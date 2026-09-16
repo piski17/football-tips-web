@@ -1,0 +1,22 @@
+{
+  "name": "football-tips-web",
+  "version": "1.0.0",
+  "description": "Webová appka na štatistickú analýzu futbalových zápasov (football-data.org), otvoriteľná z telefónu aj počítača",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "dev": "tsc -p tsconfig.json && node dist/server.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.7.2",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.0"
+  }
+}
