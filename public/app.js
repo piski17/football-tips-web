@@ -5,6 +5,7 @@ const sidebarEl = document.getElementById("sidebar");
 const toggleFiltersBtn = document.getElementById("toggleFiltersBtn");
 const leagueListEl = document.getElementById("leagueList");
 const customLeagueInput = document.getElementById("customLeagueId");
+const matchDateInput = document.getElementById("matchDateInput");
 const seasonInput = document.getElementById("seasonInput");
 const loadFixturesBtn = document.getElementById("loadFixturesBtn");
 const fixtureListEl = document.getElementById("fixtureList");
@@ -25,6 +26,8 @@ async function fetchJson(url, options) {
 }
 
 async function init() {
+  matchDateInput.value = new Date().toISOString().slice(0, 10);
+
   const leagues = await fetchJson("/api/leagues");
   leagueListEl.innerHTML = "";
   leagues.forEach((league) => {
@@ -65,7 +68,10 @@ loadFixturesBtn.addEventListener("click", async () => {
   sidebarEl.classList.remove("open");
 
   try {
-    const fixtures = await fetchJson(`/api/fixtures?league=${encodeURIComponent(leagueId)}&season=${season}`);
+    const date = matchDateInput.value || new Date().toISOString().slice(0, 10);
+    const fixtures = await fetchJson(
+      `/api/fixtures?league=${encodeURIComponent(leagueId)}&season=${season}&date=${date}`
+    );
     currentFixtures = fixtures;
     renderFixtureList(fixtures, leagueId, season);
   } catch (err) {
@@ -79,7 +85,7 @@ function renderFixtureList(fixtures, leagueId, season) {
   fixtureCountEl.textContent = fixtures.length ? `${fixtures.length} zápasov` : "";
 
   if (!fixtures.length) {
-    fixtureListEl.innerHTML = `<p class="empty-state">Pre túto ligu sa tento týždeň nekonajú žiadne zápasy.</p>`;
+    fixtureListEl.innerHTML = `<p class="empty-state">Pre túto ligu sa v tento deň nekonajú žiadne zápasy.</p>`;
     return;
   }
 

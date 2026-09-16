@@ -28,6 +28,11 @@
       </div>
 
       <div class="field-group">
+        <label for="matchDateInput">Herný deň</label>
+        <input type="date" id="matchDateInput" />
+      </div>
+
+      <div class="field-group">
         <label for="seasonInput">Sezóna</label>
         <input type="number" id="seasonInput" value="2026" />
       </div>
@@ -38,7 +43,7 @@
     <main class="content">
       <section class="fixture-column">
         <div class="column-header">
-          <h2>Zápasy tento týždeň</h2>
+          <h2>Zápasy v daný deň</h2>
           <span class="muted" id="fixtureCount"></span>
         </div>
         <div class="fixture-list" id="fixtureList">
