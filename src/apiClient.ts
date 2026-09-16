@@ -52,15 +52,25 @@ function mapFixture(m: any, season: number): Fixture {
   };
 }
 
-/** Načíta nadchádzajúce zápasy danej súťaže a sezóny (zoradené, obmedzené na `limitCount`). */
+/** Načíta nadchádzajúce zápasy danej súťaže, voliteľne obmedzené na rozsah dátumov (napr. aktuálny týždeň). */
 export async function getFixturesByLeague(
   competitionCode: string,
   season: number,
-  limitCount: number = 15
+  limitCount: number = 20,
+  dateFrom?: string,
+  dateTo?: string
 ): Promise<Fixture[]> {
   try {
+    const params: Record<string, any> = { status: "SCHEDULED" };
+    if (dateFrom && dateTo) {
+      params.dateFrom = dateFrom;
+      params.dateTo = dateTo;
+    } else {
+      params.season = season;
+    }
+
     const res = await client().get(`/competitions/${competitionCode}/matches`, {
-      params: { season, status: "SCHEDULED" },
+      params,
     });
 
     const matches = res.data?.matches ?? [];

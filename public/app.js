@@ -79,7 +79,7 @@ function renderFixtureList(fixtures, leagueId, season) {
   fixtureCountEl.textContent = fixtures.length ? `${fixtures.length} zápasov` : "";
 
   if (!fixtures.length) {
-    fixtureListEl.innerHTML = `<p class="empty-state">Pre túto ligu a sezónu sa nenašli žiadne zápasy. Ak používaš bezplatný plán, skús inú sezónu.</p>`;
+    fixtureListEl.innerHTML = `<p class="empty-state">Pre túto ligu sa tento týždeň nekonajú žiadne zápasy.</p>`;
     return;
   }
 

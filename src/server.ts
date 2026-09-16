@@ -58,6 +58,22 @@ app.get("/api/leagues", (_req, res) => {
   res.json(LEAGUE_PRESETS);
 });
 
+/** Vráti dátumy pondelka a nedele aktuálneho (kalendárneho) týždňa vo formáte YYYY-MM-DD. */
+function getCurrentWeekRange(): { dateFrom: string; dateTo: string } {
+  const now = new Date();
+  const day = now.getDay(); // 0 = nedeľa, 1 = pondelok, ..., 6 = sobota
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + diffToMonday);
+
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+
+  const toIso = (d: Date) => d.toISOString().slice(0, 10);
+  return { dateFrom: toIso(monday), dateTo: toIso(sunday) };
+}
+
 app.get("/api/fixtures", async (req, res) => {
   try {
     const league = String(req.query.league ?? "");
@@ -66,7 +82,8 @@ app.get("/api/fixtures", async (req, res) => {
       res.status(400).json({ error: "Chýba parameter league alebo season." });
       return;
     }
-    const fixtures = await getFixturesByLeague(league, season, 20);
+    const { dateFrom, dateTo } = getCurrentWeekRange();
+    const fixtures = await getFixturesByLeague(league, season, 30, dateFrom, dateTo);
     res.json(fixtures);
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
