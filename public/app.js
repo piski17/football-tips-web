@@ -25,8 +25,25 @@ async function fetchJson(url, options) {
   return data;
 }
 
+/**
+ * Odhadne sezónu (rok jej začiatku) podľa zvoleného dátumu. Väčšina top
+ * európskych líg beží od júla/augusta do mája/júna, preto mesiace júl-december
+ * patria do sezóny toho istého roka, a mesiace január-jún do sezóny predošlého roka.
+ * Pri súťažiach s jednoročnou sezónou (napr. MS, EURO) si sezónu preplš ručne.
+ */
+function guessSeasonFromDate(dateStr) {
+  const d = new Date(dateStr);
+  const month = d.getMonth() + 1; // 1-12
+  return month >= 7 ? d.getFullYear() : d.getFullYear() - 1;
+}
+
 async function init() {
   matchDateInput.value = new Date().toISOString().slice(0, 10);
+  seasonInput.value = String(guessSeasonFromDate(matchDateInput.value));
+
+  matchDateInput.addEventListener("change", () => {
+    seasonInput.value = String(guessSeasonFromDate(matchDateInput.value));
+  });
 
   const leagues = await fetchJson("/api/leagues");
   leagueListEl.innerHTML = "";
