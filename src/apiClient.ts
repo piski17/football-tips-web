@@ -26,7 +26,7 @@ function client(): AxiosInstance {
   // limite požiadaviek (HTTP 429) - zabraňuje tomu, aby jedna náhodne zlyhaná
   // požiadavka spôsobila nekonzistentné výsledky medzi opakovanými analýzami.
   axiosRetry(instance, {
-    retries: 3,
+    retries: 5,
     retryDelay: axiosRetry.exponentialDelay,
     retryCondition: (error) =>
       axiosRetry.isNetworkOrIdempotentRequestError(error) || error.response?.status === 429,
@@ -47,7 +47,7 @@ function delay(ms: number): Promise<void> {
 async function mapSequential<T, R>(
   items: T[],
   fn: (item: T, index: number) => Promise<R>,
-  delayMs: number = 150
+  delayMs: number = 200
 ): Promise<R[]> {
   const results: R[] = [];
   for (let i = 0; i < items.length; i++) {
@@ -166,7 +166,7 @@ export async function getTeamCornersAverage(
   leagueId: number,
   season: number,
   teamId: number,
-  lastN: number = 6
+  lastN: number = 10
 ): Promise<number | null> {
   try {
     const fixturesRes = await client().get("/fixtures", {
