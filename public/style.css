@@ -18,7 +18,8 @@
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   min-height: 100%;
@@ -28,7 +29,8 @@ html, body {
   font-size: 15px;
 }
 
-button, input {
+button,
+input {
   font-family: inherit;
 }
 
@@ -62,7 +64,11 @@ button, input {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, var(--accent-strong), var(--accent));
+  background: radial-gradient(
+    circle at 30% 30%,
+    var(--accent-strong),
+    var(--accent)
+  );
   flex-shrink: 0;
 }
 
@@ -133,6 +139,12 @@ button, input {
 .field-group input:focus {
   outline: none;
   border-color: var(--accent);
+}
+
+.field-group input[readonly] {
+  color: var(--text-muted);
+  cursor: default;
+  background: var(--surface);
 }
 
 .btn-primary {
@@ -403,9 +415,15 @@ button, input {
   color: #0c150f;
 }
 
-.form-pill.W { background: var(--accent); }
-.form-pill.D { background: var(--gold); }
-.form-pill.L { background: var(--danger); }
+.form-pill.W {
+  background: var(--accent);
+}
+.form-pill.D {
+  background: var(--gold);
+}
+.form-pill.L {
+  background: var(--danger);
+}
 
 .stat-line {
   display: flex;
