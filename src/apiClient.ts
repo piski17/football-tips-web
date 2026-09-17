@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from "axios";
+import axiosRetry from "axios-retry";
 import { Fixture, TeamStatistics, HeadToHeadMatch, LeagueAverages, TeamGoalPriors, TeamGoalPriorsResult } from "./types";
 
 const BASE_URL = "https://v3.football.api-sports.io";
@@ -8,11 +9,23 @@ function client(): AxiosInstance {
   if (!key) {
     throw new Error("Na serveri chýba premenná prostredia API_FOOTBALL_KEY.");
   }
-  return axios.create({
+  const instance = axios.create({
     baseURL: BASE_URL,
     headers: { "x-apisports-key": key },
     timeout: 15000,
   });
+
+  // Automaticky zopakuje požiadavku pri krátkodobom výpadku siete alebo
+  // limite požiadaviek (HTTP 429) - zabraňuje tomu, aby jedna náhodne zlyhaná
+  // požiadavka spôsobila nekonzistentné výsledky medzi opakovanými analýzami.
+  axiosRetry(instance, {
+    retries: 3,
+    retryDelay: axiosRetry.exponentialDelay,
+    retryCondition: (error) =>
+      axiosRetry.isNetworkOrIdempotentRequestError(error) || error.response?.status === 429,
+  });
+
+  return instance;
 }
 
 function checkApiErrors(data: any): void {
