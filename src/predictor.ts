@@ -1,41 +1,37 @@
 import {
   Fixture,
   TeamStatistics,
-  HeadToHeadSummary,
+  HeadToHeadMatch,
+  LeagueAverages,
+  TeamGoalPriors,
+  TeamGoalPriorsResult,
   PredictionWeights,
   OutcomeProbabilities,
   PredictionResult,
+  MarketPick,
+  OverUnderMarket,
 } from "./types";
 
 // Predvolené váhy jednotlivých faktorov v celkovom modeli.
-// Súčet by mal byť 1.0. Poisson (gólový) model nesie najväčšiu váhu,
-// forma a vzájomné zápasy ho jemne dolaďujú.
 export const DEFAULT_WEIGHTS: PredictionWeights = {
   poisson: 0.65,
   form: 0.22,
   h2h: 0.13,
 };
 
-// Priemerný počet gólov doma/vonku naprieč ligou, použitý ako základ
-// pre výpočet sily útoku/obrany. Toto je zjednodušenie - presnejší
-// model by počítal skutočný ligový priemer z /fixtures danej sezóny.
-const LEAGUE_AVG_HOME_GOALS = 1.5;
-const LEAGUE_AVG_AWAY_GOALS = 1.15;
+// Záložné hodnoty, ak by sa ligový priemer nepodarilo dopočítať (napr. začiatok sezóny bez dát).
+const FALLBACK_LEAGUE_AVG_HOME_GOALS = 1.5;
+const FALLBACK_LEAGUE_AVG_AWAY_GOALS = 1.15;
 
-const MAX_GOALS = 6; // horná hranica pri sčítavaní Poissonovej matice
+const MAX_GOALS = 6;
+
+// Bežné bookmakerské hranice pre rohy a karty - dajú sa v budúcnosti spraviť konfigurovateľné.
+const CORNERS_LINE = 9.5;
+const CARDS_LINE = 3.5;
 
 // Koľko "váhy" má ligový priemer oproti tímovým dátam na začiatku sezóny.
-// Napr. hodnota 5 znamená, že tímov vlastný priemer sa berie doslovne až
-// vtedy, keď má za sebou zhruba 5x viac odohraných zápasov než je táto
-// konštanta - kým ich má menej, priemer sa "ťahá" bližšie k ligovému
-// priemeru, aby pár extrémnych výsledkov na začiatku sezóny neskreslilo
-// predikciu.
 const SHRINKAGE_PRIOR_GAMES = 5;
 
-/**
- * Vyhladí (shrinkne) pozorovaný priemer smerom k ligovému priemeru podľa
- * počtu odohraných zápasov - čím menej zápasov, tým väčší posun k priemeru.
- */
 function shrinkAverage(observed: number, gamesPlayed: number, leagueAvg: number): number {
   if (gamesPlayed <= 0) return leagueAvg;
   const weightObserved = gamesPlayed;
@@ -54,39 +50,55 @@ function poissonPmf(k: number, lambda: number): number {
   return (Math.pow(lambda, k) * Math.exp(-lambda)) / factorial(k);
 }
 
-/** Očakávané góly domáceho a hosťujúceho tímu na základe sily útoku/obrany. */
+/** Všeobecný Over/Under odhad z Poissonovho rozdelenia - použiteľný pre rohy aj karty. */
+function poissonOverUnder(lambda: number, line: number, maxCount: number = 30): { over: number; under: number } {
+  let underCumulative = 0;
+  for (let k = 0; k <= Math.floor(line); k++) {
+    underCumulative += poissonPmf(k, lambda);
+  }
+  const cappedUnder = Math.min(1, underCumulative);
+  return { over: (1 - cappedUnder) * 100, under: cappedUnder * 100 };
+}
+
+/** Očakávané góly domáceho a hosťujúceho tímu na základe sily útoku/obrany a skutočného ligového priemeru. */
 export function expectedGoals(
   home: TeamStatistics,
-  away: TeamStatistics
+  away: TeamStatistics,
+  leagueAvg: LeagueAverages,
+  homePriorsResult?: TeamGoalPriorsResult | null,
+  awayPriorsResult?: TeamGoalPriorsResult | null
 ): { home: number; away: number } {
-  const homeGoalsForAvg = shrinkAverage(
-    home.goals.for.average.home,
-    home.fixtures.played.home,
-    LEAGUE_AVG_HOME_GOALS
-  );
+  const avgHome = leagueAvg.home || FALLBACK_LEAGUE_AVG_HOME_GOALS;
+  const avgAway = leagueAvg.away || FALLBACK_LEAGUE_AVG_AWAY_GOALS;
+
+  const homePriors = homePriorsResult?.priors;
+  const awayPriors = awayPriorsResult?.priors;
+
+  const homeForBase = homePriors?.forHome ?? avgHome;
+  const homeAgainstBase = homePriors?.againstHome ?? avgAway;
+  const awayForBase = awayPriors?.forAway ?? avgAway;
+  const awayAgainstBase = awayPriors?.againstAway ?? avgHome;
+
+  const homeGoalsForAvg = shrinkAverage(home.goals.for.average.home, home.fixtures.played.home, homeForBase);
   const homeGoalsAgainstAvg = shrinkAverage(
     home.goals.against.average.home,
     home.fixtures.played.home,
-    LEAGUE_AVG_AWAY_GOALS // tím doma inkasuje v priemere toľko, koľko súperi dávajú vonku
+    homeAgainstBase
   );
-  const awayGoalsForAvg = shrinkAverage(
-    away.goals.for.average.away,
-    away.fixtures.played.away,
-    LEAGUE_AVG_AWAY_GOALS
-  );
+  const awayGoalsForAvg = shrinkAverage(away.goals.for.average.away, away.fixtures.played.away, awayForBase);
   const awayGoalsAgainstAvg = shrinkAverage(
     away.goals.against.average.away,
     away.fixtures.played.away,
-    LEAGUE_AVG_HOME_GOALS // tím vonku inkasuje v priemere toľko, koľko súperi dávajú doma
+    awayAgainstBase
   );
 
-  const homeAttack = safeDiv(homeGoalsForAvg, LEAGUE_AVG_HOME_GOALS);
-  const awayDefense = safeDiv(awayGoalsAgainstAvg, LEAGUE_AVG_AWAY_GOALS);
-  const awayAttack = safeDiv(awayGoalsForAvg, LEAGUE_AVG_AWAY_GOALS);
-  const homeDefense = safeDiv(homeGoalsAgainstAvg, LEAGUE_AVG_HOME_GOALS);
+  const homeAttack = safeDiv(homeGoalsForAvg, avgHome);
+  const awayDefense = safeDiv(awayGoalsAgainstAvg, avgAway);
+  const awayAttack = safeDiv(awayGoalsForAvg, avgAway);
+  const homeDefense = safeDiv(homeGoalsAgainstAvg, avgHome);
 
-  const homeExpected = homeAttack * awayDefense * LEAGUE_AVG_HOME_GOALS;
-  const awayExpected = awayAttack * homeDefense * LEAGUE_AVG_AWAY_GOALS;
+  const homeExpected = homeAttack * awayDefense * avgHome;
+  const awayExpected = awayAttack * homeDefense * avgAway;
 
   return {
     home: clamp(homeExpected, 0.15, 5),
@@ -103,7 +115,6 @@ function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
-/** Poissonov model: pravdepodobnosti výsledku 1/X/2 a Over/Under 2.5. */
 export function poissonOutcomes(
   homeExpected: number,
   awayExpected: number
@@ -146,14 +157,10 @@ export function poissonOutcomes(
   };
 }
 
-/**
- * Prevedie reťazec formy (napr. "WWDLW", najnovší zápas posledný)
- * na vážené skóre 0-3, kde novšie zápasy majú väčšiu váhu.
- */
 export function formToScore(form: string): number {
-  if (!form) return 1.3; // neutrálna hodnota bez dát
+  if (!form) return 1.3;
 
-  const matches = form.slice(-5).split(""); // posledných max. 5 zápasov
+  const matches = form.slice(-5).split("");
   const weights = [1, 1.5, 2, 2.5, 3].slice(-matches.length);
   let weightedSum = 0;
   let weightTotal = 0;
@@ -168,11 +175,9 @@ export function formToScore(form: string): number {
   return weightTotal > 0 ? weightedSum / weightTotal : 1.3;
 }
 
-/** Odhad pravdepodobností 1/X/2 na základe rozdielu vo forme oboch tímov. */
 function formOutcomes(homeScore: number, awayScore: number): OutcomeProbabilities {
-  const diff = homeScore - awayScore; // rozsah približne -3 až 3
-  // Sigmoid mapovanie rozdielu na posun oproti základnej 40/28/32 (výhoda domácich).
-  const shift = (2 / (1 + Math.exp(-diff)) - 1) * 25; // -25 až +25
+  const diff = homeScore - awayScore;
+  const shift = (2 / (1 + Math.exp(-diff)) - 1) * 25;
 
   let homeWin = 40 + shift;
   let awayWin = 32 - shift;
@@ -181,24 +186,31 @@ function formOutcomes(homeScore: number, awayScore: number): OutcomeProbabilitie
   return normalizeProbs({ homeWin, draw, awayWin });
 }
 
-/** Odhad pravdepodobností 1/X/2 na základe súhrnu vzájomných zápasov. */
+/** Odhad pravdepodobností 1/X/2 z reálnej histórie vzájomných zápasov. */
 function headToHeadOutcomes(
-  summary: HeadToHeadSummary
+  h2h: HeadToHeadMatch[],
+  homeTeamId: number
 ): { probs: OutcomeProbabilities; homeWins: number; draws: number; awayWins: number } {
-  const { homeWins, draws, awayWins } = summary;
-  const consideredTotal = homeWins + draws + awayWins;
+  let homeWins = 0;
+  let draws = 0;
+  let awayWins = 0;
 
-  if (consideredTotal === 0) {
-    // Bez histórie - neutrálny odhad rovný priemeru ligy.
-    return {
-      probs: { homeWin: 40, draw: 28, awayWin: 32 },
-      homeWins,
-      draws,
-      awayWins,
-    };
+  for (const match of h2h) {
+    if (match.homeGoals === null || match.awayGoals === null) continue;
+    const homeTeamWasHome = match.homeTeamId === homeTeamId;
+    const homeTeamGoals = homeTeamWasHome ? match.homeGoals : match.awayGoals;
+    const awayTeamGoals = homeTeamWasHome ? match.awayGoals : match.homeGoals;
+
+    if (homeTeamGoals > awayTeamGoals) homeWins++;
+    else if (homeTeamGoals === awayTeamGoals) draws++;
+    else awayWins++;
   }
 
-  // Laplaceovo vyhladenie, aby jeden extrémny výsledok neposunul váhu na 100 %.
+  const consideredTotal = homeWins + draws + awayWins;
+  if (consideredTotal === 0) {
+    return { probs: { homeWin: 40, draw: 28, awayWin: 32 }, homeWins, draws, awayWins };
+  }
+
   const smoothing = 1;
   const denom = consideredTotal + 3 * smoothing;
   return {
@@ -229,51 +241,44 @@ function combineProbs(
   weights: PredictionWeights
 ): OutcomeProbabilities {
   const combined: OutcomeProbabilities = {
-    homeWin:
-      poisson.homeWin * weights.poisson +
-      form.homeWin * weights.form +
-      h2h.homeWin * weights.h2h,
-    draw:
-      poisson.draw * weights.poisson +
-      form.draw * weights.form +
-      h2h.draw * weights.h2h,
-    awayWin:
-      poisson.awayWin * weights.poisson +
-      form.awayWin * weights.form +
-      h2h.awayWin * weights.h2h,
+    homeWin: poisson.homeWin * weights.poisson + form.homeWin * weights.form + h2h.homeWin * weights.h2h,
+    draw: poisson.draw * weights.poisson + form.draw * weights.form + h2h.draw * weights.h2h,
+    awayWin: poisson.awayWin * weights.poisson + form.awayWin * weights.form + h2h.awayWin * weights.h2h,
   };
   return normalizeProbs(combined);
 }
 
 function confidenceFromMargin(sorted: number[]): "nízka" | "stredná" | "vysoká" {
-  const margin = sorted[0] - sorted[1]; // rozdiel medzi najpravdepodobnejším a druhým výsledkom
+  const margin = sorted[0] - sorted[1];
   if (margin >= 20) return "vysoká";
   if (margin >= 10) return "stredná";
   return "nízka";
 }
 
-/** Hlavná funkcia: skombinuje všetky faktory do finálnej predikcie zápasu. */
 export function predictMatch(
   fixture: Fixture,
   homeStats: TeamStatistics,
   awayStats: TeamStatistics,
-  h2h: HeadToHeadSummary,
-  weights: PredictionWeights = DEFAULT_WEIGHTS
+  h2h: HeadToHeadMatch[],
+  leagueAvg: LeagueAverages,
+  weights: PredictionWeights = DEFAULT_WEIGHTS,
+  homePriorsResult?: TeamGoalPriorsResult | null,
+  awayPriorsResult?: TeamGoalPriorsResult | null,
+  homeCornersAvg?: number | null,
+  awayCornersAvg?: number | null
 ): PredictionResult {
-  const xg = expectedGoals(homeStats, awayStats);
+  const xg = expectedGoals(homeStats, awayStats, leagueAvg, homePriorsResult, awayPriorsResult);
   const poisson = poissonOutcomes(xg.home, xg.away);
 
   const homeFormScore = formToScore(homeStats.form);
   const awayFormScore = formToScore(awayStats.form);
   const formProbs = formOutcomes(homeFormScore, awayFormScore);
 
-  const h2hResult = headToHeadOutcomes(h2h);
+  const h2hResult = headToHeadOutcomes(h2h, fixture.homeTeam.id);
 
   const finalProbs = combineProbs(poisson.probs, formProbs, h2hResult.probs, weights);
 
-  const sorted = [finalProbs.homeWin, finalProbs.draw, finalProbs.awayWin]
-    .slice()
-    .sort((a, b) => b - a);
+  const sorted = [finalProbs.homeWin, finalProbs.draw, finalProbs.awayWin].slice().sort((a, b) => b - a);
   const confidence = confidenceFromMargin(sorted);
 
   let outcome: "1" | "X" | "2" = "X";
@@ -287,10 +292,66 @@ export function predictMatch(
   }
 
   const minGamesPlayed = Math.min(homeStats.fixtures.played.total, awayStats.fixtures.played.total);
+
+  const describeHistory = (
+    label: string,
+    r?: TeamGoalPriorsResult | null
+  ): string =>
+    r ? `${label}: ${r.seasonsUsed}/${r.seasonsChecked} minulých sezón` : `${label}: žiadne historické dáta`;
+
   const sampleSizeWarning =
     minGamesPlayed < 6
-      ? `Pozor: v tejto sezóne je odohraných len málo zápasov (min. ${minGamesPlayed}), predikcia je preto menej spoľahlivá.`
+      ? `Pozor: v tejto sezóne je odohraných len málo zápasov (min. ${minGamesPlayed}). Použité historické dáta - ${describeHistory(
+          fixture.homeTeam.name,
+          homePriorsResult
+        )}, ${describeHistory(fixture.awayTeam.name, awayPriorsResult)}.`
       : undefined;
+
+  // ---- Rohy (ak sú dáta k dispozícii) ----
+  let corners: OverUnderMarket | undefined;
+  if (homeCornersAvg != null && awayCornersAvg != null) {
+    const expected = homeCornersAvg + awayCornersAvg;
+    const { over, under } = poissonOverUnder(expected, CORNERS_LINE);
+    corners = { expected, line: CORNERS_LINE, over, under };
+  }
+
+  // ---- Karty (priemer oboch tímov spolu) ----
+  const expectedCards = homeStats.cardsPerGame + awayStats.cardsPerGame;
+  const cardsOU = poissonOverUnder(expectedCards, CARDS_LINE);
+  const cards: OverUnderMarket = { expected: expectedCards, line: CARDS_LINE, ...cardsOU };
+
+  // ---- Rebríček najlepších tipov naprieč všetkými trhmi ----
+  const candidates: MarketPick[] = [];
+
+  candidates.push({ market: "Výsledok zápasu", selection: outcomeLabel, probability: sorted[0] });
+
+  if (poisson.over25 >= poisson.under25) {
+    candidates.push({ market: "Góly", selection: "Over 2.5", probability: poisson.over25 });
+  } else {
+    candidates.push({ market: "Góly", selection: "Under 2.5", probability: poisson.under25 });
+  }
+
+  if (poisson.bttsYes >= poisson.bttsNo) {
+    candidates.push({ market: "Obaja tímy skórujú", selection: "Áno", probability: poisson.bttsYes });
+  } else {
+    candidates.push({ market: "Obaja tímy skórujú", selection: "Nie", probability: poisson.bttsNo });
+  }
+
+  if (corners) {
+    if (corners.over >= corners.under) {
+      candidates.push({ market: "Rohy", selection: `Over ${CORNERS_LINE}`, probability: corners.over });
+    } else {
+      candidates.push({ market: "Rohy", selection: `Under ${CORNERS_LINE}`, probability: corners.under });
+    }
+  }
+
+  if (cards.over >= cards.under) {
+    candidates.push({ market: "Karty", selection: `Over ${CARDS_LINE}`, probability: cards.over });
+  } else {
+    candidates.push({ market: "Karty", selection: `Under ${CARDS_LINE}`, probability: cards.under });
+  }
+
+  const bestBets = candidates.sort((a, b) => b.probability - a.probability).slice(0, 4);
 
   return {
     fixture,
@@ -309,6 +370,17 @@ export function predictMatch(
       homeWins: h2hResult.homeWins,
       draws: h2hResult.draws,
       awayWins: h2hResult.awayWins,
+    },
+    corners,
+    cards,
+    bestBets,
+    historicalDataInfo: {
+      home: homePriorsResult
+        ? { seasonsUsed: homePriorsResult.seasonsUsed, seasonsChecked: homePriorsResult.seasonsChecked }
+        : null,
+      away: awayPriorsResult
+        ? { seasonsUsed: awayPriorsResult.seasonsUsed, seasonsChecked: awayPriorsResult.seasonsChecked }
+        : null,
     },
     tip: {
       outcome,

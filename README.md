@@ -2,7 +2,7 @@
 
 Rovnaká štatistická analýza futbalových zápasov ako v desktopovej appke
 (Poissonov gólový model + forma + vzájomné zápasy, dáta z
-**football-data.org**), ale teraz ako webová stránka. Dá sa hostovať
+**dashboard.api-football.com (Pro plán)**), ale teraz ako webová stránka. Dá sa hostovať
 online a otvoriť z telefónu, tabletu aj počítača cez bežný prehliadač.
 
 ## Rozdiel oproti desktopovej (Electron) verzii
@@ -10,7 +10,7 @@ online a otvoriť z telefónu, tabletu aj počítača cez bežný prehliadač.
 - Appka beží ako **Node.js server** (Express), nie ako samostatný program
   na počítači.
 - API kľúč sa **nezadáva v appke**, ale nastaví sa raz ako premenná
-  prostredia na serveri (`FOOTBALL_DATA_API_KEY`) – bezpečnejšie, keďže
+  prostredia na serveri (`API_FOOTBALL_KEY`) – bezpečnejšie, keďže
   appka je teraz prístupná cez internet.
 - Frontend je čisté HTML/CSS/JS (žiadny build krok na strane prehliadača),
   responzívny – na užšej obrazovke (telefón) sa filtre schovajú pod
@@ -26,7 +26,7 @@ npm install
 cp .env.example .env
 ```
 
-Otvor `.env` a vlož svoj kľúč z football-data.org do `FOOTBALL_DATA_API_KEY`.
+Otvor `.env` a vlož svoj kľúč z dashboard.api-football.com (Pro plán) do `API_FOOTBALL_KEY`.
 
 ```bash
 npm run dev
@@ -55,7 +55,7 @@ ktorý na toto úplne stačí.
    - **Start Command:** `npm start`
    - **Plan:** Free
 5. V sekcii **Environment** pridaj premenné:
-   - `FOOTBALL_DATA_API_KEY` = tvoj kľúč z football-data.org
+   - `API_FOOTBALL_KEY` = tvoj kľúč z dashboard.api-football.com (Pro plán)
    - (voliteľné) `APP_USER` a `APP_PASSWORD` – ak chceš appku chrániť
      heslom, aby ju nepoužíval hocikto s odkazom a nevyčerpal ti denný
      limit požiadaviek
@@ -82,7 +82,7 @@ do prehliadača ani do telefónu – to je aj dôvod, prečo appka už nemá
 ```
 src/
   server.ts       # Express server + API endpointy (/api/leagues, /api/fixtures, /api/analyze)
-  apiClient.ts     # volania na football-data.org (kľúč z process.env)
+  apiClient.ts     # volania na dashboard.api-football.com (Pro plán) (kľúč z process.env)
   predictor.ts     # rovnaký štatistický model ako v desktopovej appke
   types.ts         # zdieľané TypeScript typy
 public/

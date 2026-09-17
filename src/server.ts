@@ -5,6 +5,9 @@ import {
   getFixturesByLeague,
   getTeamStatistics,
   getHeadToHead,
+  getLeagueAverages,
+  getHistoricalGoalPriors,
+  getTeamCornersAverage,
 } from "./apiClient";
 import { predictMatch, DEFAULT_WEIGHTS } from "./predictor";
 import { LeaguePreset } from "./types";
@@ -12,20 +15,18 @@ import { LeaguePreset } from "./types";
 const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
-// Niekoľko bežných líg dostupných na bezplatnom pláne football-data.org.
+// Top ligy dostupné s API-Football Pro plánom.
 const LEAGUE_PRESETS: LeaguePreset[] = [
-  { id: "PL", name: "Premier League", country: "Anglicko" },
-  { id: "PD", name: "La Liga", country: "Španielsko" },
-  { id: "SA", name: "Serie A", country: "Taliansko" },
-  { id: "BL1", name: "Bundesliga", country: "Nemecko" },
-  { id: "FL1", name: "Ligue 1", country: "Francúzsko" },
-  { id: "CL", name: "UEFA Champions League", country: "Európa" },
+  { id: 39, name: "Premier League", country: "Anglicko" },
+  { id: 140, name: "La Liga", country: "Španielsko" },
+  { id: 135, name: "Serie A", country: "Taliansko" },
+  { id: 78, name: "Bundesliga", country: "Nemecko" },
+  { id: 61, name: "Ligue 1", country: "Francúzsko" },
+  { id: 2, name: "UEFA Champions League", country: "Európa" },
 ];
 
 /**
- * Voliteľná ochrana heslom (HTTP Basic Auth), aby si appku nemusel nechať
- * úplne verejnú (free plán football-data.org má limit 10 požiadaviek/min,
- * ktorý by cudzí návštevníci mohli vyčerpať). Ak nenastavíš APP_USER a
+ * Voliteľná ochrana heslom (HTTP Basic Auth). Ak nenastavíš APP_USER a
  * APP_PASSWORD, appka beží bez hesla.
  */
 function basicAuth(req: Request, res: Response, next: NextFunction): void {
@@ -60,14 +61,14 @@ app.get("/api/leagues", (_req, res) => {
 
 app.get("/api/fixtures", async (req, res) => {
   try {
-    const league = String(req.query.league ?? "");
+    const league = parseInt(String(req.query.league ?? ""), 10);
     const season = parseInt(String(req.query.season ?? ""), 10);
-    if (!league || Number.isNaN(season)) {
+    if (Number.isNaN(league) || Number.isNaN(season)) {
       res.status(400).json({ error: "Chýba parameter league alebo season." });
       return;
     }
     const date = String(req.query.date ?? "") || new Date().toISOString().slice(0, 10);
-    const fixtures = await getFixturesByLeague(league, season, 30, date, date);
+    const fixtures = await getFixturesByLeague(league, season, 30, date);
     res.json(fixtures);
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
@@ -82,13 +83,30 @@ app.post("/api/analyze", async (req, res) => {
       return;
     }
 
-    const [homeStats, awayStats, h2h] = await Promise.all([
-      getTeamStatistics(leagueId, season, fixture.homeTeam.id),
-      getTeamStatistics(leagueId, season, fixture.awayTeam.id),
-      getHeadToHead(fixture.fixtureId, 10),
-    ]);
+    const [homeStats, awayStats, h2h, leagueAvg, homePriors, awayPriors, homeCorners, awayCorners] =
+      await Promise.all([
+        getTeamStatistics(leagueId, season, fixture.homeTeam.id),
+        getTeamStatistics(leagueId, season, fixture.awayTeam.id),
+        getHeadToHead(fixture.homeTeam.id, fixture.awayTeam.id, 10),
+        getLeagueAverages(leagueId, season),
+        getHistoricalGoalPriors(leagueId, season, fixture.homeTeam.id),
+        getHistoricalGoalPriors(leagueId, season, fixture.awayTeam.id),
+        getTeamCornersAverage(leagueId, season, fixture.homeTeam.id),
+        getTeamCornersAverage(leagueId, season, fixture.awayTeam.id),
+      ]);
 
-    const result = predictMatch(fixture, homeStats, awayStats, h2h, DEFAULT_WEIGHTS);
+    const result = predictMatch(
+      fixture,
+      homeStats,
+      awayStats,
+      h2h,
+      leagueAvg,
+      DEFAULT_WEIGHTS,
+      homePriors,
+      awayPriors,
+      homeCorners,
+      awayCorners
+    );
     res.json(result);
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });

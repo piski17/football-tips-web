@@ -1,4 +1,4 @@
-// Zdieľané typy pre dáta z football-data.org a výsledky predikcie
+// Zdieľané typy pre dáta z API-Football a výsledky predikcie
 
 export interface Team {
   id: number;
@@ -12,7 +12,7 @@ export interface Fixture {
   timestamp: number;
   venue?: string;
   league: {
-    id: string; // kód súťaže, napr. "PL"
+    id: number;
     name: string;
     season: number;
     round?: string;
@@ -41,26 +41,66 @@ export interface TeamStatistics {
       average: { home: number; away: number; total: number };
     };
   };
+  /** Priemerný počet žltých + červených kariet tímu za zápas (celá sezóna). */
+  cardsPerGame: number;
 }
 
-/** Súhrn vzájomných zápasov, už vyjadrený relatívne k domácemu/hosťujúcemu tímu aktuálneho zápasu. */
-export interface HeadToHeadSummary {
-  matchesConsidered: number;
-  homeWins: number;
-  draws: number;
-  awayWins: number;
+/** Jeden konkrétny odporúčaný tip naprieč trhmi, zoraditeľný podľa istoty. */
+export interface MarketPick {
+  market: string; // napr. "Výsledok zápasu", "Rohy", "Karty"
+  selection: string; // napr. "Výhra Chelsea", "Over 9.5", "Under 3.5"
+  probability: number; // 0-100
+}
+
+/** Odhad pre trh typu Over/Under (rohy, karty) založený na kombinovanom Poissonovom modeli. */
+export interface OverUnderMarket {
+  expected: number;
+  line: number;
+  over: number;
+  under: number;
+}
+
+/** Jeden odohraný vzájomný zápas dvoch tímov. */
+export interface HeadToHeadMatch {
+  fixtureId: number;
+  date: string;
+  homeTeamId: number;
+  awayTeamId: number;
+  homeGoals: number | null;
+  awayGoals: number | null;
+}
+
+/** Skutočný ligový priemer gólov doma/vonku, dopočítaný z celej tabuľky danej sezóny. */
+export interface LeagueAverages {
+  home: number;
+  away: number;
+}
+
+/** Priemer gólov tímu z minulej sezóny - slúži ako informovanejší základ pre vyhladenie na začiatku sezóny. */
+export interface TeamGoalPriors {
+  forHome: number;
+  forAway: number;
+  againstHome: number;
+  againstAway: number;
+}
+
+/** Priory tímu + koľko z kontrolovaných minulých sezón sa reálne podarilo nájsť a použiť. */
+export interface TeamGoalPriorsResult {
+  priors: TeamGoalPriors;
+  seasonsUsed: number;
+  seasonsChecked: number;
 }
 
 export interface PredictionWeights {
-  poisson: number; // váha Poisson (gólového) modelu
-  form: number; // váha aktuálnej formy
-  h2h: number; // váha vzájomných zápasov
+  poisson: number;
+  form: number;
+  h2h: number;
 }
 
 export interface OutcomeProbabilities {
-  homeWin: number; // 0-100
-  draw: number; // 0-100
-  awayWin: number; // 0-100
+  homeWin: number;
+  draw: number;
+  awayWin: number;
 }
 
 export interface PredictionResult {
@@ -84,7 +124,19 @@ export interface PredictionResult {
     homeScore: number;
     awayScore: number;
   };
-  headToHead: HeadToHeadSummary;
+  headToHead: {
+    matchesConsidered: number;
+    homeWins: number;
+    draws: number;
+    awayWins: number;
+  };
+  corners?: OverUnderMarket;
+  cards?: OverUnderMarket;
+  bestBets: MarketPick[];
+  historicalDataInfo: {
+    home: { seasonsUsed: number; seasonsChecked: number } | null;
+    away: { seasonsUsed: number; seasonsChecked: number } | null;
+  };
   tip: {
     outcome: "1" | "X" | "2";
     outcomeLabel: string;
@@ -95,7 +147,7 @@ export interface PredictionResult {
 }
 
 export interface LeaguePreset {
-  id: string; // kód súťaže vo football-data.org, napr. "PL"
+  id: number; // ID ligy v API-Football, napr. 39 pre Premier League
   name: string;
   country: string;
 }

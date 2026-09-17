@@ -66,7 +66,7 @@ function selectLeague(id, el) {
 
 function getActiveLeagueId() {
   if (customLeagueInput.value.trim()) {
-    return customLeagueInput.value.trim().toUpperCase();
+    return parseInt(customLeagueInput.value.trim(), 10);
   }
   return selectedLeagueId;
 }
@@ -177,6 +177,26 @@ function renderAnalysis(r) {
       </div>
     </div>
 
+    <div class="best-bets-section">
+      <div class="section-title">Odporúčané tipy (zoradené podľa istoty)</div>
+      <div class="best-bets-list">
+        ${(r.bestBets || [])
+          .map(
+            (bet, idx) => `
+          <div class="best-bet-row">
+            <div class="best-bet-rank">${idx + 1}.</div>
+            <div class="best-bet-info">
+              <div class="best-bet-market">${escapeHtml(bet.market)}</div>
+              <div class="best-bet-selection">${escapeHtml(bet.selection)}</div>
+            </div>
+            <div class="best-bet-prob">${bet.probability.toFixed(0)}%</div>
+          </div>
+        `
+          )
+          .join("")}
+      </div>
+    </div>
+
     <div class="prob-section">
       <div class="section-title">Pravdepodobnosť výsledku</div>
       ${probRow(r.fixture.homeTeam.name, r.probabilities.homeWin)}
@@ -185,8 +205,8 @@ function renderAnalysis(r) {
     </div>
 
     <div class="stats-grid">
-      ${teamStatCard(r.fixture.homeTeam.name, r.form.home, r.form.homeScore, r.expectedGoals.home)}
-      ${teamStatCard(r.fixture.awayTeam.name, r.form.away, r.form.awayScore, r.expectedGoals.away)}
+      ${teamStatCard(r.fixture.homeTeam.name, r.form.home, r.form.homeScore, r.expectedGoals.home, r.historicalDataInfo && r.historicalDataInfo.home)}
+      ${teamStatCard(r.fixture.awayTeam.name, r.form.away, r.form.awayScore, r.expectedGoals.away, r.historicalDataInfo && r.historicalDataInfo.away)}
     </div>
 
     <div class="prob-section">
@@ -204,6 +224,19 @@ function renderAnalysis(r) {
       <div class="market-card">
         <div class="market-value">${r.btts.yes.toFixed(0)}%</div>
         <div class="market-label">Obaja tímy skórujú</div>
+      </div>
+      ${
+        r.corners
+          ? `
+      <div class="market-card">
+        <div class="market-value">${(r.corners.over >= r.corners.under ? r.corners.over : r.corners.under).toFixed(0)}%</div>
+        <div class="market-label">${r.corners.over >= r.corners.under ? "Over" : "Under"} ${r.corners.line} rohov</div>
+      </div>`
+          : ""
+      }
+      <div class="market-card">
+        <div class="market-value">${(r.cards.over >= r.cards.under ? r.cards.over : r.cards.under).toFixed(0)}%</div>
+        <div class="market-label">${r.cards.over >= r.cards.under ? "Over" : "Under"} ${r.cards.line} kariet</div>
       </div>
     </div>
 
@@ -225,12 +258,16 @@ function probRow(label, value) {
   `;
 }
 
-function teamStatCard(name, form, formScore, xg) {
+function teamStatCard(name, form, formScore, xg, historyInfo) {
   const pills = (form || "")
     .slice(-5)
     .split("")
     .map((r) => `<div class="form-pill ${r}">${r}</div>`)
     .join("");
+
+  const historyLine = historyInfo
+    ? `<div class="stat-line"><span>Historické sezóny použité</span><strong>${historyInfo.seasonsUsed} / ${historyInfo.seasonsChecked}</strong></div>`
+    : `<div class="stat-line"><span>Historické sezóny použité</span><strong>0 (nenájdené)</strong></div>`;
 
   return `
     <div class="stat-card">
@@ -238,6 +275,7 @@ function teamStatCard(name, form, formScore, xg) {
       <div class="form-pills">${pills || '<span class="muted small">bez dát o forme</span>'}</div>
       <div class="stat-line"><span>Vážené skóre formy</span><strong>${formScore.toFixed(2)} / 3.00</strong></div>
       <div class="stat-line"><span>Očakávané góly</span><strong>${xg.toFixed(2)}</strong></div>
+      ${historyLine}
     </div>
   `;
 }

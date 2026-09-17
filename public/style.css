@@ -18,8 +18,7 @@
   box-sizing: border-box;
 }
 
-html,
-body {
+html, body {
   margin: 0;
   padding: 0;
   min-height: 100%;
@@ -29,8 +28,7 @@ body {
   font-size: 15px;
 }
 
-button,
-input {
+button, input {
   font-family: inherit;
 }
 
@@ -64,11 +62,7 @@ input {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: radial-gradient(
-    circle at 30% 30%,
-    var(--accent-strong),
-    var(--accent)
-  );
+  background: radial-gradient(circle at 30% 30%, var(--accent-strong), var(--accent));
   flex-shrink: 0;
 }
 
@@ -415,15 +409,9 @@ input {
   color: #0c150f;
 }
 
-.form-pill.W {
-  background: var(--accent);
-}
-.form-pill.D {
-  background: var(--gold);
-}
-.form-pill.L {
-  background: var(--danger);
-}
+.form-pill.W { background: var(--accent); }
+.form-pill.D { background: var(--gold); }
+.form-pill.L { background: var(--danger); }
 
 .stat-line {
   display: flex;
@@ -440,7 +428,7 @@ input {
 
 .markets-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
   gap: 12px;
 }
 
@@ -462,6 +450,67 @@ input {
   font-size: 11.5px;
   color: var(--text-muted);
   margin-top: 4px;
+}
+
+.best-bets-section {
+  margin-bottom: 22px;
+}
+
+.best-bets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.best-bet-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.best-bet-row:first-child {
+  border-left-color: var(--gold);
+}
+
+.best-bet-rank {
+  font-family: var(--font-display);
+  font-size: 16px;
+  color: var(--text-muted);
+  width: 18px;
+  flex-shrink: 0;
+}
+
+.best-bet-row:first-child .best-bet-rank {
+  color: var(--gold);
+}
+
+.best-bet-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.best-bet-market {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.best-bet-selection {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.best-bet-prob {
+  font-family: var(--font-display);
+  font-size: 17px;
+  color: var(--accent-strong);
 }
 
 .disclaimer {
