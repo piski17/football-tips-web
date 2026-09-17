@@ -1,6 +1,13 @@
 import axios, { AxiosInstance } from "axios";
 import axiosRetry from "axios-retry";
-import { Fixture, TeamStatistics, HeadToHeadMatch, LeagueAverages, TeamGoalPriors, TeamGoalPriorsResult } from "./types";
+import {
+  Fixture,
+  TeamStatistics,
+  HeadToHeadMatch,
+  LeagueAverages,
+  TeamGoalPriors,
+  TeamGoalPriorsResult,
+} from "./types";
 
 const BASE_URL = "https://v3.football.api-sports.io";
 
@@ -26,6 +33,28 @@ function client(): AxiosInstance {
   });
 
   return instance;
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Spracuje položky POSTUPNE (nie všetky naraz), s malým odstupom medzi nimi.
+ * Bráni tomu, aby appka vystrelila príliš veľa súbežných požiadaviek naraz
+ * a narazila na krátkodobý limit API, ktorý by spôsobil nekonzistentné výsledky.
+ */
+async function mapSequential<T, R>(
+  items: T[],
+  fn: (item: T, index: number) => Promise<R>,
+  delayMs: number = 150
+): Promise<R[]> {
+  const results: R[] = [];
+  for (let i = 0; i < items.length; i++) {
+    results.push(await fn(items[i], i));
+    if (i < items.length - 1) await delay(delayMs);
+  }
+  return results;
 }
 
 function checkApiErrors(data: any): void {
@@ -86,6 +115,8 @@ export async function getTeamStatistics(
     throw new Error(`Štatistiky pre tím ${teamId} neboli nájdené (liga ${leagueId}, sezóna ${season}).`);
   }
 
+  // Karty prichádzajú rozdelené po 15-minútových intervaloch (žlté aj červené) -
+  // spočítame ich všetky a vydelíme počtom zápasov, aby sme dostali priemer na zápas.
   const sumCardBuckets = (buckets: any): number => {
     if (!buckets) return 0;
     return Object.values(buckets).reduce((sum: number, bucket: any) => sum + (bucket?.total ?? 0), 0);
@@ -141,23 +172,22 @@ export async function getTeamCornersAverage(
     const fixturesRes = await client().get("/fixtures", {
       params: { team: teamId, league: leagueId, season, last: lastN, status: "FT" },
     });
+    checkApiErrors(fixturesRes.data);
     const fixtures: any[] = fixturesRes.data?.response ?? [];
     if (fixtures.length === 0) return null;
 
-    const cornerValues = await Promise.all(
-      fixtures.map(async (f: any) => {
-        try {
-          const statsRes = await client().get("/fixtures/statistics", {
-            params: { fixture: f.fixture.id, team: teamId },
-          });
-          const stats: any[] = statsRes.data?.response?.[0]?.statistics ?? [];
-          const corner = stats.find((s: any) => s.type === "Corner Kicks");
-          return typeof corner?.value === "number" ? corner.value : null;
-        } catch {
-          return null;
-        }
-      })
-    );
+    const cornerValues = await mapSequential(fixtures, async (f: any) => {
+      try {
+        const statsRes = await client().get("/fixtures/statistics", {
+          params: { fixture: f.fixture.id, team: teamId },
+        });
+        const stats: any[] = statsRes.data?.response?.[0]?.statistics ?? [];
+        const corner = stats.find((s: any) => s.type === "Corner Kicks");
+        return typeof corner?.value === "number" ? corner.value : null;
+      } catch {
+        return null;
+      }
+    });
 
     const valid = cornerValues.filter((v): v is number => v !== null);
     if (valid.length === 0) return null;
@@ -204,27 +234,27 @@ export async function getHistoricalGoalPriors(
   // Váhy pre najbližšiu, druhú a tretiu predošlú sezónu - novšie sezóny sa počítajú viac.
   const recencyWeights = [3, 2, 1];
 
-  const seasonResults = await Promise.all(
-    Array.from({ length: seasonsBack }, (_, i) => season - 1 - i).map(async (pastSeason, idx) => {
-      try {
-        const res = await client().get("/teams/statistics", {
-          params: { league: leagueId, season: pastSeason, team: teamId },
-        });
-        const d = res.data?.response;
-        if (!d || !d.team || !d.fixtures?.played?.total) return null;
+  const pastSeasons = Array.from({ length: seasonsBack }, (_, i) => season - 1 - i);
 
-        return {
-          weight: recencyWeights[idx] ?? 1,
-          forHome: parseFloat(d.goals?.for?.average?.home) || 0,
-          forAway: parseFloat(d.goals?.for?.average?.away) || 0,
-          againstHome: parseFloat(d.goals?.against?.average?.home) || 0,
-          againstAway: parseFloat(d.goals?.against?.average?.away) || 0,
-        };
-      } catch {
-        return null;
-      }
-    })
-  );
+  const seasonResults = await mapSequential(pastSeasons, async (pastSeason, idx) => {
+    try {
+      const res = await client().get("/teams/statistics", {
+        params: { league: leagueId, season: pastSeason, team: teamId },
+      });
+      const d = res.data?.response;
+      if (!d || !d.team || !d.fixtures?.played?.total) return null;
+
+      return {
+        weight: recencyWeights[idx] ?? 1,
+        forHome: parseFloat(d.goals?.for?.average?.home) || 0,
+        forAway: parseFloat(d.goals?.for?.average?.away) || 0,
+        againstHome: parseFloat(d.goals?.against?.average?.home) || 0,
+        againstAway: parseFloat(d.goals?.against?.average?.away) || 0,
+      };
+    } catch {
+      return null;
+    }
+  });
 
   const valid = seasonResults.filter((r): r is NonNullable<typeof r> => r !== null);
   if (valid.length === 0) return null;
