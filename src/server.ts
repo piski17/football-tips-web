@@ -86,26 +86,21 @@ app.post("/api/analyze", async (req, res) => {
       return;
     }
 
-    const [
-      homeStats,
-      awayStats,
-      h2h,
-      leagueAvg,
-      homePriors,
-      awayPriors,
-      homeCorners,
-      awayCorners,
-      homePlayers,
-      awayPlayers,
-    ] = await Promise.all([
-      getTeamStatistics(leagueId, season, fixture.homeTeam.id),
-      getTeamStatistics(leagueId, season, fixture.awayTeam.id),
-      getHeadToHead(fixture.homeTeam.id, fixture.awayTeam.id, 10),
-      getLeagueAverages(leagueId, season),
-      getHistoricalGoalPriors(leagueId, season, fixture.homeTeam.id),
-      getHistoricalGoalPriors(leagueId, season, fixture.awayTeam.id),
-      getTeamCornersAverage(leagueId, season, fixture.homeTeam.id),
-      getTeamCornersAverage(leagueId, season, fixture.awayTeam.id),
+    // Prvá vlna - rovnaké volania, ktoré boli predtým otestované ako stabilné.
+    const [homeStats, awayStats, h2h, leagueAvg, homePriors, awayPriors, homeCorners, awayCorners] =
+      await Promise.all([
+        getTeamStatistics(leagueId, season, fixture.homeTeam.id),
+        getTeamStatistics(leagueId, season, fixture.awayTeam.id),
+        getHeadToHead(fixture.homeTeam.id, fixture.awayTeam.id, 10),
+        getLeagueAverages(leagueId, season),
+        getHistoricalGoalPriors(leagueId, season, fixture.homeTeam.id),
+        getHistoricalGoalPriors(leagueId, season, fixture.awayTeam.id),
+        getTeamCornersAverage(leagueId, season, fixture.homeTeam.id),
+        getTeamCornersAverage(leagueId, season, fixture.awayTeam.id),
+      ]);
+
+    // Druhá vlna - súpisky hráčov, spustené AŽ PO prvej vlne.
+    const [homePlayers, awayPlayers] = await Promise.all([
       getTeamPlayersWithStats(fixture.homeTeam.id, season, leagueId),
       getTeamPlayersWithStats(fixture.awayTeam.id, season, leagueId),
     ]);
