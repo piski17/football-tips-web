@@ -283,30 +283,42 @@ export async function getHistoricalGoalPriors(
 
   // Váhy pre najbližšiu, druhú a tretiu predošlú sezónu - novšie sezóny sa počítajú viac.
   const recencyWeights = [3, 2, 1];
-
   const pastSeasons = Array.from({ length: seasonsBack }, (_, i) => season - 1 - i);
 
-  const seasonResults = await mapSequential(pastSeasons, async (pastSeason, idx) => {
-    try {
-      const res = await client().get("/teams/statistics", {
-        params: { league: leagueId, season: pastSeason, team: teamId },
-      });
-      const d = res.data?.response;
-      if (!d || !d.team || !d.fixtures?.played?.total) return null;
+  const fetchAllSeasons = () =>
+    mapSequential(pastSeasons, async (pastSeason, idx) => {
+      try {
+        const res = await client().get("/teams/statistics", {
+          params: { league: leagueId, season: pastSeason, team: teamId },
+        });
+        const d = res.data?.response;
+        if (!d || !d.team || !d.fixtures?.played?.total) return null;
 
-      return {
-        weight: recencyWeights[idx] ?? 1,
-        forHome: parseFloat(d.goals?.for?.average?.home) || 0,
-        forAway: parseFloat(d.goals?.for?.average?.away) || 0,
-        againstHome: parseFloat(d.goals?.against?.average?.home) || 0,
-        againstAway: parseFloat(d.goals?.against?.average?.away) || 0,
-      };
-    } catch {
-      return null;
+        return {
+          weight: recencyWeights[idx] ?? 1,
+          forHome: parseFloat(d.goals?.for?.average?.home) || 0,
+          forAway: parseFloat(d.goals?.for?.average?.away) || 0,
+          againstHome: parseFloat(d.goals?.against?.average?.home) || 0,
+          againstAway: parseFloat(d.goals?.against?.average?.away) || 0,
+        };
+      } catch {
+        return null;
+      }
+    });
+
+  let seasonResults = await fetchAllSeasons();
+  let valid = seasonResults.filter((r): r is NonNullable<typeof r> => r !== null);
+
+  // Ak sa nepodarilo nájsť všetky sezóny, skús to celé ešte raz odznova -
+  // mohlo ísť len o krátkodobý výpadok pri konkrétnom volaní.
+  if (valid.length < seasonsBack) {
+    const retryResults = await fetchAllSeasons();
+    const retryValid = retryResults.filter((r): r is NonNullable<typeof r> => r !== null);
+    if (retryValid.length > valid.length) {
+      valid = retryValid;
     }
-  });
+  }
 
-  const valid = seasonResults.filter((r): r is NonNullable<typeof r> => r !== null);
   if (valid.length === 0) {
     setCached(cacheKey, null, TTL_HISTORICAL_PRIORS);
     return null;
