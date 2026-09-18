@@ -567,3 +567,33 @@ export async function getFixtureGoalscorerIds(fixtureId: number): Promise<number
     return [];
   }
 }
+
+/**
+ * Načíta potvrdenú zostavu zápasu (základná jedenástka + náhradníci) pre oba
+ * tímy. API-Football zvyčajne zverejňuje zostavy cca 1 hodinu pred výkopom -
+ * pri zápasoch ďalej v budúcnosti vráti pre danú stranu null.
+ */
+export async function getFixtureLineupPlayerIds(
+  fixtureId: number
+): Promise<{ homeIds: number[] | null; awayIds: number[] | null }> {
+  try {
+    const res = await client().get("/fixtures/lineups", { params: { fixture: fixtureId } });
+    checkApiErrors(res.data);
+
+    const teams: any[] = res.data?.response ?? [];
+    if (teams.length < 2) return { homeIds: null, awayIds: null };
+
+    const extractIds = (team: any): number[] | null => {
+      const startXI: any[] = team?.startXI ?? [];
+      const subs: any[] = team?.substitutes ?? [];
+      const ids = [...startXI, ...subs]
+        .map((p: any) => p.player?.id)
+        .filter((id: any): id is number => typeof id === "number");
+      return ids.length > 0 ? ids : null;
+    };
+
+    return { homeIds: extractIds(teams[0]), awayIds: extractIds(teams[1]) };
+  } catch {
+    return { homeIds: null, awayIds: null };
+  }
+}

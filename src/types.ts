@@ -141,6 +141,14 @@ export interface PredictionResult {
     home: PlayerGoalPrediction | null;
     away: PlayerGoalPrediction | null;
   };
+  bestScorer: {
+    team: string;
+    prediction: PlayerGoalPrediction;
+  } | null;
+  lineupConfirmed: {
+    home: boolean;
+    away: boolean;
+  };
   historicalDataInfo: {
     home: { seasonsUsed: number; seasonsChecked: number } | null;
     away: { seasonsUsed: number; seasonsChecked: number } | null;

@@ -269,7 +269,9 @@ export function predictMatch(
   homeCornersAvg?: number | null,
   awayCornersAvg?: number | null,
   homePlayers?: RawPlayerStat[],
-  awayPlayers?: RawPlayerStat[]
+  awayPlayers?: RawPlayerStat[],
+  homeLineupIds?: number[] | null,
+  awayLineupIds?: number[] | null
 ): PredictionResult {
   const xg = expectedGoals(homeStats, awayStats, leagueAvg, homePriorsResult, awayPriorsResult);
   const poisson = poissonOutcomes(xg.home, xg.away);
@@ -357,6 +359,25 @@ export function predictMatch(
 
   const bestBets = candidates.sort((a, b) => b.probability - a.probability);
 
+  const homeTopScorer = homePlayers
+    ? predictTopScorer(filterByLineup(homePlayers, homeLineupIds), xg.home, homeStats.goals.for.average.total)
+    : null;
+  const awayTopScorer = awayPlayers
+    ? predictTopScorer(filterByLineup(awayPlayers, awayLineupIds), xg.away, awayStats.goals.for.average.total)
+    : null;
+
+  let bestScorer: { team: string; prediction: PlayerGoalPrediction } | null = null;
+  if (homeTopScorer && awayTopScorer) {
+    bestScorer =
+      homeTopScorer.probabilityToScore >= awayTopScorer.probabilityToScore
+        ? { team: fixture.homeTeam.name, prediction: homeTopScorer }
+        : { team: fixture.awayTeam.name, prediction: awayTopScorer };
+  } else if (homeTopScorer) {
+    bestScorer = { team: fixture.homeTeam.name, prediction: homeTopScorer };
+  } else if (awayTopScorer) {
+    bestScorer = { team: fixture.awayTeam.name, prediction: awayTopScorer };
+  }
+
   return {
     fixture,
     expectedGoals: xg,
@@ -383,12 +404,13 @@ export function predictMatch(
       away: awayStats.goals.for.average.total,
     },
     topScorers: {
-      home: homePlayers
-        ? predictTopScorer(homePlayers, xg.home, homeStats.goals.for.average.total)
-        : null,
-      away: awayPlayers
-        ? predictTopScorer(awayPlayers, xg.away, awayStats.goals.for.average.total)
-        : null,
+      home: homeTopScorer,
+      away: awayTopScorer,
+    },
+    bestScorer,
+    lineupConfirmed: {
+      home: Boolean(homeLineupIds && homeLineupIds.length > 0),
+      away: Boolean(awayLineupIds && awayLineupIds.length > 0),
     },
     historicalDataInfo: {
       home: homePriorsResult
@@ -444,6 +466,17 @@ export function predictPlayerGoal(
  * gólu v tomto zápase. Hráčov s príliš málo odohranými zápasmi (menej ako
  * `minAppearances`) vynechá, aby jeden náhodný gól v 1 zápase neskreslil výber.
  */
+/**
+ * Ak je k dispozícii potvrdená zostava (lineupIds), obmedzí zoznam hráčov len
+ * na tých, ktorí sú v nej - inak vráti celú súpisku bez zmeny (zostava zatiaľ
+ * nie je známa, napr. zápas je ešte pár dní/týždňov dopredu).
+ */
+function filterByLineup(players: RawPlayerStat[], lineupIds?: number[] | null): RawPlayerStat[] {
+  if (!lineupIds || lineupIds.length === 0) return players;
+  const filtered = players.filter((p) => lineupIds.includes(p.id));
+  return filtered.length > 0 ? filtered : players;
+}
+
 export function predictTopScorer(
   players: RawPlayerStat[],
   teamExpectedGoalsThisMatch: number,
