@@ -538,3 +538,19 @@ export async function getFixtureCornersAndCards(
     return { corners: null, cards: null };
   }
 }
+
+/** Vráti ID hráčov, ktorí v tomto zápase reálne skórovali (vlastné góly sa nepočítajú). */
+export async function getFixtureGoalscorerIds(fixtureId: number): Promise<number[]> {
+  try {
+    const res = await client().get("/fixtures/events", { params: { fixture: fixtureId } });
+    checkApiErrors(res.data);
+
+    const events: any[] = res.data?.response ?? [];
+    return events
+      .filter((e: any) => e.type === "Goal" && e.detail !== "Own Goal")
+      .map((e: any) => e.player?.id)
+      .filter((id: any): id is number => typeof id === "number");
+  } catch {
+    return [];
+  }
+}

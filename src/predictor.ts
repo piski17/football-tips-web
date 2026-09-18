@@ -355,7 +355,7 @@ export function predictMatch(
     candidates.push({ market: "Karty", selection: `Under ${CARDS_LINE}`, probability: cards.under });
   }
 
-  const bestBets = candidates.sort((a, b) => b.probability - a.probability).slice(0, 4);
+  const bestBets = candidates.sort((a, b) => b.probability - a.probability);
 
   return {
     fixture,

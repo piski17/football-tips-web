@@ -171,6 +171,8 @@ export interface SavedTip {
   status: "pending" | "won" | "lost" | "void";
   actualHomeGoals?: number | null;
   actualAwayGoals?: number | null;
+  playerId?: number;
+  playerName?: string;
 }
 
 export interface LeaguePreset {

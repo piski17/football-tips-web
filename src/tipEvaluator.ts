@@ -10,9 +10,15 @@ export function evaluateTip(
   homeGoals: number,
   awayGoals: number,
   actualCorners: number | null,
-  actualCards: number | null
+  actualCards: number | null,
+  actualScorerIds: number[] | null = null
 ): "won" | "lost" | "void" {
   switch (tip.market) {
+    case "Strelec gólov": {
+      if (actualScorerIds === null || tip.playerId == null) return "void";
+      return actualScorerIds.includes(tip.playerId) ? "won" : "lost";
+    }
+
     case "Výsledok zápasu": {
       let actual: string;
       if (homeGoals > awayGoals) actual = `Výhra ${tip.homeTeam}`;

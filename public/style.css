@@ -513,6 +513,27 @@ button, input {
   color: var(--accent-strong);
 }
 
+.tip-save-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 11.5px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.tip-save-btn:hover {
+  color: var(--accent-strong);
+  border-color: var(--accent);
+}
+
+.tip-save-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .scorer-controls {
   display: flex;
   flex-direction: column;

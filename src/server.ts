@@ -13,6 +13,7 @@ import {
   getTeamPlayersWithStats,
   getFixtureResult,
   getFixtureCornersAndCards,
+  getFixtureGoalscorerIds,
 } from "./apiClient";
 import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS } from "./predictor";
 import { LeaguePreset, SavedTip } from "./types";
@@ -218,7 +219,12 @@ app.post("/api/tips/check-results", async (_req, res) => {
         cards = stats.cards;
       }
 
-      const status = evaluateTip(tip, result.homeGoals, result.awayGoals, corners, cards);
+      let scorerIds: number[] | null = null;
+      if (tip.market === "Strelec gólov") {
+        scorerIds = await getFixtureGoalscorerIds(tip.fixtureId);
+      }
+
+      const status = evaluateTip(tip, result.homeGoals, result.awayGoals, corners, cards, scorerIds);
       updateTip(tip.id, { status, actualHomeGoals: result.homeGoals, actualAwayGoals: result.awayGoals });
     }
 
