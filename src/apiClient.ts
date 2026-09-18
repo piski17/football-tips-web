@@ -217,20 +217,33 @@ export async function getTeamCornersAverage(
       return null;
     }
 
-    const cornerValues = await mapSequential(fixtures, async (f: any) => {
-      try {
-        const statsRes = await client().get("/fixtures/statistics", {
-          params: { fixture: f.fixture.id, team: teamId },
-        });
-        const stats: any[] = statsRes.data?.response?.[0]?.statistics ?? [];
-        const corner = stats.find((s: any) => s.type === "Corner Kicks");
-        return typeof corner?.value === "number" ? corner.value : null;
-      } catch {
-        return null;
-      }
-    });
+    const fetchCornerValues = () =>
+      mapSequential(fixtures, async (f: any) => {
+        try {
+          const statsRes = await client().get("/fixtures/statistics", {
+            params: { fixture: f.fixture.id, team: teamId },
+          });
+          const stats: any[] = statsRes.data?.response?.[0]?.statistics ?? [];
+          const corner = stats.find((s: any) => s.type === "Corner Kicks");
+          return typeof corner?.value === "number" ? corner.value : null;
+        } catch {
+          return null;
+        }
+      });
 
-    const valid = cornerValues.filter((v): v is number => v !== null);
+    let cornerValues = await fetchCornerValues();
+    let valid = cornerValues.filter((v): v is number => v !== null);
+
+    // Ak sa nepodarilo stiahnuť dáta pre všetky zápasy, skús to celé ešte raz -
+    // aj jeden chybajúci zápas vie posunúť priemer okolo hranice Over/Under.
+    if (valid.length < fixtures.length) {
+      const retryValues = await fetchCornerValues();
+      const retryValid = retryValues.filter((v): v is number => v !== null);
+      if (retryValid.length > valid.length) {
+        valid = retryValid;
+      }
+    }
+
     if (valid.length === 0) {
       setCached(cacheKey, null, TTL_CORNERS_AVERAGE);
       return null;
