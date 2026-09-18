@@ -11,9 +11,13 @@ import {
   getTeamSquad,
   getPlayerSeasonStats,
   getTeamPlayersWithStats,
+  getFixtureResult,
+  getFixtureCornersAndCards,
 } from "./apiClient";
 import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS } from "./predictor";
-import { LeaguePreset } from "./types";
+import { LeaguePreset, SavedTip } from "./types";
+import { saveTip, listTips, updateTip, deleteTip } from "./tipsStore";
+import { evaluateTip } from "./tipEvaluator";
 
 const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
@@ -169,6 +173,56 @@ app.post("/api/player-goal", async (req, res) => {
       teamSeasonGoalsPerGame ?? 0
     );
     res.json(prediction);
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
+// ---- Uložené tipy (spätné vyhodnotenie) ----
+
+app.post("/api/tips", (req, res) => {
+  try {
+    const tip: SavedTip = req.body;
+    saveTip(tip);
+    res.json({ ok: true });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
+app.get("/api/tips", (_req, res) => {
+  res.json(listTips());
+});
+
+app.delete("/api/tips/:id", (req, res) => {
+  deleteTip(req.params.id);
+  res.json({ ok: true });
+});
+
+app.post("/api/tips/check-results", async (_req, res) => {
+  try {
+    const tips = listTips();
+    const pending = tips.filter((t) => t.status === "pending");
+
+    for (const tip of pending) {
+      const result = await getFixtureResult(tip.fixtureId);
+      if (!result || result.status !== "FT" || result.homeGoals == null || result.awayGoals == null) {
+        continue;
+      }
+
+      let corners: number | null = null;
+      let cards: number | null = null;
+      if (tip.market === "Rohy" || tip.market === "Karty") {
+        const stats = await getFixtureCornersAndCards(tip.fixtureId);
+        corners = stats.corners;
+        cards = stats.cards;
+      }
+
+      const status = evaluateTip(tip, result.homeGoals, result.awayGoals, corners, cards);
+      updateTip(tip.id, { status, actualHomeGoals: result.homeGoals, actualAwayGoals: result.awayGoals });
+    }
+
+    res.json(listTips());
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }

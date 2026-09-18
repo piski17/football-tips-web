@@ -17,6 +17,13 @@ const fixtureListEl = document.getElementById("fixtureList");
 const fixtureCountEl = document.getElementById("fixtureCount");
 const analysisColumnEl = document.getElementById("analysisColumn");
 
+const openTipsBtn = document.getElementById("openTipsBtn");
+const tipsModal = document.getElementById("tipsModal");
+const tipsSummaryEl = document.getElementById("tipsSummary");
+const tipsListEl = document.getElementById("tipsList");
+const closeTipsBtn = document.getElementById("closeTipsBtn");
+const checkResultsBtn = document.getElementById("checkResultsBtn");
+
 toggleFiltersBtn.addEventListener("click", () => {
   sidebarEl.classList.toggle("open");
 });
@@ -205,6 +212,8 @@ function renderAnalysis(r) {
           )
           .join("")}
       </div>
+      <button class="btn-primary" id="saveTipBtn" style="margin-top:12px; width:100%;">Uložiť tento tip (#1 odporúčanie)</button>
+      <div id="saveTipMsg"></div>
     </div>
 
     <div class="prob-section">
@@ -277,6 +286,7 @@ function renderAnalysis(r) {
   `;
 
   initScorerSection(r);
+  initSaveTipButton(r);
 }
 
 function probRow(label, value) {
@@ -439,5 +449,120 @@ async function checkScorerProbability(r) {
     resultEl.innerHTML = `<p class="empty-state">${escapeHtml(err.message)}</p>`;
   }
 }
+
+// ---- Uložiť tip ----
+
+function initSaveTipButton(r) {
+  const btn = document.getElementById("saveTipBtn");
+  const msgEl = document.getElementById("saveTipMsg");
+  if (!btn || !msgEl || !r.bestBets || r.bestBets.length === 0) return;
+
+  btn.onclick = async () => {
+    const topBet = r.bestBets[0];
+    const tip = {
+      id: `${r.fixture.fixtureId}-${Date.now()}`,
+      fixtureId: r.fixture.fixtureId,
+      leagueId: r.fixture.league.id,
+      season: r.fixture.league.season,
+      leagueName: r.fixture.league.name,
+      homeTeam: r.fixture.homeTeam.name,
+      awayTeam: r.fixture.awayTeam.name,
+      matchDate: r.fixture.date,
+      market: topBet.market,
+      selection: topBet.selection,
+      probability: topBet.probability,
+      savedAt: new Date().toISOString(),
+      status: "pending",
+    };
+
+    btn.disabled = true;
+    try {
+      await fetchJson("/api/tips", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(tip),
+      });
+      msgEl.innerHTML = `<p class="muted small" style="margin-top:6px;">✓ Tip uložený (${escapeHtml(topBet.market)}: ${escapeHtml(topBet.selection)})</p>`;
+    } catch (err) {
+      msgEl.innerHTML = `<p class="muted small" style="margin-top:6px;">Uloženie zlyhalo: ${escapeHtml(err.message)}</p>`;
+    } finally {
+      btn.disabled = false;
+    }
+  };
+}
+
+// ---- História tipov ----
+
+async function openTipsHistory() {
+  tipsModal.hidden = false;
+  tipsListEl.innerHTML = `<div class="loading-state">Načítavam tipy…</div>`;
+  const tips = await fetchJson("/api/tips");
+  renderTipsList(tips);
+}
+
+function renderTipsList(tips) {
+  const won = tips.filter((t) => t.status === "won").length;
+  const lost = tips.filter((t) => t.status === "lost").length;
+  const pending = tips.filter((t) => t.status === "pending").length;
+  const decided = won + lost;
+  const winRate = decided > 0 ? ((won / decided) * 100).toFixed(0) : "—";
+
+  tipsSummaryEl.innerHTML = `
+    <span>Spolu: <strong>${tips.length}</strong></span>
+    <span>Čaká: <strong>${pending}</strong></span>
+    <span>Vyhral: <strong>${won}</strong></span>
+    <span>Prehral: <strong>${lost}</strong></span>
+    <span>Úspešnosť: <strong>${winRate}${decided > 0 ? "%" : ""}</strong></span>
+  `;
+
+  if (tips.length === 0) {
+    tipsListEl.innerHTML = `<p class="empty-state">Zatiaľ nemáš uložené žiadne tipy.</p>`;
+    return;
+  }
+
+  tipsListEl.innerHTML = tips
+    .map((t) => {
+      const date = new Date(t.matchDate).toLocaleDateString("sk-SK");
+      const statusLabel =
+        t.status === "won" ? "Vyhral" : t.status === "lost" ? "Prehral" : t.status === "void" ? "Neurčené" : "Čaká";
+      return `
+        <div class="tip-row">
+          <div class="tip-row-info">
+            <div class="tip-row-match">${escapeHtml(t.homeTeam)} — ${escapeHtml(t.awayTeam)} <span class="muted small">(${date})</span></div>
+            <div class="tip-row-market">${escapeHtml(t.market)}: ${escapeHtml(t.selection)} · ${t.probability.toFixed(0)}%</div>
+          </div>
+          <span class="tip-status ${t.status}">${statusLabel}</span>
+          <button class="tip-delete-btn" data-tip-id="${t.id}" title="Zmazať">✕</button>
+        </div>
+      `;
+    })
+    .join("");
+
+  tipsListEl.querySelectorAll(".tip-delete-btn").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      const id = e.currentTarget.dataset.tipId;
+      if (!id) return;
+      await fetch(`/api/tips/${id}`, { method: "DELETE" });
+      openTipsHistory();
+    });
+  });
+}
+
+openTipsBtn.addEventListener("click", openTipsHistory);
+closeTipsBtn.addEventListener("click", () => {
+  tipsModal.hidden = true;
+});
+
+checkResultsBtn.addEventListener("click", async () => {
+  checkResultsBtn.disabled = true;
+  checkResultsBtn.textContent = "Kontrolujem…";
+  try {
+    const tips = await fetchJson("/api/tips/check-results", { method: "POST" });
+    renderTipsList(tips);
+  } finally {
+    checkResultsBtn.disabled = false;
+    checkResultsBtn.textContent = "Skontrolovať výsledky";
+  }
+});
 
 init();

@@ -478,3 +478,63 @@ export async function getTeamPlayersWithStats(
   setCached(cacheKey, allPlayers, TTL_SQUAD);
   return allPlayers;
 }
+
+/** Načíta aktuálny stav a skóre konkrétneho zápasu (na overenie uložených tipov). */
+export async function getFixtureResult(
+  fixtureId: number
+): Promise<{ status: string; homeGoals: number | null; awayGoals: number | null } | null> {
+  try {
+    const res = await client().get("/fixtures", { params: { id: fixtureId } });
+    checkApiErrors(res.data);
+    const item = res.data?.response?.[0];
+    if (!item) return null;
+
+    return {
+      status: item.fixture?.status?.short ?? "NS",
+      homeGoals: item.goals?.home ?? null,
+      awayGoals: item.goals?.away ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Načíta celkový počet rohov a kariet (oba tímy spolu) v už odohranom zápase. */
+export async function getFixtureCornersAndCards(
+  fixtureId: number
+): Promise<{ corners: number | null; cards: number | null }> {
+  try {
+    const res = await client().get("/fixtures/statistics", { params: { fixture: fixtureId } });
+    checkApiErrors(res.data);
+
+    const teams: any[] = res.data?.response ?? [];
+    let totalCorners = 0;
+    let totalCards = 0;
+    let foundCorners = false;
+    let foundCards = false;
+
+    for (const t of teams) {
+      const stats: any[] = t.statistics ?? [];
+      const corner = stats.find((s: any) => s.type === "Corner Kicks");
+      const yellow = stats.find((s: any) => s.type === "Yellow Cards");
+      const red = stats.find((s: any) => s.type === "Red Cards");
+
+      if (typeof corner?.value === "number") {
+        totalCorners += corner.value;
+        foundCorners = true;
+      }
+      if (typeof yellow?.value === "number") {
+        totalCards += yellow.value;
+        foundCards = true;
+      }
+      if (typeof red?.value === "number") {
+        totalCards += red.value;
+        foundCards = true;
+      }
+    }
+
+    return { corners: foundCorners ? totalCorners : null, cards: foundCards ? totalCards : null };
+  } catch {
+    return { corners: null, cards: null };
+  }
+}

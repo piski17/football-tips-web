@@ -38,6 +38,8 @@
       </div>
 
       <button class="btn-primary" id="loadFixturesBtn">Načítať zápasy</button>
+
+      <button class="btn-ghost" id="openTipsBtn" style="margin-top: 8px;">História tipov</button>
     </aside>
 
     <main class="content">
@@ -58,6 +60,18 @@
         </div>
       </section>
     </main>
+  </div>
+
+  <div class="modal-overlay" id="tipsModal" hidden>
+    <div class="modal modal-large">
+      <h3>História tipov</h3>
+      <div class="tips-summary" id="tipsSummary"></div>
+      <div class="tips-list" id="tipsList"></div>
+      <div class="modal-actions">
+        <button class="btn-ghost" id="closeTipsBtn">Zavrieť</button>
+        <button class="btn-primary" id="checkResultsBtn">Skontrolovať výsledky</button>
+      </div>
+    </div>
   </div>
 
   <script src="app.js"></script>
