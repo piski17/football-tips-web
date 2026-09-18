@@ -1,5 +1,10 @@
 let selectedLeagueId = null;
 let currentFixtures = [];
+let currentAnalysis = null;
+let currentLeagueId = null;
+let currentSeason = null;
+let homeSquadCache = null;
+let awaySquadCache = null;
 
 const sidebarEl = document.getElementById("sidebar");
 const toggleFiltersBtn = document.getElementById("toggleFiltersBtn");
@@ -148,6 +153,11 @@ async function analyzeFixture(fixture, leagueId, season) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ fixture, leagueId, season }),
     });
+    currentAnalysis = result;
+    currentLeagueId = leagueId;
+    currentSeason = season;
+    homeSquadCache = null;
+    awaySquadCache = null;
     renderAnalysis(result);
   } catch (err) {
     analysisColumnEl.innerHTML = `<div class="empty-state">Analýzu sa nepodarilo vypočítať: ${escapeHtml(err.message)}</div>`;
@@ -240,12 +250,25 @@ function renderAnalysis(r) {
       </div>
     </div>
 
+    <div class="prob-section">
+      <div class="section-title">Strelci gólov</div>
+      <div id="scorerControls" class="scorer-controls">
+        <select id="scorerSelect" class="scorer-select">
+          <option value="">Načítavam hráčov…</option>
+        </select>
+        <button class="btn-primary" id="scorerCheckBtn">Overiť pravdepodobnosť</button>
+      </div>
+      <div id="scorerResult"></div>
+    </div>
+
     <div class="disclaimer">
       Toto je štatistický odhad založený na historických dátach (forma, vzájomné zápasy,
       priemer gólov), nie garancia výsledku. Športové stávkovanie nesie finančné riziko –
       stávkuj len sumy, ktoré si môžeš dovoliť stratiť.
     </div>
   `;
+
+  initScorerSection(r);
 }
 
 function probRow(label, value) {
@@ -288,6 +311,99 @@ function escapeHtml(str) {
   const div = document.createElement("div");
   div.textContent = str ?? "";
   return div.innerHTML;
+}
+
+// ---- Strelci gólov ----
+
+async function initScorerSection(r) {
+  const selectEl = document.getElementById("scorerSelect");
+  const checkBtn = document.getElementById("scorerCheckBtn");
+  const resultEl = document.getElementById("scorerResult");
+  if (!selectEl || !checkBtn || !resultEl || currentLeagueId == null || currentSeason == null) return;
+
+  selectEl.innerHTML = `<option value="">Načítavam hráčov…</option>`;
+  checkBtn.disabled = true;
+
+  try {
+    const [homeSquad, awaySquad] = await Promise.all([
+      homeSquadCache ?? fetchJson(`/api/squad?teamId=${r.fixture.homeTeam.id}`),
+      awaySquadCache ?? fetchJson(`/api/squad?teamId=${r.fixture.awayTeam.id}`),
+    ]);
+    homeSquadCache = homeSquad;
+    awaySquadCache = awaySquad;
+
+    const homeOptions = homeSquad
+      .map((p) => `<option value="home:${p.id}:${escapeHtml(p.name)}">${escapeHtml(p.name)}</option>`)
+      .join("");
+    const awayOptions = awaySquad
+      .map((p) => `<option value="away:${p.id}:${escapeHtml(p.name)}">${escapeHtml(p.name)}</option>`)
+      .join("");
+
+    selectEl.innerHTML = `
+      <option value="">Vyber hráča…</option>
+      <optgroup label="${escapeHtml(r.fixture.homeTeam.name)}">${homeOptions}</optgroup>
+      <optgroup label="${escapeHtml(r.fixture.awayTeam.name)}">${awayOptions}</optgroup>
+    `;
+    checkBtn.disabled = false;
+  } catch (err) {
+    selectEl.innerHTML = `<option value="">Súpisky sa nepodarilo načítať</option>`;
+  }
+
+  checkBtn.onclick = () => checkScorerProbability(r);
+}
+
+async function checkScorerProbability(r) {
+  const selectEl = document.getElementById("scorerSelect");
+  const resultEl = document.getElementById("scorerResult");
+  if (!selectEl || !resultEl || currentLeagueId == null || currentSeason == null) return;
+
+  const value = selectEl.value;
+  if (!value) {
+    resultEl.innerHTML = `<p class="empty-state">Najprv vyber hráča zo zoznamu.</p>`;
+    return;
+  }
+
+  const [side, idStr, ...nameParts] = value.split(":");
+  const playerId = parseInt(idStr, 10);
+  const playerName = nameParts.join(":");
+  const teamExpectedGoalsThisMatch = side === "home" ? r.expectedGoals.home : r.expectedGoals.away;
+  const teamSeasonGoalsPerGame =
+    side === "home" ? r.teamSeasonGoalsPerGame.home : r.teamSeasonGoalsPerGame.away;
+
+  resultEl.innerHTML = `<div class="loading-state">Počítam pravdepodobnosť gólu…</div>`;
+
+  try {
+    const prediction = await fetchJson("/api/player-goal", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        playerId,
+        playerName,
+        leagueId: currentLeagueId,
+        season: currentSeason,
+        teamExpectedGoalsThisMatch,
+        teamSeasonGoalsPerGame,
+      }),
+    });
+
+    resultEl.innerHTML = `
+      <div class="market-card" style="text-align:left; padding: 16px 18px;">
+        <div class="stat-line"><span>Hráč</span><strong>${escapeHtml(prediction.player.name)}</strong></div>
+        <div class="stat-line"><span>Góly túto sezónu</span><strong>${prediction.seasonGoals} (${prediction.appearances} zápasov)</strong></div>
+        <div class="stat-line"><span>Priemer gólov/zápas</span><strong>${prediction.goalsPerGame.toFixed(2)}</strong></div>
+        <div class="tip-callout" style="margin-top:12px; margin-bottom:0;">
+          <div class="tip-outcome">⚽</div>
+          <div class="tip-details">
+            <div class="tip-label">Pravdepodobnosť gólu v tomto zápase</div>
+            <div class="tip-meta">Odhad na základe podielu hráča na góloch tímu</div>
+          </div>
+          <div class="best-bet-prob" style="margin-left:auto;">${prediction.probabilityToScore.toFixed(0)}%</div>
+        </div>
+      </div>
+    `;
+  } catch (err) {
+    resultEl.innerHTML = `<p class="empty-state">${escapeHtml(err.message)}</p>`;
+  }
 }
 
 init();

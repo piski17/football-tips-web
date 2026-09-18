@@ -8,8 +8,10 @@ import {
   getLeagueAverages,
   getHistoricalGoalPriors,
   getTeamCornersAverage,
+  getTeamSquad,
+  getPlayerSeasonStats,
 } from "./apiClient";
-import { predictMatch, DEFAULT_WEIGHTS } from "./predictor";
+import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS } from "./predictor";
 import { LeaguePreset } from "./types";
 
 const app = express();
@@ -115,6 +117,51 @@ app.post("/api/analyze", async (req, res) => {
 
 app.get("/health", (_req, res) => {
   res.json({ ok: true });
+});
+
+app.get("/api/squad", async (req, res) => {
+  try {
+    const teamId = parseInt(String(req.query.teamId ?? ""), 10);
+    if (Number.isNaN(teamId)) {
+      res.status(400).json({ error: "Chýba parameter teamId." });
+      return;
+    }
+    const squad = await getTeamSquad(teamId);
+    res.json(squad);
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
+app.post("/api/player-goal", async (req, res) => {
+  try {
+    const { playerId, playerName, leagueId, season, teamExpectedGoalsThisMatch, teamSeasonGoalsPerGame } =
+      req.body ?? {};
+    if (!playerId || !leagueId || !season) {
+      res.status(400).json({ error: "Chýbajú údaje hráča, ligy alebo sezóny." });
+      return;
+    }
+
+    const stats = await getPlayerSeasonStats(playerId, season, leagueId);
+    if (!stats) {
+      res.status(404).json({
+        error: `Pre hráča ${playerName ?? ""} sa nenašli sezónne štatistiky v tejto súťaži (možno málo minút/zápasov).`,
+      });
+      return;
+    }
+
+    const prediction = predictPlayerGoal(
+      playerName ?? "",
+      playerId,
+      stats.goals,
+      stats.appearances,
+      teamExpectedGoalsThisMatch ?? 0,
+      teamSeasonGoalsPerGame ?? 0
+    );
+    res.json(prediction);
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
 });
 
 app.listen(PORT, () => {

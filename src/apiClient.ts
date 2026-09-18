@@ -7,6 +7,8 @@ import {
   LeagueAverages,
   TeamGoalPriors,
   TeamGoalPriorsResult,
+  SquadPlayer,
+  PlayerSeasonStats,
 } from "./types";
 
 const BASE_URL = "https://v3.football.api-sports.io";
@@ -85,6 +87,8 @@ function setCached<T>(key: string, value: T, ttlMs: number): void {
 const TTL_HISTORICAL_PRIORS = 6 * 60 * 60 * 1000; // 6 hodín - minulé sezóny sa nemenia
 const TTL_LEAGUE_AVERAGES = 60 * 60 * 1000; // 1 hodina
 const TTL_CORNERS_AVERAGE = 30 * 60 * 1000; // 30 minút - môže sa meniť s novo odohranými zápasmi
+const TTL_SQUAD = 6 * 60 * 60 * 1000; // 6 hodín - súpiska sa počas dňa prakticky nemení
+const TTL_PLAYER_STATS = 3 * 60 * 60 * 1000; // 3 hodiny
 
 function checkApiErrors(data: any): void {
   const errors = data?.errors;
@@ -355,4 +359,60 @@ export async function getLeagueAverages(leagueId: number, season: number): Promi
   };
   setCached(cacheKey, result, TTL_LEAGUE_AVERAGES);
   return result;
+}
+
+/** Načíta aktuálnu súpisku tímu (hráči, pozícia, číslo dresu). */
+export async function getTeamSquad(teamId: number): Promise<SquadPlayer[]> {
+  const cacheKey = `squad:${teamId}`;
+  const cached = getCached<SquadPlayer[]>(cacheKey);
+  if (cached !== undefined) return cached;
+
+  const res = await client().get("/players/squads", { params: { team: teamId } });
+  checkApiErrors(res.data);
+
+  const players: any[] = res.data?.response?.[0]?.players ?? [];
+  const result: SquadPlayer[] = players.map((p: any) => ({
+    id: p.id,
+    name: p.name,
+    position: p.position,
+    number: p.number ?? null,
+    photo: p.photo,
+  }));
+
+  setCached(cacheKey, result, TTL_SQUAD);
+  return result;
+}
+
+/** Načíta sezónne góly a počet zápasov hráča v danej lige. */
+export async function getPlayerSeasonStats(
+  playerId: number,
+  season: number,
+  leagueId: number
+): Promise<PlayerSeasonStats | null> {
+  const cacheKey = `playerStats:${playerId}:${season}:${leagueId}`;
+  const cached = getCached<PlayerSeasonStats | null>(cacheKey);
+  if (cached !== undefined) return cached;
+
+  try {
+    const res = await client().get("/players", {
+      params: { id: playerId, season, league: leagueId },
+    });
+    checkApiErrors(res.data);
+
+    const statsEntries: any[] = res.data?.response?.[0]?.statistics ?? [];
+    const entry = statsEntries.find((s: any) => s.league?.id === leagueId) ?? statsEntries[0];
+    if (!entry) {
+      setCached(cacheKey, null, TTL_PLAYER_STATS);
+      return null;
+    }
+
+    const result: PlayerSeasonStats = {
+      goals: entry.goals?.total ?? 0,
+      appearances: entry.games?.appearences ?? 0,
+    };
+    setCached(cacheKey, result, TTL_PLAYER_STATS);
+    return result;
+  } catch {
+    return null;
+  }
 }
