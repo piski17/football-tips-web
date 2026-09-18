@@ -57,6 +57,35 @@ async function mapSequential<T, R>(
   return results;
 }
 
+interface CacheEntry<T> {
+  value: T;
+  expiresAt: number;
+}
+
+// Jednoduchá pamäť (cache) s časovým limitom - šetrí API volania pre dáta,
+// ktoré sa počas krátkeho času nemenia (história minulých sezón, ligový
+// priemer, priemer rohov), a zároveň robí výsledky konzistentnejšie, keďže
+// sa nemusia sťahovať znova zakaždým, keď klikneš na ten istý zápas.
+const cache = new Map<string, CacheEntry<any>>();
+
+function getCached<T>(key: string): T | undefined {
+  const entry = cache.get(key);
+  if (!entry) return undefined;
+  if (Date.now() > entry.expiresAt) {
+    cache.delete(key);
+    return undefined;
+  }
+  return entry.value as T;
+}
+
+function setCached<T>(key: string, value: T, ttlMs: number): void {
+  cache.set(key, { value, expiresAt: Date.now() + ttlMs });
+}
+
+const TTL_HISTORICAL_PRIORS = 6 * 60 * 60 * 1000; // 6 hodín - minulé sezóny sa nemenia
+const TTL_LEAGUE_AVERAGES = 60 * 60 * 1000; // 1 hodina
+const TTL_CORNERS_AVERAGE = 30 * 60 * 1000; // 30 minút - môže sa meniť s novo odohranými zápasmi
+
 function checkApiErrors(data: any): void {
   const errors = data?.errors;
   if (!errors) return;
@@ -168,13 +197,20 @@ export async function getTeamCornersAverage(
   teamId: number,
   lastN: number = 10
 ): Promise<number | null> {
+  const cacheKey = `corners:${leagueId}:${season}:${teamId}:${lastN}`;
+  const cached = getCached<number | null>(cacheKey);
+  if (cached !== undefined) return cached;
+
   try {
     const fixturesRes = await client().get("/fixtures", {
       params: { team: teamId, league: leagueId, season, last: lastN, status: "FT" },
     });
     checkApiErrors(fixturesRes.data);
     const fixtures: any[] = fixturesRes.data?.response ?? [];
-    if (fixtures.length === 0) return null;
+    if (fixtures.length === 0) {
+      setCached(cacheKey, null, TTL_CORNERS_AVERAGE);
+      return null;
+    }
 
     const cornerValues = await mapSequential(fixtures, async (f: any) => {
       try {
@@ -190,8 +226,13 @@ export async function getTeamCornersAverage(
     });
 
     const valid = cornerValues.filter((v): v is number => v !== null);
-    if (valid.length === 0) return null;
-    return valid.reduce((a, b) => a + b, 0) / valid.length;
+    if (valid.length === 0) {
+      setCached(cacheKey, null, TTL_CORNERS_AVERAGE);
+      return null;
+    }
+    const result = valid.reduce((a, b) => a + b, 0) / valid.length;
+    setCached(cacheKey, result, TTL_CORNERS_AVERAGE);
+    return result;
   } catch {
     return null;
   }
@@ -231,6 +272,10 @@ export async function getHistoricalGoalPriors(
   teamId: number,
   seasonsBack: number = 3
 ): Promise<TeamGoalPriorsResult | null> {
+  const cacheKey = `priors:${leagueId}:${season}:${teamId}:${seasonsBack}`;
+  const cached = getCached<TeamGoalPriorsResult | null>(cacheKey);
+  if (cached !== undefined) return cached;
+
   // Váhy pre najbližšiu, druhú a tretiu predošlú sezónu - novšie sezóny sa počítajú viac.
   const recencyWeights = [3, 2, 1];
 
@@ -257,13 +302,16 @@ export async function getHistoricalGoalPriors(
   });
 
   const valid = seasonResults.filter((r): r is NonNullable<typeof r> => r !== null);
-  if (valid.length === 0) return null;
+  if (valid.length === 0) {
+    setCached(cacheKey, null, TTL_HISTORICAL_PRIORS);
+    return null;
+  }
 
   const totalWeight = valid.reduce((sum, r) => sum + r.weight, 0);
   const weightedAvg = (key: "forHome" | "forAway" | "againstHome" | "againstAway") =>
     valid.reduce((sum, r) => sum + r[key] * r.weight, 0) / totalWeight;
 
-  return {
+  const result: TeamGoalPriorsResult = {
     priors: {
       forHome: weightedAvg("forHome"),
       forAway: weightedAvg("forAway"),
@@ -273,10 +321,16 @@ export async function getHistoricalGoalPriors(
     seasonsUsed: valid.length,
     seasonsChecked: seasonsBack,
   };
+  setCached(cacheKey, result, TTL_HISTORICAL_PRIORS);
+  return result;
 }
 
 /** Dopočíta skutočný ligový priemer gólov doma/vonku z celej tabuľky danej sezóny. */
 export async function getLeagueAverages(leagueId: number, season: number): Promise<LeagueAverages> {
+  const cacheKey = `leagueAvg:${leagueId}:${season}`;
+  const cached = getCached<LeagueAverages>(cacheKey);
+  if (cached !== undefined) return cached;
+
   const res = await client().get("/standings", { params: { league: leagueId, season } });
   checkApiErrors(res.data);
 
@@ -295,8 +349,10 @@ export async function getLeagueAverages(leagueId: number, season: number): Promi
     totalAwayGames += team.away?.played ?? 0;
   }
 
-  return {
+  const result: LeagueAverages = {
     home: totalHomeGames > 0 ? totalHomeGoals / totalHomeGames : 1.5,
     away: totalAwayGames > 0 ? totalAwayGoals / totalAwayGames : 1.15,
   };
+  setCached(cacheKey, result, TTL_LEAGUE_AVERAGES);
+  return result;
 }
