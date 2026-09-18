@@ -10,6 +10,7 @@ import {
   getTeamCornersAverage,
   getTeamSquad,
   getPlayerSeasonStats,
+  getTeamPlayersWithStats,
 } from "./apiClient";
 import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS } from "./predictor";
 import { LeaguePreset } from "./types";
@@ -85,17 +86,29 @@ app.post("/api/analyze", async (req, res) => {
       return;
     }
 
-    const [homeStats, awayStats, h2h, leagueAvg, homePriors, awayPriors, homeCorners, awayCorners] =
-      await Promise.all([
-        getTeamStatistics(leagueId, season, fixture.homeTeam.id),
-        getTeamStatistics(leagueId, season, fixture.awayTeam.id),
-        getHeadToHead(fixture.homeTeam.id, fixture.awayTeam.id, 10),
-        getLeagueAverages(leagueId, season),
-        getHistoricalGoalPriors(leagueId, season, fixture.homeTeam.id),
-        getHistoricalGoalPriors(leagueId, season, fixture.awayTeam.id),
-        getTeamCornersAverage(leagueId, season, fixture.homeTeam.id),
-        getTeamCornersAverage(leagueId, season, fixture.awayTeam.id),
-      ]);
+    const [
+      homeStats,
+      awayStats,
+      h2h,
+      leagueAvg,
+      homePriors,
+      awayPriors,
+      homeCorners,
+      awayCorners,
+      homePlayers,
+      awayPlayers,
+    ] = await Promise.all([
+      getTeamStatistics(leagueId, season, fixture.homeTeam.id),
+      getTeamStatistics(leagueId, season, fixture.awayTeam.id),
+      getHeadToHead(fixture.homeTeam.id, fixture.awayTeam.id, 10),
+      getLeagueAverages(leagueId, season),
+      getHistoricalGoalPriors(leagueId, season, fixture.homeTeam.id),
+      getHistoricalGoalPriors(leagueId, season, fixture.awayTeam.id),
+      getTeamCornersAverage(leagueId, season, fixture.homeTeam.id),
+      getTeamCornersAverage(leagueId, season, fixture.awayTeam.id),
+      getTeamPlayersWithStats(fixture.homeTeam.id, season, leagueId),
+      getTeamPlayersWithStats(fixture.awayTeam.id, season, leagueId),
+    ]);
 
     const result = predictMatch(
       fixture,
@@ -107,7 +120,9 @@ app.post("/api/analyze", async (req, res) => {
       homePriors,
       awayPriors,
       homeCorners,
-      awayCorners
+      awayCorners,
+      homePlayers,
+      awayPlayers
     );
     res.json(result);
   } catch (err: any) {

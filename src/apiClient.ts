@@ -9,6 +9,7 @@ import {
   TeamGoalPriorsResult,
   SquadPlayer,
   PlayerSeasonStats,
+  RawPlayerStat,
 } from "./types";
 
 const BASE_URL = "https://v3.football.api-sports.io";
@@ -415,4 +416,53 @@ export async function getPlayerSeasonStats(
   } catch {
     return null;
   }
+}
+
+/**
+ * Načíta VŠETKÝCH hráčov tímu naraz aj s ich sezónnymi gólmi a zápasmi
+ * (2-3 volania na celý tím podľa /players?team=..., namiesto jedného
+ * volania na každého hráča zvlášť). Používa sa na automatický výber
+ * najpravdepodobnejšieho strelca.
+ */
+export async function getTeamPlayersWithStats(
+  teamId: number,
+  season: number,
+  leagueId: number,
+  maxPages: number = 3
+): Promise<RawPlayerStat[]> {
+  const cacheKey = `teamPlayers:${teamId}:${season}:${leagueId}`;
+  const cached = getCached<RawPlayerStat[]>(cacheKey);
+  if (cached !== undefined) return cached;
+
+  const allPlayers: RawPlayerStat[] = [];
+  let page = 1;
+  let totalPages = 1;
+
+  do {
+    const res = await client().get("/players", {
+      params: { team: teamId, season, league: leagueId, page },
+    });
+    checkApiErrors(res.data);
+
+    const response: any[] = res.data?.response ?? [];
+    totalPages = res.data?.paging?.total ?? 1;
+
+    for (const item of response) {
+      const statsEntries: any[] = item.statistics ?? [];
+      const entry = statsEntries.find((s: any) => s.league?.id === leagueId) ?? statsEntries[0];
+      if (!entry || !item.player) continue;
+
+      allPlayers.push({
+        id: item.player.id,
+        name: item.player.name,
+        goals: entry.goals?.total ?? 0,
+        appearances: entry.games?.appearences ?? 0,
+      });
+    }
+
+    page++;
+  } while (page <= totalPages && page <= maxPages);
+
+  setCached(cacheKey, allPlayers, TTL_SQUAD);
+  return allPlayers;
 }

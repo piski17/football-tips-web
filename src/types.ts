@@ -137,6 +137,10 @@ export interface PredictionResult {
     home: number;
     away: number;
   };
+  topScorers: {
+    home: PlayerGoalPrediction | null;
+    away: PlayerGoalPrediction | null;
+  };
   historicalDataInfo: {
     home: { seasonsUsed: number; seasonsChecked: number } | null;
     away: { seasonsUsed: number; seasonsChecked: number } | null;
@@ -167,6 +171,14 @@ export interface SquadPlayer {
 
 /** Sezónne štatistiky hráča potrebné na odhad pravdepodobnosti gólu. */
 export interface PlayerSeasonStats {
+  goals: number;
+  appearances: number;
+}
+
+/** Sezónne góly a zápasy hráča, získané hromadne pre celý tím naraz. */
+export interface RawPlayerStat {
+  id: number;
+  name: string;
   goals: number;
   appearances: number;
 }

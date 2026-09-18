@@ -251,7 +251,15 @@ function renderAnalysis(r) {
     </div>
 
     <div class="prob-section">
-      <div class="section-title">Strelci gólov</div>
+      <div class="section-title">Najpravdepodobnejší strelci (automaticky)</div>
+      <div class="stats-grid">
+        ${topScorerCard(r.fixture.homeTeam.name, r.topScorers && r.topScorers.home)}
+        ${topScorerCard(r.fixture.awayTeam.name, r.topScorers && r.topScorers.away)}
+      </div>
+    </div>
+
+    <div class="prob-section">
+      <div class="section-title">Overiť iného hráča</div>
       <div id="scorerControls" class="scorer-controls">
         <select id="scorerSelect" class="scorer-select">
           <option value="">Načítavam hráčov…</option>
@@ -299,6 +307,32 @@ function teamStatCard(name, form, formScore, xg, historyInfo) {
       <div class="stat-line"><span>Vážené skóre formy</span><strong>${formScore.toFixed(2)} / 3.00</strong></div>
       <div class="stat-line"><span>Očakávané góly</span><strong>${xg.toFixed(2)}</strong></div>
       ${historyLine}
+    </div>
+  `;
+}
+
+function topScorerCard(teamName, prediction) {
+  if (!prediction) {
+    return `
+      <div class="stat-card">
+        <h4>${escapeHtml(teamName)}</h4>
+        <p class="muted small">Nenašiel sa hráč s dostatočným počtom zápasov.</p>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="stat-card">
+      <h4>${escapeHtml(teamName)}</h4>
+      <div class="stat-line"><span>Hráč</span><strong>${escapeHtml(prediction.player.name)}</strong></div>
+      <div class="stat-line"><span>Góly / zápasy</span><strong>${prediction.seasonGoals} / ${prediction.appearances}</strong></div>
+      <div class="tip-callout" style="margin-top:10px; margin-bottom:0; padding: 10px 14px;">
+        <div class="tip-outcome" style="font-size:16px;">⚽</div>
+        <div class="tip-details">
+          <div class="tip-label" style="font-size:13px;">Pravdepodobnosť gólu</div>
+        </div>
+        <div class="best-bet-prob" style="margin-left:auto;">${prediction.probabilityToScore.toFixed(0)}%</div>
+      </div>
     </div>
   `;
 }

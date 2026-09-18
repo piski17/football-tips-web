@@ -11,6 +11,7 @@ import {
   MarketPick,
   OverUnderMarket,
   PlayerGoalPrediction,
+  RawPlayerStat,
 } from "./types";
 
 // Predvolené váhy jednotlivých faktorov v celkovom modeli.
@@ -266,7 +267,9 @@ export function predictMatch(
   homePriorsResult?: TeamGoalPriorsResult | null,
   awayPriorsResult?: TeamGoalPriorsResult | null,
   homeCornersAvg?: number | null,
-  awayCornersAvg?: number | null
+  awayCornersAvg?: number | null,
+  homePlayers?: RawPlayerStat[],
+  awayPlayers?: RawPlayerStat[]
 ): PredictionResult {
   const xg = expectedGoals(homeStats, awayStats, leagueAvg, homePriorsResult, awayPriorsResult);
   const poisson = poissonOutcomes(xg.home, xg.away);
@@ -379,6 +382,14 @@ export function predictMatch(
       home: homeStats.goals.for.average.total,
       away: awayStats.goals.for.average.total,
     },
+    topScorers: {
+      home: homePlayers
+        ? predictTopScorer(homePlayers, xg.home, homeStats.goals.for.average.total)
+        : null,
+      away: awayPlayers
+        ? predictTopScorer(awayPlayers, xg.away, awayStats.goals.for.average.total)
+        : null,
+    },
     historicalDataInfo: {
       home: homePriorsResult
         ? { seasonsUsed: homePriorsResult.seasonsUsed, seasonsChecked: homePriorsResult.seasonsChecked }
@@ -426,4 +437,26 @@ export function predictPlayerGoal(
     goalsPerGame,
     probabilityToScore,
   };
+}
+
+/**
+ * Z celej súpisky tímu automaticky vyberie hráča s najvyššou pravdepodobnosťou
+ * gólu v tomto zápase. Hráčov s príliš málo odohranými zápasmi (menej ako
+ * `minAppearances`) vynechá, aby jeden náhodný gól v 1 zápase neskreslil výber.
+ */
+export function predictTopScorer(
+  players: RawPlayerStat[],
+  teamExpectedGoalsThisMatch: number,
+  teamSeasonGoalsPerGame: number,
+  minAppearances: number = 3
+): PlayerGoalPrediction | null {
+  const eligible = players.filter((p) => p.appearances >= minAppearances);
+  if (eligible.length === 0) return null;
+
+  const predictions = eligible.map((p) =>
+    predictPlayerGoal(p.name, p.id, p.goals, p.appearances, teamExpectedGoalsThisMatch, teamSeasonGoalsPerGame)
+  );
+
+  predictions.sort((a, b) => b.probabilityToScore - a.probabilityToScore);
+  return predictions[0];
 }
