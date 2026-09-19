@@ -117,6 +117,10 @@ function mapFixture(item: any): Fixture {
 }
 
 /** Načíta zápasy danej ligy/sezóny na konkrétny deň (alebo všetky, ak deň nie je zadaný). */
+// Stavy zápasu, ktoré považujeme za "skončené" - takéto zápasy sa v zozname
+// dnešných zápasov už nezobrazujú (FT = koniec, AET = po predĺžení, PEN = po penaltách).
+const FINISHED_STATUSES = ["FT", "AET", "PEN"];
+
 export async function getFixturesByLeague(
   leagueId: number,
   season: number,
@@ -129,7 +133,10 @@ export async function getFixturesByLeague(
   const res = await client().get("/fixtures", { params });
   checkApiErrors(res.data);
 
-  const all = (res.data?.response ?? []).map((item: any) => mapFixture(item));
+  const all = (res.data?.response ?? [])
+    .map((item: any) => mapFixture(item))
+    .filter((f: Fixture) => !FINISHED_STATUSES.includes(f.status));
+
   return all.sort((a: Fixture, b: Fixture) => a.timestamp - b.timestamp).slice(0, limitCount);
 }
 
