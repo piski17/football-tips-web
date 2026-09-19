@@ -186,33 +186,33 @@ app.post("/api/player-goal", async (req, res) => {
 
 // ---- Uložené tipy (spätné vyhodnotenie) ----
 
-app.post("/api/tips", (req, res) => {
+app.post("/api/tips", async (req, res) => {
   try {
     const tip: SavedTip = req.body;
-    saveTip(tip);
+    await saveTip(tip);
     res.json({ ok: true });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
 });
 
-app.get("/api/tips", (_req, res) => {
-  res.json(listTips());
+app.get("/api/tips", async (_req, res) => {
+  res.json(await listTips());
 });
 
-app.delete("/api/tips/:id", (req, res) => {
-  deleteTip(req.params.id);
+app.delete("/api/tips/:id", async (req, res) => {
+  await deleteTip(req.params.id);
   res.json({ ok: true });
 });
 
-app.delete("/api/tips", (_req, res) => {
-  clearAllTips();
+app.delete("/api/tips", async (_req, res) => {
+  await clearAllTips();
   res.json({ ok: true });
 });
 
 app.post("/api/tips/check-results", async (_req, res) => {
   try {
-    const tips = listTips();
+    const tips = await listTips();
     const pending = tips.filter((t) => t.status === "pending");
 
     for (const tip of pending) {
@@ -235,10 +235,10 @@ app.post("/api/tips/check-results", async (_req, res) => {
       }
 
       const status = evaluateTip(tip, result.homeGoals, result.awayGoals, corners, cards, scorerIds);
-      updateTip(tip.id, { status, actualHomeGoals: result.homeGoals, actualAwayGoals: result.awayGoals });
+      await updateTip(tip.id, { status, actualHomeGoals: result.homeGoals, actualAwayGoals: result.awayGoals });
     }
 
-    res.json(listTips());
+    res.json(await listTips());
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
