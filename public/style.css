@@ -182,6 +182,10 @@ button, input {
   gap: 6px;
 }
 
+.league-group-rows[hidden] {
+  display: none;
+}
+
 .field-group {
   display: flex;
   flex-direction: column;
