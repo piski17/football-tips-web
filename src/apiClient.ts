@@ -139,56 +139,66 @@ export async function getTeamStatistics(
   season: number,
   teamId: number
 ): Promise<TeamStatistics> {
-  const res = await client().get("/teams/statistics", {
-    params: { league: leagueId, season, team: teamId },
-  });
-  checkApiErrors(res.data);
+  const cacheKey = `teamStats:${leagueId}:${season}:${teamId}`;
+  const cached = getCached<TeamStatistics>(cacheKey);
+  if (cached !== undefined) return cached;
 
-  const d = res.data?.response;
-  if (!d || !d.team) {
-    throw new Error(`Štatistiky pre tím ${teamId} neboli nájdené (liga ${leagueId}, sezóna ${season}).`);
-  }
+  const fetchOnce = async (): Promise<TeamStatistics> => {
+    const res = await client().get("/teams/statistics", {
+      params: { league: leagueId, season, team: teamId },
+    });
+    checkApiErrors(res.data);
 
-  // Karty prichádzajú rozdelené po 15-minútových intervaloch (žlté aj červené) -
-  // spočítame ich všetky a vydelíme počtom zápasov, aby sme dostali priemer na zápas.
-  const sumCardBuckets = (buckets: any): number => {
-    if (!buckets) return 0;
-    return Object.values(buckets).reduce((sum: number, bucket: any) => sum + (bucket?.total ?? 0), 0);
-  };
-  const totalYellow = sumCardBuckets(d.cards?.yellow);
-  const totalRed = sumCardBuckets(d.cards?.red);
-  const totalGames = d.fixtures?.played?.total ?? 0;
-  const cardsPerGame = totalGames > 0 ? (totalYellow + totalRed) / totalGames : 0;
+    const d = res.data?.response;
+    if (!d || !d.team) {
+      throw new Error(`Štatistiky pre tím ${teamId} neboli nájdené (liga ${leagueId}, sezóna ${season}).`);
+    }
 
-  return {
-    team: { id: d.team.id, name: d.team.name, logo: d.team.logo },
-    form: d.form ?? "",
-    fixtures: {
-      played: d.fixtures.played,
-      wins: d.fixtures.wins,
-      draws: d.fixtures.draws,
-      loses: d.fixtures.loses,
-    },
-    goals: {
-      for: {
-        total: d.goals.for.total,
-        average: {
-          home: parseFloat(d.goals.for.average.home) || 0,
-          away: parseFloat(d.goals.for.average.away) || 0,
-          total: parseFloat(d.goals.for.average.total) || 0,
+    // Karty prichádzajú rozdelené po 15-minútových intervaloch (žlté aj červené) -
+    // spočítame ich všetky a vydelíme počtom zápasov, aby sme dostali priemer na zápas.
+    const sumCardBuckets = (buckets: any): number => {
+      if (!buckets) return 0;
+      return Object.values(buckets).reduce((sum: number, bucket: any) => sum + (bucket?.total ?? 0), 0);
+    };
+    const totalYellow = sumCardBuckets(d.cards?.yellow);
+    const totalRed = sumCardBuckets(d.cards?.red);
+    const totalGames = d.fixtures?.played?.total ?? 0;
+    const cardsPerGame = totalGames > 0 ? (totalYellow + totalRed) / totalGames : 0;
+
+    return {
+      team: { id: d.team.id, name: d.team.name, logo: d.team.logo },
+      form: d.form ?? "",
+      fixtures: {
+        played: d.fixtures.played,
+        wins: d.fixtures.wins,
+        draws: d.fixtures.draws,
+        loses: d.fixtures.loses,
+      },
+      goals: {
+        for: {
+          total: d.goals.for.total,
+          average: {
+            home: parseFloat(d.goals.for.average.home) || 0,
+            away: parseFloat(d.goals.for.average.away) || 0,
+            total: parseFloat(d.goals.for.average.total) || 0,
+          },
+        },
+        against: {
+          total: d.goals.against.total,
+          average: {
+            home: parseFloat(d.goals.against.average.home) || 0,
+            away: parseFloat(d.goals.against.average.away) || 0,
+            total: parseFloat(d.goals.against.average.total) || 0,
+          },
         },
       },
-      against: {
-        total: d.goals.against.total,
-        average: {
-          home: parseFloat(d.goals.against.average.home) || 0,
-          away: parseFloat(d.goals.against.average.away) || 0,
-          total: parseFloat(d.goals.against.average.total) || 0,
-        },
-      },
-    },
-    cardsPerGame,
+      cardsPerGame,
+    };
   };
+
+  const result = await fetchOnce();
+  setCached(cacheKey, result, TTL_LEAGUE_AVERAGES);
+  return result;
 }
 
 /**
@@ -426,6 +436,7 @@ export async function getPlayerSeasonStats(
     checkApiErrors(res.data);
 
     const statsEntries: any[] = res.data?.response?.[0]?.statistics ?? [];
+    // Vyber štatistiky za správnu ligu (jeden hráč môže mať v odpovedi viac súťaží).
     const entry = statsEntries.find((s: any) => s.league?.id === leagueId) ?? statsEntries[0];
     if (!entry) {
       setCached(cacheKey, null, TTL_PLAYER_STATS);
@@ -571,7 +582,8 @@ export async function getFixtureGoalscorerIds(fixtureId: number): Promise<number
 /**
  * Načíta potvrdenú zostavu zápasu (základná jedenástka + náhradníci) pre oba
  * tímy. API-Football zvyčajne zverejňuje zostavy cca 1 hodinu pred výkopom -
- * pri zápasoch ďalej v budúcnosti vráti pre danú stranu null.
+ * pri zápasoch ďalej v budúcnosti vráti pre danú stranu null (zostava zatiaľ
+ * nie je známa).
  */
 export async function getFixtureLineupPlayerIds(
   fixtureId: number
