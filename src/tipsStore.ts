@@ -29,18 +29,32 @@ function jsonBinClient() {
  * DÔLEŽITÉ: pri zlyhaní siete táto funkcia musí chybu nahlásiť ďalej (throw),
  * nie potichu vrátiť prázdny zoznam - inak by pri ukladaní nového tipu mohla
  * appka omylom prepísať celú existujúcu históriu prázdnym/neúplným zoznamom.
+ *
+ * Dáta sa čítajú v novom formáte { tips: [...] }, so spätnou kompatibilitou
+ * pre starší formát (čistý zoznam), ak by v bin-e ešte zostal.
  */
 async function readAllRemote(): Promise<SavedTip[]> {
   const res = await jsonBinClient().get(`${JSONBIN_BASE}/latest`, {
     headers: { "X-Master-Key": JSONBIN_API_KEY!, "X-Bin-Meta": "false" },
   });
-  return Array.isArray(res.data) ? res.data : [];
+  if (Array.isArray(res.data)) return res.data; // starší formát (spätná kompatibilita)
+  if (res.data && Array.isArray(res.data.tips)) return res.data.tips;
+  return [];
 }
 
+/**
+ * Dáta sa ukladajú zabalené ako { tips: [...] }, nie ako čistý zoznam -
+ * JSONBin.io totiž odmieta obsah, ktorý vyzerá "prázdny" (napr. samotné []),
+ * čo by inak spôsobilo chybu presne pri vymazaní poslednej/všetkých položiek.
+ */
 async function writeAllRemote(tips: SavedTip[]): Promise<void> {
-  await jsonBinClient().put(`${JSONBIN_BASE}`, tips, {
-    headers: { "X-Master-Key": JSONBIN_API_KEY!, "Content-Type": "application/json" },
-  });
+  await jsonBinClient().put(
+    `${JSONBIN_BASE}`,
+    { tips },
+    {
+      headers: { "X-Master-Key": JSONBIN_API_KEY!, "Content-Type": "application/json" },
+    }
+  );
 }
 
 // ---- Lokálne úložisko (záloha, ak JSONBin nie je nastavený - napr. pri lokálnom vývoji) ----
