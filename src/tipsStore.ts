@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import axios from "axios";
+import axiosRetry from "axios-retry";
 import { SavedTip } from "./types";
 
 // ---- Trvalé úložisko cez JSONBin.io (odolné voči reštartu/redeploy appky) ----
@@ -11,22 +12,34 @@ const useJsonBin = Boolean(JSONBIN_API_KEY && JSONBIN_BIN_ID);
 
 const JSONBIN_BASE = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
 
+function jsonBinClient() {
+  const instance = axios.create({ timeout: 15000 });
+  // Automaticky zopakuje požiadavku pri krátkodobom výpadku siete, aby jeden
+  // prechodný problém nespôsobil stratu alebo neúplné uloženie tipov.
+  axiosRetry(instance, {
+    retries: 4,
+    retryDelay: axiosRetry.exponentialDelay,
+    retryCondition: (error) =>
+      axiosRetry.isNetworkOrIdempotentRequestError(error) || error.response?.status === 429,
+  });
+  return instance;
+}
+
+/**
+ * DÔLEŽITÉ: pri zlyhaní siete táto funkcia musí chybu nahlásiť ďalej (throw),
+ * nie potichu vrátiť prázdny zoznam - inak by pri ukladaní nového tipu mohla
+ * appka omylom prepísať celú existujúcu históriu prázdnym/neúplným zoznamom.
+ */
 async function readAllRemote(): Promise<SavedTip[]> {
-  try {
-    const res = await axios.get(`${JSONBIN_BASE}/latest`, {
-      headers: { "X-Master-Key": JSONBIN_API_KEY!, "X-Bin-Meta": "false" },
-      timeout: 15000,
-    });
-    return Array.isArray(res.data) ? res.data : [];
-  } catch {
-    return [];
-  }
+  const res = await jsonBinClient().get(`${JSONBIN_BASE}/latest`, {
+    headers: { "X-Master-Key": JSONBIN_API_KEY!, "X-Bin-Meta": "false" },
+  });
+  return Array.isArray(res.data) ? res.data : [];
 }
 
 async function writeAllRemote(tips: SavedTip[]): Promise<void> {
-  await axios.put(`${JSONBIN_BASE}`, tips, {
+  await jsonBinClient().put(`${JSONBIN_BASE}`, tips, {
     headers: { "X-Master-Key": JSONBIN_API_KEY!, "Content-Type": "application/json" },
-    timeout: 15000,
   });
 }
 

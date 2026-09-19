@@ -457,8 +457,12 @@ function initSaveTipButton(r) {
 async function openTipsHistory() {
   tipsModal.hidden = false;
   tipsListEl.innerHTML = `<div class="loading-state">Načítavam tipy…</div>`;
-  const tips = await fetchJson("/api/tips");
-  renderTipsList(tips);
+  try {
+    const tips = await fetchJson("/api/tips");
+    renderTipsList(tips);
+  } catch (err) {
+    tipsListEl.innerHTML = `<p class="empty-state">Tipy sa nepodarilo načítať: ${escapeHtml(err.message)}</p>`;
+  }
 }
 
 function renderTipsList(tips) {
@@ -507,8 +511,18 @@ function renderTipsList(tips) {
     btn.addEventListener("click", async (e) => {
       const id = e.currentTarget.dataset.tipId;
       if (!id) return;
-      await fetch(`/api/tips/${id}`, { method: "DELETE" });
-      openTipsHistory();
+      btn.disabled = true;
+      try {
+        const res = await fetch(`/api/tips/${id}`, { method: "DELETE" });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          alert(`Zmazanie zlyhalo: ${data.error || "neznáma chyba"}. Skús to prosím znova.`);
+        }
+      } catch (err) {
+        alert("Zmazanie zlyhalo - skontroluj internetové pripojenie a skús to znova.");
+      } finally {
+        openTipsHistory();
+      }
     });
   });
 }
@@ -524,6 +538,8 @@ checkResultsBtn.addEventListener("click", async () => {
   try {
     const tips = await fetchJson("/api/tips/check-results", { method: "POST" });
     renderTipsList(tips);
+  } catch (err) {
+    alert(`Kontrola výsledkov zlyhala: ${err.message}`);
   } finally {
     checkResultsBtn.disabled = false;
     checkResultsBtn.textContent = "Skontrolovať výsledky";
@@ -538,8 +554,10 @@ clearAllTipsBtn.addEventListener("click", async () => {
 
   clearAllTipsBtn.disabled = true;
   try {
-    await fetch("/api/tips", { method: "DELETE" });
+    await fetchJson("/api/tips", { method: "DELETE" });
     renderTipsList([]);
+  } catch (err) {
+    alert(`Vymazanie zlyhalo: ${err.message}. Skús to prosím znova.`);
   } finally {
     clearAllTipsBtn.disabled = false;
   }

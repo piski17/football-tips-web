@@ -21,6 +21,16 @@ import { LeaguePreset, SavedTip } from "./types";
 import { saveTip, listTips, updateTip, deleteTip, clearAllTips } from "./tipsStore";
 import { evaluateTip } from "./tipEvaluator";
 
+// Globálna poistka - nečakaná chyba (napr. výpadok siete pri volaní na
+// JSONBin.io alebo API-Football) nesmie zhodiť celý server. Bez tohto by
+// aj jedna nezachytená chyba reštartovala celú appku na Renderi.
+process.on("unhandledRejection", (reason) => {
+  console.error("Nezachytená chyba (unhandledRejection):", reason);
+});
+process.on("uncaughtException", (err) => {
+  console.error("Nezachytená výnimka (uncaughtException):", err);
+});
+
 const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
@@ -197,17 +207,29 @@ app.post("/api/tips", async (req, res) => {
 });
 
 app.get("/api/tips", async (_req, res) => {
-  res.json(await listTips());
+  try {
+    res.json(await listTips());
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
 });
 
 app.delete("/api/tips/:id", async (req, res) => {
-  await deleteTip(req.params.id);
-  res.json({ ok: true });
+  try {
+    await deleteTip(req.params.id);
+    res.json({ ok: true });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
 });
 
 app.delete("/api/tips", async (_req, res) => {
-  await clearAllTips();
-  res.json({ ok: true });
+  try {
+    await clearAllTips();
+    res.json({ ok: true });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
 });
 
 app.post("/api/tips/check-results", async (_req, res) => {
