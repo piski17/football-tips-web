@@ -44,7 +44,15 @@ export function updateTip(id: string, updates: Partial<SavedTip>): void {
   }
 }
 
+/** Zmaže tip len ak je ešte "pending" - už vyhodnotené tipy (won/lost/void) sa nedajú zmazať, aby zostala história presná. */
 export function deleteTip(id: string): void {
-  const tips = readAll().filter((t) => t.id !== id);
-  writeAll(tips);
+  const tips = readAll();
+  const target = tips.find((t) => t.id === id);
+  if (!target || target.status !== "pending") return;
+  writeAll(tips.filter((t) => t.id !== id));
+}
+
+/** Vymaže úplne všetky uložené tipy (aj vyhodnotené) - použiteľné na kompletný reštart histórie. */
+export function clearAllTips(): void {
+  writeAll([]);
 }

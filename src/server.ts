@@ -18,7 +18,7 @@ import {
 } from "./apiClient";
 import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS } from "./predictor";
 import { LeaguePreset, SavedTip } from "./types";
-import { saveTip, listTips, updateTip, deleteTip } from "./tipsStore";
+import { saveTip, listTips, updateTip, deleteTip, clearAllTips } from "./tipsStore";
 import { evaluateTip } from "./tipEvaluator";
 
 const app = express();
@@ -202,6 +202,11 @@ app.get("/api/tips", (_req, res) => {
 
 app.delete("/api/tips/:id", (req, res) => {
   deleteTip(req.params.id);
+  res.json({ ok: true });
+});
+
+app.delete("/api/tips", (_req, res) => {
+  clearAllTips();
   res.json({ ok: true });
 });
 

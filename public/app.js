@@ -19,6 +19,7 @@ const tipsSummaryEl = document.getElementById("tipsSummary");
 const tipsListEl = document.getElementById("tipsList");
 const closeTipsBtn = document.getElementById("closeTipsBtn");
 const checkResultsBtn = document.getElementById("checkResultsBtn");
+const clearAllTipsBtn = document.getElementById("clearAllTipsBtn");
 
 toggleFiltersBtn.addEventListener("click", () => {
   sidebarEl.classList.toggle("open");
@@ -483,7 +484,11 @@ function renderTipsList(tips) {
             <div class="tip-row-market">${escapeHtml(t.market)}: ${escapeHtml(t.selection)} · ${t.probability.toFixed(0)}%</div>
           </div>
           <span class="tip-status ${t.status}">${statusLabel}</span>
-          <button class="tip-delete-btn" data-tip-id="${t.id}" title="Zmazať">✕</button>
+          ${
+            t.status === "pending"
+              ? `<button class="tip-delete-btn" data-tip-id="${t.id}" title="Zmazať">✕</button>`
+              : ""
+          }
         </div>
       `;
     })
@@ -513,6 +518,21 @@ checkResultsBtn.addEventListener("click", async () => {
   } finally {
     checkResultsBtn.disabled = false;
     checkResultsBtn.textContent = "Skontrolovať výsledky";
+  }
+});
+
+clearAllTipsBtn.addEventListener("click", async () => {
+  const confirmed = window.confirm(
+    "Naozaj chceš vymazať ÚPLNE VŠETKY uložené tipy (aj už vyhodnotené)? Táto akcia sa nedá vrátiť späť."
+  );
+  if (!confirmed) return;
+
+  clearAllTipsBtn.disabled = true;
+  try {
+    await fetch("/api/tips", { method: "DELETE" });
+    renderTipsList([]);
+  } finally {
+    clearAllTipsBtn.disabled = false;
   }
 });
 
