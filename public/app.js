@@ -229,12 +229,12 @@ function renderAnalysis(r) {
 
     <div class="markets-grid">
       <div class="market-card">
-        <div class="market-value">${r.overUnder25.over.toFixed(0)}%</div>
-        <div class="market-label">Over 2.5 gólu</div>
+        <div class="market-value">${(r.overUnder25.over >= r.overUnder25.under ? r.overUnder25.over : r.overUnder25.under).toFixed(0)}%</div>
+        <div class="market-label">${r.overUnder25.over >= r.overUnder25.under ? "Over" : "Under"} 2.5 gólu</div>
       </div>
       <div class="market-card">
-        <div class="market-value">${r.btts.yes.toFixed(0)}%</div>
-        <div class="market-label">Obaja tímy skórujú</div>
+        <div class="market-value">${(r.btts.yes >= r.btts.no ? r.btts.yes : r.btts.no).toFixed(0)}%</div>
+        <div class="market-label">Obaja tímy skórujú: ${r.btts.yes >= r.btts.no ? "Áno" : "Nie"}</div>
       </div>
       ${
         r.corners
