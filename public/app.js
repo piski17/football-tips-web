@@ -1,4 +1,4 @@
-let selectedLeagueId = null;
+let selectedLeagueIds = new Set();
 let currentFixtures = [];
 let currentAnalysis = null;
 
@@ -57,35 +57,34 @@ async function init() {
   const leagues = await fetchJson("/api/leagues");
   leagueListEl.innerHTML = "";
   leagues.forEach((league) => {
-    const item = document.createElement("div");
+    selectedLeagueIds.add(league.id); // predvolene sú zaškrtnuté všetky ligy
+
+    const item = document.createElement("label");
     item.className = "league-item";
-    item.textContent = league.name;
-    item.title = league.country;
-    item.addEventListener("click", () => selectLeague(league.id, item));
+    item.innerHTML = `
+      <input type="checkbox" data-league-id="${league.id}" checked />
+      <span class="name">${escapeHtml(league.name)}</span>
+      <span class="country">${escapeHtml(league.country)}</span>
+    `;
+    const checkbox = item.querySelector("input");
+    checkbox.addEventListener("change", () => {
+      if (checkbox.checked) selectedLeagueIds.add(league.id);
+      else selectedLeagueIds.delete(league.id);
+    });
     leagueListEl.appendChild(item);
   });
 }
 
-function selectLeague(id, el) {
-  selectedLeagueId = id;
-  customLeagueInput.value = "";
-  document.querySelectorAll(".league-item").forEach((n) => n.classList.remove("active"));
-  el.classList.add("active");
-}
-
-function getActiveLeagueId() {
-  if (customLeagueInput.value.trim()) {
-    return parseInt(customLeagueInput.value.trim(), 10);
-  }
-  return selectedLeagueId;
-}
-
 loadFixturesBtn.addEventListener("click", async () => {
-  const leagueId = getActiveLeagueId();
   const season = parseInt(seasonInput.value, 10);
+  const date = matchDateInput.value || new Date().toISOString().slice(0, 10);
 
-  if (!leagueId) {
-    fixtureListEl.innerHTML = `<p class="empty-state">Vyber ligu, alebo zadaj vlastný kód súťaže.</p>`;
+  const leagueIds = new Set(selectedLeagueIds);
+  const customId = customLeagueInput.value.trim() ? parseInt(customLeagueInput.value.trim(), 10) : null;
+  if (customId) leagueIds.add(customId);
+
+  if (leagueIds.size === 0) {
+    fixtureListEl.innerHTML = `<p class="empty-state">Zaškrtni aspoň jednu ligu, alebo zadaj vlastné ID ligy.</p>`;
     return;
   }
 
@@ -94,12 +93,21 @@ loadFixturesBtn.addEventListener("click", async () => {
   sidebarEl.classList.remove("open");
 
   try {
-    const date = matchDateInput.value || new Date().toISOString().slice(0, 10);
-    const fixtures = await fetchJson(
-      `/api/fixtures?league=${encodeURIComponent(leagueId)}&season=${season}&date=${date}`
+    const results = await Promise.all(
+      Array.from(leagueIds).map(async (leagueId) => {
+        try {
+          const fixtures = await fetchJson(
+            `/api/fixtures?league=${encodeURIComponent(leagueId)}&season=${season}&date=${date}`
+          );
+          return { leagueId, fixtures };
+        } catch {
+          return { leagueId, fixtures: [] };
+        }
+      })
     );
-    currentFixtures = fixtures;
-    renderFixtureList(fixtures, leagueId, season);
+
+    currentFixtures = results.flatMap((r) => r.fixtures);
+    renderGroupedFixtureList(results);
   } catch (err) {
     fixtureListEl.innerHTML = `<p class="empty-state">Chyba pri načítaní: ${escapeHtml(err.message)}</p>`;
   } finally {
@@ -107,44 +115,56 @@ loadFixturesBtn.addEventListener("click", async () => {
   }
 });
 
-function renderFixtureList(fixtures, leagueId, season) {
-  fixtureCountEl.textContent = fixtures.length ? `${fixtures.length} zápasov` : "";
+function renderGroupedFixtureList(results) {
+  const totalCount = results.reduce((sum, r) => sum + r.fixtures.length, 0);
+  fixtureCountEl.textContent = totalCount ? `${totalCount} zápasov` : "";
 
-  if (!fixtures.length) {
-    fixtureListEl.innerHTML = `<p class="empty-state">Pre túto ligu sa v tento deň nekonajú žiadne zápasy.</p>`;
+  const groupsWithMatches = results.filter((r) => r.fixtures.length > 0);
+
+  if (groupsWithMatches.length === 0) {
+    fixtureListEl.innerHTML = `<p class="empty-state">Pre vybrané ligy sa v tento deň nekonajú žiadne zápasy.</p>`;
     return;
   }
 
   fixtureListEl.innerHTML = "";
-  fixtures.forEach((fixture) => {
-    const row = document.createElement("div");
-    row.className = "fixture-row";
 
-    const date = new Date(fixture.date);
-    const time = date.toLocaleString("sk-SK", {
-      day: "2-digit",
-      month: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
+  groupsWithMatches.forEach(({ fixtures }) => {
+    const leagueName = fixtures[0]?.league?.name ?? "Liga";
+    const header = document.createElement("div");
+    header.className = "league-group-header";
+    header.textContent = leagueName;
+    fixtureListEl.appendChild(header);
+
+    fixtures.forEach((fixture) => {
+      const row = document.createElement("div");
+      row.className = "fixture-row";
+
+      const date = new Date(fixture.date);
+      const time = date.toLocaleString("sk-SK", {
+        day: "2-digit",
+        month: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      row.innerHTML = `
+        <div class="time">${escapeHtml(time)}</div>
+        <div class="teams">
+          <span class="team-name">${escapeHtml(fixture.homeTeam.name)}</span>
+          <span class="vs">vs</span>
+          <span class="team-name">${escapeHtml(fixture.awayTeam.name)}</span>
+        </div>
+      `;
+
+      row.addEventListener("click", () => {
+        document.querySelectorAll(".fixture-row").forEach((n) => n.classList.remove("selected"));
+        row.classList.add("selected");
+        analyzeFixture(fixture, fixture.league.id, fixture.league.season);
+        analysisColumnEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+
+      fixtureListEl.appendChild(row);
     });
-
-    row.innerHTML = `
-      <div class="time">${escapeHtml(time)}</div>
-      <div class="teams">
-        <span class="team-name">${escapeHtml(fixture.homeTeam.name)}</span>
-        <span class="vs">vs</span>
-        <span class="team-name">${escapeHtml(fixture.awayTeam.name)}</span>
-      </div>
-    `;
-
-    row.addEventListener("click", () => {
-      document.querySelectorAll(".fixture-row").forEach((n) => n.classList.remove("selected"));
-      row.classList.add("selected");
-      analyzeFixture(fixture, leagueId, season);
-      analysisColumnEl.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-
-    fixtureListEl.appendChild(row);
   });
 }
 
