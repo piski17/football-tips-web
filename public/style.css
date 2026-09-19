@@ -10,7 +10,7 @@
   --text: #f1f5f1;
   --text-muted: #8fa391;
 
-  --font-display: "Oswald", "Arial Narrow", sans-serif;
+  --font-display: "Space Grotesk", "Arial", sans-serif;
   --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
@@ -38,18 +38,52 @@ button, input {
   min-height: 100vh;
 }
 
-/* ---------- Top bar (mobile) ---------- */
+/* ---------- Top bar ---------- */
 
 .topbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
   position: sticky;
   top: 0;
   z-index: 10;
+}
+
+.topbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.date-input,
+.custom-league-input {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: var(--text);
+  font-size: 13.5px;
+}
+
+.date-input:focus,
+.custom-league-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.custom-league-input {
+  width: 90px;
+}
+
+#loadFixturesBtn {
+  padding: 8px 12px;
+  font-size: 16px;
+  line-height: 1;
 }
 
 .brand {
@@ -69,24 +103,9 @@ button, input {
 .brand h1 {
   font-family: var(--font-display);
   font-size: 19px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
   margin: 0;
-}
-
-/* ---------- Sidebar / filters ---------- */
-
-.sidebar {
-  display: none;
-  flex-direction: column;
-  gap: 16px;
-  padding: 16px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-}
-
-.sidebar.open {
-  display: flex;
 }
 
 .league-list {
@@ -601,37 +620,13 @@ button, input {
 /* ---------- Wider screens (tablet / desktop) ---------- */
 
 @media (min-width: 860px) {
-  .topbar #toggleFiltersBtn {
-    display: none;
-  }
-
   .app {
-    flex-direction: row;
-  }
-
-  .topbar {
-    display: none;
-  }
-
-  .sidebar {
-    display: flex !important;
-    flex-direction: column;
-    width: 260px;
-    flex-shrink: 0;
-    border-right: 1px solid var(--border);
-    border-bottom: none;
-    height: 100vh;
-    position: sticky;
-    top: 0;
-  }
-
-  .sidebar .league-list {
     flex-direction: column;
   }
 
   .content {
     flex-direction: row;
-    height: 100vh;
+    height: calc(100vh - 61px);
     overflow: hidden;
   }
 

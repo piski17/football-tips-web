@@ -2,10 +2,8 @@ let selectedLeagueIds = new Set();
 let currentFixtures = [];
 let currentAnalysis = null;
 
-const sidebarEl = document.getElementById("sidebar");
-const toggleFiltersBtn = document.getElementById("toggleFiltersBtn");
-const leagueListEl = document.getElementById("leagueList");
 const customLeagueInput = document.getElementById("customLeagueId");
+const toggleCustomLeagueBtn = document.getElementById("toggleCustomLeagueBtn");
 const matchDateInput = document.getElementById("matchDateInput");
 const seasonInput = document.getElementById("seasonInput");
 const loadFixturesBtn = document.getElementById("loadFixturesBtn");
@@ -21,9 +19,12 @@ const closeTipsBtn = document.getElementById("closeTipsBtn");
 const checkResultsBtn = document.getElementById("checkResultsBtn");
 const clearAllTipsBtn = document.getElementById("clearAllTipsBtn");
 
-toggleFiltersBtn.addEventListener("click", () => {
-  sidebarEl.classList.toggle("open");
+toggleCustomLeagueBtn.addEventListener("click", () => {
+  customLeagueInput.hidden = !customLeagueInput.hidden;
+  if (!customLeagueInput.hidden) customLeagueInput.focus();
 });
+
+customLeagueInput.addEventListener("change", () => loadFixtures());
 
 async function fetchJson(url, options) {
   const res = await fetch(url, options);
@@ -52,30 +53,17 @@ async function init() {
 
   matchDateInput.addEventListener("change", () => {
     seasonInput.value = String(guessSeasonFromDate(matchDateInput.value));
+    loadFixtures();
   });
 
   const leagues = await fetchJson("/api/leagues");
-  leagueListEl.innerHTML = "";
-  leagues.forEach((league) => {
-    selectedLeagueIds.add(league.id); // predvolene sú zaškrtnuté všetky ligy
+  leagues.forEach((league) => selectedLeagueIds.add(league.id)); // všetky ligy sú vždy zahrnuté
 
-    const item = document.createElement("label");
-    item.className = "league-item";
-    item.innerHTML = `
-      <input type="checkbox" data-league-id="${league.id}" checked />
-      <span class="name">${escapeHtml(league.name)}</span>
-      <span class="country">${escapeHtml(league.country)}</span>
-    `;
-    const checkbox = item.querySelector("input");
-    checkbox.addEventListener("change", () => {
-      if (checkbox.checked) selectedLeagueIds.add(league.id);
-      else selectedLeagueIds.delete(league.id);
-    });
-    leagueListEl.appendChild(item);
-  });
+  // Appka rovno pri otvorení sama načíta dnešné zápasy - netreba na nič klikať.
+  loadFixtures();
 }
 
-loadFixturesBtn.addEventListener("click", async () => {
+async function loadFixtures() {
   const season = parseInt(seasonInput.value, 10);
   const date = matchDateInput.value || new Date().toISOString().slice(0, 10);
 
@@ -90,7 +78,6 @@ loadFixturesBtn.addEventListener("click", async () => {
 
   fixtureListEl.innerHTML = `<div class="loading-state">Načítavam zápasy…</div>`;
   loadFixturesBtn.disabled = true;
-  sidebarEl.classList.remove("open");
 
   try {
     const results = await Promise.all(
@@ -113,7 +100,9 @@ loadFixturesBtn.addEventListener("click", async () => {
   } finally {
     loadFixturesBtn.disabled = false;
   }
-});
+}
+
+loadFixturesBtn.addEventListener("click", loadFixtures);
 
 function renderGroupedFixtureList(results) {
   const totalCount = results.reduce((sum, r) => sum + r.fixtures.length, 0);
