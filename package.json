@@ -1,7 +1,7 @@
 {
-  "name": "football-tips-web",
+  "name": "tipradar-web",
   "version": "1.0.0",
-  "description": "Webová appka na štatistickú analýzu futbalových zápasov (football-data.org), otvoriteľná z telefónu aj počítača",
+  "description": "TipRadar - webová appka na štatistickú analýzu futbalových zápasov (API-Football), otvoriteľná z telefónu aj počítača",
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",

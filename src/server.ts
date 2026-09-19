@@ -66,7 +66,7 @@ function basicAuth(req: Request, res: Response, next: NextFunction): void {
     return;
   }
 
-  res.set("WWW-Authenticate", 'Basic realm="Futbal Tipy"');
+  res.set("WWW-Authenticate", 'Basic realm="TipRadar"');
   res.status(401).send("Autentifikácia zlyhala.");
 }
 
@@ -267,5 +267,5 @@ app.post("/api/tips/check-results", async (_req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Futbal Tipy beží na porte ${PORT}`);
+  console.log(`TipRadar beží na porte ${PORT}`);
 });

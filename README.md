@@ -1,4 +1,4 @@
-# Futbal Tipy – webová verzia (aj pre telefón)
+# TipRadar – webová verzia (aj pre telefón)
 
 Rovnaká štatistická analýza futbalových zápasov ako v desktopovej appke
 (Poissonov gólový model + forma + vzájomné zápasy, dáta z
