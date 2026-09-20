@@ -257,30 +257,6 @@ function renderAnalysis(r) {
       <div class="stat-line"><span>Výhry ${escapeHtml(r.fixture.awayTeam.name)}</span><strong>${r.headToHead.awayWins}</strong></div>
     </div>
 
-    <div class="markets-grid">
-      <div class="market-card">
-        <div class="market-value">${(r.overUnder25.over >= r.overUnder25.under ? r.overUnder25.over : r.overUnder25.under).toFixed(0)}%</div>
-        <div class="market-label">${r.overUnder25.over >= r.overUnder25.under ? "Over" : "Under"} 2.5 gólu</div>
-      </div>
-      <div class="market-card">
-        <div class="market-value">${(r.btts.yes >= r.btts.no ? r.btts.yes : r.btts.no).toFixed(0)}%</div>
-        <div class="market-label">Obaja tímy skórujú: ${r.btts.yes >= r.btts.no ? "Áno" : "Nie"}</div>
-      </div>
-      ${
-        r.corners
-          ? `
-      <div class="market-card">
-        <div class="market-value">${(r.corners.over >= r.corners.under ? r.corners.over : r.corners.under).toFixed(0)}%</div>
-        <div class="market-label">${r.corners.over >= r.corners.under ? "Over" : "Under"} ${r.corners.line} rohov</div>
-      </div>`
-          : ""
-      }
-      <div class="market-card">
-        <div class="market-value">${(r.cards.over >= r.cards.under ? r.cards.over : r.cards.under).toFixed(0)}%</div>
-        <div class="market-label">${r.cards.over >= r.cards.under ? "Over" : "Under"} ${r.cards.line} kariet</div>
-      </div>
-    </div>
-
     <div class="prob-section">
       <div class="section-title">Najpravdepodobnejší strelec zápasu</div>
       <p class="muted small" style="margin: -4px 0 10px;">
