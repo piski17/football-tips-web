@@ -248,16 +248,15 @@ export async function getTeamCornersAverage(
         }
       });
 
-    let cornerValues = await fetchCornerValues();
-    let valid = cornerValues.filter((v): v is number => v !== null);
+    let valid: number[] = [];
 
-    // Ak sa nepodarilo stiahnuť dáta pre všetky zápasy, skús to celé ešte raz -
-    // aj jeden chybajúci zápas vie posunúť priemer okolo hranice Over/Under.
-    if (valid.length < fixtures.length) {
-      const retryValues = await fetchCornerValues();
-      const retryValid = retryValues.filter((v): v is number => v !== null);
-      if (retryValid.length > valid.length) {
-        valid = retryValid;
+    // Skús to až 3× odznova, kým sa nepodarí stiahnuť dáta pre všetky zápasy -
+    // aj jeden chýbajúci zápas vie posunúť priemer okolo hranice Over/Under.
+    for (let attempt = 0; attempt < 3 && valid.length < fixtures.length; attempt++) {
+      const cornerValues = await fetchCornerValues();
+      const currentValid = cornerValues.filter((v): v is number => v !== null);
+      if (currentValid.length > valid.length) {
+        valid = currentValid;
       }
     }
 
@@ -336,16 +335,16 @@ export async function getHistoricalGoalPriors(
       }
     });
 
-  let seasonResults = await fetchAllSeasons();
-  let valid = seasonResults.filter((r): r is NonNullable<typeof r> => r !== null);
+  let valid: NonNullable<Awaited<ReturnType<typeof fetchAllSeasons>>[number]>[] = [];
 
-  // Ak sa nepodarilo nájsť všetky sezóny, skús to celé ešte raz odznova -
-  // mohlo ísť len o krátkodobý výpadok pri konkrétnom volaní.
-  if (valid.length < seasonsBack) {
-    const retryResults = await fetchAllSeasons();
-    const retryValid = retryResults.filter((r): r is NonNullable<typeof r> => r !== null);
-    if (retryValid.length > valid.length) {
-      valid = retryValid;
+  // Skús to až 3× odznova, kým sa nepodarí nájsť všetky sezóny - mohlo ísť
+  // len o krátkodobý výpadok pri konkrétnom volaní. Zakaždým si necháme ten
+  // najlepší (najúplnejší) výsledok, aký sa doteraz podarilo získať.
+  for (let attempt = 0; attempt < 3 && valid.length < seasonsBack; attempt++) {
+    const results = await fetchAllSeasons();
+    const currentValid = results.filter((r): r is NonNullable<typeof r> => r !== null);
+    if (currentValid.length > valid.length) {
+      valid = currentValid;
     }
   }
 
