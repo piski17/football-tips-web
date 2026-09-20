@@ -205,11 +205,7 @@ async function analyzeFixture(fixture, leagueId, season) {
 }
 
 function renderAnalysis(r) {
-  const bestOverallBet = (r.bestBets && r.bestBets[0]) || {
-    market: r.tip.outcomeLabel,
-    selection: "",
-    probability: 0,
-  };
+  const topBets = (r.bestBets || []).slice(0, 3);
 
   const gamesPlayedHtml = r.seasonGamesPlayed
     ? `<p class="muted small" style="margin: -6px 0 12px;">Odohratých zápasov v tejto sezóne: ${escapeHtml(r.fixture.homeTeam.name)} ${r.seasonGamesPlayed.home}, ${escapeHtml(r.fixture.awayTeam.name)} ${r.seasonGamesPlayed.away}</p>`
@@ -218,6 +214,24 @@ function renderAnalysis(r) {
   const warningHtml = r.sampleSizeWarning
     ? `<div class="disclaimer" style="margin-top:0;margin-bottom:20px;border-top:none;padding-top:0;color:var(--gold);">⚠️ ${escapeHtml(r.sampleSizeWarning)}</div>`
     : "";
+
+  const topBetsHtml = topBets
+    .map(
+      (bet, idx) => `
+    <div class="tip-callout" style="${idx > 0 ? "margin-top:10px;" : ""}">
+      <div class="tip-outcome">${idx === 0 ? "🎯" : idx + 1 + "."}</div>
+      <div class="tip-details">
+        <div class="tip-label">${escapeHtml(bet.market)}: ${escapeHtml(bet.selection)}</div>
+        <div class="tip-meta">
+          ${idx === 0 ? "Najvyššia dôvera zo všetkých trhov · " : ""}${bet.probability.toFixed(0)}%
+          ${bet.averageOdds ? ` · priemerný kurz ~${bet.averageOdds.toFixed(2)}` : ""}
+        </div>
+      </div>
+    </div>
+    <button class="btn-primary save-best-bet-btn" data-bet-idx="${idx}" style="width:100%; margin: 4px 0 8px;">Uložiť tento tip</button>
+  `
+    )
+    .join("");
 
   analysisColumnEl.innerHTML = `
     <div class="match-header">
@@ -228,14 +242,7 @@ function renderAnalysis(r) {
     ${gamesPlayedHtml}
     ${warningHtml}
 
-    <div class="tip-callout">
-      <div class="tip-outcome">🎯</div>
-      <div class="tip-details">
-        <div class="tip-label">${escapeHtml(bestOverallBet.market)}: ${escapeHtml(bestOverallBet.selection)}</div>
-        <div class="tip-meta">Najvyššia dôvera zo všetkých trhov · ${bestOverallBet.probability.toFixed(0)}%</div>
-      </div>
-    </div>
-    <button class="btn-primary" id="saveBestBetBtn" style="width:100%; margin: 4px 0 8px;">Uložiť tento tip</button>
+    ${topBetsHtml}
     <div id="saveTipMsg"></div>
 
     <div class="prob-section">
@@ -406,42 +413,46 @@ function wireScorerSaveButtons(r) {
 
 function initSaveTipButton(r) {
   const msgEl = document.getElementById("saveTipMsg");
-  const btn = document.getElementById("saveBestBetBtn");
-  if (!btn || !msgEl || !r.bestBets || r.bestBets.length === 0) return;
+  const buttons = document.querySelectorAll(".save-best-bet-btn");
+  if (!msgEl || !r.bestBets || r.bestBets.length === 0) return;
 
-  const chosenBet = r.bestBets[0];
+  buttons.forEach((btn) => {
+    btn.onclick = async () => {
+      const idx = parseInt(btn.dataset.betIdx ?? "0", 10);
+      const chosenBet = r.bestBets[idx];
+      if (!chosenBet) return;
 
-  btn.onclick = async () => {
-    const tip = {
-      id: `${r.fixture.fixtureId}-${Date.now()}`,
-      fixtureId: r.fixture.fixtureId,
-      leagueId: r.fixture.league.id,
-      season: r.fixture.league.season,
-      leagueName: r.fixture.league.name,
-      homeTeam: r.fixture.homeTeam.name,
-      awayTeam: r.fixture.awayTeam.name,
-      matchDate: r.fixture.date,
-      market: chosenBet.market,
-      selection: chosenBet.selection,
-      probability: chosenBet.probability,
-      savedAt: new Date().toISOString(),
-      status: "pending",
+      const tip = {
+        id: `${r.fixture.fixtureId}-${Date.now()}`,
+        fixtureId: r.fixture.fixtureId,
+        leagueId: r.fixture.league.id,
+        season: r.fixture.league.season,
+        leagueName: r.fixture.league.name,
+        homeTeam: r.fixture.homeTeam.name,
+        awayTeam: r.fixture.awayTeam.name,
+        matchDate: r.fixture.date,
+        market: chosenBet.market,
+        selection: chosenBet.selection,
+        probability: chosenBet.probability,
+        savedAt: new Date().toISOString(),
+        status: "pending",
+      };
+
+      btn.disabled = true;
+      try {
+        await fetchJson("/api/tips", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(tip),
+        });
+        msgEl.innerHTML = `<p class="muted small" style="margin-top:6px;">✓ Tip uložený (${escapeHtml(chosenBet.market)}: ${escapeHtml(chosenBet.selection)})</p>`;
+      } catch (err) {
+        msgEl.innerHTML = `<p class="muted small" style="margin-top:6px;">Uloženie zlyhalo: ${escapeHtml(err.message)}</p>`;
+      } finally {
+        btn.disabled = false;
+      }
     };
-
-    btn.disabled = true;
-    try {
-      await fetchJson("/api/tips", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(tip),
-      });
-      msgEl.innerHTML = `<p class="muted small" style="margin-top:6px;">✓ Tip uložený (${escapeHtml(chosenBet.market)}: ${escapeHtml(chosenBet.selection)})</p>`;
-    } catch (err) {
-      msgEl.innerHTML = `<p class="muted small" style="margin-top:6px;">Uloženie zlyhalo: ${escapeHtml(err.message)}</p>`;
-    } finally {
-      btn.disabled = false;
-    }
-  };
+  });
 }
 
 // ---- História tipov ----
