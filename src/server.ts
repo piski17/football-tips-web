@@ -19,7 +19,7 @@ import {
 import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS } from "./predictor";
 import { LeaguePreset, SavedTip } from "./types";
 import { saveTip, listTips, updateTip, deleteTip, clearAllTips } from "./tipsStore";
-import { evaluateTip } from "./tipEvaluator";
+import { evaluateTip, computeTicketStatus } from "./tipEvaluator";
 
 // Globálna poistka - nečakaná chyba (napr. výpadok siete pri volaní na
 // JSONBin.io alebo API-Football) nesmie zhodiť celý server. Bez tohto by
@@ -239,6 +239,44 @@ app.post("/api/tips/check-results", async (_req, res) => {
     const pending = tips.filter((t) => t.status === "pending");
 
     for (const tip of pending) {
+      if (tip.legs && tip.legs.length > 0) {
+        // Tiket - vyhodnotíme každú "nohu" zvlášť (každá môže patriť inému zápasu).
+        let anyLegChanged = false;
+
+        for (const leg of tip.legs) {
+          if (leg.status !== "pending") continue;
+
+          const result = await getFixtureResult(leg.fixtureId);
+          if (!result || result.status !== "FT" || result.homeGoals == null || result.awayGoals == null) {
+            continue;
+          }
+
+          let corners: number | null = null;
+          let cards: number | null = null;
+          if (leg.market === "Rohy" || leg.market === "Karty") {
+            const stats = await getFixtureCornersAndCards(leg.fixtureId);
+            corners = stats.corners;
+            cards = stats.cards;
+          }
+
+          let scorerIds: number[] | null = null;
+          if (leg.market === "Strelec gólov") {
+            scorerIds = await getFixtureGoalscorerIds(leg.fixtureId);
+          }
+
+          leg.status = evaluateTip(leg, result.homeGoals, result.awayGoals, corners, cards, scorerIds);
+          leg.actualHomeGoals = result.homeGoals;
+          leg.actualAwayGoals = result.awayGoals;
+          anyLegChanged = true;
+        }
+
+        if (anyLegChanged) {
+          const overallStatus = computeTicketStatus(tip.legs);
+          await updateTip(tip.id, { status: overallStatus, legs: tip.legs });
+        }
+        continue;
+      }
+
       const result = await getFixtureResult(tip.fixtureId);
       if (!result || result.status !== "FT" || result.homeGoals == null || result.awayGoals == null) {
         continue;

@@ -166,6 +166,22 @@ export interface PredictionResult {
   };
 }
 
+/** Jedna "noha" tiketu - samostatný tip v rámci kombinovanej stávky z viacerých zápasov. */
+export interface TicketLeg {
+  fixtureId: number;
+  leagueId: number;
+  season: number;
+  homeTeam: string;
+  awayTeam: string;
+  matchDate: string;
+  market: string;
+  selection: string;
+  probability: number;
+  status: "pending" | "won" | "lost" | "void";
+  actualHomeGoals?: number | null;
+  actualAwayGoals?: number | null;
+}
+
 /** Uložený tip na spätné vyhodnotenie (backtesting). */
 export interface SavedTip {
   id: string;
@@ -185,6 +201,11 @@ export interface SavedTip {
   actualAwayGoals?: number | null;
   playerId?: number;
   playerName?: string;
+  /** Ak je vyplnené, ide o "tiket" - kombinovanú stávku z viacerých zápasov.
+   * V tom prípade market/selection/probability opisujú tiket ako celok a
+   * status sa počíta z jednotlivých legs (ak čo i len jedna prehrá, prehráva
+   * celý tiket - presne ako v skutočnej stávkovej kancelárii). */
+  legs?: TicketLeg[];
 }
 
 export interface LeaguePreset {

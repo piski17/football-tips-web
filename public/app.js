@@ -20,6 +20,7 @@ const ticketSummaryEl = document.getElementById("ticketSummary");
 const ticketListEl = document.getElementById("ticketList");
 const closeTicketBtn = document.getElementById("closeTicketBtn");
 const clearTicketBtn = document.getElementById("clearTicketBtn");
+const saveTicketBtn = document.getElementById("saveTicketBtn");
 
 const openTipsBtn = document.getElementById("openTipsBtn");
 const tipsModal = document.getElementById("tipsModal");
@@ -486,8 +487,12 @@ function wireTicketButtons(r) {
 
       ticketItems.push({
         id,
+        fixtureId: r.fixture.fixtureId,
+        leagueId: r.fixture.league.id,
+        season: r.fixture.league.season,
         homeTeam: r.fixture.homeTeam.name,
         awayTeam: r.fixture.awayTeam.name,
+        matchDate: r.fixture.date,
         market: bet.market,
         selection: bet.selection,
         probability: bet.probability,
@@ -561,6 +566,60 @@ clearTicketBtn.addEventListener("click", () => {
   renderTicket();
 });
 
+saveTicketBtn.addEventListener("click", async () => {
+  if (ticketItems.length < 2) {
+    alert("Tiket musí obsahovať aspoň 2 tipy.");
+    return;
+  }
+
+  const combinedProbability = ticketItems.reduce((acc, t) => acc * (t.probability / 100), 1) * 100;
+
+  const ticketTip = {
+    id: `ticket-${Date.now()}`,
+    fixtureId: ticketItems[0].fixtureId,
+    leagueId: ticketItems[0].leagueId,
+    season: ticketItems[0].season,
+    leagueName: "Tiket",
+    homeTeam: "Tiket",
+    awayTeam: `${ticketItems.length} zápasov`,
+    matchDate: new Date().toISOString(),
+    market: "Tiket",
+    selection: `${ticketItems.length} tipov`,
+    probability: combinedProbability,
+    savedAt: new Date().toISOString(),
+    status: "pending",
+    legs: ticketItems.map((t) => ({
+      fixtureId: t.fixtureId,
+      leagueId: t.leagueId,
+      season: t.season,
+      homeTeam: t.homeTeam,
+      awayTeam: t.awayTeam,
+      matchDate: t.matchDate,
+      market: t.market,
+      selection: t.selection,
+      probability: t.probability,
+      status: "pending",
+    })),
+  };
+
+  saveTicketBtn.disabled = true;
+  try {
+    await fetchJson("/api/tips", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(ticketTip),
+    });
+    ticketItems = [];
+    updateTicketCount();
+    renderTicket();
+    alert("Tiket bol uložený do histórie tipov.");
+  } catch (err) {
+    alert(`Uloženie tiketu zlyhalo: ${err.message}`);
+  } finally {
+    saveTicketBtn.disabled = false;
+  }
+});
+
 // ---- História tipov ----
 
 async function openTipsHistory() {
@@ -597,8 +656,38 @@ function renderTipsList(tips) {
   tipsListEl.innerHTML = tips
     .map((t) => {
       const date = new Date(t.matchDate).toLocaleDateString("sk-SK");
-      const statusLabel =
-        t.status === "won" ? "Vyhral" : t.status === "lost" ? "Prehral" : t.status === "void" ? "Neurčené" : "Čaká";
+      const statusLabelOf = (s) =>
+        s === "won" ? "Vyhral" : s === "lost" ? "Prehral" : s === "void" ? "Neurčené" : "Čaká";
+      const statusLabel = statusLabelOf(t.status);
+
+      if (t.legs && t.legs.length > 0) {
+        const legsHtml = t.legs
+          .map(
+            (leg) => `
+            <div class="tip-row-market" style="padding-left: 10px; border-left: 2px solid var(--border); margin-top: 4px;">
+              ${escapeHtml(leg.homeTeam)} — ${escapeHtml(leg.awayTeam)}: ${escapeHtml(leg.market)}: ${escapeHtml(leg.selection)} · ${leg.probability.toFixed(0)}%
+              <span class="tip-status ${leg.status}" style="margin-left:6px; font-size:9.5px; padding:2px 7px;">${statusLabelOf(leg.status)}</span>
+            </div>`
+          )
+          .join("");
+
+        return `
+        <div class="tip-row" style="align-items: flex-start;">
+          <div class="tip-row-info">
+            <div class="tip-row-match">🎫 Tiket (${t.legs.length} tipov) <span class="muted small">(${date})</span></div>
+            <div class="tip-row-market">Kombinovaná pravdepodobnosť: ${t.probability.toFixed(1)}%</div>
+            ${legsHtml}
+          </div>
+          <span class="tip-status ${t.status}">${statusLabel}</span>
+          ${
+            t.status === "pending"
+              ? `<button class="tip-delete-btn" data-tip-id="${t.id}" title="Zmazať">✕</button>`
+              : ""
+          }
+        </div>
+      `;
+      }
+
       return `
         <div class="tip-row">
           <div class="tip-row-info">
