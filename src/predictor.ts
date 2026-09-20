@@ -427,6 +427,10 @@ export function predictMatch(
       goalsMarket: poisson.over25 >= 50 ? "Over 2.5" : "Under 2.5",
     },
     sampleSizeWarning,
+    seasonGamesPlayed: {
+      home: homeStats.fixtures.played.total,
+      away: awayStats.fixtures.played.total,
+    },
   };
 }
 

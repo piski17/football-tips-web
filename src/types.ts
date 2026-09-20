@@ -160,6 +160,10 @@ export interface PredictionResult {
     goalsMarket: "Over 2.5" | "Under 2.5";
   };
   sampleSizeWarning?: string;
+  seasonGamesPlayed: {
+    home: number;
+    away: number;
+  };
 }
 
 /** Uložený tip na spätné vyhodnotenie (backtesting). */
