@@ -205,7 +205,11 @@ async function analyzeFixture(fixture, leagueId, season) {
 }
 
 function renderAnalysis(r) {
-  const outcomeLetter = r.tip.outcome;
+  const bestOverallBet = (r.bestBets && r.bestBets[0]) || {
+    market: r.tip.outcomeLabel,
+    selection: "",
+    probability: 0,
+  };
 
   const gamesPlayedHtml = r.seasonGamesPlayed
     ? `<p class="muted small" style="margin: -6px 0 12px;">Odohratých zápasov v tejto sezóne: ${escapeHtml(r.fixture.homeTeam.name)} ${r.seasonGamesPlayed.home}, ${escapeHtml(r.fixture.awayTeam.name)} ${r.seasonGamesPlayed.away}</p>`
@@ -225,10 +229,10 @@ function renderAnalysis(r) {
     ${warningHtml}
 
     <div class="tip-callout">
-      <div class="tip-outcome">${outcomeLetter}</div>
+      <div class="tip-outcome">🎯</div>
       <div class="tip-details">
-        <div class="tip-label">${escapeHtml(r.tip.outcomeLabel)}</div>
-        <div class="tip-meta">Istota modelu: ${escapeHtml(r.tip.confidence)} · Odhad gólov: ${escapeHtml(r.tip.goalsMarket)}</div>
+        <div class="tip-label">${escapeHtml(bestOverallBet.market)}: ${escapeHtml(bestOverallBet.selection)}</div>
+        <div class="tip-meta">Najvyššia dôvera zo všetkých trhov · ${bestOverallBet.probability.toFixed(0)}%</div>
       </div>
     </div>
 

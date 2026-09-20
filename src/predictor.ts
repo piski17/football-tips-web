@@ -25,7 +25,7 @@ export const DEFAULT_WEIGHTS: PredictionWeights = {
 const FALLBACK_LEAGUE_AVG_HOME_GOALS = 1.5;
 const FALLBACK_LEAGUE_AVG_AWAY_GOALS = 1.15;
 
-const MAX_GOALS = 6;
+const MAX_GOALS = 7;
 
 // Bežné bookmakerské hranice pre rohy a karty - dajú sa v budúcnosti spraviť konfigurovateľné.
 const CORNERS_LINE = 9.5;
@@ -124,14 +124,29 @@ export function poissonOutcomes(
   probs: OutcomeProbabilities;
   over25: number;
   under25: number;
+  over15: number;
+  under15: number;
+  over35: number;
+  under35: number;
   bttsYes: number;
   bttsNo: number;
+  homeCleanSheet: number;
+  awayCleanSheet: number;
+  correctScore: { home: number; away: number; probability: number };
+  doubleChance: { oneX: number; xTwo: number; oneTwo: number };
 } {
   let homeWin = 0;
   let draw = 0;
   let awayWin = 0;
+  let over15 = 0;
   let over25 = 0;
+  let over35 = 0;
   let bttsYes = 0;
+  let homeCleanSheet = 0; // súper (away) nedal gól
+  let awayCleanSheet = 0; // súper (home) nedal gól
+  let bestScoreProb = -1;
+  let bestScoreHome = 0;
+  let bestScoreAway = 0;
 
   for (let h = 0; h <= MAX_GOALS; h++) {
     for (let a = 0; a <= MAX_GOALS; a++) {
@@ -140,22 +155,46 @@ export function poissonOutcomes(
       else if (h === a) draw += p;
       else awayWin += p;
 
+      if (h + a > 1) over15 += p;
       if (h + a > 2) over25 += p;
+      if (h + a > 3) over35 += p;
       if (h > 0 && a > 0) bttsYes += p;
+      if (a === 0) homeCleanSheet += p;
+      if (h === 0) awayCleanSheet += p;
+
+      if (p > bestScoreProb) {
+        bestScoreProb = p;
+        bestScoreHome = h;
+        bestScoreAway = a;
+      }
     }
   }
 
   const total = homeWin + draw + awayWin || 1;
+  const probs: OutcomeProbabilities = {
+    homeWin: (homeWin / total) * 100,
+    draw: (draw / total) * 100,
+    awayWin: (awayWin / total) * 100,
+  };
+
   return {
-    probs: {
-      homeWin: (homeWin / total) * 100,
-      draw: (draw / total) * 100,
-      awayWin: (awayWin / total) * 100,
-    },
+    probs,
     over25: over25 * 100,
     under25: (1 - over25) * 100,
+    over15: over15 * 100,
+    under15: (1 - over15) * 100,
+    over35: over35 * 100,
+    under35: (1 - over35) * 100,
     bttsYes: bttsYes * 100,
     bttsNo: (1 - bttsYes) * 100,
+    homeCleanSheet: homeCleanSheet * 100,
+    awayCleanSheet: awayCleanSheet * 100,
+    correctScore: { home: bestScoreHome, away: bestScoreAway, probability: bestScoreProb * 100 },
+    doubleChance: {
+      oneX: probs.homeWin + probs.draw,
+      xTwo: probs.draw + probs.awayWin,
+      oneTwo: probs.homeWin + probs.awayWin,
+    },
   };
 }
 
@@ -337,6 +376,18 @@ export function predictMatch(
     candidates.push({ market: "Góly", selection: "Under 2.5", probability: poisson.under25 });
   }
 
+  if (poisson.over15 >= poisson.under15) {
+    candidates.push({ market: "Góly", selection: "Over 1.5", probability: poisson.over15 });
+  } else {
+    candidates.push({ market: "Góly", selection: "Under 1.5", probability: poisson.under15 });
+  }
+
+  if (poisson.over35 >= poisson.under35) {
+    candidates.push({ market: "Góly", selection: "Over 3.5", probability: poisson.over35 });
+  } else {
+    candidates.push({ market: "Góly", selection: "Under 3.5", probability: poisson.under35 });
+  }
+
   if (poisson.bttsYes >= poisson.bttsNo) {
     candidates.push({ market: "Obaja tímy skórujú", selection: "Áno", probability: poisson.bttsYes });
   } else {
@@ -356,6 +407,28 @@ export function predictMatch(
   } else {
     candidates.push({ market: "Karty", selection: `Under ${CARDS_LINE}`, probability: cards.under });
   }
+
+  // Dvojšanca - najlepšia z troch kombinácií (1X, X2, 12)
+  const doubleChanceOptions = [
+    { selection: `${fixture.homeTeam.name} alebo remíza`, probability: poisson.doubleChance.oneX },
+    { selection: `${fixture.awayTeam.name} alebo remíza`, probability: poisson.doubleChance.xTwo },
+    { selection: `${fixture.homeTeam.name} alebo ${fixture.awayTeam.name}`, probability: poisson.doubleChance.oneTwo },
+  ].sort((a, b) => b.probability - a.probability)[0];
+  candidates.push({ market: "Dvojšanca", selection: doubleChanceOptions.selection, probability: doubleChanceOptions.probability });
+
+  // Presný výsledok - najpravdepodobnejšie skóre
+  candidates.push({
+    market: "Presný výsledok",
+    selection: `${poisson.correctScore.home}:${poisson.correctScore.away}`,
+    probability: poisson.correctScore.probability,
+  });
+
+  // Čisté konto - ktorý tím s väčšou pravdepodobnosťou neinkasuje
+  const cleanSheetOptions = [
+    { selection: `${fixture.homeTeam.name} neinkasuje`, probability: poisson.homeCleanSheet },
+    { selection: `${fixture.awayTeam.name} neinkasuje`, probability: poisson.awayCleanSheet },
+  ].sort((a, b) => b.probability - a.probability)[0];
+  candidates.push({ market: "Čisté konto", selection: cleanSheetOptions.selection, probability: cleanSheetOptions.probability });
 
   const bestBets = candidates.sort((a, b) => b.probability - a.probability);
 
