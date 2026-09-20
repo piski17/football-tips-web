@@ -437,7 +437,7 @@ export function predictMatch(
   // odporúčanie uprednostniť najlepší tip POD touto hranicou (stále vysoká
   // istota, ale realistickejší na stávkovanie). Ak by pod hranicou nebol
   // žiadny kandidát, použije sa jednoducho ten najlepší dostupný.
-  const VALUE_THRESHOLD = 90;
+  const VALUE_THRESHOLD = 80;
   const valuePick = sortedBets.find((b) => b.probability < VALUE_THRESHOLD) ?? sortedBets[0];
   const bestBets = [valuePick, ...sortedBets.filter((b) => b !== valuePick)];
 
