@@ -1,6 +1,7 @@
 let selectedLeagueIds = new Set();
 let currentFixtures = [];
 let currentAnalysis = null;
+let ticketItems = []; // aktuálne vybrané tipy na spojenie do "tiketu"
 let collapsedLeagues = new Set(); // ligy schované cez tlačidlo, zostáva aj po automatickom obnovení
 
 const customLeagueInput = document.getElementById("customLeagueId");
@@ -11,6 +12,14 @@ const loadFixturesBtn = document.getElementById("loadFixturesBtn");
 const fixtureListEl = document.getElementById("fixtureList");
 const fixtureCountEl = document.getElementById("fixtureCount");
 const analysisColumnEl = document.getElementById("analysisColumn");
+
+const openTicketBtn = document.getElementById("openTicketBtn");
+const ticketCountEl = document.getElementById("ticketCount");
+const ticketModal = document.getElementById("ticketModal");
+const ticketSummaryEl = document.getElementById("ticketSummary");
+const ticketListEl = document.getElementById("ticketList");
+const closeTicketBtn = document.getElementById("closeTicketBtn");
+const clearTicketBtn = document.getElementById("clearTicketBtn");
 
 const openTipsBtn = document.getElementById("openTipsBtn");
 const tipsModal = document.getElementById("tipsModal");
@@ -224,11 +233,13 @@ function renderAnalysis(r) {
         <div class="tip-label">${escapeHtml(bet.market)}: ${escapeHtml(bet.selection)}</div>
         <div class="tip-meta">
           ${idx === 0 ? "Najvyššia dôvera zo všetkých trhov · " : ""}${bet.probability.toFixed(0)}%
-          ${bet.averageOdds ? ` · priemerný kurz ~${bet.averageOdds.toFixed(2)}` : ""}
         </div>
       </div>
     </div>
-    <button class="btn-primary save-best-bet-btn" data-bet-idx="${idx}" style="width:100%; margin: 4px 0 8px;">Uložiť tento tip</button>
+    <div style="display:flex; gap:8px; margin: 4px 0 8px;">
+      <button class="btn-primary save-best-bet-btn" data-bet-idx="${idx}" style="flex:1;">Uložiť tento tip</button>
+      <button class="btn-ghost add-to-ticket-btn" data-bet-idx="${idx}" style="flex:1;">+ Do tiketu</button>
+    </div>
   `
     )
     .join("");
@@ -284,6 +295,7 @@ function renderAnalysis(r) {
   `;
 
   initSaveTipButton(r);
+  wireTicketButtons(r);
   wireScorerSaveButtons(r);
 }
 
@@ -454,6 +466,100 @@ function initSaveTipButton(r) {
     };
   });
 }
+
+// ---- Tiket (spojenie viacerých tipov) ----
+
+function wireTicketButtons(r) {
+  const buttons = document.querySelectorAll(".add-to-ticket-btn");
+  buttons.forEach((btn) => {
+    btn.onclick = () => {
+      const idx = parseInt(btn.dataset.betIdx ?? "0", 10);
+      const bet = r.bestBets && r.bestBets[idx];
+      if (!bet) return;
+
+      const id = `${r.fixture.fixtureId}-${bet.market}-${bet.selection}`;
+      if (ticketItems.some((t) => t.id === id)) {
+        btn.textContent = "✓ Už v tikete";
+        setTimeout(() => (btn.textContent = "+ Do tiketu"), 1500);
+        return;
+      }
+
+      ticketItems.push({
+        id,
+        homeTeam: r.fixture.homeTeam.name,
+        awayTeam: r.fixture.awayTeam.name,
+        market: bet.market,
+        selection: bet.selection,
+        probability: bet.probability,
+      });
+
+      updateTicketCount();
+      btn.textContent = "✓ Pridané";
+      setTimeout(() => (btn.textContent = "+ Do tiketu"), 1500);
+    };
+  });
+}
+
+function updateTicketCount() {
+  ticketCountEl.textContent = ticketItems.length > 0 ? `(${ticketItems.length})` : "";
+}
+
+function renderTicket() {
+  if (ticketItems.length === 0) {
+    ticketSummaryEl.innerHTML = "";
+    ticketListEl.innerHTML = `<p class="empty-state">Tiket je zatiaľ prázdny - pridaj tipy tlačidlom "+ Do tiketu" pri analýze zápasu.</p>`;
+    return;
+  }
+
+  const combinedProbability = ticketItems.reduce((acc, t) => acc * (t.probability / 100), 1) * 100;
+  const impliedOdds = combinedProbability > 0 ? 100 / combinedProbability : 0;
+
+  ticketSummaryEl.innerHTML = `
+    <span>Počet tipov: <strong>${ticketItems.length}</strong></span>
+    <span>Kombinovaná pravdepodobnosť: <strong>${combinedProbability.toFixed(1)}%</strong></span>
+    <span>Odvodený kurz: <strong>~${impliedOdds.toFixed(2)}</strong></span>
+  `;
+
+  ticketListEl.innerHTML = ticketItems
+    .map(
+      (t) => `
+    <div class="tip-row">
+      <div class="tip-row-info">
+        <div class="tip-row-match">${escapeHtml(t.homeTeam)} — ${escapeHtml(t.awayTeam)}</div>
+        <div class="tip-row-market">${escapeHtml(t.market)}: ${escapeHtml(t.selection)} · ${t.probability.toFixed(0)}%</div>
+      </div>
+      <button class="tip-delete-btn" data-ticket-id="${t.id}" title="Odstrániť z tiketu">✕</button>
+    </div>
+  `
+    )
+    .join("");
+
+  ticketListEl.querySelectorAll(".tip-delete-btn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const id = e.currentTarget.dataset.ticketId;
+      ticketItems = ticketItems.filter((t) => t.id !== id);
+      updateTicketCount();
+      renderTicket();
+    });
+  });
+}
+
+openTicketBtn.addEventListener("click", () => {
+  ticketModal.hidden = false;
+  renderTicket();
+});
+
+closeTicketBtn.addEventListener("click", () => {
+  ticketModal.hidden = true;
+});
+
+clearTicketBtn.addEventListener("click", () => {
+  if (ticketItems.length === 0) return;
+  if (!window.confirm("Naozaj chceš vymazať celý tiket?")) return;
+  ticketItems = [];
+  updateTicketCount();
+  renderTicket();
+});
 
 // ---- História tipov ----
 

@@ -15,10 +15,8 @@ import {
   getFixtureCornersAndCards,
   getFixtureGoalscorerIds,
   getFixtureLineupPlayerIds,
-  getFixtureOddsSummary,
 } from "./apiClient";
 import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS } from "./predictor";
-import { matchOddsForBet } from "./oddsMatcher";
 import { LeaguePreset, SavedTip } from "./types";
 import { saveTip, listTips, updateTip, deleteTip, clearAllTips } from "./tipsStore";
 import { evaluateTip } from "./tipEvaluator";
@@ -117,13 +115,12 @@ app.post("/api/analyze", async (req, res) => {
         getTeamCornersAverage(leagueId, season, fixture.awayTeam.id),
       ]);
 
-    // Druhá vlna - súpisky hráčov + potvrdená zostava (ak je k dispozícii) +
-    // kurzy stávkových spoločností, spustené AŽ PO prvej vlne.
-    const [homePlayers, awayPlayers, lineup, odds] = await Promise.all([
+    // Druhá vlna - súpisky hráčov + potvrdená zostava (ak je k dispozícii),
+    // spustené AŽ PO prvej vlne.
+    const [homePlayers, awayPlayers, lineup] = await Promise.all([
       getTeamPlayersWithStats(fixture.homeTeam.id, season, leagueId),
       getTeamPlayersWithStats(fixture.awayTeam.id, season, leagueId),
       getFixtureLineupPlayerIds(fixture.fixtureId),
-      getFixtureOddsSummary(fixture.fixtureId),
     ]);
 
     const result = predictMatch(
@@ -141,14 +138,6 @@ app.post("/api/analyze", async (req, res) => {
       awayPlayers,
       lineup.homeIds,
       lineup.awayIds
-    );
-
-    // Ku každej z top 3 najlepších stávok priradíme priemerný kurz od
-    // dostupných stávkových spoločností, ak sa pre daný trh nájde.
-    result.bestBets = result.bestBets.map((bet, idx) =>
-      idx < 3
-        ? { ...bet, averageOdds: matchOddsForBet(bet, odds, fixture.homeTeam.name, fixture.awayTeam.name) }
-        : bet
     );
 
     res.json(result);

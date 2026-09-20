@@ -48,6 +48,7 @@
         <button class="btn-primary" id="loadFixturesBtn" title="Obnoviť zápasy">↻</button>
       </div>
 
+      <button class="btn-ghost" id="openTicketBtn">Tiket <span id="ticketCount"></span></button>
       <button class="btn-ghost" id="openTipsBtn">História tipov</button>
     </header>
 
@@ -69,6 +70,24 @@
         </div>
       </section>
     </main>
+  </div>
+
+  <div class="modal-overlay" id="ticketModal" hidden>
+    <div class="modal modal-large">
+      <h3>Môj tiket</h3>
+      <p class="muted small">
+        Spoj viacero tipov z rôznych zápasov do jedného tiketu - appka spočíta
+        kombinovanú pravdepodobnosť a z nej odvodený kurz (presne ako "AKO"
+        tiket v stávkovej kancelárii). Ide o kalkulačku pre túto reláciu appky,
+        neukladá sa automaticky do histórie tipov.
+      </p>
+      <div class="tips-summary" id="ticketSummary"></div>
+      <div class="tips-list" id="ticketList"></div>
+      <div class="modal-actions">
+        <button class="btn-ghost" id="clearTicketBtn" style="color: var(--danger); margin-right: auto;">Vymazať tiket</button>
+        <button class="btn-ghost" id="closeTicketBtn">Zavrieť</button>
+      </div>
+    </div>
   </div>
 
   <div class="modal-overlay" id="tipsModal" hidden>
