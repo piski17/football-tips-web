@@ -430,7 +430,16 @@ export function predictMatch(
   ].sort((a, b) => b.probability - a.probability)[0];
   candidates.push({ market: "Čisté konto", selection: cleanSheetOptions.selection, probability: cleanSheetOptions.probability });
 
-  const bestBets = candidates.sort((a, b) => b.probability - a.probability);
+  const sortedBets = candidates.sort((a, b) => b.probability - a.probability);
+
+  // Tipy s extrémne vysokou pravdepodobnosťou (napr. 95 %) majú v reálnej
+  // stávkovej kancelárii spravidla mizerný kurz - preto sa snažíme ako hlavné
+  // odporúčanie uprednostniť najlepší tip POD touto hranicou (stále vysoká
+  // istota, ale realistickejší na stávkovanie). Ak by pod hranicou nebol
+  // žiadny kandidát, použije sa jednoducho ten najlepší dostupný.
+  const VALUE_THRESHOLD = 90;
+  const valuePick = sortedBets.find((b) => b.probability < VALUE_THRESHOLD) ?? sortedBets[0];
+  const bestBets = [valuePick, ...sortedBets.filter((b) => b !== valuePick)];
 
   const homeTopScorer = homePlayers
     ? predictTopScorer(filterByLineup(homePlayers, homeLineupIds), xg.home, homeStats.goals.for.average.total)
