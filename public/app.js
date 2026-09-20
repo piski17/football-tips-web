@@ -235,28 +235,8 @@ function renderAnalysis(r) {
         <div class="tip-meta">Najvyššia dôvera zo všetkých trhov · ${bestOverallBet.probability.toFixed(0)}%</div>
       </div>
     </div>
-
-    <div class="best-bets-section">
-      <div class="section-title">Odporúčané tipy - klikni "Uložiť" pri tom, ktorý chceš sledovať</div>
-      <div class="best-bets-list">
-        ${(r.bestBets || [])
-          .map(
-            (bet, idx) => `
-          <div class="best-bet-row">
-            <div class="best-bet-rank">${idx + 1}.</div>
-            <div class="best-bet-info">
-              <div class="best-bet-market">${escapeHtml(bet.market)}</div>
-              <div class="best-bet-selection">${escapeHtml(bet.selection)}</div>
-            </div>
-            <div class="best-bet-prob">${bet.probability.toFixed(0)}%</div>
-            <button class="tip-save-btn" data-bet-idx="${idx}">Uložiť</button>
-          </div>
-        `
-          )
-          .join("")}
-      </div>
-      <div id="saveTipMsg"></div>
-    </div>
+    <button class="btn-primary" id="saveBestBetBtn" style="width:100%; margin: 4px 0 8px;">Uložiť tento tip</button>
+    <div id="saveTipMsg"></div>
 
     <div class="prob-section">
       <div class="section-title">Pravdepodobnosť výsledku</div>
@@ -450,46 +430,42 @@ function wireScorerSaveButtons(r) {
 
 function initSaveTipButton(r) {
   const msgEl = document.getElementById("saveTipMsg");
-  const saveButtons = document.querySelectorAll(".tip-save-btn");
-  if (!msgEl || !r.bestBets || r.bestBets.length === 0) return;
+  const btn = document.getElementById("saveBestBetBtn");
+  if (!btn || !msgEl || !r.bestBets || r.bestBets.length === 0) return;
 
-  saveButtons.forEach((btn) => {
-    btn.onclick = async () => {
-      const idx = parseInt(btn.dataset.betIdx ?? "0", 10);
-      const chosenBet = r.bestBets[idx];
-      if (!chosenBet) return;
+  const chosenBet = r.bestBets[0];
 
-      const tip = {
-        id: `${r.fixture.fixtureId}-${Date.now()}`,
-        fixtureId: r.fixture.fixtureId,
-        leagueId: r.fixture.league.id,
-        season: r.fixture.league.season,
-        leagueName: r.fixture.league.name,
-        homeTeam: r.fixture.homeTeam.name,
-        awayTeam: r.fixture.awayTeam.name,
-        matchDate: r.fixture.date,
-        market: chosenBet.market,
-        selection: chosenBet.selection,
-        probability: chosenBet.probability,
-        savedAt: new Date().toISOString(),
-        status: "pending",
-      };
-
-      btn.disabled = true;
-      try {
-        await fetchJson("/api/tips", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(tip),
-        });
-        msgEl.innerHTML = `<p class="muted small" style="margin-top:6px;">✓ Tip uložený (${escapeHtml(chosenBet.market)}: ${escapeHtml(chosenBet.selection)})</p>`;
-      } catch (err) {
-        msgEl.innerHTML = `<p class="muted small" style="margin-top:6px;">Uloženie zlyhalo: ${escapeHtml(err.message)}</p>`;
-      } finally {
-        btn.disabled = false;
-      }
+  btn.onclick = async () => {
+    const tip = {
+      id: `${r.fixture.fixtureId}-${Date.now()}`,
+      fixtureId: r.fixture.fixtureId,
+      leagueId: r.fixture.league.id,
+      season: r.fixture.league.season,
+      leagueName: r.fixture.league.name,
+      homeTeam: r.fixture.homeTeam.name,
+      awayTeam: r.fixture.awayTeam.name,
+      matchDate: r.fixture.date,
+      market: chosenBet.market,
+      selection: chosenBet.selection,
+      probability: chosenBet.probability,
+      savedAt: new Date().toISOString(),
+      status: "pending",
     };
-  });
+
+    btn.disabled = true;
+    try {
+      await fetchJson("/api/tips", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(tip),
+      });
+      msgEl.innerHTML = `<p class="muted small" style="margin-top:6px;">✓ Tip uložený (${escapeHtml(chosenBet.market)}: ${escapeHtml(chosenBet.selection)})</p>`;
+    } catch (err) {
+      msgEl.innerHTML = `<p class="muted small" style="margin-top:6px;">Uloženie zlyhalo: ${escapeHtml(err.message)}</p>`;
+    } finally {
+      btn.disabled = false;
+    }
+  };
 }
 
 // ---- História tipov ----
