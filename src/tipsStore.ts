@@ -13,11 +13,12 @@ const useJsonBin = Boolean(JSONBIN_API_KEY && JSONBIN_BIN_ID);
 const JSONBIN_BASE = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
 
 function jsonBinClient() {
-  const instance = axios.create({ timeout: 30000 });
-  // Automaticky zopakuje požiadavku pri krátkodobom výpadku siete, aby jeden
-  // prechodný problém nespôsobil stratu alebo neúplné uloženie tipov.
+  const instance = axios.create({ timeout: 20000 });
+  // Automaticky zopakuje požiadavku pri krátkodobom výpadku siete - menej
+  // pokusov ako predtým, aby jedna pomalá požiadavka nenechala používateľa
+  // čakať aj niekoľko minút (radšej rýchlejšie zlyhá a appka to ukáže ako chybu).
   axiosRetry(instance, {
-    retries: 4,
+    retries: 2,
     retryDelay: axiosRetry.exponentialDelay,
     retryCondition: (error) =>
       axiosRetry.isNetworkOrIdempotentRequestError(error) || error.response?.status === 429,
@@ -96,10 +97,29 @@ async function writeAll(tips: SavedTip[]): Promise<void> {
   }
 }
 
+/**
+ * Poistka proti súbežným zápisom: ak by appka aj web (alebo dve rýchle
+ * akcie po sebe) chceli zapisovať naraz, mohlo by dôjsť k tomu, že jeden
+ * zápis prepíše ten druhý (lebo obaja si najprv prečítajú ten istý "starý"
+ * stav). Táto fronta zaručí, že sa vždy vykoná najprv jedno kompletné
+ * čítanie+zápis, až potom ďalšie - nikdy naraz.
+ */
+let writeQueue: Promise<unknown> = Promise.resolve();
+function withWriteLock<T>(operation: () => Promise<T>): Promise<T> {
+  const run = writeQueue.then(operation, operation);
+  writeQueue = run.then(
+    () => undefined,
+    () => undefined
+  );
+  return run;
+}
+
 export async function saveTip(tip: SavedTip): Promise<void> {
-  const tips = await readAll();
-  tips.unshift(tip);
-  await writeAll(tips);
+  await withWriteLock(async () => {
+    const tips = await readAll();
+    tips.unshift(tip);
+    await writeAll(tips);
+  });
 }
 
 export async function listTips(): Promise<SavedTip[]> {
@@ -107,23 +127,29 @@ export async function listTips(): Promise<SavedTip[]> {
 }
 
 export async function updateTip(id: string, updates: Partial<SavedTip>): Promise<void> {
-  const tips = await readAll();
-  const idx = tips.findIndex((t) => t.id === id);
-  if (idx >= 0) {
-    tips[idx] = { ...tips[idx], ...updates };
-    await writeAll(tips);
-  }
+  await withWriteLock(async () => {
+    const tips = await readAll();
+    const idx = tips.findIndex((t) => t.id === id);
+    if (idx >= 0) {
+      tips[idx] = { ...tips[idx], ...updates };
+      await writeAll(tips);
+    }
+  });
 }
 
 /** Zmaže tip len ak je ešte "pending" - už vyhodnotené tipy (won/lost/void) sa nedajú zmazať, aby zostala história presná. */
 export async function deleteTip(id: string): Promise<void> {
-  const tips = await readAll();
-  const target = tips.find((t) => t.id === id);
-  if (!target || target.status !== "pending") return;
-  await writeAll(tips.filter((t) => t.id !== id));
+  await withWriteLock(async () => {
+    const tips = await readAll();
+    const target = tips.find((t) => t.id === id);
+    if (!target || target.status !== "pending") return;
+    await writeAll(tips.filter((t) => t.id !== id));
+  });
 }
 
 /** Vymaže úplne všetky uložené tipy (aj vyhodnotené) - použiteľné na kompletný reštart histórie. */
 export async function clearAllTips(): Promise<void> {
-  await writeAll([]);
+  await withWriteLock(async () => {
+    await writeAll([]);
+  });
 }
