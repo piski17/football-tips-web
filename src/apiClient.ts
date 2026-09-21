@@ -85,7 +85,7 @@ function setCached<T>(key: string, value: T, ttlMs: number): void {
   cache.set(key, { value, expiresAt: Date.now() + ttlMs });
 }
 
-const TTL_HISTORICAL_PRIORS = 6 * 60 * 60 * 1000; // 6 hodín - minulé sezóny sa nemenia
+const TTL_HISTORICAL_PRIORS = 24 * 60 * 60 * 1000; // 24 hodín - minulé sezóny sa nikdy nemenia, netreba to počítať často znova
 const TTL_LEAGUE_AVERAGES = 60 * 60 * 1000; // 1 hodina
 const TTL_CORNERS_AVERAGE = 30 * 60 * 1000; // 30 minút - môže sa meniť s novo odohranými zápasmi
 const TTL_SQUAD = 6 * 60 * 60 * 1000; // 6 hodín - súpiska sa počas dňa prakticky nemení
@@ -290,7 +290,7 @@ export async function getTeamExtendedStatsAverages(
     let valid: Record<string, number | null>[] = [];
 
     // Skús to až 3× odznova, kým sa nepodarí stiahnuť dáta pre všetky zápasy.
-    for (let attempt = 0; attempt < 3 && valid.length < fixtures.length; attempt++) {
+    for (let attempt = 0; attempt < 5 && valid.length < fixtures.length; attempt++) {
       const rows = await fetchAllStats();
       const currentValid = rows.filter((r): r is Record<string, number | null> => r !== null);
       if (currentValid.length > valid.length) {
@@ -401,7 +401,7 @@ export async function getHistoricalGoalPriors(
   // Skús to až 3× odznova, kým sa nepodarí nájsť všetky sezóny - mohlo ísť
   // len o krátkodobý výpadok pri konkrétnom volaní. Zakaždým si necháme ten
   // najlepší (najúplnejší) výsledok, aký sa doteraz podarilo získať.
-  for (let attempt = 0; attempt < 3 && valid.length < seasonsBack; attempt++) {
+  for (let attempt = 0; attempt < 5 && valid.length < seasonsBack; attempt++) {
     const results = await fetchAllSeasons();
     const currentValid = results.filter((r): r is NonNullable<typeof r> => r !== null);
     if (currentValid.length > valid.length) {
