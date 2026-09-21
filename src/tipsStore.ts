@@ -13,7 +13,7 @@ const useJsonBin = Boolean(JSONBIN_API_KEY && JSONBIN_BIN_ID);
 const JSONBIN_BASE = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
 
 function jsonBinClient() {
-  const instance = axios.create({ timeout: 15000 });
+  const instance = axios.create({ timeout: 30000 });
   // Automaticky zopakuje požiadavku pri krátkodobom výpadku siete, aby jeden
   // prechodný problém nespôsobil stratu alebo neúplné uloženie tipov.
   axiosRetry(instance, {
