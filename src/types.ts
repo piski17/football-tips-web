@@ -51,6 +51,7 @@ export interface MarketPick {
   selection: string; // napr. "Výhra Chelsea", "Over 9.5", "Under 3.5"
   probability: number; // 0-100
   category: string; // na skupinovanie podobných trhov, aby appka nedávala 2 podobné tipy naraz
+  explanation?: string; // krátke vysvetlenie, prečo model tento tip odporúča
 }
 
 /** Odhad pre trh typu Over/Under (rohy, karty) založený na kombinovanom Poissonovom modeli. */

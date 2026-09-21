@@ -96,6 +96,20 @@
       <h3>História tipov</h3>
       <div class="tips-summary" id="tipsSummary"></div>
       <div class="market-breakdown" id="marketBreakdown"></div>
+
+      <div class="bankroll-section" id="bankrollSection">
+        <div class="market-breakdown-title">
+          Bankroll simulátor
+          <span class="muted small">- simulácia so sadzbou podľa dôvery a predpokladaným "fér" kurzom z pravdepodobnosti modelu</span>
+        </div>
+        <div class="bankroll-controls">
+          <label for="bankrollStartInput">Počiatočný bankroll:</label>
+          <input type="number" id="bankrollStartInput" value="1000" min="1" step="50" />
+          <span>€</span>
+        </div>
+        <div id="bankrollResult"></div>
+      </div>
+
       <div class="tips-list" id="tipsList"></div>
       <div class="modal-actions">
         <button class="btn-ghost" id="clearAllTipsBtn" style="color: var(--danger); margin-right: auto;">Vymazať všetky tipy</button>

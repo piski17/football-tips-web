@@ -400,51 +400,79 @@ export function predictMatch(
     offsides = { expected, line: OFFSIDES_LINE, over, under };
   }
 
-  // ---- Rebríček najlepších tipov naprieč všetkými trhmi ----
+  // ---- Vysvetlenia ("prečo tento tip") pre jednotlivé skupiny trhov ----
+  const resultExplanation = `${fixture.homeTeam.name} forma: ${homeStats.form || "–"} (skóre ${homeFormScore.toFixed(
+    1
+  )}), ${fixture.awayTeam.name} forma: ${awayStats.form || "–"} (skóre ${awayFormScore.toFixed(
+    1
+  )}). Posledných ${h2hResult.homeWins + h2hResult.draws + h2hResult.awayWins} vzájomných zápasov: ${
+    h2hResult.homeWins
+  }-${h2hResult.draws}-${h2hResult.awayWins} (výhry domáci-remízy-výhry hostia). Očakávané góly ${xg.home.toFixed(
+    1
+  )}:${xg.away.toFixed(1)}.`;
+
+  const golyExplanation = `Očakávaný súčet gólov v zápase je ${(xg.home + xg.away).toFixed(1)} (${
+    fixture.homeTeam.name
+  } ${xg.home.toFixed(1)}, ${fixture.awayTeam.name} ${xg.away.toFixed(1)}).`;
+
+  const bttsExplanation = `${fixture.homeTeam.name} strieľa priemerne ${homeStats.goals.for.average.total.toFixed(
+    1
+  )} a inkasuje ${homeStats.goals.against.average.total.toFixed(1)} gólu/zápas, ${
+    fixture.awayTeam.name
+  } strieľa ${awayStats.goals.for.average.total.toFixed(1)} a inkasuje ${awayStats.goals.against.average.total.toFixed(
+    1
+  )} gólu/zápas.`;
+
+  const statExplanation = (expected: number, line: number): string =>
+    `Priemer oboch tímov v tejto štatistike za posledné zápasy je ${expected.toFixed(
+      1
+    )}, oproti hranici ${line} ide o jasný rozdiel.`;
+
+
   // Každý kandidát má aj "kategóriu" - tipy z rovnakej kategórie sú si
   // navzájom podobné/prekrývajúce sa (napr. Dvojšanca a Výsledok zápasu),
   // takže appka pri výbere viacerých tipov na zápas berie max. 1 z každej
   // kategórie, aby dostal rôznorodý, nie opakujúci sa výber.
   const candidates: MarketPick[] = [];
 
-  candidates.push({ market: "Výsledok zápasu", selection: outcomeLabel, probability: sorted[0], category: "vysledok" });
+  candidates.push({ market: "Výsledok zápasu", selection: outcomeLabel, probability: sorted[0], category: "vysledok", explanation: resultExplanation });
 
   if (poisson.over25 >= poisson.under25) {
-    candidates.push({ market: "Góly", selection: "Over 2.5", probability: poisson.over25, category: "goly" });
+    candidates.push({ market: "Góly", selection: "Over 2.5", probability: poisson.over25, category: "goly", explanation: golyExplanation });
   } else {
-    candidates.push({ market: "Góly", selection: "Under 2.5", probability: poisson.under25, category: "goly" });
+    candidates.push({ market: "Góly", selection: "Under 2.5", probability: poisson.under25, category: "goly", explanation: golyExplanation });
   }
 
   if (poisson.over15 >= poisson.under15) {
-    candidates.push({ market: "Góly", selection: "Over 1.5", probability: poisson.over15, category: "goly" });
+    candidates.push({ market: "Góly", selection: "Over 1.5", probability: poisson.over15, category: "goly", explanation: golyExplanation });
   } else {
-    candidates.push({ market: "Góly", selection: "Under 1.5", probability: poisson.under15, category: "goly" });
+    candidates.push({ market: "Góly", selection: "Under 1.5", probability: poisson.under15, category: "goly", explanation: golyExplanation });
   }
 
   if (poisson.over35 >= poisson.under35) {
-    candidates.push({ market: "Góly", selection: "Over 3.5", probability: poisson.over35, category: "goly" });
+    candidates.push({ market: "Góly", selection: "Over 3.5", probability: poisson.over35, category: "goly", explanation: golyExplanation });
   } else {
-    candidates.push({ market: "Góly", selection: "Under 3.5", probability: poisson.under35, category: "goly" });
+    candidates.push({ market: "Góly", selection: "Under 3.5", probability: poisson.under35, category: "goly", explanation: golyExplanation });
   }
 
   if (poisson.bttsYes >= poisson.bttsNo) {
-    candidates.push({ market: "Obaja tímy skórujú", selection: "Áno", probability: poisson.bttsYes, category: "btts" });
+    candidates.push({ market: "Obaja tímy skórujú", selection: "Áno", probability: poisson.bttsYes, category: "btts", explanation: bttsExplanation });
   } else {
-    candidates.push({ market: "Obaja tímy skórujú", selection: "Nie", probability: poisson.bttsNo, category: "btts" });
+    candidates.push({ market: "Obaja tímy skórujú", selection: "Nie", probability: poisson.bttsNo, category: "btts", explanation: bttsExplanation });
   }
 
   if (corners) {
     if (corners.over >= corners.under) {
-      candidates.push({ market: "Rohy", selection: `Over ${CORNERS_LINE}`, probability: corners.over, category: "rohy" });
+      candidates.push({ market: "Rohy", selection: `Over ${CORNERS_LINE}`, probability: corners.over, category: "rohy", explanation: statExplanation(corners.expected, CORNERS_LINE) });
     } else {
-      candidates.push({ market: "Rohy", selection: `Under ${CORNERS_LINE}`, probability: corners.under, category: "rohy" });
+      candidates.push({ market: "Rohy", selection: `Under ${CORNERS_LINE}`, probability: corners.under, category: "rohy", explanation: statExplanation(corners.expected, CORNERS_LINE) });
     }
   }
 
   if (cards.over >= cards.under) {
-    candidates.push({ market: "Karty", selection: `Over ${CARDS_LINE}`, probability: cards.over, category: "karty" });
+    candidates.push({ market: "Karty", selection: `Over ${CARDS_LINE}`, probability: cards.over, category: "karty", explanation: statExplanation(cards.expected, CARDS_LINE) });
   } else {
-    candidates.push({ market: "Karty", selection: `Under ${CARDS_LINE}`, probability: cards.under, category: "karty" });
+    candidates.push({ market: "Karty", selection: `Under ${CARDS_LINE}`, probability: cards.under, category: "karty", explanation: statExplanation(cards.expected, CARDS_LINE) });
   }
 
   if (shotsOnGoal) {
@@ -454,6 +482,7 @@ export function predictMatch(
         selection: `Over ${SHOTS_ON_GOAL_LINE}`,
         probability: shotsOnGoal.over,
         category: "strely",
+        explanation: statExplanation(shotsOnGoal.expected, SHOTS_ON_GOAL_LINE),
       });
     } else {
       candidates.push({
@@ -461,15 +490,16 @@ export function predictMatch(
         selection: `Under ${SHOTS_ON_GOAL_LINE}`,
         probability: shotsOnGoal.under,
         category: "strely",
+        explanation: statExplanation(shotsOnGoal.expected, SHOTS_ON_GOAL_LINE),
       });
     }
   }
 
   if (fouls) {
     if (fouls.over >= fouls.under) {
-      candidates.push({ market: "Fauly", selection: `Over ${FOULS_LINE}`, probability: fouls.over, category: "fauly" });
+      candidates.push({ market: "Fauly", selection: `Over ${FOULS_LINE}`, probability: fouls.over, category: "fauly", explanation: statExplanation(fouls.expected, FOULS_LINE) });
     } else {
-      candidates.push({ market: "Fauly", selection: `Under ${FOULS_LINE}`, probability: fouls.under, category: "fauly" });
+      candidates.push({ market: "Fauly", selection: `Under ${FOULS_LINE}`, probability: fouls.under, category: "fauly", explanation: statExplanation(fouls.expected, FOULS_LINE) });
     }
   }
 
@@ -480,6 +510,7 @@ export function predictMatch(
         selection: `Over ${OFFSIDES_LINE}`,
         probability: offsides.over,
         category: "ofsajdy",
+        explanation: statExplanation(offsides.expected, OFFSIDES_LINE),
       });
     } else {
       candidates.push({
@@ -487,6 +518,7 @@ export function predictMatch(
         selection: `Under ${OFFSIDES_LINE}`,
         probability: offsides.under,
         category: "ofsajdy",
+        explanation: statExplanation(offsides.expected, OFFSIDES_LINE),
       });
     }
   }
@@ -502,6 +534,7 @@ export function predictMatch(
     selection: doubleChanceOptions.selection,
     probability: doubleChanceOptions.probability,
     category: "vysledok", // rovnaká kategória ako Výsledok zápasu - sú si obsahovo blízke
+    explanation: resultExplanation,
   });
 
   // Presný výsledok - najpravdepodobnejšie skóre
@@ -510,6 +543,9 @@ export function predictMatch(
     selection: `${poisson.correctScore.home}:${poisson.correctScore.away}`,
     probability: poisson.correctScore.probability,
     category: "presny_vysledok",
+    explanation: `Najpravdepodobnejšie skóre podľa modelu, vychádzajúce z očakávaných gólov ${xg.home.toFixed(
+      1
+    )}:${xg.away.toFixed(1)}.`,
   });
 
   // Čisté konto - ktorý tím s väčšou pravdepodobnosťou neinkasuje
@@ -517,11 +553,23 @@ export function predictMatch(
     { selection: `${fixture.homeTeam.name} neinkasuje`, probability: poisson.homeCleanSheet },
     { selection: `${fixture.awayTeam.name} neinkasuje`, probability: poisson.awayCleanSheet },
   ].sort((a, b) => b.probability - a.probability)[0];
+  const cleanSheetExplanation = cleanSheetOptions.selection.startsWith(fixture.homeTeam.name)
+    ? `${fixture.awayTeam.name} strieľa v priemere len ${awayStats.goals.for.average.total.toFixed(
+        1
+      )} gólu na zápas, ${fixture.homeTeam.name} inkasuje priemerne ${homeStats.goals.against.average.total.toFixed(
+        1
+      )} gólu na zápas.`
+    : `${fixture.homeTeam.name} strieľa v priemere len ${homeStats.goals.for.average.total.toFixed(
+        1
+      )} gólu na zápas, ${fixture.awayTeam.name} inkasuje priemerne ${awayStats.goals.against.average.total.toFixed(
+        1
+      )} gólu na zápas.`;
   candidates.push({
     market: "Čisté konto",
     selection: cleanSheetOptions.selection,
     probability: cleanSheetOptions.probability,
     category: "ciste_konto",
+    explanation: cleanSheetExplanation,
   });
 
   const sortedBets = candidates.sort((a, b) => b.probability - a.probability);
