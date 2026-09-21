@@ -1,3 +1,24 @@
+// ---- Animácia percenta na úvodnej obrazovke ----
+(function runSplashProgress() {
+  const fill = document.getElementById("splashProgressFill");
+  const pct = document.getElementById("splashProgressPct");
+  if (!fill || !pct) return;
+
+  const duration = 3400; // ms - stihne sa doplniť pred zmiznutím úvodnej obrazovky (3.8s)
+  const start = performance.now();
+
+  function tick(now) {
+    const elapsed = now - start;
+    const progress = Math.min(1, elapsed / duration);
+    const percent = Math.round(progress * 100);
+    fill.style.width = `${percent}%`;
+    pct.textContent = `${percent}%`;
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+
+  requestAnimationFrame(tick);
+})();
+
 let selectedLeagueIds = new Set();
 let currentFixtures = [];
 let currentAnalysis = null;
