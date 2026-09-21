@@ -324,6 +324,20 @@ button, input {
   min-width: 0;
 }
 
+.team-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.team-logo {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
 .fixture-row .team-name {
   font-size: 14px;
   white-space: nowrap;
@@ -334,6 +348,7 @@ button, input {
 .fixture-row .vs {
   font-size: 10.5px;
   color: var(--text-muted);
+  padding-left: 22px;
 }
 
 .empty-state {
@@ -361,6 +376,24 @@ button, input {
   color: var(--text-muted);
   font-size: 12.5px;
   margin-bottom: 6px;
+}
+
+.match-header-teams {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.team-logo-lg {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+.vs-lg {
+  color: var(--text-muted);
+  font-weight: 400;
 }
 
 .match-header h2 {

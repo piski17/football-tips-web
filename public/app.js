@@ -180,9 +180,15 @@ function renderGroupedFixtureList(results) {
       row.innerHTML = `
         <div class="time">${escapeHtml(time)}</div>
         <div class="teams">
-          <span class="team-name">${escapeHtml(fixture.homeTeam.name)}</span>
+          <div class="team-line">
+            ${fixture.homeTeam.logo ? `<img class="team-logo" src="${escapeHtml(fixture.homeTeam.logo)}" alt="" />` : ""}
+            <span class="team-name">${escapeHtml(fixture.homeTeam.name)}</span>
+          </div>
           <span class="vs">vs</span>
-          <span class="team-name">${escapeHtml(fixture.awayTeam.name)}</span>
+          <div class="team-line">
+            ${fixture.awayTeam.logo ? `<img class="team-logo" src="${escapeHtml(fixture.awayTeam.logo)}" alt="" />` : ""}
+            <span class="team-name">${escapeHtml(fixture.awayTeam.name)}</span>
+          </div>
         </div>
       `;
 
@@ -252,7 +258,13 @@ function renderAnalysis(r) {
   analysisColumnEl.innerHTML = `
     <div class="match-header">
       <div class="league-name">${escapeHtml(r.fixture.league.name)} · sezóna ${r.fixture.league.season}</div>
-      <h2>${escapeHtml(r.fixture.homeTeam.name)} — ${escapeHtml(r.fixture.awayTeam.name)}</h2>
+      <h2 class="match-header-teams">
+        ${r.fixture.homeTeam.logo ? `<img class="team-logo-lg" src="${escapeHtml(r.fixture.homeTeam.logo)}" alt="" />` : ""}
+        <span>${escapeHtml(r.fixture.homeTeam.name)}</span>
+        <span class="vs-lg">—</span>
+        ${r.fixture.awayTeam.logo ? `<img class="team-logo-lg" src="${escapeHtml(r.fixture.awayTeam.logo)}" alt="" />` : ""}
+        <span>${escapeHtml(r.fixture.awayTeam.name)}</span>
+      </h2>
     </div>
 
     ${gamesPlayedHtml}
