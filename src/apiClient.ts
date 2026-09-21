@@ -234,11 +234,29 @@ export async function getTeamExtendedStatsAverages(
   const empty: TeamExtendedStatsAverages = { corners: null, shotsOnGoal: null, fouls: null, offsides: null };
 
   try {
-    const fixturesRes = await client().get("/fixtures", {
+    // Tieto štatistiky (na rozdiel od gólov) nemajú sezónny súhrn v API -
+    // počítajú sa z jednotlivých zápasov. Ak ich aktuálna sezóna nemá dosť
+    // (napr. na začiatku sezóny), doplníme zvyšok z tej predošlej, aby bol
+    // priemer od začiatku spoľahlivý.
+    const currentSeasonRes = await client().get("/fixtures", {
       params: { team: teamId, league: leagueId, season, last: lastN, status: "FT" },
     });
-    checkApiErrors(fixturesRes.data);
-    const fixtures: any[] = fixturesRes.data?.response ?? [];
+    checkApiErrors(currentSeasonRes.data);
+    let fixtures: any[] = currentSeasonRes.data?.response ?? [];
+
+    if (fixtures.length < lastN) {
+      const remaining = lastN - fixtures.length;
+      try {
+        const prevSeasonRes = await client().get("/fixtures", {
+          params: { team: teamId, league: leagueId, season: season - 1, last: remaining, status: "FT" },
+        });
+        const prevFixtures: any[] = prevSeasonRes.data?.response ?? [];
+        fixtures = [...fixtures, ...prevFixtures];
+      } catch {
+        // predošlá sezóna nie je k dispozícii - pokračujeme len s tým, čo máme
+      }
+    }
+
     if (fixtures.length === 0) {
       setCached(cacheKey, empty, TTL_CORNERS_AVERAGE);
       return empty;
