@@ -530,7 +530,7 @@ export function predictMatch(
   // stávkovej kancelárii spravidla mizerný kurz - preto appka pri výbere
   // hlavných odporúčaní uprednostňuje tipy POD touto hranicou (stále vysoká
   // istota, ale realistickejšie na stávkovanie).
-  const VALUE_THRESHOLD = 80;
+  const VALUE_THRESHOLD = 75;
   const valueCandidates = sortedBets.filter((b) => b.probability < VALUE_THRESHOLD);
   const pickPool = valueCandidates.length > 0 ? valueCandidates : sortedBets;
 
@@ -546,7 +546,7 @@ export function predictMatch(
     usedCategories.add(bet.category);
   }
 
-  const bestBets = [...diversifiedPicks, ...sortedBets.filter((b) => !diversifiedPicks.includes(b))];
+  const bestBets = diversifiedPicks;
 
   const homeTopScorer = homePlayers
     ? predictTopScorer(filterByLineup(homePlayers, homeLineupIds), xg.home, homeStats.goals.for.average.total)
