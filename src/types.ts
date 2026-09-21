@@ -50,6 +50,7 @@ export interface MarketPick {
   market: string; // napr. "Výsledok zápasu", "Rohy", "Karty"
   selection: string; // napr. "Výhra Chelsea", "Over 9.5", "Under 3.5"
   probability: number; // 0-100
+  category: string; // na skupinovanie podobných trhov, aby appka nedávala 2 podobné tipy naraz
 }
 
 /** Odhad pre trh typu Over/Under (rohy, karty) založený na kombinovanom Poissonovom modeli. */
@@ -132,6 +133,9 @@ export interface PredictionResult {
   };
   corners?: OverUnderMarket;
   cards?: OverUnderMarket;
+  shotsOnGoal?: OverUnderMarket;
+  fouls?: OverUnderMarket;
+  offsides?: OverUnderMarket;
   bestBets: MarketPick[];
   teamSeasonGoalsPerGame: {
     home: number;

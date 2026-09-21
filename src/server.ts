@@ -7,7 +7,7 @@ import {
   getHeadToHead,
   getLeagueAverages,
   getHistoricalGoalPriors,
-  getTeamCornersAverage,
+  getTeamExtendedStatsAverages,
   getTeamSquad,
   getPlayerSeasonStats,
   getTeamPlayersWithStats,
@@ -103,7 +103,7 @@ app.post("/api/analyze", async (req, res) => {
     }
 
     // Prvá vlna - rovnaké volania, ktoré boli predtým otestované ako stabilné.
-    const [homeStats, awayStats, h2h, leagueAvg, homePriors, awayPriors, homeCorners, awayCorners] =
+    const [homeStats, awayStats, h2h, leagueAvg, homePriors, awayPriors, homeExtStats, awayExtStats] =
       await Promise.all([
         getTeamStatistics(leagueId, season, fixture.homeTeam.id),
         getTeamStatistics(leagueId, season, fixture.awayTeam.id),
@@ -111,8 +111,8 @@ app.post("/api/analyze", async (req, res) => {
         getLeagueAverages(leagueId, season),
         getHistoricalGoalPriors(leagueId, season, fixture.homeTeam.id),
         getHistoricalGoalPriors(leagueId, season, fixture.awayTeam.id),
-        getTeamCornersAverage(leagueId, season, fixture.homeTeam.id),
-        getTeamCornersAverage(leagueId, season, fixture.awayTeam.id),
+        getTeamExtendedStatsAverages(leagueId, season, fixture.homeTeam.id),
+        getTeamExtendedStatsAverages(leagueId, season, fixture.awayTeam.id),
       ]);
 
     // Druhá vlna - súpisky hráčov + potvrdená zostava (ak je k dispozícii),
@@ -132,12 +132,20 @@ app.post("/api/analyze", async (req, res) => {
       DEFAULT_WEIGHTS,
       homePriors,
       awayPriors,
-      homeCorners,
-      awayCorners,
+      homeExtStats.corners,
+      awayExtStats.corners,
       homePlayers,
       awayPlayers,
       lineup.homeIds,
-      lineup.awayIds
+      lineup.awayIds,
+      {
+        homeShotsOnGoal: homeExtStats.shotsOnGoal,
+        awayShotsOnGoal: awayExtStats.shotsOnGoal,
+        homeFouls: homeExtStats.fouls,
+        awayFouls: awayExtStats.fouls,
+        homeOffsides: homeExtStats.offsides,
+        awayOffsides: awayExtStats.offsides,
+      }
     );
 
     res.json(result);
@@ -253,10 +261,17 @@ app.post("/api/tips/check-results", async (_req, res) => {
 
           let corners: number | null = null;
           let cards: number | null = null;
-          if (leg.market === "Rohy" || leg.market === "Karty") {
+          let shotsOnGoal: number | null = null;
+          let fouls: number | null = null;
+          let offsides: number | null = null;
+          const statsMarkets = ["Rohy", "Karty", "Strely na bránu", "Fauly", "Ofsajdy"];
+          if (statsMarkets.includes(leg.market)) {
             const stats = await getFixtureCornersAndCards(leg.fixtureId);
             corners = stats.corners;
             cards = stats.cards;
+            shotsOnGoal = stats.shotsOnGoal;
+            fouls = stats.fouls;
+            offsides = stats.offsides;
           }
 
           let scorerIds: number[] | null = null;
@@ -264,7 +279,17 @@ app.post("/api/tips/check-results", async (_req, res) => {
             scorerIds = await getFixtureGoalscorerIds(leg.fixtureId);
           }
 
-          leg.status = evaluateTip(leg, result.homeGoals, result.awayGoals, corners, cards, scorerIds);
+          leg.status = evaluateTip(
+            leg,
+            result.homeGoals,
+            result.awayGoals,
+            corners,
+            cards,
+            scorerIds,
+            shotsOnGoal,
+            fouls,
+            offsides
+          );
           leg.actualHomeGoals = result.homeGoals;
           leg.actualAwayGoals = result.awayGoals;
           anyLegChanged = true;

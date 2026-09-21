@@ -21,7 +21,10 @@ export function evaluateTip(
   awayGoals: number,
   actualCorners: number | null,
   actualCards: number | null,
-  actualScorerIds: number[] | null = null
+  actualScorerIds: number[] | null = null,
+  actualShotsOnGoal: number | null = null,
+  actualFouls: number | null = null,
+  actualOffsides: number | null = null
 ): "won" | "lost" | "void" {
   switch (tip.market) {
     case "Strelec gólov": {
@@ -65,6 +68,30 @@ export function evaluateTip(
       if (line === null) return "void";
       const isOver = tip.selection.startsWith("Over");
       return actualCards > line === isOver ? "won" : "lost";
+    }
+
+    case "Strely na bránu": {
+      if (actualShotsOnGoal === null) return "void";
+      const line = extractLine(tip.selection);
+      if (line === null) return "void";
+      const isOver = tip.selection.startsWith("Over");
+      return actualShotsOnGoal > line === isOver ? "won" : "lost";
+    }
+
+    case "Fauly": {
+      if (actualFouls === null) return "void";
+      const line = extractLine(tip.selection);
+      if (line === null) return "void";
+      const isOver = tip.selection.startsWith("Over");
+      return actualFouls > line === isOver ? "won" : "lost";
+    }
+
+    case "Ofsajdy": {
+      if (actualOffsides === null) return "void";
+      const line = extractLine(tip.selection);
+      if (line === null) return "void";
+      const isOver = tip.selection.startsWith("Over");
+      return actualOffsides > line === isOver ? "won" : "lost";
     }
 
     case "Dvojšanca": {

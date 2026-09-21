@@ -209,19 +209,29 @@ export async function getTeamStatistics(
 }
 
 /**
- * Dopočíta priemerný počet rohov tímu za zápas z jeho posledných `lastN`
- * odohraných zápasov (API-Football nemá priemer rohov v /teams/statistics,
- * treba ho poskladať zo štatistík jednotlivých zápasov).
+ * Načíta priemer rohov, striel na bránu, faulov a ofsajdov z posledných N
+ * odohratých zápasov tímu - všetko v jednom spoločnom cykle požiadaviek
+ * (namiesto samostatného volania pre každú štatistiku zvlášť, čo by
+ * viacnásobne zvýšilo počet požiadaviek na API-Football).
  */
-export async function getTeamCornersAverage(
+export interface TeamExtendedStatsAverages {
+  corners: number | null;
+  shotsOnGoal: number | null;
+  fouls: number | null;
+  offsides: number | null;
+}
+
+export async function getTeamExtendedStatsAverages(
   leagueId: number,
   season: number,
   teamId: number,
   lastN: number = 10
-): Promise<number | null> {
-  const cacheKey = `corners:${leagueId}:${season}:${teamId}:${lastN}`;
-  const cached = getCached<number | null>(cacheKey);
+): Promise<TeamExtendedStatsAverages> {
+  const cacheKey = `extStatsAvg:${leagueId}:${season}:${teamId}:${lastN}`;
+  const cached = getCached<TeamExtendedStatsAverages>(cacheKey);
   if (cached !== undefined) return cached;
+
+  const empty: TeamExtendedStatsAverages = { corners: null, shotsOnGoal: null, fouls: null, offsides: null };
 
   try {
     const fixturesRes = await client().get("/fixtures", {
@@ -230,46 +240,79 @@ export async function getTeamCornersAverage(
     checkApiErrors(fixturesRes.data);
     const fixtures: any[] = fixturesRes.data?.response ?? [];
     if (fixtures.length === 0) {
-      setCached(cacheKey, null, TTL_CORNERS_AVERAGE);
-      return null;
+      setCached(cacheKey, empty, TTL_CORNERS_AVERAGE);
+      return empty;
     }
 
-    const fetchCornerValues = () =>
+    const fieldMap: Record<string, string> = {
+      corners: "Corner Kicks",
+      shotsOnGoal: "Shots on Goal",
+      fouls: "Fouls",
+      offsides: "Offsides",
+    };
+
+    const fetchAllStats = () =>
       mapSequential(fixtures, async (f: any) => {
         try {
           const statsRes = await client().get("/fixtures/statistics", {
             params: { fixture: f.fixture.id, team: teamId },
           });
           const stats: any[] = statsRes.data?.response?.[0]?.statistics ?? [];
-          const corner = stats.find((s: any) => s.type === "Corner Kicks");
-          return typeof corner?.value === "number" ? corner.value : null;
+          const row: Record<string, number | null> = {};
+          for (const [key, apiName] of Object.entries(fieldMap)) {
+            const stat = stats.find((s: any) => s.type === apiName);
+            row[key] = typeof stat?.value === "number" ? stat.value : null;
+          }
+          return row;
         } catch {
           return null;
         }
       });
 
-    let valid: number[] = [];
+    let valid: Record<string, number | null>[] = [];
 
-    // Skús to až 3× odznova, kým sa nepodarí stiahnuť dáta pre všetky zápasy -
-    // aj jeden chýbajúci zápas vie posunúť priemer okolo hranice Over/Under.
+    // Skús to až 3× odznova, kým sa nepodarí stiahnuť dáta pre všetky zápasy.
     for (let attempt = 0; attempt < 3 && valid.length < fixtures.length; attempt++) {
-      const cornerValues = await fetchCornerValues();
-      const currentValid = cornerValues.filter((v): v is number => v !== null);
+      const rows = await fetchAllStats();
+      const currentValid = rows.filter((r): r is Record<string, number | null> => r !== null);
       if (currentValid.length > valid.length) {
         valid = currentValid;
       }
     }
 
     if (valid.length === 0) {
-      setCached(cacheKey, null, TTL_CORNERS_AVERAGE);
-      return null;
+      setCached(cacheKey, empty, TTL_CORNERS_AVERAGE);
+      return empty;
     }
-    const result = valid.reduce((a, b) => a + b, 0) / valid.length;
+
+    const average = (key: string): number | null => {
+      const values = valid.map((r) => r[key]).filter((v): v is number => v !== null);
+      return values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : null;
+    };
+
+    const result: TeamExtendedStatsAverages = {
+      corners: average("corners"),
+      shotsOnGoal: average("shotsOnGoal"),
+      fouls: average("fouls"),
+      offsides: average("offsides"),
+    };
+
     setCached(cacheKey, result, TTL_CORNERS_AVERAGE);
     return result;
   } catch {
-    return null;
+    return empty;
   }
+}
+
+/** Priemer rohov - tenký obal nad getTeamExtendedStatsAverages (kvôli spätnej kompatibilite). */
+export async function getTeamCornersAverage(
+  leagueId: number,
+  season: number,
+  teamId: number,
+  lastN: number = 10
+): Promise<number | null> {
+  const stats = await getTeamExtendedStatsAverages(leagueId, season, teamId, lastN);
+  return stats.corners;
 }
 
 /** Načíta posledných N vzájomných zápasov medzi dvoma tímami. */
@@ -532,40 +575,50 @@ export async function getFixtureResult(
 /** Načíta celkový počet rohov a kariet (oba tímy spolu) v už odohranom zápase. */
 export async function getFixtureCornersAndCards(
   fixtureId: number
-): Promise<{ corners: number | null; cards: number | null }> {
+): Promise<{
+  corners: number | null;
+  cards: number | null;
+  shotsOnGoal: number | null;
+  fouls: number | null;
+  offsides: number | null;
+}> {
   try {
     const res = await client().get("/fixtures/statistics", { params: { fixture: fixtureId } });
     checkApiErrors(res.data);
 
     const teams: any[] = res.data?.response ?? [];
-    let totalCorners = 0;
-    let totalCards = 0;
-    let foundCorners = false;
-    let foundCards = false;
+    const totals: Record<string, number> = {};
+    const found: Record<string, boolean> = {};
+
+    const fieldMap: Record<string, string> = {
+      corners: "Corner Kicks",
+      cardsYellow: "Yellow Cards",
+      cardsRed: "Red Cards",
+      shotsOnGoal: "Shots on Goal",
+      fouls: "Fouls",
+      offsides: "Offsides",
+    };
 
     for (const t of teams) {
       const stats: any[] = t.statistics ?? [];
-      const corner = stats.find((s: any) => s.type === "Corner Kicks");
-      const yellow = stats.find((s: any) => s.type === "Yellow Cards");
-      const red = stats.find((s: any) => s.type === "Red Cards");
-
-      if (typeof corner?.value === "number") {
-        totalCorners += corner.value;
-        foundCorners = true;
-      }
-      if (typeof yellow?.value === "number") {
-        totalCards += yellow.value;
-        foundCards = true;
-      }
-      if (typeof red?.value === "number") {
-        totalCards += red.value;
-        foundCards = true;
+      for (const [key, apiName] of Object.entries(fieldMap)) {
+        const stat = stats.find((s: any) => s.type === apiName);
+        if (typeof stat?.value === "number") {
+          totals[key] = (totals[key] ?? 0) + stat.value;
+          found[key] = true;
+        }
       }
     }
 
-    return { corners: foundCorners ? totalCorners : null, cards: foundCards ? totalCards : null };
+    return {
+      corners: found.corners ? totals.corners : null,
+      cards: found.cardsYellow || found.cardsRed ? (totals.cardsYellow ?? 0) + (totals.cardsRed ?? 0) : null,
+      shotsOnGoal: found.shotsOnGoal ? totals.shotsOnGoal : null,
+      fouls: found.fouls ? totals.fouls : null,
+      offsides: found.offsides ? totals.offsides : null,
+    };
   } catch {
-    return { corners: null, cards: null };
+    return { corners: null, cards: null, shotsOnGoal: null, fouls: null, offsides: null };
   }
 }
 
