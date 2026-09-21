@@ -4,19 +4,23 @@ import axios from "axios";
 import axiosRetry from "axios-retry";
 import { SavedTip } from "./types";
 
-// ---- Trvalé úložisko cez JSONBin.io (odolné voči reštartu/redeploy appky) ----
+// ---- Trvalé úložisko cez Upstash Redis (odolné voči reštartu/redeploy appky) ----
+//
+// Predtým appka používala JSONBin.io, ktorého bezplatný plán ale poskytuje len
+// 10 000 požiadaviek JEDNORAZOVO (nie mesačne) - pri bežnom používaní appky sa
+// to rýchlo minie. Upstash Redis má bezplatný plán 500 000 požiadaviek KAŽDÝ
+// MESIAC, čo je pre tento účel oveľa udržateľnejšie.
 
-const JSONBIN_API_KEY = process.env.JSONBIN_API_KEY;
-const JSONBIN_BIN_ID = process.env.JSONBIN_BIN_ID;
-const useJsonBin = Boolean(JSONBIN_API_KEY && JSONBIN_BIN_ID);
+const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL;
+const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
+const useUpstash = Boolean(UPSTASH_URL && UPSTASH_TOKEN);
 
-const JSONBIN_BASE = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+const TIPS_KEY = "tipradar_tips";
 
-function jsonBinClient() {
+function upstashClient() {
   const instance = axios.create({ timeout: 20000 });
   // Automaticky zopakuje požiadavku pri krátkodobom výpadku siete - menej
-  // pokusov ako predtým, aby jedna pomalá požiadavka nenechala používateľa
-  // čakať aj niekoľko minút (radšej rýchlejšie zlyhá a appka to ukáže ako chybu).
+  // pokusov, aby jedna pomalá požiadavka nenechala používateľa čakať dlho.
   axiosRetry(instance, {
     retries: 2,
     retryDelay: axiosRetry.exponentialDelay,
@@ -30,35 +34,28 @@ function jsonBinClient() {
  * DÔLEŽITÉ: pri zlyhaní siete táto funkcia musí chybu nahlásiť ďalej (throw),
  * nie potichu vrátiť prázdny zoznam - inak by pri ukladaní nového tipu mohla
  * appka omylom prepísať celú existujúcu históriu prázdnym/neúplným zoznamom.
- *
- * Dáta sa čítajú v novom formáte { tips: [...] }, so spätnou kompatibilitou
- * pre starší formát (čistý zoznam), ak by v bin-e ešte zostal.
  */
 async function readAllRemote(): Promise<SavedTip[]> {
-  const res = await jsonBinClient().get(`${JSONBIN_BASE}/latest`, {
-    headers: { "X-Master-Key": JSONBIN_API_KEY!, "X-Bin-Meta": "false" },
+  const res = await upstashClient().get(`${UPSTASH_URL}/get/${TIPS_KEY}`, {
+    headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
   });
-  if (Array.isArray(res.data)) return res.data; // starší formát (spätná kompatibilita)
-  if (res.data && Array.isArray(res.data.tips)) return res.data.tips;
-  return [];
+  const raw = res.data?.result;
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 }
 
-/**
- * Dáta sa ukladajú zabalené ako { tips: [...] }, nie ako čistý zoznam -
- * JSONBin.io totiž odmieta obsah, ktorý vyzerá "prázdny" (napr. samotné []),
- * čo by inak spôsobilo chybu presne pri vymazaní poslednej/všetkých položiek.
- */
 async function writeAllRemote(tips: SavedTip[]): Promise<void> {
-  await jsonBinClient().put(
-    `${JSONBIN_BASE}`,
-    { tips },
-    {
-      headers: { "X-Master-Key": JSONBIN_API_KEY!, "Content-Type": "application/json" },
-    }
-  );
+  await upstashClient().post(`${UPSTASH_URL}/set/${TIPS_KEY}`, JSON.stringify(tips), {
+    headers: { Authorization: `Bearer ${UPSTASH_TOKEN}`, "Content-Type": "text/plain" },
+  });
 }
 
-// ---- Lokálne úložisko (záloha, ak JSONBin nie je nastavený - napr. pri lokálnom vývoji) ----
+// ---- Lokálne úložisko (záloha, ak Upstash nie je nastavený - napr. pri lokálnom vývoji) ----
 
 const DATA_DIR = path.join(__dirname, "..", "data");
 const FILE_PATH = path.join(DATA_DIR, "tips.json");
@@ -83,14 +80,14 @@ function writeAllLocal(tips: SavedTip[]): void {
   fs.writeFileSync(FILE_PATH, JSON.stringify(tips, null, 2), "utf-8");
 }
 
-// ---- Spoločné funkcie - použijú JSONBin, ak je nastavený, inak lokálny súbor ----
+// ---- Spoločné funkcie - použijú Upstash, ak je nastavený, inak lokálny súbor ----
 
 async function readAll(): Promise<SavedTip[]> {
-  return useJsonBin ? readAllRemote() : readAllLocal();
+  return useUpstash ? readAllRemote() : readAllLocal();
 }
 
 async function writeAll(tips: SavedTip[]): Promise<void> {
-  if (useJsonBin) {
+  if (useUpstash) {
     await writeAllRemote(tips);
   } else {
     writeAllLocal(tips);
@@ -100,9 +97,8 @@ async function writeAll(tips: SavedTip[]): Promise<void> {
 /**
  * Poistka proti súbežným zápisom: ak by appka aj web (alebo dve rýchle
  * akcie po sebe) chceli zapisovať naraz, mohlo by dôjsť k tomu, že jeden
- * zápis prepíše ten druhý (lebo obaja si najprv prečítajú ten istý "starý"
- * stav). Táto fronta zaručí, že sa vždy vykoná najprv jedno kompletné
- * čítanie+zápis, až potom ďalšie - nikdy naraz.
+ * zápis prepíše ten druhý. Táto fronta zaručí, že sa vždy vykoná najprv
+ * jedno kompletné čítanie+zápis, až potom ďalšie - nikdy naraz.
  */
 let writeQueue: Promise<unknown> = Promise.resolve();
 function withWriteLock<T>(operation: () => Promise<T>): Promise<T> {
