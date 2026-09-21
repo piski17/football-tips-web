@@ -25,6 +25,7 @@ const saveTicketBtn = document.getElementById("saveTicketBtn");
 const openTipsBtn = document.getElementById("openTipsBtn");
 const tipsModal = document.getElementById("tipsModal");
 const tipsSummaryEl = document.getElementById("tipsSummary");
+const marketBreakdownEl = document.getElementById("marketBreakdown");
 const tipsListEl = document.getElementById("tipsList");
 const closeTipsBtn = document.getElementById("closeTipsBtn");
 const checkResultsBtn = document.getElementById("checkResultsBtn");
@@ -629,6 +630,43 @@ async function openTipsHistory() {
   }
 }
 
+function renderMarketBreakdown(tips) {
+  const decidedTips = tips.filter((t) => t.status === "won" || t.status === "lost");
+  if (decidedTips.length === 0) {
+    marketBreakdownEl.innerHTML = "";
+    return;
+  }
+
+  const byMarket = {};
+  for (const t of decidedTips) {
+    if (!byMarket[t.market]) byMarket[t.market] = { won: 0, total: 0 };
+    byMarket[t.market].total++;
+    if (t.status === "won") byMarket[t.market].won++;
+  }
+
+  const rows = Object.entries(byMarket).sort((a, b) => b[1].total - a[1].total);
+
+  marketBreakdownEl.innerHTML = `
+    <div class="market-breakdown-title">Úspešnosť podľa typu stávky</div>
+    ${rows
+      .map(([market, stats]) => {
+        const pct = (stats.won / stats.total) * 100;
+        return `
+        <div class="market-breakdown-row">
+          <div class="market-breakdown-label">
+            <span>${escapeHtml(market)}</span>
+            <span class="muted small">${stats.won}/${stats.total} · ${pct.toFixed(0)}%</span>
+          </div>
+          <div class="market-breakdown-bar">
+            <div class="market-breakdown-bar-fill" style="width: ${pct}%;"></div>
+          </div>
+        </div>
+      `;
+      })
+      .join("")}
+  `;
+}
+
 function renderTipsList(tips) {
   const won = tips.filter((t) => t.status === "won").length;
   const lost = tips.filter((t) => t.status === "lost").length;
@@ -643,6 +681,8 @@ function renderTipsList(tips) {
     <span>Prehral: <strong>${lost}</strong></span>
     <span>Úspešnosť: <strong>${winRate}${decided > 0 ? "%" : ""}</strong></span>
   `;
+
+  renderMarketBreakdown(tips);
 
   if (tips.length === 0) {
     tipsListEl.innerHTML = `<p class="empty-state">Zatiaľ nemáš uložené žiadne tipy.</p>`;

@@ -1,14 +1,15 @@
 :root {
-  --bg: #0f1b14;
-  --surface: #16241c;
-  --surface-alt: #1c2f24;
-  --border: #24382c;
-  --accent: #3fa65c;
-  --accent-strong: #57c97a;
-  --gold: #e8b84b;
+  --bg: #0a0a0b;
+  --surface: #131315;
+  --surface-alt: #1c1c1f;
+  --border: #2c2c30;
+  --accent: #c9a04d;
+  --accent-strong: #e8c766;
+  --gold: #e8c766;
   --danger: #d9776c;
-  --text: #f1f5f1;
-  --text-muted: #8fa391;
+  --success: #6bbf7a;
+  --text: #f2f0ea;
+  --text-muted: #948f80;
 
   --font-display: "Space Grotesk", "Arial", sans-serif;
   --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
@@ -795,8 +796,8 @@ button, input {
 }
 
 .tip-status.won {
-  background: rgba(63, 166, 92, 0.18);
-  color: var(--accent-strong);
+  background: rgba(107, 191, 122, 0.18);
+  color: var(--success);
 }
 
 .tip-status.lost {
@@ -862,4 +863,42 @@ button, input {
     visibility: hidden;
     pointer-events: none;
   }
+}
+
+/* ---------- Rozpis úspešnosti podľa trhu ---------- */
+
+.market-breakdown {
+  padding: 10px 0 14px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+}
+
+.market-breakdown-title {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.market-breakdown-row {
+  margin-bottom: 8px;
+}
+
+.market-breakdown-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12.5px;
+  margin-bottom: 3px;
+}
+
+.market-breakdown-bar {
+  height: 5px;
+  background: var(--surface-alt);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.market-breakdown-bar-fill {
+  height: 100%;
+  background: var(--accent-strong);
+  border-radius: 3px;
 }
