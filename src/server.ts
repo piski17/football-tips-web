@@ -20,7 +20,7 @@ import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS } from "./predictor";
 import { LeaguePreset, SavedTip } from "./types";
 import { saveTip, listTips, updateTip, deleteTip, clearAllTips } from "./tipsStore";
 import { evaluateTip, computeTicketStatus } from "./tipEvaluator";
-import { sendTipToTelegram, deleteTelegramMessages, isTelegramEnabled } from "./telegram";
+import { sendTipToTelegram, deleteTelegramMessages, isTelegramEnabled, availableTelegramTargets } from "./telegram";
 import { listSubscribers, addSubscriber, updateSubscriber, deleteSubscriber } from "./subscribersStore";
 import { Subscriber } from "./types";
 
@@ -240,21 +240,26 @@ app.post("/api/tips/:id/telegram", async (req, res) => {
       res.status(400).json({ error: "Telegram nie je na serveri nastavený." });
       return;
     }
-    const messageIds = await sendTipToTelegram(tip);
-    if (messageIds) {
-      await updateTip(tip.id, { telegramMessageIds: messageIds });
+    const target = req.body?.target === "vip" || req.body?.target === "both" ? req.body.target : "premium";
+    const sent = await sendTipToTelegram(tip, target);
+    if (sent.length > 0) {
+      await updateTip(tip.id, { telegramMessages: sent });
     }
-    res.json({ ok: Boolean(messageIds) });
+    res.json({ ok: sent.length > 0 });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
 });
 
+app.get("/api/telegram/targets", (_req, res) => {
+  res.json({ targets: availableTelegramTargets() });
+});
+
 app.delete("/api/tips/:id", async (req, res) => {
   try {
     const deleted = await deleteTip(req.params.id);
-    if (deleted?.telegramMessageIds?.length) {
-      await deleteTelegramMessages(deleted.telegramMessageIds);
+    if (deleted?.telegramMessages?.length) {
+      await deleteTelegramMessages(deleted.telegramMessages);
     }
     res.json({ ok: true });
   } catch (err: any) {
@@ -266,8 +271,8 @@ app.delete("/api/tips", async (_req, res) => {
   try {
     const previous = await clearAllTips();
     for (const tip of previous) {
-      if (tip.telegramMessageIds?.length) {
-        await deleteTelegramMessages(tip.telegramMessageIds);
+      if (tip.telegramMessages?.length) {
+        await deleteTelegramMessages(tip.telegramMessages);
       }
     }
     res.json({ ok: true });

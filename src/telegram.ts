@@ -2,11 +2,21 @@ import axios from "axios";
 import { SavedTip } from "./types";
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
-const enabled = Boolean(TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID);
+const TELEGRAM_CHAT_ID_PREMIUM = process.env.TELEGRAM_CHAT_ID_PREMIUM;
+const TELEGRAM_CHAT_ID_VIP = process.env.TELEGRAM_CHAT_ID_VIP;
+
+export type TelegramTarget = "premium" | "vip" | "both";
 
 export function isTelegramEnabled(): boolean {
-  return enabled;
+  return Boolean(TELEGRAM_BOT_TOKEN && (TELEGRAM_CHAT_ID_PREMIUM || TELEGRAM_CHAT_ID_VIP));
+}
+
+/** Ktoré kanály sú reálne nastavené (na zobrazenie voľby vo formulári). */
+export function availableTelegramTargets(): ("premium" | "vip")[] {
+  const targets: ("premium" | "vip")[] = [];
+  if (TELEGRAM_CHAT_ID_PREMIUM) targets.push("premium");
+  if (TELEGRAM_CHAT_ID_VIP) targets.push("vip");
+  return targets;
 }
 
 function escapeHtml(text: string): string {
@@ -58,37 +68,53 @@ function buildMessageText(tip: SavedTip): string {
   );
 }
 
-/**
- * Pošle tip (jednotlivý alebo tiket) ako textovú správu do nastaveného
- * Telegram kanálu/skupiny. Vráti zoznam ID odoslaných správ (na prípadné
- * neskoršie zmazanie), alebo null, ak Telegram nie je nastavený alebo
- * odoslanie zlyhalo.
- */
-export async function sendTipToTelegram(tip: SavedTip): Promise<number[] | null> {
-  if (!enabled) return null;
-
+async function sendToChat(chatId: string, text: string): Promise<number | null> {
   try {
     const res = await axios.post(
       `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
-      { chat_id: TELEGRAM_CHAT_ID, text: buildMessageText(tip), parse_mode: "HTML" },
+      { chat_id: chatId, text, parse_mode: "HTML" },
       { timeout: 10000 }
     );
     const messageId = res.data?.result?.message_id;
-    return typeof messageId === "number" ? [messageId] : null;
+    return typeof messageId === "number" ? messageId : null;
   } catch (err: any) {
     console.error("Odoslanie do Telegramu zlyhalo:", err?.response?.data ?? err?.message ?? err);
     return null;
   }
 }
 
-/** Zmaže zoznam správ z Telegram kanálu/skupiny (napr. keď sa tip zmaže aj z histórie). */
-export async function deleteTelegramMessages(messageIds: number[]): Promise<void> {
-  if (!enabled) return;
-  for (const messageId of messageIds) {
+/**
+ * Pošle tip (jednotlivý alebo tiket) do zvoleného Telegram kanálu/kanálov
+ * ("premium", "vip", alebo "both" - obidva naraz). Vráti zoznam presne
+ * odoslaných správ (kanál + ID správy) na prípadné neskoršie zmazanie.
+ */
+export async function sendTipToTelegram(
+  tip: SavedTip,
+  target: TelegramTarget
+): Promise<{ chatId: string; messageId: number }[]> {
+  const chatIds: string[] = [];
+  if ((target === "premium" || target === "both") && TELEGRAM_CHAT_ID_PREMIUM) chatIds.push(TELEGRAM_CHAT_ID_PREMIUM);
+  if ((target === "vip" || target === "both") && TELEGRAM_CHAT_ID_VIP) chatIds.push(TELEGRAM_CHAT_ID_VIP);
+  if (chatIds.length === 0) return [];
+
+  const text = buildMessageText(tip);
+  const sent: { chatId: string; messageId: number }[] = [];
+
+  for (const chatId of chatIds) {
+    const messageId = await sendToChat(chatId, text);
+    if (messageId) sent.push({ chatId, messageId });
+  }
+
+  return sent;
+}
+
+/** Zmaže presne dané správy (každú v jej vlastnom kanáli) - napr. keď sa tip zmaže aj z histórie. */
+export async function deleteTelegramMessages(messages: { chatId: string; messageId: number }[]): Promise<void> {
+  for (const { chatId, messageId } of messages) {
     try {
       await axios.post(
         `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/deleteMessage`,
-        { chat_id: TELEGRAM_CHAT_ID, message_id: messageId },
+        { chat_id: chatId, message_id: messageId },
         { timeout: 10000 }
       );
     } catch (err: any) {

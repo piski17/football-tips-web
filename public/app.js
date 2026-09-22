@@ -484,11 +484,42 @@ function wireScorerSaveButtons(r) {
   });
 }
 
+function askTelegramTarget() {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.innerHTML = `
+      <div class="modal" style="max-width:320px;">
+        <h3>Odoslať do Telegramu?</h3>
+        <div style="display:flex; flex-direction:column; gap:10px; margin-top:18px;">
+          <button class="btn-primary" id="tgChoicePremium">📣 PREMIUM kanál</button>
+          <button class="btn-primary" id="tgChoiceVip">👑 VIP kanál</button>
+          <button class="btn-ghost" id="tgChoiceBoth">Oba naraz</button>
+          <button class="btn-ghost" id="tgChoiceNone">Neposielať</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    const cleanup = (result) => {
+      document.body.removeChild(overlay);
+      resolve(result);
+    };
+    overlay.querySelector("#tgChoicePremium").addEventListener("click", () => cleanup("premium"));
+    overlay.querySelector("#tgChoiceVip").addEventListener("click", () => cleanup("vip"));
+    overlay.querySelector("#tgChoiceBoth").addEventListener("click", () => cleanup("both"));
+    overlay.querySelector("#tgChoiceNone").addEventListener("click", () => cleanup(null));
+  });
+}
+
 async function maybeOfferTelegram(tipId) {
-  const send = window.confirm("Odoslať tento tip aj do Telegramu?");
-  if (!send) return;
+  const target = await askTelegramTarget();
+  if (!target) return;
   try {
-    await fetchJson(`/api/tips/${tipId}/telegram`, { method: "POST" });
+    await fetchJson(`/api/tips/${tipId}/telegram`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ target }),
+    });
   } catch (err) {
     alert(`Odoslanie do Telegramu zlyhalo: ${err.message}`);
   }
