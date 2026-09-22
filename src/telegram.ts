@@ -59,40 +59,18 @@ function buildMessageText(tip: SavedTip): string {
 }
 
 /**
- * Pošle tip (jednotlivý alebo tiket) do nastaveného Telegram kanálu/skupiny.
- * Pri jednotlivom tipe, ak sú k dispozícii loga oboch tímov, pošle ich ako
- * fotky (album) s textom tipu ako popiskom. Pri tikete (viac zápasov naraz)
- * zostáva len text, aby to nebolo neprehľadné.
- * Vráti zoznam ID odoslaných správ (na prípadné neskoršie zmazanie), alebo
- * null, ak Telegram nie je nastavený alebo odoslanie zlyhalo.
+ * Pošle tip (jednotlivý alebo tiket) ako textovú správu do nastaveného
+ * Telegram kanálu/skupiny. Vráti zoznam ID odoslaných správ (na prípadné
+ * neskoršie zmazanie), alebo null, ak Telegram nie je nastavený alebo
+ * odoslanie zlyhalo.
  */
 export async function sendTipToTelegram(tip: SavedTip): Promise<number[] | null> {
   if (!enabled) return null;
 
-  const isTicket = Boolean(tip.legs && tip.legs.length > 0);
-  const text = buildMessageText(tip);
-
   try {
-    if (!isTicket && tip.homeTeamLogo && tip.awayTeamLogo) {
-      const res = await axios.post(
-        `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMediaGroup`,
-        {
-          chat_id: TELEGRAM_CHAT_ID,
-          media: [
-            { type: "photo", media: tip.homeTeamLogo },
-            { type: "photo", media: tip.awayTeamLogo, caption: text, parse_mode: "HTML" },
-          ],
-        },
-        { timeout: 10000 }
-      );
-      const messages: any[] = res.data?.result ?? [];
-      const ids = messages.map((m) => m.message_id).filter((id) => typeof id === "number");
-      return ids.length > 0 ? ids : null;
-    }
-
     const res = await axios.post(
       `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
-      { chat_id: TELEGRAM_CHAT_ID, text, parse_mode: "HTML" },
+      { chat_id: TELEGRAM_CHAT_ID, text: buildMessageText(tip), parse_mode: "HTML" },
       { timeout: 10000 }
     );
     const messageId = res.data?.result?.message_id;
