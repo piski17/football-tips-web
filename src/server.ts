@@ -20,7 +20,14 @@ import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS } from "./predictor";
 import { LeaguePreset, SavedTip } from "./types";
 import { saveTip, listTips, updateTip, deleteTip, clearAllTips } from "./tipsStore";
 import { evaluateTip, computeTicketStatus } from "./tipEvaluator";
-import { sendTipToTelegram, deleteTelegramMessages, isTelegramEnabled, availableTelegramTargets } from "./telegram";
+import {
+  sendTipToTelegram,
+  deleteTelegramMessages,
+  isTelegramEnabled,
+  availableTelegramTargets,
+  handleTelegramUpdate,
+  setTelegramWebhook,
+} from "./telegram";
 import { listSubscribers, addSubscriber, updateSubscriber, deleteSubscriber } from "./subscribersStore";
 import { Subscriber } from "./types";
 
@@ -52,6 +59,13 @@ const LEAGUE_PRESETS: LeaguePreset[] = [
  * APP_PASSWORD, appka beží bez hesla.
  */
 function basicAuth(req: Request, res: Response, next: NextFunction): void {
+  // Telegram servery volajú tento endpoint priamo, bez znalosti hesla appky -
+  // musí zostať verejne prístupný, inak by appka nikdy nedostala žiadne správy.
+  if (req.path === "/api/telegram/webhook") {
+    next();
+    return;
+  }
+
   const user = process.env.APP_USER;
   const pass = process.env.APP_PASSWORD;
   if (!user || !pass) {
@@ -253,6 +267,27 @@ app.post("/api/tips/:id/telegram", async (req, res) => {
 
 app.get("/api/telegram/targets", (_req, res) => {
   res.json({ targets: availableTelegramTargets() });
+});
+
+// Sem posiela Telegram prichádzajúce správy od používateľov (nová správa, stlačenie tlačidla).
+app.post("/api/telegram/webhook", async (req, res) => {
+  try {
+    await handleTelegramUpdate(req.body);
+  } catch (err) {
+    console.error("Spracovanie Telegram webhooku zlyhalo:", err);
+  }
+  res.sendStatus(200); // Telegram vyžaduje vždy 200, inak to bude skúšať doručiť znova
+});
+
+// Otvor túto adresu v prehliadači RAZ po nasadení appky, aby Telegram vedel, kam posielať správy.
+app.get("/api/telegram/setup-webhook", async (req, res) => {
+  try {
+    const webhookUrl = `${req.protocol}://${req.get("host")}/api/telegram/webhook`;
+    await setTelegramWebhook(webhookUrl);
+    res.send(`Hotovo! Webhook nastavený na: ${webhookUrl}`);
+  } catch (err: any) {
+    res.status(502).send(`Nastavenie webhooku zlyhalo: ${err.message ?? String(err)}`);
+  }
 });
 
 app.delete("/api/tips/:id", async (req, res) => {

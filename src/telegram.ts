@@ -122,3 +122,72 @@ export async function deleteTelegramMessages(messages: { chatId: string; message
     }
   }
 }
+
+// ---- Automatický FAQ asistent (odpovedá, keď niekto napíše botovi súkromne) ----
+
+const TELEGRAM_CONTACT_USERNAME = process.env.TELEGRAM_CONTACT_USERNAME || "im_mishko";
+
+const FAQ_ANSWERS: Record<string, string> = {
+  faq_price:
+    `💰 <b>Cenník</b>\n\n` +
+    `🟡 <b>PREMIUM</b> — 29 €/mesiac\nDenné tipy zo všetkých sledovaných líg, s vysvetlením a plnou históriou úspešnosti.\n\n` +
+    `👑 <b>VIP</b> — 99 €/mesiac\nPre stávkové skupiny a kanály — neobmedzený počet vašich vlastných klientov.\n\n` +
+    `Kedykoľvek zrušiteľné, žiadna viazanosť.`,
+  faq_how:
+    `❓ <b>Ako to funguje</b>\n\n` +
+    `TipRadar denne prepočíta desiatky zápasov cez vlastný štatistický model (Poissonovo rozdelenie gólov, vážená forma, vzájomné zápasy, historické dáta) a vyberie 2-3 najhodnotnejšie tipy naprieč 12 trhmi — s vysvetlením, prečo.`,
+  faq_sample:
+    `📊 <b>Ukážka tipu</b>\n\n` +
+    `🎯 Dvojšanca: domáci alebo remíza\n📈 Dôvera: 74%\n💰 Odhadovaný kurz: ~1.35\n💵 Odporúčaná sadzba: 3% bankrollu\n\n` +
+    `💡 Domáci tím je vo forme (4 výhry z posledných 5), v posledných 8 vzájomných zápasoch prehral len raz.`,
+};
+
+const MAIN_MENU_KEYBOARD = {
+  inline_keyboard: [
+    [{ text: "💰 Cenník", callback_data: "faq_price" }],
+    [{ text: "❓ Ako to funguje", callback_data: "faq_how" }],
+    [{ text: "📊 Ukážka tipu", callback_data: "faq_sample" }],
+    [{ text: "✍️ Napísať priamo", url: `https://t.me/${TELEGRAM_CONTACT_USERNAME}` }],
+  ],
+};
+
+async function callTelegramApi(method: string, body: Record<string, unknown>): Promise<void> {
+  try {
+    await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/${method}`, body, { timeout: 10000 });
+  } catch (err: any) {
+    console.error(`Telegram API (${method}) zlyhalo:`, err?.response?.data ?? err?.message ?? err);
+  }
+}
+
+/** Spracuje jednu prichádzajúcu udalosť z Telegram webhooku (nová správa alebo stlačenie tlačidla). */
+export async function handleTelegramUpdate(update: any): Promise<void> {
+  if (!TELEGRAM_BOT_TOKEN) return;
+
+  if (update.callback_query) {
+    const chatId = update.callback_query.message?.chat?.id;
+    const data = update.callback_query.data;
+    await callTelegramApi("answerCallbackQuery", { callback_query_id: update.callback_query.id });
+    const answer = FAQ_ANSWERS[data];
+    if (chatId && answer) {
+      await callTelegramApi("sendMessage", { chat_id: chatId, text: answer, parse_mode: "HTML", reply_markup: MAIN_MENU_KEYBOARD });
+    }
+    return;
+  }
+
+  // Akákoľvek správa od súkromného používateľa (nie z kanálu) spustí uvítacie menu.
+  const chatId = update.message?.chat?.id;
+  const chatType = update.message?.chat?.type;
+  if (!chatId || chatType !== "private") return;
+
+  await callTelegramApi("sendMessage", {
+    chat_id: chatId,
+    text: "👋 Vitaj v <b>TipRadar</b>!\n\nVyber si, čo ťa zaujíma:",
+    parse_mode: "HTML",
+    reply_markup: MAIN_MENU_KEYBOARD,
+  });
+}
+
+/** Zaregistruje na Telegram serveri adresu, kam má posielať prichádzajúce správy (spustiť raz po nasadení). */
+export async function setTelegramWebhook(webhookUrl: string): Promise<void> {
+  await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook`, { url: webhookUrl });
+}
