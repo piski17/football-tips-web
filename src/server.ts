@@ -20,6 +20,7 @@ import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS } from "./predictor";
 import { LeaguePreset, SavedTip } from "./types";
 import { saveTip, listTips, updateTip, deleteTip, clearAllTips } from "./tipsStore";
 import { evaluateTip, computeTicketStatus } from "./tipEvaluator";
+import { notifyNewTip } from "./telegram";
 
 // Globálna poistka - nečakaná chyba (napr. výpadok siete pri volaní na
 // JSONBin.io alebo API-Football) nesmie zhodiť celý server. Bez tohto by
@@ -210,6 +211,7 @@ app.post("/api/tips", async (req, res) => {
     const tip: SavedTip = req.body;
     await saveTip(tip);
     res.json({ ok: true });
+    notifyNewTip(tip); // po odpovedi klientovi - nezdržiava uloženie, len informuje Telegram
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
