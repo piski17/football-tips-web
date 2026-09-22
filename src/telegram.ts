@@ -22,10 +22,11 @@ async function sendTelegramMessage(text: string): Promise<void> {
       },
       { timeout: 10000 }
     );
-  } catch (err) {
+  } catch (err: any) {
     // Odoslanie do Telegramu nikdy nesmie zhodiť samotné uloženie tipu -
-    // len to potichu zalogujeme na serveri.
-    console.error("Odoslanie do Telegramu zlyhalo:", err);
+    // len to potichu zalogujeme na serveri (s presným dôvodom od Telegramu,
+    // aby sa to dalo ľahko diagnostikovať).
+    console.error("Odoslanie do Telegramu zlyhalo:", err?.response?.data ?? err?.message ?? err);
   }
 }
 
