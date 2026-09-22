@@ -20,7 +20,7 @@ import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS } from "./predictor";
 import { LeaguePreset, SavedTip } from "./types";
 import { saveTip, listTips, updateTip, deleteTip, clearAllTips } from "./tipsStore";
 import { evaluateTip, computeTicketStatus } from "./tipEvaluator";
-import { notifyNewTip } from "./telegram";
+import { sendTipToTelegram, deleteTelegramMessage, isTelegramEnabled } from "./telegram";
 
 // Globálna poistka - nečakaná chyba (napr. výpadok siete pri volaní na
 // JSONBin.io alebo API-Football) nesmie zhodiť celý server. Bez tohto by
@@ -210,8 +210,7 @@ app.post("/api/tips", async (req, res) => {
   try {
     const tip: SavedTip = req.body;
     await saveTip(tip);
-    res.json({ ok: true });
-    notifyNewTip(tip); // po odpovedi klientovi - nezdržiava uloženie, len informuje Telegram
+    res.json({ ok: true, telegramAvailable: isTelegramEnabled() });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
@@ -225,9 +224,36 @@ app.get("/api/tips", async (_req, res) => {
   }
 });
 
+// Odošle už uložený tip do Telegramu (len na výslovné vyžiadanie, s potvrdením v UI)
+// a uloží si ID tej správy, aby sa dala neskôr zmazať spolu s tipom.
+app.post("/api/tips/:id/telegram", async (req, res) => {
+  try {
+    const tips = await listTips();
+    const tip = tips.find((t) => t.id === req.params.id);
+    if (!tip) {
+      res.status(404).json({ error: "Tip sa nenašiel." });
+      return;
+    }
+    if (!isTelegramEnabled()) {
+      res.status(400).json({ error: "Telegram nie je na serveri nastavený." });
+      return;
+    }
+    const messageId = await sendTipToTelegram(tip);
+    if (messageId) {
+      await updateTip(tip.id, { telegramMessageId: messageId });
+    }
+    res.json({ ok: Boolean(messageId) });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
 app.delete("/api/tips/:id", async (req, res) => {
   try {
-    await deleteTip(req.params.id);
+    const deleted = await deleteTip(req.params.id);
+    if (deleted?.telegramMessageId) {
+      await deleteTelegramMessage(deleted.telegramMessageId);
+    }
     res.json({ ok: true });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });

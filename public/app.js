@@ -461,6 +461,16 @@ function wireScorerSaveButtons(r) {
   });
 }
 
+async function maybeOfferTelegram(tipId) {
+  const send = window.confirm("Odoslať tento tip aj do Telegramu?");
+  if (!send) return;
+  try {
+    await fetchJson(`/api/tips/${tipId}/telegram`, { method: "POST" });
+  } catch (err) {
+    alert(`Odoslanie do Telegramu zlyhalo: ${err.message}`);
+  }
+}
+
 function initSaveTipButton(r) {
   const msgEl = document.getElementById("saveTipMsg");
   const buttons = document.querySelectorAll(".save-best-bet-btn");
@@ -496,6 +506,7 @@ function initSaveTipButton(r) {
           body: JSON.stringify(tip),
         });
         msgEl.innerHTML = `<p class="muted small" style="margin-top:6px;">✓ Tip uložený (${escapeHtml(chosenBet.market)}: ${escapeHtml(chosenBet.selection)})</p>`;
+        await maybeOfferTelegram(tip.id);
       } catch (err) {
         msgEl.innerHTML = `<p class="muted small" style="margin-top:6px;">Uloženie zlyhalo: ${escapeHtml(err.message)}</p>`;
       } finally {
@@ -653,7 +664,7 @@ saveTicketBtn.addEventListener("click", async () => {
     ticketItems = [];
     updateTicketCount();
     renderTicket();
-    alert("Tiket bol uložený do histórie tipov.");
+    await maybeOfferTelegram(ticketTip.id);
   } catch (err) {
     alert(`Uloženie tiketu zlyhalo: ${err.message}`);
   } finally {
