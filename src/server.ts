@@ -21,6 +21,8 @@ import { LeaguePreset, SavedTip } from "./types";
 import { saveTip, listTips, updateTip, deleteTip, clearAllTips } from "./tipsStore";
 import { evaluateTip, computeTicketStatus } from "./tipEvaluator";
 import { sendTipToTelegram, deleteTelegramMessages, isTelegramEnabled } from "./telegram";
+import { listSubscribers, addSubscriber, updateSubscriber, deleteSubscriber } from "./subscribersStore";
+import { Subscriber } from "./types";
 
 // Globálna poistka - nečakaná chyba (napr. výpadok siete pri volaní na
 // JSONBin.io alebo API-Football) nesmie zhodiť celý server. Bez tohto by
@@ -358,6 +360,44 @@ app.post("/api/tips/check-results", async (_req, res) => {
     }
 
     res.json(await listTips());
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
+// ---- Predplatitelia (sledovanie platieb, keďže platba beží mimo appky - napr. bankovým prevodom) ----
+
+app.get("/api/subscribers", async (_req, res) => {
+  try {
+    res.json(await listSubscribers());
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
+app.post("/api/subscribers", async (req, res) => {
+  try {
+    const subscriber: Subscriber = req.body;
+    await addSubscriber(subscriber);
+    res.json({ ok: true });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
+app.patch("/api/subscribers/:id", async (req, res) => {
+  try {
+    await updateSubscriber(req.params.id, req.body);
+    res.json({ ok: true });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
+app.delete("/api/subscribers/:id", async (req, res) => {
+  try {
+    await deleteSubscriber(req.params.id);
+    res.json({ ok: true });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }

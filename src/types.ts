@@ -256,3 +256,15 @@ export interface PlayerGoalPrediction {
   goalsPerGame: number;
   probabilityToScore: number; // 0-100
 }
+
+/** Predplatiteľ služby (osobný alebo skupina/kanál na ďalší predaj). */
+export interface Subscriber {
+  id: string;
+  name: string; // meno alebo názov skupiny/kanálu
+  contact?: string; // email, telegram username a pod.
+  tier: "individual" | "group";
+  priceEur: number; // suma, ktorú platí (na prehľad mesačného príjmu)
+  nextPaymentDue: string; // ISO dátum - kedy má zaplatiť najbližšiu platbu
+  note?: string;
+  createdAt: string; // ISO
+}
