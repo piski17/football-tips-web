@@ -262,7 +262,12 @@ app.delete("/api/tips/:id", async (req, res) => {
 
 app.delete("/api/tips", async (_req, res) => {
   try {
-    await clearAllTips();
+    const previous = await clearAllTips();
+    for (const tip of previous) {
+      if (tip.telegramMessageId) {
+        await deleteTelegramMessage(tip.telegramMessageId);
+      }
+    }
     res.json({ ok: true });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });

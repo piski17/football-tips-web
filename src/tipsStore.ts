@@ -144,9 +144,11 @@ export async function deleteTip(id: string): Promise<SavedTip | null> {
   });
 }
 
-/** Vymaže úplne všetky uložené tipy (aj vyhodnotené) - použiteľné na kompletný reštart histórie. */
-export async function clearAllTips(): Promise<void> {
-  await withWriteLock(async () => {
+/** Vymaže úplne všetky uložené tipy (aj vyhodnotené) a vráti, čo bolo predtým uložené (napr. kvôli zmazaniu súvisiacich správ z Telegramu). */
+export async function clearAllTips(): Promise<SavedTip[]> {
+  return withWriteLock(async () => {
+    const previous = await readAll();
     await writeAll([]);
+    return previous;
   });
 }
