@@ -56,6 +56,7 @@
 
       <button class="btn-ghost" id="openTicketBtn">Tiket <span id="ticketCount"></span></button>
       <button class="btn-ghost" id="openTipsBtn">História tipov</button>
+      <button class="btn-ghost" id="openSubscribersBtn">Predplatitelia</button>
     </header>
 
     <main class="content">
@@ -121,6 +122,28 @@
         <button class="btn-ghost" id="clearAllTipsBtn" style="color: var(--danger); margin-right: auto;">Vymazať všetky tipy</button>
         <button class="btn-ghost" id="closeTipsBtn">Zavrieť</button>
         <button class="btn-primary" id="checkResultsBtn">Skontrolovať výsledky</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="subscribersModal" hidden>
+    <div class="modal modal-large">
+      <h3>Predplatitelia</h3>
+      <div class="tips-summary" id="subscribersSummary"></div>
+
+      <div class="subscriber-form">
+        <input type="text" id="subName" placeholder="Meno / názov skupiny" />
+        <input type="text" id="subContact" placeholder="Kontakt (email, Telegram...)" />
+        <select id="subTier">
+          <option value="individual">PREMIUM (29 €)</option>
+          <option value="group">VIP (99 €)</option>
+        </select>
+        <button class="btn-primary" id="addSubscriberBtn">Pridať</button>
+      </div>
+
+      <div class="tips-list" id="subscribersList"></div>
+      <div class="modal-actions">
+        <button class="btn-ghost" id="closeSubscribersBtn">Zavrieť</button>
       </div>
     </div>
   </div>

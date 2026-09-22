@@ -54,6 +54,16 @@ const closeTipsBtn = document.getElementById("closeTipsBtn");
 const checkResultsBtn = document.getElementById("checkResultsBtn");
 const clearAllTipsBtn = document.getElementById("clearAllTipsBtn");
 
+const openSubscribersBtn = document.getElementById("openSubscribersBtn");
+const subscribersModal = document.getElementById("subscribersModal");
+const subscribersSummaryEl = document.getElementById("subscribersSummary");
+const subscribersListEl = document.getElementById("subscribersList");
+const closeSubscribersBtn = document.getElementById("closeSubscribersBtn");
+const addSubscriberBtn = document.getElementById("addSubscriberBtn");
+const subNameInput = document.getElementById("subName");
+const subContactInput = document.getElementById("subContact");
+const subTierSelect = document.getElementById("subTier");
+
 toggleCustomLeagueBtn.addEventListener("click", () => {
   customLeagueInput.hidden = !customLeagueInput.hidden;
   if (!customLeagueInput.hidden) customLeagueInput.focus();
@@ -889,6 +899,144 @@ function renderTipsList(tips) {
 openTipsBtn.addEventListener("click", openTipsHistory);
 closeTipsBtn.addEventListener("click", () => {
   tipsModal.hidden = true;
+});
+
+// ---- Predplatitelia ----
+
+function daysUntil(dateStr) {
+  const diffMs = new Date(dateStr).getTime() - Date.now();
+  return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+}
+
+function subscriberStatus(sub) {
+  const days = daysUntil(sub.nextPaymentDue);
+  if (days < 0) return { label: "Vypršal", cls: "lost" };
+  if (days <= 3) return { label: `Vyprší o ${days} d.`, cls: "void" };
+  return { label: "Aktívny", cls: "won" };
+}
+
+async function openSubscribers() {
+  subscribersModal.hidden = false;
+  subscribersListEl.innerHTML = `<p class="muted small">Načítavam…</p>`;
+  try {
+    const subs = await fetchJson("/api/subscribers");
+    renderSubscribersList(subs);
+  } catch (err) {
+    subscribersListEl.innerHTML = `<p class="muted small">Predplatiteľov sa nepodarilo načítať: ${escapeHtml(err.message)}</p>`;
+  }
+}
+
+function renderSubscribersList(subs) {
+  const activeCount = subs.filter((s) => daysUntil(s.nextPaymentDue) >= 0).length;
+  const monthlyRevenue = subs
+    .filter((s) => daysUntil(s.nextPaymentDue) >= 0)
+    .reduce((sum, s) => sum + (s.priceEur || 0), 0);
+
+  subscribersSummaryEl.innerHTML = `
+    <span>Spolu: <strong>${subs.length}</strong></span>
+    <span>Aktívnych: <strong>${activeCount}</strong></span>
+    <span>Mesačný príjem: <strong>${monthlyRevenue} €</strong></span>
+  `;
+
+  if (subs.length === 0) {
+    subscribersListEl.innerHTML = `<p class="empty-state">Zatiaľ nemáš pridaných žiadnych predplatiteľov.</p>`;
+    return;
+  }
+
+  subscribersListEl.innerHTML = subs
+    .map((s) => {
+      const status = subscriberStatus(s);
+      const tierLabel = s.tier === "group" ? "VIP" : "PREMIUM";
+      const dueDate = new Date(s.nextPaymentDue).toLocaleDateString("sk-SK");
+      return `
+        <div class="tip-row">
+          <div class="tip-row-info">
+            <div class="tip-row-match">${escapeHtml(s.name)} <span class="muted small">(${tierLabel} · ${s.priceEur} €)</span></div>
+            <div class="tip-row-market">${escapeHtml(s.contact || "")} · najbližšia platba: ${dueDate}</div>
+          </div>
+          <span class="tip-status ${status.cls}">${status.label}</span>
+          <button class="tip-delete-btn" data-extend-id="${s.id}" title="Predĺžiť o mesiac" style="background:var(--surface-alt); color:var(--gold-bright); border-radius:6px; padding:4px 8px; font-size:12px;">+30d</button>
+          <button class="tip-delete-btn" data-remove-id="${s.id}" title="Zmazať">✕</button>
+        </div>
+      `;
+    })
+    .join("");
+
+  subscribersListEl.querySelectorAll("[data-extend-id]").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      const id = e.currentTarget.dataset.extendId;
+      const sub = subs.find((s) => s.id === id);
+      if (!sub) return;
+      const base = daysUntil(sub.nextPaymentDue) > 0 ? new Date(sub.nextPaymentDue) : new Date();
+      base.setDate(base.getDate() + 30);
+      try {
+        await fetchJson(`/api/subscribers/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nextPaymentDue: base.toISOString() }),
+        });
+        openSubscribers();
+      } catch (err) {
+        alert(`Predĺženie zlyhalo: ${err.message}`);
+      }
+    });
+  });
+
+  subscribersListEl.querySelectorAll("[data-remove-id]").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      const id = e.currentTarget.dataset.removeId;
+      if (!window.confirm("Naozaj zmazať tohto predplatiteľa?")) return;
+      try {
+        await fetchJson(`/api/subscribers/${id}`, { method: "DELETE" });
+        openSubscribers();
+      } catch (err) {
+        alert(`Zmazanie zlyhalo: ${err.message}`);
+      }
+    });
+  });
+}
+
+openSubscribersBtn.addEventListener("click", openSubscribers);
+closeSubscribersBtn.addEventListener("click", () => {
+  subscribersModal.hidden = true;
+});
+
+addSubscriberBtn.addEventListener("click", async () => {
+  const name = subNameInput.value.trim();
+  if (!name) {
+    alert("Zadaj meno alebo názov skupiny.");
+    return;
+  }
+  const tier = subTierSelect.value;
+  const priceEur = tier === "group" ? 99 : 29;
+  const nextPaymentDue = new Date();
+  nextPaymentDue.setDate(nextPaymentDue.getDate() + 30);
+
+  const subscriber = {
+    id: `sub-${Date.now()}`,
+    name,
+    contact: subContactInput.value.trim(),
+    tier,
+    priceEur,
+    nextPaymentDue: nextPaymentDue.toISOString(),
+    createdAt: new Date().toISOString(),
+  };
+
+  addSubscriberBtn.disabled = true;
+  try {
+    await fetchJson("/api/subscribers", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(subscriber),
+    });
+    subNameInput.value = "";
+    subContactInput.value = "";
+    openSubscribers();
+  } catch (err) {
+    alert(`Pridanie zlyhalo: ${err.message}`);
+  } finally {
+    addSubscriberBtn.disabled = false;
+  }
 });
 
 checkResultsBtn.addEventListener("click", async () => {
