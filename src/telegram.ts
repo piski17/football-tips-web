@@ -13,7 +13,21 @@ function escapeHtml(text: string): string {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+/** Rovnaká logika ako v bankroll simulátore - vyššia dôvera = vyššia odporúčaná sadzba. */
+function stakeTierPercent(probability: number): number {
+  if (probability >= 70) return 3;
+  if (probability >= 60) return 2;
+  return 1;
+}
+
+function impliedOdds(probability: number): string {
+  return probability > 0 ? (100 / probability).toFixed(2) : "-";
+}
+
 function buildMessageText(tip: SavedTip): string {
+  const odds = impliedOdds(tip.probability);
+  const stakePct = stakeTierPercent(tip.probability);
+
   if (tip.legs && tip.legs.length > 0) {
     const legsText = tip.legs
       .map(
@@ -24,16 +38,23 @@ function buildMessageText(tip: SavedTip): string {
       )
       .join("\n\n");
 
-    return `🎫 <b>Nový tiket</b> (${tip.legs.length} tipov)\n\n${legsText}\n\n📈 Kombinovaná pravdepodobnosť: <b>${tip.probability.toFixed(
-      1
-    )}%</b>`;
+    return (
+      `🎫 <b>Nový tiket</b> (${tip.legs.length} tipov)\n\n${legsText}\n\n` +
+      `📈 Kombinovaná pravdepodobnosť: <b>${tip.probability.toFixed(1)}%</b>\n` +
+      `💰 Odhadovaný kurz: <b>~${odds}</b>\n` +
+      `💵 Odporúčaná sadzba: <b>${stakePct}% bankrollu</b>\n\n` +
+      `<i>ℹ️ Odhad na základe modelu, nie garantovaný kurz stávkovej kancelárie.</i>`
+    );
   }
 
   return (
     `🎯 <b>Nový tip</b>\n\n` +
     `⚽ ${escapeHtml(tip.homeTeam)} — ${escapeHtml(tip.awayTeam)}\n` +
     `📊 ${escapeHtml(tip.market)}: <b>${escapeHtml(tip.selection)}</b>\n` +
-    `📈 Dôvera: <b>${tip.probability.toFixed(0)}%</b>`
+    `📈 Dôvera: <b>${tip.probability.toFixed(0)}%</b>\n` +
+    `💰 Odhadovaný kurz: <b>~${odds}</b>\n` +
+    `💵 Odporúčaná sadzba: <b>${stakePct}% bankrollu</b>\n\n` +
+    `<i>ℹ️ Odhad na základe modelu, nie garantovaný kurz stávkovej kancelárie.</i>`
   );
 }
 
