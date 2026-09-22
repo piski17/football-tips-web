@@ -282,7 +282,10 @@ app.post("/api/telegram/webhook", async (req, res) => {
 // Otvor túto adresu v prehliadači RAZ po nasadení appky, aby Telegram vedel, kam posielať správy.
 app.get("/api/telegram/setup-webhook", async (req, res) => {
   try {
-    const webhookUrl = `${req.protocol}://${req.get("host")}/api/telegram/webhook`;
+    // Render appke posiela požiadavky interne cez http, aj keď zvonka beží na
+    // https - preto sa protokol nedá spoľahnúť na req.protocol a natvrdo
+    // použijeme https (Telegram aj tak vyžaduje výhradne https adresu).
+    const webhookUrl = `https://${req.get("host")}/api/telegram/webhook`;
     await setTelegramWebhook(webhookUrl);
     res.send(`Hotovo! Webhook nastavený na: ${webhookUrl}`);
   } catch (err: any) {

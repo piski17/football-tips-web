@@ -189,5 +189,10 @@ export async function handleTelegramUpdate(update: any): Promise<void> {
 
 /** Zaregistruje na Telegram serveri adresu, kam má posielať prichádzajúce správy (spustiť raz po nasadení). */
 export async function setTelegramWebhook(webhookUrl: string): Promise<void> {
-  await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook`, { url: webhookUrl });
+  try {
+    await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook`, { url: webhookUrl });
+  } catch (err: any) {
+    const reason = err?.response?.data?.description ?? err?.message ?? String(err);
+    throw new Error(reason);
+  }
 }
