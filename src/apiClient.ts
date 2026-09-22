@@ -113,6 +113,9 @@ function mapFixture(item: any): Fixture {
     homeTeam: { id: item.teams.home.id, name: item.teams.home.name, logo: item.teams.home.logo },
     awayTeam: { id: item.teams.away.id, name: item.teams.away.name, logo: item.teams.away.logo },
     status: item.fixture.status?.short ?? "NS",
+    elapsed: item.fixture.status?.elapsed ?? null,
+    goalsHome: item.goals?.home ?? null,
+    goalsAway: item.goals?.away ?? null,
   };
 }
 

@@ -20,6 +20,9 @@ export interface Fixture {
   homeTeam: Team;
   awayTeam: Team;
   status: string;
+  elapsed?: number | null; // odohraná minúta, ak zápas prebieha
+  goalsHome?: number | null; // aktuálne skóre, ak zápas prebieha alebo skončil
+  goalsAway?: number | null;
 }
 
 export interface TeamStatistics {
