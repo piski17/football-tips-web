@@ -5,6 +5,80 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID_PREMIUM = process.env.TELEGRAM_CHAT_ID_PREMIUM;
 const TELEGRAM_CHAT_ID_VIP = process.env.TELEGRAM_CHAT_ID_VIP;
 
+// ---- Preklad názvov reprezentácií do slovenčiny (kluby zostávajú v pôvodnom tvare) ----
+const COUNTRY_NAME_SK: Record<string, string> = {
+  Albania: "Albánsko",
+  Andorra: "Andorra",
+  Armenia: "Arménsko",
+  Austria: "Rakúsko",
+  Azerbaijan: "Azerbajdžan",
+  Belarus: "Bielorusko",
+  Belgium: "Belgicko",
+  "Bosnia and Herzegovina": "Bosna a Hercegovina",
+  Bulgaria: "Bulharsko",
+  Croatia: "Chorvátsko",
+  Cyprus: "Cyprus",
+  "Czech Republic": "Česko",
+  Denmark: "Dánsko",
+  England: "Anglicko",
+  Estonia: "Estónsko",
+  "Faroe Islands": "Faerské ostrovy",
+  Finland: "Fínsko",
+  France: "Francúzsko",
+  Georgia: "Gruzínsko",
+  Germany: "Nemecko",
+  Gibraltar: "Gibraltár",
+  Greece: "Grécko",
+  Hungary: "Maďarsko",
+  Iceland: "Island",
+  Israel: "Izrael",
+  Italy: "Taliansko",
+  Kazakhstan: "Kazachstan",
+  Kosovo: "Kosovo",
+  Latvia: "Lotyšsko",
+  Liechtenstein: "Lichtenštajnsko",
+  Lithuania: "Litva",
+  Luxembourg: "Luxembursko",
+  Malta: "Malta",
+  Moldova: "Moldavsko",
+  Montenegro: "Čierna Hora",
+  Netherlands: "Holandsko",
+  "North Macedonia": "Severné Macedónsko",
+  "Northern Ireland": "Severné Írsko",
+  Norway: "Nórsko",
+  Poland: "Poľsko",
+  Portugal: "Portugalsko",
+  "Republic of Ireland": "Írsko",
+  Romania: "Rumunsko",
+  Russia: "Rusko",
+  "San Marino": "San Maríno",
+  Scotland: "Škótsko",
+  Serbia: "Srbsko",
+  Slovakia: "Slovensko",
+  Slovenia: "Slovinsko",
+  Spain: "Španielsko",
+  Sweden: "Švédsko",
+  Switzerland: "Švajčiarsko",
+  Turkey: "Turecko",
+  Ukraine: "Ukrajina",
+  Wales: "Wales",
+};
+
+function translateTeamName(name: string): string {
+  return COUNTRY_NAME_SK[name] ?? name;
+}
+
+/** Preloží mená tímov vložené priamo vo vete (napr. "Dvojšanca: Liechtenstein alebo remíza") - len na zobrazenie. */
+function translateNamesInText(text: string | undefined, homeOriginal: string, awayOriginal: string): string {
+  if (!text) return "";
+  let result = text;
+  const homeSk = translateTeamName(homeOriginal);
+  const awaySk = translateTeamName(awayOriginal);
+  if (homeSk !== homeOriginal) result = result.split(homeOriginal).join(homeSk);
+  if (awaySk !== awayOriginal) result = result.split(awayOriginal).join(awaySk);
+  return result;
+}
+
 export type TelegramTarget = "premium" | "vip" | "both";
 
 export function isTelegramEnabled(): boolean {
@@ -42,8 +116,8 @@ function buildMessageText(tip: SavedTip): string {
     const legsText = tip.legs
       .map(
         (leg) =>
-          `⚽ ${escapeHtml(leg.homeTeam)} — ${escapeHtml(leg.awayTeam)}\n   ${escapeHtml(leg.market)}: <b>${escapeHtml(
-            leg.selection
+          `⚽ ${escapeHtml(translateTeamName(leg.homeTeam))} — ${escapeHtml(translateTeamName(leg.awayTeam))}\n   ${escapeHtml(leg.market)}: <b>${escapeHtml(
+            translateNamesInText(leg.selection, leg.homeTeam, leg.awayTeam)
           )}</b> (${leg.probability.toFixed(0)}%)`
       )
       .join("\n\n");
@@ -59,8 +133,8 @@ function buildMessageText(tip: SavedTip): string {
 
   return (
     `🎯 <b>Nový tip</b>\n\n` +
-    `⚽ ${escapeHtml(tip.homeTeam)} — ${escapeHtml(tip.awayTeam)}\n` +
-    `📊 ${escapeHtml(tip.market)}: <b>${escapeHtml(tip.selection)}</b>\n` +
+    `⚽ ${escapeHtml(translateTeamName(tip.homeTeam))} — ${escapeHtml(translateTeamName(tip.awayTeam))}\n` +
+    `📊 ${escapeHtml(tip.market)}: <b>${escapeHtml(translateNamesInText(tip.selection, tip.homeTeam, tip.awayTeam))}</b>\n` +
     `📈 Dôvera: <b>${tip.probability.toFixed(0)}%</b>\n` +
     `💰 Odhadovaný kurz: <b>~${odds}</b>\n` +
     `💵 Odporúčaná sadzba: <b>${stakePct}% bankrollu</b>\n\n` +
