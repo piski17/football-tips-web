@@ -49,6 +49,7 @@ const tipsSummaryEl = document.getElementById("tipsSummary");
 const marketBreakdownEl = document.getElementById("marketBreakdown");
 const bankrollStartInput = document.getElementById("bankrollStartInput");
 const bankrollResultEl = document.getElementById("bankrollResult");
+const calibrationResultEl = document.getElementById("calibrationResult");
 const tipsListEl = document.getElementById("tipsList");
 const closeTipsBtn = document.getElementById("closeTipsBtn");
 const checkResultsBtn = document.getElementById("checkResultsBtn");
@@ -749,6 +750,58 @@ function stakeTierPercent(probability) {
   return 0.01;
 }
 
+function renderCalibrationReport(tips) {
+  // Tikety vynechávame - ich pravdepodobnosť je kombinovaná naprieč viacerými
+  // zápasmi, takže sa nedá zmysluplne porovnať s jedným percentom.
+  const resolved = tips.filter((t) => !t.legs && (t.status === "won" || t.status === "lost"));
+
+  if (resolved.length === 0) {
+    calibrationResultEl.innerHTML = `<p class="muted small">Zatiaľ nemáš dosť vyhodnotených tipov na kalibráciu.</p>`;
+    return;
+  }
+
+  const buckets = [
+    { min: 50, max: 60, label: "50-60%" },
+    { min: 60, max: 70, label: "60-70%" },
+    { min: 70, max: 80, label: "70-80%" },
+    { min: 80, max: 90, label: "80-90%" },
+    { min: 90, max: 100, label: "90-100%" },
+  ];
+
+  const rows = buckets
+    .map((b) => {
+      const inBucket = resolved.filter((t) => t.probability >= b.min && t.probability < (b.max === 100 ? 101 : b.max));
+      if (inBucket.length === 0) return null;
+      const won = inBucket.filter((t) => t.status === "won").length;
+      const actualPct = (won / inBucket.length) * 100;
+      const predictedMid = (b.min + b.max) / 2;
+      return { label: b.label, count: inBucket.length, actualPct, predictedMid };
+    })
+    .filter(Boolean);
+
+  if (rows.length === 0) {
+    calibrationResultEl.innerHTML = `<p class="muted small">Zatiaľ nemáš dosť vyhodnotených tipov na kalibráciu.</p>`;
+    return;
+  }
+
+  calibrationResultEl.innerHTML = rows
+    .map(
+      (r) => `
+      <div class="market-breakdown-row">
+        <div class="market-breakdown-label">
+          <span>Predikcia ${r.label}</span>
+          <span class="muted small">realita: ${r.actualPct.toFixed(0)}% · ${r.count} tipov</span>
+        </div>
+        <div class="market-breakdown-bar" style="position:relative;">
+          <div class="market-breakdown-bar-fill" style="width: ${r.actualPct}%;"></div>
+          <div style="position:absolute; left:${r.predictedMid}%; top:-2px; bottom:-2px; width:2px; background:var(--text);"></div>
+        </div>
+      </div>
+    `
+    )
+    .join("") + `<p class="muted small" style="margin-top:8px;">Zlatý pruh = koľko tipov reálne vyšlo. Biela čiarka = stred predikovaného rozsahu (kde by mal pruh byť, ak je model presný).</p>`;
+}
+
 function renderBankrollSimulation(tips) {
   lastRenderedTips = tips;
 
@@ -849,6 +902,7 @@ function renderTipsList(tips) {
 
   renderMarketBreakdown(tips);
   renderBankrollSimulation(tips);
+  renderCalibrationReport(tips);
 
   if (tips.length === 0) {
     tipsListEl.innerHTML = `<p class="empty-state">Zatiaľ nemáš uložené žiadne tipy.</p>`;

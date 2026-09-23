@@ -27,6 +27,7 @@ import {
   availableTelegramTargets,
   handleTelegramUpdate,
   setTelegramWebhook,
+  notifyAdminExpiringSubscribers,
 } from "./telegram";
 import { listSubscribers, addSubscriber, updateSubscriber, deleteSubscriber } from "./subscribersStore";
 import { Subscriber } from "./types";
@@ -445,6 +446,36 @@ app.delete("/api/subscribers/:id", async (req, res) => {
     res.status(502).json({ error: err.message ?? String(err) });
   }
 });
+
+// ---- Pravidelná kontrola blížiacich sa/vypršaných platieb predplatiteľov ----
+
+let lastExpiryCheckDate: string | null = null;
+
+async function checkExpiringSubscribers(): Promise<void> {
+  const today = new Date().toISOString().slice(0, 10);
+  if (lastExpiryCheckDate === today) return; // dnes už bola kontrola spustená
+
+  try {
+    const subs = await listSubscribers();
+    const expiring = subs
+      .map((s) => ({
+        name: s.name,
+        tier: s.tier,
+        daysLeft: Math.ceil((new Date(s.nextPaymentDue).getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
+      }))
+      .filter((s) => s.daysLeft <= 3);
+
+    if (expiring.length > 0) {
+      await notifyAdminExpiringSubscribers(expiring);
+    }
+    lastExpiryCheckDate = today;
+  } catch (err) {
+    console.error("Kontrola vypršania predplatných zlyhala:", err);
+  }
+}
+
+setInterval(checkExpiringSubscribers, 6 * 60 * 60 * 1000); // kontrola každých 6 hodín
+checkExpiringSubscribers(); // aj hneď po štarte appky
 
 app.listen(PORT, () => {
   console.log(`TipRadar beží na porte ${PORT}`);

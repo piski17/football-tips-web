@@ -187,6 +187,29 @@ export async function handleTelegramUpdate(update: any): Promise<void> {
   });
 }
 
+const TELEGRAM_ADMIN_CHAT_ID = process.env.TELEGRAM_ADMIN_CHAT_ID;
+
+/** Pošle tebe (administrátorovi) súhrn predplatiteľov, ktorým čoskoro vyprší alebo už vypršala platnosť. */
+export async function notifyAdminExpiringSubscribers(
+  expiring: { name: string; tier: string; daysLeft: number }[]
+): Promise<void> {
+  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_ADMIN_CHAT_ID || expiring.length === 0) return;
+
+  const lines = expiring
+    .map((s) => {
+      const tierLabel = s.tier === "group" ? "VIP" : "PREMIUM";
+      const when = s.daysLeft < 0 ? "už vypršal" : s.daysLeft === 0 ? "vyprší dnes" : `vyprší o ${s.daysLeft} d.`;
+      return `• ${s.name} (${tierLabel}) — ${when}`;
+    })
+    .join("\n");
+
+  await callTelegramApi("sendMessage", {
+    chat_id: TELEGRAM_ADMIN_CHAT_ID,
+    text: `⚠️ <b>Blížiace sa/vypršané platby</b>\n\n${lines}`,
+    parse_mode: "HTML",
+  });
+}
+
 /** Zaregistruje na Telegram serveri adresu, kam má posielať prichádzajúce správy (spustiť raz po nasadení). */
 export async function setTelegramWebhook(webhookUrl: string): Promise<void> {
   try {
