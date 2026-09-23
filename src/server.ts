@@ -258,7 +258,8 @@ app.post("/api/tips/:id/telegram", async (req, res) => {
     const target = req.body?.target === "vip" || req.body?.target === "both" ? req.body.target : "premium";
     const sent = await sendTipToTelegram(tip, target);
     if (sent.length > 0) {
-      await updateTip(tip.id, { telegramMessages: sent });
+      const existing = tip.telegramMessages ?? [];
+      await updateTip(tip.id, { telegramMessages: [...existing, ...sent] });
     }
     res.json({ ok: sent.length > 0 });
   } catch (err: any) {
