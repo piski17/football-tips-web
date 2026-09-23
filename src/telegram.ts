@@ -88,13 +88,18 @@ async function sendToChat(chatId: string, text: string): Promise<number | null> 
  * ("premium", "vip", alebo "both" - obidva naraz). Vráti zoznam presne
  * odoslaných správ (kanál + ID správy) na prípadné neskoršie zmazanie.
  */
+function resolveChatIds(target: TelegramTarget): string[] {
+  const chatIds: string[] = [];
+  if ((target === "premium" || target === "both") && TELEGRAM_CHAT_ID_PREMIUM) chatIds.push(TELEGRAM_CHAT_ID_PREMIUM);
+  if ((target === "vip" || target === "both") && TELEGRAM_CHAT_ID_VIP) chatIds.push(TELEGRAM_CHAT_ID_VIP);
+  return chatIds;
+}
+
 export async function sendTipToTelegram(
   tip: SavedTip,
   target: TelegramTarget
 ): Promise<{ chatId: string; messageId: number }[]> {
-  const chatIds: string[] = [];
-  if ((target === "premium" || target === "both") && TELEGRAM_CHAT_ID_PREMIUM) chatIds.push(TELEGRAM_CHAT_ID_PREMIUM);
-  if ((target === "vip" || target === "both") && TELEGRAM_CHAT_ID_VIP) chatIds.push(TELEGRAM_CHAT_ID_VIP);
+  const chatIds = resolveChatIds(target);
   if (chatIds.length === 0) return [];
 
   const text = buildMessageText(tip);
@@ -105,6 +110,20 @@ export async function sendTipToTelegram(
     if (messageId) sent.push({ chatId, messageId });
   }
 
+  return sent;
+}
+
+/** Pošle vlastný text (nie tip) do zvoleného kanála/kanálov - používa sa napr. pre "Dnes bez tipu" alebo týždenný report. */
+export async function sendCustomMessage(
+  text: string,
+  target: TelegramTarget
+): Promise<{ chatId: string; messageId: number }[]> {
+  const chatIds = resolveChatIds(target);
+  const sent: { chatId: string; messageId: number }[] = [];
+  for (const chatId of chatIds) {
+    const messageId = await sendToChat(chatId, text);
+    if (messageId) sent.push({ chatId, messageId });
+  }
   return sent;
 }
 

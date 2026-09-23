@@ -28,6 +28,7 @@ import {
   handleTelegramUpdate,
   setTelegramWebhook,
   notifyAdminExpiringSubscribers,
+  sendCustomMessage,
 } from "./telegram";
 import { listSubscribers, addSubscriber, updateSubscriber, deleteSubscriber } from "./subscribersStore";
 import { Subscriber } from "./types";
@@ -269,6 +270,68 @@ app.post("/api/tips/:id/telegram", async (req, res) => {
 
 app.get("/api/telegram/targets", (_req, res) => {
   res.json({ targets: availableTelegramTargets() });
+});
+
+app.post("/api/telegram/no-tip-today", async (req, res) => {
+  try {
+    if (!isTelegramEnabled()) {
+      res.status(400).json({ error: "Telegram nie je na serveri nastavený." });
+      return;
+    }
+    const target = req.body?.target === "vip" || req.body?.target === "both" ? req.body.target : "both";
+    const text =
+      `📭 <b>Dnes bez tipu</b>\n\n` +
+      `Model dnes nenašiel žiadnu stávku s dostatočnou hodnotou. Radšej žiadny tip, než zlý tip.\n\n` +
+      `Uvidíme sa nabudúce! 👋`;
+    const sent = await sendCustomMessage(text, target);
+    res.json({ ok: sent.length > 0 });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
+app.post("/api/telegram/weekly-report", async (req, res) => {
+  try {
+    if (!isTelegramEnabled()) {
+      res.status(400).json({ error: "Telegram nie je na serveri nastavený." });
+      return;
+    }
+
+    const tips = await listTips();
+    const resolved = tips.filter((t) => t.status === "won" || t.status === "lost");
+    const won = resolved.filter((t) => t.status === "won").length;
+    const winRate = resolved.length > 0 ? ((won / resolved.length) * 100).toFixed(0) : null;
+
+    const byMarket: Record<string, { won: number; total: number }> = {};
+    for (const t of resolved) {
+      if (!byMarket[t.market]) byMarket[t.market] = { won: 0, total: 0 };
+      byMarket[t.market].total++;
+      if (t.status === "won") byMarket[t.market].won++;
+    }
+    let bestMarket: string | null = null;
+    let bestRate = -1;
+    for (const [market, stats] of Object.entries(byMarket)) {
+      if (stats.total < 3) continue; // príliš málo tipov na zmysluplné porovnanie
+      const rate = stats.won / stats.total;
+      if (rate > bestRate) {
+        bestRate = rate;
+        bestMarket = market;
+      }
+    }
+
+    const text =
+      `📊 <b>Týždenný report</b>\n\n` +
+      `Vyhodnotených tipov: <b>${resolved.length}</b>\n` +
+      (winRate !== null ? `Úspešnosť: <b>${winRate}%</b>\n` : "") +
+      (bestMarket ? `Najlepší trh: <b>${bestMarket}</b> (${(bestRate * 100).toFixed(0)}%)\n` : "") +
+      `\n<i>Poctivá história - vrátane prehratých tipov.</i>`;
+
+    const target = req.body?.target === "vip" || req.body?.target === "both" ? req.body.target : "both";
+    const sent = await sendCustomMessage(text, target);
+    res.json({ ok: sent.length > 0 });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
 });
 
 // Sem posiela Telegram prichádzajúce správy od používateľov (nová správa, stlačenie tlačidla).

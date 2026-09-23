@@ -54,6 +54,8 @@ const tipsListEl = document.getElementById("tipsList");
 const closeTipsBtn = document.getElementById("closeTipsBtn");
 const checkResultsBtn = document.getElementById("checkResultsBtn");
 const clearAllTipsBtn = document.getElementById("clearAllTipsBtn");
+const noTipTodayBtn = document.getElementById("noTipTodayBtn");
+const weeklyReportBtn = document.getElementById("weeklyReportBtn");
 
 const openSubscribersBtn = document.getElementById("openSubscribersBtn");
 const subscribersModal = document.getElementById("subscribersModal");
@@ -1162,6 +1164,42 @@ clearAllTipsBtn.addEventListener("click", async () => {
     alert(`Vymazanie zlyhalo: ${err.message}. Skús to prosím znova.`);
   } finally {
     clearAllTipsBtn.disabled = false;
+  }
+});
+
+noTipTodayBtn.addEventListener("click", async () => {
+  const target = await askTelegramTarget();
+  if (!target) return;
+  noTipTodayBtn.disabled = true;
+  try {
+    await fetchJson("/api/telegram/no-tip-today", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ target }),
+    });
+    alert("Odoslané.");
+  } catch (err) {
+    alert(`Odoslanie zlyhalo: ${err.message}`);
+  } finally {
+    noTipTodayBtn.disabled = false;
+  }
+});
+
+weeklyReportBtn.addEventListener("click", async () => {
+  const target = await askTelegramTarget();
+  if (!target) return;
+  weeklyReportBtn.disabled = true;
+  try {
+    await fetchJson("/api/telegram/weekly-report", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ target }),
+    });
+    alert("Odoslané.");
+  } catch (err) {
+    alert(`Odoslanie zlyhalo: ${err.message}`);
+  } finally {
+    weeklyReportBtn.disabled = false;
   }
 });
 
