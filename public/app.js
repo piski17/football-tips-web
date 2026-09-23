@@ -355,7 +355,7 @@ function renderAnalysis(r) {
     : "";
 
   const warningHtml = r.sampleSizeWarning
-    ? `<div class="disclaimer" style="margin-top:0;margin-bottom:20px;border-top:none;padding-top:0;color:var(--gold);">⚠️ ${escapeHtml(r.sampleSizeWarning)}</div>`
+    ? `<div class="disclaimer" style="margin-top:0;margin-bottom:20px;border-top:none;padding-top:0;color:var(--gold);">⚠️ ${escapeHtml(translateNamesInText(r.sampleSizeWarning, r.fixture.homeTeam.name, r.fixture.awayTeam.name))}</div>`
     : "";
 
   const topBetsHtml = topBets
