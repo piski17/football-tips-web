@@ -278,7 +278,10 @@ app.post("/api/telegram/no-tip-today", async (req, res) => {
       res.status(400).json({ error: "Telegram nie je na serveri nastavený." });
       return;
     }
-    const target = req.body?.target === "vip" || req.body?.target === "both" ? req.body.target : "both";
+    const target =
+      req.body?.target === "premium" || req.body?.target === "vip" || req.body?.target === "both"
+        ? req.body.target
+        : "both";
     const text =
       `📭 <b>Dnes bez tipu</b>\n\n` +
       `Model dnes nenašiel žiadnu stávku s dostatočnou hodnotou. Radšej žiadny tip, než zlý tip.\n\n` +
@@ -326,7 +329,10 @@ app.post("/api/telegram/weekly-report", async (req, res) => {
       (bestMarket ? `Najlepší trh: <b>${bestMarket}</b> (${(bestRate * 100).toFixed(0)}%)\n` : "") +
       `\n<i>Poctivá história - vrátane prehratých tipov.</i>`;
 
-    const target = req.body?.target === "vip" || req.body?.target === "both" ? req.body.target : "both";
+    const target =
+      req.body?.target === "premium" || req.body?.target === "vip" || req.body?.target === "both"
+        ? req.body.target
+        : "both";
     const sent = await sendCustomMessage(text, target);
     res.json({ ok: sent.length > 0 });
   } catch (err: any) {
