@@ -401,11 +401,12 @@ export function predictMatch(
   }
 
   // ---- Vysvetlenia ("prečo tento tip") pre jednotlivé skupiny trhov ----
-  const resultExplanation = `${fixture.homeTeam.name} forma: ${homeStats.form || "–"} (skóre ${homeFormScore.toFixed(
-    1
-  )}), ${fixture.awayTeam.name} forma: ${awayStats.form || "–"} (skóre ${awayFormScore.toFixed(
-    1
-  )}). Posledných ${h2hResult.homeWins + h2hResult.draws + h2hResult.awayWins} vzájomných zápasov: ${
+  const homeFormText = homeStats.form ? `forma: ${homeStats.form} (skóre ${homeFormScore.toFixed(1)})` : "forma zatiaľ neznáma (odohraných 0 zápasov, použitý priemerný odhad)";
+  const awayFormText = awayStats.form ? `forma: ${awayStats.form} (skóre ${awayFormScore.toFixed(1)})` : "forma zatiaľ neznáma (odohraných 0 zápasov, použitý priemerný odhad)";
+
+  const resultExplanation = `${fixture.homeTeam.name} ${homeFormText}, ${
+    fixture.awayTeam.name
+  } ${awayFormText}. Posledných ${h2hResult.homeWins + h2hResult.draws + h2hResult.awayWins} vzájomných zápasov: ${
     h2hResult.homeWins
   }-${h2hResult.draws}-${h2hResult.awayWins} (výhry domáci-remízy-výhry hostia). Očakávané góly ${xg.home.toFixed(
     1
@@ -415,13 +416,9 @@ export function predictMatch(
     fixture.homeTeam.name
   } ${xg.home.toFixed(1)}, ${fixture.awayTeam.name} ${xg.away.toFixed(1)}).`;
 
-  const bttsExplanation = `${fixture.homeTeam.name} strieľa priemerne ${homeStats.goals.for.average.total.toFixed(
-    1
-  )} a inkasuje ${homeStats.goals.against.average.total.toFixed(1)} gólu/zápas, ${
+  const bttsExplanation = `Očakávané góly: ${fixture.homeTeam.name} ${xg.home.toFixed(1)}, ${
     fixture.awayTeam.name
-  } strieľa ${awayStats.goals.for.average.total.toFixed(1)} a inkasuje ${awayStats.goals.against.average.total.toFixed(
-    1
-  )} gólu/zápas.`;
+  } ${xg.away.toFixed(1)} - oba tímy majú reálnu šancu skórovať.`;
 
   const statExplanation = (expected: number, line: number): string =>
     `Priemer oboch tímov v tejto štatistike za posledné zápasy je ${expected.toFixed(
@@ -554,16 +551,12 @@ export function predictMatch(
     { selection: `${fixture.awayTeam.name} neinkasuje`, probability: poisson.awayCleanSheet },
   ].sort((a, b) => b.probability - a.probability)[0];
   const cleanSheetExplanation = cleanSheetOptions.selection.startsWith(fixture.homeTeam.name)
-    ? `${fixture.awayTeam.name} strieľa v priemere len ${awayStats.goals.for.average.total.toFixed(
-        1
-      )} gólu na zápas, ${fixture.homeTeam.name} inkasuje priemerne ${homeStats.goals.against.average.total.toFixed(
-        1
-      )} gólu na zápas.`
-    : `${fixture.homeTeam.name} strieľa v priemere len ${homeStats.goals.for.average.total.toFixed(
-        1
-      )} gólu na zápas, ${fixture.awayTeam.name} inkasuje priemerne ${awayStats.goals.against.average.total.toFixed(
-        1
-      )} gólu na zápas.`;
+    ? `Očakávané góly ${fixture.awayTeam.name} sú len ${xg.away.toFixed(1)} - ${
+        fixture.homeTeam.name
+      } má slušnú šancu na čisté konto.`
+    : `Očakávané góly ${fixture.homeTeam.name} sú len ${xg.home.toFixed(1)} - ${
+        fixture.awayTeam.name
+      } má slušnú šancu na čisté konto.`;
   candidates.push({
     market: "Čisté konto",
     selection: cleanSheetOptions.selection,
