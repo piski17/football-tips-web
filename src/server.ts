@@ -54,6 +54,7 @@ const LEAGUE_PRESETS: LeaguePreset[] = [
   { id: 78, name: "Bundesliga", country: "Nemecko" },
   { id: 61, name: "Ligue 1", country: "Francúzsko" },
   { id: 2, name: "UEFA Champions League", country: "Európa" },
+  { id: 5, name: "UEFA Nations League", country: "Európa" },
 ];
 
 /**
