@@ -62,9 +62,9 @@ const LEAGUE_PRESETS: LeaguePreset[] = [
  * APP_PASSWORD, appka beží bez hesla.
  */
 function basicAuth(req: Request, res: Response, next: NextFunction): void {
-  // Telegram servery volajú tento endpoint priamo, bez znalosti hesla appky -
-  // musí zostať verejne prístupný, inak by appka nikdy nedostala žiadne správy.
-  if (req.path === "/api/telegram/webhook") {
+  // Telegram servery a verejná prezentačná stránka volajú tieto endpointy
+  // priamo, bez znalosti hesla appky - musia zostať verejne prístupné.
+  if (req.path === "/api/telegram/webhook" || req.path === "/api/public/track-record") {
     next();
     return;
   }
@@ -264,6 +264,22 @@ app.post("/api/tips/:id/telegram", async (req, res) => {
       await updateTip(tip.id, { telegramMessages: [...existing, ...sent] });
     }
     res.json({ ok: sent.length > 0 });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
+// Verejná (bez hesla) štatistika úspešnosti - používa ju prezentačná stránka,
+// ktorá beží na inej doméne (claude.ai), preto povoľujeme CORS len pre tento
+// jeden konkrétny endpoint. Neobsahuje žiadne citlivé dáta, len súhrnné čísla.
+app.get("/api/public/track-record", async (_req, res) => {
+  res.set("Access-Control-Allow-Origin", "*");
+  try {
+    const tips = await listTips();
+    const resolved = tips.filter((t) => t.status === "won" || t.status === "lost");
+    const won = resolved.filter((t) => t.status === "won").length;
+    const winRate = resolved.length > 0 ? Math.round((won / resolved.length) * 100) : null;
+    res.json({ totalResolved: resolved.length, won, winRate });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
