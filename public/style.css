@@ -752,11 +752,10 @@ button, input {
   inset: 0;
   background: rgba(0, 0, 0, 0.55);
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   z-index: 50;
   padding: 16px;
-  overflow-y: auto;
 }
 
 .modal-overlay[hidden] {
@@ -802,6 +801,7 @@ button, input {
 .modal-large {
   max-width: 640px;
   max-height: 80vh;
+  overflow-y: auto;
 }
 
 .tips-summary {
@@ -821,7 +821,6 @@ button, input {
 
 .tips-list {
   overflow-y: auto;
-  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 8px;
