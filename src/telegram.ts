@@ -189,6 +189,43 @@ export async function sendTipToTelegram(
 }
 
 /** Pošle vlastný text (nie tip) do zvoleného kanála/kanálov - používa sa napr. pre "Dnes bez tipu" alebo týždenný report. */
+/** Postaví a pošle správu s výsledkom už vyhodnoteného tipu/tiketu (víťazstvo/prehra), so zeleným/červeným zvýraznením. */
+export async function sendTipResultToTelegram(
+  tip: SavedTip,
+  target: TelegramTarget
+): Promise<{ chatId: string; messageId: number }[]> {
+  const chatIds = resolveChatIds(target);
+  if (chatIds.length === 0) return [];
+
+  let text: string;
+
+  if (tip.legs && tip.legs.length > 0) {
+    const header = tip.status === "won" ? "✅ <b>VÝHRA TIKETU</b>" : "❌ <b>PREHRA TIKETU</b>";
+    const legsText = tip.legs
+      .map((leg) => {
+        const icon = leg.status === "won" ? "✅" : leg.status === "lost" ? "❌" : "➖";
+        return `${icon} ${escapeHtml(translateTeamName(leg.homeTeam))} — ${escapeHtml(translateTeamName(leg.awayTeam))}: ${escapeHtml(
+          leg.market
+        )}: ${escapeHtml(translateNamesInText(leg.selection, leg.homeTeam, leg.awayTeam))}`;
+      })
+      .join("\n");
+    text = `${header} (${tip.legs.length} tipov)\n\n${legsText}`;
+  } else {
+    const header = tip.status === "won" ? "✅ <b>VÝHRA</b>" : "❌ <b>PREHRA</b>";
+    text =
+      `${header}\n\n` +
+      `⚽ ${escapeHtml(translateTeamName(tip.homeTeam))} — ${escapeHtml(translateTeamName(tip.awayTeam))}\n` +
+      `📊 ${escapeHtml(tip.market)}: <b>${escapeHtml(translateNamesInText(tip.selection, tip.homeTeam, tip.awayTeam))}</b>`;
+  }
+
+  const sent: { chatId: string; messageId: number }[] = [];
+  for (const chatId of chatIds) {
+    const messageId = await sendToChat(chatId, text);
+    if (messageId) sent.push({ chatId, messageId });
+  }
+  return sent;
+}
+
 export async function sendCustomMessage(
   text: string,
   target: TelegramTarget

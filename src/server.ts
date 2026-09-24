@@ -30,6 +30,7 @@ import {
   notifyAdminExpiringSubscribers,
   sendCustomMessage,
   sendRenewalReminder,
+  sendTipResultToTelegram,
 } from "./telegram";
 import { listSubscribers, addSubscriber, updateSubscriber, deleteSubscriber } from "./subscribersStore";
 import { Subscriber } from "./types";
@@ -268,6 +269,37 @@ app.post("/api/tips/:id/telegram", async (req, res) => {
         : `🌟 <b>ZÁPAS TÝŽDŇA</b>`
       : undefined;
     const sent = await sendTipToTelegram(tip, target, headerOverride);
+    if (sent.length > 0) {
+      const existing = tip.telegramMessages ?? [];
+      await updateTip(tip.id, { telegramMessages: [...existing, ...sent] });
+    }
+    res.json({ ok: sent.length > 0 });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
+app.post("/api/tips/:id/telegram-result", async (req, res) => {
+  try {
+    const tips = await listTips();
+    const tip = tips.find((t) => t.id === req.params.id);
+    if (!tip) {
+      res.status(404).json({ error: "Tip sa nenašiel." });
+      return;
+    }
+    if (tip.status !== "won" && tip.status !== "lost") {
+      res.status(400).json({ error: "Tento tip/tiket ešte nie je vyhodnotený." });
+      return;
+    }
+    if (!isTelegramEnabled()) {
+      res.status(400).json({ error: "Telegram nie je na serveri nastavený." });
+      return;
+    }
+    const target =
+      req.body?.target === "premium" || req.body?.target === "vip" || req.body?.target === "both"
+        ? req.body.target
+        : "both";
+    const sent = await sendTipResultToTelegram(tip, target);
     if (sent.length > 0) {
       const existing = tip.telegramMessages ?? [];
       await updateTip(tip.id, { telegramMessages: [...existing, ...sent] });
