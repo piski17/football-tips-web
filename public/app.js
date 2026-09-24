@@ -814,15 +814,12 @@ saveTicketBtn.addEventListener("click", async () => {
 // ---- História tipov ----
 
 async function openTipsHistory() {
-  console.log("DIAGNOSTIKA: openTipsHistory spustená");
   tipsModal.hidden = false;
   tipsListEl.innerHTML = `<div class="loading-state">Načítavam tipy…</div>`;
   try {
     const tips = await fetchJson("/api/tips");
-    console.log("DIAGNOSTIKA: tipy načítané, počet:", tips.length);
     renderTipsList(tips);
   } catch (err) {
-    console.log("DIAGNOSTIKA: chyba pri načítaní:", err.message);
     tipsListEl.innerHTML = `<p class="empty-state">Tipy sa nepodarilo načítať: ${escapeHtml(err.message)}</p>`;
   }
 }
