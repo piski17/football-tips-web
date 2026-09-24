@@ -1166,6 +1166,11 @@ function renderSubscribersList(subs) {
             <div class="tip-row-market">${escapeHtml(s.contact || "")} · najbližšia platba: ${dueDate}</div>
           </div>
           <span class="tip-status ${status.cls}">${status.label}</span>
+          ${
+            s.telegramChatId
+              ? `<button class="tip-delete-btn" data-test-reminder-id="${s.id}" title="Poslať testovaciu pripomienku teraz" style="background:var(--surface-alt); color:var(--gold-bright); border-radius:6px; padding:4px 8px; font-size:12px;">🔔 Test</button>`
+              : ""
+          }
           <button class="tip-delete-btn" data-extend-id="${s.id}" title="Predĺžiť o mesiac" style="background:var(--surface-alt); color:var(--gold-bright); border-radius:6px; padding:4px 8px; font-size:12px;">+30d</button>
           <button class="tip-delete-btn" data-remove-id="${s.id}" title="Zmazať">✕</button>
         </div>
@@ -1189,6 +1194,21 @@ function renderSubscribersList(subs) {
         openSubscribers();
       } catch (err) {
         alert(`Predĺženie zlyhalo: ${err.message}`);
+      }
+    });
+  });
+
+  subscribersListEl.querySelectorAll("[data-test-reminder-id]").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      const id = e.currentTarget.dataset.testReminderId;
+      btn.disabled = true;
+      try {
+        const res = await fetchJson(`/api/subscribers/${id}/test-reminder`, { method: "POST" });
+        alert(res.ok ? "Testovacia pripomienka odoslaná - skontroluj Telegram." : "Odoslanie zlyhalo.");
+      } catch (err) {
+        alert(`Odoslanie zlyhalo: ${err.message}`);
+      } finally {
+        btn.disabled = false;
       }
     });
   });

@@ -567,6 +567,29 @@ app.patch("/api/subscribers/:id", async (req, res) => {
   }
 });
 
+app.post("/api/subscribers/:id/test-reminder", async (req, res) => {
+  try {
+    const subs = await listSubscribers();
+    const sub = subs.find((s) => s.id === req.params.id);
+    if (!sub) {
+      res.status(404).json({ error: "Predplatiteľ sa nenašiel." });
+      return;
+    }
+    if (!sub.telegramChatId) {
+      res.status(400).json({ error: "Tento predplatiteľ nemá vyplnené Telegram chat ID." });
+      return;
+    }
+    const tips = await listTips();
+    const resolved = tips.filter((t) => t.status === "won" || t.status === "lost");
+    const won = resolved.filter((t) => t.status === "won").length;
+    const winRate = resolved.length > 0 ? Math.round((won / resolved.length) * 100) : null;
+    const ok = await sendRenewalReminder(sub.telegramChatId, { totalResolved: resolved.length, winRate });
+    res.json({ ok });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
 app.delete("/api/subscribers/:id", async (req, res) => {
   try {
     await deleteSubscriber(req.params.id);
