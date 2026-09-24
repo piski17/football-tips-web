@@ -814,12 +814,15 @@ saveTicketBtn.addEventListener("click", async () => {
 // ---- História tipov ----
 
 async function openTipsHistory() {
+  console.log("DIAGNOSTIKA: openTipsHistory spustená");
   tipsModal.hidden = false;
   tipsListEl.innerHTML = `<div class="loading-state">Načítavam tipy…</div>`;
   try {
     const tips = await fetchJson("/api/tips");
+    console.log("DIAGNOSTIKA: tipy načítané, počet:", tips.length);
     renderTipsList(tips);
   } catch (err) {
+    console.log("DIAGNOSTIKA: chyba pri načítaní:", err.message);
     tipsListEl.innerHTML = `<p class="empty-state">Tipy sa nepodarilo načítať: ${escapeHtml(err.message)}</p>`;
   }
 }
@@ -1019,7 +1022,7 @@ function renderTipsList(tips) {
           <span class="tip-status ${t.status}">${statusLabel}</span>
           ${
             t.status === "pending"
-              ? `<button class="tip-delete-btn" data-telegram-id="${t.id}" title="Poslať do Telegramu">TG</button>
+              ? `<button class="tip-delete-btn" data-telegram-id="${t.id}" title="Poslať do Telegramu">✉</button>
                  <button class="tip-delete-btn" data-motw-id="${t.id}" title="Poslať ako Zápas/Tiket týždňa">★</button>
                  <button class="tip-delete-btn" data-tip-id="${t.id}" title="Zmazať">✕</button>`
               : ""
@@ -1037,7 +1040,7 @@ function renderTipsList(tips) {
           <span class="tip-status ${t.status}">${statusLabel}</span>
           ${
             t.status === "pending"
-              ? `<button class="tip-delete-btn" data-telegram-id="${t.id}" title="Poslať do Telegramu">TG</button>
+              ? `<button class="tip-delete-btn" data-telegram-id="${t.id}" title="Poslať do Telegramu">✉</button>
                  <button class="tip-delete-btn" data-motw-id="${t.id}" title="Poslať ako Zápas/Tiket týždňa">★</button>
                  <button class="tip-delete-btn" data-tip-id="${t.id}" title="Zmazať">✕</button>`
               : ""
