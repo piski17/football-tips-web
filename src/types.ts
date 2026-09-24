@@ -262,6 +262,7 @@ export interface Subscriber {
   id: string;
   name: string;
   contact?: string;
+  telegramChatId?: string; // voliteľné - ak vyplnené, appka mu vie poslať osobnú pripomienku pred obnovením
   tier: "individual" | "group";
   priceEur: number;
   nextPaymentDue: string; // ISO dátum

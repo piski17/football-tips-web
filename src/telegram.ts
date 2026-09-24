@@ -303,6 +303,21 @@ export async function notifyAdminExpiringSubscribers(
   });
 }
 
+/** Pošle predplatiteľovi osobnú pripomienku pred obnovením platby, s prehľadom celkovej úspešnosti. */
+export async function sendRenewalReminder(
+  chatId: string,
+  stats: { totalResolved: number; winRate: number | null }
+): Promise<boolean> {
+  if (!TELEGRAM_BOT_TOKEN) return false;
+  const text =
+    `🔔 <b>Tvoje predplatné čoskoro vyprší</b>\n\n` +
+    `Za posledné obdobie sme vyhodnotili <b>${stats.totalResolved}</b> tipov` +
+    (stats.winRate !== null ? ` s úspešnosťou <b>${stats.winRate}%</b>.` : ".") +
+    `\n\nAk chceš pokračovať v predplatnom, napíš nám - radi ťa predĺžime. 🙌`;
+  const messageId = await sendToChat(chatId, text);
+  return messageId !== null;
+}
+
 /** Zaregistruje na Telegram serveri adresu, kam má posielať prichádzajúce správy (spustiť raz po nasadení). */
 export async function setTelegramWebhook(webhookUrl: string): Promise<void> {
   try {

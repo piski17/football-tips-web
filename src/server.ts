@@ -29,6 +29,7 @@ import {
   setTelegramWebhook,
   notifyAdminExpiringSubscribers,
   sendCustomMessage,
+  sendRenewalReminder,
 } from "./telegram";
 import { listSubscribers, addSubscriber, updateSubscriber, deleteSubscriber } from "./subscribersStore";
 import { Subscriber } from "./types";
@@ -357,6 +358,47 @@ app.post("/api/telegram/weekly-report", async (req, res) => {
   }
 });
 
+app.post("/api/telegram/match-of-week", async (req, res) => {
+  try {
+    if (!isTelegramEnabled()) {
+      res.status(400).json({ error: "Telegram nie je na serveri nastavený." });
+      return;
+    }
+
+    const { homeTeam, awayTeam, bestBets } = req.body ?? {};
+    if (!homeTeam || !awayTeam || !Array.isArray(bestBets) || bestBets.length === 0) {
+      res.status(400).json({ error: "Chýbajú údaje zápasu alebo tipov." });
+      return;
+    }
+
+    const escapeHtmlLocal = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const betsText = bestBets
+      .slice(0, 3)
+      .map(
+        (bet: any, idx: number) =>
+          `${idx === 0 ? "🎯" : `${idx + 1}.`} <b>${escapeHtmlLocal(bet.market)}: ${escapeHtmlLocal(
+            bet.selection
+          )}</b> (${bet.probability.toFixed(0)}%)\n<i>${escapeHtmlLocal(bet.explanation ?? "")}</i>`
+      )
+      .join("\n\n");
+
+    const text =
+      `🌟 <b>ZÁPAS TÝŽDŇA</b>\n\n` +
+      `⚽ <b>${escapeHtmlLocal(homeTeam)} — ${escapeHtmlLocal(awayTeam)}</b>\n\n` +
+      `${betsText}\n\n` +
+      `<i>Náš tip na najväčší zápas týždňa, s plným rozborom modelu.</i>`;
+
+    const target =
+      req.body?.target === "premium" || req.body?.target === "vip" || req.body?.target === "both"
+        ? req.body.target
+        : "both";
+    const sent = await sendCustomMessage(text, target);
+    res.json({ ok: sent.length > 0 });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
 // Sem posiela Telegram prichádzajúce správy od používateľov (nová správa, stlačenie tlačidla).
 app.post("/api/telegram/webhook", async (req, res) => {
   try {
@@ -544,17 +586,29 @@ async function checkExpiringSubscribers(): Promise<void> {
 
   try {
     const subs = await listSubscribers();
-    const expiring = subs
-      .map((s) => ({
-        name: s.name,
-        tier: s.tier,
-        daysLeft: Math.ceil((new Date(s.nextPaymentDue).getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
-      }))
-      .filter((s) => s.daysLeft <= 3);
+    const withDaysLeft = subs.map((s) => ({
+      ...s,
+      daysLeft: Math.ceil((new Date(s.nextPaymentDue).getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
+    }));
 
+    const expiring = withDaysLeft.filter((s) => s.daysLeft <= 3);
     if (expiring.length > 0) {
-      await notifyAdminExpiringSubscribers(expiring);
+      await notifyAdminExpiringSubscribers(expiring.map((s) => ({ name: s.name, tier: s.tier, daysLeft: s.daysLeft })));
     }
+
+    // Osobná pripomienka predplatiteľom, ktorým vyprší platnosť presne o 3 dni
+    // (a majú vyplnené svoje Telegram chat ID) - s prehľadom celkovej úspešnosti.
+    const toRemind = withDaysLeft.filter((s) => s.daysLeft === 3 && s.telegramChatId);
+    if (toRemind.length > 0) {
+      const tips = await listTips();
+      const resolved = tips.filter((t) => t.status === "won" || t.status === "lost");
+      const won = resolved.filter((t) => t.status === "won").length;
+      const winRate = resolved.length > 0 ? Math.round((won / resolved.length) * 100) : null;
+      for (const sub of toRemind) {
+        await sendRenewalReminder(sub.telegramChatId!, { totalResolved: resolved.length, winRate });
+      }
+    }
+
     lastExpiryCheckDate = today;
   } catch (err) {
     console.error("Kontrola vypršania predplatných zlyhala:", err);

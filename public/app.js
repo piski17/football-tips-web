@@ -144,6 +144,7 @@ const closeSubscribersBtn = document.getElementById("closeSubscribersBtn");
 const addSubscriberBtn = document.getElementById("addSubscriberBtn");
 const subNameInput = document.getElementById("subName");
 const subContactInput = document.getElementById("subContact");
+const subTelegramChatIdInput = document.getElementById("subTelegramChatId");
 const subTierSelect = document.getElementById("subTier");
 
 toggleCustomLeagueBtn.addEventListener("click", () => {
@@ -396,6 +397,7 @@ function renderAnalysis(r) {
 
     ${topBetsHtml}
     <div id="saveTipMsg"></div>
+    <button class="btn-ghost" id="matchOfWeekBtn" style="width:100%; margin: 4px 0 8px;">🌟 Poslať ako Zápas týždňa</button>
 
     <div class="prob-section">
       <div class="section-title">Pravdepodobnosť výsledku</div>
@@ -437,6 +439,7 @@ function renderAnalysis(r) {
 
   initSaveTipButton(r);
   wireTicketButtons(r);
+  wireMatchOfWeekButton(r);
   wireScorerSaveButtons(r);
 }
 
@@ -605,6 +608,38 @@ async function maybeOfferTelegram(tipId) {
   } catch (err) {
     alert(`Odoslanie do Telegramu zlyhalo: ${err.message}`);
   }
+}
+
+function wireMatchOfWeekButton(r) {
+  const btn = document.getElementById("matchOfWeekBtn");
+  if (!btn) return;
+  btn.addEventListener("click", async () => {
+    const target = await askTelegramTarget();
+    if (!target) return;
+    btn.disabled = true;
+    try {
+      await fetchJson("/api/telegram/match-of-week", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          homeTeam: translateTeamName(r.fixture.homeTeam.name),
+          awayTeam: translateTeamName(r.fixture.awayTeam.name),
+          bestBets: (r.bestBets || []).slice(0, 3).map((bet) => ({
+            market: bet.market,
+            selection: translateNamesInText(bet.selection, r.fixture.homeTeam.name, r.fixture.awayTeam.name),
+            probability: bet.probability,
+            explanation: translateNamesInText(bet.explanation, r.fixture.homeTeam.name, r.fixture.awayTeam.name),
+          })),
+          target,
+        }),
+      });
+      alert("Odoslané ako Zápas týždňa.");
+    } catch (err) {
+      alert(`Odoslanie zlyhalo: ${err.message}`);
+    } finally {
+      btn.disabled = false;
+    }
+  });
 }
 
 function initSaveTipButton(r) {
@@ -1192,6 +1227,7 @@ addSubscriberBtn.addEventListener("click", async () => {
     id: `sub-${Date.now()}`,
     name,
     contact: subContactInput.value.trim(),
+    telegramChatId: subTelegramChatIdInput.value.trim() || undefined,
     tier,
     priceEur,
     nextPaymentDue: nextPaymentDue.toISOString(),
@@ -1207,6 +1243,7 @@ addSubscriberBtn.addEventListener("click", async () => {
     });
     subNameInput.value = "";
     subContactInput.value = "";
+    subTelegramChatIdInput.value = "";
     openSubscribers();
   } catch (err) {
     alert(`Pridanie zlyhalo: ${err.message}`);
