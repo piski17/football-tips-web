@@ -258,8 +258,16 @@ app.post("/api/tips/:id/telegram", async (req, res) => {
       res.status(400).json({ error: "Telegram nie je na serveri nastavený." });
       return;
     }
-    const target = req.body?.target === "vip" || req.body?.target === "both" ? req.body.target : "premium";
-    const sent = await sendTipToTelegram(tip, target);
+    const target =
+      req.body?.target === "premium" || req.body?.target === "vip" || req.body?.target === "both"
+        ? req.body.target
+        : "premium";
+    const headerOverride = req.body?.asMatchOfWeek
+      ? tip.legs && tip.legs.length > 0
+        ? `🌟 <b>TIKET TÝŽDŇA</b>`
+        : `🌟 <b>ZÁPAS TÝŽDŇA</b>`
+      : undefined;
+    const sent = await sendTipToTelegram(tip, target, headerOverride);
     if (sent.length > 0) {
       const existing = tip.telegramMessages ?? [];
       await updateTip(tip.id, { telegramMessages: [...existing, ...sent] });
@@ -346,47 +354,6 @@ app.post("/api/telegram/weekly-report", async (req, res) => {
       (winRate !== null ? `Úspešnosť: <b>${winRate}%</b>\n` : "") +
       (bestMarket ? `Najlepší trh: <b>${bestMarket}</b> (${(bestRate * 100).toFixed(0)}%)\n` : "") +
       `\n<i>Poctivá história - vrátane prehratých tipov.</i>`;
-
-    const target =
-      req.body?.target === "premium" || req.body?.target === "vip" || req.body?.target === "both"
-        ? req.body.target
-        : "both";
-    const sent = await sendCustomMessage(text, target);
-    res.json({ ok: sent.length > 0 });
-  } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
-  }
-});
-
-app.post("/api/telegram/match-of-week", async (req, res) => {
-  try {
-    if (!isTelegramEnabled()) {
-      res.status(400).json({ error: "Telegram nie je na serveri nastavený." });
-      return;
-    }
-
-    const { homeTeam, awayTeam, bestBets } = req.body ?? {};
-    if (!homeTeam || !awayTeam || !Array.isArray(bestBets) || bestBets.length === 0) {
-      res.status(400).json({ error: "Chýbajú údaje zápasu alebo tipov." });
-      return;
-    }
-
-    const escapeHtmlLocal = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    const betsText = bestBets
-      .slice(0, 3)
-      .map(
-        (bet: any, idx: number) =>
-          `${idx === 0 ? "🎯" : `${idx + 1}.`} <b>${escapeHtmlLocal(bet.market)}: ${escapeHtmlLocal(
-            bet.selection
-          )}</b> (${bet.probability.toFixed(0)}%)\n<i>${escapeHtmlLocal(bet.explanation ?? "")}</i>`
-      )
-      .join("\n\n");
-
-    const text =
-      `🌟 <b>ZÁPAS TÝŽDŇA</b>\n\n` +
-      `⚽ <b>${escapeHtmlLocal(homeTeam)} — ${escapeHtmlLocal(awayTeam)}</b>\n\n` +
-      `${betsText}\n\n` +
-      `<i>Náš tip na najväčší zápas týždňa, s plným rozborom modelu.</i>`;
 
     const target =
       req.body?.target === "premium" || req.body?.target === "vip" || req.body?.target === "both"

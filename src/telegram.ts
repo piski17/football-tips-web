@@ -108,7 +108,7 @@ function impliedOdds(probability: number): string {
   return probability > 0 ? (100 / probability).toFixed(2) : "-";
 }
 
-function buildMessageText(tip: SavedTip): string {
+function buildMessageText(tip: SavedTip, headerOverride?: string): string {
   const odds = impliedOdds(tip.probability);
   const stakePct = stakeTierPercent(tip.probability);
 
@@ -123,7 +123,7 @@ function buildMessageText(tip: SavedTip): string {
       .join("\n\n");
 
     return (
-      `🎫 <b>Nový tiket</b> (${tip.legs.length} tipov)\n\n${legsText}\n\n` +
+      `${headerOverride ?? `🎫 <b>Nový tiket</b>`} (${tip.legs.length} tipov)\n\n${legsText}\n\n` +
       `📈 Kombinovaná pravdepodobnosť: <b>${tip.probability.toFixed(1)}%</b>\n` +
       `💰 Odhadovaný kurz: <b>~${odds}</b>\n` +
       `💵 Odporúčaná sadzba: <b>${stakePct}% bankrollu</b>\n\n` +
@@ -132,7 +132,7 @@ function buildMessageText(tip: SavedTip): string {
   }
 
   return (
-    `🎯 <b>Nový tip</b>\n\n` +
+    `${headerOverride ?? `🎯 <b>Nový tip</b>`}\n\n` +
     `⚽ ${escapeHtml(translateTeamName(tip.homeTeam))} — ${escapeHtml(translateTeamName(tip.awayTeam))}\n` +
     `📊 ${escapeHtml(tip.market)}: <b>${escapeHtml(translateNamesInText(tip.selection, tip.homeTeam, tip.awayTeam))}</b>\n` +
     `📈 Dôvera: <b>${tip.probability.toFixed(0)}%</b>\n` +
@@ -171,12 +171,13 @@ function resolveChatIds(target: TelegramTarget): string[] {
 
 export async function sendTipToTelegram(
   tip: SavedTip,
-  target: TelegramTarget
+  target: TelegramTarget,
+  headerOverride?: string
 ): Promise<{ chatId: string; messageId: number }[]> {
   const chatIds = resolveChatIds(target);
   if (chatIds.length === 0) return [];
 
-  const text = buildMessageText(tip);
+  const text = buildMessageText(tip, headerOverride);
   const sent: { chatId: string; messageId: number }[] = [];
 
   for (const chatId of chatIds) {
