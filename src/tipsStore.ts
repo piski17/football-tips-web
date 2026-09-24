@@ -134,11 +134,12 @@ export async function updateTip(id: string, updates: Partial<SavedTip>): Promise
 }
 
 /** Zmaže tip len ak je ešte "pending" - už vyhodnotené tipy (won/lost/void) sa nedajú zmazať, aby zostala história presná. */
+/** Zmaže tip/tiket bez ohľadu na jeho stav (aj vyhodnotené) - potvrdenie rieši rozhranie pred zavolaním. */
 export async function deleteTip(id: string): Promise<SavedTip | null> {
   return withWriteLock(async () => {
     const tips = await readAll();
     const target = tips.find((t) => t.id === id);
-    if (!target || target.status !== "pending") return null;
+    if (!target) return null;
     await writeAll(tips.filter((t) => t.id !== id));
     return target;
   });

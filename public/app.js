@@ -1023,10 +1023,10 @@ function renderTipsList(tips) {
           ${
             t.status === "pending"
               ? `<button class="tip-delete-btn" data-telegram-id="${t.id}" title="Poslať do Telegramu">✉</button>
-                 <button class="tip-delete-btn" data-motw-id="${t.id}" title="Poslať ako Zápas/Tiket týždňa">★</button>
-                 <button class="tip-delete-btn" data-tip-id="${t.id}" title="Zmazať">✕</button>`
+                 <button class="tip-delete-btn" data-motw-id="${t.id}" title="Poslať ako Zápas/Tiket týždňa">★</button>`
               : ""
           }
+          <button class="tip-delete-btn" data-tip-id="${t.id}" title="Zmazať">✕</button>
         </div>
       `;
       }
@@ -1041,10 +1041,10 @@ function renderTipsList(tips) {
           ${
             t.status === "pending"
               ? `<button class="tip-delete-btn" data-telegram-id="${t.id}" title="Poslať do Telegramu">✉</button>
-                 <button class="tip-delete-btn" data-motw-id="${t.id}" title="Poslať ako Zápas/Tiket týždňa">★</button>
-                 <button class="tip-delete-btn" data-tip-id="${t.id}" title="Zmazať">✕</button>`
+                 <button class="tip-delete-btn" data-motw-id="${t.id}" title="Poslať ako Zápas/Tiket týždňa">★</button>`
               : ""
           }
+          <button class="tip-delete-btn" data-tip-id="${t.id}" title="Zmazať">✕</button>
         </div>
       `;
     })
@@ -1054,6 +1054,8 @@ function renderTipsList(tips) {
     btn.addEventListener("click", async (e) => {
       const id = e.currentTarget.dataset.tipId;
       if (!id) return;
+      const confirmed = window.confirm("Naozaj chceš odstrániť tento tip/tiket z histórie? Táto akcia sa nedá vrátiť späť.");
+      if (!confirmed) return;
       btn.disabled = true;
       try {
         const res = await fetch(`/api/tips/${id}`, { method: "DELETE" });
