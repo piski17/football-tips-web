@@ -274,7 +274,7 @@ export async function handleTelegramUpdate(update: any): Promise<void> {
 
   await callTelegramApi("sendMessage", {
     chat_id: chatId,
-    text: "👋 Vitaj v <b>TipRadar</b>!\n\nVyber si, čo ťa zaujíma:",
+    text: `👋 Vitaj v <b>TipRadar</b>!\n\nVyber si, čo ťa zaujíma:\n\n<i>Tvoje Telegram ID: <code>${chatId}</code></i>`,
     parse_mode: "HTML",
     reply_markup: MAIN_MENU_KEYBOARD,
   });
