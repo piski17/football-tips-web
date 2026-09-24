@@ -579,8 +579,8 @@ function askTelegramTarget() {
       <div class="modal" style="max-width:320px;">
         <h3>Odoslať do Telegramu?</h3>
         <div style="display:flex; flex-direction:column; gap:10px; margin-top:18px;">
-          <button class="btn-primary" id="tgChoicePremium">📣 PREMIUM kanál</button>
-          <button class="btn-primary" id="tgChoiceVip">👑 VIP kanál</button>
+          <button class="btn-primary" id="tgChoicePremium">◆ PREMIUM kanál</button>
+          <button class="btn-primary" id="tgChoiceVip">♛ VIP kanál</button>
           <button class="btn-ghost" id="tgChoiceBoth">Oba naraz</button>
           <button class="btn-ghost" id="tgChoiceNone">Neposielať</button>
         </div>
