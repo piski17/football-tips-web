@@ -397,7 +397,6 @@ function renderAnalysis(r) {
 
     ${topBetsHtml}
     <div id="saveTipMsg"></div>
-    <button class="btn-ghost" id="matchOfWeekBtn" style="width:100%; margin: 4px 0 8px;">🌟 Poslať ako Zápas týždňa</button>
 
     <div class="prob-section">
       <div class="section-title">Pravdepodobnosť výsledku</div>
@@ -439,7 +438,6 @@ function renderAnalysis(r) {
 
   initSaveTipButton(r);
   wireTicketButtons(r);
-  wireMatchOfWeekButton(r);
   wireScorerSaveButtons(r);
 }
 
@@ -608,38 +606,6 @@ async function maybeOfferTelegram(tipId) {
   } catch (err) {
     alert(`Odoslanie do Telegramu zlyhalo: ${err.message}`);
   }
-}
-
-function wireMatchOfWeekButton(r) {
-  const btn = document.getElementById("matchOfWeekBtn");
-  if (!btn) return;
-  btn.addEventListener("click", async () => {
-    const target = await askTelegramTarget();
-    if (!target) return;
-    btn.disabled = true;
-    try {
-      await fetchJson("/api/telegram/match-of-week", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          homeTeam: translateTeamName(r.fixture.homeTeam.name),
-          awayTeam: translateTeamName(r.fixture.awayTeam.name),
-          bestBets: (r.bestBets || []).slice(0, 3).map((bet) => ({
-            market: bet.market,
-            selection: translateNamesInText(bet.selection, r.fixture.homeTeam.name, r.fixture.awayTeam.name),
-            probability: bet.probability,
-            explanation: translateNamesInText(bet.explanation, r.fixture.homeTeam.name, r.fixture.awayTeam.name),
-          })),
-          target,
-        }),
-      });
-      alert("Odoslané ako Zápas týždňa.");
-    } catch (err) {
-      alert(`Odoslanie zlyhalo: ${err.message}`);
-    } finally {
-      btn.disabled = false;
-    }
-  });
 }
 
 function initSaveTipButton(r) {
@@ -1054,6 +1020,7 @@ function renderTipsList(tips) {
           ${
             t.status === "pending"
               ? `<button class="tip-delete-btn" data-telegram-id="${t.id}" title="Poslať do Telegramu">📤</button>
+                 <button class="tip-delete-btn" data-motw-id="${t.id}" title="Poslať ako Zápas/Tiket týždňa">🌟</button>
                  <button class="tip-delete-btn" data-tip-id="${t.id}" title="Zmazať">✕</button>`
               : ""
           }
@@ -1071,6 +1038,7 @@ function renderTipsList(tips) {
           ${
             t.status === "pending"
               ? `<button class="tip-delete-btn" data-telegram-id="${t.id}" title="Poslať do Telegramu">📤</button>
+                 <button class="tip-delete-btn" data-motw-id="${t.id}" title="Poslať ako Zápas/Tiket týždňa">🌟</button>
                  <button class="tip-delete-btn" data-tip-id="${t.id}" title="Zmazať">✕</button>`
               : ""
           }
@@ -1103,6 +1071,25 @@ function renderTipsList(tips) {
       const id = e.currentTarget.dataset.telegramId;
       if (!id) return;
       await maybeOfferTelegram(id);
+    });
+  });
+
+  tipsListEl.querySelectorAll("[data-motw-id]").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      const id = e.currentTarget.dataset.motwId;
+      if (!id) return;
+      const target = await askTelegramTarget();
+      if (!target) return;
+      try {
+        await fetchJson(`/api/tips/${id}/telegram`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ target, asMatchOfWeek: true }),
+        });
+        alert("Odoslané ako Zápas/Tiket týždňa.");
+      } catch (err) {
+        alert(`Odoslanie zlyhalo: ${err.message}`);
+      }
     });
   });
 }
