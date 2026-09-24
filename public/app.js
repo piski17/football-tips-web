@@ -994,9 +994,13 @@ function renderTipsList(tips) {
   tipsListEl.innerHTML = tips
     .map((t) => {
       const date = new Date(t.matchDate).toLocaleDateString("sk-SK");
-      const statusLabelOf = (s) =>
-        s === "won" ? "Vyhral" : s === "lost" ? "Prehral" : s === "void" ? "Neurčené" : "Čaká";
-      const statusLabel = statusLabelOf(t.status);
+      const rowClass = t.status === "won" ? "tip-row-won" : t.status === "lost" ? "tip-row-lost" : "";
+      const resultIconHtml =
+        t.status === "won"
+          ? `<span class="tip-result-icon won">✓</span>`
+          : t.status === "lost"
+          ? `<span class="tip-result-icon lost">✕</span>`
+          : `<span class="tip-status ${t.status}">${t.status === "void" ? "Neurčené" : "Čaká"}</span>`;
 
       if (t.legs && t.legs.length > 0) {
         const legsHtml = t.legs
@@ -1004,19 +1008,18 @@ function renderTipsList(tips) {
             (leg) => `
             <div class="tip-row-market" style="padding-left: 10px; border-left: 2px solid var(--border); margin-top: 4px;">
               ${escapeHtml(translateTeamName(leg.homeTeam))} — ${escapeHtml(translateTeamName(leg.awayTeam))}: ${escapeHtml(leg.market)}: ${escapeHtml(translateNamesInText(leg.selection, leg.homeTeam, leg.awayTeam))} · ${leg.probability.toFixed(0)}%
-              <span class="tip-status ${leg.status}" style="margin-left:6px; font-size:9.5px; padding:2px 7px;">${statusLabelOf(leg.status)}</span>
             </div>`
           )
           .join("");
 
         return `
-        <div class="tip-row" style="align-items: flex-start;">
+        <div class="tip-row ${rowClass}" style="align-items: flex-start;">
           <div class="tip-row-info">
             <div class="tip-row-match">🎫 Tiket (${t.legs.length} tipov) <span class="muted small">(${date})</span></div>
             <div class="tip-row-market">Kombinovaná pravdepodobnosť: ${t.probability.toFixed(1)}%</div>
             ${legsHtml}
           </div>
-          <span class="tip-status ${t.status}">${statusLabel}</span>
+          ${resultIconHtml}
           ${
             t.status === "pending"
               ? `<button class="tip-delete-btn" data-telegram-id="${t.id}" title="Poslať do Telegramu">✉</button>
@@ -1029,12 +1032,12 @@ function renderTipsList(tips) {
       }
 
       return `
-        <div class="tip-row">
+        <div class="tip-row ${rowClass}">
           <div class="tip-row-info">
             <div class="tip-row-match">${escapeHtml(translateTeamName(t.homeTeam))} — ${escapeHtml(translateTeamName(t.awayTeam))} <span class="muted small">(${date})</span></div>
             <div class="tip-row-market">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))} · ${t.probability.toFixed(0)}%</div>
           </div>
-          <span class="tip-status ${t.status}">${statusLabel}</span>
+          ${resultIconHtml}
           ${
             t.status === "pending"
               ? `<button class="tip-delete-btn" data-telegram-id="${t.id}" title="Poslať do Telegramu">✉</button>
