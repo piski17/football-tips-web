@@ -401,14 +401,14 @@ function renderAnalysis(r) {
 
     <div class="prob-section">
       <div class="section-title">Pravdepodobnosť výsledku</div>
-      ${probRow(r.fixture.homeTeam.name, r.probabilities.homeWin)}
+      ${probRow(translateTeamName(r.fixture.homeTeam.name), r.probabilities.homeWin)}
       ${probRow("Remíza", r.probabilities.draw)}
-      ${probRow(r.fixture.awayTeam.name, r.probabilities.awayWin)}
+      ${probRow(translateTeamName(r.fixture.awayTeam.name), r.probabilities.awayWin)}
     </div>
 
     <div class="stats-grid">
-      ${teamStatCard(r.fixture.homeTeam.name, r.form.home, r.form.homeScore, r.expectedGoals.home, r.historicalDataInfo && r.historicalDataInfo.home)}
-      ${teamStatCard(r.fixture.awayTeam.name, r.form.away, r.form.awayScore, r.expectedGoals.away, r.historicalDataInfo && r.historicalDataInfo.away)}
+      ${teamStatCard(translateTeamName(r.fixture.homeTeam.name), r.form.home, r.form.homeScore, r.expectedGoals.home, r.historicalDataInfo && r.historicalDataInfo.home)}
+      ${teamStatCard(translateTeamName(r.fixture.awayTeam.name), r.form.away, r.form.awayScore, r.expectedGoals.away, r.historicalDataInfo && r.historicalDataInfo.away)}
     </div>
 
     <div class="prob-section">
