@@ -27,6 +27,20 @@ html, body {
   color: var(--text);
   font-family: var(--font-body);
   font-size: 15px;
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: url("favicon.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 60vmin 60vmin;
+  opacity: 0.035;
+  pointer-events: none;
+  z-index: -1;
 }
 
 button, input {
