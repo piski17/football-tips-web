@@ -575,13 +575,12 @@ export function predictMatch(
   const valueCandidates = sortedBets.filter((b) => b.probability < VALUE_THRESHOLD);
   const pickPool = valueCandidates.length > 0 ? valueCandidates : sortedBets;
 
-  // Appka vyberie 2-3 NAJLEPŠIE tipy, ale vždy z RÔZNYCH kategórií, aby
-  // nedávala dva podobné/prekrývajúce sa tipy naraz (napr. Dvojšanca +
-  // Výsledok zápasu). Ak by kategórií nebolo dosť, jednoducho vráti menej.
+  // Appka vyberie len 1 NAJLEPŠÍ tip na zápas (namiesto viacerých), aby bola
+  // odporúčaná stávka jasná a jednoznačná.
   const usedCategories = new Set<string>();
   const diversifiedPicks: MarketPick[] = [];
   for (const bet of pickPool) {
-    if (diversifiedPicks.length >= 3) break;
+    if (diversifiedPicks.length >= 1) break;
     if (usedCategories.has(bet.category)) continue;
     diversifiedPicks.push(bet);
     usedCategories.add(bet.category);
