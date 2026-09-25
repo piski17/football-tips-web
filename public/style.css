@@ -918,6 +918,18 @@ button, input {
   flex-shrink: 0;
 }
 
+.tip-delete-btn[data-tip-id] {
+  color: var(--danger);
+}
+
+.tip-delete-btn[data-motw-id] {
+  color: var(--gold);
+}
+
+.tip-delete-btn[data-result-id] {
+  color: var(--success);
+}
+
 .tip-delete-btn:hover {
   color: var(--danger);
 }
