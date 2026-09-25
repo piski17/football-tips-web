@@ -579,12 +579,11 @@ export function predictMatch(
     (b) => b.probability >= MIN_PROBABILITY && b.probability <= MAX_PROBABILITY
   );
 
-  // Appka vyberie len 1 NAJLEPŠÍ tip na zápas (namiesto viacerých), aby bola
-  // odporúčaná stávka jasná a jednoznačná.
+  // Appka ukáže VŠETKY tipy zápasu, ktoré spadajú do pásma - najviac jeden
+  // z každej kategórie (trhu), zoradené od najvyššej pravdepodobnosti.
   const usedCategories = new Set<string>();
   const diversifiedPicks: MarketPick[] = [];
   for (const bet of pickPool) {
-    if (diversifiedPicks.length >= 1) break;
     if (usedCategories.has(bet.category)) continue;
     diversifiedPicks.push(bet);
     usedCategories.add(bet.category);
