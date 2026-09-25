@@ -55,10 +55,90 @@ const COUNTRY_NAME_SK = {
   Turkey: "Turecko",
   Ukraine: "Ukrajina",
   Wales: "Wales",
+  // Alternatívne názvy z API a reprezentácie mimo Európy
+  Czechia: "Česko",
+  "FYR Macedonia": "Severné Macedónsko",
+  Macedonia: "Severné Macedónsko",
+  "Türkiye": "Turecko",
+  Turkiye: "Turecko",
+  "Bosnia & Herzegovina": "Bosna a Hercegovina",
+  Ireland: "Írsko",
+  Holland: "Holandsko",
+  Kyrgyzstan: "Kirgizsko",
+  Argentina: "Argentína",
+  Brazil: "Brazília",
+  Uruguay: "Uruguaj",
+  Colombia: "Kolumbia",
+  Chile: "Čile",
+  Paraguay: "Paraguaj",
+  Peru: "Peru",
+  Ecuador: "Ekvádor",
+  Bolivia: "Bolívia",
+  Venezuela: "Venezuela",
+  USA: "USA",
+  "United States": "USA",
+  Mexico: "Mexiko",
+  Canada: "Kanada",
+  "Costa Rica": "Kostarika",
+  Panama: "Panama",
+  Jamaica: "Jamajka",
+  Honduras: "Honduras",
+  Haiti: "Haiti",
+  Curacao: "Curaçao",
+  Morocco: "Maroko",
+  Algeria: "Alžírsko",
+  Tunisia: "Tunisko",
+  Egypt: "Egypt",
+  Senegal: "Senegal",
+  Nigeria: "Nigéria",
+  Ghana: "Ghana",
+  Cameroon: "Kamerun",
+  "Ivory Coast": "Pobrežie Slonoviny",
+  "Cote D'Ivoire": "Pobrežie Slonoviny",
+  "South Africa": "Južná Afrika",
+  Mali: "Mali",
+  "Cape Verde Islands": "Kapverdy",
+  Japan: "Japonsko",
+  "South Korea": "Južná Kórea",
+  "Korea Republic": "Južná Kórea",
+  Australia: "Austrália",
+  Iran: "Irán",
+  "Saudi Arabia": "Saudská Arábia",
+  Qatar: "Katar",
+  Iraq: "Irak",
+  Jordan: "Jordánsko",
+  "United Arab Emirates": "Spojené arabské emiráty",
+  Uzbekistan: "Uzbekistan",
+  China: "Čína",
+  "China PR": "Čína",
+  "New Zealand": "Nový Zéland",
 };
 
 function translateTeamName(name) {
   return COUNTRY_NAME_SK[name] ?? name;
+}
+
+// ---- Preklad názvov súťaží (ligy s vlastným názvom ostávajú v pôvodnom tvare) ----
+const LEAGUE_NAME_SK = {
+  "UEFA Nations League": "Liga národov UEFA",
+  "UEFA Champions League": "Liga majstrov UEFA",
+  "UEFA Europa League": "Európska liga UEFA",
+  "UEFA Europa Conference League": "Konferenčná liga UEFA",
+  "UEFA Conference League": "Konferenčná liga UEFA",
+  "World Cup": "Majstrovstvá sveta",
+  "World Cup - Qualification Europe": "Kvalifikácia MS – Európa",
+  "Euro Championship": "Majstrovstvá Európy",
+  "Euro Championship - Qualification": "Kvalifikácia ME",
+  "Friendlies": "Prípravné zápasy",
+};
+
+function translateLeagueName(name) {
+  return LEAGUE_NAME_SK[name] ?? name;
+}
+
+/** Forma tímu z API (W/D/L) -> slovenské písmená (V/R/P). */
+function translateFormLetter(letter) {
+  return ({ W: "V", D: "R", L: "P" })[letter] ?? letter;
 }
 
 /**
@@ -97,6 +177,10 @@ function translateNamesInText(text, homeOriginal, awayOriginal) {
   const awaySk = translateTeamName(awayOriginal);
   if (homeSk !== homeOriginal) result = result.split(homeOriginal).join(homeSk);
   if (awaySk !== awayOriginal) result = result.split(awayOriginal).join(awaySk);
+  // "Over 2.5" / "Under 2.5" -> "Nad 2,5" / "Pod 2,5" (len na zobrazenie,
+  // uložené dáta ostávajú bez zmeny kvôli vyhodnocovaniu).
+  result = result.replace(/\bOver (\d+(?:\.\d+)?)/g, (_m, n) => "Nad " + n.replace(".", ","));
+  result = result.replace(/\bUnder (\d+(?:\.\d+)?)/g, (_m, n) => "Pod " + n.replace(".", ","));
   return result;
 }
 
@@ -282,7 +366,7 @@ function renderGroupedFixtureList(results) {
     header.className = "league-group-header";
     header.innerHTML = `<span style="display:flex; align-items:center; gap:8px;">${
       leagueLogo ? `<img src="${escapeHtml(leagueLogo)}" class="league-logo" alt="" />` : ""
-    }${escapeHtml(leagueName)}</span><span class="chevron">${isCollapsed ? "▸" : "▾"}</span>`;
+    }${escapeHtml(translateLeagueName(leagueName))}</span><span class="chevron">${isCollapsed ? "▸" : "▾"}</span>`;
     header.addEventListener("click", () => {
       if (collapsedLeagues.has(leagueName)) collapsedLeagues.delete(leagueName);
       else collapsedLeagues.add(leagueName);
@@ -404,7 +488,7 @@ function renderAnalysis(r) {
 
   analysisColumnEl.innerHTML = `
     <div class="match-header">
-      <div class="league-name">${escapeHtml(r.fixture.league.name)} · sezóna ${r.fixture.league.season}</div>
+      <div class="league-name">${escapeHtml(translateLeagueName(r.fixture.league.name))} · sezóna ${r.fixture.league.season}</div>
       <h2 class="match-header-teams">
         ${r.fixture.homeTeam.logo ? `<img class="team-logo-lg" src="${escapeHtml(r.fixture.homeTeam.logo)}" alt="" />` : ""}
         <span>${escapeHtml(translateTeamName(r.fixture.homeTeam.name))}</span>
@@ -477,7 +561,7 @@ function teamStatCard(name, form, formScore, xg, historyInfo) {
   const pills = (form || "")
     .slice(-5)
     .split("")
-    .map((r) => `<div class="form-pill ${r}">${r}</div>`)
+    .map((r) => `<div class="form-pill ${r}">${translateFormLetter(r)}</div>`)
     .join("");
 
   const historyLine = historyInfo
@@ -508,7 +592,7 @@ function bestScorerCard(best) {
 
   return `
     <div class="stat-card">
-      <h4>${escapeHtml(prediction.player.name)} <span class="muted small">(${escapeHtml(best.team)})</span></h4>
+      <h4>${escapeHtml(prediction.player.name)} <span class="muted small">(${escapeHtml(translateTeamName(best.team))})</span></h4>
       <div class="stat-line"><span>Góly / zápasy</span><strong>${prediction.seasonGoals} / ${prediction.appearances}</strong></div>
       <div class="tip-callout" style="margin-top:10px; margin-bottom:0; padding: 10px 14px;">
         <div class="tip-outcome" style="font-size:16px;">⚽</div>
@@ -666,7 +750,7 @@ function initSaveTipButton(r) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(tip),
         });
-        msgEl.innerHTML = `<p class="muted small" style="margin-top:6px;">✓ Tip uložený (${escapeHtml(chosenBet.market)}: ${escapeHtml(chosenBet.selection)})</p>`;
+        msgEl.innerHTML = `<p class="muted small" style="margin-top:6px;">✓ Tip uložený (${escapeHtml(chosenBet.market)}: ${escapeHtml(translateNamesInText(chosenBet.selection, r.fixture.homeTeam.name, r.fixture.awayTeam.name))})</p>`;
         await maybeOfferTelegram(tip.id);
       } catch (err) {
         msgEl.innerHTML = `<p class="muted small" style="margin-top:6px;">Uloženie zlyhalo: ${escapeHtml(err.message)}</p>`;

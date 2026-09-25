@@ -62,6 +62,63 @@ const COUNTRY_NAME_SK: Record<string, string> = {
   Turkey: "Turecko",
   Ukraine: "Ukrajina",
   Wales: "Wales",
+  // Alternatívne názvy z API a reprezentácie mimo Európy
+  Czechia: "Česko",
+  "FYR Macedonia": "Severné Macedónsko",
+  Macedonia: "Severné Macedónsko",
+  "Türkiye": "Turecko",
+  Turkiye: "Turecko",
+  "Bosnia & Herzegovina": "Bosna a Hercegovina",
+  Ireland: "Írsko",
+  Holland: "Holandsko",
+  Kyrgyzstan: "Kirgizsko",
+  Argentina: "Argentína",
+  Brazil: "Brazília",
+  Uruguay: "Uruguaj",
+  Colombia: "Kolumbia",
+  Chile: "Čile",
+  Paraguay: "Paraguaj",
+  Peru: "Peru",
+  Ecuador: "Ekvádor",
+  Bolivia: "Bolívia",
+  Venezuela: "Venezuela",
+  USA: "USA",
+  "United States": "USA",
+  Mexico: "Mexiko",
+  Canada: "Kanada",
+  "Costa Rica": "Kostarika",
+  Panama: "Panama",
+  Jamaica: "Jamajka",
+  Honduras: "Honduras",
+  Haiti: "Haiti",
+  Curacao: "Curaçao",
+  Morocco: "Maroko",
+  Algeria: "Alžírsko",
+  Tunisia: "Tunisko",
+  Egypt: "Egypt",
+  Senegal: "Senegal",
+  Nigeria: "Nigéria",
+  Ghana: "Ghana",
+  Cameroon: "Kamerun",
+  "Ivory Coast": "Pobrežie Slonoviny",
+  "Cote D'Ivoire": "Pobrežie Slonoviny",
+  "South Africa": "Južná Afrika",
+  Mali: "Mali",
+  "Cape Verde Islands": "Kapverdy",
+  Japan: "Japonsko",
+  "South Korea": "Južná Kórea",
+  "Korea Republic": "Južná Kórea",
+  Australia: "Austrália",
+  Iran: "Irán",
+  "Saudi Arabia": "Saudská Arábia",
+  Qatar: "Katar",
+  Iraq: "Irak",
+  Jordan: "Jordánsko",
+  "United Arab Emirates": "Spojené arabské emiráty",
+  Uzbekistan: "Uzbekistan",
+  China: "Čína",
+  "China PR": "Čína",
+  "New Zealand": "Nový Zéland",
 };
 
 function translateTeamName(name: string): string {
@@ -76,6 +133,10 @@ function translateNamesInText(text: string | undefined, homeOriginal: string, aw
   const awaySk = translateTeamName(awayOriginal);
   if (homeSk !== homeOriginal) result = result.split(homeOriginal).join(homeSk);
   if (awaySk !== awayOriginal) result = result.split(awayOriginal).join(awaySk);
+  // "Over 2.5" / "Under 2.5" -> "Nad 2,5" / "Pod 2,5" (len na zobrazenie,
+  // uložené dáta ostávajú bez zmeny kvôli vyhodnocovaniu).
+  result = result.replace(/\bOver (\d+(?:\.\d+)?)/g, (_m, n) => "Nad " + n.replace(".", ","));
+  result = result.replace(/\bUnder (\d+(?:\.\d+)?)/g, (_m, n) => "Pod " + n.replace(".", ","));
   return result;
 }
 
