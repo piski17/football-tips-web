@@ -567,13 +567,17 @@ export function predictMatch(
 
   const sortedBets = candidates.sort((a, b) => b.probability - a.probability);
 
-  // Tipy s extrémne vysokou pravdepodobnosťou (napr. 95 %) majú v reálnej
-  // stávkovej kancelárii spravidla mizerný kurz - preto appka pri výbere
-  // hlavných odporúčaní uprednostňuje tipy POD touto hranicou (stále vysoká
-  // istota, ale realistickejšie na stávkovanie).
-  const VALUE_THRESHOLD = 75;
-  const valueCandidates = sortedBets.filter((b) => b.probability < VALUE_THRESHOLD);
-  const pickPool = valueCandidates.length > 0 ? valueCandidates : sortedBets;
+  // Appka odporúča len tipy v pásme MIN_PROBABILITY – MAX_PROBABILITY:
+  // - pod 65 % tipy vychádzajú príliš nepravidelne (dlhé série prehier),
+  // - nad 75 % má tip v stávkovej kancelárii spravidla príliš nízky kurz
+  //   (férový kurz pod 1,33 a po marži bookmakera ešte menej).
+  // Ak žiadny tip zápasu nespadá do pásma, zápas ostane BEZ odporúčania -
+  // appka radšej nič neodporučí, ako by ponúkla horší tip.
+  const MIN_PROBABILITY = 65;
+  const MAX_PROBABILITY = 75;
+  const pickPool = sortedBets.filter(
+    (b) => b.probability >= MIN_PROBABILITY && b.probability <= MAX_PROBABILITY
+  );
 
   // Appka vyberie len 1 NAJLEPŠÍ tip na zápas (namiesto viacerých), aby bola
   // odporúčaná stávka jasná a jednoznačná.
