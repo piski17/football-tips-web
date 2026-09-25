@@ -1017,7 +1017,7 @@ function renderTipsList(tips) {
           .join("");
 
         return `
-        <div class="tip-row ${rowClass}" style="align-items: flex-start;">
+        <div class="tip-row ${rowClass}" data-row-id="${t.id}" style="align-items: flex-start;">
           <div class="tip-row-info">
             <div class="tip-row-match">🎫 Tiket (${t.legs.length} tipov) <span class="muted small">(${date})</span></div>
             <div class="tip-row-market">Kombinovaná pravdepodobnosť: ${t.probability.toFixed(1)}% · kurz ~${impliedOdds(t.probability)}</div>
@@ -1029,13 +1029,12 @@ function renderTipsList(tips) {
               ? `<button class="tip-delete-btn" data-motw-id="${t.id}" title="Poslať ako Zápas/Tiket týždňa">★</button>`
               : `<button class="tip-delete-btn" data-result-id="${t.id}" title="Poslať výsledok do Telegramu">➤</button>`
           }
-          <button class="tip-delete-btn" data-tip-id="${t.id}" title="Zmazať">✕</button>
         </div>
       `;
       }
 
       return `
-        <div class="tip-row ${rowClass}">
+        <div class="tip-row ${rowClass}" data-row-id="${t.id}">
           <div class="tip-row-info">
             <div class="tip-row-match">${escapeHtml(translateTeamName(t.homeTeam))} — ${escapeHtml(translateTeamName(t.awayTeam))} <span class="muted small">(${date})</span></div>
             <div class="tip-row-market">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))} · ${t.probability.toFixed(0)}% · kurz ~${impliedOdds(t.probability)}</div>
@@ -1046,19 +1045,17 @@ function renderTipsList(tips) {
               ? `<button class="tip-delete-btn" data-motw-id="${t.id}" title="Poslať ako Zápas/Tiket týždňa">★</button>`
               : `<button class="tip-delete-btn" data-result-id="${t.id}" title="Poslať výsledok do Telegramu">➤</button>`
           }
-          <button class="tip-delete-btn" data-tip-id="${t.id}" title="Zmazať">✕</button>
         </div>
       `;
     })
     .join("");
 
-  tipsListEl.querySelectorAll(".tip-delete-btn").forEach((btn) => {
-    btn.addEventListener("click", async (e) => {
-      const id = e.currentTarget.dataset.tipId;
-      if (!id) return;
+  tipsListEl.querySelectorAll("[data-row-id]").forEach((row) => {
+    row.addEventListener("click", async (e) => {
+      if (e.target.closest("button")) return; // klik na iné tlačidlo v riadku (★/➤) - nie na mazanie
+      const id = row.dataset.rowId;
       const confirmed = window.confirm("Naozaj chceš odstrániť tento tip/tiket z histórie? Táto akcia sa nedá vrátiť späť.");
       if (!confirmed) return;
-      btn.disabled = true;
       try {
         const res = await fetch(`/api/tips/${id}`, { method: "DELETE" });
         if (!res.ok) {
@@ -1070,14 +1067,6 @@ function renderTipsList(tips) {
       } finally {
         openTipsHistory();
       }
-    });
-  });
-
-  tipsListEl.querySelectorAll("[data-telegram-id]").forEach((btn) => {
-    btn.addEventListener("click", async (e) => {
-      const id = e.currentTarget.dataset.telegramId;
-      if (!id) return;
-      await maybeOfferTelegram(id);
     });
   });
 

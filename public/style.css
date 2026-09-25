@@ -836,6 +836,12 @@ button, input {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 10px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.tip-row:hover {
+  border-color: var(--danger);
 }
 
 .tip-row-info {
@@ -916,10 +922,6 @@ button, input {
   cursor: pointer;
   font-size: 15px;
   flex-shrink: 0;
-}
-
-.tip-delete-btn[data-tip-id] {
-  color: var(--danger);
 }
 
 .tip-delete-btn[data-motw-id] {
