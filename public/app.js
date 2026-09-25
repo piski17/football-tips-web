@@ -127,8 +127,6 @@ let currentAnalysis = null;
 let ticketItems = []; // aktuálne vybrané tipy na spojenie do "tiketu"
 let collapsedLeagues = new Set(); // ligy schované cez tlačidlo, zostáva aj po automatickom obnovení
 
-const customLeagueInput = document.getElementById("customLeagueId");
-const toggleCustomLeagueBtn = document.getElementById("toggleCustomLeagueBtn");
 const matchDateInput = document.getElementById("matchDateInput");
 const seasonInput = document.getElementById("seasonInput");
 const loadFixturesBtn = document.getElementById("loadFixturesBtn");
@@ -170,12 +168,6 @@ const subContactInput = document.getElementById("subContact");
 const subTelegramChatIdInput = document.getElementById("subTelegramChatId");
 const subTierSelect = document.getElementById("subTier");
 
-toggleCustomLeagueBtn.addEventListener("click", () => {
-  customLeagueInput.hidden = !customLeagueInput.hidden;
-  if (!customLeagueInput.hidden) customLeagueInput.focus();
-});
-
-customLeagueInput.addEventListener("change", () => loadFixtures());
 
 async function fetchJson(url, options) {
   const res = await fetch(url, options);
@@ -219,12 +211,10 @@ async function loadFixtures(silent = false) {
   const date = matchDateInput.value || new Date().toISOString().slice(0, 10);
 
   const leagueIds = new Set(selectedLeagueIds);
-  const customId = customLeagueInput.value.trim() ? parseInt(customLeagueInput.value.trim(), 10) : null;
-  if (customId) leagueIds.add(customId);
 
   if (leagueIds.size === 0) {
     if (!silent) {
-      fixtureListEl.innerHTML = `<p class="empty-state">Zaškrtni aspoň jednu ligu, alebo zadaj vlastné ID ligy.</p>`;
+      fixtureListEl.innerHTML = `<p class="empty-state">Zaškrtni aspoň jednu ligu.</p>`;
     }
     return;
   }
