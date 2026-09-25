@@ -584,13 +584,10 @@ export async function getFixtureResult(
     const item = res.data?.response?.[0];
     if (!item) return null;
 
-    // Stávkové kancelárie vyhodnocujú podľa riadneho hracieho času (90 min +
-    // nadstavenie). Pri zápasoch s predĺžením/penaltami preto berieme skóre
-    // "fulltime" (stav po 90 min), nie konečné skóre vrátane predĺženia.
     return {
       status: item.fixture?.status?.short ?? "NS",
-      homeGoals: item.score?.fulltime?.home ?? item.goals?.home ?? null,
-      awayGoals: item.score?.fulltime?.away ?? item.goals?.away ?? null,
+      homeGoals: item.goals?.home ?? null,
+      awayGoals: item.goals?.away ?? null,
     };
   } catch {
     return null;

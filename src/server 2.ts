@@ -11,12 +11,15 @@ import {
   getTeamSquad,
   getPlayerSeasonStats,
   getTeamPlayersWithStats,
+  getFixtureResult,
+  getFixtureCornersAndCards,
+  getFixtureGoalscorerIds,
   getFixtureLineupPlayerIds,
 } from "./apiClient";
 import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS } from "./predictor";
 import { LeaguePreset, SavedTip } from "./types";
 import { saveTip, listTips, updateTip, deleteTip, clearAllTips } from "./tipsStore";
-import { computeTicketStatus, settleBet } from "./tipEvaluator";
+import { evaluateTip, computeTicketStatus } from "./tipEvaluator";
 import {
   sendTipToTelegram,
   deleteTelegramMessages,
@@ -356,27 +359,12 @@ app.post("/api/telegram/weekly-report", async (req, res) => {
     }
 
     const tips = await listTips();
-    const resolvedAll = tips.filter((t) => t.status === "won" || t.status === "lost");
+    const resolved = tips.filter((t) => t.status === "won" || t.status === "lost");
+    const won = resolved.filter((t) => t.status === "won").length;
+    const winRate = resolved.length > 0 ? ((won / resolved.length) * 100).toFixed(0) : null;
 
-    // Týždeň = tipy na zápasy za posledných 7 dní (podľa dátumu zápasu).
-    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const inLastWeek = (t: SavedTip) => {
-      const d = new Date(t.matchDate).getTime();
-      return !isNaN(d) && d >= weekAgo;
-    };
-    const resolvedWeek = resolvedAll.filter(inLastWeek);
-    const voidWeek = tips.filter((t) => t.status === "void" && inLastWeek(t)).length;
-
-    const wonWeek = resolvedWeek.filter((t) => t.status === "won").length;
-    const lostWeek = resolvedWeek.length - wonWeek;
-    const rateWeek = resolvedWeek.length > 0 ? ((wonWeek / resolvedWeek.length) * 100).toFixed(0) : null;
-
-    const wonAll = resolvedAll.filter((t) => t.status === "won").length;
-    const rateAll = resolvedAll.length > 0 ? ((wonAll / resolvedAll.length) * 100).toFixed(0) : null;
-
-    // Najlepší trh týždňa (aspoň 3 vyhodnotené tipy, inak nemá porovnanie zmysel).
     const byMarket: Record<string, { won: number; total: number }> = {};
-    for (const t of resolvedWeek) {
+    for (const t of resolved) {
       if (!byMarket[t.market]) byMarket[t.market] = { won: 0, total: 0 };
       byMarket[t.market].total++;
       if (t.status === "won") byMarket[t.market].won++;
@@ -384,7 +372,7 @@ app.post("/api/telegram/weekly-report", async (req, res) => {
     let bestMarket: string | null = null;
     let bestRate = -1;
     for (const [market, stats] of Object.entries(byMarket)) {
-      if (stats.total < 3) continue;
+      if (stats.total < 3) continue; // príliš málo tipov na zmysluplné porovnanie
       const rate = stats.won / stats.total;
       if (rate > bestRate) {
         bestRate = rate;
@@ -393,14 +381,10 @@ app.post("/api/telegram/weekly-report", async (req, res) => {
     }
 
     const text =
-      `📊 <b>Týždenný report</b> (posledných 7 dní)\n\n` +
-      (resolvedWeek.length > 0
-        ? `✅ Vyšlo: <b>${wonWeek}</b>   ❌ Nevyšlo: <b>${lostWeek}</b>\n` +
-          `Úspešnosť týždňa: <b>${rateWeek}%</b>\n` +
-          (voidWeek > 0 ? `↩ Vrátené: ${voidWeek}\n` : "") +
-          (bestMarket ? `Najlepší trh: <b>${bestMarket}</b> (${(bestRate * 100).toFixed(0)}%)\n` : "")
-        : `Tento týždeň zatiaľ nie sú vyhodnotené žiadne tipy.\n`) +
-      (rateAll !== null ? `\nCelkovo od začiatku: <b>${rateAll}%</b> (${wonAll} z ${resolvedAll.length})\n` : "") +
+      `📊 <b>Týždenný report</b>\n\n` +
+      `Vyhodnotených tipov: <b>${resolved.length}</b>\n` +
+      (winRate !== null ? `Úspešnosť: <b>${winRate}%</b>\n` : "") +
+      (bestMarket ? `Najlepší trh: <b>${bestMarket}</b> (${(bestRate * 100).toFixed(0)}%)\n` : "") +
       `\n<i>Poctivá história - vrátane prehratých tipov.</i>`;
 
     const target =
@@ -473,15 +457,51 @@ app.post("/api/tips/check-results", async (_req, res) => {
       if (tip.legs && tip.legs.length > 0) {
         // Tiket - vyhodnotíme každú "nohu" zvlášť (každá môže patriť inému zápasu).
         let anyLegChanged = false;
+
         for (const leg of tip.legs) {
           if (leg.status !== "pending") continue;
-          const settled = await settleBet(leg);
-          if (!settled) continue; // zápas sa ešte neskončil
-          leg.status = settled.status;
-          leg.actualHomeGoals = settled.homeGoals;
-          leg.actualAwayGoals = settled.awayGoals;
+
+          const result = await getFixtureResult(leg.fixtureId);
+          if (!result || result.status !== "FT" || result.homeGoals == null || result.awayGoals == null) {
+            continue;
+          }
+
+          let corners: number | null = null;
+          let cards: number | null = null;
+          let shotsOnGoal: number | null = null;
+          let fouls: number | null = null;
+          let offsides: number | null = null;
+          const statsMarkets = ["Rohy", "Karty", "Strely na bránu", "Fauly", "Ofsajdy"];
+          if (statsMarkets.includes(leg.market)) {
+            const stats = await getFixtureCornersAndCards(leg.fixtureId);
+            corners = stats.corners;
+            cards = stats.cards;
+            shotsOnGoal = stats.shotsOnGoal;
+            fouls = stats.fouls;
+            offsides = stats.offsides;
+          }
+
+          let scorerIds: number[] | null = null;
+          if (leg.market === "Strelec gólov") {
+            scorerIds = await getFixtureGoalscorerIds(leg.fixtureId);
+          }
+
+          leg.status = evaluateTip(
+            leg,
+            result.homeGoals,
+            result.awayGoals,
+            corners,
+            cards,
+            scorerIds,
+            shotsOnGoal,
+            fouls,
+            offsides
+          );
+          leg.actualHomeGoals = result.homeGoals;
+          leg.actualAwayGoals = result.awayGoals;
           anyLegChanged = true;
         }
+
         if (anyLegChanged) {
           const overallStatus = computeTicketStatus(tip.legs);
           await updateTip(tip.id, { status: overallStatus, legs: tip.legs });
@@ -489,13 +509,26 @@ app.post("/api/tips/check-results", async (_req, res) => {
         continue;
       }
 
-      const settled = await settleBet(tip);
-      if (!settled) continue; // zápas sa ešte neskončil
-      await updateTip(tip.id, {
-        status: settled.status,
-        actualHomeGoals: settled.homeGoals,
-        actualAwayGoals: settled.awayGoals,
-      });
+      const result = await getFixtureResult(tip.fixtureId);
+      if (!result || result.status !== "FT" || result.homeGoals == null || result.awayGoals == null) {
+        continue;
+      }
+
+      let corners: number | null = null;
+      let cards: number | null = null;
+      if (tip.market === "Rohy" || tip.market === "Karty") {
+        const stats = await getFixtureCornersAndCards(tip.fixtureId);
+        corners = stats.corners;
+        cards = stats.cards;
+      }
+
+      let scorerIds: number[] | null = null;
+      if (tip.market === "Strelec gólov") {
+        scorerIds = await getFixtureGoalscorerIds(tip.fixtureId);
+      }
+
+      const status = evaluateTip(tip, result.homeGoals, result.awayGoals, corners, cards, scorerIds);
+      await updateTip(tip.id, { status, actualHomeGoals: result.homeGoals, actualAwayGoals: result.awayGoals });
     }
 
     res.json(await listTips());

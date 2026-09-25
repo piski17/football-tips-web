@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>TipRadar</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="alternate icon" type="image/png" href="favicon-32.png" />
+  <link rel="apple-touch-icon" href="favicon-256.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="splashScreen" class="splash-screen">
+    <svg class="splash-logo" viewBox="0 0 640 200" xmlns="http://www.w3.org/2000/svg">
+      <g>
+        <circle cx="100" cy="100" r="94" fill="#12211a"/>
+        <circle cx="100" cy="100" r="94" fill="none" stroke="#e8b84b" stroke-width="4"/>
+        <circle cx="100" cy="100" r="69" fill="none" stroke="#3fa65c" stroke-width="2.2"/>
+        <circle cx="100" cy="100" r="40" fill="none" stroke="#57c97a" stroke-width="2.6"/>
+        <path d="M 100 100 L 100 12 A 88 88 0 0 1 166 51 Z" fill="#57c97a" fill-opacity="0.55"/>
+        <line x1="100" y1="100" x2="166" y2="51" stroke="#57c97a" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="100" cy="100" r="4.2" fill="#e8b84b"/>
+        <circle cx="152" cy="68" r="28" fill="none" stroke="#e8b84b" stroke-width="2.6"/>
+        <circle cx="152" cy="68" r="20" fill="#f1f5f1" stroke="#0f1b14" stroke-width="1.3"/>
+        <path d="M 152 58 L 160 63.8 L 157 73 L 147 73 L 144 63.8 Z" fill="#0f1b14"/>
+        <path d="M 152 58 L 152 50.5 M 160 63.8 L 167.5 61.3 M 157 73 L 161.5 80 M 147 73 L 142.5 80 M 144 63.8 L 136.5 61.3"
+              stroke="#0f1b14" stroke-width="1.7" fill="none"/>
+      </g>
+      <text x="215" y="128" font-family="Space Grotesk, Poppins, Arial, sans-serif" font-weight="700" font-size="88" fill="#f1f5f1">Tip<tspan fill="#57c97a">Radar</tspan></text>
+    </svg>
+    <div class="splash-progress">
+      <div class="splash-progress-track">
+        <div class="splash-progress-fill" id="splashProgressFill"></div>
+      </div>
+      <div class="splash-progress-pct" id="splashProgressPct">0%</div>
+    </div>
+  </div>
+
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark"></span>
+        <h1>TipRadar</h1>
+      </div>
+
+      <div class="topbar-controls">
+        <input type="date" id="matchDateInput" class="date-input" />
+        <input type="number" id="seasonInput" value="2026" readonly hidden />
+        <button class="btn-ghost" id="toggleCustomLeagueBtn" title="Pridať vlastnú ligu">+ Liga</button>
+        <input type="number" id="customLeagueId" class="custom-league-input" placeholder="ID ligy" hidden />
+        <button class="btn-primary" id="loadFixturesBtn" title="Obnoviť zápasy">↻</button>
+      </div>
+
+      <button class="btn-ghost" id="openTicketBtn">Tiket <span id="ticketCount"></span></button>
+      <button class="btn-ghost" id="openTipsBtn">História tipov</button>
+      <button class="btn-ghost" id="openSubscribersBtn">Predplatitelia</button>
+    </header>
+
+    <main class="content">
+      <section class="fixture-column">
+        <div class="column-header">
+          <h2>Zápasy dnes</h2>
+          <span class="muted" id="fixtureCount"></span>
+        </div>
+        <div class="fixture-list" id="fixtureList">
+          <p class="empty-state">Načítavam zápasy…</p>
+        </div>
+      </section>
+
+      <section class="analysis-column" id="analysisColumn">
+        <div class="empty-state analysis-empty">
+          <p>Vyber zápas zo zoznamu.</p>
+          <p class="muted small">Zobrazí sa štatistická analýza a odporúčaný tip.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="ticketModal" hidden>
+    <div class="modal modal-large">
+      <h3>Môj tiket</h3>
+      <p class="muted small">
+        Spoj viacero tipov z rôznych zápasov do jedného tiketu - appka spočíta
+        kombinovanú pravdepodobnosť a z nej odvodený kurz (presne ako "AKO"
+        tiket v stávkovej kancelárii). Ide o kalkulačku pre túto reláciu appky,
+        neukladá sa automaticky do histórie tipov.
+      </p>
+      <div class="tips-summary" id="ticketSummary"></div>
+      <div class="tips-list" id="ticketList"></div>
+      <div class="modal-actions">
+        <button class="btn-ghost" id="clearTicketBtn" style="color: var(--danger); margin-right: auto;">Vymazať tiket</button>
+        <button class="btn-ghost" id="closeTicketBtn">Zavrieť</button>
+        <button class="btn-primary" id="saveTicketBtn">Uložiť tiket do histórie</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="tipsModal" hidden>
+    <div class="modal modal-large">
+      <h3>História tipov</h3>
+      <div class="tips-summary" id="tipsSummary"></div>
+      <div class="market-breakdown" id="marketBreakdown"></div>
+
+      <div class="bankroll-section" id="bankrollSection">
+        <div class="market-breakdown-title">
+          Bankroll simulátor
+          <span class="muted small">- simulácia so sadzbou podľa dôvery a predpokladaným "fér" kurzom z pravdepodobnosti modelu</span>
+        </div>
+        <div class="bankroll-controls">
+          <label for="bankrollStartInput">Počiatočný bankroll:</label>
+          <input type="number" id="bankrollStartInput" value="1000" min="1" step="50" />
+          <span>€</span>
+        </div>
+        <div id="bankrollResult"></div>
+      </div>
+
+      <div class="bankroll-section" id="calibrationSection">
+        <div class="market-breakdown-title">
+          Kalibračný report
+          <span class="muted small">- porovnanie predpovedanej pravdepodobnosti s tým, ako často tipy reálne vyšli</span>
+        </div>
+        <div id="calibrationResult"></div>
+      </div>
+
+      <div class="tips-list" id="tipsList"></div>
+      <div class="modal-actions">
+        <button class="btn-ghost" id="clearAllTipsBtn" style="color: var(--danger); margin-right: auto;">Vymazať všetky tipy</button>
+        <button class="btn-ghost" id="noTipTodayBtn"><span style="color: var(--danger);">⊘</span> Dnes bez tipu</button>
+        <button class="btn-ghost" id="weeklyReportBtn"><span style="color: var(--gold);">▤</span> Týždenný report</button>
+        <button class="btn-ghost" id="closeTipsBtn">Zavrieť</button>
+        <button class="btn-primary" id="checkResultsBtn">Skontrolovať výsledky</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="subscribersModal" hidden>
+    <div class="modal modal-large">
+      <h3>Predplatitelia</h3>
+      <div class="tips-summary" id="subscribersSummary"></div>
+
+      <div class="subscriber-form">
+        <input type="text" id="subName" placeholder="Meno / názov skupiny" />
+        <input type="text" id="subContact" placeholder="Kontakt (email, Telegram...)" />
+        <input type="text" id="subTelegramChatId" placeholder="Telegram chat ID (voliteľné)" />
+        <select id="subTier">
+          <option value="individual">PREMIUM (29 €)</option>
+          <option value="group">VIP (99 €)</option>
+        </select>
+        <button class="btn-primary" id="addSubscriberBtn">Pridať</button>
+      </div>
+
+      <div class="tips-list" id="subscribersList"></div>
+      <div class="modal-actions">
+        <button class="btn-ghost" id="closeSubscribersBtn">Zavrieť</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,5 +1,4 @@
 import { TicketLeg } from "./types";
-import { getFixtureResult, getFixtureCornersAndCards, getFixtureGoalscorerIds } from "./apiClient";
 
 /** Spoločný tvar, ktorý potrebuje vyhodnotenie - vyhovuje mu SavedTip aj TicketLeg. */
 interface EvaluatableBet {
@@ -139,84 +138,4 @@ export function computeTicketStatus(legs: TicketLeg[]): "won" | "lost" | "void" 
   if (legs.some((l) => l.status === "pending")) return "pending";
   if (legs.every((l) => l.status === "void")) return "void";
   return "won";
-}
-
-/** Zápas sa skončil (v riadnom čase, po predĺžení alebo po penaltách). */
-const FINISHED_STATUSES = ["FT", "AET", "PEN"];
-/** Zápas sa nedohrá - stávka sa vracia (ako v stávkovej kancelárii). */
-const VOID_STATUSES = ["CANC", "ABD", "AWD", "WO"];
-/** Odložený / prerušený zápas - ak sa neodohrá do 3 dní, stávka sa vracia. */
-const DELAYED_STATUSES = ["PST", "TBD", "SUSP", "INT"];
-const DELAYED_VOID_AFTER_MS = 3 * 24 * 60 * 60 * 1000;
-const STATS_MARKETS = ["Rohy", "Karty", "Strely na bránu", "Fauly", "Ofsajdy"];
-
-export interface SettledBet {
-  status: "won" | "lost" | "void";
-  homeGoals: number | null;
-  awayGoals: number | null;
-}
-
-/**
- * Zistí výsledok zápasu cez API a vyhodnotí jeden tip (alebo nohu tiketu).
- * Vráti null, ak sa zápas ešte neskončil (tip ostáva "pending").
- * Spoločná logika pre webový server aj Electron appku.
- */
-export async function settleBet(
-  bet: EvaluatableBet & { fixtureId: number; matchDate?: string }
-): Promise<SettledBet | null> {
-  const result = await getFixtureResult(bet.fixtureId);
-  if (!result) return null;
-
-  if (VOID_STATUSES.includes(result.status)) {
-    return { status: "void", homeGoals: null, awayGoals: null };
-  }
-
-  if (DELAYED_STATUSES.includes(result.status)) {
-    const kickoff = bet.matchDate ? new Date(bet.matchDate).getTime() : NaN;
-    if (!isNaN(kickoff) && Date.now() - kickoff > DELAYED_VOID_AFTER_MS) {
-      return { status: "void", homeGoals: null, awayGoals: null };
-    }
-    return null;
-  }
-
-  if (!FINISHED_STATUSES.includes(result.status) || result.homeGoals == null || result.awayGoals == null) {
-    return null;
-  }
-
-  const wentToExtraTime = result.status !== "FT";
-
-  let corners: number | null = null;
-  let cards: number | null = null;
-  let shotsOnGoal: number | null = null;
-  let fouls: number | null = null;
-  let offsides: number | null = null;
-  // Štatistiky z API zahŕňajú aj predĺženie - pri takom zápase sa nedá určiť
-  // stav po 90 minútach, preto takýto tip vraciame (void).
-  if (STATS_MARKETS.includes(bet.market) && !wentToExtraTime) {
-    const stats = await getFixtureCornersAndCards(bet.fixtureId);
-    corners = stats.corners;
-    cards = stats.cards;
-    shotsOnGoal = stats.shotsOnGoal;
-    fouls = stats.fouls;
-    offsides = stats.offsides;
-  }
-
-  let scorerIds: number[] | null = null;
-  // Strelci z API zahŕňajú aj góly z predĺženia - rovnaký dôvod ako vyššie.
-  if (bet.market === "Strelec gólov" && !wentToExtraTime) {
-    scorerIds = await getFixtureGoalscorerIds(bet.fixtureId);
-  }
-
-  const status = evaluateTip(
-    bet,
-    result.homeGoals,
-    result.awayGoals,
-    corners,
-    cards,
-    scorerIds,
-    shotsOnGoal,
-    fouls,
-    offsides
-  );
-  return { status, homeGoals: result.homeGoals, awayGoals: result.awayGoals };
 }

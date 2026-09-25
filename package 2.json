@@ -1,0 +1,23 @@
+{
+  "name": "tipradar-web",
+  "version": "1.0.0",
+  "description": "TipRadar - webová appka na štatistickú analýzu futbalových zápasov (API-Football), otvoriteľná z telefónu aj počítača",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "dev": "tsc -p tsconfig.json && node dist/server.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.7.2",
+    "axios-retry": "^4.5.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.0"
+  }
+}

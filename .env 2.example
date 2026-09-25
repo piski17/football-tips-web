@@ -1,0 +1,40 @@
+# Skopíruj tento súbor na ".env" a doplň skutočné hodnoty (lokálne spustenie).
+# Na Render.com (alebo inom hostingu) sa tieto premenné nastavujú v nastaveniach
+# služby (Environment Variables), tento súbor sa tam nenahráva.
+
+API_FOOTBALL_KEY=tvoj_kluc_z_dashboard.api-football.com
+
+# Voliteľné, ale odporúčané: bez toho sa uložené tipy vymažú pri každom
+# redeployi/reštarte appky na Renderi (bezplatný plán má dočasný disk).
+# Založ si zadarmo Redis databázu na console.upstash.com (bezplatný plán:
+# 500 000 požiadaviek KAŽDÝ MESIAC) a doplň hodnoty zo záložky "REST API":
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
+
+# Voliteľné: ak vyplníš oboje, appka bude vyžadovať prihlásenie (HTTP Basic Auth),
+# aby ju nemohol používať hocikto s odkazom a nevyčerpal denný/minútový limit.
+APP_USER=
+APP_PASSWORD=
+
+# Voliteľné: ak vyplníš aspoň jedno, appka bude vedieť posielať uložené tipy
+# do Telegramu. Dá sa nastaviť jeden alebo oba kanály naraz - appka sa ťa pri
+# každom odoslaní opýta, do ktorého ho poslať (PREMIUM, VIP, alebo oba).
+# Ten istý bot zároveň automaticky odpovedá na súkromné správy od záujemcov
+# (FAQ menu s cenníkom a kontaktom) - stačí raz po nasadení otvoriť v
+# prehliadači https://tvoja-adresa.onrender.com/api/telegram/setup-webhook
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID_PREMIUM=
+TELEGRAM_CHAT_ID_VIP=
+
+# Voliteľné: Telegram username, na ktorý FAQ bot nasmeruje tlačidlo "Napísať
+# priamo" (bez @). Ak nevyplníš, použije sa im_mishko.
+TELEGRAM_CONTACT_USERNAME=
+
+# Voliteľné: tvoje vlastné Telegram chat ID (nie kanál, tvoj súkromný chat s
+# botom) - ak vyplníš, appka ti raz denne pošle upozornenie na predplatiteľov,
+# ktorým čoskoro vyprší alebo už vypršala platnosť. Zisti ho rovnakým
+# spôsobom ako pri PREMIUM/VIP kanáloch (getUpdates po napísaní botovi).
+TELEGRAM_ADMIN_CHAT_ID=
+
+# Voliteľné, Render.com si port nastavuje sám automaticky.
+PORT=3000
