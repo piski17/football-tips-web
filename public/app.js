@@ -375,7 +375,8 @@ async function analyzeFixture(fixture, leagueId, season) {
 }
 
 function renderAnalysis(r) {
-  const topBets = (r.bestBets || []).slice(0, 3);
+  // Zobrazí všetky tipy zápasu v pásme 65–75 % (predictor.ts vracia max. 1 na trh).
+  const topBets = r.bestBets || [];
 
   const gamesPlayedHtml = r.seasonGamesPlayed
     ? `<p class="muted small" style="margin: -6px 0 12px;">Odohratých zápasov v tejto sezóne: ${escapeHtml(translateTeamName(r.fixture.homeTeam.name))} ${r.seasonGamesPlayed.home}, ${escapeHtml(translateTeamName(r.fixture.awayTeam.name))} ${r.seasonGamesPlayed.away}</p>`
@@ -406,6 +407,11 @@ function renderAnalysis(r) {
     )
     .join("");
 
+  const noBetsHtml =
+    topBets.length === 0
+      ? `<div class="empty-state" style="margin-bottom:16px;">Pri tomto zápase nie je žiadny tip v pásme 65–75 %.</div>`
+      : "";
+
   analysisColumnEl.innerHTML = `
     <div class="match-header">
       <div class="league-name">${escapeHtml(r.fixture.league.name)} · sezóna ${r.fixture.league.season}</div>
@@ -421,7 +427,7 @@ function renderAnalysis(r) {
     ${gamesPlayedHtml}
     ${warningHtml}
 
-    ${topBetsHtml}
+    ${topBetsHtml}${noBetsHtml}
     <div id="saveTipMsg"></div>
 
     <div class="prob-section">
