@@ -109,6 +109,7 @@ function mapFixture(item: any): Fixture {
       name: item.league.name,
       season: item.league.season,
       round: item.league.round,
+      logo: item.league.logo,
     },
     homeTeam: { id: item.teams.home.id, name: item.teams.home.name, logo: item.teams.home.logo },
     awayTeam: { id: item.teams.away.id, name: item.teams.away.name, logo: item.teams.away.logo },

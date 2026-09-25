@@ -16,6 +16,7 @@ export interface Fixture {
     name: string;
     season: number;
     round?: string;
+    logo?: string;
   };
   homeTeam: Team;
   awayTeam: Team;

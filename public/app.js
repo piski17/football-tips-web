@@ -71,6 +71,25 @@ function impliedOdds(probability) {
   return probability > 0 ? (100 / probability).toFixed(2) : "-";
 }
 
+function skeletonHtml(rows = 3) {
+  return Array.from({ length: rows })
+    .map(() => `<div class="skeleton skeleton-block"></div>`)
+    .join("");
+}
+
+function showToast(message) {
+  const isError = /zlyhal|chyba|nepodarilo/i.test(message);
+  const toast = document.createElement("div");
+  toast.className = `toast ${isError ? "toast-error" : "toast-success"}`;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add("toast-visible"));
+  setTimeout(() => {
+    toast.classList.remove("toast-visible");
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}
+
 function translateNamesInText(text, homeOriginal, awayOriginal) {
   if (!text) return "";
   let result = text;
@@ -211,7 +230,7 @@ async function loadFixtures(silent = false) {
   }
 
   if (!silent) {
-    fixtureListEl.innerHTML = `<div class="loading-state">Načítavam zápasy…</div>`;
+    fixtureListEl.innerHTML = skeletonHtml(5);
     loadFixturesBtn.disabled = true;
   }
 
@@ -263,6 +282,7 @@ function renderGroupedFixtureList(results) {
 
   groupsWithMatches.forEach(({ fixtures }) => {
     const leagueName = fixtures[0]?.league?.name ?? "Liga";
+    const leagueLogo = fixtures[0]?.league?.logo;
     const isCollapsed = collapsedLeagues.has(leagueName);
 
     const group = document.createElement("div");
@@ -270,7 +290,9 @@ function renderGroupedFixtureList(results) {
 
     const header = document.createElement("button");
     header.className = "league-group-header";
-    header.innerHTML = `<span>${escapeHtml(leagueName)}</span><span class="chevron">${isCollapsed ? "▸" : "▾"}</span>`;
+    header.innerHTML = `<span style="display:flex; align-items:center; gap:8px;">${
+      leagueLogo ? `<img src="${escapeHtml(leagueLogo)}" class="league-logo" alt="" />` : ""
+    }${escapeHtml(leagueName)}</span><span class="chevron">${isCollapsed ? "▸" : "▾"}</span>`;
     header.addEventListener("click", () => {
       if (collapsedLeagues.has(leagueName)) collapsedLeagues.delete(leagueName);
       else collapsedLeagues.add(leagueName);
@@ -337,7 +359,7 @@ function renderGroupedFixtureList(results) {
 }
 
 async function analyzeFixture(fixture, leagueId, season) {
-  analysisColumnEl.innerHTML = `<div class="loading-state">Počítam štatistickú analýzu…</div>`;
+  analysisColumnEl.innerHTML = skeletonHtml(4);
 
   try {
     const result = await fetchJson("/api/analyze", {
@@ -608,7 +630,7 @@ async function maybeOfferTelegram(tipId) {
       body: JSON.stringify({ target }),
     });
   } catch (err) {
-    alert(`Odoslanie do Telegramu zlyhalo: ${err.message}`);
+    showToast(`Odoslanie do Telegramu zlyhalo: ${err.message}`);
   }
 }
 
@@ -763,7 +785,7 @@ clearTicketBtn.addEventListener("click", () => {
 
 saveTicketBtn.addEventListener("click", async () => {
   if (ticketItems.length < 2) {
-    alert("Tiket musí obsahovať aspoň 2 tipy.");
+    showToast("Tiket musí obsahovať aspoň 2 tipy.");
     return;
   }
 
@@ -809,7 +831,7 @@ saveTicketBtn.addEventListener("click", async () => {
     renderTicket();
     await maybeOfferTelegram(ticketTip.id);
   } catch (err) {
-    alert(`Uloženie tiketu zlyhalo: ${err.message}`);
+    showToast(`Uloženie tiketu zlyhalo: ${err.message}`);
   } finally {
     saveTicketBtn.disabled = false;
   }
@@ -819,7 +841,7 @@ saveTicketBtn.addEventListener("click", async () => {
 
 async function openTipsHistory() {
   tipsModal.hidden = false;
-  tipsListEl.innerHTML = `<div class="loading-state">Načítavam tipy…</div>`;
+  tipsListEl.innerHTML = skeletonHtml(2);
   try {
     const tips = await fetchJson("/api/tips");
     renderTipsList(tips);
@@ -1060,10 +1082,10 @@ function renderTipsList(tips) {
         const res = await fetch(`/api/tips/${id}`, { method: "DELETE" });
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
-          alert(`Zmazanie zlyhalo: ${data.error || "neznáma chyba"}. Skús to prosím znova.`);
+          showToast(`Zmazanie zlyhalo: ${data.error || "neznáma chyba"}. Skús to prosím znova.`);
         }
       } catch (err) {
-        alert("Zmazanie zlyhalo - skontroluj internetové pripojenie a skús to znova.");
+        showToast("Zmazanie zlyhalo - skontroluj internetové pripojenie a skús to znova.");
       } finally {
         openTipsHistory();
       }
@@ -1082,9 +1104,9 @@ function renderTipsList(tips) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ target, asMatchOfWeek: true }),
         });
-        alert("Odoslané ako Zápas/Tiket týždňa.");
+        showToast("Odoslané ako Zápas/Tiket týždňa.");
       } catch (err) {
-        alert(`Odoslanie zlyhalo: ${err.message}`);
+        showToast(`Odoslanie zlyhalo: ${err.message}`);
       }
     });
   });
@@ -1101,9 +1123,9 @@ function renderTipsList(tips) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ target }),
         });
-        alert("Výsledok odoslaný.");
+        showToast("Výsledok odoslaný.");
       } catch (err) {
-        alert(`Odoslanie zlyhalo: ${err.message}`);
+        showToast(`Odoslanie zlyhalo: ${err.message}`);
       }
     });
   });
@@ -1130,7 +1152,7 @@ function subscriberStatus(sub) {
 
 async function openSubscribers() {
   subscribersModal.hidden = false;
-  subscribersListEl.innerHTML = `<p class="muted small">Načítavam…</p>`;
+  subscribersListEl.innerHTML = skeletonHtml(2);
   try {
     const subs = await fetchJson("/api/subscribers");
     renderSubscribersList(subs);
@@ -1195,7 +1217,7 @@ function renderSubscribersList(subs) {
         });
         openSubscribers();
       } catch (err) {
-        alert(`Predĺženie zlyhalo: ${err.message}`);
+        showToast(`Predĺženie zlyhalo: ${err.message}`);
       }
     });
   });
@@ -1206,9 +1228,9 @@ function renderSubscribersList(subs) {
       btn.disabled = true;
       try {
         const res = await fetchJson(`/api/subscribers/${id}/test-reminder`, { method: "POST" });
-        alert(res.ok ? "Testovacia pripomienka odoslaná - skontroluj Telegram." : "Odoslanie zlyhalo.");
+        showToast(res.ok ? "Testovacia pripomienka odoslaná - skontroluj Telegram." : "Odoslanie zlyhalo.");
       } catch (err) {
-        alert(`Odoslanie zlyhalo: ${err.message}`);
+        showToast(`Odoslanie zlyhalo: ${err.message}`);
       } finally {
         btn.disabled = false;
       }
@@ -1223,7 +1245,7 @@ function renderSubscribersList(subs) {
         await fetchJson(`/api/subscribers/${id}`, { method: "DELETE" });
         openSubscribers();
       } catch (err) {
-        alert(`Zmazanie zlyhalo: ${err.message}`);
+        showToast(`Zmazanie zlyhalo: ${err.message}`);
       }
     });
   });
@@ -1237,7 +1259,7 @@ closeSubscribersBtn.addEventListener("click", () => {
 addSubscriberBtn.addEventListener("click", async () => {
   const name = subNameInput.value.trim();
   if (!name) {
-    alert("Zadaj meno alebo názov skupiny.");
+    showToast("Zadaj meno alebo názov skupiny.");
     return;
   }
   const tier = subTierSelect.value;
@@ -1268,7 +1290,7 @@ addSubscriberBtn.addEventListener("click", async () => {
     subTelegramChatIdInput.value = "";
     openSubscribers();
   } catch (err) {
-    alert(`Pridanie zlyhalo: ${err.message}`);
+    showToast(`Pridanie zlyhalo: ${err.message}`);
   } finally {
     addSubscriberBtn.disabled = false;
   }
@@ -1281,7 +1303,7 @@ checkResultsBtn.addEventListener("click", async () => {
     const tips = await fetchJson("/api/tips/check-results", { method: "POST" });
     renderTipsList(tips);
   } catch (err) {
-    alert(`Kontrola výsledkov zlyhala: ${err.message}`);
+    showToast(`Kontrola výsledkov zlyhala: ${err.message}`);
   } finally {
     checkResultsBtn.disabled = false;
     checkResultsBtn.textContent = "Skontrolovať výsledky";
@@ -1299,7 +1321,7 @@ clearAllTipsBtn.addEventListener("click", async () => {
     await fetchJson("/api/tips", { method: "DELETE" });
     renderTipsList([]);
   } catch (err) {
-    alert(`Vymazanie zlyhalo: ${err.message}. Skús to prosím znova.`);
+    showToast(`Vymazanie zlyhalo: ${err.message}. Skús to prosím znova.`);
   } finally {
     clearAllTipsBtn.disabled = false;
   }
@@ -1315,9 +1337,9 @@ noTipTodayBtn.addEventListener("click", async () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ target }),
     });
-    alert("Odoslané.");
+    showToast("Odoslané.");
   } catch (err) {
-    alert(`Odoslanie zlyhalo: ${err.message}`);
+    showToast(`Odoslanie zlyhalo: ${err.message}`);
   } finally {
     noTipTodayBtn.disabled = false;
   }
@@ -1333,9 +1355,9 @@ weeklyReportBtn.addEventListener("click", async () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ target }),
     });
-    alert("Odoslané.");
+    showToast("Odoslané.");
   } catch (err) {
-    alert(`Odoslanie zlyhalo: ${err.message}`);
+    showToast(`Odoslanie zlyhalo: ${err.message}`);
   } finally {
     weeklyReportBtn.disabled = false;
   }
