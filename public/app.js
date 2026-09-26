@@ -539,7 +539,7 @@ function renderAnalysis(r) {
             <div class="low-value-row">
               <span class="muted small">${escapeHtml(b.market)}: ${escapeHtml(
                 translateNamesInText(b.selection, r.fixture.homeTeam.name, r.fixture.awayTeam.name)
-              )} (${b.probability.toFixed(0)} %, kurz ${fmtOdds(b.odds)} – ${escapeHtml(b.rejectReason || "bez hodnoty")})</span>
+              )} (${b.probability.toFixed(0)} %${typeof b.odds === "number" && b.odds > 1 ? `, kurz ${fmtOdds(b.odds)}` : ""} – ${escapeHtml(b.rejectReason || "bez hodnoty")})</span>
               <span class="low-value-actions">
                 <button class="btn-ghost btn-mini save-best-bet-btn" data-source="low" data-bet-idx="${i}">Uložiť aj tak</button>
                 <button class="btn-ghost btn-mini add-to-ticket-btn" data-source="low" data-bet-idx="${i}">+ Do tiketu</button>

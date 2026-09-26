@@ -623,7 +623,13 @@ export function predictMatch(
   const lowValueBets: MarketPick[] = [];
   for (const b of inBand) {
     const ev = b.expectedValue;
-    if (ev == null) {
+    if (ev == null && oddsAvailable) {
+      // Stávkovky k zápasu kurzy majú, ale tento trh (alebo túto hranicu) neponúkajú -
+      // na tip sa reálne nedá staviť. Ručne ho stále možno pridať ("Uložiť aj tak").
+      b.rejectReason = "stávkovky tento trh neponúkajú";
+      lowValueBets.push(b);
+    } else if (ev == null) {
+      // Pre zápas zatiaľ nie sú žiadne kurzy - nevieme posúdiť, tip ostáva.
       pickPool.push(b);
     } else if (ev < MIN_EXPECTED_VALUE) {
       b.rejectReason = "nízky kurz, bez hodnoty";
