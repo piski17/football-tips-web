@@ -434,3 +434,55 @@ export async function setTelegramWebhook(webhookUrl: string): Promise<void> {
     throw new Error(reason);
   }
 }
+
+/** Text denného vyhodnotenia - všetky tipy a tikety jedného dňa v jednej správe. */
+export function buildDailyResultsText(tips: SavedTip[], day: string): string {
+  const [y, m, d] = day.split("-").map((n) => parseInt(n, 10));
+  const icon = (status: string) => (status === "won" ? "✅" : status === "lost" ? "❌" : status === "void" ? "↩️" : "⏳");
+  const oddsTxt = (odds?: number | null) => (typeof odds === "number" && odds > 1 ? ` · kurz ${odds.toFixed(2)}` : "");
+
+  const lines: string[] = [];
+  for (const t of tips) {
+    if (t.legs && t.legs.length > 0) {
+      const n = t.legs.length;
+      lines.push(`${icon(t.status)} 🎫 <b>Tiket</b> (${n} ${n >= 2 && n <= 4 ? "zápasy" : "zápasov"})${oddsTxt(t.odds)}`);
+      for (const leg of t.legs) {
+        lines.push(
+          `    ${icon(leg.status)} ${escapeHtml(translateTeamName(leg.homeTeam))} — ${escapeHtml(translateTeamName(leg.awayTeam))}: ${escapeHtml(
+            leg.market
+          )}: ${escapeHtml(translateNamesInText(leg.selection, leg.homeTeam, leg.awayTeam))}`
+        );
+      }
+    } else {
+      lines.push(
+        `${icon(t.status)} <b>${escapeHtml(translateTeamName(t.homeTeam))} — ${escapeHtml(translateTeamName(t.awayTeam))}</b>\n` +
+          `    ${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}${oddsTxt(t.odds)}`
+      );
+    }
+  }
+
+  const decided = tips.filter((t) => t.status === "won" || t.status === "lost");
+  const won = decided.filter((t) => t.status === "won").length;
+  const pending = tips.filter((t) => t.status === "pending").length;
+  const withOdds = decided.filter((t) => typeof t.odds === "number" && t.odds > 1);
+  const profit = withOdds.reduce((sum, t) => sum + (t.status === "won" ? t.odds! - 1 : -1), 0);
+
+  let summary = "";
+  if (decided.length > 0) {
+    summary += `Vyšlo: <b>${won} z ${decided.length}</b> (${Math.round((won / decided.length) * 100)} %)\n`;
+    if (withOdds.length > 0) {
+      summary += `Zisk: <b>${profit >= 0 ? "+" : ""}${profit.toFixed(1)} j.</b>${
+        withOdds.length < decided.length ? ` (z ${withOdds.length} tipov so známym kurzom)` : ""
+      }\n`;
+    }
+  }
+  if (pending > 0) summary += `⏳ Ešte sa hrá: ${pending}\n`;
+
+  return (
+    `📋 <b>Vyhodnotenie dňa</b> · ${d}. ${m}. ${y}\n\n` +
+    lines.join("\n") +
+    `\n\n` +
+    summary +
+    `\n<i>Poctivá história - vrátane prehratých tipov.</i>`
+  );
+}

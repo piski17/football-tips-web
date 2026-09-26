@@ -28,8 +28,7 @@ import {
   notifyAdminExpiringSubscribers,
   sendCustomMessage,
   sendRenewalReminder,
-  sendTipResultToTelegram,
-} from "./telegram";
+  sendTipResultToTelegram, buildDailyResultsText } from "./telegram";
 import { listSubscribers, addSubscriber, updateSubscriber, deleteSubscriber } from "./subscribersStore";
 import { Subscriber } from "./types";
 
@@ -375,6 +374,56 @@ app.post("/api/telegram/no-tip-today", async (req, res) => {
   }
 });
 
+// ---- Denné vyhodnotenie: všetky tipy a tikety dňa v jednej správe ----
+/** Deň (YYYY-MM-DD) podľa slovenského času. */
+function dayKeySk(date: Date): string {
+  return new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Bratislava" }).format(date);
+}
+
+/** Tip patrí k dňu výkopu; tiket k dňu posledného zápasu (vtedy sa dohrá). */
+function tipDayKey(t: SavedTip): string | null {
+  const dates = t.legs && t.legs.length > 0 ? t.legs.map((l) => l.matchDate) : [t.matchDate];
+  const times = dates.map((d) => new Date(d).getTime()).filter((n) => !isNaN(n));
+  if (times.length === 0) return null;
+  return dayKeySk(new Date(Math.max(...times)));
+}
+
+app.post("/api/telegram/daily-results", async (req, res) => {
+  try {
+    if (!isTelegramEnabled()) {
+      res.status(400).json({ error: "Telegram nie je na serveri nastavený." });
+      return;
+    }
+    const day =
+      typeof req.body?.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(req.body.day) ? req.body.day : dayKeySk(new Date());
+    const force = req.body?.force === true;
+    const target =
+      req.body?.target === "premium" || req.body?.target === "vip" || req.body?.target === "both"
+        ? req.body.target
+        : "both";
+
+    // Najprv vyhodnotíme, čo sa medzitým dohralo.
+    await checkPendingResults();
+
+    const tips = statsTips(await listTips()).filter((t) => tipDayKey(t) === day);
+    if (tips.length === 0) {
+      res.json({ ok: false, empty: true });
+      return;
+    }
+    const pendingCount = tips.filter((t) => t.status === "pending").length;
+    if (pendingCount > 0 && !force) {
+      res.json({ ok: false, pendingCount });
+      return;
+    }
+
+    const text = buildDailyResultsText(tips, day);
+    const sent = await sendCustomMessage(text, target);
+    res.json({ ok: sent.length > 0 });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
 app.post("/api/telegram/weekly-report", async (req, res) => {
   try {
     if (!isTelegramEnabled()) {
@@ -501,40 +550,44 @@ app.delete("/api/tips", async (_req, res) => {
   }
 });
 
-app.post("/api/tips/check-results", async (_req, res) => {
-  try {
-    const tips = await listTips();
-    const pending = tips.filter((t) => t.status === "pending");
+/** Vyhodnotí všetky čakajúce tipy a tikety, ktorých zápasy sa už skončili. */
+async function checkPendingResults(): Promise<void> {
+  const tips = await listTips();
+  const pending = tips.filter((t) => t.status === "pending");
 
-    for (const tip of pending) {
-      if (tip.legs && tip.legs.length > 0) {
-        // Tiket - vyhodnotíme každú "nohu" zvlášť (každá môže patriť inému zápasu).
-        let anyLegChanged = false;
-        for (const leg of tip.legs) {
-          if (leg.status !== "pending") continue;
-          const settled = await settleBet(leg);
-          if (!settled) continue; // zápas sa ešte neskončil
-          leg.status = settled.status;
-          leg.actualHomeGoals = settled.homeGoals;
-          leg.actualAwayGoals = settled.awayGoals;
-          anyLegChanged = true;
-        }
-        if (anyLegChanged) {
-          const overallStatus = computeTicketStatus(tip.legs);
-          await updateTip(tip.id, { status: overallStatus, legs: tip.legs });
-        }
-        continue;
+  for (const tip of pending) {
+    if (tip.legs && tip.legs.length > 0) {
+      // Tiket - vyhodnotíme každú "nohu" zvlášť (každá môže patriť inému zápasu).
+      let anyLegChanged = false;
+      for (const leg of tip.legs) {
+        if (leg.status !== "pending") continue;
+        const settled = await settleBet(leg);
+        if (!settled) continue; // zápas sa ešte neskončil
+        leg.status = settled.status;
+        leg.actualHomeGoals = settled.homeGoals;
+        leg.actualAwayGoals = settled.awayGoals;
+        anyLegChanged = true;
       }
-
-      const settled = await settleBet(tip);
-      if (!settled) continue; // zápas sa ešte neskončil
-      await updateTip(tip.id, {
-        status: settled.status,
-        actualHomeGoals: settled.homeGoals,
-        actualAwayGoals: settled.awayGoals,
-      });
+      if (anyLegChanged) {
+        const overallStatus = computeTicketStatus(tip.legs);
+        await updateTip(tip.id, { status: overallStatus, legs: tip.legs });
+      }
+      continue;
     }
 
+    const settled = await settleBet(tip);
+    if (!settled) continue; // zápas sa ešte neskončil
+    await updateTip(tip.id, {
+      status: settled.status,
+      actualHomeGoals: settled.homeGoals,
+      actualAwayGoals: settled.awayGoals,
+    });
+  }
+}
+
+app.post("/api/tips/check-results", async (_req, res) => {
+  try {
+    await checkPendingResults();
     res.json(await listTips());
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });

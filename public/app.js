@@ -278,6 +278,7 @@ const checkResultsBtn = document.getElementById("checkResultsBtn");
 const clearAllTipsBtn = document.getElementById("clearAllTipsBtn");
 const noTipTodayBtn = document.getElementById("noTipTodayBtn");
 const weeklyReportBtn = document.getElementById("weeklyReportBtn");
+const dailyResultsBtn = document.getElementById("dailyResultsBtn");
 
 const openSubscribersBtn = document.getElementById("openSubscribersBtn");
 const subscribersModal = document.getElementById("subscribersModal");
@@ -1589,6 +1590,52 @@ weeklyReportBtn.addEventListener("click", async () => {
     showToast(`Odoslanie zlyhalo: ${err.message}`);
   } finally {
     weeklyReportBtn.disabled = false;
+  }
+});
+
+// ---- Denné vyhodnotenie (všetky tipy a tikety dňa naraz do Telegramu) ----
+/** Deň, za ktorý sa posiela vyhodnotenie: dnes, po polnoci (do 6:00) ešte včerajšok. */
+function dailyResultsDay() {
+  const d = new Date();
+  if (d.getHours() < 6) d.setDate(d.getDate() - 1);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+dailyResultsBtn.addEventListener("click", async () => {
+  const target = await askTelegramTarget();
+  if (!target) return;
+  const day = dailyResultsDay();
+  dailyResultsBtn.disabled = true;
+  try {
+    let res = await fetchJson("/api/telegram/daily-results", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ target, day }),
+    });
+    if (res && res.pendingCount > 0) {
+      const ok = window.confirm(
+        `${res.pendingCount} ${res.pendingCount === 1 ? "tip sa ešte hrá" : res.pendingCount < 5 ? "tipy sa ešte hrajú" : "tipov sa ešte hrá"}. Poslať vyhodnotenie aj tak? (Nedohrané budú označené ⏳.)`
+      );
+      if (!ok) return;
+      res = await fetchJson("/api/telegram/daily-results", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ target, day, force: true }),
+      });
+    }
+    if (res && res.empty) {
+      showToast("Pre dnešok nie sú v histórii žiadne tipy ani tikety.");
+    } else if (res && res.ok) {
+      showToast("Denné vyhodnotenie odoslané.");
+      if (lastRenderedTips) openTipsHistory();
+    } else {
+      showToast("Nepodarilo sa odoslať - skontroluj nastavenie Telegramu.");
+    }
+  } catch (err) {
+    showToast(`Odoslanie zlyhalo: ${err.message}`);
+  } finally {
+    dailyResultsBtn.disabled = false;
   }
 });
 
