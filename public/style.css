@@ -1246,3 +1246,11 @@ button, input {
   color: var(--gold);
   font-size: 14px;
 }
+
+/* Vypnuté tlačidlá (napr. zápas už začal) - nech je jasne vidieť, že sa nedajú použiť */
+button:disabled,
+button:disabled:hover {
+  opacity: 0.35;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
