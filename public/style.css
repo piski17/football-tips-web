@@ -939,6 +939,14 @@ button, input {
   color: var(--success);
 }
 
+.tip-delete-btn[data-send-id] {
+  color: #2aabee; /* Telegram modrá */
+}
+
+.tip-delete-btn[data-send-id]:hover {
+  color: #5cc3f5;
+}
+
 .tip-delete-btn:hover {
   color: var(--danger);
 }

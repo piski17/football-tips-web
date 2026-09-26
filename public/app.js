@@ -1133,7 +1133,7 @@ function renderTipsList(tips) {
           ${resultIconHtml}
           ${
             t.status === "pending"
-              ? `<button class="tip-delete-btn" data-motw-id="${t.id}" title="Poslať ako Zápas/Tiket týždňa">★</button>`
+              ? `<button class="tip-delete-btn" data-send-id="${t.id}" title="Poslať do Telegram kanála" aria-label="Poslať do Telegram kanála"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="display:block"><path fill="currentColor" d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L6.2 13.1 1.3 11.6c-1-.3-1.1-1 .2-1.5L20.6 2.8c.9-.3 1.6.2 1.3 1.5z"/></svg></button><button class="tip-delete-btn" data-motw-id="${t.id}" title="Poslať ako Zápas/Tiket týždňa">★</button>`
               : `<button class="tip-delete-btn" data-result-id="${t.id}" title="Poslať výsledok do Telegramu">➤</button>`
           }
         </div>
@@ -1149,7 +1149,7 @@ function renderTipsList(tips) {
           ${resultIconHtml}
           ${
             t.status === "pending"
-              ? `<button class="tip-delete-btn" data-motw-id="${t.id}" title="Poslať ako Zápas/Tiket týždňa">★</button>`
+              ? `<button class="tip-delete-btn" data-send-id="${t.id}" title="Poslať do Telegram kanála" aria-label="Poslať do Telegram kanála"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="display:block"><path fill="currentColor" d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L6.2 13.1 1.3 11.6c-1-.3-1.1-1 .2-1.5L20.6 2.8c.9-.3 1.6.2 1.3 1.5z"/></svg></button><button class="tip-delete-btn" data-motw-id="${t.id}" title="Poslať ako Zápas/Tiket týždňa">★</button>`
               : `<button class="tip-delete-btn" data-result-id="${t.id}" title="Poslať výsledok do Telegramu">➤</button>`
           }
         </div>
@@ -1173,6 +1173,25 @@ function renderTipsList(tips) {
         showToast("Zmazanie zlyhalo - skontroluj internetové pripojenie a skús to znova.");
       } finally {
         openTipsHistory();
+      }
+    });
+  });
+
+  tipsListEl.querySelectorAll("[data-send-id]").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      const id = e.currentTarget.dataset.sendId;
+      if (!id) return;
+      const target = await askTelegramTarget();
+      if (!target) return;
+      try {
+        await fetchJson(`/api/tips/${id}/telegram`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ target }),
+        });
+        showToast("Tip odoslaný do Telegram kanála.");
+      } catch (err) {
+        showToast(`Odoslanie zlyhalo: ${err.message}`);
       }
     });
   });
