@@ -23,6 +23,15 @@ export interface OddsMatch {
 /** Minimálna očakávaná hodnota tipu: pravdepodobnosť × kurz. 1,05 = +5 %. */
 export const MIN_EXPECTED_VALUE = 1.05;
 
+/**
+ * Hodnota nad touto hranicou (+25 %) je podozrivá - model sa s trhom rozchádza
+ * viac, než je v praxi bežné, a chyba je spravidla v modeli.
+ */
+export const SUSPICIOUS_EXPECTED_VALUE = 1.25;
+
+/** Pod týmto počtom odohraných zápasov v sezóne (pri ktoromkoľvek tíme) má model málo dát. */
+export const MIN_GAMES_FOR_TRUST = 5;
+
 // Stávky na polčasy, jednotlivé tímy, handicapy a pod. - tie nechceme.
 const EXCLUDED = /(1st|2nd|first|second|half|home|away|team|exact|asian|handicap|odd\/even|european|double|draw no|interval|minute|min\b|1x2|race|highest|player|&|\/ ?both|result\/)/i;
 

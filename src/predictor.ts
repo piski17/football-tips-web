@@ -1,4 +1,4 @@
-import { MarketOdds, findOdds, MIN_EXPECTED_VALUE } from "./oddsMatcher";
+import { MarketOdds, findOdds, MIN_EXPECTED_VALUE, SUSPICIOUS_EXPECTED_VALUE, MIN_GAMES_FOR_TRUST } from "./oddsMatcher";
 import {
   Fixture,
   TeamStatistics,
@@ -581,9 +581,33 @@ export function predictMatch(
   const inBand = sortedBets.filter(
     (b) => b.probability >= MIN_PROBABILITY && b.probability <= MAX_PROBABILITY
   );
-  const hasValue = (b: MarketPick) => b.expectedValue == null || b.expectedValue >= MIN_EXPECTED_VALUE;
-  const pickPool = inBand.filter(hasValue);
-  const lowValueBets = inBand.filter((b) => !hasValue(b));
+  // Posúdenie hodnoty podľa skutočného kurzu:
+  //  - pod +5 %: tip nemá hodnotu -> vyradiť,
+  //  - nad +25 % a málo odohraných zápasov v sezóne: model stojí na slabých
+  //    dátach a rozdiel oproti trhu je takmer iste jeho chyba -> vyradiť,
+  //  - nad +25 % a dát je dosť: tip ostáva, ale s upozornením,
+  //  - inak normálny tip. Tip bez dostupného kurzu ostáva bez zmeny.
+  const fewGames =
+    Math.min(homeStats.fixtures.played.total ?? 0, awayStats.fixtures.played.total ?? 0) < MIN_GAMES_FOR_TRUST;
+  const pickPool: MarketPick[] = [];
+  const lowValueBets: MarketPick[] = [];
+  for (const b of inBand) {
+    const ev = b.expectedValue;
+    if (ev == null) {
+      pickPool.push(b);
+    } else if (ev < MIN_EXPECTED_VALUE) {
+      b.rejectReason = "nízky kurz, bez hodnoty";
+      lowValueBets.push(b);
+    } else if (ev > SUSPICIOUS_EXPECTED_VALUE && fewGames) {
+      b.rejectReason = "podozrivo vysoká hodnota pri málo dátach v sezóne";
+      lowValueBets.push(b);
+    } else {
+      if (ev > SUSPICIOUS_EXPECTED_VALUE) {
+        b.valueWarning = "Model a stávkovky sa výrazne rozchádzajú – pred stávkou over zostavy a správy.";
+      }
+      pickPool.push(b);
+    }
+  }
 
   // Appka ukáže VŠETKY tipy zápasu, ktoré spadajú do pásma - najviac jeden
   // z každej kategórie (trhu), zoradené od najvyššej pravdepodobnosti.

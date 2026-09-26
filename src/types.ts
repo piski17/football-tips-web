@@ -62,6 +62,10 @@ export interface MarketPick {
   oddsBookmakers?: number;
   /** Očakávaná hodnota: pravdepodobnosť × kurz (napr. 1,08 = +8 %). */
   expectedValue?: number | null;
+  /** Upozornenie pri tipe, ktorý ostal v odporúčaniach (napr. podozrivo vysoká hodnota). */
+  valueWarning?: string;
+  /** Dôvod, prečo bol tip vyradený (len pri lowValueBets). */
+  rejectReason?: string;
 }
 
 /** Odhad pre trh typu Over/Under (rohy, karty) založený na kombinovanom Poissonovom modeli. */
