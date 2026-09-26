@@ -100,3 +100,40 @@ export function findOdds(
   // Držanie lopty, strelci a staré trhy - stávkovky ich cez API spravidla neponúkajú.
   return null;
 }
+
+/**
+ * Pravdepodobnosť (0–1), ktorú tipu pripisujú stávkovky - z kurzov všetkých
+ * možností daného trhu, s odrátanou maržou (napr. nad/pod 2,5 alebo 1/X/2).
+ * Ak chýba kurz na niektorú z možností, marža sa odhadne na 5 %.
+ */
+export function marketProbability(
+  odds: MarketOdds[],
+  pick: { market: string; selection: string },
+  homeTeam: string,
+  awayTeam: string
+): number | null {
+  const own = findOdds(odds, pick, homeTeam, awayTeam);
+  if (!own) return null;
+
+  let others: (OddsMatch | null)[] = [];
+  if (pick.market === "Výsledok zápasu") {
+    others = [`Výhra ${homeTeam}`, "Remíza", `Výhra ${awayTeam}`]
+      .filter((sel) => sel !== pick.selection)
+      .map((sel) => findOdds(odds, { market: pick.market, selection: sel }, homeTeam, awayTeam));
+  } else if (pick.market === "Obaja tímy skórujú") {
+    others = [findOdds(odds, { market: pick.market, selection: pick.selection === "Áno" ? "Nie" : "Áno" }, homeTeam, awayTeam)];
+  } else {
+    const ou = parseOverUnder(pick.selection);
+    if (ou) {
+      const opposite = `${ou.dir === "over" ? "Under" : "Over"} ${ou.line}`;
+      others = [findOdds(odds, { market: pick.market, selection: opposite }, homeTeam, awayTeam)];
+    }
+  }
+
+  const ownImplied = 1 / own.odd;
+  if (others.length > 0 && others.every((o) => o !== null)) {
+    const total = ownImplied + others.reduce((sum, o) => sum + 1 / o!.odd, 0);
+    return ownImplied / total;
+  }
+  return ownImplied / 1.05;
+}

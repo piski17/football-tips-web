@@ -265,8 +265,9 @@ export async function getTeamExtendedStatsAverages(
     if (fixtures.length < lastN) {
       const remaining = lastN - fixtures.length;
       try {
+        const [prevSeason] = await getPreviousSeasons(leagueId, season, 1);
         const prevSeasonRes = await client().get("/fixtures", {
-          params: { team: teamId, league: leagueId, season: season - 1, last: remaining, status: "FT" },
+          params: { team: teamId, league: leagueId, season: prevSeason, last: remaining, status: "FT" },
         });
         const prevFixtures: any[] = prevSeasonRes.data?.response ?? [];
         fixtures = [...fixtures, ...prevFixtures];
@@ -374,6 +375,70 @@ export async function getHeadToHead(
   }));
 }
 
+const TTL_LEAGUE_SEASONS = 24 * 60 * 60 * 1000; // 24 hodín
+
+/**
+ * Roky sezón, ktoré súťaž naozaj má (napr. Liga národov: 2018, 2020, 2022, 2024…).
+ * Ligy sa hrajú každý rok, ale reprezentačné súťaže len každé 2 roky - preto
+ * nestačí jednoducho odpočítať 1, 2, 3 roky.
+ */
+async function getLeagueSeasonYears(leagueId: number): Promise<number[]> {
+  const cacheKey = `leagueSeasons:${leagueId}`;
+  const cached = getCached<number[]>(cacheKey);
+  if (cached !== undefined) return cached;
+  try {
+    const res = await client().get("/leagues", { params: { id: leagueId } });
+    checkApiErrors(res.data);
+    const years: number[] = (res.data?.response?.[0]?.seasons ?? [])
+      .map((s: any) => Number(s?.year))
+      .filter((y: number) => isFinite(y));
+    const unique = Array.from(new Set(years)).sort((a, b) => b - a);
+    setCached(cacheKey, unique, TTL_LEAGUE_SEASONS);
+    return unique;
+  } catch {
+    return [];
+  }
+}
+
+/** Posledných `count` sezón súťaže pred `season`. Ak API zlyhá, klasicky season-1, season-2, … */
+export async function getPreviousSeasons(leagueId: number, season: number, count: number): Promise<number[]> {
+  const years = (await getLeagueSeasonYears(leagueId)).filter((y) => y < season).slice(0, count);
+  if (years.length > 0) return years;
+  return Array.from({ length: count }, (_, i) => season - 1 - i);
+}
+
+/**
+ * Forma tímu z posledných odohraných zápasov vo VŠETKÝCH súťažiach (napr. pri
+ * reprezentácii kvalifikácie, turnaje aj prípravné zápasy). Vracia text ako
+ * "WDLWW" - najstarší zápas vľavo, najnovší vpravo (rovnako ako API).
+ * Použije sa, keď tím v aktuálnej sezóne súťaže ešte nehral.
+ */
+export async function getRecentFormAnyCompetition(teamId: number, count: number = 5): Promise<string> {
+  const cacheKey = `recentForm:${teamId}:${count}`;
+  const cached = getCached<string>(cacheKey);
+  if (cached !== undefined) return cached;
+  try {
+    const res = await client().get("/fixtures", { params: { team: teamId, last: count, status: "FT-AET-PEN" } });
+    checkApiErrors(res.data);
+    const fixtures: any[] = (res.data?.response ?? []).slice().sort(
+      (a: any, b: any) => new Date(a?.fixture?.date).getTime() - new Date(b?.fixture?.date).getTime()
+    );
+    const form = fixtures
+      .map((f: any) => {
+        const isHome = f?.teams?.home?.id === teamId;
+        const gf = isHome ? f?.goals?.home : f?.goals?.away;
+        const ga = isHome ? f?.goals?.away : f?.goals?.home;
+        if (gf == null || ga == null) return "";
+        return gf > ga ? "W" : gf < ga ? "L" : "D";
+      })
+      .join("");
+    setCached(cacheKey, form, TTL_CORNERS_AVERAGE);
+    return form;
+  } catch {
+    return "";
+  }
+}
+
 /**
  * Načíta priemer gólov tímu z VIACERÝCH minulých sezón (rovnaká liga) a
  * skombinuje ich do jedného váženého priemeru - novšie sezóny majú väčšiu váhu.
@@ -393,7 +458,8 @@ export async function getHistoricalGoalPriors(
 
   // Váhy pre najbližšiu, druhú a tretiu predošlú sezónu - novšie sezóny sa počítajú viac.
   const recencyWeights = [3, 2, 1];
-  const pastSeasons = Array.from({ length: seasonsBack }, (_, i) => season - 1 - i);
+  // Skutočné predchádzajúce sezóny súťaže (pri Lige národov napr. 2024, 2022, 2020).
+  const pastSeasons = await getPreviousSeasons(leagueId, season, seasonsBack);
 
   const fetchAllSeasons = () =>
     mapSequential(pastSeasons, async (pastSeason, idx) => {

@@ -1,4 +1,11 @@
-import { MarketOdds, findOdds, MIN_EXPECTED_VALUE, SUSPICIOUS_EXPECTED_VALUE, MIN_GAMES_FOR_TRUST } from "./oddsMatcher";
+import {
+  MarketOdds,
+  findOdds,
+  marketProbability,
+  MIN_EXPECTED_VALUE,
+  SUSPICIOUS_EXPECTED_VALUE,
+  MIN_GAMES_FOR_TRUST,
+} from "./oddsMatcher";
 import {
   Fixture,
   TeamStatistics,
@@ -571,12 +578,35 @@ export function predictMatch(
   // nedostane. Tip BEZ dostupného kurzu ostáva (nevieme ho posúdiť) -
   // v appke je pri ňom len odhadovaný kurz.
   const oddsAvailable = !!marketOdds && marketOdds.length > 0;
+
+  // Málo dát v sezóne (napr. reprezentácie na začiatku Ligy národov): odhad
+  // modelu zmiešame s odhadom stávkoviek. Stávkovky poznajú silu súperov,
+  // ktorú model z malého množstva zápasov nevidí. Váha trhu klesá s počtom
+  // odohraných zápasov: 0 zápasov = 50 % model / 50 % trh, 4 zápasy = 90 / 10,
+  // od 5 zápasov sa odhad modelu nemení.
+  // (minGamesPlayed = menší z počtov odohraných zápasov oboch tímov, vypočítaný vyššie)
+  const marketWeight = minGamesPlayed >= MIN_GAMES_FOR_TRUST ? 0 : 0.5 * (1 - minGamesPlayed / MIN_GAMES_FOR_TRUST);
+
   for (const c of candidates) {
     const match = oddsAvailable ? findOdds(marketOdds!, c, fixture.homeTeam.name, fixture.awayTeam.name) : null;
     c.odds = match ? match.odd : null;
     c.oddsBookmakers = match ? match.bookmakers : 0;
+    if (match && marketWeight > 0) {
+      const pMarket = marketProbability(marketOdds!, c, fixture.homeTeam.name, fixture.awayTeam.name);
+      if (pMarket !== null) {
+        const modelPct = c.probability;
+        c.probability = (1 - marketWeight) * modelPct + marketWeight * pMarket * 100;
+        c.explanation =
+          (c.explanation ? c.explanation + " " : "") +
+          `(Málo dát v sezóne – odhad upravený podľa kurzov stávkoviek: model ${modelPct.toFixed(0)} %, stávkovky ${(
+            pMarket * 100
+          ).toFixed(0)} %.)`;
+      }
+    }
     c.expectedValue = match ? (c.probability / 100) * match.odd : null;
   }
+  // Po úprave podľa trhu sa poradie tipov mohlo zmeniť.
+  sortedBets.sort((a, b) => b.probability - a.probability);
 
   const inBand = sortedBets.filter(
     (b) => b.probability >= MIN_PROBABILITY && b.probability <= MAX_PROBABILITY

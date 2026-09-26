@@ -13,6 +13,7 @@ import {
   getTeamPlayersWithStats,
   getFixtureLineupPlayerIds,
   getFixtureOdds,
+  getRecentFormAnyCompetition,
 } from "./apiClient";
 import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS } from "./predictor";
 import { LeaguePreset, SavedTip } from "./types";
@@ -129,7 +130,7 @@ app.post("/api/analyze", async (req, res) => {
     }
 
     // Prvá vlna - rovnaké volania, ktoré boli predtým otestované ako stabilné.
-    const [homeStats, awayStats, h2h, leagueAvg, homePriors, awayPriors, homeExtStats, awayExtStats] =
+    let [homeStats, awayStats, h2h, leagueAvg, homePriors, awayPriors, homeExtStats, awayExtStats] =
       await Promise.all([
         getTeamStatistics(leagueId, season, fixture.homeTeam.id),
         getTeamStatistics(leagueId, season, fixture.awayTeam.id),
@@ -140,6 +141,17 @@ app.post("/api/analyze", async (req, res) => {
         getTeamExtendedStatsAverages(leagueId, season, fixture.homeTeam.id),
         getTeamExtendedStatsAverages(leagueId, season, fixture.awayTeam.id),
       ]);
+
+    // Tím v tejto sezóne súťaže ešte nehral (typicky reprezentácie na začiatku
+    // Ligy národov) -> forma z posledných zápasov vo všetkých súťažiach.
+    if (!homeStats.form) {
+      const form = await getRecentFormAnyCompetition(fixture.homeTeam.id);
+      if (form) homeStats = { ...homeStats, form };
+    }
+    if (!awayStats.form) {
+      const form = await getRecentFormAnyCompetition(fixture.awayTeam.id);
+      if (form) awayStats = { ...awayStats, form };
+    }
 
     // Druhá vlna - súpisky hráčov + potvrdená zostava (ak je k dispozícii),
     // spustené AŽ PO prvej vlne.
