@@ -202,6 +202,8 @@ export interface TicketLeg {
   probability: number;
   /** Skutočný kurz v čase pridania do tiketu (ak bol k dispozícii). */
   odds?: number | null;
+  /** Tip bol vyradený kontrolou kurzu, ale pridaný ručne ("mimo filtra"). */
+  overrideFilter?: boolean;
   status: "pending" | "won" | "lost" | "void";
   actualHomeGoals?: number | null;
   actualAwayGoals?: number | null;
@@ -222,6 +224,8 @@ export interface SavedTip {
   probability: number;
   /** Skutočný kurz v čase uloženia (medián stávkoviek), ak bol k dispozícii. */
   odds?: number | null;
+  /** Tip (alebo niektorý zápas tiketu) bol vyradený kontrolou kurzu, ale uložený ručne - "mimo filtra". */
+  overrideFilter?: boolean;
   savedAt: string; // ISO
   status: "pending" | "won" | "lost" | "void";
   actualHomeGoals?: number | null;

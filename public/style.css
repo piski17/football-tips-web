@@ -1201,3 +1201,38 @@ button, input {
     background-position: -200% 0;
   }
 }
+
+/* ---------- Vyradené tipy (kontrola kurzu) ---------- */
+.low-value-list {
+  margin: 6px 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.low-value-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+}
+.low-value-actions {
+  display: inline-flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.btn-mini {
+  padding: 3px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+.override-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--gold);
+  border: 1px solid currentColor;
+  white-space: nowrap;
+}

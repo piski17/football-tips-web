@@ -151,6 +151,15 @@ function impliedOdds(probability) {
   return probability > 0 ? (100 / probability).toFixed(2) : "-";
 }
 
+/** Označenie tipu pridaného ručne napriek kontrole kurzu. */
+function isOverrideTip(t) {
+  return !!t.overrideFilter || (Array.isArray(t.legs) && t.legs.some((l) => l.overrideFilter));
+}
+
+function overrideBadge(t) {
+  return isOverrideTip(t) ? ` <span class="override-badge" title="Vyradené kontrolou kurzu, pridané ručne">⚠️ mimo filtra</span>` : "";
+}
+
 /** Kurz v slovenskom zápise (1,72). */
 function fmtOdds(n) {
   return n.toFixed(2).replace(".", ",");
@@ -511,12 +520,23 @@ function renderAnalysis(r) {
   // Tipy v pásme, ktoré vypadli pre nízky skutočný kurz (bez hodnoty) - len na informáciu.
   const lowValueHtml =
     (r.lowValueBets || []).length > 0
-      ? `<div class="muted small" style="margin: 6px 0 14px;">Vyradené po kontrole kurzu: ${(r.lowValueBets || [])
-          .map(
-            (b) =>
-              `${escapeHtml(b.market)}: ${escapeHtml(translateNamesInText(b.selection, r.fixture.homeTeam.name, r.fixture.awayTeam.name))} (${b.probability.toFixed(0)} %, kurz ${fmtOdds(b.odds)} – ${escapeHtml(b.rejectReason || "bez hodnoty")})`
-          )
-          .join(" · ")}</div>`
+      ? `<div class="low-value-list">
+          <div class="muted small" style="margin-bottom:6px;">Vyradené po kontrole kurzu (môžeš ich pridať na vlastnú zodpovednosť):</div>
+          ${(r.lowValueBets || [])
+            .map(
+              (b, i) => `
+            <div class="low-value-row">
+              <span class="muted small">${escapeHtml(b.market)}: ${escapeHtml(
+                translateNamesInText(b.selection, r.fixture.homeTeam.name, r.fixture.awayTeam.name)
+              )} (${b.probability.toFixed(0)} %, kurz ${fmtOdds(b.odds)} – ${escapeHtml(b.rejectReason || "bez hodnoty")})</span>
+              <span class="low-value-actions">
+                <button class="btn-ghost btn-mini save-best-bet-btn" data-source="low" data-bet-idx="${i}">Uložiť aj tak</button>
+                <button class="btn-ghost btn-mini add-to-ticket-btn" data-source="low" data-bet-idx="${i}">+ Do tiketu</button>
+              </span>
+            </div>`
+            )
+            .join("")}
+        </div>`
       : "";
 
   analysisColumnEl.innerHTML = `
@@ -750,12 +770,13 @@ async function maybeOfferTelegram(tipId) {
 function initSaveTipButton(r) {
   const msgEl = document.getElementById("saveTipMsg");
   const buttons = document.querySelectorAll(".save-best-bet-btn");
-  if (!msgEl || !r.bestBets || r.bestBets.length === 0) return;
+  if (!msgEl) return;
 
   buttons.forEach((btn) => {
     btn.onclick = async () => {
       const idx = parseInt(btn.dataset.betIdx ?? "0", 10);
-      const chosenBet = r.bestBets[idx];
+      const fromLow = btn.dataset.source === "low"; // vyradený tip pridaný ručne
+      const chosenBet = (fromLow ? r.lowValueBets : r.bestBets)?.[idx];
       if (!chosenBet) return;
 
       const tip = {
@@ -773,6 +794,7 @@ function initSaveTipButton(r) {
         selection: chosenBet.selection,
         probability: chosenBet.probability,
         odds: chosenBet.odds ?? null,
+        ...(fromLow ? { overrideFilter: true } : {}),
         savedAt: new Date().toISOString(),
         status: "pending",
       };
@@ -802,7 +824,8 @@ function wireTicketButtons(r) {
   buttons.forEach((btn) => {
     btn.onclick = () => {
       const idx = parseInt(btn.dataset.betIdx ?? "0", 10);
-      const bet = r.bestBets && r.bestBets[idx];
+      const fromLow = btn.dataset.source === "low";
+      const bet = (fromLow ? r.lowValueBets : r.bestBets)?.[idx];
       if (!bet) return;
 
       const id = `${r.fixture.fixtureId}-${bet.market}-${bet.selection}`;
@@ -824,6 +847,7 @@ function wireTicketButtons(r) {
         selection: bet.selection,
         probability: bet.probability,
         odds: bet.odds ?? null,
+        ...(fromLow ? { overrideFilter: true } : {}),
       });
 
       updateTicketCount();
@@ -920,6 +944,7 @@ saveTicketBtn.addEventListener("click", async () => {
     market: "Tiket",
     selection: `${ticketItems.length} tipov`,
     probability: combinedProbability,
+    ...(ticketItems.some((t) => t.overrideFilter) ? { overrideFilter: true } : {}),
     odds: ticketItems.every((t) => typeof t.odds === "number" && t.odds > 1)
       ? Math.round(ticketItems.reduce((acc, t) => acc * t.odds, 1) * 100) / 100
       : null,
@@ -936,6 +961,7 @@ saveTicketBtn.addEventListener("click", async () => {
       selection: t.selection,
       probability: t.probability,
       odds: t.odds ?? null,
+      ...(t.overrideFilter ? { overrideFilter: true } : {}),
       status: "pending",
     })),
   };
@@ -1115,6 +1141,19 @@ function renderMarketBreakdown(tips) {
   `;
 }
 
+/** Samostatný prehľad tipov "mimo filtra" - či sa oplatí prekonávať kontrolu kurzu. */
+function overrideSummaryHtml(tips) {
+  const ov = tips.filter(isOverrideTip);
+  if (ov.length === 0) return "";
+  const decided = ov.filter((t) => t.status === "won" || t.status === "lost");
+  const won = decided.filter((t) => t.status === "won").length;
+  const withOdds = decided.filter((t) => typeof t.odds === "number" && t.odds > 1);
+  const profit = withOdds.reduce((sum, t) => sum + (t.status === "won" ? t.odds - 1 : -1), 0);
+  return `<span title="Tipy vyradené kontrolou kurzu, ktoré si pridal ručne">⚠️ Mimo filtra: <strong>${won} z ${decided.length}</strong>${
+    withOdds.length > 0 ? ` · zisk <strong>${profit >= 0 ? "+" : ""}${profit.toFixed(1).replace(".", ",")} j.</strong>` : ""
+  }${ov.length > decided.length ? ` · čaká ${ov.length - decided.length}` : ""}</span>`;
+}
+
 const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté konto"];
 
 function renderTipsList(tips) {
@@ -1133,6 +1172,7 @@ function renderTipsList(tips) {
     <span>Vyhral: <strong>${won}</strong></span>
     <span>Prehral: <strong>${lost}</strong></span>
     <span>Úspešnosť: <strong>${winRate}${decided > 0 ? "%" : ""}</strong></span>
+    ${overrideSummaryHtml(statTips)}
   `;
 
   renderMarketBreakdown(statTips);
@@ -1169,7 +1209,7 @@ function renderTipsList(tips) {
         <div class="tip-row ${rowClass}" data-row-id="${t.id}" style="align-items: flex-start;">
           <div class="tip-row-info">
             <div class="tip-row-match">🎫 Tiket (${t.legs.length} tipov) <span class="muted small">(${date})</span></div>
-            <div class="tip-row-market">Kombinovaná pravdepodobnosť: ${t.probability.toFixed(1)}% · kurz ${tipOddsLabel(t)}</div>
+            <div class="tip-row-market">Kombinovaná pravdepodobnosť: ${t.probability.toFixed(1)}% · kurz ${tipOddsLabel(t)}${overrideBadge(t)}</div>
             ${legsHtml}
           </div>
           ${resultIconHtml}
@@ -1186,7 +1226,7 @@ function renderTipsList(tips) {
         <div class="tip-row ${rowClass}" data-row-id="${t.id}">
           <div class="tip-row-info">
             <div class="tip-row-match">${escapeHtml(translateTeamName(t.homeTeam))} — ${escapeHtml(translateTeamName(t.awayTeam))} <span class="muted small">(${date})</span></div>
-            <div class="tip-row-market">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))} · ${t.probability.toFixed(0)}% · kurz ${tipOddsLabel(t)}</div>
+            <div class="tip-row-market">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))} · ${t.probability.toFixed(0)}% · kurz ${tipOddsLabel(t)}${overrideBadge(t)}</div>
           </div>
           ${resultIconHtml}
           ${
