@@ -12,6 +12,7 @@ import {
   getPlayerSeasonStats,
   getTeamPlayersWithStats,
   getFixtureLineupPlayerIds,
+  getFixtureOdds,
 } from "./apiClient";
 import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS } from "./predictor";
 import { LeaguePreset, SavedTip } from "./types";
@@ -143,10 +144,11 @@ app.post("/api/analyze", async (req, res) => {
 
     // Druhá vlna - súpisky hráčov + potvrdená zostava (ak je k dispozícii),
     // spustené AŽ PO prvej vlne.
-    const [homePlayers, awayPlayers, lineup] = await Promise.all([
+    const [homePlayers, awayPlayers, lineup, marketOdds] = await Promise.all([
       getTeamPlayersWithStats(fixture.homeTeam.id, season, leagueId),
       getTeamPlayersWithStats(fixture.awayTeam.id, season, leagueId),
       getFixtureLineupPlayerIds(fixture.fixtureId),
+      getFixtureOdds(fixture.fixtureId),
     ]);
 
     const result = predictMatch(
@@ -173,7 +175,8 @@ app.post("/api/analyze", async (req, res) => {
         awayOffsides: awayExtStats.offsides,
         homePossession: homeExtStats.possession,
         awayPossession: awayExtStats.possession,
-      }
+      },
+      marketOdds
     );
 
     res.json(result);
@@ -332,6 +335,17 @@ app.get("/api/public/track-record", async (_req, res) => {
   }
 });
 
+// Diagnostika: aké kurzy vracia API-Football pre zápas (názvy stávok a volieb).
+app.get("/api/debug/odds/:fixtureId", async (req, res) => {
+  try {
+    const fixtureId = parseInt(req.params.fixtureId, 10);
+    const odds = await getFixtureOdds(fixtureId);
+    res.json({ count: odds.length, bets: Array.from(new Set(odds.map((o) => o.bet))).sort(), odds });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
 app.get("/api/telegram/targets", (_req, res) => {
   res.json({ targets: availableTelegramTargets() });
 });
@@ -380,6 +394,11 @@ app.post("/api/telegram/weekly-report", async (req, res) => {
     const lostWeek = resolvedWeek.length - wonWeek;
     const rateWeek = resolvedWeek.length > 0 ? ((wonWeek / resolvedWeek.length) * 100).toFixed(0) : null;
 
+    // Zisk v jednotkách (1 jednotka na tip) - len z tipov, pri ktorých poznáme skutočný kurz.
+    const withOdds = resolvedWeek.filter((t) => typeof t.odds === "number" && t.odds > 1);
+    const profitWeek = withOdds.reduce((sum, t) => sum + (t.status === "won" ? t.odds! - 1 : -1), 0);
+    const roiWeek = withOdds.length > 0 ? (profitWeek / withOdds.length) * 100 : null;
+
     const wonAll = resolvedAll.filter((t) => t.status === "won").length;
     const rateAll = resolvedAll.length > 0 ? ((wonAll / resolvedAll.length) * 100).toFixed(0) : null;
 
@@ -407,6 +426,11 @@ app.post("/api/telegram/weekly-report", async (req, res) => {
         ? `✅ Vyšlo: <b>${wonWeek}</b>   ❌ Nevyšlo: <b>${lostWeek}</b>\n` +
           `Úspešnosť týždňa: <b>${rateWeek}%</b>\n` +
           (voidWeek > 0 ? `↩ Vrátené: ${voidWeek}\n` : "") +
+          (roiWeek !== null
+            ? `Zisk: <b>${profitWeek >= 0 ? "+" : ""}${profitWeek.toFixed(1)} j.</b> (ROI ${roiWeek >= 0 ? "+" : ""}${roiWeek.toFixed(0)}%${
+                withOdds.length < resolvedWeek.length ? `, z ${withOdds.length} tipov so známym kurzom` : ""
+              })\n`
+            : "") +
           (bestMarket ? `Najlepší trh: <b>${bestMarket}</b> (${(bestRate * 100).toFixed(0)}%)\n` : "")
         : `Tento týždeň zatiaľ nie sú vyhodnotené žiadne tipy.\n`) +
       (rateAll !== null ? `\nCelkovo od začiatku: <b>${rateAll}%</b> (${wonAll} z ${resolvedAll.length})\n` : "") +

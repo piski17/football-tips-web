@@ -172,6 +172,14 @@ function impliedOdds(probability: number): string {
 function buildMessageText(tip: SavedTip, headerOverride?: string): string {
   const odds = impliedOdds(tip.probability);
   const stakePct = stakeTierPercent(tip.probability);
+  // Skutočný kurz stávkoviek (ak bol pri uložení k dispozícii), inak odhad z modelu.
+  const hasRealOdds = typeof tip.odds === "number" && tip.odds > 1;
+  const oddsLine = hasRealOdds
+    ? `💰 Kurz: <b>${tip.odds!.toFixed(2)}</b>\n`
+    : `💰 Odhadovaný kurz: <b>~${odds}</b>\n`;
+  const oddsNote = hasRealOdds
+    ? `<i>ℹ️ Priemerný kurz stávkových kancelárií v čase odoslania - u tvojej stávkovky sa môže mierne líšiť.</i>`
+    : `<i>ℹ️ Odhad na základe modelu, nie garantovaný kurz stávkovej kancelárie.</i>`;
 
   if (tip.legs && tip.legs.length > 0) {
     const legsText = tip.legs
@@ -186,9 +194,9 @@ function buildMessageText(tip: SavedTip, headerOverride?: string): string {
     return (
       `${headerOverride ?? `🎫 <b>Nový tiket</b>`} (${tip.legs.length} tipov)\n\n${legsText}\n\n` +
       `📈 Kombinovaná pravdepodobnosť: <b>${tip.probability.toFixed(1)}%</b>\n` +
-      `💰 Odhadovaný kurz: <b>~${odds}</b>\n` +
+      oddsLine +
       `💵 Odporúčaná sadzba: <b>${stakePct}% bankrollu</b>\n\n` +
-      `<i>ℹ️ Odhad na základe modelu, nie garantovaný kurz stávkovej kancelárie.</i>`
+      oddsNote
     );
   }
 
@@ -197,9 +205,9 @@ function buildMessageText(tip: SavedTip, headerOverride?: string): string {
     `⚽ ${escapeHtml(translateTeamName(tip.homeTeam))} — ${escapeHtml(translateTeamName(tip.awayTeam))}\n` +
     `📊 ${escapeHtml(tip.market)}: <b>${escapeHtml(translateNamesInText(tip.selection, tip.homeTeam, tip.awayTeam))}</b>\n` +
     `📈 Dôvera: <b>${tip.probability.toFixed(0)}%</b>\n` +
-    `💰 Odhadovaný kurz: <b>~${odds}</b>\n` +
+    oddsLine +
     `💵 Odporúčaná sadzba: <b>${stakePct}% bankrollu</b>\n\n` +
-    `<i>ℹ️ Odhad na základe modelu, nie garantovaný kurz stávkovej kancelárie.</i>`
+    oddsNote
   );
 }
 

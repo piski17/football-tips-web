@@ -56,6 +56,12 @@ export interface MarketPick {
   probability: number; // 0-100
   category: string; // na skupinovanie podobných trhov, aby appka nedávala 2 podobné tipy naraz
   explanation?: string; // krátke vysvetlenie, prečo model tento tip odporúča
+  /** Skutočný kurz (medián stávkoviek z API-Football), ak je k dispozícii. */
+  odds?: number | null;
+  /** Z koľkých stávkoviek kurz pochádza. */
+  oddsBookmakers?: number;
+  /** Očakávaná hodnota: pravdepodobnosť × kurz (napr. 1,08 = +8 %). */
+  expectedValue?: number | null;
 }
 
 /** Odhad pre trh typu Over/Under (rohy, karty) založený na kombinovanom Poissonovom modeli. */
@@ -142,6 +148,10 @@ export interface PredictionResult {
   fouls?: OverUnderMarket;
   offsides?: OverUnderMarket;
   bestBets: MarketPick[];
+  /** Tipy v pásme 65–75 %, ktoré vypadli pre príliš nízky skutočný kurz. */
+  lowValueBets?: MarketPick[];
+  /** Či boli pre zápas k dispozícii skutočné kurzy stávkoviek. */
+  oddsAvailable?: boolean;
   teamSeasonGoalsPerGame: {
     home: number;
     away: number;
@@ -186,6 +196,8 @@ export interface TicketLeg {
   market: string;
   selection: string;
   probability: number;
+  /** Skutočný kurz v čase pridania do tiketu (ak bol k dispozícii). */
+  odds?: number | null;
   status: "pending" | "won" | "lost" | "void";
   actualHomeGoals?: number | null;
   actualAwayGoals?: number | null;
@@ -204,6 +216,8 @@ export interface SavedTip {
   market: string; // napr. "Výsledok zápasu", "Góly", "Rohy"...
   selection: string; // napr. "Over 2.5", "Výhra Chelsea"
   probability: number;
+  /** Skutočný kurz v čase uloženia (medián stávkoviek), ak bol k dispozícii. */
+  odds?: number | null;
   savedAt: string; // ISO
   status: "pending" | "won" | "lost" | "void";
   actualHomeGoals?: number | null;

@@ -1,3 +1,4 @@
+import { MarketOdds } from "./oddsMatcher";
 import axios, { AxiosInstance } from "axios";
 import axiosRetry from "axios-retry";
 import {
@@ -90,6 +91,7 @@ const TTL_LEAGUE_AVERAGES = 60 * 60 * 1000; // 1 hodina
 const TTL_CORNERS_AVERAGE = 30 * 60 * 1000; // 30 minút - môže sa meniť s novo odohranými zápasmi
 const TTL_SQUAD = 6 * 60 * 60 * 1000; // 6 hodín - súpiska sa počas dňa prakticky nemení
 const TTL_PLAYER_STATS = 3 * 60 * 60 * 1000; // 3 hodiny
+const TTL_ODDS = 30 * 60 * 1000; // 30 minút - kurzy sa pred zápasom priebežne menia
 
 function checkApiErrors(data: any): void {
   const errors = data?.errors;
@@ -715,5 +717,55 @@ export async function getFixtureLineupPlayerIds(
     return { homeIds: extractIds(teams[0]), awayIds: extractIds(teams[1]) };
   } catch {
     return { homeIds: null, awayIds: null };
+  }
+}
+
+/**
+ * Skutočné predzápasové kurzy stávkových kancelárií pre zápas (endpoint /odds).
+ * Pre každú kombináciu stávka + voľba vráti medián naprieč stávkovkami.
+ * Pri chybe alebo chýbajúcich kurzoch vráti prázdny zoznam - analýza zápasu
+ * tým nikdy nezlyhá, len tipy nebudú mať skutočný kurz.
+ */
+export async function getFixtureOdds(fixtureId: number): Promise<MarketOdds[]> {
+  const cacheKey = `odds:${fixtureId}`;
+  const cached = getCached<MarketOdds[]>(cacheKey);
+  if (cached !== undefined) return cached;
+  try {
+    const collected = new Map<string, { bet: string; value: string; odds: number[] }>();
+    let page = 1;
+    let totalPages = 1;
+    do {
+      const res = await client().get("/odds", { params: { fixture: fixtureId, page } });
+      checkApiErrors(res.data);
+      totalPages = Number(res.data?.paging?.total) || 1;
+      for (const item of res.data?.response ?? []) {
+        for (const bookmaker of item?.bookmakers ?? []) {
+          for (const bet of bookmaker?.bets ?? []) {
+            for (const v of bet?.values ?? []) {
+              const odd = parseFloat(String(v?.odd ?? "").replace(",", "."));
+              if (!isFinite(odd) || odd <= 1) continue;
+              const betName = String(bet?.name ?? "");
+              const value = String(v?.value ?? "");
+              const key = betName + "|||" + value;
+              if (!collected.has(key)) collected.set(key, { bet: betName, value, odds: [] });
+              collected.get(key)!.odds.push(odd);
+            }
+          }
+        }
+      }
+      page++;
+    } while (page <= totalPages && page <= 3);
+
+    const result: MarketOdds[] = [];
+    for (const { bet, value, odds } of collected.values()) {
+      const sorted = [...odds].sort((a, b) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      const median = sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+      result.push({ bet, value, odd: Math.round(median * 100) / 100, bookmakers: sorted.length });
+    }
+    setCached(cacheKey, result, TTL_ODDS);
+    return result;
+  } catch {
+    return [];
   }
 }

@@ -1,3 +1,4 @@
+import { MarketOdds, findOdds, MIN_EXPECTED_VALUE } from "./oddsMatcher";
 import {
   Fixture,
   TeamStatistics,
@@ -331,7 +332,8 @@ export function predictMatch(
     awayOffsides?: number | null;
     homePossession?: number | null;
     awayPossession?: number | null;
-  }
+  },
+  marketOdds?: MarketOdds[]
 ): PredictionResult {
   const xg = expectedGoals(homeStats, awayStats, leagueAvg, homePriorsResult, awayPriorsResult);
   const poisson = poissonOutcomes(xg.home, xg.away);
@@ -563,9 +565,25 @@ export function predictMatch(
   // appka radšej nič neodporučí, ako by ponúkla horší tip.
   const MIN_PROBABILITY = 65;
   const MAX_PROBABILITY = 75;
-  const pickPool = sortedBets.filter(
+  // Skutočné kurzy stávkoviek: ku každému tipu priradíme kurz (ak ho stávkovky
+  // ponúkajú) a očakávanú hodnotu = pravdepodobnosť × kurz. Tip s kurzom,
+  // ktorý nedosahuje MIN_EXPECTED_VALUE, nemá hodnotu a do odporúčaní sa
+  // nedostane. Tip BEZ dostupného kurzu ostáva (nevieme ho posúdiť) -
+  // v appke je pri ňom len odhadovaný kurz.
+  const oddsAvailable = !!marketOdds && marketOdds.length > 0;
+  for (const c of candidates) {
+    const match = oddsAvailable ? findOdds(marketOdds!, c, fixture.homeTeam.name, fixture.awayTeam.name) : null;
+    c.odds = match ? match.odd : null;
+    c.oddsBookmakers = match ? match.bookmakers : 0;
+    c.expectedValue = match ? (c.probability / 100) * match.odd : null;
+  }
+
+  const inBand = sortedBets.filter(
     (b) => b.probability >= MIN_PROBABILITY && b.probability <= MAX_PROBABILITY
   );
+  const hasValue = (b: MarketPick) => b.expectedValue == null || b.expectedValue >= MIN_EXPECTED_VALUE;
+  const pickPool = inBand.filter(hasValue);
+  const lowValueBets = inBand.filter((b) => !hasValue(b));
 
   // Appka ukáže VŠETKY tipy zápasu, ktoré spadajú do pásma - najviac jeden
   // z každej kategórie (trhu), zoradené od najvyššej pravdepodobnosti.
@@ -622,6 +640,8 @@ export function predictMatch(
     fouls,
     offsides,
     bestBets,
+    lowValueBets,
+    oddsAvailable,
     teamSeasonGoalsPerGame: {
       home: homeStats.goals.for.average.total,
       away: awayStats.goals.for.average.total,

@@ -151,6 +151,25 @@ function impliedOdds(probability) {
   return probability > 0 ? (100 / probability).toFixed(2) : "-";
 }
 
+/** Kurz v slovenskom zápise (1,72). */
+function fmtOdds(n) {
+  return n.toFixed(2).replace(".", ",");
+}
+
+/** Skutočný kurz tipu, ak je známy - inak odhad z pravdepodobnosti (~1,43). */
+function tipOddsLabel(t) {
+  return typeof t.odds === "number" && t.odds > 1 ? fmtOdds(t.odds) : "~" + impliedOdds(t.probability).replace(".", ",");
+}
+
+/** Riadok s kurzom a hodnotou pri tipe v detaile zápasu. */
+function betOddsHtml(bet) {
+  if (typeof bet.odds === "number" && bet.odds > 1) {
+    const ev = Math.round(((bet.expectedValue ?? 0) - 1) * 100);
+    return ` · kurz <strong>${fmtOdds(bet.odds)}</strong> <span class="muted small">(${bet.oddsBookmakers} stáv.)</span> · hodnota <strong style="color:var(--success)">${ev >= 0 ? "+" : ""}${ev} %</strong>`;
+  }
+  return ` · kurz ~${impliedOdds(bet.probability).replace(".", ",")} <span class="muted small">(odhad - stávkovky kurz neponúkajú)</span>`;
+}
+
 function skeletonHtml(rows = 3) {
   return Array.from({ length: rows })
     .map(() => `<div class="skeleton skeleton-block"></div>`)
@@ -468,7 +487,7 @@ function renderAnalysis(r) {
       <div class="tip-details">
         <div class="tip-label">${escapeHtml(bet.market)}: ${escapeHtml(translateNamesInText(bet.selection, r.fixture.homeTeam.name, r.fixture.awayTeam.name))}</div>
         <div class="tip-meta">
-          ${idx === 0 ? "Najvyššia dôvera zo všetkých trhov · " : ""}${bet.probability.toFixed(0)}%
+          ${idx === 0 ? "Najvyššia dôvera zo všetkých trhov · " : ""}${bet.probability.toFixed(0)}%${betOddsHtml(bet)}
         </div>
         ${bet.explanation ? `<div class="tip-explanation">💡 ${escapeHtml(translateNamesInText(bet.explanation, r.fixture.homeTeam.name, r.fixture.awayTeam.name))}</div>` : ""}
       </div>
@@ -483,7 +502,20 @@ function renderAnalysis(r) {
 
   const noBetsHtml =
     topBets.length === 0
-      ? `<div class="empty-state" style="margin-bottom:16px;">Pri tomto zápase nie je žiadny tip v pásme 65–75 %.</div>`
+      ? `<div class="empty-state" style="margin-bottom:16px;">Pri tomto zápase nie je žiadny tip v pásme 65–75 %${
+          (r.lowValueBets || []).length > 0 ? " s dostatočným kurzom" : ""
+        }.</div>`
+      : "";
+
+  // Tipy v pásme, ktoré vypadli pre nízky skutočný kurz (bez hodnoty) - len na informáciu.
+  const lowValueHtml =
+    (r.lowValueBets || []).length > 0
+      ? `<div class="muted small" style="margin: 6px 0 14px;">Vyradené pre nízky kurz (bez hodnoty): ${(r.lowValueBets || [])
+          .map(
+            (b) =>
+              `${escapeHtml(b.market)}: ${escapeHtml(translateNamesInText(b.selection, r.fixture.homeTeam.name, r.fixture.awayTeam.name))} (${b.probability.toFixed(0)} %, kurz ${fmtOdds(b.odds)})`
+          )
+          .join(" · ")}</div>`
       : "";
 
   analysisColumnEl.innerHTML = `
@@ -501,7 +533,7 @@ function renderAnalysis(r) {
     ${gamesPlayedHtml}
     ${warningHtml}
 
-    ${topBetsHtml}${noBetsHtml}
+    ${topBetsHtml}${noBetsHtml}${lowValueHtml}
     <div id="saveTipMsg"></div>
 
     <div class="prob-section">
@@ -739,6 +771,7 @@ function initSaveTipButton(r) {
         market: chosenBet.market,
         selection: chosenBet.selection,
         probability: chosenBet.probability,
+        odds: chosenBet.odds ?? null,
         savedAt: new Date().toISOString(),
         status: "pending",
       };
@@ -789,6 +822,7 @@ function wireTicketButtons(r) {
         market: bet.market,
         selection: bet.selection,
         probability: bet.probability,
+        odds: bet.odds ?? null,
       });
 
       updateTicketCount();
@@ -811,11 +845,13 @@ function renderTicket() {
 
   const combinedProbability = ticketItems.reduce((acc, t) => acc * (t.probability / 100), 1) * 100;
   const impliedOdds = combinedProbability > 0 ? 100 / combinedProbability : 0;
+  const allHaveOdds = ticketItems.every((t) => typeof t.odds === "number" && t.odds > 1);
+  const realTicketOdds = allHaveOdds ? ticketItems.reduce((acc, t) => acc * t.odds, 1) : null;
 
   ticketSummaryEl.innerHTML = `
     <span>Počet tipov: <strong>${ticketItems.length}</strong></span>
     <span>Kombinovaná pravdepodobnosť: <strong>${combinedProbability.toFixed(1)}%</strong></span>
-    <span>Odvodený kurz: <strong>~${impliedOdds.toFixed(2)}</strong></span>
+    <span>${realTicketOdds ? `Kurz: <strong>${fmtOdds(realTicketOdds)}</strong>` : `Odvodený kurz: <strong>~${impliedOdds.toFixed(2)}</strong>`}</span>
   `;
 
   ticketListEl.innerHTML = ticketItems
@@ -883,6 +919,9 @@ saveTicketBtn.addEventListener("click", async () => {
     market: "Tiket",
     selection: `${ticketItems.length} tipov`,
     probability: combinedProbability,
+    odds: ticketItems.every((t) => typeof t.odds === "number" && t.odds > 1)
+      ? Math.round(ticketItems.reduce((acc, t) => acc * t.odds, 1) * 100) / 100
+      : null,
     savedAt: new Date().toISOString(),
     status: "pending",
     legs: ticketItems.map((t) => ({
@@ -895,6 +934,7 @@ saveTicketBtn.addEventListener("click", async () => {
       market: t.market,
       selection: t.selection,
       probability: t.probability,
+      odds: t.odds ?? null,
       status: "pending",
     })),
   };
@@ -1009,7 +1049,8 @@ function renderBankrollSimulation(tips) {
   for (const t of resolved) {
     const stakePct = stakeTierPercent(t.probability);
     const stake = bankroll * stakePct;
-    const impliedOdds = 100 / t.probability; // predpokladaný "fér" kurz odvodený z vlastnej pravdepodobnosti modelu
+    // Skutočný kurz, ak bol pri tipe uložený - inak "fér" kurz odvodený z pravdepodobnosti modelu.
+    const impliedOdds = typeof t.odds === "number" && t.odds > 1 ? t.odds : 100 / t.probability;
     bankroll += t.status === "won" ? stake * (impliedOdds - 1) : -stake;
     history.push(bankroll);
   }
@@ -1127,7 +1168,7 @@ function renderTipsList(tips) {
         <div class="tip-row ${rowClass}" data-row-id="${t.id}" style="align-items: flex-start;">
           <div class="tip-row-info">
             <div class="tip-row-match">🎫 Tiket (${t.legs.length} tipov) <span class="muted small">(${date})</span></div>
-            <div class="tip-row-market">Kombinovaná pravdepodobnosť: ${t.probability.toFixed(1)}% · kurz ~${impliedOdds(t.probability)}</div>
+            <div class="tip-row-market">Kombinovaná pravdepodobnosť: ${t.probability.toFixed(1)}% · kurz ${tipOddsLabel(t)}</div>
             ${legsHtml}
           </div>
           ${resultIconHtml}
@@ -1144,7 +1185,7 @@ function renderTipsList(tips) {
         <div class="tip-row ${rowClass}" data-row-id="${t.id}">
           <div class="tip-row-info">
             <div class="tip-row-match">${escapeHtml(translateTeamName(t.homeTeam))} — ${escapeHtml(translateTeamName(t.awayTeam))} <span class="muted small">(${date})</span></div>
-            <div class="tip-row-market">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))} · ${t.probability.toFixed(0)}% · kurz ~${impliedOdds(t.probability)}</div>
+            <div class="tip-row-market">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))} · ${t.probability.toFixed(0)}% · kurz ${tipOddsLabel(t)}</div>
           </div>
           ${resultIconHtml}
           ${
