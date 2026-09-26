@@ -25,9 +25,19 @@ export function evaluateTip(
   actualScorerIds: number[] | null = null,
   actualShotsOnGoal: number | null = null,
   actualFouls: number | null = null,
-  actualOffsides: number | null = null
+  actualOffsides: number | null = null,
+  actualPossession: { team: string; value: number }[] | null = null
 ): "won" | "lost" | "void" {
   switch (tip.market) {
+    case "Vyššie držanie lopty": {
+      if (actualPossession === null) return "void";
+      const picked = actualPossession.find((p) => p.team === tip.selection);
+      const other = actualPossession.find((p) => p.team !== tip.selection);
+      if (!picked || !other) return "void";
+      if (picked.value === other.value) return "void"; // 50:50 - stávka sa vracia
+      return picked.value > other.value ? "won" : "lost";
+    }
+
     case "Strelec gólov": {
       if (actualScorerIds === null || tip.playerId == null) return "void";
       return actualScorerIds.includes(tip.playerId) ? "won" : "lost";
@@ -148,7 +158,7 @@ const VOID_STATUSES = ["CANC", "ABD", "AWD", "WO"];
 /** Odložený / prerušený zápas - ak sa neodohrá do 3 dní, stávka sa vracia. */
 const DELAYED_STATUSES = ["PST", "TBD", "SUSP", "INT"];
 const DELAYED_VOID_AFTER_MS = 3 * 24 * 60 * 60 * 1000;
-const STATS_MARKETS = ["Rohy", "Karty", "Strely na bránu", "Fauly", "Ofsajdy"];
+const STATS_MARKETS = ["Rohy", "Karty", "Strely na bránu", "Fauly", "Ofsajdy", "Vyššie držanie lopty"];
 
 export interface SettledBet {
   status: "won" | "lost" | "void";
@@ -190,6 +200,7 @@ export async function settleBet(
   let shotsOnGoal: number | null = null;
   let fouls: number | null = null;
   let offsides: number | null = null;
+  let possession: { team: string; value: number }[] | null = null;
   // Štatistiky z API zahŕňajú aj predĺženie - pri takom zápase sa nedá určiť
   // stav po 90 minútach, preto takýto tip vraciame (void).
   if (STATS_MARKETS.includes(bet.market) && !wentToExtraTime) {
@@ -199,6 +210,7 @@ export async function settleBet(
     shotsOnGoal = stats.shotsOnGoal;
     fouls = stats.fouls;
     offsides = stats.offsides;
+    possession = stats.possession;
   }
 
   let scorerIds: number[] | null = null;
@@ -216,7 +228,8 @@ export async function settleBet(
     scorerIds,
     shotsOnGoal,
     fouls,
-    offsides
+    offsides,
+    possession
   );
   return { status, homeGoals: result.homeGoals, awayGoals: result.awayGoals };
 }

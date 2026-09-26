@@ -46,6 +46,13 @@ const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 // Top ligy dostupné s API-Football Pro plánom.
+// Trhy, ktoré appka už neponúka - staré uložené tipy na ne sa nerátajú do
+// úspešnosti, reportov ani pripomienok (v histórii ostávajú viditeľné).
+const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté konto"];
+function statsTips(tips: SavedTip[]): SavedTip[] {
+  return tips.filter((t) => !EXCLUDED_STATS_MARKETS.includes(t.market));
+}
+
 const LEAGUE_PRESETS: LeaguePreset[] = [
   { id: 39, name: "Premier League", country: "Anglicko" },
   { id: 140, name: "La Liga", country: "Španielsko" },
@@ -164,6 +171,8 @@ app.post("/api/analyze", async (req, res) => {
         awayFouls: awayExtStats.fouls,
         homeOffsides: homeExtStats.offsides,
         awayOffsides: awayExtStats.offsides,
+        homePossession: homeExtStats.possession,
+        awayPossession: awayExtStats.possession,
       }
     );
 
@@ -314,7 +323,7 @@ app.get("/api/public/track-record", async (_req, res) => {
   res.set("Access-Control-Allow-Origin", "*");
   try {
     const tips = await listTips();
-    const resolved = tips.filter((t) => t.status === "won" || t.status === "lost");
+    const resolved = statsTips(tips).filter((t) => t.status === "won" || t.status === "lost");
     const won = resolved.filter((t) => t.status === "won").length;
     const winRate = resolved.length > 0 ? Math.round((won / resolved.length) * 100) : null;
     res.json({ totalResolved: resolved.length, won, winRate });
@@ -356,7 +365,7 @@ app.post("/api/telegram/weekly-report", async (req, res) => {
     }
 
     const tips = await listTips();
-    const resolvedAll = tips.filter((t) => t.status === "won" || t.status === "lost");
+    const resolvedAll = statsTips(tips).filter((t) => t.status === "won" || t.status === "lost");
 
     // Týždeň = tipy na zápasy za posledných 7 dní (podľa dátumu zápasu).
     const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
@@ -365,7 +374,7 @@ app.post("/api/telegram/weekly-report", async (req, res) => {
       return !isNaN(d) && d >= weekAgo;
     };
     const resolvedWeek = resolvedAll.filter(inLastWeek);
-    const voidWeek = tips.filter((t) => t.status === "void" && inLastWeek(t)).length;
+    const voidWeek = statsTips(tips).filter((t) => t.status === "void" && inLastWeek(t)).length;
 
     const wonWeek = resolvedWeek.filter((t) => t.status === "won").length;
     const lostWeek = resolvedWeek.length - wonWeek;
@@ -546,7 +555,7 @@ app.post("/api/subscribers/:id/test-reminder", async (req, res) => {
       return;
     }
     const tips = await listTips();
-    const resolved = tips.filter((t) => t.status === "won" || t.status === "lost");
+    const resolved = statsTips(tips).filter((t) => t.status === "won" || t.status === "lost");
     const won = resolved.filter((t) => t.status === "won").length;
     const winRate = resolved.length > 0 ? Math.round((won / resolved.length) * 100) : null;
     const ok = await sendRenewalReminder(sub.telegramChatId, { totalResolved: resolved.length, winRate });
@@ -590,7 +599,7 @@ async function checkExpiringSubscribers(): Promise<void> {
     const toRemind = withDaysLeft.filter((s) => s.daysLeft === 3 && s.telegramChatId);
     if (toRemind.length > 0) {
       const tips = await listTips();
-      const resolved = tips.filter((t) => t.status === "won" || t.status === "lost");
+      const resolved = statsTips(tips).filter((t) => t.status === "won" || t.status === "lost");
       const won = resolved.filter((t) => t.status === "won").length;
       const winRate = resolved.length > 0 ? Math.round((won / resolved.length) * 100) : null;
       for (const sub of toRemind) {

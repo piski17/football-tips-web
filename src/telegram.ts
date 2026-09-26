@@ -327,11 +327,11 @@ const FAQ_ANSWERS: Record<string, string> = {
     `Kedykoľvek zrušiteľné, žiadna viazanosť.`,
   faq_how:
     `❓ <b>Ako to funguje</b>\n\n` +
-    `TipRadar denne prepočíta desiatky zápasov cez vlastný štatistický model (Poissonovo rozdelenie gólov, vážená forma, vzájomné zápasy, historické dáta) a vyberie 2-3 najhodnotnejšie tipy naprieč 12 trhmi — s vysvetlením, prečo.`,
+    `TipRadar denne prepočíta desiatky zápasov cez vlastný štatistický model (Poissonovo rozdelenie gólov, vážená forma, vzájomné zápasy, historické dáta) a vyberie 2-3 najhodnotnejšie tipy naprieč 10 trhmi (výsledok, góly, obaja skórujú, rohy, karty, strely na bránu, fauly, ofsajdy, držanie lopty, strelci) — s vysvetlením, prečo.`,
   faq_sample:
     `📊 <b>Ukážka tipu</b>\n\n` +
-    `🎯 Dvojšanca: domáci alebo remíza\n📈 Dôvera: 74%\n💰 Odhadovaný kurz: ~1.35\n💵 Odporúčaná sadzba: 3% bankrollu\n\n` +
-    `💡 Domáci tím je vo forme (4 výhry z posledných 5), v posledných 8 vzájomných zápasoch prehral len raz.`,
+    `🎯 Góly: Nad 2,5\n📈 Dôvera: 71%\n💰 Odhadovaný kurz: ~1.41\n💵 Odporúčaná sadzba: 3% bankrollu\n\n` +
+    `💡 Očakávané góly 1,6 : 1,3 - oba tímy strieľajú pravidelne a v posledných 5 vzájomných zápasoch padli v priemere 3 góly.`,
 };
 
 const MAIN_MENU_KEYBOARD = {

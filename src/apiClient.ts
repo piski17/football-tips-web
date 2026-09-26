@@ -223,6 +223,18 @@ export interface TeamExtendedStatsAverages {
   shotsOnGoal: number | null;
   fouls: number | null;
   offsides: number | null;
+  /** Priemerné držanie lopty tímu v % (0–100). */
+  possession: number | null;
+}
+
+/** Hodnota štatistiky z API - číslo, alebo percento ako text ("55%"). */
+function parseStatValue(value: unknown): number | null {
+  if (typeof value === "number") return value;
+  if (typeof value === "string") {
+    const n = parseFloat(value.replace("%", ""));
+    return isFinite(n) ? n : null;
+  }
+  return null;
 }
 
 export async function getTeamExtendedStatsAverages(
@@ -235,7 +247,7 @@ export async function getTeamExtendedStatsAverages(
   const cached = getCached<TeamExtendedStatsAverages>(cacheKey);
   if (cached !== undefined) return cached;
 
-  const empty: TeamExtendedStatsAverages = { corners: null, shotsOnGoal: null, fouls: null, offsides: null };
+  const empty: TeamExtendedStatsAverages = { corners: null, shotsOnGoal: null, fouls: null, offsides: null, possession: null };
 
   try {
     // Tieto štatistiky (na rozdiel od gólov) nemajú sezónny súhrn v API -
@@ -271,6 +283,7 @@ export async function getTeamExtendedStatsAverages(
       shotsOnGoal: "Shots on Goal",
       fouls: "Fouls",
       offsides: "Offsides",
+      possession: "Ball Possession",
     };
 
     const fetchAllStats = () =>
@@ -283,7 +296,7 @@ export async function getTeamExtendedStatsAverages(
           const row: Record<string, number | null> = {};
           for (const [key, apiName] of Object.entries(fieldMap)) {
             const stat = stats.find((s: any) => s.type === apiName);
-            row[key] = typeof stat?.value === "number" ? stat.value : null;
+            row[key] = parseStatValue(stat?.value);
           }
           return row;
         } catch {
@@ -317,6 +330,7 @@ export async function getTeamExtendedStatsAverages(
       shotsOnGoal: average("shotsOnGoal"),
       fouls: average("fouls"),
       offsides: average("offsides"),
+      possession: average("possession"),
     };
 
     setCached(cacheKey, result, TTL_CORNERS_AVERAGE);
@@ -606,6 +620,8 @@ export async function getFixtureCornersAndCards(
   shotsOnGoal: number | null;
   fouls: number | null;
   offsides: number | null;
+  /** Držanie lopty v % podľa názvu tímu (tak, ako ho vracia API). */
+  possession: { team: string; value: number }[] | null;
 }> {
   try {
     const res = await client().get("/fixtures/statistics", { params: { fixture: fixtureId } });
@@ -635,15 +651,23 @@ export async function getFixtureCornersAndCards(
       }
     }
 
+    const possession: { team: string; value: number }[] = [];
+    for (const t of teams) {
+      const stat = (t.statistics ?? []).find((s: any) => s.type === "Ball Possession");
+      const value = parseStatValue(stat?.value);
+      if (value !== null && t.team?.name) possession.push({ team: t.team.name, value });
+    }
+
     return {
       corners: found.corners ? totals.corners : null,
       cards: found.cardsYellow || found.cardsRed ? (totals.cardsYellow ?? 0) + (totals.cardsRed ?? 0) : null,
       shotsOnGoal: found.shotsOnGoal ? totals.shotsOnGoal : null,
       fouls: found.fouls ? totals.fouls : null,
       offsides: found.offsides ? totals.offsides : null,
+      possession: possession.length === 2 ? possession : null,
     };
   } catch {
-    return { corners: null, cards: null, shotsOnGoal: null, fouls: null, offsides: null };
+    return { corners: null, cards: null, shotsOnGoal: null, fouls: null, offsides: null, possession: null };
   }
 }
 

@@ -299,6 +299,14 @@ function confidenceFromMargin(sorted: number[]): "nízka" | "stredná" | "vysok�
   return "nízka";
 }
 
+/** Distribučná funkcia normovaného normálneho rozdelenia (aproximácia, presnosť ~1e-7). */
+function normalCdf(z: number): number {
+  const t = 1 / (1 + 0.2316419 * Math.abs(z));
+  const d = 0.3989423 * Math.exp((-z * z) / 2);
+  const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+  return z > 0 ? 1 - p : p;
+}
+
 export function predictMatch(
   fixture: Fixture,
   homeStats: TeamStatistics,
@@ -321,6 +329,8 @@ export function predictMatch(
     awayFouls?: number | null;
     homeOffsides?: number | null;
     awayOffsides?: number | null;
+    homePossession?: number | null;
+    awayPossession?: number | null;
   }
 ): PredictionResult {
   const xg = expectedGoals(homeStats, awayStats, leagueAvg, homePriorsResult, awayPriorsResult);
@@ -427,7 +437,7 @@ export function predictMatch(
 
 
   // Každý kandidát má aj "kategóriu" - tipy z rovnakej kategórie sú si
-  // navzájom podobné/prekrývajúce sa (napr. Dvojšanca a Výsledok zápasu),
+  // navzájom podobné/prekrývajúce sa (napr. rôzne hranice gólov),
   // takže appka pri výbere viacerých tipov na zápas berie max. 1 z každej
   // kategórie, aby dostal rôznorodý, nie opakujúci sa výber.
   const candidates: MarketPick[] = [];
@@ -520,50 +530,28 @@ export function predictMatch(
     }
   }
 
-  // Dvojšanca - najlepšia z troch kombinácií (1X, X2, 12)
-  const doubleChanceOptions = [
-    { selection: `${fixture.homeTeam.name} alebo remíza`, probability: poisson.doubleChance.oneX },
-    { selection: `${fixture.awayTeam.name} alebo remíza`, probability: poisson.doubleChance.xTwo },
-    { selection: `${fixture.homeTeam.name} alebo ${fixture.awayTeam.name}`, probability: poisson.doubleChance.oneTwo },
-  ].sort((a, b) => b.probability - a.probability)[0];
-  candidates.push({
-    market: "Dvojšanca",
-    selection: doubleChanceOptions.selection,
-    probability: doubleChanceOptions.probability,
-    category: "vysledok", // rovnaká kategória ako Výsledok zápasu - sú si obsahovo blízke
-    explanation: resultExplanation,
-  });
-
-  // Presný výsledok - najpravdepodobnejšie skóre
-  candidates.push({
-    market: "Presný výsledok",
-    selection: `${poisson.correctScore.home}:${poisson.correctScore.away}`,
-    probability: poisson.correctScore.probability,
-    category: "presny_vysledok",
-    explanation: `Najpravdepodobnejšie skóre podľa modelu, vychádzajúce z očakávaných gólov ${xg.home.toFixed(
-      1
-    )}:${xg.away.toFixed(1)}.`,
-  });
-
-  // Čisté konto - ktorý tím s väčšou pravdepodobnosťou neinkasuje
-  const cleanSheetOptions = [
-    { selection: `${fixture.homeTeam.name} neinkasuje`, probability: poisson.homeCleanSheet },
-    { selection: `${fixture.awayTeam.name} neinkasuje`, probability: poisson.awayCleanSheet },
-  ].sort((a, b) => b.probability - a.probability)[0];
-  const cleanSheetExplanation = cleanSheetOptions.selection.startsWith(fixture.homeTeam.name)
-    ? `Očakávané góly ${fixture.awayTeam.name} sú len ${xg.away.toFixed(1)} - ${
-        fixture.homeTeam.name
-      } má slušnú šancu na čisté konto.`
-    : `Očakávané góly ${fixture.homeTeam.name} sú len ${xg.home.toFixed(1)} - ${
-        fixture.awayTeam.name
-      } má slušnú šancu na čisté konto.`;
-  candidates.push({
-    market: "Čisté konto",
-    selection: cleanSheetOptions.selection,
-    probability: cleanSheetOptions.probability,
-    category: "ciste_konto",
-    explanation: cleanSheetExplanation,
-  });
+  // Vyššie držanie lopty - odhad z priemerného držania lopty oboch tímov.
+  // Odhad domácich = priemer (ich držanie, 100 - držanie súpera). Skutočné
+  // držanie v zápase kolíše okolo odhadu približne o ±8 percentuálnych bodov
+  // (smerodajná odchýlka), z toho sa počíta pravdepodobnosť cez normálne rozdelenie.
+  if (extraStatsAvg?.homePossession != null && extraStatsAvg?.awayPossession != null) {
+    const expectedHome = (extraStatsAvg.homePossession + (100 - extraStatsAvg.awayPossession)) / 2;
+    const POSSESSION_SD = 8;
+    const homeHigher = normalCdf((expectedHome - 50) / POSSESSION_SD) * 100;
+    const homeFavoured = homeHigher >= 50;
+    const team = homeFavoured ? fixture.homeTeam.name : fixture.awayTeam.name;
+    candidates.push({
+      market: "Vyššie držanie lopty",
+      selection: team,
+      probability: homeFavoured ? homeHigher : 100 - homeHigher,
+      category: "drzanie_lopty",
+      explanation: `Priemerné držanie lopty: ${fixture.homeTeam.name} ${extraStatsAvg.homePossession.toFixed(
+        0
+      )} %, ${fixture.awayTeam.name} ${extraStatsAvg.awayPossession.toFixed(0)} %. Odhad pre tento zápas ${expectedHome.toFixed(
+        0
+      )}:${(100 - expectedHome).toFixed(0)}.`,
+    });
+  }
 
   const sortedBets = candidates.sort((a, b) => b.probability - a.probability);
 
