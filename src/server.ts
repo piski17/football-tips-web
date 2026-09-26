@@ -17,7 +17,7 @@ import {
 import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS } from "./predictor";
 import { LeaguePreset, SavedTip } from "./types";
 import { saveTip, listTips, updateTip, deleteTip, clearAllTips } from "./tipsStore";
-import { computeTicketStatus, settleBet } from "./tipEvaluator";
+import { computeTicketStatus, settleBet, tipHasStartedMatch, MATCH_STARTED_MESSAGE } from "./tipEvaluator";
 import {
   sendTipToTelegram,
   deleteTelegramMessages,
@@ -239,6 +239,10 @@ app.post("/api/player-goal", async (req, res) => {
 app.post("/api/tips", async (req, res) => {
   try {
     const tip: SavedTip = req.body;
+    if (tipHasStartedMatch(tip)) {
+      res.status(400).json({ error: MATCH_STARTED_MESSAGE });
+      return;
+    }
     await saveTip(tip);
     res.json({ ok: true, telegramAvailable: isTelegramEnabled() });
   } catch (err: any) {

@@ -233,3 +233,15 @@ export async function settleBet(
   );
   return { status, homeGoals: result.homeGoals, awayGoals: result.awayGoals };
 }
+
+/** Zápas (alebo niektorý zápas tiketu) už začal - tip sa nesmie uložiť. */
+export function tipHasStartedMatch(tip: { matchDate: string; legs?: { matchDate: string }[] }): boolean {
+  const dates = tip.legs && tip.legs.length > 0 ? tip.legs.map((l) => l.matchDate) : [tip.matchDate];
+  const now = Date.now();
+  return dates.some((d) => {
+    const t = new Date(d).getTime();
+    return !isNaN(t) && t <= now;
+  });
+}
+
+export const MATCH_STARTED_MESSAGE = "Zápas už začal – tip ani tiket z neho sa už nedá pridať.";

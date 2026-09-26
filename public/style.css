@@ -1236,3 +1236,13 @@ button, input {
   border: 1px solid currentColor;
   white-space: nowrap;
 }
+
+/* ---------- Zápas už začal ---------- */
+.match-locked {
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  font-size: 14px;
+}
