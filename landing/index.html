@@ -292,7 +292,7 @@
     <div id="trackRecordBar" class="track-record-bar">
       <div class="track-record-stat">
         <div class="track-record-value" id="trStatTotal">—</div>
-        <div class="track-record-label">vyhodnotených tipov</div>
+        <div class="track-record-label" id="trTotalLabel">vyhodnotených tipov</div>
       </div>
       <div class="track-record-stat">
         <div class="track-record-value" id="trStatRate">—</div>
@@ -306,7 +306,7 @@
         <div class="track-record-value" id="trStatRoi">—</div>
         <div class="track-record-label">ROI</div>
       </div>
-      <div class="track-record-note" id="trNote">Aktuálne čísla priamo z TipRadaru – tipy sa vyhodnocujú automaticky podľa skutočných výsledkov, nie ručne.</div>
+      <div class="track-record-note" id="trNote">Aktuálne čísla priamo z TipRadaru – každý tip sa vyhodnocuje podľa skutočného výsledku zápasu.</div>
       <div class="track-record-month" id="trMonth" hidden></div>
     </div>
 
@@ -450,6 +450,8 @@
         return;
       }
       $("trStatTotal").textContent = d.totalResolved;
+      const n = d.totalResolved;
+      $("trTotalLabel").textContent = n === 1 ? "vyhodnotený tip" : n >= 2 && n <= 4 ? "vyhodnotené tipy" : "vyhodnotených tipov";
       $("trStatRate").textContent = d.winRate + " %";
       if (typeof d.profit === "number" && d.withOdds > 0) {
         $("trStatProfit").textContent = signed(d.profit, 1);
