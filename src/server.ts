@@ -402,7 +402,38 @@ app.get("/api/public/track-record", async (_req, res) => {
           status: t.status,
         };
       });
-    res.json({ ...summarize(all), month: { key: monthKey, ...summarize(inMonth) }, recent });
+    // Vývoj v čase: po dňoch (keď je dní s tipmi najviac 14), inak po týždňoch (od pondelka).
+    const resolvedAll = all.filter((t) => t.status === "won" || t.status === "lost");
+    const days = Array.from(new Set(resolvedAll.map((t) => tipDayKey(t) ?? "").filter(Boolean))).sort();
+    const byWeek = days.length > 14;
+    const weekStart = (day: string) => {
+      const [y, m, d] = day.split("-").map(Number);
+      const dt = new Date(Date.UTC(y, m - 1, d));
+      const dow = (dt.getUTCDay() + 6) % 7; // pondelok = 0
+      dt.setUTCDate(dt.getUTCDate() - dow);
+      return dt.toISOString().slice(0, 10);
+    };
+    const groups = new Map<string, SavedTip[]>();
+    for (const t of resolvedAll) {
+      const day = tipDayKey(t);
+      if (!day) continue;
+      const key = byWeek ? weekStart(day) : day;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(t);
+    }
+    const timeline = Array.from(groups.entries())
+      .sort((a, b) => (a[0] < b[0] ? -1 : 1))
+      .slice(-12)
+      .map(([key, list]) => {
+        const sm = summarize(list);
+        return { key, won: sm.won, total: sm.totalResolved, rate: sm.winRate, profit: sm.profit, withOdds: sm.withOdds };
+      });
+    res.json({
+      ...summarize(all),
+      month: { key: monthKey, ...summarize(inMonth) },
+      recent,
+      timeline: { unit: byWeek ? "week" : "day", points: timeline },
+    });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }

@@ -145,6 +145,19 @@
   .ui-showcase { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
   .ui-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
   .ui-card-label { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+  .tl-chart { display: flex; align-items: flex-end; gap: 6px; height: 150px; padding-top: 18px; position: relative; }
+  .tl-chart::before { content: ""; position: absolute; left: 0; right: 0; bottom: 50%; border-top: 1px dashed var(--border); }
+  .tl-col { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; cursor: pointer; position: relative; background: none; border: 0; padding: 0; font: inherit; color: inherit; }
+  .tl-bar { width: 100%; max-width: 38px; border-radius: 5px 5px 0 0; background: #57c97a; min-height: 4px; transition: opacity .15s; }
+  .tl-bar.neg { background: #e0685d; } .tl-bar.flat { background: #9c978b; }
+  .tl-col:hover .tl-bar, .tl-col:focus-visible .tl-bar, .tl-col.active .tl-bar { opacity: .75; }
+  .tl-rate { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; white-space: nowrap; }
+  .tl-axis { display: flex; gap: 6px; margin-top: 6px; }
+  .tl-axis span { flex: 1; min-width: 0; text-align: center; font-size: 10.5px; color: var(--text-muted); white-space: nowrap; overflow: hidden; }
+  .tl-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 13px; color: var(--text-muted); padding: 0 10px; }
+  .tl-detail { font-size: 12.5px; color: var(--text-muted); margin-top: 10px; min-height: 1.4em; }
+  .tl-detail strong { color: var(--text); }
+
   .mock-tip { display: flex; gap: 12px; align-items: flex-start; border-left: 3px solid var(--gold); padding: 12px 14px; background: var(--surface-2); border-radius: 6px; }
   .mock-tip-icon { font-size: 18px; }
   .mock-tip-title { font-weight: 600; font-size: 14px; margin-bottom: 3px; }
@@ -353,17 +366,11 @@
         </div>
       </div>
       <div class="ui-card">
-        <div class="ui-card-label">Vývoj úspešnosti v čase</div>
-        <div class="mock-bars">
-          <div class="mock-bar" style="height:40%"></div>
-          <div class="mock-bar" style="height:55%"></div>
-          <div class="mock-bar" style="height:48%"></div>
-          <div class="mock-bar" style="height:70%"></div>
-          <div class="mock-bar" style="height:63%"></div>
-          <div class="mock-bar" style="height:82%"></div>
-          <div class="mock-bar" style="height:75%"></div>
-          <div class="mock-bar" style="height:95%"></div>
+        <div class="ui-card-label" id="tlLabel">Vývoj úspešnosti v čase</div>
+        <div class="tl-chart" id="tlChart" role="img" aria-label="Graf úspešnosti tipov v čase">
+          <div class="tl-empty">Graf sa zobrazí automaticky po prvých vyhodnotených tipoch.</div>
         </div>
+        <div class="tl-detail" id="tlDetail"></div>
       </div>
     </div>
   </section>
@@ -442,6 +449,36 @@
     draw();
     $("recentTips").hidden = false;
   }
+  function renderTimeline(tl) {
+    const pts = (tl && tl.points) || [];
+    if (!pts.length) return;
+    const weekly = tl.unit === "week";
+    $("tlLabel").textContent = weekly ? "Vývoj úspešnosti po týždňoch" : "Vývoj úspešnosti po dňoch";
+    const lab = (key) => { const [y, m, d] = key.split("-").map(Number); return `${d}. ${m}.`; };
+    const cols = pts.map((p, i) => {
+      const h = Math.max(3, p.rate ?? 0);
+      const cls = p.withOdds > 0 ? (p.profit > 0 ? "" : p.profit < 0 ? " neg" : " flat") : " flat";
+      return `<button class="tl-col" data-i="${i}" aria-label="${lab(p.key)}: ${p.won} z ${p.total}"><span class="tl-rate">${p.rate} %</span><span class="tl-bar${cls}" style="height:${h}%"></span></button>`;
+    }).join("");
+    $("tlChart").innerHTML = cols;
+    $("tlChart").insertAdjacentHTML("afterend", `<div class="tl-axis">${pts.map((p) => `<span>${weekly ? "od " : ""}${lab(p.key)}</span>`).join("")}</div>`);
+    const show = (i) => {
+      const p = pts[i];
+      document.querySelectorAll(".tl-col").forEach((c) => c.classList.toggle("active", c.dataset.i === String(i)));
+      const period = weekly ? `Týždeň od ${lab(p.key)}` : lab(p.key);
+      const gen = p.total === 1 ? "tipu" : "tipov";
+      const verb = p.won === 1 ? "vyšiel" : p.won >= 2 && p.won <= 4 ? "vyšli" : "vyšlo";
+      let txt = `<strong>${period}:</strong> ${p.won} z ${p.total} ${gen} ${verb} (${p.rate} %)`;
+      if (p.withOdds > 0) txt += ` · zisk <span style="color:${p.profit > 0 ? "#57c97a" : p.profit < 0 ? "#e0685d" : "inherit"}">${signed(p.profit, 1)} j.</span>`;
+      $("tlDetail").innerHTML = txt;
+    };
+    document.querySelectorAll(".tl-col").forEach((c) => {
+      c.addEventListener("mouseenter", () => show(Number(c.dataset.i)));
+      c.addEventListener("click", () => show(Number(c.dataset.i)));
+      c.addEventListener("focus", () => show(Number(c.dataset.i)));
+    });
+    show(pts.length - 1);
+  }
   fetch("/api/public/track-record", { cache: "no-store" })
     .then((r) => (r.ok ? r.json() : Promise.reject()))
     .then((d) => {
@@ -460,6 +497,7 @@
         color($("trStatRoi"), d.roi);
       }
       renderRecent(d.recent || []);
+      renderTimeline(d.timeline);
       const m = d.month;
       if (m && m.totalResolved > 0) {
         const [y, mo] = String(m.key).split("-").map(Number);
