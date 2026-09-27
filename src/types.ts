@@ -226,6 +226,8 @@ export interface SavedTip {
   odds?: number | null;
   /** Tip (alebo niektorý zápas tiketu) bol vyradený kontrolou kurzu, ale uložený ručne - "mimo filtra". */
   overrideFilter?: boolean;
+  /** Tip doplnený ručne po zápase (s výsledkom) - neprechádza automatickým vyhodnotením. */
+  manualEntry?: boolean;
   savedAt: string; // ISO
   status: "pending" | "won" | "lost" | "void";
   actualHomeGoals?: number | null;

@@ -127,6 +127,7 @@
       <div class="tips-list" id="tipsList"></div>
       <div class="modal-actions">
         <button class="btn-ghost" id="clearAllTipsBtn" style="color: var(--danger); margin-right: auto;">Vymazať všetky tipy</button>
+        <button class="btn-ghost" id="manualTipBtn" title="Zapísať tip na už odohraný zápas aj s výsledkom">➕ Doplniť odohraný tip</button>
         <button class="btn-ghost" id="noTipTodayBtn"><span style="color: var(--danger);">⊘</span> Dnes bez tipu</button>
         <button class="btn-ghost" id="dailyResultsBtn" title="Poslať vyhodnotenie všetkých tipov a tiketov dňa do Telegramu"><span style="color: var(--success);">☑</span> Denné vyhodnotenie</button>
         <button class="btn-ghost" id="weeklyReportBtn"><span style="color: var(--gold);">▤</span> Týždenný report</button>
@@ -155,6 +156,45 @@
       <div class="tips-list" id="subscribersList"></div>
       <div class="modal-actions">
         <button class="btn-ghost" id="closeSubscribersBtn">Zavrieť</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="manualTipModal" hidden>
+    <div class="modal">
+      <h3>Doplniť odohraný tip</h3>
+      <p class="muted small" style="margin: -4px 0 14px;">Pre tipy, ktoré si klientom poslal, ale v TipRadare nie sú uložené. Tip sa uloží rovno s výsledkom a započíta sa do štatistík aj do čísel na prezentačnej stránke.</p>
+      <div class="subscriber-form manual-tip-form">
+        <input type="date" id="mtDate" aria-label="Dátum zápasu" />
+        <input type="time" id="mtTime" aria-label="Čas výkopu (voliteľné)" title="Čas výkopu (voliteľné)" />
+        <input type="text" id="mtHome" placeholder="Domáci, napr. Česko" />
+        <input type="text" id="mtAway" placeholder="Hostia, napr. Chorvátsko" />
+        <select id="mtMarket" aria-label="Trh">
+          <option>Výsledok zápasu</option>
+          <option>Góly</option>
+          <option>Oba tímy skórujú</option>
+          <option>Rohy</option>
+          <option>Karty</option>
+          <option>Strely na bránu</option>
+          <option>Fauly</option>
+          <option>Ofsajdy</option>
+          <option>Vyššie držanie lopty</option>
+          <option>Strelec gólov</option>
+          <option>Tiket</option>
+        </select>
+        <input type="text" id="mtSelection" placeholder="Tip, napr. Áno alebo Nad 2,5" />
+        <input type="text" id="mtOdds" inputmode="decimal" placeholder="Kurz, napr. 1,67" />
+        <input type="text" id="mtProb" inputmode="decimal" placeholder="Dôvera % (voliteľné)" />
+        <select id="mtResult" aria-label="Výsledok">
+          <option value="won">✓ Vyšiel</option>
+          <option value="lost">✗ Nevyšiel</option>
+          <option value="void">↩ Vrátený</option>
+        </select>
+      </div>
+      <div class="muted small" id="mtMsg" style="min-height: 1.4em;"></div>
+      <div class="modal-actions">
+        <button class="btn-ghost" id="mtCloseBtn">Zavrieť</button>
+        <button class="btn-primary" id="mtSaveBtn">Uložiť tip</button>
       </div>
     </div>
   </div>

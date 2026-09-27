@@ -182,6 +182,10 @@ function isOverrideTip(t) {
   return !!t.overrideFilter || (Array.isArray(t.legs) && t.legs.some((l) => l.overrideFilter));
 }
 
+function manualBadge(t) {
+  return t.manualEntry ? ` <span class="override-badge" style="color: var(--text-muted);" title="Tip doplnený ručne po zápase">✍ doplnené ručne</span>` : "";
+}
+
 function overrideBadge(t) {
   return isOverrideTip(t) ? ` <span class="override-badge" title="Vyradené kontrolou kurzu, pridané ručne">⚠️ mimo filtra</span>` : "";
 }
@@ -1271,7 +1275,7 @@ function renderTipsList(tips) {
         <div class="tip-row ${rowClass}" data-row-id="${t.id}" style="align-items: flex-start;">
           <div class="tip-row-info">
             <div class="tip-row-match">🎫 Tiket (${plural(t.legs.length, "tip", "tipy", "tipov")}) <span class="muted small">(${date})</span></div>
-            <div class="tip-row-market">Kombinovaná pravdepodobnosť: ${fmtNum(t.probability, 1)} % · kurz ${tipOddsLabel(t)}${overrideBadge(t)}</div>
+            <div class="tip-row-market">Kombinovaná pravdepodobnosť: ${fmtNum(t.probability, 1)} % · kurz ${tipOddsLabel(t)}${overrideBadge(t)}${manualBadge(t)}</div>
             ${legsHtml}
           </div>
           ${resultIconHtml}
@@ -1288,7 +1292,7 @@ function renderTipsList(tips) {
         <div class="tip-row ${rowClass}" data-row-id="${t.id}">
           <div class="tip-row-info">
             <div class="tip-row-match">${escapeHtml(translateTeamName(t.homeTeam))} — ${escapeHtml(translateTeamName(t.awayTeam))} <span class="muted small">(${date})</span></div>
-            <div class="tip-row-market">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))} · ${t.probability.toFixed(0)} % · kurz ${tipOddsLabel(t)}${overrideBadge(t)}</div>
+            <div class="tip-row-market">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))} · ${t.probability.toFixed(0)} % · kurz ${tipOddsLabel(t)}${overrideBadge(t)}${manualBadge(t)}</div>
           </div>
           ${resultIconHtml}
           ${
@@ -1855,5 +1859,81 @@ function renderDayTips() {
 }
 
 dayTipsBtn.addEventListener("click", () => showDayTips());
+
+
+// ---- Doplnenie odohraného tipu (tip poslaný klientom, ktorý v TipRadare chýba) ----
+const manualTipModal = document.getElementById("manualTipModal");
+const mt = (id) => document.getElementById(id);
+
+document.getElementById("manualTipBtn").addEventListener("click", () => {
+  const today = new Date();
+  today.setDate(today.getDate() - 1);
+  const pad = (n) => String(n).padStart(2, "0");
+  if (!mt("mtDate").value) mt("mtDate").value = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+  mt("mtMsg").textContent = "";
+  manualTipModal.hidden = false;
+});
+document.getElementById("mtCloseBtn").addEventListener("click", () => {
+  manualTipModal.hidden = true;
+  openTipsHistory();
+});
+document.getElementById("mtSaveBtn").addEventListener("click", async () => {
+  const date = mt("mtDate").value;
+  const home = mt("mtHome").value.trim();
+  const away = mt("mtAway").value.trim();
+  const selection = mt("mtSelection").value.trim();
+  const odds = parseFloat(String(mt("mtOdds").value).replace(",", "."));
+  const probInput = parseFloat(String(mt("mtProb").value).replace(",", ".").replace("%", ""));
+  if (!date || !home || !away || !selection) {
+    mt("mtMsg").textContent = "Vyplň dátum, oba tímy a tip.";
+    return;
+  }
+  if (!(odds > 1)) {
+    mt("mtMsg").textContent = "Zadaj kurz väčší ako 1 (napr. 1,67).";
+    return;
+  }
+  const kickoff = new Date(`${date}T${mt("mtTime").value || "12:00"}:00`);
+  if (kickoff.getTime() > Date.now()) {
+    mt("mtMsg").textContent = "Tento formulár je len pre odohrané zápasy. Tipy pred zápasom ukladaj z analýzy zápasu.";
+    return;
+  }
+  const probability = probInput > 0 && probInput <= 100 ? probInput : Math.round(10000 / odds) / 100;
+  const tip = {
+    id: `manual-${Date.now()}`,
+    fixtureId: 0,
+    leagueId: 0,
+    season: kickoff.getFullYear(),
+    leagueName: "",
+    homeTeam: home,
+    awayTeam: away,
+    matchDate: kickoff.toISOString(),
+    market: mt("mtMarket").value,
+    selection,
+    probability,
+    odds: Math.round(odds * 100) / 100,
+    manualEntry: true,
+    savedAt: new Date().toISOString(),
+    status: mt("mtResult").value,
+  };
+  const btn = document.getElementById("mtSaveBtn");
+  btn.disabled = true;
+  try {
+    await fetchJson("/api/tips", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(tip),
+    });
+    mt("mtMsg").textContent = `✓ Uložené: ${home} – ${away}, ${tip.market}: ${selection}. Môžeš pridať ďalší tip.`;
+    mt("mtHome").value = "";
+    mt("mtAway").value = "";
+    mt("mtSelection").value = "";
+    mt("mtOdds").value = "";
+    mt("mtProb").value = "";
+  } catch (err) {
+    mt("mtMsg").textContent = `Uloženie zlyhalo: ${err?.message ?? String(err)}`;
+  } finally {
+    btn.disabled = false;
+  }
+});
 
 init();

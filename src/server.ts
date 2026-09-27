@@ -270,7 +270,9 @@ app.post("/api/player-goal", async (req, res) => {
 app.post("/api/tips", async (req, res) => {
   try {
     const tip: SavedTip = req.body;
-    if (tipHasStartedMatch(tip)) {
+    // Ručne doplnený odohraný tip (už s výsledkom) smie mať dátum v minulosti.
+    const isManualResult = tip.manualEntry === true && ["won", "lost", "void"].includes(tip.status);
+    if (!isManualResult && tipHasStartedMatch(tip)) {
       res.status(400).json({ error: MATCH_STARTED_MESSAGE });
       return;
     }
