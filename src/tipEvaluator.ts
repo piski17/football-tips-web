@@ -1,4 +1,4 @@
-import { TicketLeg } from "./types";
+import { TicketLeg, SavedTip } from "./types";
 import { getFixtureResult, getFixtureCornersAndCards, getFixtureGoalscorerIds } from "./apiClient";
 
 /** Spoločný tvar, ktorý potrebuje vyhodnotenie - vyhovuje mu SavedTip aj TicketLeg. */
@@ -246,3 +246,30 @@ export function tipHasStartedMatch(tip: { matchDate: string; legs?: { matchDate:
 }
 
 export const MATCH_STARTED_MESSAGE = "Zápas už začal – tip ani tiket z neho sa už nedá pridať.";
+
+/** Ručná oprava tipu v histórii (výsledok, kurz, pri tikete výsledky jednotlivých zápasov). */
+export interface TipEdit {
+  status?: "won" | "lost" | "void" | "pending";
+  odds?: number | null;
+  legs?: { status: "won" | "lost" | "void" | "pending" }[];
+}
+
+const EDIT_STATUSES = ["won", "lost", "void", "pending"];
+
+/** Vráti zmeny, ktoré sa majú uložiť k tipu (nový stav tiketu sa vypočíta z jeho zápasov). */
+export function buildTipEdit(tip: SavedTip, edit: TipEdit): Partial<SavedTip> {
+  const patch: Partial<SavedTip> = { edited: true };
+  if (tip.legs && tip.legs.length > 0 && Array.isArray(edit.legs)) {
+    const legs = tip.legs.map((l, i) => {
+      const st = edit.legs![i]?.status;
+      return EDIT_STATUSES.includes(st as string) ? { ...l, status: st as TicketLeg["status"] } : l;
+    });
+    patch.legs = legs;
+    patch.status = computeTicketStatus(legs);
+  } else if (edit.status && EDIT_STATUSES.includes(edit.status)) {
+    patch.status = edit.status;
+  }
+  if (edit.odds === null) patch.odds = null;
+  else if (typeof edit.odds === "number" && isFinite(edit.odds) && edit.odds > 1) patch.odds = Math.round(edit.odds * 100) / 100;
+  return patch;
+}

@@ -186,6 +186,10 @@ function manualBadge(t) {
   return t.manualEntry ? ` <span class="override-badge" style="color: var(--text-muted);" title="Tip doplnený ručne po zápase">✍ doplnené ručne</span>` : "";
 }
 
+function editedBadge(t) {
+  return t.edited ? ` <span class="override-badge" style="color: var(--text-muted);" title="Výsledok alebo kurz bol ručne opravený">✎ upravené</span>` : "";
+}
+
 function overrideBadge(t) {
   return isOverrideTip(t) ? ` <span class="override-badge" title="Vyradené kontrolou kurzu, pridané ručne">⚠️ mimo filtra</span>` : "";
 }
@@ -1290,14 +1294,14 @@ function renderTipsList(tips) {
         <div class="tip-row ${rowClassFull}" data-row-id="${t.id}" style="align-items: flex-start;">
           <div class="tip-row-info">
             <div class="tip-row-match">🎫 Tiket (${plural(t.legs.length, "tip", "tipy", "tipov")}) <span class="muted small">(${date})</span></div>
-            <div class="tip-row-market">Kombinovaná pravdepodobnosť: ${fmtNum(t.probability, 1)} % · kurz ${tipOddsLabel(t)}${overrideBadge(t)}${manualBadge(t)}</div>
+            <div class="tip-row-market">Kombinovaná pravdepodobnosť: ${fmtNum(t.probability, 1)} % · kurz ${tipOddsLabel(t)}${overrideBadge(t)}${manualBadge(t)}${editedBadge(t)}</div>
             ${legsHtml}
           </div>
           ${resultIconHtml}
           ${
             t.status === "pending"
-              ? `<button class="tip-delete-btn" data-send-id="${t.id}" title="Poslať do Telegram kanála" aria-label="Poslať do Telegram kanála"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="display:block"><path fill="currentColor" d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L6.2 13.1 1.3 11.6c-1-.3-1.1-1 .2-1.5L20.6 2.8c.9-.3 1.6.2 1.3 1.5z"/></svg></button><button class="tip-delete-btn" data-motw-id="${t.id}" title="Poslať ako Zápas/Tiket týždňa">★</button>`
-              : `<button class="tip-delete-btn" data-result-id="${t.id}" title="Poslať výsledok do Telegramu">➤</button>`
+              ? `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button><button class="tip-delete-btn" data-send-id="${t.id}" title="Poslať do Telegram kanála" aria-label="Poslať do Telegram kanála"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="display:block"><path fill="currentColor" d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L6.2 13.1 1.3 11.6c-1-.3-1.1-1 .2-1.5L20.6 2.8c.9-.3 1.6.2 1.3 1.5z"/></svg></button><button class="tip-delete-btn" data-motw-id="${t.id}" title="Poslať ako Zápas/Tiket týždňa">★</button>`
+              : `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button><button class="tip-delete-btn" data-result-id="${t.id}" title="Poslať výsledok do Telegramu">➤</button>`
           }
         </div>
       `;
@@ -1307,13 +1311,13 @@ function renderTipsList(tips) {
         <div class="tip-row ${rowClassFull}" data-row-id="${t.id}">
           <div class="tip-row-info">
             <div class="tip-row-match">${escapeHtml(translateTeamName(t.homeTeam))} — ${escapeHtml(translateTeamName(t.awayTeam))} <span class="muted small">(${date})</span></div>
-            <div class="tip-row-market">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))} · ${t.probability.toFixed(0)} % · kurz ${tipOddsLabel(t)}${overrideBadge(t)}${manualBadge(t)}</div>
+            <div class="tip-row-market">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))} · ${t.probability.toFixed(0)} % · kurz ${tipOddsLabel(t)}${overrideBadge(t)}${manualBadge(t)}${editedBadge(t)}</div>
           </div>
           ${resultIconHtml}
           ${
             t.status === "pending"
-              ? `<button class="tip-delete-btn" data-send-id="${t.id}" title="Poslať do Telegram kanála" aria-label="Poslať do Telegram kanála"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="display:block"><path fill="currentColor" d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L6.2 13.1 1.3 11.6c-1-.3-1.1-1 .2-1.5L20.6 2.8c.9-.3 1.6.2 1.3 1.5z"/></svg></button><button class="tip-delete-btn" data-motw-id="${t.id}" title="Poslať ako Zápas/Tiket týždňa">★</button>`
-              : `<button class="tip-delete-btn" data-result-id="${t.id}" title="Poslať výsledok do Telegramu">➤</button>`
+              ? `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button><button class="tip-delete-btn" data-send-id="${t.id}" title="Poslať do Telegram kanála" aria-label="Poslať do Telegram kanála"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="display:block"><path fill="currentColor" d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L6.2 13.1 1.3 11.6c-1-.3-1.1-1 .2-1.5L20.6 2.8c.9-.3 1.6.2 1.3 1.5z"/></svg></button><button class="tip-delete-btn" data-motw-id="${t.id}" title="Poslať ako Zápas/Tiket týždňa">★</button>`
+              : `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button><button class="tip-delete-btn" data-result-id="${t.id}" title="Poslať výsledok do Telegramu">➤</button>`
           }
         </div>
       `;
@@ -1321,6 +1325,14 @@ function renderTipsList(tips) {
     .join("");
 
   wireArchivedToggle();
+
+  tipsListEl.querySelectorAll("[data-edit-id]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const tip = currentHistoryTips.find((x) => x.id === btn.dataset.editId);
+      if (tip) openEditTip(tip);
+    });
+  });
 
   tipsListEl.querySelectorAll("[data-row-id]").forEach((row) => {
     row.addEventListener("click", async (e) => {
@@ -2015,5 +2027,109 @@ async function archiveAllResolved() {
 }
 
 document.getElementById("archiveResolvedBtn").addEventListener("click", () => archiveAllResolved());
+
+
+// ---- Oprava tipu v histórii (výsledok, kurz, pri tikete výsledky zápasov) ----
+const STATUS_OPTIONS = [
+  ["won", "✓ Vyšiel"],
+  ["lost", "✗ Nevyšiel"],
+  ["void", "↩ Vrátený"],
+  ["pending", "⏳ Čaká"],
+];
+function statusSelect(id, value) {
+  return `<select id="${id}" class="edit-select">${STATUS_OPTIONS.map(
+    ([v, l]) => `<option value="${v}"${v === value ? " selected" : ""}>${l}</option>`
+  ).join("")}</select>`;
+}
+function ticketStatusFrom(statuses) {
+  if (statuses.includes("lost")) return "lost";
+  if (statuses.includes("pending")) return "pending";
+  if (statuses.every((x) => x === "void")) return "void";
+  return "won";
+}
+const STATUS_TEXT = { won: "✓ Vyšiel", lost: "✗ Nevyšiel", void: "↩ Vrátený", pending: "⏳ Čaká" };
+
+function openEditTip(tip) {
+  let overlay = document.getElementById("editTipModal");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.id = "editTipModal";
+    document.body.appendChild(overlay);
+  }
+  const isTicket = Array.isArray(tip.legs) && tip.legs.length > 0;
+  const title = isTicket
+    ? `🎫 Tiket (${plural(tip.legs.length, "zápas", "zápasy", "zápasov")})`
+    : `${escapeHtml(translateTeamName(tip.homeTeam))} — ${escapeHtml(translateTeamName(tip.awayTeam))}`;
+  const legsHtml = isTicket
+    ? tip.legs
+        .map(
+          (l, i) => `<div class="edit-leg">
+            <div class="edit-leg-name">${escapeHtml(translateTeamName(l.homeTeam))} — ${escapeHtml(translateTeamName(l.awayTeam))}<br><span class="muted small">${escapeHtml(
+              l.market
+            )}: ${escapeHtml(translateNamesInText(l.selection, l.homeTeam, l.awayTeam))}</span></div>
+            ${statusSelect("editLeg" + i, l.status)}
+          </div>`
+        )
+        .join("")
+    : "";
+  overlay.innerHTML = `
+    <div class="modal">
+      <h3>Upraviť tip</h3>
+      <p class="muted small" style="margin:-4px 0 12px;">${title}${
+        isTicket ? "" : `<br>${escapeHtml(tip.market)}: ${escapeHtml(translateNamesInText(tip.selection, tip.homeTeam, tip.awayTeam))}`
+      }</p>
+      ${
+        isTicket
+          ? `<div class="edit-legs">${legsHtml}</div>
+             <p class="small" style="margin:10px 0 0;">Výsledok tiketu: <strong id="editTicketStatus"></strong> <span class="muted">(vypočíta sa zo zápasov)</span></p>`
+          : `<label class="edit-row">Výsledok ${statusSelect("editStatus", tip.status)}</label>`
+      }
+      <label class="edit-row">Kurz <input type="text" id="editOdds" inputmode="decimal" value="${
+        typeof tip.odds === "number" && tip.odds > 1 ? String(tip.odds).replace(".", ",") : ""
+      }" placeholder="napr. 1,75" /></label>
+      <p class="muted small" id="editMsg" style="min-height:1.4em;"></p>
+      <div class="modal-actions">
+        <button class="btn-ghost" id="editCancelBtn">Zrušiť</button>
+        <button class="btn-primary" id="editSaveBtn">Uložiť opravu</button>
+      </div>
+    </div>`;
+  overlay.hidden = false;
+  const $e = (id) => document.getElementById(id);
+  const legStatuses = () => (isTicket ? tip.legs.map((_, i) => $e("editLeg" + i).value) : []);
+  const refreshTicket = () => {
+    if (isTicket) $e("editTicketStatus").textContent = STATUS_TEXT[ticketStatusFrom(legStatuses())];
+  };
+  if (isTicket) tip.legs.forEach((_, i) => $e("editLeg" + i).addEventListener("change", refreshTicket));
+  refreshTicket();
+  $e("editCancelBtn").onclick = () => {
+    overlay.hidden = true;
+  };
+  $e("editSaveBtn").onclick = async () => {
+    const oddsText = String($e("editOdds").value).trim().replace(",", ".");
+    const odds = oddsText === "" ? null : parseFloat(oddsText);
+    if (odds !== null && !(odds > 1)) {
+      $e("editMsg").textContent = "Kurz musí byť číslo väčšie ako 1 (napr. 1,75), alebo nechaj políčko prázdne.";
+      return;
+    }
+    const edit = { odds };
+    if (isTicket) edit.legs = legStatuses().map((status) => ({ status }));
+    else edit.status = $e("editStatus").value;
+    $e("editSaveBtn").disabled = true;
+    try {
+      await fetchJson(`/api/tips/${encodeURIComponent(tip.id)}/edit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(edit),
+      });
+      overlay.hidden = true;
+      showToast("Tip upravený.");
+      openTipsHistory();
+    } catch (err) {
+      $e("editMsg").textContent = `Uloženie zlyhalo: ${err?.message ?? String(err)}`;
+      $e("editSaveBtn").disabled = false;
+    }
+  };
+}
 
 init();

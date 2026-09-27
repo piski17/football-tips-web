@@ -1301,3 +1301,20 @@ button:disabled:hover {
 .archived-bar { font-size: 13px; color: var(--text-muted); margin: 0 0 10px; }
 .link-btn { background: none; border: 0; padding: 0; color: var(--gold); font: inherit; cursor: pointer; text-decoration: underline; }
 .tip-row.is-archived { opacity: 0.55; }
+
+/* ---------- Oprava tipu ---------- */
+.edit-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 10px 0; font-size: 14px; }
+.edit-row input, .edit-select { max-width: 180px; }
+.edit-legs { display: flex; flex-direction: column; gap: 8px; }
+.edit-leg { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--border); font-size: 14px; }
+.edit-leg-name { min-width: 0; }
+.edit-select,
+.edit-row input {
+  background: var(--bg, #0b0e0c);
+  color: var(--text, #f3f1ea);
+  border: 1px solid var(--border, rgba(255,255,255,0.12));
+  border-radius: 8px;
+  padding: 7px 10px;
+  font: inherit;
+  font-size: 14px;
+}

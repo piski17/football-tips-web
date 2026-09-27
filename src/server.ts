@@ -18,7 +18,7 @@ import {
 import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS } from "./predictor";
 import { LeaguePreset, SavedTip } from "./types";
 import { saveTip, listTips, updateTip, deleteTip, clearAllTips } from "./tipsStore";
-import { computeTicketStatus, settleBet, tipHasStartedMatch, MATCH_STARTED_MESSAGE } from "./tipEvaluator";
+import { computeTicketStatus, settleBet, tipHasStartedMatch, MATCH_STARTED_MESSAGE, buildTipEdit } from "./tipEvaluator";
 import {
   sendTipToTelegram,
   deleteTelegramMessages,
@@ -627,6 +627,21 @@ app.get("/api/telegram/setup-webhook", async (req, res) => {
     res.send(`Hotovo! Webhook nastavený na: ${webhookUrl}`);
   } catch (err: any) {
     res.status(502).send(`Nastavenie webhooku zlyhalo: ${err.message ?? String(err)}`);
+  }
+});
+
+// Ručná oprava tipu (výsledok, kurz, pri tikete výsledky zápasov).
+app.post("/api/tips/:id/edit", async (req, res) => {
+  try {
+    const tip = (await listTips()).find((t) => t.id === req.params.id);
+    if (!tip) {
+      res.status(404).json({ error: "Tip sa nenašiel." });
+      return;
+    }
+    await updateTip(tip.id, buildTipEdit(tip, req.body ?? {}));
+    res.json({ ok: true });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
   }
 });
 
