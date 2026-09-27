@@ -173,7 +173,11 @@
   .row .b { color: var(--muted); font-size: 13.5px; }
   .row .o { font-family: var(--display); font-weight: 700; color: var(--gold); text-align: right; }
   .row .o small { display: block; font-family: var(--body); font-weight: 400; color: var(--muted); font-size: 12px; }
-  .more { margin-top: 14px; }
+  .pager { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .pg-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: var(--chalk); font: 600 20px/1 var(--body); cursor: pointer; display: grid; place-items: center; }
+  .pg-btn:hover:not(:disabled) { border-color: var(--muted); }
+  .pg-btn:disabled { opacity: .3; cursor: default; }
+  .pg-info { color: var(--muted); font-size: 14px; }
   @media (max-width: 900px) { .results { grid-template-columns: minmax(0, 1fr); } }
 
   /* ---------- Predplatné ---------- */
@@ -337,7 +341,11 @@
             <button class="chip" data-f="lost" aria-pressed="false">Nevyšli</button>
           </div>
           <div class="list" id="list"><p class="empty">Zatiaľ tu nie sú žiadne vyhodnotené tipy.</p></div>
-          <button class="btn btn-line more" id="more" hidden>Zobraziť ďalšie</button>
+          <div class="pager" id="pager" hidden>
+            <button class="pg-btn" id="pgPrev" aria-label="Novšie tipy">‹</button>
+            <span class="pg-info num" id="pgInfo" aria-live="polite"></span>
+            <button class="pg-btn" id="pgNext" aria-label="Staršie tipy">›</button>
+          </div>
         </div>
       </div>
     </div>
@@ -596,26 +604,34 @@
   }
 
   // ---------- Zoznam tipov s filtrom ----------
-  let recentAll = [], filter = "all", shown = 8;
+  // 5 tipov na stranu, šípkami sa listuje na staršie
+  const PER_PAGE = 5;
+  let recentAll = [], filter = "all", page = 0;
   function drawList() {
     const list = recentAll.filter((r) => filter === "all" || r.status === filter);
     if (!list.length) {
       $("list").innerHTML = `<p class="empty">${recentAll.length ? "V tomto filtri zatiaľ nie sú žiadne tipy." : "Zatiaľ tu nie sú žiadne vyhodnotené tipy."}</p>`;
-      $("more").hidden = true; return;
+      $("pager").hidden = true; return;
     }
+    const pages = Math.ceil(list.length / PER_PAGE);
+    page = Math.min(page, pages - 1);
     const icon = { won: "✓", lost: "✕", void: "↺" };
-    $("list").innerHTML = list.slice(0, shown).map((r) => `
+    $("list").innerHTML = list.slice(page * PER_PAGE, page * PER_PAGE + PER_PAGE).map((r) => `
       <div class="row"><span class="mark ${esc(r.status)}" aria-label="${RES[r.status] || ""}">${icon[r.status] || ""}</span>
         <div><div class="m">${esc(r.match)}</div><div class="b">${esc(r.bet)}</div></div>
         <div class="o num">${r.odds ? fmt(r.odds, 2) : ""}<small>${dayLabel(r.day)}</small></div></div>`).join("");
-    $("more").hidden = list.length <= shown;
+    $("pager").hidden = pages <= 1;
+    $("pgInfo").textContent = `${page + 1} / ${pages}`;
+    $("pgPrev").disabled = page === 0;
+    $("pgNext").disabled = page >= pages - 1;
   }
   document.querySelectorAll(".filters .chip").forEach((c) => c.addEventListener("click", () => {
-    filter = c.dataset.f; shown = 8;
+    filter = c.dataset.f; page = 0;
     document.querySelectorAll(".filters .chip").forEach((x) => x.setAttribute("aria-pressed", String(x === c)));
     drawList();
   }));
-  $("more").addEventListener("click", () => { shown += 12; drawList(); });
+  $("pgPrev").addEventListener("click", () => { if (page > 0) { page--; drawList(); } });
+  $("pgNext").addEventListener("click", () => { page++; drawList(); });
 
   // ---------- Dáta z TipRadaru (len na čítanie) ----------
   fetch("/api/public/track-record", { cache: "no-store" })

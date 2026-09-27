@@ -1362,3 +1362,9 @@ input, select, textarea { accent-color: var(--accent); }
 .fixture-row .time strong { font-size: 15px; font-weight: 700; color: var(--gold); font-variant-numeric: tabular-nums; }
 .fixture-row .time span { font-family: var(--font-body); font-size: 11.5px; color: var(--text-muted); }
 .fixture-row .time.live { width: 50px; }
+
+/* Prázdny stav analýzy: radar ako na prezentácii */
+.empty-radar { width: 150px; height: 150px; display: block; margin: 0 auto 18px; }
+.empty-sweep { transform-origin: 120px 120px; animation: emptySweep 6s linear infinite; }
+@keyframes emptySweep { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .empty-sweep { animation: none; } }
