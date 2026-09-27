@@ -353,6 +353,12 @@ const FAQ_ANSWERS: Record<string, string> = {
   faq_how:
     `❓ <b>Ako to funguje</b>\n\n` +
     `TipRadar denne prepočíta desiatky zápasov cez vlastný štatistický model (Poissonovo rozdelenie gólov, vážená forma, vzájomné zápasy, historické dáta) a vyberie 2 – 3 najhodnotnejšie tipy naprieč 10 trhmi (výsledok, góly, oba tímy skórujú, rohy, karty, strely na bránu, fauly, ofsajdy, držanie lopty, strelci) — s vysvetlením, prečo.`,
+  faq_time:
+    `🕒 <b>Kedy prídu tipy</b>\n\n` +
+    `Tipy posielame v deň zápasu, <b>2 – 3 hodiny pred výkopom</b> – vtedy sú kurzy aj dáta najpresnejšie a zostane dosť času na stávku.\n\n` +
+    `Pri večerných zápasoch (18:00 – 21:00) prídu tipy zvyčajne medzi <b>15:00 a 16:00</b>, pri skorších zápasoch primerane skôr.\n\n` +
+    `📋 Večer, keď sa zápasy dohrajú, pošleme <b>vyhodnotenie dňa</b> – vrátane tipov, ktoré nevyšli.\n\n` +
+    `Ak sa pred zápasom stane niečo dôležité (napr. v zostave chýba kľúčový hráč), dáme vedieť.`,
   faq_sample:
     `📊 <b>Ukážka tipu</b>\n\n` +
     `🎯 Góly: Nad 2,5\n📈 Dôvera: 71 %\n💰 Kurz: 1,75\n💵 Odporúčaná sadzba: 3 % bankrollu\n\n` +
@@ -364,6 +370,7 @@ const MAIN_MENU_KEYBOARD = {
     [{ text: "💰 Cenník", callback_data: "faq_price" }],
     [{ text: "❓ Ako to funguje", callback_data: "faq_how" }],
     [{ text: "📊 Ukážka tipu", callback_data: "faq_sample" }],
+    [{ text: "🕒 Kedy prídu tipy", callback_data: "faq_time" }],
     [{ text: "✍️ Napísať priamo", url: `https://t.me/${TELEGRAM_CONTACT_USERNAME}` }],
   ],
 };

@@ -1682,7 +1682,8 @@ async function showDayTips() {
   };
   progress();
   const queue = fixtures.slice();
-  // Dva zápasy naraz - rýchlejšie, a zároveň šetrne k limitu API.
+  // Zápasy analyzujeme jeden po druhom - šetrne k limitu požiadaviek API,
+  // aby boli výsledky pri každom načítaní rovnaké a úplné.
   const worker = async () => {
     while (queue.length > 0) {
       const f = queue.shift();
@@ -1701,7 +1702,7 @@ async function showDayTips() {
     }
   };
   try {
-    await Promise.all([worker(), worker()]);
+    await worker();
     items.sort((a, b) => b.bet.probability - a.bet.probability);
     dayTipsItems = items;
     dayTipsInfo = { analyzed: fixtures.length, failed };

@@ -29,9 +29,32 @@ function client(): AxiosInstance {
   // Automaticky zopakuje požiadavku pri krátkodobom výpadku siete alebo
   // limite požiadaviek (HTTP 429) - zabraňuje tomu, aby jedna náhodne zlyhaná
   // požiadavka spôsobila nekonzistentné výsledky medzi opakovanými analýzami.
+  // API-Football pri prekročení limitu požiadaviek odpovie "úspešne" (HTTP 200),
+  // ale s chybou "Too many requests" v tele odpovede. Takú odpoveď premeníme
+  // na chybu 429, aby sa požiadavka po chvíli zopakovala - inak by appka
+  // považovala chýbajúce dáta (kurzy, štatistiky) za skutočne prázdne.
+  instance.interceptors.response.use((res: any) => {
+    const errors = res.data?.errors;
+    const messages: string[] = !errors
+      ? []
+      : Array.isArray(errors)
+      ? errors.map(String)
+      : Object.entries(errors).map(([k, v]) => `${k}: ${String(v)}`);
+    if (messages.some((m) => /rate|too many|limit/i.test(m))) {
+      const err: any = new Error("Prekročený limit požiadaviek API: " + messages.join(" | "));
+      err.config = res.config;
+      err.response = { ...res, status: 429 };
+      err.isAxiosError = true;
+      return Promise.reject(err);
+    }
+    return res;
+  });
+
   axiosRetry(instance, {
-    retries: 5,
-    retryDelay: axiosRetry.exponentialDelay,
+    retries: 6,
+    // Pri limite požiadaviek čakáme dlhšie (1,5 s, 3 s, 4,5 s …), inak krátko.
+    retryDelay: (retryCount: number, error: any) =>
+      error?.response?.status === 429 ? retryCount * 1500 + Math.random() * 500 : axiosRetry.exponentialDelay(retryCount),
     retryCondition: (error) =>
       axiosRetry.isNetworkOrIdempotentRequestError(error) || error.response?.status === 429,
   });
@@ -295,6 +318,7 @@ export async function getTeamExtendedStatsAverages(
           const statsRes = await client().get("/fixtures/statistics", {
             params: { fixture: f.fixture.id, team: teamId },
           });
+          checkApiErrors(statsRes.data);
           const stats: any[] = statsRes.data?.response?.[0]?.statistics ?? [];
           const row: Record<string, number | null> = {};
           for (const [key, apiName] of Object.entries(fieldMap)) {
@@ -319,7 +343,8 @@ export async function getTeamExtendedStatsAverages(
     }
 
     if (valid.length === 0) {
-      setCached(cacheKey, empty, TTL_CORNERS_AVERAGE);
+      // Nič sa nepodarilo stiahnuť (napr. výpadok API) - NEukladáme si to,
+      // aby sa pri ďalšej analýze skúsilo znova.
       return empty;
     }
 
