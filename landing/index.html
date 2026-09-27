@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>TipRadar — štatisticky podložené futbalové tipy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0a0a0b;
+    --surface: #131315;
+    --surface-2: #1c1c1f;
+    --border: #2a2a2e;
+    --gold: #c9a04d;
+    --gold-bright: #e8c766;
+    --pitch: #3fa65c;
+    --text: #f2f0ea;
+    --text-muted: #99938a;
+    --font-display: "Space Grotesk", Arial, sans-serif;
+    --font-body: "Inter", -apple-system, sans-serif;
+  }
+  :root:not([data-theme="light"]) { color-scheme: dark; }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #f4f2ec;
+      --surface: #ffffff;
+      --surface-2: #ece8dd;
+      --border: #ddd6c4;
+      --text: #17140d;
+      --text-muted: #6b6152;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f2ec;
+    --surface: #ffffff;
+    --surface-2: #ece8dd;
+    --border: #ddd6c4;
+    --text: #17140d;
+    --text-muted: #6b6152;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    line-height: 1.6;
+  }
+  img, svg { max-width: 100%; }
+
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 28px; }
+
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 22px 0; }
+  .brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 700; font-size: 19px; }
+  .brand-mark { width: 26px; height: 26px; flex-shrink: 0; }
+  .topbar a { color: var(--text-muted); text-decoration: none; font-size: 13.5px; border: 1px solid var(--border); padding: 8px 16px; border-radius: 100px; }
+
+  .hero { padding: 56px 0 66px; display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 48px; align-items: center; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--gold-bright);
+    border: 1px solid rgba(201, 160, 77, 0.4); background: rgba(201, 160, 77, 0.08);
+    padding: 6px 13px; border-radius: 100px; margin-bottom: 22px;
+  }
+  .badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--gold-bright); }
+  h1 { font-family: var(--font-display); font-size: clamp(32px, 4.6vw, 48px); line-height: 1.1; margin: 0 0 20px; max-width: 13ch; }
+  .hero-sub { font-size: 16.5px; color: var(--text-muted); max-width: 48ch; margin: 0 0 30px; }
+  .hero-facts { display: flex; gap: 30px; flex-wrap: wrap; }
+  .hero-fact strong { display: block; font-family: var(--font-display); font-size: 25px; color: var(--gold-bright); }
+  .hero-fact span { font-size: 12.5px; color: var(--text-muted); }
+  .hero-visual { display: flex; justify-content: center; }
+  .radar-illustration { width: min(320px, 90%); }
+
+  section { padding: 58px 0; border-top: 1px solid var(--border); }
+  .section-kicker { color: var(--gold); font-size: 13.5px; margin-bottom: 10px; }
+  h2 { font-family: var(--font-display); font-size: clamp(23px, 3.2vw, 30px); margin: 0 0 16px; max-width: 26ch; }
+  .section-lede { color: var(--text-muted); max-width: 62ch; font-size: 15.5px; margin-bottom: 36px; }
+
+  .paths { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .path { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 30px; display: flex; flex-direction: column; }
+  .path.emphasis { border-color: rgba(201, 160, 77, 0.5); }
+  .path-tag { font-size: 12px; color: var(--gold-bright); margin-bottom: 10px; }
+  .path h3 { font-family: var(--font-display); font-size: 21px; margin: 0 0 10px; }
+  .path p { color: var(--text-muted); font-size: 14px; margin: 0 0 20px; }
+  .path-list { list-style: none; margin: 0 0 24px; padding: 0; flex: 1; }
+  .path-list li { font-size: 13.5px; color: var(--text-muted); padding: 8px 0 8px 20px; border-bottom: 1px solid var(--border); position: relative; }
+  .path-list li::before { content: ""; position: absolute; left: 0; top: 15px; width: 5px; height: 5px; border-radius: 50%; background: var(--gold); }
+  .path-list li:last-child { border-bottom: none; }
+  .path-price { display: flex; align-items: baseline; gap: 6px; margin-bottom: 8px; }
+  .path-price strong { font-family: var(--font-display); font-size: 30px; color: var(--text); }
+  .path-price span { font-size: 13px; color: var(--text-muted); }
+  .path-note { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; }
+  .path-note.highlight { color: var(--gold-bright); }
+
+  .trust-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); }
+
+  .track-record-bar {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 28px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .track-record-stat { text-align: left; }
+  .track-record-value {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--gold-bright);
+  }
+  .track-record-label { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
+  .track-record-note { font-size: 12px; color: var(--text-muted); margin-left: auto; max-width: 260px; }
+  .track-record-value.pos { color: #57c97a; }
+  .track-record-value.neg { color: #e0685d; }
+  .track-record-month { flex-basis: 100%; font-size: 13px; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 14px; }
+  .track-record-month strong { color: var(--text); font-weight: 600; }
+  .track-record-month .pos { color: #57c97a; } .track-record-month .neg { color: #e0685d; }
+  @media (max-width: 640px) { .track-record-bar { gap: 20px 28px; } .track-record-note { margin-left: 0; max-width: none; } }
+  .trust-item { background: var(--surface); padding: 26px; }
+  .trust-item h3 { font-family: var(--font-display); font-size: 16px; margin: 0 0 8px; }
+  .trust-item p { color: var(--text-muted); font-size: 13.5px; margin: 0; }
+
+  .ui-showcase { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .ui-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+  .ui-card-label { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+  .mock-tip { display: flex; gap: 12px; align-items: flex-start; border-left: 3px solid var(--gold); padding: 12px 14px; background: var(--surface-2); border-radius: 6px; }
+  .mock-tip-icon { font-size: 18px; }
+  .mock-tip-title { font-weight: 600; font-size: 14px; margin-bottom: 3px; }
+  .mock-tip-meta { font-size: 12px; color: var(--text-muted); }
+  .mock-tip-explain { font-size: 12px; color: var(--text-muted); font-style: italic; margin-top: 8px; line-height: 1.5; }
+  .mock-bars { display: flex; align-items: flex-end; gap: 3px; height: 56px; margin-top: 14px; }
+  .mock-bar { flex: 1; background: var(--gold-bright); border-radius: 2px; }
+
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .steps-model { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+  .step { border-top: 2px solid var(--gold); padding-top: 16px; }
+  .step h3 { font-family: var(--font-display); font-size: 16px; margin: 0 0 8px; }
+  .step p { color: var(--text-muted); font-size: 13.5px; margin: 0; }
+
+  .offer { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 40px; text-align: center; }
+  .offer h2 { max-width: none; }
+  .contact-line { font-family: var(--font-display); font-size: 20px; color: var(--gold-bright); margin-top: 20px; }
+  .disclaimer { font-size: 12px; color: var(--text-muted); max-width: 68ch; margin: 20px auto 0; }
+
+  footer { padding: 30px 0 40px; color: var(--text-muted); font-size: 12.5px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+
+  @media (max-width: 760px) {
+    .hero { grid-template-columns: 1fr; padding-top: 24px; }
+    .hero-visual { order: -1; }
+    .paths, .trust-grid, .ui-showcase, .steps, .steps-model { grid-template-columns: 1fr; }
+    .offer { padding: 28px 22px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="100" cy="100" r="94" fill="#12211a"/>
+        <circle cx="100" cy="100" r="94" fill="none" stroke="#c9a04d" stroke-width="6"/>
+        <circle cx="100" cy="100" r="60" fill="none" stroke="#3fa65c" stroke-width="3"/>
+        <circle cx="100" cy="100" r="4" fill="#e8c766"/>
+      </svg>
+      TipRadar
+    </div>
+    <a href="#predplatne">Predplatné</a>
+  </header>
+
+  <section class="hero" style="border-top:none;">
+    <div>
+      <div class="badge">Štatistický model, nie odhad od oka</div>
+      <h1>Futbalové tipy podložené číslami, nie pocitmi</h1>
+      <p class="hero-sub">
+        TipRadar denne prepočíta desiatky zápasov cez vlastný
+        pravdepodobnostný model a vyberie tie stávky, ktoré majú
+        skutočnú štatistickú hodnotu — s presným vysvetlením, prečo.
+        K dispozícii ako osobné predplatné, alebo ako zdroj tipov pre
+        vašu stávkovú skupinu.
+      </p>
+      <div class="hero-facts">
+        <div class="hero-fact"><strong>10</strong><span>sledovaných typov stávok</span></div>
+        <div class="hero-fact"><strong>2–3</strong><span>odporúčané tipy na zápas</span></div>
+        <div class="hero-fact"><strong>100%</strong><span>vyhodnotená história, bez výnimiek</span></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <svg class="radar-illustration" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="120" cy="120" r="112" fill="#12211a"/>
+        <circle cx="120" cy="120" r="112" fill="none" stroke="#c9a04d" stroke-width="4.5"/>
+        <circle cx="120" cy="120" r="82" fill="none" stroke="#3fa65c" stroke-width="2.5"/>
+        <circle cx="120" cy="120" r="47" fill="none" stroke="#57c97a" stroke-width="3"/>
+        <path d="M 120 120 L 120 14 A 106 106 0 0 1 197 61 Z" fill="#57c97a" fill-opacity="0.45"/>
+        <line x1="120" y1="120" x2="197" y2="61" stroke="#57c97a" stroke-width="4.5" stroke-linecap="round"/>
+        <circle cx="120" cy="120" r="5" fill="#e8c766"/>
+        <circle cx="181" cy="82" r="33" fill="none" stroke="#e8c766" stroke-width="3"/>
+        <circle cx="181" cy="82" r="24" fill="#f1f5f1" stroke="#0f1b14" stroke-width="1.5"/>
+        <path d="M 181 70 L 190.7 76.9 L 187.2 88.3 L 174.8 88.3 L 171.3 76.9 Z" fill="#0f1b14"/>
+      </svg>
+    </div>
+  </section>
+
+  <section id="predplatne">
+    <div class="section-kicker">Predplatné</div>
+    <h2>Dva spôsoby prístupu k rovnakému modelu</h2>
+    <p class="section-lede">
+      Vyberte si podľa toho, či tipy chcete využívať sami, alebo ich
+      posúvať ďalej vlastným klientom pod svojou značkou.
+    </p>
+
+    <div class="paths">
+      <div class="path">
+        <div class="path-tag">Pre jednotlivcov</div>
+        <h3>PREMIUM</h3>
+        <p>Denný prístup ku všetkým odporúčaným tipom, s vysvetlením a úplnou históriou úspešnosti.</p>
+        <ul class="path-list">
+          <li>Tipy zo všetkých sledovaných líg každý deň</li>
+          <li>Vysvetlenie ku každému tipu — forma, vzájomné zápasy, štatistiky</li>
+          <li>Vlastný tiket a bankroll simulátor</li>
+          <li>Prístup z aplikácie aj z telefónu</li>
+        </ul>
+        <div class="path-price"><strong>29 €</strong><span>/ mesiac</span></div>
+        <div class="path-note highlight">Menej než 1 € na deň.</div>
+        <div class="path-note">Kedykoľvek zrušiteľné, bez viazanosti.</div>
+      </div>
+
+      <div class="path emphasis">
+        <div class="path-tag">Pre stávkové skupiny a kanály</div>
+        <h3>VIP</h3>
+        <p>Prístup k tipom priamo od zdroja, ktoré posuniete svojim vlastným členom pod vlastnou značkou.</p>
+        <ul class="path-list">
+          <li>Rovnaké tipy ako v osobnom predplatnom, bez obmedzenia počtu vašich klientov</li>
+          <li>Skorší prístup pred zverejnením pre bežných predplatiteľov</li>
+          <li>Priama konzultácia — doladenie líg a trhov podľa potrieb skupiny</li>
+        </ul>
+        <div class="path-price"><strong>99 €</strong><span>/ mesiac</span></div>
+        <div class="path-note">Neobmedzený počet vašich vlastných klientov.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-kicker">Žiadne tajomstvá, žiadne "dôveruj mi"</div>
+    <h2>Ako presne TipRadar pracuje</h2>
+    <div class="steps-model">
+      <div class="step">
+        <h3>1. Zbierame dáta</h3>
+        <p>Štatistiky zápasov, forma tímov aj vzájomné súboje, z každej sledovanej ligy.</p>
+      </div>
+      <div class="step">
+        <h3>2. Štatistický model</h3>
+        <p>Poissonovo rozdelenie gólov, vážená forma a historické dáta — nie odhad od oka.</p>
+      </div>
+      <div class="step">
+        <h3>3. Vyberieme tip</h3>
+        <p>Len stávky s reálnou hodnotou, naprieč 10 rôznymi trhmi.</p>
+      </div>
+      <div class="step">
+        <h3>4. Transparentná história</h3>
+        <p>Každý tip aj jeho výsledok — vrátane tých, čo nevyšli.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-kicker">Prečo veriť týmto číslam</div>
+    <h2>Transparentnosť namiesto sľubov</h2>
+
+    <div id="trackRecordBar" class="track-record-bar">
+      <div class="track-record-stat">
+        <div class="track-record-value" id="trStatTotal">—</div>
+        <div class="track-record-label">vyhodnotených tipov</div>
+      </div>
+      <div class="track-record-stat">
+        <div class="track-record-value" id="trStatRate">—</div>
+        <div class="track-record-label">úspešnosť</div>
+      </div>
+      <div class="track-record-stat">
+        <div class="track-record-value" id="trStatProfit">—</div>
+        <div class="track-record-label">zisk (jednotky)</div>
+      </div>
+      <div class="track-record-stat">
+        <div class="track-record-value" id="trStatRoi">—</div>
+        <div class="track-record-label">ROI</div>
+      </div>
+      <div class="track-record-note" id="trNote">Aktuálne čísla priamo z TipRadaru – tipy sa vyhodnocujú automaticky podľa skutočných výsledkov, nie ručne.</div>
+      <div class="track-record-month" id="trMonth" hidden></div>
+    </div>
+
+    <div class="trust-grid">
+      <div class="trust-item">
+        <h3>Každý tip má dôvod</h3>
+        <p>Pri každom odporúčaní vidíte presne, z akých dát a čísel model vychádzal — nie len samotné percento.</p>
+      </div>
+      <div class="trust-item">
+        <h3>Úspešnosť sa nedá schovať</h3>
+        <p>Vyhodnotené tipy sa spätne nedajú zmazať. História úspešnosti je vždy kompletná, vrátane prehratých tipov.</p>
+      </div>
+      <div class="trust-item">
+        <h3>Rozpis podľa typu stávky</h3>
+        <p>Presný prehľad, ktoré trhy — góly, rohy, karty a ďalšie — dosahujú najlepšie výsledky, nie len jedno súhrnné číslo.</p>
+      </div>
+      <div class="trust-item">
+        <h3>Model, nie odhad</h3>
+        <p>Poissonovo rozdelenie gólov, vážená forma a vzájomné zápasy — rovnaký matematický postup pri každom jednom zápase.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-kicker">Ukážka</div>
+    <h2>Presne to, čo dostanete pri každom tipe</h2>
+    <div class="ui-showcase">
+      <div class="ui-card">
+        <div class="ui-card-label">Odporúčaný tip</div>
+        <div class="mock-tip">
+          <div class="mock-tip-icon">🎯</div>
+          <div>
+            <div class="mock-tip-title">Góly: nad 2,5</div>
+            <div class="mock-tip-meta">Najvyššia dôvera zo všetkých trhov · 71 %</div>
+            <div class="mock-tip-explain">💡 Očakávané góly 1,6 : 1,3 – oba tímy strieľajú pravidelne a v posledných 5 vzájomných zápasoch padli v priemere 3 góly.</div>
+          </div>
+        </div>
+      </div>
+      <div class="ui-card">
+        <div class="ui-card-label">Vývoj úspešnosti v čase</div>
+        <div class="mock-bars">
+          <div class="mock-bar" style="height:40%"></div>
+          <div class="mock-bar" style="height:55%"></div>
+          <div class="mock-bar" style="height:48%"></div>
+          <div class="mock-bar" style="height:70%"></div>
+          <div class="mock-bar" style="height:63%"></div>
+          <div class="mock-bar" style="height:82%"></div>
+          <div class="mock-bar" style="height:75%"></div>
+          <div class="mock-bar" style="height:95%"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-kicker">Postup</div>
+    <h2>Prístup do niekoľkých minút</h2>
+    <div class="steps">
+      <div class="step">
+        <h3>1. Zvoľte si variant</h3>
+        <p>Osobné predplatné alebo licenciu pre skupinu — podľa toho, ako tipy plánujete využívať.</p>
+      </div>
+      <div class="step">
+        <h3>2. Získajte prístup</h3>
+        <p>Do aplikácie aj webu, prípadne do súkromného kanála pri skupinovej licencii.</p>
+      </div>
+      <div class="step">
+        <h3>3. Sledujte tipy denne</h3>
+        <p>Nové odporúčania pribúdajú priebežne, ako sa blíži výkop jednotlivých zápasov.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="offer">
+      <div class="section-kicker" style="display:flex; justify-content:center;">Kontakt</div>
+      <h2>Máte záujem o osobné predplatné, alebo pre svoju skupinu?</h2>
+      <p class="section-lede" style="margin:0 auto;">Napíšte, o ktorú možnosť máte záujem, a dohodneme si podrobnosti.</p>
+      <div class="contact-line">tipradarai@gmail.com</div>
+      <div class="contact-line" style="font-size: 16px; margin-top: 8px;">Telegram: <a href="https://t.me/im_mishko" target="_blank" rel="noopener" style="color: inherit;">TIP RADAR</a></div>
+      <p class="disclaimer">
+        TipRadar je analytický nástroj založený na štatistickom modeli, nie
+        stávková spoločnosť ani finančné poradenstvo. Tipy sú informatívne
+        a neručia za výsledok konkrétnej stávky — rozhodnutie, či a koľko
+        staviť, je vždy na vás.
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    <span>TipRadar — štatistická analýza futbalových zápasov</span>
+    <span>18+ · hrajte zodpovedne</span>
+  </footer>
+</div>
+
+
+<script>
+// Čísla úspešnosti sa načítajú priamo z TipRadaru (len na čítanie).
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const fmt = (n, d) => Number(n).toFixed(d).replace(".", ",");
+  const signed = (n, d) => (n > 0 ? "+" : n < 0 ? "−" : "") + fmt(Math.abs(n), d);
+  const color = (el, v) => { el.classList.remove("pos", "neg"); if (v > 0) el.classList.add("pos"); else if (v < 0) el.classList.add("neg"); };
+  const ofTips = (n) => (n === 1 ? "tipu" : "tipov"); // "z 1 tipu", "z 5 tipov"
+  const verb = (n) => (n === 1 ? "vyšiel" : n >= 2 && n <= 4 ? "vyšli" : "vyšlo");
+  const MONTHS = ["január", "február", "marec", "apríl", "máj", "jún", "júl", "august", "september", "október", "november", "december"];
+  fetch("/api/public/track-record", { cache: "no-store" })
+    .then((r) => (r.ok ? r.json() : Promise.reject()))
+    .then((d) => {
+      if (!d || !d.totalResolved) {
+        $("trNote").textContent = "Prvé vyhodnotené tipy sa tu zobrazia automaticky, hneď ako sa dohrajú zápasy.";
+        return;
+      }
+      $("trStatTotal").textContent = d.totalResolved;
+      $("trStatRate").textContent = d.winRate + " %";
+      if (typeof d.profit === "number" && d.withOdds > 0) {
+        $("trStatProfit").textContent = signed(d.profit, 1);
+        color($("trStatProfit"), d.profit);
+        $("trStatRoi").textContent = signed(d.roi, 0) + " %";
+        color($("trStatRoi"), d.roi);
+      }
+      const m = d.month;
+      if (m && m.totalResolved > 0) {
+        const [y, mo] = String(m.key).split("-").map(Number);
+        const parts = [`<strong>${MONTHS[mo - 1]} ${y}:</strong> ${m.won} z ${m.totalResolved} ${ofTips(m.totalResolved)} ${verb(m.won)} (${m.winRate} %)`];
+        if (m.withOdds > 0) {
+          parts.push(`zisk <span class="${m.profit > 0 ? "pos" : m.profit < 0 ? "neg" : ""}">${signed(m.profit, 1)} j.</span>`);
+          parts.push(`ROI <span class="${m.roi > 0 ? "pos" : m.roi < 0 ? "neg" : ""}">${signed(m.roi, 0)} %</span>`);
+        }
+        $("trMonth").innerHTML = parts.join(" · ");
+        $("trMonth").hidden = false;
+      }
+    })
+    .catch(() => {
+      $("trNote").textContent = "Čísla sa momentálne nepodarilo načítať – skúste stránku obnoviť.";
+    });
+})();
+</script>
+</body>
+</html>

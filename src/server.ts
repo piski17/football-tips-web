@@ -86,7 +86,12 @@ const LEAGUE_PRESETS: LeaguePreset[] = [
 function basicAuth(req: Request, res: Response, next: NextFunction): void {
   // Telegram servery a verejná prezentačná stránka volajú tieto endpointy
   // priamo, bez znalosti hesla appky - musia zostať verejne prístupné.
-  if (req.path === "/api/telegram/webhook" || req.path === "/api/public/track-record") {
+  if (
+    req.path === "/api/telegram/webhook" ||
+    req.path === "/api/public/track-record" ||
+    req.path === "/prezentacia" ||
+    req.path === "/prezentacia/"
+  ) {
     next();
     return;
   }
@@ -356,13 +361,34 @@ app.get("/api/public/track-record", async (_req, res) => {
   res.set("Access-Control-Allow-Origin", "*");
   try {
     const tips = await listTips();
-    const resolved = statsTips(tips).filter((t) => t.status === "won" || t.status === "lost");
-    const won = resolved.filter((t) => t.status === "won").length;
-    const winRate = resolved.length > 0 ? Math.round((won / resolved.length) * 100) : null;
-    res.json({ totalResolved: resolved.length, won, winRate });
+    const summarize = (list: SavedTip[]) => {
+      const resolved = list.filter((t) => t.status === "won" || t.status === "lost");
+      const won = resolved.filter((t) => t.status === "won").length;
+      const withOdds = resolved.filter((t) => typeof t.odds === "number" && t.odds > 1);
+      const profit = withOdds.reduce((sum, t) => sum + (t.status === "won" ? t.odds! - 1 : -1), 0);
+      return {
+        totalResolved: resolved.length,
+        won,
+        winRate: resolved.length > 0 ? Math.round((won / resolved.length) * 100) : null,
+        withOdds: withOdds.length,
+        profit: Math.round(profit * 100) / 100,
+        roi: withOdds.length > 0 ? Math.round((profit / withOdds.length) * 1000) / 10 : null,
+      };
+    };
+    const all = statsTips(tips);
+    // Aktuálny mesiac (podľa slovenského času a dňa zápasu).
+    const monthKey = dayKeySk(new Date()).slice(0, 7);
+    const inMonth = all.filter((t) => (tipDayKey(t) ?? "").startsWith(monthKey));
+    // Len súhrnné čísla - žiadne jednotlivé tipy ani iné údaje.
+    res.json({ ...summarize(all), month: { key: monthKey, ...summarize(inMonth) } });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
+});
+
+// Verejná prezentačná stránka (bez hesla). Zobrazuje len texty a súhrnné čísla.
+app.get(["/prezentacia", "/prezentacia/"], (_req, res) => {
+  res.sendFile(path.join(__dirname, "..", "landing", "index.html"));
 });
 
 // Diagnostika: aké kurzy vracia API-Football pre zápas (názvy stávok a volieb).
