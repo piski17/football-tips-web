@@ -1223,6 +1223,7 @@ function overrideSummaryHtml(tips) {
 const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté konto"];
 
 function renderTipsList(tips) {
+  currentHistoryTips = tips;
   // Tipy na trhy, ktoré appka už neponúka (dvojšanca, presný výsledok, čisté
   // konto), ostávajú v zozname, ale nerátajú sa do štatistík.
   const statTips = tips.filter((t) => !EXCLUDED_STATS_MARKETS.includes(t.market));
@@ -1237,7 +1238,7 @@ function renderTipsList(tips) {
     <span>Čaká: <strong>${pending}</strong></span>
     <span>Vyhral: <strong>${won}</strong></span>
     <span>Prehral: <strong>${lost}</strong></span>
-    <span>Úspešnosť: <strong>${winRate}${decided > 0 ? "%" : ""}</strong></span>
+    <span>Úspešnosť: <strong>${winRate}${decided > 0 ? " %" : ""}</strong></span>
     ${overrideSummaryHtml(statTips)}
   `;
 
@@ -1245,15 +1246,29 @@ function renderTipsList(tips) {
   renderBankrollSimulation(statTips);
   renderCalibrationReport(statTips);
 
-  if (tips.length === 0) {
-    tipsListEl.innerHTML = `<p class="empty-state">Zatiaľ nemáš uložené žiadne tipy.</p>`;
+  // Skryté (archivované) tipy sa v zozname nezobrazujú, ale rátajú sa do štatistík
+  // a ostávajú na prezentačnej stránke.
+  const archivedCount = tips.filter((t) => t.archived).length;
+  const visible = showArchivedTips ? tips : tips.filter((t) => !t.archived);
+  const archivedBar =
+    archivedCount > 0
+      ? `<div class="archived-bar">Skrytých tipov: <strong>${archivedCount}</strong> (rátajú sa do štatistík aj na prezentácii) · <button class="link-btn" id="toggleArchivedBtn">${
+          showArchivedTips ? "Schovať skryté" : "Zobraziť skryté"
+        }</button></div>`
+      : "";
+
+  if (visible.length === 0) {
+    tipsListEl.innerHTML =
+      archivedBar + `<p class="empty-state">${tips.length === 0 ? "Zatiaľ nemáš uložené žiadne tipy." : "Všetky tipy sú skryté."}</p>`;
+    wireArchivedToggle();
     return;
   }
 
-  tipsListEl.innerHTML = tips
+  tipsListEl.innerHTML = archivedBar + visible
     .map((t) => {
       const date = new Date(t.matchDate).toLocaleDateString("sk-SK");
-      const rowClass = t.status === "won" ? "tip-row-won" : t.status === "lost" ? "tip-row-lost" : "";
+      const rowClass = t.status === "won" ? "tip-row-won" : t.status === "lost" ? "tip-row-lost" : ""
+      const rowClassFull = rowClass + (t.archived ? " is-archived" : "");
       const resultIconHtml =
         t.status === "won"
           ? `<span class="tip-result-icon won">✓</span>`
@@ -1272,7 +1287,7 @@ function renderTipsList(tips) {
           .join("");
 
         return `
-        <div class="tip-row ${rowClass}" data-row-id="${t.id}" style="align-items: flex-start;">
+        <div class="tip-row ${rowClassFull}" data-row-id="${t.id}" style="align-items: flex-start;">
           <div class="tip-row-info">
             <div class="tip-row-match">🎫 Tiket (${plural(t.legs.length, "tip", "tipy", "tipov")}) <span class="muted small">(${date})</span></div>
             <div class="tip-row-market">Kombinovaná pravdepodobnosť: ${fmtNum(t.probability, 1)} % · kurz ${tipOddsLabel(t)}${overrideBadge(t)}${manualBadge(t)}</div>
@@ -1289,7 +1304,7 @@ function renderTipsList(tips) {
       }
 
       return `
-        <div class="tip-row ${rowClass}" data-row-id="${t.id}">
+        <div class="tip-row ${rowClassFull}" data-row-id="${t.id}">
           <div class="tip-row-info">
             <div class="tip-row-match">${escapeHtml(translateTeamName(t.homeTeam))} — ${escapeHtml(translateTeamName(t.awayTeam))} <span class="muted small">(${date})</span></div>
             <div class="tip-row-market">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))} · ${t.probability.toFixed(0)} % · kurz ${tipOddsLabel(t)}${overrideBadge(t)}${manualBadge(t)}</div>
@@ -1305,10 +1320,17 @@ function renderTipsList(tips) {
     })
     .join("");
 
+  wireArchivedToggle();
+
   tipsListEl.querySelectorAll("[data-row-id]").forEach((row) => {
     row.addEventListener("click", async (e) => {
       if (e.target.closest("button")) return; // klik na iné tlačidlo v riadku (★/➤) - nie na mazanie
       const id = row.dataset.rowId;
+      const tip = currentHistoryTips.find((x) => x.id === id);
+      if (tip && (tip.archived || tip.status !== "pending")) {
+        await toggleArchive(tip);
+        return;
+      }
       const confirmed = window.confirm("Naozaj chceš odstrániť tento tip/tiket z histórie? Táto akcia sa nedá vrátiť späť.");
       if (!confirmed) return;
       try {
@@ -1935,5 +1957,63 @@ document.getElementById("mtSaveBtn").addEventListener("click", async () => {
     btn.disabled = false;
   }
 });
+
+
+// ---- Skrývanie tipov v histórii (archív) ----
+let currentHistoryTips = [];
+let showArchivedTips = false;
+
+function wireArchivedToggle() {
+  const btn = document.getElementById("toggleArchivedBtn");
+  if (btn) btn.onclick = () => {
+    showArchivedTips = !showArchivedTips;
+    renderTipsList(currentHistoryTips);
+  };
+}
+
+async function setArchived(id, archived) {
+  await fetchJson(`/api/tips/${encodeURIComponent(id)}/archive`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ archived }),
+  });
+}
+
+async function toggleArchive(tip) {
+  const msg = tip.archived
+    ? "Vrátiť tento tip späť do histórie?"
+    : "Skryť tento tip z histórie?\n\nNa prezentačnej stránke aj v štatistikách ostane – len ho tu nebudeš vidieť. Skryté tipy si môžeš kedykoľvek zobraziť.";
+  if (!window.confirm(msg)) return;
+  try {
+    await setArchived(tip.id, !tip.archived);
+  } catch (err) {
+    showToast(`Nepodarilo sa: ${err?.message ?? String(err)}`);
+  } finally {
+    openTipsHistory();
+  }
+}
+
+async function archiveAllResolved() {
+  const toHide = currentHistoryTips.filter((t) => !t.archived && t.status !== "pending");
+  if (toHide.length === 0) {
+    showToast("Nie sú žiadne vyhodnotené tipy na skrytie.");
+    return;
+  }
+  const ok = window.confirm(
+    `Skryť ${plural(toHide.length, "vyhodnotený tip", "vyhodnotené tipy", "vyhodnotených tipov")} z histórie?\n\nNa prezentačnej stránke aj v štatistikách ostanú. Čakajúce tipy ostanú viditeľné.`
+  );
+  if (!ok) return;
+  for (const t of toHide) {
+    try {
+      await setArchived(t.id, true);
+    } catch {
+      /* pokračujeme s ďalšími */
+    }
+  }
+  showToast("Vyhodnotené tipy sú skryté.");
+  openTipsHistory();
+}
+
+document.getElementById("archiveResolvedBtn").addEventListener("click", () => archiveAllResolved());
 
 init();

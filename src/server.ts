@@ -29,7 +29,7 @@ import {
   notifyAdminExpiringSubscribers,
   sendCustomMessage,
   sendRenewalReminder,
-  sendTipResultToTelegram, buildDailyResultsText } from "./telegram";
+  sendTipResultToTelegram, buildDailyResultsText, translateTeamName, translateNamesInText } from "./telegram";
 import { listSubscribers, addSubscriber, updateSubscriber, deleteSubscriber } from "./subscribersStore";
 import { Subscriber } from "./types";
 
@@ -381,8 +381,28 @@ app.get("/api/public/track-record", async (_req, res) => {
     // Aktuálny mesiac (podľa slovenského času a dňa zápasu).
     const monthKey = dayKeySk(new Date()).slice(0, 7);
     const inMonth = all.filter((t) => (tipDayKey(t) ?? "").startsWith(monthKey));
-    // Len súhrnné čísla - žiadne jednotlivé tipy ani iné údaje.
-    res.json({ ...summarize(all), month: { key: monthKey, ...summarize(inMonth) } });
+    // Posledné VYHODNOTENÉ tipy (po skončení zápasu) - na ukážku, z čoho čísla vznikli.
+    // Čakajúce tipy sa nikdy nezverejňujú, tie patria len platiacim klientom.
+    const recent = all
+      .filter((t) => t.status === "won" || t.status === "lost" || t.status === "void")
+      .map((t) => ({ t, day: tipDayKey(t) ?? "" }))
+      .sort((a, b) => (a.day < b.day ? 1 : a.day > b.day ? -1 : 0))
+      .slice(0, 50)
+      .map(({ t, day }) => {
+        const isTicket = Array.isArray(t.legs) && t.legs.length > 0;
+        return {
+          day,
+          match: isTicket
+            ? `Tiket (${plural(t.legs!.length, "zápas", "zápasy", "zápasov")})`
+            : `${translateTeamName(t.homeTeam)} – ${translateTeamName(t.awayTeam)}`,
+          bet: isTicket
+            ? t.legs!.map((l) => `${translateTeamName(l.homeTeam)} – ${translateTeamName(l.awayTeam)}: ${translateNamesInText(l.selection, l.homeTeam, l.awayTeam)}`).join(" · ")
+            : `${t.market}: ${translateNamesInText(t.selection, t.homeTeam, t.awayTeam)}`,
+          odds: typeof t.odds === "number" && t.odds > 1 ? Math.round(t.odds * 100) / 100 : null,
+          status: t.status,
+        };
+      });
+    res.json({ ...summarize(all), month: { key: monthKey, ...summarize(inMonth) }, recent });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
@@ -576,6 +596,16 @@ app.get("/api/telegram/setup-webhook", async (req, res) => {
     res.send(`Hotovo! Webhook nastavený na: ${webhookUrl}`);
   } catch (err: any) {
     res.status(502).send(`Nastavenie webhooku zlyhalo: ${err.message ?? String(err)}`);
+  }
+});
+
+// Skrytie / vrátenie tipu v histórii (tip ostáva uložený, na prezentácii aj v štatistikách).
+app.post("/api/tips/:id/archive", async (req, res) => {
+  try {
+    await updateTip(req.params.id, { archived: req.body?.archived !== false });
+    res.json({ ok: true });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
   }
 });
 

@@ -1296,3 +1296,8 @@ button:disabled:hover {
   padding: 7px 12px;
 }
 #tipsModal .modal-actions button { white-space: nowrap; }
+
+/* ---------- Skryté (archivované) tipy ---------- */
+.archived-bar { font-size: 13px; color: var(--text-muted); margin: 0 0 10px; }
+.link-btn { background: none; border: 0; padding: 0; color: var(--gold); font: inherit; cursor: pointer; text-decoration: underline; }
+.tip-row.is-archived { opacity: 0.55; }

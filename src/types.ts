@@ -228,6 +228,8 @@ export interface SavedTip {
   overrideFilter?: boolean;
   /** Tip doplnený ručne po zápase (s výsledkom) - neprechádza automatickým vyhodnotením. */
   manualEntry?: boolean;
+  /** Tip skrytý z histórie tipov - naďalej sa ráta do štatistík a zobrazuje na prezentačnej stránke. */
+  archived?: boolean;
   savedAt: string; // ISO
   status: "pending" | "won" | "lost" | "void";
   actualHomeGoals?: number | null;

@@ -119,6 +119,19 @@
   }
   .track-record-label { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
   .track-record-note { font-size: 12px; color: var(--text-muted); margin-left: auto; max-width: 260px; }
+  .recent-tips { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px 28px; margin-bottom: 24px; }
+  .recent-tips h3 { font-family: var(--font-display); font-size: 17px; margin: 0 0 4px; }
+  .recent-note { font-size: 12.5px; color: var(--text-muted); margin: 0 0 12px; }
+  .recent-row { display: grid; grid-template-columns: 28px 64px minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--border); }
+  .recent-icon { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #0b0e0c; }
+  .recent-icon.won { background: #57c97a; } .recent-icon.lost { background: #e0685d; } .recent-icon.void { background: #9c978b; }
+  .recent-day { font-size: 12.5px; color: var(--text-muted); }
+  .recent-main { min-width: 0; }
+  .recent-match { font-weight: 600; font-size: 14px; }
+  .recent-bet { font-size: 12.5px; color: var(--text-muted); }
+  .recent-odds { font-family: var(--font-display); font-weight: 600; color: var(--gold-bright); font-size: 15px; }
+  .recent-more { margin-top: 12px; background: none; border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 8px 14px; font: inherit; font-size: 13px; cursor: pointer; }
+  @media (max-width: 640px) { .recent-tips { padding: 18px; } .recent-row { grid-template-columns: 26px minmax(0, 1fr) auto; } .recent-day { grid-column: 2; grid-row: 1; } .recent-main { grid-column: 2; grid-row: 2; } .recent-icon { grid-row: 1 / span 2; } .recent-odds { grid-row: 1 / span 2; grid-column: 3; } }
   .track-record-value.pos { color: #57c97a; }
   .track-record-value.neg { color: #e0685d; }
   .track-record-month { flex-basis: 100%; font-size: 13px; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 14px; }
@@ -297,6 +310,13 @@
       <div class="track-record-month" id="trMonth" hidden></div>
     </div>
 
+    <div class="recent-tips" id="recentTips" hidden>
+      <h3>Posledné vyhodnotené tipy</h3>
+      <p class="recent-note">Všetky tipy aj s výsledkom – vrátane tých, čo nevyšli. Tipy na zápasy, ktoré sa ešte nehrali, dostávajú len predplatitelia.</p>
+      <div class="recent-list" id="recentList"></div>
+      <button class="recent-more" id="recentMore" hidden>Zobraziť ďalšie</button>
+    </div>
+
     <div class="trust-grid">
       <div class="trust-item">
         <h3>Každý tip má dôvod</h3>
@@ -400,6 +420,28 @@
   const ofTips = (n) => (n === 1 ? "tipu" : "tipov"); // "z 1 tipu", "z 5 tipov"
   const verb = (n) => (n === 1 ? "vyšiel" : n >= 2 && n <= 4 ? "vyšli" : "vyšlo");
   const MONTHS = ["január", "február", "marec", "apríl", "máj", "jún", "júl", "august", "september", "október", "november", "december"];
+  const esc = (v) => String(v).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  function renderRecent(list) {
+    if (!list.length) return;
+    const icon = { won: "✓", lost: "✗", void: "↩" };
+    const row = (r) => {
+      const [y, mo, da] = String(r.day).split("-").map(Number);
+      return `<div class="recent-row">
+        <div class="recent-icon ${esc(r.status)}" aria-label="${r.status === "won" ? "vyšiel" : r.status === "lost" ? "nevyšiel" : "vrátený"}">${icon[r.status] || ""}</div>
+        <div class="recent-day">${da ? `${da}. ${mo}.` : ""}</div>
+        <div class="recent-main"><div class="recent-match">${esc(r.match)}</div><div class="recent-bet">${esc(r.bet)}</div></div>
+        <div class="recent-odds">${r.odds ? fmt(r.odds, 2) : ""}</div>
+      </div>`;
+    };
+    let shown = 10;
+    const draw = () => {
+      $("recentList").innerHTML = list.slice(0, shown).map(row).join("");
+      $("recentMore").hidden = list.length <= shown;
+    };
+    $("recentMore").onclick = () => { shown += 20; draw(); };
+    draw();
+    $("recentTips").hidden = false;
+  }
   fetch("/api/public/track-record", { cache: "no-store" })
     .then((r) => (r.ok ? r.json() : Promise.reject()))
     .then((d) => {
@@ -415,6 +457,7 @@
         $("trStatRoi").textContent = signed(d.roi, 0) + " %";
         color($("trStatRoi"), d.roi);
       }
+      renderRecent(d.recent || []);
       const m = d.month;
       if (m && m.totalResolved > 0) {
         const [y, mo] = String(m.key).split("-").map(Number);

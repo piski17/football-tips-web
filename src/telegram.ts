@@ -137,12 +137,12 @@ const COUNTRY_NAME_SK: Record<string, string> = {
   "New Zealand": "Nový Zéland",
 };
 
-function translateTeamName(name: string): string {
+export function translateTeamName(name: string): string {
   return COUNTRY_NAME_SK[name] ?? name;
 }
 
 /** Preloží mená tímov vložené priamo vo vete (napr. "Dvojšanca: Liechtenstein alebo remíza") - len na zobrazenie. */
-function translateNamesInText(text: string | undefined, homeOriginal: string, awayOriginal: string): string {
+export function translateNamesInText(text: string | undefined, homeOriginal: string, awayOriginal: string): string {
   if (!text) return "";
   let result = text;
   const homeSk = translateTeamName(homeOriginal);
