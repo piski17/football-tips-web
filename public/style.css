@@ -1282,3 +1282,17 @@ button:disabled:hover {
 /* ---------- Doplnenie odohraného tipu ---------- */
 .manual-tip-form input,
 .manual-tip-form select { flex: 1 1 180px; min-width: 0; }
+
+/* ---------- Nástroje v histórii tipov (Telegram, doplnenie tipu) ---------- */
+.history-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 14px;
+}
+.history-tools button {
+  white-space: nowrap;
+  font-size: 13px;
+  padding: 7px 12px;
+}
+#tipsModal .modal-actions button { white-space: nowrap; }
