@@ -357,7 +357,7 @@ const FAQ_ANSWERS: Record<string, string> = {
   faq_time:
     `🕒 <b>Kedy prídu tipy</b>\n\n` +
     `Tipy posielame v deň zápasu, <b>2 – 3 hodiny pred výkopom</b> – vtedy sú kurzy aj dáta najpresnejšie a zostane dosť času na stávku.\n\n` +
-    `Pri večerných zápasoch (18:00 – 21:00) prídu tipy zvyčajne medzi <b>15:00 a 16:00</b>, pri skorších zápasoch primerane skôr.\n\n` +
+    `Čas sa riadi výkopom konkrétneho zápasu – na zápas o 18:00 prídu tipy približne medzi <b>15:00 a 16:00</b>, na zápas o 21:00 medzi <b>18:00 a 19:00</b>.\n\n` +
     `📋 Večer, keď sa zápasy dohrajú, pošleme <b>vyhodnotenie dňa</b> – vrátane tipov, ktoré nevyšli.\n\n` +
     `Ak sa pred zápasom stane niečo dôležité (napr. v zostave chýba kľúčový hráč), dáme vedieť.`,
   faq_sample:
