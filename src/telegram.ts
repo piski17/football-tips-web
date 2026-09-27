@@ -63,7 +63,6 @@ const COUNTRY_NAME_SK: Record<string, string> = {
   Norway: "Nórsko",
   Poland: "Poľsko",
   Portugal: "Portugalsko",
-  "Republic of Ireland": "Írsko",
   Romania: "Rumunsko",
   Russia: "Rusko",
   "San Marino": "San Maríno",
@@ -79,6 +78,8 @@ const COUNTRY_NAME_SK: Record<string, string> = {
   Wales: "Wales",
   // Alternatívne názvy z API a reprezentácie mimo Európy
   Czechia: "Česko",
+  "Rep. Of Ireland": "Írsko",
+  "Republic of Ireland": "Írsko",
   "FYR Macedonia": "Severné Macedónsko",
   Macedonia: "Severné Macedónsko",
   "Türkiye": "Turecko",
