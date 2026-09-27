@@ -1254,3 +1254,27 @@ button:disabled:hover {
   cursor: not-allowed;
   filter: grayscale(1);
 }
+
+/* ---------- Tipy dňa ---------- */
+.column-header #dayTipsBtn { margin-left: auto; }
+.day-tip {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  gap: 10px 12px;
+  align-items: center;
+  padding: 14px 0;
+  border-top: 1px solid var(--border, rgba(255,255,255,0.08));
+}
+.day-tip-rank { color: var(--gold); font-weight: 700; font-size: 18px; text-align: right; }
+.day-tip-main { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.day-tip-match {
+  background: none; border: 0; padding: 0; color: inherit; font: inherit; text-align: left; cursor: pointer;
+  font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.day-tip-match:hover { text-decoration: underline; }
+.day-tip-actions { display: flex; flex-direction: column; gap: 6px; }
+@media (max-width: 640px) {
+  .day-tip { grid-template-columns: 26px minmax(0, 1fr); }
+  .day-tip-actions { grid-column: 2; flex-direction: row; }
+}
+.column-header { gap: 8px; flex-wrap: wrap; }

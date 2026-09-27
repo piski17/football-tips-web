@@ -1656,4 +1656,202 @@ dailyResultsBtn.addEventListener("click", async () => {
   }
 });
 
+
+// ---- Tipy dňa: všetky odporúčané tipy zo všetkých zápasov dňa, zoradené od najvyššej dôvery ----
+const dayTipsBtn = document.getElementById("dayTipsBtn");
+let dayTipsItems = [];
+let dayTipsInfo = { analyzed: 0, failed: 0 };
+
+function kickoffTime(fixture) {
+  const d = new Date(fixture?.date);
+  return isNaN(d.getTime()) ? "" : d.toLocaleTimeString("sk-SK", { hour: "2-digit", minute: "2-digit" });
+}
+
+async function showDayTips() {
+  const fixtures = currentFixtures.filter((f) => !matchHasStarted(f));
+  if (fixtures.length === 0) {
+    analysisColumnEl.innerHTML = `<div class="empty-state">V tento deň už nie sú žiadne zápasy pred výkopom.</div>`;
+    return;
+  }
+  dayTipsBtn.disabled = true;
+  const items = [];
+  let done = 0;
+  let failed = 0;
+  const progress = () => {
+    analysisColumnEl.innerHTML = `<div class="empty-state">Analyzujem zápasy dňa… ${done} / ${fixtures.length}<br><span class="muted small">Prvé načítanie chvíľu trvá, ďalšie sú rýchle.</span></div>`;
+  };
+  progress();
+  const queue = fixtures.slice();
+  // Dva zápasy naraz - rýchlejšie, a zároveň šetrne k limitu API.
+  const worker = async () => {
+    while (queue.length > 0) {
+      const f = queue.shift();
+      try {
+        const r = await fetchJson("/api/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fixture: f, leagueId: f.league.id, season: f.league.season }),
+        });
+        for (const bet of r?.bestBets || []) items.push({ r, bet });
+      } catch {
+        failed++;
+      }
+      done++;
+      progress();
+    }
+  };
+  try {
+    await Promise.all([worker(), worker()]);
+    items.sort((a, b) => b.bet.probability - a.bet.probability);
+    dayTipsItems = items;
+    dayTipsInfo = { analyzed: fixtures.length, failed };
+    renderDayTips();
+  } finally {
+    dayTipsBtn.disabled = false;
+  }
+}
+
+function renderDayTips() {
+  const dateLabel = (() => {
+    const [y, m, d] = (matchDateInput.value || "").split("-").map(Number);
+    return y ? `${d}. ${m}. ${y}` : "";
+  })();
+  const rows = dayTipsItems
+    .map(({ r, bet }, i) => {
+      const f = r.fixture;
+      const warn = bet.valueWarning
+        ? `<div class="muted small" style="color:var(--gold);">⚠️ ${escapeHtml(bet.valueWarning)}</div>`
+        : "";
+      return `
+      <div class="day-tip">
+        <div class="day-tip-rank">${i + 1}.</div>
+        <div class="day-tip-main">
+          <button class="day-tip-match" data-open="${i}" title="Otvoriť detail zápasu">
+            <span class="muted">${escapeHtml(kickoffTime(f))}</span> ${escapeHtml(translateTeamName(f.homeTeam.name))} — ${escapeHtml(
+              translateTeamName(f.awayTeam.name)
+            )}
+          </button>
+          <div class="day-tip-bet">${escapeHtml(bet.market)}: <strong>${escapeHtml(
+            translateNamesInText(bet.selection, f.homeTeam.name, f.awayTeam.name)
+          )}</strong></div>
+          <div class="muted small">Dôvera <strong>${bet.probability.toFixed(0)} %</strong>${betOddsHtml(bet)}</div>
+          ${warn}
+        </div>
+        <div class="day-tip-actions">
+          <button class="btn-primary btn-mini" data-save="${i}">Uložiť</button>
+          <button class="btn-ghost btn-mini" data-ticket="${i}">+ Do tiketu</button>
+        </div>
+      </div>`;
+    })
+    .join("");
+
+  analysisColumnEl.innerHTML = `
+    <div class="league-name">Tipy dňa${dateLabel ? " · " + dateLabel : ""}</div>
+    <h2 style="margin: 4px 0 6px;">Všetky odporúčané tipy</h2>
+    <p class="muted small" style="margin: 0 0 16px;">
+      ${plural(dayTipsItems.length, "tip", "tipy", "tipov")} · analyzované: ${plural(dayTipsInfo.analyzed, "zápas", "zápasy", "zápasov")} pred výkopom · zoradené od najvyššej dôvery${
+        dayTipsInfo.failed ? ` · ${dayTipsInfo.failed} sa nepodarilo analyzovať` : ""
+      }
+    </p>
+    ${rows || `<div class="empty-state">V tento deň nie je žiadny tip, ktorý by prešiel pravidlami (65–75 % a kontrola kurzu).</div>`}
+  `;
+
+  analysisColumnEl.querySelectorAll("[data-open]").forEach((btn) => {
+    btn.onclick = () => {
+      const item = dayTipsItems[Number(btn.dataset.open)];
+      if (!item) return;
+      currentAnalysis = item.r;
+      try {
+        renderAnalysis(item.r);
+      } finally {
+        // Tlačidlo späť na zoznam - vždy, aj keby sa detail nepodarilo vykresliť.
+        const back = document.createElement("button");
+        back.className = "btn-ghost btn-mini";
+        back.textContent = "‹ Späť na tipy dňa";
+        back.style.marginBottom = "12px";
+        back.onclick = () => renderDayTips();
+        analysisColumnEl.prepend(back);
+        analysisColumnEl.scrollTop = 0;
+      }
+    };
+  });
+
+  analysisColumnEl.querySelectorAll("[data-save]").forEach((btn) => {
+    btn.onclick = async () => {
+      const item = dayTipsItems[Number(btn.dataset.save)];
+      if (!item) return;
+      const { r, bet } = item;
+      if (matchHasStarted(r.fixture)) {
+        showToast(MATCH_STARTED_TEXT);
+        return;
+      }
+      const tip = {
+        id: `${r.fixture.fixtureId}-${Date.now()}`,
+        fixtureId: r.fixture.fixtureId,
+        leagueId: r.fixture.league.id,
+        season: r.fixture.league.season,
+        leagueName: r.fixture.league.name,
+        homeTeam: r.fixture.homeTeam.name,
+        awayTeam: r.fixture.awayTeam.name,
+        homeTeamLogo: r.fixture.homeTeam.logo,
+        awayTeamLogo: r.fixture.awayTeam.logo,
+        matchDate: r.fixture.date,
+        market: bet.market,
+        selection: bet.selection,
+        probability: bet.probability,
+        odds: bet.odds ?? null,
+        savedAt: new Date().toISOString(),
+        status: "pending",
+      };
+      btn.disabled = true;
+      try {
+        await fetchJson("/api/tips", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(tip),
+        });
+        btn.textContent = "✓ Uložené";
+        await maybeOfferTelegram(tip.id);
+      } catch (err) {
+        showToast(`Uloženie zlyhalo: ${err?.message ?? String(err)}`);
+        btn.disabled = false;
+      }
+    };
+  });
+
+  analysisColumnEl.querySelectorAll("[data-ticket]").forEach((btn) => {
+    btn.onclick = () => {
+      const item = dayTipsItems[Number(btn.dataset.ticket)];
+      if (!item) return;
+      const { r, bet } = item;
+      if (matchHasStarted(r.fixture)) {
+        showToast(MATCH_STARTED_TEXT);
+        return;
+      }
+      const id = `${r.fixture.fixtureId}-${bet.market}-${bet.selection}`;
+      if (ticketItems.some((t) => t.id === id)) {
+        btn.textContent = "✓ Už v tikete";
+        return;
+      }
+      ticketItems.push({
+        id,
+        fixtureId: r.fixture.fixtureId,
+        leagueId: r.fixture.league.id,
+        season: r.fixture.league.season,
+        homeTeam: r.fixture.homeTeam.name,
+        awayTeam: r.fixture.awayTeam.name,
+        matchDate: r.fixture.date,
+        market: bet.market,
+        selection: bet.selection,
+        probability: bet.probability,
+        odds: bet.odds ?? null,
+      });
+      updateTicketCount();
+      btn.textContent = "✓ V tikete";
+    };
+  });
+}
+
+dayTipsBtn.addEventListener("click", () => showDayTips());
+
 init();
