@@ -1,18 +1,19 @@
 :root {
-  --bg: #0a0a0b;
-  --surface: #131315;
-  --surface-alt: #1c1c1f;
-  --border: #2c2c30;
-  --accent: #c9a04d;
-  --accent-strong: #e8c766;
-  --gold: #e8c766;
-  --danger: #d9776c;
-  --success: #6bbf7a;
-  --text: #f2f0ea;
-  --text-muted: #948f80;
+  /* Vizuálna identita TipRadar – rovnaká ako na prezentačnej stránke (nočný trávnik, zlatá, výsledkové farby). */
+  --bg: #07100c;
+  --surface: #0d1913;
+  --surface-alt: #13231b;
+  --border: #213629;
+  --accent: #d9b25c;
+  --accent-strong: #e9cf8e;
+  --gold: #e3c275;
+  --danger: #e46f63;
+  --success: #5bd08a;
+  --text: #eeece4;
+  --text-muted: #8d9c93;
 
-  --font-display: "Space Grotesk", "Arial", sans-serif;
-  --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: "Bricolage Grotesque", "Figtree", system-ui, sans-serif;
+  --font-body: "Figtree", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 * {
@@ -1318,3 +1319,46 @@ button:disabled:hover {
   font: inherit;
   font-size: 14px;
 }
+
+/* ================================================================
+   Vzhľad podľa prezentačnej stránky (zaoblené tlačidlá, písma, lišta)
+   ================================================================ */
+h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.01em; }
+body { -webkit-font-smoothing: antialiased; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.topbar {
+  background: rgba(7, 16, 12, 0.86);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.brand-mark { width: 26px; height: 26px; border-radius: 0; background: none; }
+.brand-mark svg { width: 100%; height: 100%; display: block; }
+.brand h1 { font-weight: 800; font-size: 20px; letter-spacing: -0.01em; }
+
+.btn-primary {
+  border-radius: 999px;
+  color: #1a1407;
+  font-weight: 700;
+}
+.btn-primary:disabled { opacity: 0.45; }
+.btn-ghost {
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-weight: 500;
+}
+.btn-ghost:hover { border-color: var(--text-muted); }
+
+.modal { border-radius: 18px; }
+input, select, textarea { accent-color: var(--accent); }
+
+* { scrollbar-color: var(--border) transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; border: 2px solid var(--bg); }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* Čas výkopu v zozname zápasov: výrazný čas, pod ním menší dátum */
+.fixture-row .time { width: 50px; display: flex; flex-direction: column; gap: 1px; line-height: 1.2; }
+.fixture-row .time strong { font-size: 15px; font-weight: 700; color: var(--gold); font-variant-numeric: tabular-nums; }
+.fixture-row .time span { font-family: var(--font-body); font-size: 11.5px; color: var(--text-muted); }
+.fixture-row .time.live { width: 50px; }

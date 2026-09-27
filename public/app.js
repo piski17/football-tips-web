@@ -465,7 +465,9 @@ function renderGroupedFixtureList(results) {
              <span class="live-dot"></span>${liveLabel}
              <div class="live-score">${fixture.goalsHome ?? 0}:${fixture.goalsAway ?? 0}</div>
            </div>`
-        : `<div class="time">${escapeHtml(time)}</div>`;
+        : `<div class="time"><strong>${escapeHtml(
+            date.toLocaleTimeString("sk-SK", { hour: "2-digit", minute: "2-digit" })
+          )}</strong><span>${date.getDate()}. ${date.getMonth() + 1}.</span></div>`;
 
       row.innerHTML = `
         ${timeHtml}
