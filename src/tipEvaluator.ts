@@ -59,6 +59,7 @@ export function evaluateTip(
       return total > line === isOver ? "won" : "lost";
     }
 
+    case "Oba tímy skórujú":
     case "Obaja tímy skórujú": {
       const btts = homeGoals > 0 && awayGoals > 0;
       const predictedYes = tip.selection === "Áno";

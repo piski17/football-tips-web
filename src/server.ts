@@ -33,6 +33,21 @@ import {
 import { listSubscribers, addSubscriber, updateSubscriber, deleteSubscriber } from "./subscribersStore";
 import { Subscriber } from "./types";
 
+/** Slovenský tvar podľa počtu: plural(3, "tip", "tipy", "tipov") -> "3 tipy". */
+/** Číslo so slovenskou desatinnou čiarkou: fmtNum(1.845, 2) -> "1,85". */
+function fmtNum(n: number, digits: number): string {
+  return Number(n).toFixed(digits).replace(".", ",");
+}
+
+/** Číslo so znamienkom: +1,5 / −0,8 (typografické mínus). */
+function signed(n: number, digits: number): string {
+  return (n > 0 ? "+" : n < 0 ? "−" : "") + fmtNum(Math.abs(n), digits);
+}
+
+function plural(n: number, one: string, few: string, many: string): string {
+  return n + " " + (n === 1 ? one : n >= 2 && n <= 4 ? few : many);
+}
+
 // Globálna poistka - nečakaná chyba (napr. výpadok siete pri volaní na
 // JSONBin.io alebo API-Football) nesmie zhodiť celý server. Bez tohto by
 // aj jedna nezachytená chyba reštartovala celú appku na Renderi.
@@ -489,17 +504,17 @@ app.post("/api/telegram/weekly-report", async (req, res) => {
       `📊 <b>Týždenný report</b> (posledných 7 dní)\n\n` +
       (resolvedWeek.length > 0
         ? `✅ Vyšlo: <b>${wonWeek}</b>   ❌ Nevyšlo: <b>${lostWeek}</b>\n` +
-          `Úspešnosť týždňa: <b>${rateWeek}%</b>\n` +
+          `Úspešnosť týždňa: <b>${rateWeek} %</b>\n` +
           (voidWeek > 0 ? `↩ Vrátené: ${voidWeek}\n` : "") +
           (roiWeek !== null
-            ? `Zisk: <b>${profitWeek >= 0 ? "+" : ""}${profitWeek.toFixed(1)} j.</b> (ROI ${roiWeek >= 0 ? "+" : ""}${roiWeek.toFixed(0)}%${
-                withOdds.length < resolvedWeek.length ? `, z ${withOdds.length} tipov so známym kurzom` : ""
+            ? `Zisk: <b>${signed(profitWeek, 1)} j.</b> (ROI ${signed(roiWeek, 0)} %${
+                withOdds.length < resolvedWeek.length ? `, z ${plural(withOdds.length, "tipu", "tipov", "tipov")} so známym kurzom` : ""
               })\n`
             : "") +
-          (bestMarket ? `Najlepší trh: <b>${bestMarket}</b> (${(bestRate * 100).toFixed(0)}%)\n` : "")
+          (bestMarket ? `Najlepší trh: <b>${bestMarket}</b> (${(bestRate * 100).toFixed(0)} %)\n` : "")
         : `Tento týždeň zatiaľ nie sú vyhodnotené žiadne tipy.\n`) +
-      (rateAll !== null ? `\nCelkovo od začiatku: <b>${rateAll}%</b> (${wonAll} z ${resolvedAll.length})\n` : "") +
-      `\n<i>Poctivá história - vrátane prehratých tipov.</i>`;
+      (rateAll !== null ? `\nCelkovo od začiatku: <b>${rateAll} %</b> (${wonAll} z ${resolvedAll.length})\n` : "") +
+      `\n<i>Poctivá história – vrátane prehratých tipov.</i>`;
 
     const target =
       req.body?.target === "premium" || req.body?.target === "vip" || req.body?.target === "both"

@@ -1,6 +1,21 @@
 import axios from "axios";
 import { SavedTip } from "./types";
 
+/** Slovenský tvar podľa počtu: plural(3, "tip", "tipy", "tipov") -> "3 tipy". */
+/** Číslo so slovenskou desatinnou čiarkou: fmtNum(1.845, 2) -> "1,85". */
+function fmtNum(n: number, digits: number): string {
+  return Number(n).toFixed(digits).replace(".", ",");
+}
+
+/** Číslo so znamienkom: +1,5 / −0,8 (typografické mínus). */
+function signed(n: number, digits: number): string {
+  return (n > 0 ? "+" : n < 0 ? "−" : "") + fmtNum(Math.abs(n), digits);
+}
+
+function plural(n: number, one: string, few: string, many: string): string {
+  return n + " " + (n === 1 ? one : n >= 2 && n <= 4 ? few : many);
+}
+
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID_PREMIUM = process.env.TELEGRAM_CHAT_ID_PREMIUM;
 const TELEGRAM_CHAT_ID_VIP = process.env.TELEGRAM_CHAT_ID_VIP;
@@ -137,6 +152,8 @@ function translateNamesInText(text: string | undefined, homeOriginal: string, aw
   // uložené dáta ostávajú bez zmeny kvôli vyhodnocovaniu).
   result = result.replace(/\bOver (\d+(?:\.\d+)?)/g, (_m, n) => "Nad " + n.replace(".", ","));
   result = result.replace(/\bUnder (\d+(?:\.\d+)?)/g, (_m, n) => "Pod " + n.replace(".", ","));
+  // Desatinné čísla po slovensky (1.8 -> 1,8) - vysvetlenia tipov a varovania.
+  result = result.replace(/(\d)\.(\d)/g, "$1,$2");
   return result;
 }
 
@@ -175,10 +192,10 @@ function buildMessageText(tip: SavedTip, headerOverride?: string): string {
   // Skutočný kurz stávkoviek (ak bol pri uložení k dispozícii), inak odhad z modelu.
   const hasRealOdds = typeof tip.odds === "number" && tip.odds > 1;
   const oddsLine = hasRealOdds
-    ? `💰 Kurz: <b>${tip.odds!.toFixed(2)}</b>\n`
-    : `💰 Odhadovaný kurz: <b>~${odds}</b>\n`;
+    ? `💰 Kurz: <b>${fmtNum(tip.odds!, 2)}</b>\n`
+    : `💰 Odhadovaný kurz: <b>~${String(odds).replace(".", ",")}</b>\n`;
   const oddsNote = hasRealOdds
-    ? `<i>ℹ️ Priemerný kurz stávkových kancelárií v čase odoslania - u tvojej stávkovky sa môže mierne líšiť.</i>`
+    ? `<i>ℹ️ Priemerný kurz stávkových kancelárií v čase odoslania – u tvojej stávkovky sa môže mierne líšiť.</i>`
     : `<i>ℹ️ Odhad na základe modelu, nie garantovaný kurz stávkovej kancelárie.</i>`;
 
   if (tip.legs && tip.legs.length > 0) {
@@ -187,15 +204,15 @@ function buildMessageText(tip: SavedTip, headerOverride?: string): string {
         (leg) =>
           `⚽ ${escapeHtml(translateTeamName(leg.homeTeam))} — ${escapeHtml(translateTeamName(leg.awayTeam))}\n   ${escapeHtml(leg.market)}: <b>${escapeHtml(
             translateNamesInText(leg.selection, leg.homeTeam, leg.awayTeam)
-          )}</b> (${leg.probability.toFixed(0)}%)`
+          )}</b> (${leg.probability.toFixed(0)} %)`
       )
       .join("\n\n");
 
     return (
-      `${headerOverride ?? `🎫 <b>Nový tiket</b>`} (${tip.legs.length} tipov)\n\n${legsText}\n\n` +
-      `📈 Kombinovaná pravdepodobnosť: <b>${tip.probability.toFixed(1)}%</b>\n` +
+      `${headerOverride ?? `🎫 <b>Nový tiket</b>`} (${plural(tip.legs.length, "tip", "tipy", "tipov")})\n\n${legsText}\n\n` +
+      `📈 Kombinovaná pravdepodobnosť: <b>${fmtNum(tip.probability, 1)} %</b>\n` +
       oddsLine +
-      `💵 Odporúčaná sadzba: <b>${stakePct}% bankrollu</b>\n\n` +
+      `💵 Odporúčaná sadzba: <b>${stakePct} % bankrollu</b>\n\n` +
       oddsNote
     );
   }
@@ -204,9 +221,9 @@ function buildMessageText(tip: SavedTip, headerOverride?: string): string {
     `${headerOverride ?? `🎯 <b>Nový tip</b>`}\n\n` +
     `⚽ ${escapeHtml(translateTeamName(tip.homeTeam))} — ${escapeHtml(translateTeamName(tip.awayTeam))}\n` +
     `📊 ${escapeHtml(tip.market)}: <b>${escapeHtml(translateNamesInText(tip.selection, tip.homeTeam, tip.awayTeam))}</b>\n` +
-    `📈 Dôvera: <b>${tip.probability.toFixed(0)}%</b>\n` +
+    `📈 Dôvera: <b>${tip.probability.toFixed(0)} %</b>\n` +
     oddsLine +
-    `💵 Odporúčaná sadzba: <b>${stakePct}% bankrollu</b>\n\n` +
+    `💵 Odporúčaná sadzba: <b>${stakePct} % bankrollu</b>\n\n` +
     oddsNote
   );
 }
@@ -278,7 +295,7 @@ export async function sendTipResultToTelegram(
         )}: ${escapeHtml(translateNamesInText(leg.selection, leg.homeTeam, leg.awayTeam))}`;
       })
       .join("\n");
-    text = `${header} (${tip.legs.length} tipov)\n\n${legsText}`;
+    text = `${header} (${plural(tip.legs.length, "tip", "tipy", "tipov")})\n\n${legsText}`;
   } else {
     const header = tip.status === "won" ? "✅ <b>VÝHRA</b>" : "❌ <b>PREHRA</b>";
     text =
@@ -335,11 +352,11 @@ const FAQ_ANSWERS: Record<string, string> = {
     `Kedykoľvek zrušiteľné, žiadna viazanosť.`,
   faq_how:
     `❓ <b>Ako to funguje</b>\n\n` +
-    `TipRadar denne prepočíta desiatky zápasov cez vlastný štatistický model (Poissonovo rozdelenie gólov, vážená forma, vzájomné zápasy, historické dáta) a vyberie 2-3 najhodnotnejšie tipy naprieč 10 trhmi (výsledok, góly, obaja skórujú, rohy, karty, strely na bránu, fauly, ofsajdy, držanie lopty, strelci) — s vysvetlením, prečo.`,
+    `TipRadar denne prepočíta desiatky zápasov cez vlastný štatistický model (Poissonovo rozdelenie gólov, vážená forma, vzájomné zápasy, historické dáta) a vyberie 2 – 3 najhodnotnejšie tipy naprieč 10 trhmi (výsledok, góly, oba tímy skórujú, rohy, karty, strely na bránu, fauly, ofsajdy, držanie lopty, strelci) — s vysvetlením, prečo.`,
   faq_sample:
     `📊 <b>Ukážka tipu</b>\n\n` +
-    `🎯 Góly: Nad 2,5\n📈 Dôvera: 71%\n💰 Odhadovaný kurz: ~1.41\n💵 Odporúčaná sadzba: 3% bankrollu\n\n` +
-    `💡 Očakávané góly 1,6 : 1,3 - oba tímy strieľajú pravidelne a v posledných 5 vzájomných zápasoch padli v priemere 3 góly.`,
+    `🎯 Góly: Nad 2,5\n📈 Dôvera: 71 %\n💰 Kurz: 1,75\n💵 Odporúčaná sadzba: 3 % bankrollu\n\n` +
+    `💡 Očakávané góly 1,6 : 1,3 – oba tímy strieľajú pravidelne a v posledných 5 vzájomných zápasoch padli v priemere 3 góly.`,
 };
 
 const MAIN_MENU_KEYBOARD = {
@@ -418,9 +435,9 @@ export async function sendRenewalReminder(
   if (!TELEGRAM_BOT_TOKEN) return false;
   const text =
     `🔔 <b>Tvoje predplatné čoskoro vyprší</b>\n\n` +
-    `Za posledné obdobie sme vyhodnotili <b>${stats.totalResolved}</b> tipov` +
-    (stats.winRate !== null ? ` s úspešnosťou <b>${stats.winRate}%</b>.` : ".") +
-    `\n\nAk chceš pokračovať v predplatnom, napíš nám - radi ťa predĺžime. 🙌`;
+    `Za posledné obdobie sme vyhodnotili <b>${stats.totalResolved}</b> ${stats.totalResolved === 1 ? "tip" : stats.totalResolved <= 4 ? "tipy" : "tipov"}` +
+    (stats.winRate !== null ? ` s úspešnosťou <b>${stats.winRate} %</b>.` : ".") +
+    `\n\nAk chceš pokračovať v predplatnom, napíš nám – radi ťa predĺžime. 🙌`;
   const messageId = await sendToChat(chatId, text);
   return messageId !== null;
 }
@@ -439,7 +456,7 @@ export async function setTelegramWebhook(webhookUrl: string): Promise<void> {
 export function buildDailyResultsText(tips: SavedTip[], day: string): string {
   const [y, m, d] = day.split("-").map((n) => parseInt(n, 10));
   const icon = (status: string) => (status === "won" ? "✅" : status === "lost" ? "❌" : status === "void" ? "↩️" : "⏳");
-  const oddsTxt = (odds?: number | null) => (typeof odds === "number" && odds > 1 ? ` · kurz ${odds.toFixed(2)}` : "");
+  const oddsTxt = (odds?: number | null) => (typeof odds === "number" && odds > 1 ? ` · kurz ${fmtNum(odds, 2)}` : "");
 
   const lines: string[] = [];
   for (const t of tips) {
@@ -471,8 +488,8 @@ export function buildDailyResultsText(tips: SavedTip[], day: string): string {
   if (decided.length > 0) {
     summary += `Vyšlo: <b>${won} z ${decided.length}</b> (${Math.round((won / decided.length) * 100)} %)\n`;
     if (withOdds.length > 0) {
-      summary += `Zisk: <b>${profit >= 0 ? "+" : ""}${profit.toFixed(1)} j.</b>${
-        withOdds.length < decided.length ? ` (z ${withOdds.length} tipov so známym kurzom)` : ""
+      summary += `Zisk: <b>${signed(profit, 1)} j.</b>${
+        withOdds.length < decided.length ? ` (z ${plural(withOdds.length, "tipu", "tipov", "tipov")} so známym kurzom)` : ""
       }\n`;
     }
   }
@@ -483,6 +500,6 @@ export function buildDailyResultsText(tips: SavedTip[], day: string): string {
     lines.join("\n") +
     `\n\n` +
     summary +
-    `\n<i>Poctivá história - vrátane prehratých tipov.</i>`
+    `\n<i>Poctivá história – vrátane prehratých tipov.</i>`
   );
 }

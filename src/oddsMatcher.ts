@@ -21,6 +21,9 @@ export interface OddsMatch {
 }
 
 /** Minimálna očakávaná hodnota tipu: pravdepodobnosť × kurz. 1,05 = +5 %. */
+/** Názov trhu "oba tímy skórujú" - nový aj starší (v uložených tipoch). */
+const BTTS_MARKETS = ["Oba tímy skórujú", "Obaja tímy skórujú"];
+
 export const MIN_EXPECTED_VALUE = 1.05;
 
 /**
@@ -75,7 +78,7 @@ export function findOdds(
     return best(odds.filter((o) => /^match winner$/i.test(o.bet.trim()) && o.value.trim().toLowerCase() === want));
   }
 
-  if (pick.market === "Obaja tímy skórujú") {
+  if (BTTS_MARKETS.includes(pick.market)) {
     const want = pick.selection === "Áno" ? "yes" : pick.selection === "Nie" ? "no" : null;
     if (!want) return null;
     return best(
@@ -120,7 +123,7 @@ export function marketProbability(
     others = [`Výhra ${homeTeam}`, "Remíza", `Výhra ${awayTeam}`]
       .filter((sel) => sel !== pick.selection)
       .map((sel) => findOdds(odds, { market: pick.market, selection: sel }, homeTeam, awayTeam));
-  } else if (pick.market === "Obaja tímy skórujú") {
+  } else if (BTTS_MARKETS.includes(pick.market)) {
     others = [findOdds(odds, { market: pick.market, selection: pick.selection === "Áno" ? "Nie" : "Áno" }, homeTeam, awayTeam)];
   } else {
     const ou = parseOverUnder(pick.selection);

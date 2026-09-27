@@ -376,7 +376,7 @@ export function predictMatch(
 
   const sampleSizeWarning =
     minGamesPlayed < 6
-      ? `Pozor: v tejto sezóne je odohraných len málo zápasov (min. ${minGamesPlayed}). Použité historické dáta - ${describeHistory(
+      ? `Pozor: v tejto sezóne je odohraných len málo zápasov (min. ${minGamesPlayed}). Použité historické dáta – ${describeHistory(
           fixture.homeTeam.name,
           homePriorsResult
         )}, ${describeHistory(fixture.awayTeam.name, awayPriorsResult)}.`
@@ -437,7 +437,7 @@ export function predictMatch(
 
   const bttsExplanation = `Očakávané góly: ${fixture.homeTeam.name} ${xg.home.toFixed(1)}, ${
     fixture.awayTeam.name
-  } ${xg.away.toFixed(1)} - oba tímy majú reálnu šancu skórovať.`;
+  } ${xg.away.toFixed(1)} – oba tímy majú reálnu šancu skórovať.`;
 
   const statExplanation = (expected: number, line: number): string =>
     `Priemer oboch tímov v tejto štatistike za posledné zápasy je ${expected.toFixed(
@@ -472,9 +472,9 @@ export function predictMatch(
   }
 
   if (poisson.bttsYes >= poisson.bttsNo) {
-    candidates.push({ market: "Obaja tímy skórujú", selection: "Áno", probability: poisson.bttsYes, category: "btts", explanation: bttsExplanation });
+    candidates.push({ market: "Oba tímy skórujú", selection: "Áno", probability: poisson.bttsYes, category: "btts", explanation: bttsExplanation });
   } else {
-    candidates.push({ market: "Obaja tímy skórujú", selection: "Nie", probability: poisson.bttsNo, category: "btts", explanation: bttsExplanation });
+    candidates.push({ market: "Oba tímy skórujú", selection: "Nie", probability: poisson.bttsNo, category: "btts", explanation: bttsExplanation });
   }
 
   if (corners) {

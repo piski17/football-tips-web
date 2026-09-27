@@ -118,8 +118,15 @@ export async function saveTip(tip: SavedTip): Promise<void> {
   });
 }
 
+/** Staršie tipy mali trh pomenovaný "Obaja tímy skórujú" - zobrazujeme správne "Oba tímy skórujú". */
+function normalizeTip(t: SavedTip): SavedTip {
+  const fix = (m: string) => (m === "Obaja tímy skórujú" ? "Oba tímy skórujú" : m);
+  const legs = t.legs ? t.legs.map((l) => ({ ...l, market: fix(l.market) })) : t.legs;
+  return { ...t, market: fix(t.market), ...(legs ? { legs } : {}) };
+}
+
 export async function listTips(): Promise<SavedTip[]> {
-  return readAll();
+  return (await readAll()).map(normalizeTip);
 }
 
 export async function updateTip(id: string, updates: Partial<SavedTip>): Promise<void> {
