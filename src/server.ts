@@ -1,3 +1,4 @@
+import { startBacktest, getBacktest } from "./backtest";
 import { getDay, getAllDays, setDay } from "./dailyStore";
 import "dotenv/config";
 import express, { NextFunction, Request, Response } from "express";
@@ -763,6 +764,31 @@ app.post("/api/daily/import", async (req, res) => {
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
+});
+
+
+// ---- Spätný test modelu (za heslom) ----
+app.post("/api/backtest", (req, res) => {
+  const b = req.body ?? {};
+  const leagueIds = Array.isArray(b.leagueIds) ? b.leagueIds.map(Number).filter((n: number) => Number.isFinite(n)) : [];
+  const season = Number(b.season);
+  const re = /^\d{4}-\d{2}-\d{2}$/;
+  if (!leagueIds.length || !Number.isFinite(season) || !re.test(b.from ?? "") || !re.test(b.to ?? "")) {
+    res.status(400).json({ error: "Vyber ligy, sezónu a obdobie." });
+    return;
+  }
+  const maxFixtures = Math.max(5, Math.min(300, Number(b.maxFixtures) || 60));
+  const job = startBacktest({ leagueIds, season, from: b.from, to: b.to, maxFixtures });
+  res.json(job);
+});
+
+app.get("/api/backtest/:id", (req, res) => {
+  const job = getBacktest(req.params.id);
+  if (!job) {
+    res.status(404).json({ error: "Test sa nenašiel (server sa medzitým mohol reštartovať)." });
+    return;
+  }
+  res.json(job);
 });
 
 // Skrytie / vrátenie tipu v histórii (tip ostáva uložený, na prezentácii aj v štatistikách).

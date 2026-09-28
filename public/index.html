@@ -55,6 +55,7 @@
       <button class="btn-ghost" id="openTicketBtn">Tiket <span id="ticketCount"></span></button>
       <button class="btn-ghost" id="openTipsBtn">História tipov</button>
       <button class="btn-ghost" id="openSubscribersBtn">Predplatitelia</button>
+      <button class="btn-ghost" id="openBacktestBtn" title="Overenie presnosti modelu na odohraných zápasoch">Spätný test</button>
       <a class="btn-ghost" href="/suhrn" style="text-decoration:none;display:inline-flex;align-items:center;">Denný súhrn</a>
     </header>
 
@@ -201,6 +202,29 @@
       <div class="modal-actions">
         <button class="btn-ghost" id="mtCloseBtn">Zavrieť</button>
         <button class="btn-primary" id="mtSaveBtn">Uložiť tip</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="backtestModal" hidden>
+    <div class="modal modal-large">
+      <h3>Spätný test modelu</h3>
+      <p class="muted small" style="margin:-4px 0 14px;">Model vypočíta tipy pre odohrané zápasy len z údajov, ktoré boli známe pred výkopom, a porovná ich so skutočnými výsledkami. Ukáže, pri ktorých trhoch sa percentá zhodujú s realitou a kde model preceňuje alebo podceňuje. Kurzy sa nepoužívajú – test meria presnosť percent, nie zisk.</p>
+      <div class="bt-form">
+        <div class="bt-leagues" id="btLeagues"><span class="muted small">Načítavam ligy…</span></div>
+        <div class="bt-fields">
+          <label>Od <input type="date" id="btFrom" /></label>
+          <label>Do <input type="date" id="btTo" /></label>
+          <label>Sezóna <input type="number" id="btSeason" min="2000" max="2100" /></label>
+          <label>Max. zápasov <input type="number" id="btMax" min="5" max="300" value="60" /></label>
+        </div>
+        <p class="muted small" id="btCost"></p>
+      </div>
+      <div id="btProgress" class="muted small"></div>
+      <div id="btReport"></div>
+      <div class="modal-actions">
+        <button class="btn-ghost" id="btCloseBtn">Zavrieť</button>
+        <button class="btn-primary" id="btStartBtn">Spustiť test</button>
       </div>
     </div>
   </div>

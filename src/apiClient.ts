@@ -122,6 +122,26 @@ function checkApiErrors(data: any): void {
   if (messages.length > 0) throw new Error(messages.join(" | "));
 }
 
+/** Deň pred dátumom (YYYY-MM-DD) – pre spätný test: údaje len spred výkopu. */
+function dayBefore(iso: string): string {
+  const d = new Date(iso);
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+/** Ponechá len zápasy odohrané pred daným časom (pre spätný test). */
+function beforeDate(fixtures: any[], asOf?: string): any[] {
+  if (!asOf) return fixtures;
+  const t = new Date(asOf).getTime();
+  return fixtures.filter((f: any) => new Date(f?.fixture?.date).getTime() < t);
+}
+
+/** Odohrané zápasy ligy v období (pre spätný test). */
+export async function getFinishedFixtures(leagueId: number, season: number, from: string, to: string): Promise<Fixture[]> {
+  const res = await client().get("/fixtures", { params: { league: leagueId, season, from, to, status: "FT-AET-PEN" } });
+  checkApiErrors(res.data);
+  return (res.data?.response ?? []).map((item: any) => mapFixture(item));
+}
+
 function mapFixture(item: any): Fixture {
   return {
     fixtureId: item.fixture.id,
@@ -172,15 +192,16 @@ export async function getFixturesByLeague(
 export async function getTeamStatistics(
   leagueId: number,
   season: number,
-  teamId: number
+  teamId: number,
+  asOf?: string
 ): Promise<TeamStatistics> {
-  const cacheKey = `teamStats:${leagueId}:${season}:${teamId}`;
+  const cacheKey = `teamStats:${leagueId}:${season}:${teamId}:${asOf ? dayBefore(asOf) : ""}`;
   const cached = getCached<TeamStatistics>(cacheKey);
   if (cached !== undefined) return cached;
 
   const fetchOnce = async (): Promise<TeamStatistics> => {
     const res = await client().get("/teams/statistics", {
-      params: { league: leagueId, season, team: teamId },
+      params: { league: leagueId, season, team: teamId, ...(asOf ? { date: dayBefore(asOf) } : {}) },
     });
     checkApiErrors(res.data);
 
@@ -270,9 +291,12 @@ export async function getTeamExtendedStatsAverages(
   leagueId: number,
   season: number,
   teamId: number,
-  lastN: number = 10
+  lastN: number = 10,
+  asOf?: string
 ): Promise<TeamExtendedStatsAverages> {
-  const cacheKey = `extStatsAvg2:${leagueId}:${season}:${teamId}:${lastN}`;
+  const cacheKey = `extStatsAvg2:${leagueId}:${season}:${teamId}:${lastN}:${asOf ?? ""}`;
+  // Pri spätnom teste načítame viac zápasov a ponecháme len tie spred výkopu.
+  const extra = asOf ? 15 : 0;
   const cached = getCached<TeamExtendedStatsAverages>(cacheKey);
   if (cached !== undefined) return cached;
 
@@ -284,19 +308,19 @@ export async function getTeamExtendedStatsAverages(
     // (napr. na začiatku sezóny), doplníme zvyšok z tej predošlej, aby bol
     // priemer od začiatku spoľahlivý.
     const currentSeasonRes = await client().get("/fixtures", {
-      params: { team: teamId, league: leagueId, season, last: lastN, status: "FT" },
+      params: { team: teamId, league: leagueId, season, last: lastN + extra, status: "FT" },
     });
     checkApiErrors(currentSeasonRes.data);
-    let fixtures: any[] = currentSeasonRes.data?.response ?? [];
+    let fixtures: any[] = beforeDate(currentSeasonRes.data?.response ?? [], asOf).slice(0, lastN);
 
     if (fixtures.length < lastN) {
       const remaining = lastN - fixtures.length;
       try {
         const [prevSeason] = await getPreviousSeasons(leagueId, season, 1);
         const prevSeasonRes = await client().get("/fixtures", {
-          params: { team: teamId, league: leagueId, season: prevSeason, last: remaining, status: "FT" },
+          params: { team: teamId, league: leagueId, season: prevSeason, last: remaining + extra, status: "FT" },
         });
-        const prevFixtures: any[] = prevSeasonRes.data?.response ?? [];
+        const prevFixtures: any[] = beforeDate(prevSeasonRes.data?.response ?? [], asOf).slice(0, remaining);
         fixtures = [...fixtures, ...prevFixtures];
       } catch {
         // predošlá sezóna nie je k dispozícii - pokračujeme len s tým, čo máme
@@ -308,10 +332,10 @@ export async function getTeamExtendedStatsAverages(
     if (fixtures.length < 6) {
       try {
         const allRes = await client().get("/fixtures", {
-          params: { team: teamId, last: lastN, status: "FT-AET-PEN" },
+          params: { team: teamId, last: lastN + extra, status: "FT-AET-PEN" },
         });
         const seen = new Set(fixtures.map((f: any) => f.fixture?.id));
-        for (const f of allRes.data?.response ?? []) {
+        for (const f of beforeDate(allRes.data?.response ?? [], asOf)) {
           if (fixtures.length >= lastN) break;
           if (!seen.has(f.fixture?.id)) fixtures.push(f);
         }
@@ -337,11 +361,16 @@ export async function getTeamExtendedStatsAverages(
       mapSequential(fixtures, async (f: any) => {
         try {
           // Štatistiky oboch tímov naraz (jedna požiadavka) – vlastné aj súperove.
-          const statsRes = await client().get("/fixtures/statistics", {
-            params: { fixture: f.fixture.id },
-          });
-          checkApiErrors(statsRes.data);
-          const teams: any[] = statsRes.data?.response ?? [];
+          const rawKey = `fxStatsRaw:${f.fixture.id}`;
+          let teams = getCached<any[]>(rawKey);
+          if (teams === undefined) {
+            const statsRes = await client().get("/fixtures/statistics", {
+              params: { fixture: f.fixture.id },
+            });
+            checkApiErrors(statsRes.data);
+            teams = (statsRes.data?.response ?? []) as any[];
+            if (teams.length) setCached(rawKey, teams, 7 * 24 * 60 * 60 * 1000);
+          }
           const own: any[] = teams.find((t: any) => t?.team?.id === teamId)?.statistics ?? [];
           const opp: any[] = teams.find((t: any) => t?.team?.id !== teamId)?.statistics ?? [];
           if (own.length === 0) return null;
@@ -469,14 +498,17 @@ export async function getPreviousSeasons(leagueId: number, season: number, count
  * "WDLWW" - najstarší zápas vľavo, najnovší vpravo (rovnako ako API).
  * Použije sa, keď tím v aktuálnej sezóne súťaže ešte nehral.
  */
-export async function getRecentFormAnyCompetition(teamId: number, count: number = 5): Promise<string> {
-  const cacheKey = `recentForm:${teamId}:${count}`;
+export async function getRecentFormAnyCompetition(teamId: number, count: number = 5, asOf?: string): Promise<string> {
+  const cacheKey = `recentForm:${teamId}:${count}:${asOf ?? ""}`;
   const cached = getCached<string>(cacheKey);
   if (cached !== undefined) return cached;
   try {
-    const res = await client().get("/fixtures", { params: { team: teamId, last: count, status: "FT-AET-PEN" } });
+    const res = await client().get("/fixtures", { params: { team: teamId, last: count + (asOf ? 15 : 0), status: "FT-AET-PEN" } });
     checkApiErrors(res.data);
-    const fixtures: any[] = (res.data?.response ?? []).slice().sort(
+    const fixtures: any[] = beforeDate(res.data?.response ?? [], asOf)
+      .sort((a: any, b: any) => new Date(b?.fixture?.date).getTime() - new Date(a?.fixture?.date).getTime())
+      .slice(0, count)
+      .sort(
       (a: any, b: any) => new Date(a?.fixture?.date).getTime() - new Date(b?.fixture?.date).getTime()
     );
     const form = fixtures

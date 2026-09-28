@@ -794,6 +794,7 @@ export function predictMatch(
     bestBets,
     lowValueBets,
     oddsAvailable,
+    allCandidates: candidates,
     teamSeasonGoalsPerGame: {
       home: homeStats.goals.for.average.total,
       away: awayStats.goals.for.average.total,

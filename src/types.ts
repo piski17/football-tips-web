@@ -168,6 +168,8 @@ export interface PredictionResult {
   bestBets: MarketPick[];
   /** Tipy v pásme 65–75 %, ktoré vypadli pre príliš nízky skutočný kurz. */
   lowValueBets?: MarketPick[];
+  /** Všetci kandidáti (najpravdepodobnejšia voľba pre každý trh) – pre spätný test. */
+  allCandidates?: MarketPick[];
   /** Či boli pre zápas k dispozícii skutočné kurzy stávkoviek. */
   oddsAvailable?: boolean;
   teamSeasonGoalsPerGame: {

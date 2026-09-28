@@ -2154,4 +2154,114 @@ function openEditTip(tip) {
   };
 }
 
+
+// ---- Spätný test modelu ----
+const backtestModal = document.getElementById("backtestModal");
+let btPollTimer = null;
+
+function btDefaults() {
+  const pad = (n) => String(n).padStart(2, "0");
+  const iso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const to = new Date(); to.setDate(to.getDate() - 1);
+  const from = new Date(); from.setDate(from.getDate() - 21);
+  if (!document.getElementById("btFrom").value) document.getElementById("btFrom").value = iso(from);
+  if (!document.getElementById("btTo").value) document.getElementById("btTo").value = iso(to);
+  if (!document.getElementById("btSeason").value) document.getElementById("btSeason").value = seasonInput.value;
+}
+function btCost() {
+  const n = parseInt(document.getElementById("btMax").value, 10) || 60;
+  document.getElementById("btCost").textContent =
+    `Odhad: ${n} zápasov ≈ ${n * 15}–${n * 25} požiadaviek na API pri prvom behu (opakované zápasy a tímy sú rýchlejšie). Test beží na serveri, okno môžeš zavrieť a vrátiť sa neskôr.`;
+}
+
+async function openBacktest() {
+  backtestModal.hidden = false;
+  btDefaults(); btCost();
+  try {
+    const leagues = await fetchJson("/api/leagues");
+    document.getElementById("btLeagues").innerHTML = leagues
+      .map((l) => `<label><input type="checkbox" value="${l.id}" checked /> ${escapeHtml(translateLeagueName(l.name))}</label>`)
+      .join("");
+  } catch {
+    document.getElementById("btLeagues").innerHTML = `<span class="muted small">Ligy sa nepodarilo načítať.</span>`;
+  }
+  const last = localStorage.getItem("tipradar-backtest-job");
+  if (last) pollBacktest(last);
+}
+
+function pct(v) { return v == null ? "–" : `${fmtNum(v, 0)} %`; }
+function diffCell(pred, real) {
+  if (pred == null || real == null) return `<td class="num">–</td>`;
+  const d = real - pred;
+  const cls = Math.abs(d) < 5 ? "bt-good" : d < 0 ? "bt-bad" : "";
+  return `<td class="num ${cls}">${d > 0 ? "+" : d < 0 ? "−" : ""}${fmtNum(Math.abs(d), 0)} b.</td>`;
+}
+
+function renderBacktest(job) {
+  const r = job.report;
+  const p = job.progress || { done: 0, total: 0 };
+  const running = job.status === "running";
+  document.getElementById("btProgress").innerHTML = running
+    ? `Prebieha test: ${p.done} / ${p.total || "?"} zápasov…<div class="bt-bar"><i style="width:${p.total ? (p.done / p.total) * 100 : 3}%"></i></div>`
+    : job.status === "error"
+      ? `Test zlyhal: ${escapeHtml(job.error || "")}`
+      : `Hotovo – ${r ? r.fixturesAnalyzed : 0} zápasov${r && r.fixturesFailed ? `, ${r.fixturesFailed} sa nepodarilo spracovať` : ""}.`;
+  document.getElementById("btStartBtn").disabled = running;
+  if (!r || !r.samples) { document.getElementById("btReport").innerHTML = running ? "" : `<p class="muted">Pre zvolené obdobie a ligy sa nenašli žiadne vyhodnotiteľné zápasy.</p>`; return; }
+
+  const b = r.bandOverall;
+  const summary = b.count
+    ? `<div class="bt-summary">Tipy v pásme 65 – 75 % (tie, ktoré by appka odporučila): <strong>${b.count}</strong>, model v priemere <strong>${pct(b.avgPredicted)}</strong>, reálne vyšlo <strong class="${b.hitRate < b.avgPredicted - 5 ? "bt-bad" : "bt-good"}">${pct(b.hitRate)}</strong>.</div>`
+    : "";
+  const buckets = r.buckets.filter((x) => x.count > 0).map((x) =>
+    `<tr><td>${x.label}</td><td class="num">${x.count}</td><td class="num">${pct(x.avgPredicted)}</td><td class="num">${pct(x.hitRate)}</td>${diffCell(x.avgPredicted, x.hitRate)}</tr>`).join("");
+  const markets = r.markets.map((m) =>
+    `<tr><td>${escapeHtml(m.market)}</td><td class="num">${m.count}</td><td class="num">${pct(m.avgPredicted)}</td><td class="num">${pct(m.hitRate)}</td>${diffCell(m.avgPredicted, m.hitRate)}<td class="num">${m.inBand.count ? `${pct(m.inBand.hitRate)} <span class="muted">(${m.inBand.count})</span>` : "–"}</td></tr>`).join("");
+  document.getElementById("btReport").innerHTML = `
+    ${summary}
+    <h4 style="margin:14px 0 0;">Podľa dôvery modelu</h4>
+    <table class="bt-table"><thead><tr><th>Pásmo</th><th class="num">Tipov</th><th class="num">Model</th><th class="num">Realita</th><th class="num">Rozdiel</th></tr></thead><tbody>${buckets}</tbody></table>
+    <h4 style="margin:4px 0 0;">Podľa trhov</h4>
+    <table class="bt-table"><thead><tr><th>Trh</th><th class="num">Tipov</th><th class="num">Model</th><th class="num">Realita</th><th class="num">Rozdiel</th><th class="num">V pásme 65–75 %</th></tr></thead><tbody>${markets}</tbody></table>
+    <p class="muted small">Rozdiel = realita mínus predpoveď v percentuálnych bodoch. Zelená: model sedí (do ±5 b.). Červená: model <strong>preceňuje</strong> – tipy vychádzajú menej často, než hovorí. Pri menej ako ~50 tipoch v riadku berte čísla len orientačne.</p>`;
+}
+
+async function pollBacktest(id) {
+  clearTimeout(btPollTimer);
+  try {
+    const job = await fetchJson(`/api/backtest/${encodeURIComponent(id)}`);
+    renderBacktest(job);
+    if (job.status === "running") btPollTimer = setTimeout(() => pollBacktest(id), 3000);
+  } catch {
+    localStorage.removeItem("tipradar-backtest-job");
+    document.getElementById("btProgress").textContent = "";
+    document.getElementById("btStartBtn").disabled = false;
+  }
+}
+
+document.getElementById("openBacktestBtn").addEventListener("click", openBacktest);
+document.getElementById("btCloseBtn").addEventListener("click", () => { backtestModal.hidden = true; clearTimeout(btPollTimer); });
+document.getElementById("btMax").addEventListener("input", btCost);
+document.getElementById("btStartBtn").addEventListener("click", async () => {
+  const leagueIds = Array.from(document.querySelectorAll("#btLeagues input:checked")).map((i) => Number(i.value));
+  if (!leagueIds.length) { showToast("Vyber aspoň jednu ligu."); return; }
+  try {
+    const job = await fetchJson("/api/backtest", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        leagueIds,
+        season: parseInt(document.getElementById("btSeason").value, 10),
+        from: document.getElementById("btFrom").value,
+        to: document.getElementById("btTo").value,
+        maxFixtures: parseInt(document.getElementById("btMax").value, 10) || 60,
+      }),
+    });
+    localStorage.setItem("tipradar-backtest-job", job.id);
+    pollBacktest(job.id);
+  } catch (err) {
+    showToast(`Test sa nepodarilo spustiť: ${err.message}`);
+  }
+});
+
 init();
