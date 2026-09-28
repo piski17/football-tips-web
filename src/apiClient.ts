@@ -249,6 +249,11 @@ export interface TeamExtendedStatsAverages {
   offsides: number | null;
   /** Priemerné držanie lopty tímu v % (0–100). */
   possession: number | null;
+  /** To isté, ale čo tím DOVOĽUJE súperom (rohy, strely, fauly a ofsajdy súperov). */
+  cornersAgainst?: number | null;
+  shotsOnGoalAgainst?: number | null;
+  foulsAgainst?: number | null;
+  offsidesAgainst?: number | null;
 }
 
 /** Hodnota štatistiky z API - číslo, alebo percento ako text ("55%"). */
@@ -267,7 +272,7 @@ export async function getTeamExtendedStatsAverages(
   teamId: number,
   lastN: number = 10
 ): Promise<TeamExtendedStatsAverages> {
-  const cacheKey = `extStatsAvg:${leagueId}:${season}:${teamId}:${lastN}`;
+  const cacheKey = `extStatsAvg2:${leagueId}:${season}:${teamId}:${lastN}`;
   const cached = getCached<TeamExtendedStatsAverages>(cacheKey);
   if (cached !== undefined) return cached;
 
@@ -298,6 +303,23 @@ export async function getTeamExtendedStatsAverages(
       }
     }
 
+    // Stále málo zápasov (typicky reprezentácie – Liga národov sa hrá zriedka):
+    // doplníme posledné zápasy tímu zo VŠETKÝCH súťaží (kvalifikácie, turnaje, prípravné).
+    if (fixtures.length < 6) {
+      try {
+        const allRes = await client().get("/fixtures", {
+          params: { team: teamId, last: lastN, status: "FT-AET-PEN" },
+        });
+        const seen = new Set(fixtures.map((f: any) => f.fixture?.id));
+        for (const f of allRes.data?.response ?? []) {
+          if (fixtures.length >= lastN) break;
+          if (!seen.has(f.fixture?.id)) fixtures.push(f);
+        }
+      } catch {
+        // bez doplnenia
+      }
+    }
+
     if (fixtures.length === 0) {
       setCached(cacheKey, empty, TTL_CORNERS_AVERAGE);
       return empty;
@@ -314,15 +336,21 @@ export async function getTeamExtendedStatsAverages(
     const fetchAllStats = () =>
       mapSequential(fixtures, async (f: any) => {
         try {
+          // Štatistiky oboch tímov naraz (jedna požiadavka) – vlastné aj súperove.
           const statsRes = await client().get("/fixtures/statistics", {
-            params: { fixture: f.fixture.id, team: teamId },
+            params: { fixture: f.fixture.id },
           });
           checkApiErrors(statsRes.data);
-          const stats: any[] = statsRes.data?.response?.[0]?.statistics ?? [];
+          const teams: any[] = statsRes.data?.response ?? [];
+          const own: any[] = teams.find((t: any) => t?.team?.id === teamId)?.statistics ?? [];
+          const opp: any[] = teams.find((t: any) => t?.team?.id !== teamId)?.statistics ?? [];
+          if (own.length === 0) return null;
           const row: Record<string, number | null> = {};
           for (const [key, apiName] of Object.entries(fieldMap)) {
-            const stat = stats.find((s: any) => s.type === apiName);
-            row[key] = parseStatValue(stat?.value);
+            row[key] = parseStatValue(own.find((s: any) => s.type === apiName)?.value);
+            if (key !== "possession") {
+              row[key + "Against"] = parseStatValue(opp.find((s: any) => s.type === apiName)?.value);
+            }
           }
           return row;
         } catch {
@@ -358,6 +386,10 @@ export async function getTeamExtendedStatsAverages(
       fouls: average("fouls"),
       offsides: average("offsides"),
       possession: average("possession"),
+      cornersAgainst: average("cornersAgainst"),
+      shotsOnGoalAgainst: average("shotsOnGoalAgainst"),
+      foulsAgainst: average("foulsAgainst"),
+      offsidesAgainst: average("offsidesAgainst"),
     };
 
     setCached(cacheKey, result, TTL_CORNERS_AVERAGE);
