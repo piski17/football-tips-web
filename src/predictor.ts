@@ -72,6 +72,29 @@ function poissonOverUnder(lambda: number, line: number, maxCount: number = 30): 
   return { over: (1 - cappedUnder) * 100, under: cappedUnder * 100 };
 }
 
+/**
+ * Nad/pod pre štatistiky, ktoré kolíšu viac, ako predpokladá Poissonovo
+ * rozdelenie (karty, strely, ofsajdy). Negatívne binomické rozdelenie
+ * s rozptylom = priemer × varRatio. Spätný test ukázal, že pri týchto trhoch
+ * Poisson preceňoval istotu.
+ */
+function overdispersedOverUnder(mean: number, line: number, varRatio: number): { over: number; under: number } {
+  if (!(mean > 0) || varRatio <= 1.0001) return poissonOverUnder(Math.max(mean, 0.01), line);
+  const r = mean / (varRatio - 1);
+  const p = r / (r + mean);
+  let pmf = Math.pow(p, r);
+  let under = 0;
+  const maxK = Math.floor(line);
+  for (let k = 0; k <= maxK; k++) {
+    under += pmf;
+    pmf = pmf * ((k + r) / (k + 1)) * (1 - p);
+  }
+  under = Math.min(1, Math.max(0, under)) * 100;
+  return { over: 100 - under, under };
+}
+// Pomer rozptylu k priemeru (z väčšej nestability týchto štatistík).
+const VAR_RATIO = { cards: 1.4, shotsOnGoal: 1.35, offsides: 1.3 };
+
 /** Očakávané góly domáceho a hosťujúceho tímu na základe sily útoku/obrany a skutočného ligového priemeru. */
 export function expectedGoals(
   home: TeamStatistics,
@@ -376,6 +399,8 @@ export function predictMatch(
     awayOffsides?: number | null;
     homePossession?: number | null;
     awayPossession?: number | null;
+    homeCards?: number | null;
+    awayCards?: number | null;
   },
   marketOdds?: MarketOdds[],
   h2hStats?: H2HStats[]
@@ -446,11 +471,23 @@ export function predictMatch(
   }
 
   // ---- Karty (priemer oboch tímov spolu) ----
-  const cardsBlend = blendH2H(homeStats.cardsPerGame + awayStats.cardsPerGame, "cards");
-  const expectedCards = cardsBlend.value;
-  if (cardsBlend.h2h) h2hNotes.karty = `Vo vzájomných zápasoch (${cardsBlend.h2h.n}) padlo v priemere ${fmt1(cardsBlend.h2h.avg)} kariet.`;
-  const cardsOU = poissonOverUnder(expectedCards, CARDS_LINE);
-  const cards: OverUnderMarket = { expected: expectedCards, line: CARDS_LINE, ...cardsOU };
+  // Prednostne z posledných 10 zápasov (s doplnením z minulej sezóny / iných súťaží).
+  // Súhrn sezóny sa použije len pri aspoň 3 odohraných zápasoch oboch tímov – inak
+  // (napr. začiatok sezóny) sa tip na karty radšej neponúkne.
+  let cards: OverUnderMarket | undefined;
+  const baseCards =
+    extraStatsAvg?.homeCards != null && extraStatsAvg?.awayCards != null
+      ? extraStatsAvg.homeCards + extraStatsAvg.awayCards
+      : (homeStats.fixtures.played.total ?? 0) >= 3 && (awayStats.fixtures.played.total ?? 0) >= 3
+        ? homeStats.cardsPerGame + awayStats.cardsPerGame
+        : null;
+  if (baseCards !== null && baseCards > 0) {
+    const cardsBlend = blendH2H(baseCards, "cards");
+    const expectedCards = cardsBlend.value;
+    if (cardsBlend.h2h) h2hNotes.karty = `Vo vzájomných zápasoch (${cardsBlend.h2h.n}) padlo v priemere ${fmt1(cardsBlend.h2h.avg)} kariet.`;
+    const cardsOU = overdispersedOverUnder(expectedCards, CARDS_LINE, VAR_RATIO.cards);
+    cards = { expected: expectedCards, line: CARDS_LINE, ...cardsOU };
+  }
 
   // ---- Strely na bránu (ak sú dáta k dispozícii) ----
   let shotsOnGoal: OverUnderMarket | undefined;
@@ -458,7 +495,7 @@ export function predictMatch(
     const b = blendH2H(extraStatsAvg.homeShotsOnGoal + extraStatsAvg.awayShotsOnGoal, "shotsOnGoal");
     const expected = b.value;
     if (b.h2h) h2hNotes.strely = `Vo vzájomných zápasoch (${b.h2h.n}) v priemere ${fmt1(b.h2h.avg)} striel na bránu.`;
-    const { over, under } = poissonOverUnder(expected, SHOTS_ON_GOAL_LINE);
+    const { over, under } = overdispersedOverUnder(expected, SHOTS_ON_GOAL_LINE, VAR_RATIO.shotsOnGoal);
     shotsOnGoal = { expected, line: SHOTS_ON_GOAL_LINE, over, under };
   }
 
@@ -478,7 +515,7 @@ export function predictMatch(
     const b = blendH2H(extraStatsAvg.homeOffsides + extraStatsAvg.awayOffsides, "offsides");
     const expected = b.value;
     if (b.h2h) h2hNotes.ofsajdy = `Vo vzájomných zápasoch (${b.h2h.n}) v priemere ${fmt1(b.h2h.avg)} ofsajdov.`;
-    const { over, under } = poissonOverUnder(expected, OFFSIDES_LINE);
+    const { over, under } = overdispersedOverUnder(expected, OFFSIDES_LINE, VAR_RATIO.offsides);
     offsides = { expected, line: OFFSIDES_LINE, over, under };
   }
 
@@ -548,9 +585,9 @@ export function predictMatch(
     }
   }
 
-  if (cards.over >= cards.under) {
+  if (cards && cards.over >= cards.under) {
     candidates.push({ market: "Karty", selection: `Over ${CARDS_LINE}`, probability: cards.over, category: "karty", explanation: statExplanation(cards.expected, CARDS_LINE) });
-  } else {
+  } else if (cards) {
     candidates.push({ market: "Karty", selection: `Under ${CARDS_LINE}`, probability: cards.under, category: "karty", explanation: statExplanation(cards.expected, CARDS_LINE) });
   }
 

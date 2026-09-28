@@ -132,6 +132,8 @@ async function predictAsOf(fixture: Fixture, leagueId: number, season: number): 
       awayOffsides: mixStat(awayExt.offsides, homeExt.offsidesAgainst),
       homePossession: homeExt.possession,
       awayPossession: awayExt.possession,
+      homeCards: mixStat(homeExt.cards, awayExt.cardsAgainst),
+      awayCards: mixStat(awayExt.cards, homeExt.cardsAgainst),
     },
     undefined,
     h2hStats

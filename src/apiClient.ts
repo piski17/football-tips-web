@@ -275,6 +275,9 @@ export interface TeamExtendedStatsAverages {
   shotsOnGoalAgainst?: number | null;
   foulsAgainst?: number | null;
   offsidesAgainst?: number | null;
+  /** Karty tímu (žlté + červené) a karty jeho súperov, priemer na zápas. */
+  cards?: number | null;
+  cardsAgainst?: number | null;
 }
 
 /** Hodnota štatistiky z API - číslo, alebo percento ako text ("55%"). */
@@ -294,7 +297,7 @@ export async function getTeamExtendedStatsAverages(
   lastN: number = 10,
   asOf?: string
 ): Promise<TeamExtendedStatsAverages> {
-  const cacheKey = `extStatsAvg2:${leagueId}:${season}:${teamId}:${lastN}:${asOf ?? ""}`;
+  const cacheKey = `extStatsAvg3:${leagueId}:${season}:${teamId}:${lastN}:${asOf ?? ""}`;
   // Pri spätnom teste načítame viac zápasov a ponecháme len tie spred výkopu.
   const extra = asOf ? 15 : 0;
   const cached = getCached<TeamExtendedStatsAverages>(cacheKey);
@@ -381,6 +384,12 @@ export async function getTeamExtendedStatsAverages(
               row[key + "Against"] = parseStatValue(opp.find((s: any) => s.type === apiName)?.value);
             }
           }
+          // Karty = žlté + červené. Chýbajúca hodnota v API znamená 0 kariet.
+          const cardsOf = (list: any[]) =>
+            (parseStatValue(list.find((s: any) => s.type === "Yellow Cards")?.value) ?? 0) +
+            (parseStatValue(list.find((s: any) => s.type === "Red Cards")?.value) ?? 0);
+          row.cards = cardsOf(own);
+          row.cardsAgainst = opp.length ? cardsOf(opp) : null;
           return row;
         } catch {
           return null;
@@ -419,6 +428,8 @@ export async function getTeamExtendedStatsAverages(
       shotsOnGoalAgainst: average("shotsOnGoalAgainst"),
       foulsAgainst: average("foulsAgainst"),
       offsidesAgainst: average("offsidesAgainst"),
+      cards: average("cards"),
+      cardsAgainst: average("cardsAgainst"),
     };
 
     setCached(cacheKey, result, TTL_CORNERS_AVERAGE);
