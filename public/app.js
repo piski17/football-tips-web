@@ -613,6 +613,26 @@ function renderAnalysis(r) {
       <div class="stat-line"><span>Výhry ${escapeHtml(translateTeamName(r.fixture.homeTeam.name))}</span><strong>${r.headToHead.homeWins}</strong></div>
       <div class="stat-line"><span>Remízy</span><strong>${r.headToHead.draws}</strong></div>
       <div class="stat-line"><span>Výhry ${escapeHtml(translateTeamName(r.fixture.awayTeam.name))}</span><strong>${r.headToHead.awayWins}</strong></div>
+      ${
+        (r.headToHead.matches || []).length
+          ? `<div class="h2h-list">${(r.headToHead.matches || [])
+              .map((m) => {
+                const d = new Date(m.date);
+                const date = isNaN(d.getTime()) ? "" : `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}`;
+                const home = translateTeamName(m.homeWasHome ? r.fixture.homeTeam.name : r.fixture.awayTeam.name);
+                const away = translateTeamName(m.homeWasHome ? r.fixture.awayTeam.name : r.fixture.homeTeam.name);
+                const hg = m.homeWasHome ? m.homeGoals : m.awayGoals;
+                const ag = m.homeWasHome ? m.awayGoals : m.homeGoals;
+                return `<div class="h2h-row${m.usedInModel ? "" : " h2h-old"}"><span class="muted">${date}</span><span>${escapeHtml(home)} <strong>${hg} : ${ag}</strong> ${escapeHtml(away)}</span></div>`;
+              })
+              .join("")}</div>
+             <p class="muted small" style="margin:8px 0 0;">${
+               r.headToHead.usedInModel
+                 ? `Model započítal ${r.headToHead.usedInModel} ${r.headToHead.usedInModel >= 5 ? "najnovších zápasov" : "najnovšie zápasy"} za posledných 10 rokov (sivé nie).`
+                 : "Menej ako 3 vzájomné zápasy za posledných 10 rokov – do odhadu sa nezapočítali."
+             }</p>`
+          : ""
+      }
     </div>
 
     <div class="prob-section">

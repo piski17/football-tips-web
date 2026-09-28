@@ -155,6 +155,10 @@ export interface PredictionResult {
     homeWins: number;
     draws: number;
     awayWins: number;
+    /** Posledné vzájomné zápasy (najnovšie prvé) – góly z pohľadu dnešných domácich/hostí. */
+    matches?: { date: string; homeGoals: number; awayGoals: number; homeWasHome: boolean; usedInModel: boolean }[];
+    /** Koľko vzájomných zápasov model započítal do odhadu (0 = nepoužité). */
+    usedInModel?: number;
   };
   corners?: OverUnderMarket;
   cards?: OverUnderMarket;

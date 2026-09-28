@@ -316,7 +316,7 @@ function normalCdf(z: number): number {
 
 
 // ---- Vzájomné zápasy: doplnok k odhadu z dlhodobých priemerov ----
-// Váha rastie s počtom zápasov (za posledných 6 rokov, najviac 5 najnovších):
+// Váha rastie s počtom zápasov (za posledných 10 rokov, najviac 5 najnovších):
 // 3 zápasy = 15 %, 4 = 20 %, 5 = 25 %; menej ako 3 = nepoužijú sa.
 // Novšie zápasy majú väčšiu váhu (každý starší × 0,85).
 const H2H_MIN = 3;
@@ -333,12 +333,18 @@ function recencyAverage(values: (number | null)[]): { avg: number; n: number } |
   return n >= H2H_MIN ? { avg: sum / wsum, n } : null;
 }
 interface H2HGoals { n: number; weight: number; home: number; away: number; total: number }
-function h2hGoals(h2h: HeadToHeadMatch[], homeTeamId: number): H2HGoals | null {
-  const sixYearsAgo = Date.now() - 6 * 365 * 24 * 60 * 60 * 1000;
-  const recent = h2h
-    .filter((m) => m.homeGoals !== null && m.awayGoals !== null && new Date(m.date).getTime() >= sixYearsAgo)
+/** Vzájomné zápasy sa berú za posledných 10 rokov (reprezentácie sa stretávajú zriedka). */
+const H2H_YEARS = 10;
+function h2hRecent(h2h: HeadToHeadMatch[]): HeadToHeadMatch[] {
+  const since = Date.now() - H2H_YEARS * 365 * 24 * 60 * 60 * 1000;
+  return h2h
+    .filter((m) => m.homeGoals !== null && m.awayGoals !== null && new Date(m.date).getTime() >= since)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
+}
+function h2hGoals(h2h: HeadToHeadMatch[], homeTeamId: number): H2HGoals | null {
+  const recent = h2hRecent(h2h)
+  ;
   const home = recencyAverage(recent.map((m) => (m.homeTeamId === homeTeamId ? m.homeGoals : m.awayGoals)));
   const away = recencyAverage(recent.map((m) => (m.homeTeamId === homeTeamId ? m.awayGoals : m.homeGoals)));
   if (!home || !away) return null;
@@ -763,6 +769,22 @@ export function predictMatch(
       homeWins: h2hResult.homeWins,
       draws: h2hResult.draws,
       awayWins: h2hResult.awayWins,
+      matches: h2h
+        .filter((m) => m.homeGoals !== null && m.awayGoals !== null)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 8)
+        .map((m) => {
+          const homeWasHome = m.homeTeamId === fixture.homeTeam.id;
+          const used = h2hG !== null && h2hRecent(h2h).some((r) => r.fixtureId === m.fixtureId);
+          return {
+            date: m.date,
+            homeGoals: (homeWasHome ? m.homeGoals : m.awayGoals) as number,
+            awayGoals: (homeWasHome ? m.awayGoals : m.homeGoals) as number,
+            homeWasHome,
+            usedInModel: used,
+          };
+        }),
+      usedInModel: h2hG ? h2hG.n : 0,
     },
     corners,
     cards,

@@ -1368,3 +1368,8 @@ input, select, textarea { accent-color: var(--accent); }
 .empty-sweep { transform-origin: 120px 120px; animation: emptySweep 6s linear infinite; }
 @keyframes emptySweep { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .empty-sweep { animation: none; } }
+
+/* ---------- Zoznam vzájomných zápasov ---------- */
+.h2h-list { margin-top: 10px; border-top: 1px solid var(--border); }
+.h2h-row { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+.h2h-row.h2h-old { opacity: 0.5; }
