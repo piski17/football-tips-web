@@ -1,3 +1,4 @@
+import { getDay, getAllDays, setDay } from "./dailyStore";
 import "dotenv/config";
 import express, { NextFunction, Request, Response } from "express";
 import path from "path";
@@ -140,7 +141,7 @@ app.get(["/favicon.svg", "/favicon-32.png", "/favicon-256.png"], (req, res) => {
 });
 
 app.use(basicAuth);
-app.use(express.json());
+app.use(express.json({ limit: "2mb" }));
 app.use(express.static(path.join(__dirname, "..", "public")));
 
 app.get("/api/leagues", (_req, res) => {
@@ -662,6 +663,88 @@ app.post("/api/tips/:id/edit", async (req, res) => {
     }
     await updateTip(tip.id, buildTipEdit(tip, req.body ?? {}));
     res.json({ ok: true });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
+
+// ---- Denný súhrn (/suhrn) – za heslom, dáta v tej istej databáze ako história tipov ----
+const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
+function cleanTips(tips: unknown): unknown[] {
+  if (!Array.isArray(tips)) return [];
+  return tips.slice(0, 200).map((t: any) => ({
+    time: String(t?.time ?? "").slice(0, 5),
+    match: String(t?.match ?? "").slice(0, 120),
+    tip: String(t?.tip ?? "").slice(0, 160),
+    odds: String(t?.odds ?? "").slice(0, 12),
+    result: ["won", "lost", "void"].includes(t?.result) ? t.result : "",
+  }));
+}
+
+app.get(["/suhrn", "/suhrn/"], (_req, res) => {
+  res.sendFile(path.join(__dirname, "..", "public", "suhrn.html"));
+});
+
+app.get("/api/daily", async (_req, res) => {
+  try {
+    res.json({ days: await getAllDays() });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
+app.get("/api/daily/:day", async (req, res) => {
+  if (!DAY_RE.test(req.params.day)) {
+    res.status(400).json({ error: "Neplatný dátum." });
+    return;
+  }
+  try {
+    res.json((await getDay(req.params.day)) ?? { state: { tips: [] }, rev: 0 });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
+// Uloženie dňa. Ak medzitým iné zariadenie uložilo novšiu verziu, vráti ju (409)
+// a stránka ju prevezme – staršia verzia tak nikdy neprepíše novšiu.
+app.put("/api/daily/:day", async (req, res) => {
+  const day = req.params.day;
+  if (!DAY_RE.test(day)) {
+    res.status(400).json({ error: "Neplatný dátum." });
+    return;
+  }
+  try {
+    const current = await getDay(day);
+    const baseRev = Number(req.body?.baseRev) || 0;
+    if (current && current.rev > baseRev) {
+      res.status(409).json(current);
+      return;
+    }
+    const entry = { state: { tips: cleanTips(req.body?.state?.tips) }, rev: (current?.rev ?? 0) + 1 };
+    await setDay(day, entry);
+    res.json(entry);
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
+// Jednorazový prenos zo starej verzie na claude.ai – nahrá len dni, ktoré tu ešte nie sú vyplnené.
+app.post("/api/daily/import", async (req, res) => {
+  try {
+    const days = req.body?.days ?? {};
+    const existing = await getAllDays();
+    let imported = 0;
+    for (const [day, v] of Object.entries<any>(days)) {
+      if (!DAY_RE.test(day)) continue;
+      const tips = cleanTips(v?.tips ?? v?.state?.tips);
+      const filled = (list: any[]) => list.some((t) => t.match || t.tip || t.odds || t.result);
+      if (!filled(tips)) continue;
+      if (existing[day] && filled(existing[day].state.tips as any[])) continue;
+      await setDay(day, { state: { tips }, rev: (existing[day]?.rev ?? 0) + 1 });
+      imported++;
+    }
+    res.json({ imported });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }

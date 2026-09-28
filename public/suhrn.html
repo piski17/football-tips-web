@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TipRadar — denný súhrn výsledkov</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  /* Svetlá verzia: kriedový papier */
+  --bg: #f3f1ea; --panel: #fffdf7; --line: #dcd8cc; --text: #122018; --muted: #5f6e65;
+  --accent: #b8892a; --accent-ink: #1a1407; --good: #2f8f57; --bad: #c24e43; --input: #faf8f1;
+  --display: "Bricolage Grotesque", "Figtree", system-ui, sans-serif;
+  --body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+/* Tmavá verzia: nočný trávnik ako na prezentácii */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #07100c; --panel: #0d1913; --line: #213629; --text: #eeece4; --muted: #8d9c93;
+    --accent: #d9b25c; --accent-ink: #1a1407; --good: #5bd08a; --bad: #e46f63; --input: #0a150f;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #07100c; --panel: #0d1913; --line: #213629; --text: #eeece4; --muted: #8d9c93;
+  --accent: #d9b25c; --accent-ink: #1a1407; --good: #5bd08a; --bad: #e46f63; --input: #0a150f;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 "Poppins", "Segoe UI", Roboto, Arial, sans-serif; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 28px 20px 48px; }
+h1 { font-size: 26px; margin: 0 0 4px; font-weight: 700; }
+.lead { color: var(--muted); margin: 0 0 24px; max-width: 70ch; }
+.layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+.layout > div { min-width: 0; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+.panel + .panel { margin-top: 20px; }
+@media (max-width: 620px) { .wrap { padding: 20px 12px 40px; } .panel { padding: 14px; } }
+h2 { font-size: 16px; font-weight: 600; margin: 0 0 14px; }
+input[type=text], input[type=date], textarea {
+  width: 100%; min-width: 0; font: inherit; color: var(--text); background: var(--input);
+  border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px;
+}
+input[type=date] { -webkit-appearance: none; appearance: none; min-height: 42px; text-align: center; }
+input:focus-visible, textarea:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Aktuálny deň */
+.day-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
+.day-title { font-size: 20px; font-weight: 700; }
+.day-title small { display: block; font-size: 13px; font-weight: 400; color: var(--muted); }
+.sync { font-size: 12.5px; color: var(--muted); margin: 2px 0 14px; }
+.sync.ok { color: var(--good); }
+
+.rows { display: flex; flex-direction: column; gap: 10px; }
+.row { display: grid; grid-template-columns: 50px 88px minmax(0, 1.6fr) minmax(0, 1.1fr) 76px auto 34px; gap: 8px; align-items: center; }
+input[type=time] { width: 100%; min-width: 0; font: inherit; color: var(--text); background: var(--input); border: 1px solid var(--line); border-radius: 8px; padding: 8px 6px; min-height: 42px; }
+.row .n { color: var(--muted); font-size: 13px; display: flex; align-items: center; justify-content: flex-end; gap: 2px; }
+.drag { border: 0; background: transparent; color: var(--muted); cursor: grab; font-size: 18px; line-height: 1; padding: 8px 4px;
+        touch-action: none; -webkit-user-select: none; user-select: none; border-radius: 6px; letter-spacing: -3px; }
+.drag:hover { color: var(--text); background: var(--input); }
+.row.dragging { opacity: .85; background: var(--panel); box-shadow: 0 8px 24px rgba(0,0,0,.25); border-radius: 10px; position: relative; z-index: 5; }
+.rows.drag-active .drag { cursor: grabbing; }
+body.no-select { -webkit-user-select: none; user-select: none; }
+@media (max-width: 620px) {
+  .row { grid-template-columns: 38px 1fr 88px; grid-template-areas: "n m h" ". t k" ". r d"; row-gap: 6px;
+         padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+  .row .n { grid-area: n; align-self: start; padding-top: 2px; flex-direction: column; gap: 0; }
+  .row .m { grid-area: m; } .row .t { grid-area: t; } .row .k { grid-area: k; } .row .h { grid-area: h; }
+  .row .res { grid-area: r; } .row .del { grid-area: d; justify-self: end; }
+}
+.res { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.res button { border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 13px; padding: 8px 10px; cursor: pointer; white-space: nowrap; }
+.res button + button { border-left: 1px solid var(--line); }
+.res button[aria-pressed="true"][data-v="won"] { background: var(--good); color: #fff; }
+.res button[aria-pressed="true"][data-v="lost"] { background: var(--bad); color: #fff; }
+.res button[aria-pressed="true"][data-v="void"] { background: var(--muted); color: #fff; }
+.del { border: 0; background: transparent; color: var(--muted); font-size: 20px; cursor: pointer; border-radius: 6px; width: 34px; height: 34px; }
+.del:hover { color: var(--bad); }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.btn { font: inherit; font-weight: 600; border-radius: 9px; padding: 10px 16px; cursor: pointer; border: 1px solid var(--line); background: var(--input); color: var(--text); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #141414; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+/* Navigácia medzi dňami - pod tipmi */
+.daynav { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; margin-top: 18px;
+          padding-top: 16px; border-top: 1px solid var(--line); }
+.daynav .arrow { font-size: 22px; line-height: 1; padding: 9px 16px; }
+.daynav .mid { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+.daynav .today { font-size: 13px; padding: 6px 10px; font-weight: 500; }
+
+.hint { color: var(--muted); font-size: 13px; margin-top: 10px; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.stat { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.stat b { display: block; font-size: 20px; }
+.stat span { color: var(--muted); font-size: 12px; }
+.stat b.pos { color: var(--good); }
+.stat b.neg { color: var(--bad); }
+.stats.four { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 520px) { .stats.four { grid-template-columns: repeat(2, 1fr); } }
+.total-meta { color: var(--muted); font-size: 13px; margin: -6px 0 12px; }
+.months { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 13.5px; }
+.months th { text-align: left; font-weight: 500; color: var(--muted); font-size: 12px; padding: 6px 4px; border-bottom: 1px solid var(--line); }
+.months td { padding: 8px 4px; border-bottom: 1px solid var(--line); }
+.months td.num, .months th.num { text-align: right; white-space: nowrap; }
+.months td.pos { color: var(--good); font-weight: 600; }
+.months td.neg { color: var(--bad); font-weight: 600; }
+.months tr.cur td:first-child { font-weight: 600; }
+.months-wrap { overflow-x: auto; }
+
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; margin-bottom: 12px; }
+.seg button { border: 0; background: var(--input); color: var(--text); font: inherit; font-size: 13.5px; padding: 8px 13px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: #141414; font-weight: 600; }
+.preview { position: sticky; top: calc(16px + env(safe-area-inset-top, 0px)); }
+canvas { display: block; width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--line); background: #0b0e0c; }
+.preview.story canvas { width: auto; max-width: 100%; max-height: 78vh; margin: 0 auto; }
+textarea { min-height: 220px; resize: vertical; font-size: 14px; }
+.status { font-size: 13px; color: var(--muted); min-height: 1.5em; margin-top: 8px; }
+
+/* ---------- Vzhľad TipRadar (rovnaký ako prezentácia) ---------- */
+body { font-family: var(--body); font-size: 15.5px; -webkit-font-smoothing: antialiased; }
+h1, h2, .day-title, .stat b { font-family: var(--display); letter-spacing: -0.02em; }
+.top { display: flex; align-items: center; gap: 12px; margin-bottom: 26px; }
+.top .brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 800; font-size: 19px; }
+.top .brand svg { width: 30px; height: 30px; }
+.top .tag { margin-left: auto; font-size: 13px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; }
+h1 { font-size: clamp(30px, 4vw, 42px); font-weight: 800; line-height: 1.05; margin-bottom: 10px; }
+.lead { font-size: 15.5px; max-width: 72ch; }
+h2 { font-size: 18px; font-weight: 700; }
+.panel { border-radius: 16px; padding: 22px; }
+.day-title { font-size: 26px; font-weight: 800; }
+.day-title small { font-family: var(--body); letter-spacing: 0; }
+input[type=text], input[type=date], input[type=time], textarea { border-radius: 10px; font-family: var(--body); }
+input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+.btn { border-radius: 999px; padding: 10px 18px; font-family: var(--body); font-weight: 600; background: transparent; border-color: var(--line); }
+.btn:hover:not(:disabled) { border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover:not(:disabled) { filter: brightness(1.08); }
+.daynav .arrow { width: 46px; height: 46px; padding: 0; display: grid; place-items: center; }
+.res { border-radius: 999px; }
+.res button { padding: 8px 12px; font-family: var(--body); font-weight: 500; }
+.stat { border-radius: 12px; padding: 12px 14px; }
+.stat b { font-size: 24px; font-weight: 800; }
+.seg { border-radius: 999px; }
+.seg button { padding: 8px 14px; font-family: var(--body); font-weight: 500; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.months td.num, .months th.num { font-variant-numeric: tabular-nums; }
+.stat b, .day-title { font-variant-numeric: tabular-nums; }
+canvas { border-radius: 14px; }
+
+/* Riadky tipov sa prispôsobia šírke panelu (nie celého okna) */
+.rows { container-type: inline-size; }
+@container (max-width: 700px) {
+  .row { grid-template-columns: 38px 1fr 96px; grid-template-areas: "n m h" ". t k" ". r d"; row-gap: 6px;
+         padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+  .row .n { grid-area: n; align-self: start; padding-top: 2px; flex-direction: column; gap: 0; }
+  .row .m { grid-area: m; } .row .t { grid-area: t; } .row .k { grid-area: k; } .row .h { grid-area: h; }
+  .row .res { grid-area: r; justify-self: start; } .row .del { grid-area: d; justify-self: end; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="92" fill="#12211a"/><circle cx="100" cy="100" r="92" fill="none" stroke="#d9b25c" stroke-width="9"/><circle cx="100" cy="100" r="56" fill="none" stroke="#3fa65c" stroke-width="6"/><path d="M100 100 L100 14 A86 86 0 0 1 163 42 Z" fill="#5bd08a" fill-opacity=".5"/><circle cx="100" cy="100" r="9" fill="#e9cf8e"/></svg>
+      TipRadar
+    </div>
+    <span class="tag">Denný súhrn</span>
+  </header>
+  <h1>Denný súhrn výsledkov</h1>
+  <p class="lead">Každý deň zapíš tipy a tikety, ktoré si poslal, a po zápasoch označ, ako dopadli. Úspešnosť, zisk a ROI sa vypočítajú samé (1 jednotka na každý tip). Obrázok stiahneš ako príbeh (1080×1920) alebo príspevok (1080×1350). Šípkami pod tipmi sa presunieš na iný deň, každý deň má vlastné tipy.</p>
+
+  <div class="layout">
+    <div>
+      <div class="panel">
+        <div class="day-head">
+          <div class="day-title" id="dayTitle">–</div>
+        </div>
+        <div class="sync" id="syncStatus" role="status">Ukladá sa v tomto prehliadači…</div>
+
+        <div class="rows" id="rows"></div>
+        <div class="actions">
+          <button class="btn" id="add">+ Pridať tip</button>
+          <button class="btn" id="sortTime" title="Zoradiť tipy podľa času výkopu">⇅ Zoradiť podľa času</button>
+          <button class="btn" id="clear">Vymazať tento deň</button>
+        </div>
+
+        <div class="daynav" aria-label="Posun medzi dňami">
+          <button class="btn arrow" id="prevDay" aria-label="Predchádzajúci deň" title="Predchádzajúci deň">‹</button>
+          <div class="mid">
+            <input type="date" id="dayInput" aria-label="Deň">
+            <button class="btn today" id="todayBtn">Dnes</button>
+          </div>
+          <button class="btn arrow" id="nextDay" aria-label="Nasledujúci deň" title="Nasledujúci deň">›</button>
+        </div>
+        <p class="hint">Poradie tipov zmeníš podržaním úchytu ⋮⋮ a potiahnutím. Čas výkopu je nepovinný – pomocou neho zoradíš tipy tlačidlom „⇅ Zoradiť podľa času". Tiket zapíš ako jeden riadok (napr. „Tiket (3 zápasy)") s celkovým kurzom. Do príbehu sa zmestí 6 tipov, do príspevku 10. Štatistiky vždy rátajú so všetkými.</p>
+      </div>
+
+      <div class="panel">
+        <h2>Súhrn dňa</h2>
+        <div class="stats">
+          <div class="stat"><b id="sRate">–</b><span>úspešnosť</span></div>
+          <div class="stat"><b id="sProfit">–</b><span>zisk (jednotky)</span></div>
+          <div class="stat"><b id="sRoi">–</b><span>ROI</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2 id="monthTitle">Mesiac</h2>
+        <div class="total-meta" id="monthMeta">–</div>
+        <div class="stats four">
+          <div class="stat"><b id="mCount">–</b><span>vyšlo / vyhodnotené</span></div>
+          <div class="stat"><b id="mRate">–</b><span>úspešnosť</span></div>
+          <div class="stat"><b id="mProfit">–</b><span>zisk (jednotky)</span></div>
+          <div class="stat"><b id="mRoi">–</b><span>ROI</span></div>
+        </div>
+        <div class="months-wrap" id="monthsWrap" hidden>
+          <table class="months" aria-label="Prehľad mesiacov">
+            <thead><tr><th>Mesiac</th><th class="num">Vyšlo</th><th class="num">Úspešnosť</th><th class="num">Zisk</th><th class="num">ROI</th></tr></thead>
+            <tbody id="monthsBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Celkovo za celé obdobie</h2>
+        <div class="total-meta" id="totalMeta">–</div>
+        <div class="stats four">
+          <div class="stat"><b id="tCount">–</b><span>vyšlo / vyhodnotené</span></div>
+          <div class="stat"><b id="tRate">–</b><span>úspešnosť</span></div>
+          <div class="stat"><b id="tProfit">–</b><span>zisk (jednotky)</span></div>
+          <div class="stat"><b id="tRoi">–</b><span>ROI</span></div>
+        </div>
+      </div>
+
+
+      <div class="panel" id="importPanel">
+        <h2>Prenos zo starej verzie</h2>
+        <p class="hint" style="margin-top:0">Ak si tipy zapisoval na stránke na claude.ai, stiahni tam zálohu tlačidlom „Exportovať všetky dni" a nahraj ju sem. Prenesú sa len dni, ktoré tu ešte nemáš vyplnené.</p>
+        <div class="actions"><label class="btn" for="importFile" style="cursor:pointer">Nahrať zálohu (.json)</label><input type="file" id="importFile" accept="application/json,.json" hidden></div>
+        <div class="status" id="importStatus" role="status"></div>
+      </div>
+      <div class="panel">
+        <h2>Popisok na Instagram</h2>
+        <textarea id="caption" aria-label="Popisok na Instagram"></textarea>
+        <div class="actions"><button class="btn" id="copy">Kopírovať popisok</button></div>
+        <div class="status" id="copyStatus" role="status"></div>
+      </div>
+    </div>
+
+    <div class="preview story" id="previewBox">
+      <div class="panel">
+        <div class="seg" role="group" aria-label="Formát obrázka">
+          <button type="button" data-f="story" aria-pressed="true">Príbeh 1080×1920</button>
+          <button type="button" data-f="post" aria-pressed="false">Príspevok 1080×1350</button>
+        </div>
+        <canvas id="cv" width="1080" height="1920" aria-label="Náhľad obrázka na Instagram"></canvas>
+        <div class="actions">
+          <button class="btn primary" id="dl">Stiahnuť denný súhrn</button>
+        </div>
+        <div class="status" id="dlStatus" role="status"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const rowsEl = $('rows');
+  const LOCAL_PREFIX = 'tipradar-day-v1:';
+  const OLD_WEEK_KEY = 'tipradar-week-v1';
+
+  // ---------- dátumy ----------
+  const pad = (n) => String(n).padStart(2, '0');
+  function isoLocal(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  /** Dnešok; po polnoci (do 6:00) ešte včerajšok - aby neskoré zápasy patrili k svojmu dňu. */
+  function defaultDay() { const d = new Date(); if (d.getHours() < 6) d.setDate(d.getDate() - 1); return isoLocal(d); }
+  function shiftDay(day, delta) { const [y, m, d] = day.split('-').map(Number); const x = new Date(y, m - 1, d); x.setDate(x.getDate() + delta); return isoLocal(x); }
+  function fmtDay(day) { const [y, m, d] = day.split('-').map(Number); return d + '. ' + m + '. ' + y; }
+  const WEEKDAYS = ['nedeľa', 'pondelok', 'utorok', 'streda', 'štvrtok', 'piatok', 'sobota'];
+  function weekday(day) { const [y, m, d] = day.split('-').map(Number); return WEEKDAYS[new Date(y, m - 1, d).getDay()]; }
+  function relLabel(day) {
+    const today = isoLocal(new Date());
+    if (day === today) return 'dnes';
+    if (day === shiftDay(today, -1)) return 'včera';
+    if (day === shiftDay(today, 1)) return 'zajtra';
+    return weekday(day);
+  }
+
+  // ---------- stav ----------
+  function blank() { return { time: '', match: '', tip: '', odds: '', result: '' }; }
+  function emptyDay() { return { tips: [blank(), blank(), blank()] }; }
+  let day = defaultDay();
+  let state = loadLocal(day);
+  let format = 'story';
+
+  function loadLocal(d) {
+    try { const v = JSON.parse(localStorage.getItem(LOCAL_PREFIX + d) || 'null'); if (v && Array.isArray(v.tips)) return v; } catch (e) {}
+    return emptyDay();
+  }
+  function saveLocal() { try { localStorage.setItem(LOCAL_PREFIX + day, JSON.stringify(state)); } catch (e) {} }
+
+  const nf = (n, dgt = 2) => n.toLocaleString('sk-SK', { minimumFractionDigits: dgt, maximumFractionDigits: dgt });
+  const sign = (n, s) => (n > 0 ? '+' : n < 0 ? '−' : '') + s;
+  function parseOdds(v) { const n = parseFloat(String(v).replace(',', '.')); return isFinite(n) && n > 1 ? n : null; }
+  const filled = (t) => t.match.trim() || t.tip.trim() || t.odds || t.result;
+
+  function stats() { return statsOf(state.tips); }
+  function statsOf(tips) {
+    let won = 0, lost = 0, voided = 0, profit = 0, withOdds = 0;
+    for (const t of tips) {
+      const o = parseOdds(t.odds);
+      if (t.result === 'won') { won++; if (o) { profit += o - 1; withOdds++; } }
+      else if (t.result === 'lost') { lost++; profit -= 1; withOdds++; }
+      else if (t.result === 'void') { voided++; }
+    }
+    const settled = won + lost;
+    const pending = tips.filter(t => filled(t) && !t.result).length;
+    return { won, lost, voided, settled, pending, profit, rate: settled ? won / settled : null, roi: withOdds ? profit / withOdds : null };
+  }
+
+  // ---------- synchronizácia cez TipRadar server (každý deň zvlášť) ----------
+  let online = false, cloudTimer = null, knownRev = 0, pendingLocal = false, pushing = false, pushAgain = false;
+  const SYNC_OK = '☁️ Uložené v TipRadare – synchronizované so všetkými zariadeniami';
+  function setSync(text, ok) { const el = $('syncStatus'); el.textContent = text; el.classList.toggle('ok', !!ok); }
+  async function api(method, url, body) {
+    const res = await fetch(url, { method, headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined, cache: 'no-store' });
+    const data = await res.json().catch(() => null);
+    return { status: res.status, data };
+  }
+
+  function save() {
+    saveLocal();
+    pendingLocal = true;
+    clearTimeout(cloudTimer);
+    setSync('Ukladá sa…', false);
+    const forDay = day;
+    cloudTimer = setTimeout(() => push(forDay), 700);
+  }
+  async function push(forDay) {
+    if (forDay !== day) return;
+    if (pushing) { pushAgain = true; return; }
+    pushing = true;
+    try {
+      const r = await api('PUT', '/api/daily/' + forDay, { state: JSON.parse(JSON.stringify(state)), baseRev: knownRev });
+      if (forDay !== day) return;
+      if (r.status === 200 && r.data) {
+        knownRev = r.data.rev; pendingLocal = false; online = true; setSync(SYNC_OK, true); loadAllDays();
+      } else if (r.status === 409 && r.data) {
+        // Iné zariadenie medzitým uložilo novšiu verziu – prevezmeme ju.
+        pendingLocal = false; applyRemote(r.data, true);
+        setSync('Prevzatá novšia verzia z iného zariadenia.', true);
+      } else {
+        throw new Error('HTTP ' + r.status);
+      }
+    } catch (e) {
+      online = false;
+      setSync('Bez pripojenia – tipy sú uložené v prehliadači, odošlú sa pri ďalšej zmene.', false);
+      setTimeout(() => { if (pendingLocal && forDay === day) push(forDay); }, 5000);
+    } finally {
+      pushing = false;
+      if (pushAgain) { pushAgain = false; push(day); }
+    }
+  }
+  function applyRemote(entry, force) {
+    if (!entry || !entry.state || !Array.isArray(entry.state.tips)) return;
+    const rev = Number(entry.rev) || 0;
+    if (!force && (rev <= knownRev || pendingLocal || pushing)) return;
+    knownRev = rev;
+    state = { tips: entry.state.tips.length ? JSON.parse(JSON.stringify(entry.state.tips)) : emptyDay().tips };
+    saveLocal();
+    renderRows(); refresh();
+  }
+  async function pullDay() {
+    const forDay = day;
+    try {
+      const r = await api('GET', '/api/daily/' + forDay);
+      if (forDay !== day || r.status !== 200 || !r.data) return;
+      online = true;
+      applyRemote(r.data, false);
+      if (!pendingLocal) setSync(SYNC_OK, true);
+    } catch (e) {
+      online = false; setSync('Bez pripojenia – tipy sú uložené v prehliadači.', false);
+    }
+  }
+  async function attachDay() {
+    knownRev = 0; pendingLocal = false;
+    const forDay = day;
+    try {
+      const r = await api('GET', '/api/daily/' + forDay);
+      if (forDay !== day) return;
+      if (r.status !== 200 || !r.data) throw new Error('HTTP ' + r.status);
+      online = true;
+      if (r.data.rev > 0) applyRemote(r.data, true);
+      else if (state.tips.some(filled)) { pendingLocal = true; await push(forDay); } // deň je zatiaľ len v prehliadači
+      setSync(SYNC_OK, true);
+    } catch (e) {
+      online = false; setSync('Bez pripojenia – tipy sú uložené v prehliadači.', false);
+    }
+  }
+  async function initCloud() {
+    await attachDay();
+    loadAllDays();
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) { pullDay(); loadAllDays(); } });
+    window.addEventListener('focus', () => { pullDay(); loadAllDays(); });
+    setInterval(() => { if (!document.hidden) pullDay(); }, 10000);
+    setInterval(() => { if (!document.hidden) loadAllDays(); }, 30000);
+  }
+
+  // ---------- celkové štatistiky zo všetkých dní ----------
+  let allDays = {}; // 'YYYY-MM-DD' -> tips (z účtu alebo z prehliadača)
+  function loadAllLocal() {
+    const out = {};
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith(LOCAL_PREFIX)) {
+          const v = JSON.parse(localStorage.getItem(k) || 'null');
+          if (v && Array.isArray(v.tips)) out[k.slice(LOCAL_PREFIX.length)] = v.tips;
+        }
+      }
+    } catch (e) {}
+    return out;
+  }
+  async function loadAllDays() {
+    try {
+      const r = await api('GET', '/api/daily');
+      if (r.status !== 200 || !r.data) return;
+      const out = {};
+      for (const [d, v] of Object.entries(r.data.days || {})) if (v && v.state && Array.isArray(v.state.tips)) out[d] = v.state.tips;
+      allDays = out; online = true;
+      renderTotals();
+    } catch (e) {}
+  }
+  function renderTotals() {
+    const days = Object.assign({}, online ? allDays : loadAllLocal());
+    days[day] = state.tips; // aktuálny deň vždy v najnovšej podobe
+    const all = [], usedDays = [];
+    for (const [d, tips] of Object.entries(days)) {
+      const f = tips.filter(filled);
+      if (f.length) { all.push(...f); usedDays.push(d); }
+    }
+    usedDays.sort();
+    renderMonths(days);
+    const s = statsOf(all);
+    $('tCount').textContent = s.settled ? s.won + ' / ' + s.settled : '–';
+    $('tRate').textContent = s.rate == null ? '–' : Math.round(s.rate * 100) + ' %';
+    setSigned($('tProfit'), s.roi == null ? null : s.profit, (v) => sign(v, nf(Math.abs(v), 1)));
+    setSigned($('tRoi'), s.roi, (v) => sign(v, Math.round(Math.abs(v) * 100) + ' %'));
+    $('totalMeta').textContent = usedDays.length
+      ? 'Od ' + fmtDay(usedDays[0]) + ' · ' + usedDays.length + (usedDays.length === 1 ? ' deň' : usedDays.length < 5 ? ' dni' : ' dní') +
+        ' · ' + plTips(all.length) + (s.pending ? ' (' + s.pending + ' čaká na výsledok)' : '')
+      : 'Zatiaľ žiadne tipy.';
+  }
+  const plTips = (n) => n + (n === 1 ? ' tip' : n >= 2 && n <= 4 ? ' tipy' : ' tipov');
+  // ---------- mesačné štatistiky ----------
+  const MONTHS = ['január', 'február', 'marec', 'apríl', 'máj', 'jún', 'júl', 'august', 'september', 'október', 'november', 'december'];
+  const monthLabel = (key) => { const [y, m] = key.split('-').map(Number); return MONTHS[m - 1] + ' ' + y; };
+  function lastDayOfMonth(key) { const [y, m] = key.split('-').map(Number); return isoLocal(new Date(y, m, 0)); }
+  function renderMonths(days) {
+    const byMonth = {};
+    for (const [d, tips] of Object.entries(days)) {
+      const f = tips.filter(filled); if (!f.length) continue;
+      const key = d.slice(0, 7);
+      (byMonth[key] = byMonth[key] || []).push(...f);
+    }
+    // Mesiac práve zobrazeného dňa
+    const cur = day.slice(0, 7);
+    const ms = statsOf(byMonth[cur] || []);
+    $('monthTitle').textContent = 'Mesiac · ' + monthLabel(cur);
+    const today = isoLocal(new Date());
+    const closed = lastDayOfMonth(cur) < today;
+    $('monthMeta').textContent = (byMonth[cur] || []).length
+      ? (closed ? 'Uzavretý mesiac' : 'Priebežne – mesiac ešte prebieha') + ' · ' + plTips((byMonth[cur] || []).length) + (ms.pending ? ' (' + ms.pending + ' čaká na výsledok)' : '')
+      : 'V tomto mesiaci zatiaľ nie sú žiadne tipy.';
+    $('mCount').textContent = ms.settled ? ms.won + ' / ' + ms.settled : '–';
+    $('mRate').textContent = ms.rate == null ? '–' : Math.round(ms.rate * 100) + ' %';
+    setSigned($('mProfit'), ms.roi == null ? null : ms.profit, (v) => sign(v, nf(Math.abs(v), 1)));
+    setSigned($('mRoi'), ms.roi, (v) => sign(v, Math.round(Math.abs(v) * 100) + ' %'));
+
+    // Prehľad všetkých mesiacov (najnovší hore), keď je ich aspoň dva
+    const keys = Object.keys(byMonth).sort().reverse();
+    $('monthsWrap').hidden = keys.length < 2;
+    const body = $('monthsBody'); body.innerHTML = '';
+    for (const key of keys) {
+      const st = statsOf(byMonth[key]);
+      const tr = document.createElement('tr'); if (key === cur) tr.className = 'cur';
+      const cell = (text, cls) => { const td = document.createElement('td'); td.textContent = text; if (cls) td.className = cls; tr.appendChild(td); };
+      cell(monthLabel(key));
+      cell(st.settled ? st.won + ' / ' + st.settled : '–', 'num');
+      cell(st.rate == null ? '–' : Math.round(st.rate * 100) + ' %', 'num');
+      cell(st.roi == null ? '–' : sign(st.profit, nf(Math.abs(st.profit), 1)) + ' j.', 'num' + (st.roi == null ? '' : st.profit > 0 ? ' pos' : st.profit < 0 ? ' neg' : ''));
+      cell(st.roi == null ? '–' : sign(st.roi, Math.round(Math.abs(st.roi) * 100) + ' %'), 'num' + (st.roi == null ? '' : st.roi > 0 ? ' pos' : st.roi < 0 ? ' neg' : ''));
+      body.appendChild(tr);
+    }
+  }
+
+  /** Číslo so znamienkom: zelené v pluse, červené v mínuse. */
+  function setSigned(el, value, format) {
+    el.classList.remove('pos', 'neg');
+    if (value == null) { el.textContent = '–'; return; }
+    el.textContent = format(value);
+    if (value > 0) el.classList.add('pos'); else if (value < 0) el.classList.add('neg');
+  }
+
+  // ---------- prepínanie dní ----------
+  function goToDay(d) {
+    if (!d || d === day) return;
+    clearTimeout(cloudTimer);
+    if (pendingLocal) push(day); // rozpísanú zmenu uložíme hneď
+    day = d;
+    state = loadLocal(day);
+    captionTouched = false;
+    renderRows(); refresh();
+    setSync('Načítava sa…', false); attachDay();
+  }
+  $('prevDay').onclick = () => goToDay(shiftDay(day, -1));
+  $('nextDay').onclick = () => goToDay(shiftDay(day, 1));
+  $('todayBtn').onclick = () => goToDay(defaultDay());
+  $('dayInput').onchange = (e) => { if (e.target.value) goToDay(e.target.value); };
+
+  // ---------- formulár ----------
+  function renderRows() {
+    rowsEl.innerHTML = '';
+    state.tips.forEach((t, i) => {
+      const r = document.createElement('div'); r.className = 'row';
+      r.innerHTML =
+        '<div class="n"><button type="button" class="drag" aria-label="Presunúť tip ' + (i + 1) + ' (potiahni, alebo šípky hore/dole)" title="Podrž a potiahni">⋮⋮</button><span>' + (i + 1) + '.</span></div>' +
+        '<input class="h" type="time" aria-label="Čas výkopu ' + (i + 1) + '" title="Čas výkopu">' +
+        '<input class="m" type="text" placeholder="Zápas, napr. Arsenal – Leeds" aria-label="Zápas ' + (i + 1) + '">' +
+        '<input class="t" type="text" placeholder="Tip, napr. Góly nad 2,5" aria-label="Tip ' + (i + 1) + '">' +
+        '<input class="k" type="text" inputmode="decimal" placeholder="Kurz" aria-label="Kurz ' + (i + 1) + '">' +
+        '<div class="res" role="group" aria-label="Výsledok ' + (i + 1) + '">' +
+          '<button type="button" data-v="won">✓ Vyšiel</button>' +
+          '<button type="button" data-v="lost">✗ Nevyšiel</button>' +
+          '<button type="button" data-v="void" title="Vrátená stávka">↩</button>' +
+        '</div>' +
+        '<button type="button" class="del" aria-label="Odstrániť tip ' + (i + 1) + '">×</button>';
+      const [h, m, tp, k] = r.querySelectorAll('input');
+      h.value = t.time || ''; m.value = t.match; tp.value = t.tip; k.value = t.odds;
+      h.onchange = () => { t.time = h.value; update(); };
+      m.oninput = () => { t.match = m.value; update(); };
+      tp.oninput = () => { t.tip = tp.value; update(); };
+      k.oninput = () => { t.odds = k.value; update(); };
+      r.querySelectorAll('.res button').forEach(b => {
+        b.setAttribute('aria-pressed', String(t.result === b.dataset.v));
+        b.onclick = () => { t.result = t.result === b.dataset.v ? '' : b.dataset.v; renderRows(); update(); };
+      });
+      r.querySelector('.del').onclick = () => { state.tips.splice(i, 1); if (!state.tips.length) state.tips.push(blank()); renderRows(); update(); };
+      rowsEl.appendChild(r);
+      wireDrag(r.querySelector('.drag'), r);
+    });
+  }
+
+  // ---- Presúvanie tipov: podrž úchyt ⋮⋮ a potiahni (prst aj myš), alebo šípky na klávesnici ----
+  function moveTip(from, to) {
+    if (to < 0 || to >= state.tips.length || from === to) return;
+    const [t] = state.tips.splice(from, 1);
+    state.tips.splice(to, 0, t);
+  }
+  function wireDrag(handle, row) {
+    handle.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+      e.preventDefault();
+      const from = [...rowsEl.children].indexOf(row);
+      const to = from + (e.key === 'ArrowUp' ? -1 : 1);
+      if (to < 0 || to >= state.tips.length) return;
+      moveTip(from, to); renderRows(); update();
+      rowsEl.children[to].querySelector('.drag').focus();
+    });
+    handle.addEventListener('pointerdown', (e) => {
+      if (e.button !== undefined && e.button !== 0) return;
+      e.preventDefault();
+      const startIndex = [...rowsEl.children].indexOf(row);
+      let lastY = e.clientY, scrollTimer = null;
+      row.classList.add('dragging'); rowsEl.classList.add('drag-active'); document.body.classList.add('no-select');
+      // Nové miesto = za všetkými ostatnými riadkami, ktorých stred je nad prstom.
+      const reposition = (y) => {
+        const others = [...rowsEl.children].filter((r) => r !== row);
+        let target = others.length;
+        for (let i = 0; i < others.length; i++) {
+          const box = others[i].getBoundingClientRect();
+          if (y < box.top + box.height / 2) { target = i; break; }
+        }
+        const ref = others[target] || null;
+        if (row.nextSibling !== ref) rowsEl.insertBefore(row, ref);
+      };
+      const autoScroll = () => {
+        const edge = 70, h = window.innerHeight;
+        if (lastY < edge) window.scrollBy(0, -12); else if (lastY > h - edge) window.scrollBy(0, 12); else return;
+        reposition(lastY);
+      };
+      scrollTimer = setInterval(autoScroll, 30);
+      // Pohyb sledujeme na celom dokumente - riadok sa počas ťahania presúva v stránke
+      // a prehliadač by inak "stratil" prst či myš.
+      const onMove = (ev) => { if (ev.pointerId !== e.pointerId) return; ev.preventDefault(); lastY = ev.clientY; reposition(ev.clientY); };
+      const onUp = (ev) => {
+        if (ev && ev.pointerId !== e.pointerId) return;
+        clearInterval(scrollTimer);
+        document.removeEventListener('pointermove', onMove);
+        document.removeEventListener('pointerup', onUp);
+        document.removeEventListener('pointercancel', onUp);
+        row.classList.remove('dragging'); rowsEl.classList.remove('drag-active'); document.body.classList.remove('no-select');
+        const endIndex = [...rowsEl.children].indexOf(row);
+        if (endIndex !== startIndex) moveTip(startIndex, endIndex);
+        renderRows(); update();
+      };
+      document.addEventListener('pointermove', onMove, { passive: false });
+      document.addEventListener('pointerup', onUp);
+      document.addEventListener('pointercancel', onUp);
+    });
+  }
+  $('add').onclick = () => { state.tips.push(blank()); renderRows(); update(); rowsEl.lastChild.querySelector('input.m').focus(); };
+  $('sortTime').onclick = () => {
+    // Najskôr tipy s časom (od najskoršieho), potom tipy bez času, prázdne riadky na koniec.
+    const withIdx = state.tips.map((t, i) => ({ t, i }));
+    const rank = (x) => (!filled(x.t) && !x.t.time ? 2 : x.t.time ? 0 : 1);
+    withIdx.sort((a, b) => rank(a) - rank(b) || (a.t.time && b.t.time ? a.t.time.localeCompare(b.t.time) : 0) || a.i - b.i);
+    state.tips = withIdx.map((x) => x.t);
+    renderRows(); update();
+  };
+  $('clear').onclick = () => {
+    if (confirm('Vymazať všetky tipy dňa ' + fmtDay(day) + '? Zmaže sa to na všetkých zariadeniach.')) {
+      state = emptyDay(); renderRows(); update();
+    }
+  };
+
+  // ---------- kreslenie ----------
+  const cv = $('cv'), ctx = cv.getContext('2d');
+  const C = { bg: '#0b0e0c', surface: '#141916', line: '#26302a', gold: '#e8c766', goldDim: '#c9a04d', green: '#57c97a', red: '#e0685d', text: '#f3f1ea', muted: '#9c978b' };
+  const F = (w, s) => w + ' ' + s + 'px Poppins, "Segoe UI", Arial, sans-serif';
+  function fit(text, max, font) {
+    ctx.font = font;
+    if (ctx.measureText(text).width <= max) return text;
+    let t = text; while (t.length > 1 && ctx.measureText(t + '…').width > max) t = t.slice(0, -1);
+    return t + '…';
+  }
+  function mark(x, y, r) {
+    ctx.save(); ctx.translate(x, y);
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fillStyle = '#12211a'; ctx.fill();
+    ctx.lineWidth = r * 0.085; ctx.strokeStyle = C.goldDim; ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.64, 0, Math.PI * 2); ctx.lineWidth = r * 0.055; ctx.strokeStyle = '#3fa65c'; ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.09, 0, Math.PI * 2); ctx.fillStyle = C.gold; ctx.fill();
+    ctx.restore();
+  }
+  function badge(x, y, kind, r = 21) {
+    const col = kind === 'won' ? C.green : kind === 'lost' ? C.red : kind === 'void' ? C.muted : C.line;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+    if (kind) { ctx.fillStyle = col; ctx.fill(); }
+    ctx.lineWidth = 2.5; ctx.strokeStyle = col; ctx.stroke();
+    const k = r / 21;
+    ctx.strokeStyle = '#0b0e0c'; ctx.lineWidth = 4.5 * k; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    if (kind === 'won') { ctx.moveTo(x - 9 * k, y + 1 * k); ctx.lineTo(x - 2 * k, y + 8 * k); ctx.lineTo(x + 10 * k, y - 7 * k); }
+    else if (kind === 'lost') { ctx.moveTo(x - 7 * k, y - 7 * k); ctx.lineTo(x + 7 * k, y + 7 * k); ctx.moveTo(x + 7 * k, y - 7 * k); ctx.lineTo(x - 7 * k, y + 7 * k); }
+    else if (kind === 'void') { ctx.moveTo(x - 8 * k, y); ctx.lineTo(x + 8 * k, y); }
+    ctx.stroke();
+  }
+  function background(W, H, cy) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, H);
+    const g = ctx.createRadialGradient(540, cy, 0, 540, cy, 760);
+    g.addColorStop(0, 'rgba(87,201,122,0.08)'); g.addColorStop(1, 'rgba(87,201,122,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    ctx.textBaseline = 'alphabetic';
+  }
+  function headline(s) {
+    if (!s.settled) return 'Výsledky dňa';
+    // Sloveso sa riadi počtom tipov, ktoré vyšli: 1 vyšiel, 2–4 vyšli, 0 a 5+ vyšlo.
+    const verb = s.won === 1 ? 'vyšiel' : s.won >= 2 && s.won <= 4 ? 'vyšli' : 'vyšlo';
+    return s.won + ' z ' + s.settled + (s.settled === 1 ? ' tipu ' : ' tipov ') + verb;
+  }
+  function statBoxes(s, L, R, y, h, labelSize, valueSize) {
+    const boxes = [
+      ['Úspešnosť', s.rate == null ? '–' : Math.round(s.rate * 100) + ' %', C.text],
+      ['Zisk', s.roi == null ? '–' : sign(s.profit, nf(Math.abs(s.profit), 1) + ' j.'), s.profit > 0 ? C.green : s.profit < 0 ? C.red : C.text],
+      ['ROI', s.roi == null ? '–' : sign(s.roi, Math.round(Math.abs(s.roi) * 100) + ' %'), s.roi > 0 ? C.green : s.roi < 0 ? C.red : C.text],
+    ];
+    const gap = 22, bw = (R - L - gap * 2) / 3;
+    boxes.forEach((b, i) => {
+      const x = L + i * (bw + gap);
+      ctx.fillStyle = C.surface; ctx.strokeStyle = C.line; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect(x, y, bw, h, 24); ctx.fill(); ctx.stroke();
+      ctx.textAlign = 'left';
+      ctx.fillStyle = C.muted; ctx.font = F(400, labelSize); ctx.fillText(b[0], x + 26, y + labelSize + 22);
+      ctx.fillStyle = b[2]; ctx.font = F(700, valueSize); ctx.fillText(fit(b[1], bw - 44, F(700, valueSize)), x + 26, y + h - 30);
+    });
+  }
+  function tipList(list, L, R, top, maxRows, rowH, big) {
+    const shown = list.slice(0, maxRows), extra = list.length - shown.length;
+    shown.forEach((t, i) => {
+      const y = top + i * rowH, cy = y + rowH / 2;
+      ctx.strokeStyle = C.line; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(L, y); ctx.lineTo(R, y); ctx.stroke();
+      const r = big ? 27 : 21;
+      badge(L + r, cy, t.result, r);
+      const tx = L + r * 2 + 24, tw = R - tx - 130;
+      const f1 = F(600, big ? 34 : 27), f2 = F(400, big ? 27 : 22);
+      ctx.textAlign = 'left';
+      ctx.fillStyle = C.text; ctx.font = f1; ctx.fillText(fit(t.match.trim() || '—', tw, f1), tx, cy - (big ? 6 : 5));
+      const sub = (t.time ? t.time + ' · ' : '') + t.tip.trim();
+      ctx.fillStyle = C.muted; ctx.font = f2; ctx.fillText(fit(sub, tw, f2), tx, cy + (big ? 32 : 26));
+      const o = parseOdds(t.odds);
+      ctx.textAlign = 'right'; ctx.fillStyle = C.gold; ctx.font = F(600, big ? 36 : 28);
+      ctx.fillText(o ? nf(o, 2) : '', R, cy + 11);
+    });
+    const yEnd = top + shown.length * rowH;
+    if (shown.length) { ctx.strokeStyle = C.line; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(L, yEnd); ctx.lineTo(R, yEnd); ctx.stroke(); }
+    if (extra > 0) {
+      ctx.textAlign = 'left'; ctx.fillStyle = C.muted; ctx.font = F(400, big ? 26 : 22);
+      ctx.fillText('+ ' + extra + ' ďalš' + (extra === 1 ? 'í tip' : extra < 5 ? 'ie tipy' : 'ích tipov'), L, yEnd + 42);
+    }
+    if (!shown.length) { ctx.textAlign = 'left'; ctx.fillStyle = C.muted; ctx.font = F(400, 30); ctx.fillText('Doplň tipy vo formulári.', L, top + 60); }
+    return yEnd + (extra > 0 ? 50 : 0);
+  }
+  function footer(y, L, R, withTelegram) {
+    ctx.font = F(400, 24); ctx.fillStyle = C.muted;
+    if (withTelegram) {
+      ctx.textAlign = 'left'; ctx.fillText('Telegram ', L, y);
+      const w0 = ctx.measureText('Telegram ').width;
+      ctx.fillStyle = C.gold; ctx.font = F(600, 24); ctx.fillText('@TipRadarAiBot', L + w0, y);
+      ctx.textAlign = 'right'; ctx.fillStyle = C.muted; ctx.font = F(400, 24); ctx.fillText('18+ · hraj zodpovedne', R, y);
+    } else {
+      ctx.textAlign = 'center'; ctx.fillText('18+ · hraj zodpovedne', (L + R) / 2, y);
+    }
+    ctx.textAlign = 'left';
+  }
+
+  function drawStory() {
+    // Bezpečná zóna príbehu: hore ~250 px (meno účtu), dole ~340 px (pole na odpoveď).
+    const W = 1080, H = 1920, L = 90, R = W - 90, s = stats();
+    const list = state.tips.filter(filled);
+    background(W, H, 700);
+    mark(L + 20, 290, 20);
+    ctx.fillStyle = C.text; ctx.font = F(700, 30); ctx.textAlign = 'left'; ctx.fillText('TipRadar', L + 54, 301);
+    ctx.fillStyle = C.goldDim; ctx.font = F(500, 34);
+    ctx.fillText('Výsledky dňa · ' + fmtDay(day), L, 392);
+    ctx.fillStyle = C.text; ctx.font = F(700, 96);
+    ctx.fillText(fit(headline(s), R - L, F(700, 96)), L, 500);
+    if (s.pending) { ctx.fillStyle = C.muted; ctx.font = F(400, 28); ctx.fillText('⏳ Ešte sa hrá: ' + s.pending, L, 552); }
+    statBoxes(s, L, R, 590, 150, 26, 58);
+    // Tipy sa vždy zmestia do pevného priestoru (790 – 1270 px), aby výzva, šípka
+    // a „18+" boli na každom obrázku na rovnakom mieste a pod šípkou ostalo
+    // miesto na nálepku s odkazom na Telegram.
+    const LIST_TOP = 790, LIST_BOTTOM = 1270, MAX_ROWS = 6;
+    const extra = Math.max(0, list.length - MAX_ROWS);
+    const rows = Math.max(1, Math.min(list.length, MAX_ROWS));
+    const rowH = Math.min(100, Math.floor((LIST_BOTTOM - LIST_TOP - (extra ? 44 : 0)) / rows));
+    tipList(list, L, R, LIST_TOP, MAX_ROWS, rowH, rowH >= 90);
+    const ctaY = 1330;
+    ctx.textAlign = 'center'; ctx.font = F(400, 32); ctx.fillStyle = C.text;
+    const a = 'Tipy dostávajú predplatitelia ', b = 'ešte pred zápasom';
+    ctx.font = F(400, 32); const wa = ctx.measureText(a).width; ctx.font = F(600, 32); const wb = ctx.measureText(b).width;
+    const sx = (W - wa - wb) / 2;
+    ctx.textAlign = 'left'; ctx.font = F(400, 32); ctx.fillStyle = C.text; ctx.fillText(a, sx, ctaY);
+    ctx.font = F(600, 32); ctx.fillStyle = C.gold; ctx.fillText(b, sx + wa, ctaY);
+    ctx.textAlign = 'center'; ctx.font = F(400, 46); ctx.fillText('👇', W / 2, ctaY + 64);
+    footer(1690, L, R, false);
+  }
+  function drawPost() {
+    const W = 1080, H = 1350, L = 110, R = W - 110, s = stats();
+    const list = state.tips.filter(filled);
+    background(W, H, 380);
+    ctx.textAlign = 'left'; ctx.fillStyle = C.goldDim; ctx.font = F(500, 28);
+    ctx.fillText('Výsledky dňa · ' + fmtDay(day), L, 150);
+    ctx.fillStyle = C.text; ctx.font = F(700, 74);
+    ctx.fillText(fit(headline(s), R - L, F(700, 74)), L, 240);
+    statBoxes(s, L, R, 300, 150, 23, 54);
+    const rows = Math.min(10, Math.max(list.length, 1));
+    const rowH = Math.min(92, 700 / rows);
+    tipList(list, L, R, 510, 10, rowH, false);
+    footer(1290, L, R, true);
+    mark(R - 22, 140, 22);
+  }
+  function draw() { if (format === 'story') drawStory(); else drawPost(); }
+
+  document.querySelectorAll('.seg button').forEach(b => {
+    b.onclick = () => {
+      format = b.dataset.f;
+      document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+      cv.height = format === 'story' ? 1920 : 1350;
+      $('previewBox').classList.toggle('story', format === 'story');
+      draw();
+    };
+  });
+
+  // ---------- popisok ----------
+  let captionTouched = false;
+  $('caption').oninput = () => { captionTouched = true; };
+  function caption() {
+    const s = stats();
+    if (!s.settled) return 'Výsledky dňa ' + fmtDay(day) + '\n\nOznač výsledky tipov a popisok sa vygeneruje sám.';
+    const lines = ['Výsledky dňa ' + fmtDay(day) + ' 📊', ''];
+    lines.push('✅ Vyšlo: ' + s.won + ' z ' + s.settled + ' (' + Math.round(s.rate * 100) + ' %)');
+    if (s.roi != null) {
+      lines.push((s.profit >= 0 ? '📈' : '📉') + ' Zisk: ' + sign(s.profit, nf(Math.abs(s.profit), 1)) + ' jednotiek');
+      lines.push('💰 ROI: ' + sign(s.roi, Math.round(Math.abs(s.roi) * 100) + ' %'));
+    }
+    if (s.voided) lines.push('↩ Vrátené: ' + s.voided);
+    if (s.pending) lines.push('⏳ Ešte sa hrá: ' + s.pending);
+    lines.push('');
+    lines.push(s.profit >= 0
+      ? 'Každý deň zverejňujeme všetky tipy aj s výsledkami, vrátane tých, čo nevyšli.'
+      : 'Dnes to nevyšlo podľa predstáv a ukazujeme to rovnako otvorene ako dobré dni. Hodnotí sa dlhodobý výsledok.');
+    lines.push('', 'Počítané pri stávke 1 jednotky na každý tip.', '', '📩 Telegram @TipRadarAiBot (odkaz v biu)', '', '18+ | Hraj zodpovedne. Tipy nezaručujú výsledok.', '', '#futbaltipy #vysledky #futbal #tipy #football');
+    return lines.join('\n');
+  }
+
+  // ---------- obnovenie ----------
+  function refresh() {
+    $('dayTitle').innerHTML = fmtDay(day) + '<small>' + relLabel(day) + '</small>';
+    $('dayInput').value = day;
+    $('dl').textContent = 'Stiahnuť denný súhrn · ' + fmtDay(day);
+    const s = stats();
+    $('sRate').textContent = s.rate == null ? '–' : Math.round(s.rate * 100) + ' %';
+    setSigned($('sProfit'), s.roi == null ? null : s.profit, (v) => sign(v, nf(Math.abs(v), 1)));
+    setSigned($('sRoi'), s.roi, (v) => sign(v, Math.round(Math.abs(v) * 100) + ' %'));
+    renderTotals();
+    if (!captionTouched) $('caption').value = caption();
+    draw();
+  }
+  function update() { save(); refresh(); }
+
+  $('copy').onclick = async () => {
+    const ta = $('caption');
+    try { await navigator.clipboard.writeText(ta.value); $('copyStatus').textContent = 'Popisok skopírovaný.'; }
+    catch (e) { ta.focus(); ta.select(); $('copyStatus').textContent = 'Text je označený, skopíruj ho cez Kopírovať (Ctrl/Cmd + C).'; }
+  };
+
+  // ---------- stiahnutie ----------
+  $('dl').onclick = async () => {
+    const name = 'tipradar-vysledky-' + day + (format === 'story' ? '-pribeh' : '') + '.png';
+    const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
+    const file = new File([blob], name, { type: 'image/png' });
+    // V mobile ponúkneme systémové zdieľanie (Uložiť obrázok / Instagram), inak klasické stiahnutie.
+    if (navigator.canShare && navigator.canShare({ files: [file] }) && /Mobi|iPhone|iPad|Android/i.test(navigator.userAgent)) {
+      try { await navigator.share({ files: [file] }); $('dlStatus').textContent = ''; return; } catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    $('dlStatus').textContent = 'Obrázok stiahnutý.';
+  };
+
+
+  // ---------- jednorazový prenos zo starej verzie (claude.ai) ----------
+  $('importFile').addEventListener('change', async (e) => {
+    const f = e.target.files && e.target.files[0]; if (!f) return;
+    try {
+      const data = JSON.parse(await f.text());
+      const r = await api('POST', '/api/daily/import', { days: data.days || data });
+      if (r.status !== 200) throw new Error('HTTP ' + r.status);
+      $('importStatus').textContent = 'Prenesené dni: ' + (r.data.imported || 0) + '.';
+      await loadAllDays(); await attachDay();
+    } catch (err) {
+      $('importStatus').textContent = 'Súbor sa nepodarilo nahrať. Skontroluj, či je to záloha zo starej verzie.';
+    } finally { e.target.value = ''; }
+  });
+
+  renderRows();
+  refresh();
+  initCloud();
+  if (document.fonts && document.fonts.load) {
+    Promise.all(['700', '600', '500', '400'].map(w => document.fonts.load(w + ' 20px Poppins'))).then(draw).catch(() => {});
+    document.fonts.ready.then(draw);
+  }
+})();
+</script>
+</body>
+</html>
