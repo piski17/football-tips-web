@@ -117,6 +117,24 @@ function basicAuth(req: Request, res: Response, next: NextFunction): void {
   res.status(401).send("Autentifikácia zlyhala.");
 }
 
+// Vlastná doména: tipradar.eu (a www) zobrazuje priamo prezentačnú stránku bez hesla,
+// appka s heslom beží na app.tipradar.eu (a naďalej aj na adrese .onrender.com).
+const LANDING_HOSTS = (process.env.LANDING_HOSTS || "tipradar.eu,www.tipradar.eu")
+  .split(",")
+  .map((h) => h.trim().toLowerCase())
+  .filter(Boolean);
+app.get("/", (req, res, next) => {
+  if (LANDING_HOSTS.includes((req.hostname || "").toLowerCase())) {
+    res.sendFile(path.join(__dirname, "..", "landing", "index.html"));
+    return;
+  }
+  next();
+});
+// Ikonka stránky musí byť dostupná aj bez hesla (používa ju verejná prezentácia).
+app.get(["/favicon.svg", "/favicon-32.png", "/favicon-256.png"], (req, res) => {
+  res.sendFile(path.join(__dirname, "..", "public", req.path.slice(1)));
+});
+
 app.use(basicAuth);
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "..", "public")));
