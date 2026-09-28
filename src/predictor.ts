@@ -19,8 +19,7 @@ import {
   MarketPick,
   OverUnderMarket,
   PlayerGoalPrediction,
-  RawPlayerStat,
-} from "./types";
+  RawPlayerStat, H2HStats } from "./types";
 
 // Predvolené váhy jednotlivých faktorov v celkovom modeli.
 export const DEFAULT_WEIGHTS: PredictionWeights = {
@@ -315,6 +314,38 @@ function normalCdf(z: number): number {
   return z > 0 ? 1 - p : p;
 }
 
+
+// ---- Vzájomné zápasy: doplnok k odhadu z dlhodobých priemerov ----
+// Váha rastie s počtom zápasov (za posledných 6 rokov, najviac 5 najnovších):
+// 3 zápasy = 15 %, 4 = 20 %, 5 = 25 %; menej ako 3 = nepoužijú sa.
+// Novšie zápasy majú väčšiu váhu (každý starší × 0,85).
+const H2H_MIN = 3;
+function h2hWeight(n: number): number {
+  return n >= 5 ? 0.25 : n === 4 ? 0.2 : n === 3 ? 0.15 : 0;
+}
+function recencyAverage(values: (number | null)[]): { avg: number; n: number } | null {
+  let sum = 0, wsum = 0, n = 0;
+  values.forEach((v, i) => {
+    if (v === null || v === undefined || !isFinite(v)) return;
+    const w = Math.pow(0.85, i);
+    sum += v * w; wsum += w; n++;
+  });
+  return n >= H2H_MIN ? { avg: sum / wsum, n } : null;
+}
+interface H2HGoals { n: number; weight: number; home: number; away: number; total: number }
+function h2hGoals(h2h: HeadToHeadMatch[], homeTeamId: number): H2HGoals | null {
+  const sixYearsAgo = Date.now() - 6 * 365 * 24 * 60 * 60 * 1000;
+  const recent = h2h
+    .filter((m) => m.homeGoals !== null && m.awayGoals !== null && new Date(m.date).getTime() >= sixYearsAgo)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5);
+  const home = recencyAverage(recent.map((m) => (m.homeTeamId === homeTeamId ? m.homeGoals : m.awayGoals)));
+  const away = recencyAverage(recent.map((m) => (m.homeTeamId === homeTeamId ? m.awayGoals : m.homeGoals)));
+  if (!home || !away) return null;
+  return { n: home.n, weight: h2hWeight(home.n), home: home.avg, away: away.avg, total: home.avg + away.avg };
+}
+const fmt1 = (n: number) => n.toFixed(1).replace(".", ",");
+
 export function predictMatch(
   fixture: Fixture,
   homeStats: TeamStatistics,
@@ -340,9 +371,25 @@ export function predictMatch(
     homePossession?: number | null;
     awayPossession?: number | null;
   },
-  marketOdds?: MarketOdds[]
+  marketOdds?: MarketOdds[],
+  h2hStats?: H2HStats[]
 ): PredictionResult {
   const xg = expectedGoals(homeStats, awayStats, leagueAvg, homePriorsResult, awayPriorsResult);
+  // Vzájomné zápasy spresnia očakávané góly (výsledok, góly, oba tímy skórujú…).
+  const h2hG = h2hGoals(h2h, fixture.homeTeam.id);
+  if (h2hG && h2hG.weight > 0) {
+    xg.home = (1 - h2hG.weight) * xg.home + h2hG.weight * h2hG.home;
+    xg.away = (1 - h2hG.weight) * xg.away + h2hG.weight * h2hG.away;
+  }
+  // Štatistiky vzájomných zápasov spresnia rohy, karty, strely, fauly, ofsajdy a držanie lopty.
+  const h2hStat = (key: keyof H2HStats) => recencyAverage((h2hStats ?? []).map((x) => x[key]));
+  const blendH2H = (expected: number, key: keyof H2HStats): { value: number; h2h: { avg: number; n: number } | null } => {
+    const h = h2hStat(key);
+    if (!h) return { value: expected, h2h: null };
+    const w = h2hWeight(h.n);
+    return { value: (1 - w) * expected + w * h.avg, h2h: h };
+  };
+  const h2hNotes: Record<string, string> = {};
   const poisson = poissonOutcomes(xg.home, xg.away);
 
   const homeFormScore = formToScore(homeStats.form);
@@ -385,20 +432,26 @@ export function predictMatch(
   // ---- Rohy (ak sú dáta k dispozícii) ----
   let corners: OverUnderMarket | undefined;
   if (homeCornersAvg != null && awayCornersAvg != null) {
-    const expected = homeCornersAvg + awayCornersAvg;
+    const b = blendH2H(homeCornersAvg + awayCornersAvg, "corners");
+    const expected = b.value;
+    if (b.h2h) h2hNotes.rohy = `Vo vzájomných zápasoch (${b.h2h.n}) padlo v priemere ${fmt1(b.h2h.avg)} rohov.`;
     const { over, under } = poissonOverUnder(expected, CORNERS_LINE);
     corners = { expected, line: CORNERS_LINE, over, under };
   }
 
   // ---- Karty (priemer oboch tímov spolu) ----
-  const expectedCards = homeStats.cardsPerGame + awayStats.cardsPerGame;
+  const cardsBlend = blendH2H(homeStats.cardsPerGame + awayStats.cardsPerGame, "cards");
+  const expectedCards = cardsBlend.value;
+  if (cardsBlend.h2h) h2hNotes.karty = `Vo vzájomných zápasoch (${cardsBlend.h2h.n}) padlo v priemere ${fmt1(cardsBlend.h2h.avg)} kariet.`;
   const cardsOU = poissonOverUnder(expectedCards, CARDS_LINE);
   const cards: OverUnderMarket = { expected: expectedCards, line: CARDS_LINE, ...cardsOU };
 
   // ---- Strely na bránu (ak sú dáta k dispozícii) ----
   let shotsOnGoal: OverUnderMarket | undefined;
   if (extraStatsAvg?.homeShotsOnGoal != null && extraStatsAvg?.awayShotsOnGoal != null) {
-    const expected = extraStatsAvg.homeShotsOnGoal + extraStatsAvg.awayShotsOnGoal;
+    const b = blendH2H(extraStatsAvg.homeShotsOnGoal + extraStatsAvg.awayShotsOnGoal, "shotsOnGoal");
+    const expected = b.value;
+    if (b.h2h) h2hNotes.strely = `Vo vzájomných zápasoch (${b.h2h.n}) v priemere ${fmt1(b.h2h.avg)} striel na bránu.`;
     const { over, under } = poissonOverUnder(expected, SHOTS_ON_GOAL_LINE);
     shotsOnGoal = { expected, line: SHOTS_ON_GOAL_LINE, over, under };
   }
@@ -406,7 +459,9 @@ export function predictMatch(
   // ---- Fauly (ak sú dáta k dispozícii) ----
   let fouls: OverUnderMarket | undefined;
   if (extraStatsAvg?.homeFouls != null && extraStatsAvg?.awayFouls != null) {
-    const expected = extraStatsAvg.homeFouls + extraStatsAvg.awayFouls;
+    const b = blendH2H(extraStatsAvg.homeFouls + extraStatsAvg.awayFouls, "fouls");
+    const expected = b.value;
+    if (b.h2h) h2hNotes.fauly = `Vo vzájomných zápasoch (${b.h2h.n}) v priemere ${fmt1(b.h2h.avg)} faulov.`;
     const { over, under } = poissonOverUnder(expected, FOULS_LINE);
     fouls = { expected, line: FOULS_LINE, over, under };
   }
@@ -414,7 +469,9 @@ export function predictMatch(
   // ---- Ofsajdy (ak sú dáta k dispozícii) ----
   let offsides: OverUnderMarket | undefined;
   if (extraStatsAvg?.homeOffsides != null && extraStatsAvg?.awayOffsides != null) {
-    const expected = extraStatsAvg.homeOffsides + extraStatsAvg.awayOffsides;
+    const b = blendH2H(extraStatsAvg.homeOffsides + extraStatsAvg.awayOffsides, "offsides");
+    const expected = b.value;
+    if (b.h2h) h2hNotes.ofsajdy = `Vo vzájomných zápasoch (${b.h2h.n}) v priemere ${fmt1(b.h2h.avg)} ofsajdov.`;
     const { over, under } = poissonOverUnder(expected, OFFSIDES_LINE);
     offsides = { expected, line: OFFSIDES_LINE, over, under };
   }
@@ -544,7 +601,9 @@ export function predictMatch(
   // držanie v zápase kolíše okolo odhadu približne o ±8 percentuálnych bodov
   // (smerodajná odchýlka), z toho sa počíta pravdepodobnosť cez normálne rozdelenie.
   if (extraStatsAvg?.homePossession != null && extraStatsAvg?.awayPossession != null) {
-    const expectedHome = (extraStatsAvg.homePossession + (100 - extraStatsAvg.awayPossession)) / 2;
+    const possBlend = blendH2H((extraStatsAvg.homePossession + (100 - extraStatsAvg.awayPossession)) / 2, "homePossession");
+    const expectedHome = possBlend.value;
+    if (possBlend.h2h) h2hNotes.drzanie_lopty = `Vo vzájomných zápasoch (${possBlend.h2h.n}) mali domáci loptu v priemere ${possBlend.h2h.avg.toFixed(0)} %.`;
     const POSSESSION_SD = 8;
     const homeHigher = normalCdf((expectedHome - 50) / POSSESSION_SD) * 100;
     const homeFavoured = homeHigher >= 50;
@@ -577,6 +636,17 @@ export function predictMatch(
   // ktorý nedosahuje MIN_EXPECTED_VALUE, nemá hodnotu a do odporúčaní sa
   // nedostane. Tip BEZ dostupného kurzu ostáva (nevieme ho posúdiť) -
   // v appke je pri ňom len odhadovaný kurz.
+  if (h2hG && h2hG.weight > 0) {
+    const g = `V posledných ${h2hG.n} vzájomných zápasoch padlo v priemere ${fmt1(h2hG.total)} gólu.`;
+    h2hNotes.goly = g;
+    h2hNotes.btts = g;
+    h2hNotes.vysledok = `Vzájomné zápasy (${h2hG.n}) sú započítané do odhadu gólov.`;
+  }
+  for (const c of candidates) {
+    const note = h2hNotes[c.category];
+    if (note) c.explanation = (c.explanation ? c.explanation + " " : "") + note;
+  }
+
   const oddsAvailable = !!marketOdds && marketOdds.length > 0;
 
   // Málo dát v sezóne (napr. reprezentácie na začiatku Ligy národov): odhad

@@ -15,6 +15,7 @@ import {
   getFixtureLineupPlayerIds,
   getFixtureOdds,
   getRecentFormAnyCompetition,
+  getHeadToHeadStats,
 } from "./apiClient";
 import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS } from "./predictor";
 import { LeaguePreset, SavedTip } from "./types";
@@ -205,6 +206,8 @@ app.post("/api/analyze", async (req, res) => {
       getFixtureOdds(fixture.fixtureId),
     ]);
 
+    // Štatistiky posledných vzájomných zápasov (rohy, karty…) – pri chybe sa jednoducho nepoužijú.
+    const h2hStats = await getHeadToHeadStats(h2h, fixture.homeTeam.name).catch(() => []);
     const result = predictMatch(
       fixture,
       homeStats,
@@ -230,7 +233,8 @@ app.post("/api/analyze", async (req, res) => {
         homePossession: homeExtStats.possession,
         awayPossession: awayExtStats.possession,
       },
-      marketOdds
+      marketOdds,
+      h2hStats
     );
 
     res.json(result);

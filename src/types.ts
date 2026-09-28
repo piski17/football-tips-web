@@ -77,6 +77,16 @@ export interface OverUnderMarket {
 }
 
 /** Jeden odohraný vzájomný zápas dvoch tímov. */
+/** Štatistiky jedného vzájomného zápasu (držanie lopty z pohľadu dnešných domácich). */
+export interface H2HStats {
+  corners: number | null;
+  cards: number | null;
+  shotsOnGoal: number | null;
+  fouls: number | null;
+  offsides: number | null;
+  homePossession: number | null;
+}
+
 export interface HeadToHeadMatch {
   fixtureId: number;
   date: string;

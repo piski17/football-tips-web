@@ -10,8 +10,7 @@ import {
   TeamGoalPriorsResult,
   SquadPlayer,
   PlayerSeasonStats,
-  RawPlayerStat,
-} from "./types";
+  RawPlayerStat, H2HStats } from "./types";
 
 const BASE_URL = "https://v3.football.api-sports.io";
 
@@ -859,4 +858,40 @@ export async function getFixtureOdds(fixtureId: number): Promise<MarketOdds[]> {
   } catch {
     return [];
   }
+}
+
+/**
+ * Štatistiky posledných vzájomných zápasov (rohy, karty, strely, fauly, ofsajdy,
+ * držanie lopty) – na spresnenie odhadu. Odohrané zápasy sa už nemenia, preto
+ * sa ukladajú na 7 dní a pri ďalšom otvorení zápasu nestoja nič.
+ * Berie len zápasy za posledných 6 rokov, najviac 5 najnovších.
+ */
+export async function getHeadToHeadStats(
+  h2h: HeadToHeadMatch[],
+  currentHomeTeamName: string
+): Promise<H2HStats[]> {
+  const sixYearsAgo = Date.now() - 6 * 365 * 24 * 60 * 60 * 1000;
+  const recent = h2h
+    .filter((m) => m.homeGoals !== null && m.awayGoals !== null && new Date(m.date).getTime() >= sixYearsAgo)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5);
+  const out: H2HStats[] = [];
+  for (const m of recent) {
+    const cacheKey = `h2hStats:${m.fixtureId}`;
+    let stats = getCached<Awaited<ReturnType<typeof getFixtureCornersAndCards>>>(cacheKey);
+    if (stats === undefined) {
+      stats = await getFixtureCornersAndCards(m.fixtureId);
+      setCached(cacheKey, stats, 7 * 24 * 60 * 60 * 1000);
+    }
+    const poss = stats.possession?.find((p) => p.team === currentHomeTeamName)?.value ?? null;
+    out.push({
+      corners: stats.corners,
+      cards: stats.cards,
+      shotsOnGoal: stats.shotsOnGoal,
+      fouls: stats.fouls,
+      offsides: stats.offsides,
+      homePossession: poss,
+    });
+  }
+  return out;
 }
