@@ -6,33 +6,33 @@
 <title>TipRadar — predstavenie</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --bg: #0a0a0b;
-    --surface: #131315;
-    --surface-2: #1c1c1f;
-    --border: #2a2a2e;
-    --gold: #c9a04d;
-    --gold-bright: #e8c766;
+    --bg: #07100c;
+    --surface: #0d1913;
+    --surface-2: #13231b;
+    --border: #213629;
+    --gold: #d9b25c;
+    --gold-bright: #e9cf8e;
     --pitch: #3fa65c;
-    --danger: #d9776c;
-    --success: #6bbf7a;
-    --text: #f2f0ea;
-    --text-muted: #99938a;
-    --font-display: "Space Grotesk", "Poppins", Arial, sans-serif;
-    --font-body: "Inter", "Poppins", -apple-system, sans-serif;
+    --danger: #e46f63;
+    --success: #5bd08a;
+    --text: #eeece4;
+    --text-muted: #8d9c93;
+    --font-display: "Bricolage Grotesque", "Figtree", system-ui, sans-serif;
+    --font-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
   }
   :root:not([data-theme="light"]) { color-scheme: dark; }
   @media (prefers-color-scheme: light) {
     :root:not([data-theme="dark"]) {
-      --bg: #f4f2ec; --surface: #ffffff; --surface-2: #ece8dd; --border: #ddd6c4;
-      --text: #17140d; --text-muted: #6b6152;
+      --bg: #f3f1ea; --surface: #fffdf7; --surface-2: #ece9df; --border: #dcd8cc;
+      --text: #122018; --text-muted: #5f6e65;
     }
   }
   :root[data-theme="light"] {
-    --bg: #f4f2ec; --surface: #ffffff; --surface-2: #ece8dd; --border: #ddd6c4;
-    --text: #17140d; --text-muted: #6b6152;
+    --bg: #f3f1ea; --surface: #fffdf7; --surface-2: #ece9df; --border: #dcd8cc;
+    --text: #122018; --text-muted: #5f6e65;
   }
 
   * { box-sizing: border-box; }
@@ -108,7 +108,7 @@
   .market-chip {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: 12px;
     padding: 10px 8px;
     font-size: 12.5px;
     color: var(--text-muted);
@@ -122,7 +122,7 @@
   .mock-tip {
     display: flex; gap: 14px; align-items: flex-start; text-align: left;
     border-left: 3px solid var(--gold);
-    padding: 18px 20px; background: var(--surface); border-radius: 8px;
+    padding: 18px 20px; background: var(--surface); border-radius: 12px;
     max-width: 480px; margin-top: 24px;
   }
   .mock-tip-icon { font-size: 22px; }
@@ -132,7 +132,7 @@
 
   /* Slide 4: ticket */
   .mock-ticket {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
     padding: 20px; max-width: 480px; width: 100%; margin-top: 24px; text-align: left;
   }
   .mock-ticket-row {
@@ -144,7 +144,7 @@
 
   /* Slide: ako to funguje */
   .mini-steps { max-width: 500px; width: 100%; margin-top: 24px; text-align: left; display: flex; flex-direction: column; gap: 10px; }
-  .mini-step { display: flex; gap: 14px; align-items: flex-start; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; }
+  .mini-step { display: flex; gap: 14px; align-items: flex-start; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; }
   .mini-step-num { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--gold); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: var(--gold-bright); }
   .mini-step-title { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
   .mini-step-desc { font-size: 12px; color: var(--text-muted); }
@@ -152,7 +152,7 @@
   /* Slide 5: bankroll */
   .mock-bars { display: flex; align-items: flex-end; gap: 5px; height: 90px; margin-top: 30px; max-width: 420px; width: 100%; }
   .mock-bar {
-    flex: 1; background: var(--gold-bright); border-radius: 3px 3px 0 0;
+    flex: 1; background: var(--success); border-radius: 6px 6px 0 0;
     height: 0; animation: barGrow 0.5s ease forwards;
   }
   @keyframes barGrow { to { height: var(--h); } }
@@ -160,7 +160,7 @@
   /* Slide 6: channels */
   .channel-row { display: flex; gap: 24px; margin-top: 28px; flex-wrap: wrap; justify-content: center; }
   .channel-card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
     padding: 22px 26px; min-width: 160px;
   }
   .channel-card .emoji { font-size: 26px; margin-bottom: 8px; }
@@ -172,9 +172,9 @@
     background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
     padding: 26px 30px; min-width: 160px;
   }
-  .price-card.vip { border-color: rgba(201,160,77,0.5); }
+  .price-card.vip { border-color: var(--gold); background: linear-gradient(180deg, rgba(217,178,92,0.10), rgba(217,178,92,0) 60%), var(--surface); }
   .price-card .tag { font-size: 11.5px; color: var(--gold-bright); margin-bottom: 6px; }
-  .price-card .amount { font-family: var(--font-display); font-size: 30px; }
+  .price-card .amount { font-family: var(--font-display); font-size: 34px; font-weight: 800; letter-spacing: -0.02em; }
   .price-card .per { font-size: 12px; color: var(--text-muted); }
 
   .contact-line { font-family: var(--font-display); font-size: 20px; color: var(--gold-bright); margin-top: 22px; }
@@ -250,6 +250,13 @@
     .mini-step-title { font-size: 15px; }
     .mini-step-desc { font-size: 12.5px; line-height: 1.4; }
   }
+
+  /* ---------- Vzhľad TipRadar (rovnaký ako prezentácia) ---------- */
+  body { -webkit-font-smoothing: antialiased; }
+  h1, h2, .display, .price, .mini-step-title { letter-spacing: -0.02em; }
+  .radar-sweep { transform-origin: 120px 120px; animation: radarSweep 6s linear infinite; }
+  @keyframes radarSweep { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .radar-sweep { animation: none; } }
 </style>
 </head>
 <body>
@@ -257,9 +264,9 @@
 <div class="brand-mark-fixed">
   <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
     <circle cx="100" cy="100" r="94" fill="#12211a"/>
-    <circle cx="100" cy="100" r="94" fill="none" stroke="#c9a04d" stroke-width="6"/>
+    <circle cx="100" cy="100" r="94" fill="none" stroke="#d9b25c" stroke-width="6"/>
     <circle cx="100" cy="100" r="60" fill="none" stroke="#3fa65c" stroke-width="3"/>
-    <circle cx="100" cy="100" r="4" fill="#e8c766"/>
+    <circle cx="100" cy="100" r="4" fill="#e9cf8e"/>
   </svg>
   TipRadar
 </div>
@@ -269,12 +276,14 @@
   <div class="slide" data-duration="4000">
     <svg class="radar-illustration" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
       <circle cx="120" cy="120" r="112" fill="#12211a"/>
-      <circle cx="120" cy="120" r="112" fill="none" stroke="#c9a04d" stroke-width="4.5"/>
+      <circle cx="120" cy="120" r="112" fill="none" stroke="#d9b25c" stroke-width="4.5"/>
       <circle cx="120" cy="120" r="82" fill="none" stroke="#3fa65c" stroke-width="2.5"/>
-      <circle cx="120" cy="120" r="47" fill="none" stroke="#57c97a" stroke-width="3"/>
-      <path d="M 120 120 L 120 14 A 106 106 0 0 1 197 61 Z" fill="#57c97a" fill-opacity="0.45"/>
-      <line x1="120" y1="120" x2="197" y2="61" stroke="#57c97a" stroke-width="4.5" stroke-linecap="round"/>
-      <circle cx="120" cy="120" r="5" fill="#e8c766"/>
+      <circle cx="120" cy="120" r="47" fill="none" stroke="#5bd08a" stroke-width="3"/>
+      <g class="radar-sweep">
+      <path d="M 120 120 L 120 14 A 106 106 0 0 1 197 61 Z" fill="#5bd08a" fill-opacity="0.45"/>
+      <line x1="120" y1="120" x2="197" y2="61" stroke="#5bd08a" stroke-width="4.5" stroke-linecap="round"/>
+      </g>
+      <circle cx="120" cy="120" r="5" fill="#e9cf8e"/>
     </svg>
     <div class="kicker">Štatistický model, nie odhad od oka</div>
     <h1>Futbalové tipy podložené číslami</h1>
