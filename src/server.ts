@@ -130,6 +130,10 @@ app.get("/", (req, res, next) => {
   }
   next();
 });
+// Verejná video prezentácia (tipradar.eu/video) – bez hesla, na každej adrese.
+app.get(["/video", "/video/"], (_req, res) => {
+  res.sendFile(path.join(__dirname, "..", "landing", "video.html"));
+});
 // Ikonka stránky musí byť dostupná aj bez hesla (používa ju verejná prezentácia).
 app.get(["/favicon.svg", "/favicon-32.png", "/favicon-256.png"], (req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", req.path.slice(1)));

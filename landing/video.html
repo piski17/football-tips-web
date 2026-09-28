@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>TipRadar — predstavenie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0a0a0b;
+    --surface: #131315;
+    --surface-2: #1c1c1f;
+    --border: #2a2a2e;
+    --gold: #c9a04d;
+    --gold-bright: #e8c766;
+    --pitch: #3fa65c;
+    --danger: #d9776c;
+    --success: #6bbf7a;
+    --text: #f2f0ea;
+    --text-muted: #99938a;
+    --font-display: "Space Grotesk", "Poppins", Arial, sans-serif;
+    --font-body: "Inter", "Poppins", -apple-system, sans-serif;
+  }
+  :root:not([data-theme="light"]) { color-scheme: dark; }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #f4f2ec; --surface: #ffffff; --surface-2: #ece8dd; --border: #ddd6c4;
+      --text: #17140d; --text-muted: #6b6152;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f2ec; --surface: #ffffff; --surface-2: #ece8dd; --border: #ddd6c4;
+    --text: #17140d; --text-muted: #6b6152;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font-family: var(--font-body); overflow: hidden;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  img, svg { max-width: 100%; }
+
+  .stage {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 28px;
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 0.55s ease, transform 0.55s ease;
+    pointer-events: none;
+  }
+  .slide.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .kicker {
+    color: var(--gold);
+    font-size: 13px;
+    letter-spacing: 0.3px;
+    margin-bottom: 14px;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(28px, 5vw, 44px);
+    line-height: 1.15;
+    margin: 0 0 16px;
+    max-width: 16ch;
+  }
+  .lede {
+    color: var(--text-muted);
+    font-size: 16px;
+    max-width: 46ch;
+    margin: 0 auto;
+  }
+
+  .radar-illustration { width: min(220px, 50vw); margin-bottom: 22px; }
+
+  /* Slide 2: market grid */
+  .market-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    max-width: 520px;
+    margin-top: 30px;
+  }
+  .market-chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 8px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    opacity: 0;
+    transform: scale(0.9);
+    animation: chipIn 0.4s ease forwards;
+  }
+  @keyframes chipIn { to { opacity: 1; transform: scale(1); } }
+
+  /* Slide 3: tip callout */
+  .mock-tip {
+    display: flex; gap: 14px; align-items: flex-start; text-align: left;
+    border-left: 3px solid var(--gold);
+    padding: 18px 20px; background: var(--surface); border-radius: 8px;
+    max-width: 480px; margin-top: 24px;
+  }
+  .mock-tip-icon { font-size: 22px; }
+  .mock-tip-title { font-weight: 600; font-size: 16px; margin-bottom: 4px; }
+  .mock-tip-meta { font-size: 12.5px; color: var(--text-muted); margin-bottom: 10px; }
+  .mock-tip-explain { font-size: 12.5px; color: var(--text-muted); font-style: italic; line-height: 1.6; }
+
+  /* Slide 4: ticket */
+  .mock-ticket {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 20px; max-width: 480px; width: 100%; margin-top: 24px; text-align: left;
+  }
+  .mock-ticket-row {
+    display: flex; justify-content: space-between; font-size: 13px;
+    padding: 9px 0; border-bottom: 1px solid var(--border); color: var(--text-muted);
+  }
+  .mock-ticket-row:last-child { border-bottom: none; }
+  .mock-ticket-row strong { color: var(--text); }
+
+  /* Slide: ako to funguje */
+  .mini-steps { max-width: 500px; width: 100%; margin-top: 24px; text-align: left; display: flex; flex-direction: column; gap: 10px; }
+  .mini-step { display: flex; gap: 14px; align-items: flex-start; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; }
+  .mini-step-num { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--gold); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: var(--gold-bright); }
+  .mini-step-title { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+  .mini-step-desc { font-size: 12px; color: var(--text-muted); }
+
+  /* Slide 5: bankroll */
+  .mock-bars { display: flex; align-items: flex-end; gap: 5px; height: 90px; margin-top: 30px; max-width: 420px; width: 100%; }
+  .mock-bar {
+    flex: 1; background: var(--gold-bright); border-radius: 3px 3px 0 0;
+    height: 0; animation: barGrow 0.5s ease forwards;
+  }
+  @keyframes barGrow { to { height: var(--h); } }
+
+  /* Slide 6: channels */
+  .channel-row { display: flex; gap: 24px; margin-top: 28px; flex-wrap: wrap; justify-content: center; }
+  .channel-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 22px 26px; min-width: 160px;
+  }
+  .channel-card .emoji { font-size: 26px; margin-bottom: 8px; }
+  .channel-card .name { font-family: var(--font-display); font-size: 16px; }
+
+  /* Slide 7: pricing */
+  .price-row { display: flex; gap: 20px; margin-top: 28px; flex-wrap: wrap; justify-content: center; }
+  .price-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 26px 30px; min-width: 160px;
+  }
+  .price-card.vip { border-color: rgba(201,160,77,0.5); }
+  .price-card .tag { font-size: 11.5px; color: var(--gold-bright); margin-bottom: 6px; }
+  .price-card .amount { font-family: var(--font-display); font-size: 30px; }
+  .price-card .per { font-size: 12px; color: var(--text-muted); }
+
+  .contact-line { font-family: var(--font-display); font-size: 20px; color: var(--gold-bright); margin-top: 22px; }
+
+  /* Progress + controls */
+  .controls {
+    position: absolute;
+    bottom: max(18px, env(safe-area-inset-bottom, 0px));
+    left: 0; right: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 0 24px;
+  }
+  .progress-track {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    gap: 5px;
+  }
+  .progress-seg {
+    flex: 1;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-seg-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--gold-bright);
+  }
+  .progress-seg.done .progress-seg-fill { width: 100%; }
+  .progress-seg.playing .progress-seg-fill { animation: fillSeg var(--dur) linear forwards; }
+  @keyframes fillSeg { from { width: 0%; } to { width: 100%; } }
+
+  .play-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+  }
+
+  .brand-mark-fixed {
+    position: absolute;
+    top: max(16px, env(safe-area-inset-top, 0px));
+    left: 20px;
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--font-display); font-weight: 700; font-size: 14px;
+    color: var(--text-muted);
+  }
+  .brand-mark-fixed svg { width: 18px; height: 18px; }
+  @media (max-aspect-ratio: 3/4) {
+    .radar-illustration { width: min(360px, 60vw); }
+    h1 { font-size: clamp(38px, 8vw, 58px); }
+    .lede { font-size: 22px; }
+    .kicker { font-size: 17px; }
+    .market-grid { max-width: 640px; }
+    .market-chip { font-size: 16px; padding: 16px 10px; }
+    .mock-tip, .mock-ticket { max-width: 480px; width: 100%; transform: none; }
+    .mock-tip-title { font-size: 17px; } .mock-tip-meta, .mock-tip-explain, .mock-ticket-row { font-size: 14px; }
+    .price-card { padding: 34px 40px; }
+    .price-card .amount { font-size: 42px; }
+    .contact-line { font-size: 28px; }
+    .mini-steps { max-width: 640px; gap: 8px; }
+    .mini-step { padding: 10px 14px; gap: 12px; }
+    .mini-step-num { width: 30px; height: 30px; font-size: 14px; }
+    .mini-step-title { font-size: 15px; }
+    .mini-step-desc { font-size: 12.5px; line-height: 1.4; }
+  }
+</style>
+</head>
+<body>
+
+<div class="brand-mark-fixed">
+  <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="100" cy="100" r="94" fill="#12211a"/>
+    <circle cx="100" cy="100" r="94" fill="none" stroke="#c9a04d" stroke-width="6"/>
+    <circle cx="100" cy="100" r="60" fill="none" stroke="#3fa65c" stroke-width="3"/>
+    <circle cx="100" cy="100" r="4" fill="#e8c766"/>
+  </svg>
+  TipRadar
+</div>
+
+<div class="stage" id="stage">
+
+  <div class="slide" data-duration="4000">
+    <svg class="radar-illustration" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="120" cy="120" r="112" fill="#12211a"/>
+      <circle cx="120" cy="120" r="112" fill="none" stroke="#c9a04d" stroke-width="4.5"/>
+      <circle cx="120" cy="120" r="82" fill="none" stroke="#3fa65c" stroke-width="2.5"/>
+      <circle cx="120" cy="120" r="47" fill="none" stroke="#57c97a" stroke-width="3"/>
+      <path d="M 120 120 L 120 14 A 106 106 0 0 1 197 61 Z" fill="#57c97a" fill-opacity="0.45"/>
+      <line x1="120" y1="120" x2="197" y2="61" stroke="#57c97a" stroke-width="4.5" stroke-linecap="round"/>
+      <circle cx="120" cy="120" r="5" fill="#e8c766"/>
+    </svg>
+    <div class="kicker">Štatistický model, nie odhad od oka</div>
+    <h1>Futbalové tipy podložené číslami</h1>
+    <p class="lede">TipRadar denne prepočíta desiatky zápasov a vyberie stávky so skutočnou hodnotou.</p>
+  </div>
+
+  <div class="slide" data-duration="7500">
+    <div class="kicker">Žiadne tajomstvá, žiadne „dôveruj mi“</div>
+    <h1>Ako presne TipRadar pracuje</h1>
+    <div class="mini-steps">
+      <div class="mini-step">
+        <div class="mini-step-num">1</div>
+        <div>
+          <div class="mini-step-title">Zbierame dáta</div>
+          <div class="mini-step-desc">Štatistiky zápasov, forma tímov aj vzájomné súboje, z každej sledovanej ligy.</div>
+        </div>
+      </div>
+      <div class="mini-step">
+        <div class="mini-step-num">2</div>
+        <div>
+          <div class="mini-step-title">Štatistický model</div>
+          <div class="mini-step-desc">Poissonovo rozdelenie gólov, vážená forma a historické dáta.</div>
+        </div>
+      </div>
+      <div class="mini-step">
+        <div class="mini-step-num">3</div>
+        <div>
+          <div class="mini-step-title">Vyberieme tip</div>
+          <div class="mini-step-desc">Len stávky s reálnou hodnotou, naprieč 10 trhmi.</div>
+        </div>
+      </div>
+      <div class="mini-step">
+        <div class="mini-step-num">4</div>
+        <div>
+          <div class="mini-step-title">Transparentná história</div>
+          <div class="mini-step-desc">Každý tip aj jeho výsledok — vrátane tých, čo nevyšli.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-duration="4200">
+    <div class="kicker">Jeden model, desať trhov</div>
+    <h1>Nič nenecháva náhode</h1>
+    <div class="market-grid" id="marketGrid"></div>
+  </div>
+
+  <div class="slide" data-duration="4500">
+    <div class="kicker">Nie len percento</div>
+    <h1>Každý tip má svoj dôvod</h1>
+    <div class="mock-tip">
+      <div class="mock-tip-icon">🎯</div>
+      <div>
+        <div class="mock-tip-title">Góly: nad 2,5</div>
+        <div class="mock-tip-meta">Najvyššia dôvera zo všetkých trhov · 71 %</div>
+        <div class="mock-tip-explain">💡 Očakávané góly 1,6 : 1,3 – oba tímy strieľajú pravidelne a v posledných 5 vzájomných zápasoch padli v priemere 3 góly.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-duration="4000">
+    <div class="kicker">Spájaj tipy do tiketov</div>
+    <h1>Kombinovaná hodnota na jeden pohľad</h1>
+    <div class="mock-ticket">
+      <div class="mock-ticket-row"><span>Arsenal — Leeds · Karty nad 3,5</span><strong>72 %</strong></div>
+      <div class="mock-ticket-row"><span>Chelsea — Bournemouth · Góly nad 1,5</span><strong>68 %</strong></div>
+      <div class="mock-ticket-row"><span>Kombinovaný kurz</span><strong>~2,04</strong></div>
+    </div>
+  </div>
+
+  <div class="slide" data-duration="4000">
+    <div class="kicker">Poctivá história</div>
+    <h1>Vidno presne, čo funguje</h1>
+    <div class="mock-bars" id="mockBars"></div>
+  </div>
+
+  <div class="slide" data-duration="4000">
+    <div class="kicker">Doručenie priamo k vám</div>
+    <h1>Tipy tam, kde ich sledujete</h1>
+    <div class="channel-row">
+      <div class="channel-card"><div class="emoji">📣</div><div class="name">PREMIUM kanál</div></div>
+      <div class="channel-card"><div class="emoji">👑</div><div class="name">VIP kanál</div></div>
+    </div>
+  </div>
+
+  <div class="slide" data-duration="4500">
+    <div class="kicker">Predplatné</div>
+    <h1>Menej než 1 € na deň</h1>
+    <div class="price-row">
+      <div class="price-card">
+        <div class="tag">PREMIUM</div>
+        <div class="amount">29 €</div>
+        <div class="per">/ mesiac</div>
+      </div>
+      <div class="price-card vip">
+        <div class="tag">VIP · skupiny a kanály</div>
+        <div class="amount">99 €</div>
+        <div class="per">/ mesiac</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" data-duration="5000">
+    <div class="kicker">Kontakt</div>
+    <h1>Chcete sa pridať?</h1>
+    <p class="lede">Napíšte a dohodneme si podrobnosti.</p>
+    <div class="contact-line">tipradarai@gmail.com</div>
+    <div class="contact-line" style="font-size: 20px; margin-top: 10px;">Telegram: @TipRadarAiBot</div>
+  </div>
+
+</div>
+
+<div class="controls">
+  <div class="progress-track" id="progressTrack"></div>
+  <button class="play-btn" id="playBtn" aria-label="Pauza/Prehrať">⏸</button>
+</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll(".slide"));
+  const track = document.getElementById("progressTrack");
+  const playBtn = document.getElementById("playBtn");
+  let current = 0;
+  let playing = true;
+  let timer = null;
+
+  // Market grid content
+  const markets = ["Výsledok", "Góly O/U", "Oba skórujú", "Rohy", "Karty", "Strely na bránu", "Fauly", "Ofsajdy", "Držanie lopty", "Strelci", "+ tikety", "+ vyhodnotenie"];
+  const marketGrid = document.getElementById("marketGrid");
+  markets.forEach((m, i) => {
+    const chip = document.createElement("div");
+    chip.className = "market-chip";
+    chip.textContent = m;
+    chip.style.animationDelay = (i * 0.06) + "s";
+    marketGrid.appendChild(chip);
+  });
+
+  // Bankroll bars content
+  const barsData = [35, 48, 42, 60, 55, 72, 65, 88];
+  const barsEl = document.getElementById("mockBars");
+  barsData.forEach((v, i) => {
+    const bar = document.createElement("div");
+    bar.className = "mock-bar";
+    bar.style.setProperty("--h", v + "%");
+    bar.style.animationDelay = (i * 0.08) + "s";
+    barsEl.appendChild(bar);
+  });
+
+  // Progress segments
+  slides.forEach((slide, i) => {
+    const seg = document.createElement("div");
+    seg.className = "progress-seg";
+    seg.innerHTML = '<div class="progress-seg-fill"></div>';
+    seg.style.setProperty("--dur", (parseInt(slide.dataset.duration) / 1000) + "s");
+    seg.addEventListener("click", () => goTo(i));
+    track.appendChild(seg);
+  });
+  const segs = Array.from(track.children);
+
+  function updateSegs() {
+    segs.forEach((seg, i) => {
+      seg.classList.remove("done", "playing");
+      if (i < current) seg.classList.add("done");
+      if (i === current) seg.classList.add("playing");
+    });
+  }
+
+  function showSlide(i) {
+    slides.forEach((s, idx) => s.classList.toggle("active", idx === i));
+    updateSegs();
+  }
+
+  function scheduleNext() {
+    clearTimeout(timer);
+    if (!playing) return;
+    const duration = parseInt(slides[current].dataset.duration);
+    timer = setTimeout(() => {
+      current = (current + 1) % slides.length;
+      showSlide(current);
+      scheduleNext();
+    }, duration);
+  }
+
+  function goTo(i) {
+    current = i;
+    showSlide(current);
+    scheduleNext();
+  }
+
+  playBtn.addEventListener("click", () => {
+    playing = !playing;
+    playBtn.textContent = playing ? "⏸" : "▶";
+    if (playing) {
+      scheduleNext();
+    } else {
+      clearTimeout(timer);
+      segs.forEach((seg) => seg.classList.remove("playing"));
+    }
+  });
+
+  // Vystavené len na účel spoľahlivého externého nahrávania videa (nie je
+  // to nutné pre bežné používanie tejto stránky ako interaktívneho artefaktu).
+  window.__stopAutoplay = () => {
+    playing = false;
+    clearTimeout(timer);
+  };
+  window.__goToSlide = (i) => {
+    current = i;
+    showSlide(current);
+  };
+
+  showSlide(current);
+  scheduleNext();
+</script>
+
+</body>
+</html>
