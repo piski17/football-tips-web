@@ -571,10 +571,15 @@ export function predictMatch(
     candidates.push({ market: "Góly", selection: "Under 3.5", probability: poisson.under35, category: "goly", explanation: golyExplanation });
   }
 
-  if (poisson.bttsYes >= poisson.bttsNo) {
-    candidates.push({ market: "Oba tímy skórujú", selection: "Áno", probability: poisson.bttsYes, category: "btts", explanation: bttsExplanation });
+  // Kalibrácia podľa spätného testu (~106 zápasov): Poisson pri „oba tímy skórujú"
+  // preceňoval istotu (model 62 %, realita 50 %) – nevidí, že zápasy s nulou na
+  // jednej strane (0:0, 1:0, 2:0…) sú častejšie. Odchýlku od 50 % preto zmenšíme.
+  const BTTS_SHRINK = 0.6;
+  const bttsYesCal = 50 + BTTS_SHRINK * (poisson.bttsYes - 50);
+  if (bttsYesCal >= 50) {
+    candidates.push({ market: "Oba tímy skórujú", selection: "Áno", probability: bttsYesCal, category: "btts", explanation: bttsExplanation });
   } else {
-    candidates.push({ market: "Oba tímy skórujú", selection: "Nie", probability: poisson.bttsNo, category: "btts", explanation: bttsExplanation });
+    candidates.push({ market: "Oba tímy skórujú", selection: "Nie", probability: 100 - bttsYesCal, category: "btts", explanation: bttsExplanation });
   }
 
   if (corners) {
