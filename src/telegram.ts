@@ -348,12 +348,12 @@ const TELEGRAM_CONTACT_USERNAME = process.env.TELEGRAM_CONTACT_USERNAME || "im_m
 const FAQ_ANSWERS: Record<string, string> = {
   faq_price:
     `💰 <b>Cenník</b>\n\n` +
-    `🟡 <b>PREMIUM</b> — 29 €/mesiac\nDenné tipy zo všetkých sledovaných líg, s vysvetlením a plnou históriou úspešnosti.\n\n` +
-    `👑 <b>VIP</b> — 99 €/mesiac\nPre stávkové skupiny a kanály — neobmedzený počet vašich vlastných klientov.\n\n` +
+    `🟡 <b>PREMIUM</b> – 29 €/mesiac\nVšetky tipy dňa v súkromnom kanáli, s kurzom, dôverou a vysvetlením. Večer vyhodnotenie a týždenný report.\n\n` +
+    `👑 <b>VIP</b> – 59 €/mesiac\nVšetko z Premium, navyše tipy o hodinu skôr, denný VIP tiket z najsilnejších tipov a priamy kontakt pre otázky k tipom.\n\n` +
     `Kedykoľvek zrušiteľné, žiadna viazanosť.`,
   faq_how:
     `❓ <b>Ako to funguje</b>\n\n` +
-    `TipRadar denne prepočíta desiatky zápasov cez vlastný štatistický model (Poissonovo rozdelenie gólov, vážená forma, vzájomné zápasy, historické dáta) a vyberie 2 – 3 najhodnotnejšie tipy naprieč 10 trhmi (výsledok, góly, oba tímy skórujú, rohy, karty, strely na bránu, fauly, ofsajdy, držanie lopty, strelci) — s vysvetlením, prečo.`,
+    `TipRadar denne prepočíta desiatky zápasov cez vlastný štatistický model (Poissonovo rozdelenie gólov, vážená forma, vzájomné zápasy, historické dáta) a vyberie tipy s reálnou hodnotou naprieč 10 trhmi (výsledok, góly, oba tímy skórujú, rohy, karty, strely na bránu, fauly, ofsajdy, držanie lopty, strelci) — s vysvetlením, prečo.`,
   faq_time:
     `🕒 <b>Kedy prídu tipy</b>\n\n` +
     `Tipy posielame v deň zápasu, <b>2 – 3 hodiny pred výkopom</b> – vtedy sú kurzy aj dáta najpresnejšie a zostane dosť času na stávku.\n\n` +
