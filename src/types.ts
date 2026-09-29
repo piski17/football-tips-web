@@ -66,6 +66,8 @@ export interface MarketPick {
   valueWarning?: string;
   /** Dôvod, prečo bol tip vyradený (len pri lowValueBets). */
   rejectReason?: string;
+  /** Pri málo dátach: model a stávkovky sa líšia o 15+ bodov (dôvod vyradenia). */
+  marketConflict?: string;
 }
 
 /** Odhad pre trh typu Over/Under (rohy, karty) založený na kombinovanom Poissonovom modeli. */

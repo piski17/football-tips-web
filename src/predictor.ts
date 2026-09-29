@@ -375,6 +375,9 @@ function h2hGoals(h2h: HeadToHeadMatch[], homeTeamId: number): H2HGoals | null {
 }
 const fmt1 = (n: number) => n.toFixed(1).replace(".", ",");
 
+/** Rozdiel (v percentuálnych bodoch) medzi modelom a stávkovkami, od ktorého sa tip pri málo dátach vyradí. */
+const MARKET_CONFLICT_POINTS = 15;
+
 export function predictMatch(
   fixture: Fixture,
   homeStats: TeamStatistics,
@@ -713,6 +716,11 @@ export function predictMatch(
       const pMarket = marketProbability(marketOdds!, c, fixture.homeTeam.name, fixture.awayTeam.name);
       if (pMarket !== null) {
         const modelPct = c.probability;
+        // Rozpor so stávkovkami: pri málo dátach a rozdiele 15+ bodov model
+        // pravdepodobne nevidí niečo podstatné (typicky rozdiel v sile súperov).
+        if (Math.abs(modelPct - pMarket * 100) >= MARKET_CONFLICT_POINTS) {
+          c.marketConflict = `model a stávkovky sa výrazne rozchádzajú (model ${modelPct.toFixed(0)} %, stávkovky ${(pMarket * 100).toFixed(0)} %)`;
+        }
         c.probability = (1 - marketWeight) * modelPct + marketWeight * pMarket * 100;
         c.explanation =
           (c.explanation ? c.explanation + " " : "") +
@@ -741,7 +749,10 @@ export function predictMatch(
   const lowValueBets: MarketPick[] = [];
   for (const b of inBand) {
     const ev = b.expectedValue;
-    if (ev == null && oddsAvailable) {
+    if (b.marketConflict) {
+      b.rejectReason = b.marketConflict;
+      lowValueBets.push(b);
+    } else if (ev == null && oddsAvailable) {
       // Stávkovky k zápasu kurzy majú, ale tento trh (alebo túto hranicu) neponúkajú -
       // na tip sa reálne nedá staviť. Ručne ho stále možno pridať ("Uložiť aj tak").
       b.rejectReason = "stávkovky tento trh neponúkajú";
