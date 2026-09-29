@@ -51,6 +51,7 @@
   .nav.scrolled { border-bottom-color: var(--line); }
   .nav .wrap { display: flex; align-items: center; gap: 32px; height: 72px; }
   .mono { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+  .radar-logo { width: 34px; height: 34px; display: block; flex: 0 0 auto; }
   .mono-badge { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--gold); display: grid; place-items: center; font-family: var(--serif); font-weight: 700; color: var(--gold); font-size: 17px; }
   .mono-name { font-family: var(--serif); font-size: 23px; font-weight: 600; letter-spacing: 0.01em; }
   .nav-links { display: flex; gap: 28px; margin-left: auto; font-size: 14.5px; }
@@ -235,7 +236,7 @@
 
 <nav class="nav" id="nav" aria-label="Hlavná navigácia">
   <div class="wrap">
-    <a class="mono" href="#top" aria-label="TipRadar – na začiatok"><span class="mono-badge">T</span><span class="mono-name">TipRadar</span></a>
+    <a class="mono" href="#top" aria-label="TipRadar – na začiatok"><svg class="radar-logo" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="92" fill="#143529"/><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#d6be8a" fill-opacity=".32"/><line x1="100" y1="100" x2="162.2" y2="37.8" stroke="#d6be8a" stroke-width="7" stroke-linecap="round"/><circle cx="100" cy="100" r="92" fill="none" stroke="#d6be8a" stroke-width="8"/><circle cx="100" cy="100" r="58" fill="none" stroke="#d6be8a" stroke-opacity=".5" stroke-width="4"/><circle cx="100" cy="100" r="9" fill="#e9cf8e"/></svg><span class="mono-name">TipRadar</span></a>
     <div class="nav-links">
       <a href="#ako" data-sec="ako">Ako vzniká tip</a>
       <a href="#vysledky" data-sec="vysledky">Výsledky</a>

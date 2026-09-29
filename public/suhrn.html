@@ -171,6 +171,7 @@ h2 { font-size: 22px; }
 .day-title { font-size: 30px; }
 .stat b { font-size: 28px; }
 .top .brand { font-size: 24px; gap: 12px; }
+.radar-logo { width: 32px; height: 32px; display: block; flex: 0 0 auto; }
 .mono-badge { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--accent); display: grid; place-items: center; color: var(--accent); font-size: 17px; font-weight: 700; }
 .btn.primary { background: linear-gradient(180deg, #e2cd9c, #d6be8a 55%, #b39a62); border-color: #b39a62; color: #1d1a12; }
 .seg button[aria-pressed="true"] { background: #d6be8a; color: #1d1a12; }
@@ -180,7 +181,7 @@ h2 { font-size: 22px; }
 <body>
 <div class="wrap">
   <header class="top">
-    <div class="brand"><span class="mono-badge">T</span>TipRadar</div>
+    <div class="brand"><svg class="radar-logo" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="92" fill="#143529"/><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#d6be8a" fill-opacity=".32"/><line x1="100" y1="100" x2="162.2" y2="37.8" stroke="#d6be8a" stroke-width="7" stroke-linecap="round"/><circle cx="100" cy="100" r="92" fill="none" stroke="#d6be8a" stroke-width="8"/><circle cx="100" cy="100" r="58" fill="none" stroke="#d6be8a" stroke-opacity=".5" stroke-width="4"/><circle cx="100" cy="100" r="9" fill="#e9cf8e"/></svg>TipRadar</div>
     <span class="tag">Denný súhrn</span>
   </header>
   <h1>Denný súhrn výsledkov</h1>
@@ -654,14 +655,18 @@ h2 { font-size: 22px; }
     let t = text; while (t.length > 1 && ctx.measureText(t + '…').width > max) t = t.slice(0, -1);
     return t + '…';
   }
-  // Monogram „T" v zlatom krúžku (ako na tipradar.eu).
+  // Logo TipRadar: radar v šampanskom zlate (ako na tipradar.eu).
   function mark(x, y, r) {
-    ctx.save();
-    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.lineWidth = 2; ctx.strokeStyle = C.gold; ctx.stroke();
-    ctx.fillStyle = C.gold; ctx.font = S(700, Math.round(r * 1.15)); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('T', x, y + r * 0.06);
+    ctx.save(); ctx.translate(x, y);
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fillStyle = C.surface; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, r * 0.95, -Math.PI / 2, -Math.PI / 4); ctx.closePath();
+    ctx.fillStyle = 'rgba(214,190,138,0.32)'; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(-Math.PI / 4) * r * 0.95, Math.sin(-Math.PI / 4) * r * 0.95);
+    ctx.strokeStyle = C.gold; ctx.lineWidth = r * 0.075; ctx.lineCap = 'round'; ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.strokeStyle = C.gold; ctx.lineWidth = r * 0.085; ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.63, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(214,190,138,0.5)'; ctx.lineWidth = r * 0.045; ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.1, 0, Math.PI * 2); ctx.fillStyle = '#e9cf8e'; ctx.fill();
     ctx.restore();
-    ctx.textBaseline = 'alphabetic';
   }
   function badge(x, y, kind, r = 21) {
     const col = kind === 'won' ? C.green : kind === 'lost' ? C.red : kind === 'void' ? C.muted : C.line;
