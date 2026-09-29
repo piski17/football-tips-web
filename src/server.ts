@@ -133,6 +133,10 @@ app.get("/", (req, res, next) => {
   }
   next();
 });
+// Nová prémiová verzia prezentácie na ukážku (tipradar.eu/nova) – bez hesla.
+app.get(["/nova", "/nova/"], (_req, res) => {
+  res.sendFile(path.join(__dirname, "..", "landing", "premium.html"));
+});
 // Verejná video prezentácia (tipradar.eu/video) – bez hesla, na každej adrese.
 app.get(["/video", "/video/"], (_req, res) => {
   res.sendFile(path.join(__dirname, "..", "landing", "video.html"));
