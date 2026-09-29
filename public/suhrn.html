@@ -7,32 +7,32 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
   box-sizing: border-box;
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  /* Svetlá verzia: kriedový papier */
-  --bg: #f3f1ea; --panel: #fffdf7; --line: #dcd8cc; --text: #122018; --muted: #5f6e65;
-  --accent: #b8892a; --accent-ink: #1a1407; --good: #2f8f57; --bad: #c24e43; --input: #faf8f1;
-  --display: "Bricolage Grotesque", "Figtree", system-ui, sans-serif;
-  --body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Svetlá verzia: slonovinový papier */
+  --bg: #f3ede2; --panel: #fbf7ef; --line: #ddd3c1; --text: #0f2a22; --muted: #5f6b62;
+  --accent: #9c7f45; --accent-ink: #fbf7ef; --good: #2f7a54; --bad: #9a3b4a; --input: #fffaf1;
+  --display: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+  --body: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
-/* Tmavá verzia: nočný trávnik ako na prezentácii */
+/* Tmavá verzia: závodná zelená a šampanské zlato ako na tipradar.eu */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #07100c; --panel: #0d1913; --line: #213629; --text: #eeece4; --muted: #8d9c93;
-    --accent: #d9b25c; --accent-ink: #1a1407; --good: #5bd08a; --bad: #e46f63; --input: #0a150f;
+    --bg: #0f2a22; --panel: #143529; --line: #2a4a3d; --text: #f3ede2; --muted: #a9b4a8;
+    --accent: #d6be8a; --accent-ink: #1d1a12; --good: #6fbf93; --bad: #c0707c; --input: #0a1f19;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #07100c; --panel: #0d1913; --line: #213629; --text: #eeece4; --muted: #8d9c93;
-  --accent: #d9b25c; --accent-ink: #1a1407; --good: #5bd08a; --bad: #e46f63; --input: #0a150f;
+  --bg: #0f2a22; --panel: #143529; --line: #2a4a3d; --text: #f3ede2; --muted: #a9b4a8;
+  --accent: #d6be8a; --accent-ink: #1d1a12; --good: #6fbf93; --bad: #c0707c; --input: #0a1f19;
 }
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-padding-top: env(safe-area-inset-top, 0px); }
-body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 "Poppins", "Segoe UI", Roboto, Arial, sans-serif; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 var(--body); }
 .wrap { max-width: 1240px; margin: 0 auto; padding: 28px 20px 48px; }
 h1 { font-size: 26px; margin: 0 0 4px; font-weight: 700; }
 .lead { color: var(--muted); margin: 0 0 24px; max-width: 70ch; }
@@ -163,15 +163,24 @@ canvas { border-radius: 14px; }
   .row .m { grid-area: m; } .row .t { grid-area: t; } .row .k { grid-area: k; } .row .h { grid-area: h; }
   .row .res { grid-area: r; justify-self: start; } .row .del { grid-area: d; justify-self: end; }
 }
+
+/* ---------- Prémiový vzhľad (tipradar.eu) ---------- */
+h1, h2, .day-title, .stat b, .top .brand { font-family: var(--display); font-weight: 600; letter-spacing: -0.01em; }
+h1 { font-size: clamp(34px, 4.4vw, 46px); }
+h2 { font-size: 22px; }
+.day-title { font-size: 30px; }
+.stat b { font-size: 28px; }
+.top .brand { font-size: 24px; gap: 12px; }
+.mono-badge { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--accent); display: grid; place-items: center; color: var(--accent); font-size: 17px; font-weight: 700; }
+.btn.primary { background: linear-gradient(180deg, #e2cd9c, #d6be8a 55%, #b39a62); border-color: #b39a62; color: #1d1a12; }
+.seg button[aria-pressed="true"] { background: #d6be8a; color: #1d1a12; }
+.panel { border-radius: 18px; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="top">
-    <div class="brand">
-      <svg viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="92" fill="#12211a"/><circle cx="100" cy="100" r="92" fill="none" stroke="#d9b25c" stroke-width="9"/><circle cx="100" cy="100" r="56" fill="none" stroke="#3fa65c" stroke-width="6"/><path d="M100 100 L100 14 A86 86 0 0 1 163 42 Z" fill="#5bd08a" fill-opacity=".5"/><circle cx="100" cy="100" r="9" fill="#e9cf8e"/></svg>
-      TipRadar
-    </div>
+    <div class="brand"><span class="mono-badge">T</span>TipRadar</div>
     <span class="tag">Denný súhrn</span>
   </header>
   <h1>Denný súhrn výsledkov</h1>
@@ -635,21 +644,24 @@ canvas { border-radius: 14px; }
 
   // ---------- kreslenie ----------
   const cv = $('cv'), ctx = cv.getContext('2d');
-  const C = { bg: '#0b0e0c', surface: '#141916', line: '#26302a', gold: '#e8c766', goldDim: '#c9a04d', green: '#57c97a', red: '#e0685d', text: '#f3f1ea', muted: '#9c978b' };
-  const F = (w, s) => w + ' ' + s + 'px Poppins, "Segoe UI", Arial, sans-serif';
+  // Farby a písma ako na tipradar.eu: závodná zelená, šampanské zlato, slonovinová.
+  const C = { bg: '#0f2a22', bgDeep: '#0a1f19', surface: '#143529', line: '#2a4a3d', gold: '#d6be8a', goldDim: '#b39a62', green: '#6fbf93', red: '#c0707c', text: '#f3ede2', muted: '#a9b4a8' };
+  const F = (w, s) => w + ' ' + s + 'px Manrope, "Segoe UI", Arial, sans-serif';
+  const S = (w, s) => w + ' ' + s + 'px "Cormorant Garamond", Georgia, serif';
   function fit(text, max, font) {
     ctx.font = font;
     if (ctx.measureText(text).width <= max) return text;
     let t = text; while (t.length > 1 && ctx.measureText(t + '…').width > max) t = t.slice(0, -1);
     return t + '…';
   }
+  // Monogram „T" v zlatom krúžku (ako na tipradar.eu).
   function mark(x, y, r) {
-    ctx.save(); ctx.translate(x, y);
-    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fillStyle = '#12211a'; ctx.fill();
-    ctx.lineWidth = r * 0.085; ctx.strokeStyle = C.goldDim; ctx.stroke();
-    ctx.beginPath(); ctx.arc(0, 0, r * 0.64, 0, Math.PI * 2); ctx.lineWidth = r * 0.055; ctx.strokeStyle = '#3fa65c'; ctx.stroke();
-    ctx.beginPath(); ctx.arc(0, 0, r * 0.09, 0, Math.PI * 2); ctx.fillStyle = C.gold; ctx.fill();
+    ctx.save();
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.lineWidth = 2; ctx.strokeStyle = C.gold; ctx.stroke();
+    ctx.fillStyle = C.gold; ctx.font = S(700, Math.round(r * 1.15)); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('T', x, y + r * 0.06);
     ctx.restore();
+    ctx.textBaseline = 'alphabetic';
   }
   function badge(x, y, kind, r = 21) {
     const col = kind === 'won' ? C.green : kind === 'lost' ? C.red : kind === 'void' ? C.muted : C.line;
@@ -657,7 +669,7 @@ canvas { border-radius: 14px; }
     if (kind) { ctx.fillStyle = col; ctx.fill(); }
     ctx.lineWidth = 2.5; ctx.strokeStyle = col; ctx.stroke();
     const k = r / 21;
-    ctx.strokeStyle = '#0b0e0c'; ctx.lineWidth = 4.5 * k; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.strokeStyle = C.bgDeep; ctx.lineWidth = 4.5 * k; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     ctx.beginPath();
     if (kind === 'won') { ctx.moveTo(x - 9 * k, y + 1 * k); ctx.lineTo(x - 2 * k, y + 8 * k); ctx.lineTo(x + 10 * k, y - 7 * k); }
     else if (kind === 'lost') { ctx.moveTo(x - 7 * k, y - 7 * k); ctx.lineTo(x + 7 * k, y + 7 * k); ctx.moveTo(x + 7 * k, y - 7 * k); ctx.lineTo(x - 7 * k, y + 7 * k); }
@@ -667,9 +679,14 @@ canvas { border-radius: 14px; }
   function background(W, H, cy) {
     ctx.clearRect(0, 0, W, H);
     ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, H);
-    const g = ctx.createRadialGradient(540, cy, 0, 540, cy, 760);
-    g.addColorStop(0, 'rgba(87,201,122,0.08)'); g.addColorStop(1, 'rgba(87,201,122,0)');
+    // jemné svetlo vpravo hore ako na webe
+    const g = ctx.createRadialGradient(W * 0.8, H * 0.05, 0, W * 0.8, H * 0.05, H * 0.75);
+    g.addColorStop(0, 'rgba(38,86,66,0.95)'); g.addColorStop(1, 'rgba(38,86,66,0)');
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    // zlatá linka pri spodnom okraji
+    const lg = ctx.createLinearGradient(0, 0, W, 0);
+    lg.addColorStop(0, 'rgba(214,190,138,0)'); lg.addColorStop(0.5, 'rgba(214,190,138,0.55)'); lg.addColorStop(1, 'rgba(214,190,138,0)');
+    ctx.fillStyle = lg; ctx.fillRect(0, H - 3, W, 1.5);
     ctx.textBaseline = 'alphabetic';
   }
   function headline(s) {
@@ -691,7 +708,7 @@ canvas { border-radius: 14px; }
       ctx.beginPath(); ctx.roundRect(x, y, bw, h, 24); ctx.fill(); ctx.stroke();
       ctx.textAlign = 'left';
       ctx.fillStyle = C.muted; ctx.font = F(400, labelSize); ctx.fillText(b[0], x + 26, y + labelSize + 22);
-      ctx.fillStyle = b[2]; ctx.font = F(700, valueSize); ctx.fillText(fit(b[1], bw - 44, F(700, valueSize)), x + 26, y + h - 30);
+      ctx.fillStyle = b[2]; ctx.font = S(600, Math.round(valueSize * 1.15)); ctx.fillText(fit(b[1], bw - 44, S(600, Math.round(valueSize * 1.15))), x + 26, y + h - 28);
     });
   }
   function tipList(list, L, R, top, maxRows, rowH, big) {
@@ -708,7 +725,7 @@ canvas { border-radius: 14px; }
       const sub = (t.time ? t.time + ' · ' : '') + t.tip.trim();
       ctx.fillStyle = C.muted; ctx.font = f2; ctx.fillText(fit(sub, tw, f2), tx, cy + (big ? 32 : 26));
       const o = parseOdds(t.odds);
-      ctx.textAlign = 'right'; ctx.fillStyle = C.gold; ctx.font = F(600, big ? 36 : 28);
+      ctx.textAlign = 'right'; ctx.fillStyle = C.gold; ctx.font = S(600, big ? 44 : 34);
       ctx.fillText(o ? nf(o, 2) : '', R, cy + 11);
     });
     const yEnd = top + shown.length * rowH;
@@ -723,9 +740,9 @@ canvas { border-radius: 14px; }
   function footer(y, L, R, withTelegram) {
     ctx.font = F(400, 24); ctx.fillStyle = C.muted;
     if (withTelegram) {
-      ctx.textAlign = 'left'; ctx.fillText('Telegram ', L, y);
-      const w0 = ctx.measureText('Telegram ').width;
-      ctx.fillStyle = C.gold; ctx.font = F(600, 24); ctx.fillText('@TipRadarAiBot', L + w0, y);
+      ctx.textAlign = 'left'; ctx.fillText('Výsledky a členstvo: ', L, y);
+      const w0 = ctx.measureText('Výsledky a členstvo: ').width;
+      ctx.fillStyle = C.gold; ctx.font = F(600, 24); ctx.fillText('tipradar.eu', L + w0, y);
       ctx.textAlign = 'right'; ctx.fillStyle = C.muted; ctx.font = F(400, 24); ctx.fillText('18+ · hraj zodpovedne', R, y);
     } else {
       ctx.textAlign = 'center'; ctx.fillText('18+ · hraj zodpovedne', (L + R) / 2, y);
@@ -738,12 +755,12 @@ canvas { border-radius: 14px; }
     const W = 1080, H = 1920, L = 90, R = W - 90, s = stats();
     const list = state.tips.filter(filled);
     background(W, H, 700);
-    mark(L + 20, 290, 20);
-    ctx.fillStyle = C.text; ctx.font = F(700, 30); ctx.textAlign = 'left'; ctx.fillText('TipRadar', L + 54, 301);
-    ctx.fillStyle = C.goldDim; ctx.font = F(500, 34);
+    mark(L + 22, 290, 22);
+    ctx.fillStyle = C.text; ctx.font = S(600, 40); ctx.textAlign = 'left'; ctx.fillText('TipRadar', L + 60, 302);
+    ctx.fillStyle = C.gold; ctx.font = F(500, 32);
     ctx.fillText('Výsledky dňa · ' + fmtDay(day), L, 392);
-    ctx.fillStyle = C.text; ctx.font = F(700, 96);
-    ctx.fillText(fit(headline(s), R - L, F(700, 96)), L, 500);
+    ctx.fillStyle = C.text; ctx.font = S(600, 112);
+    ctx.fillText(fit(headline(s), R - L, S(600, 112)), L, 500);
     if (s.pending) { ctx.fillStyle = C.muted; ctx.font = F(400, 28); ctx.fillText('⏳ Ešte sa hrá: ' + s.pending, L, 552); }
     statBoxes(s, L, R, 590, 150, 26, 58);
     // Tipy sa vždy zmestia do pevného priestoru (790 – 1270 px), aby výzva, šípka
@@ -756,11 +773,11 @@ canvas { border-radius: 14px; }
     tipList(list, L, R, LIST_TOP, MAX_ROWS, rowH, rowH >= 90);
     const ctaY = 1330;
     ctx.textAlign = 'center'; ctx.font = F(400, 32); ctx.fillStyle = C.text;
-    const a = 'Tipy dostávajú predplatitelia ', b = 'ešte pred zápasom';
-    ctx.font = F(400, 32); const wa = ctx.measureText(a).width; ctx.font = F(600, 32); const wb = ctx.measureText(b).width;
+    const a = 'Tipy dostávajú členovia ', b = 'ešte pred zápasom';
+    ctx.font = F(400, 32); const wa = ctx.measureText(a).width; ctx.font = F(700, 32); const wb = ctx.measureText(b).width;
     const sx = (W - wa - wb) / 2;
     ctx.textAlign = 'left'; ctx.font = F(400, 32); ctx.fillStyle = C.text; ctx.fillText(a, sx, ctaY);
-    ctx.font = F(600, 32); ctx.fillStyle = C.gold; ctx.fillText(b, sx + wa, ctaY);
+    ctx.font = F(700, 32); ctx.fillStyle = C.gold; ctx.fillText(b, sx + wa, ctaY);
     ctx.textAlign = 'center'; ctx.font = F(400, 46); ctx.fillText('👇', W / 2, ctaY + 64);
     footer(1690, L, R, false);
   }
@@ -768,10 +785,10 @@ canvas { border-radius: 14px; }
     const W = 1080, H = 1350, L = 110, R = W - 110, s = stats();
     const list = state.tips.filter(filled);
     background(W, H, 380);
-    ctx.textAlign = 'left'; ctx.fillStyle = C.goldDim; ctx.font = F(500, 28);
+    ctx.textAlign = 'left'; ctx.fillStyle = C.gold; ctx.font = F(500, 28);
     ctx.fillText('Výsledky dňa · ' + fmtDay(day), L, 150);
-    ctx.fillStyle = C.text; ctx.font = F(700, 74);
-    ctx.fillText(fit(headline(s), R - L, F(700, 74)), L, 240);
+    ctx.fillStyle = C.text; ctx.font = S(600, 88);
+    ctx.fillText(fit(headline(s), R - L, S(600, 88)), L, 240);
     statBoxes(s, L, R, 300, 150, 23, 54);
     const rows = Math.min(10, Math.max(list.length, 1));
     const rowH = Math.min(92, 700 / rows);
@@ -868,7 +885,10 @@ canvas { border-radius: 14px; }
   refresh();
   initCloud();
   if (document.fonts && document.fonts.load) {
-    Promise.all(['700', '600', '500', '400'].map(w => document.fonts.load(w + ' 20px Poppins'))).then(draw).catch(() => {});
+    Promise.all([
+      ...['700', '600', '500', '400'].map(w => document.fonts.load(w + ' 20px Manrope')),
+      ...['700', '600'].map(w => document.fonts.load(w + ' 20px "Cormorant Garamond"')),
+    ]).then(draw).catch(() => {});
     document.fonts.ready.then(draw);
   }
 })();
