@@ -380,6 +380,15 @@ const fmt1 = (n: number) => n.toFixed(1).replace(".", ",");
  * pri málo dátach vyradí. Čím viac vzájomných zápasov model započítal, tým lepšie
  * pozná vzťah tímov a tým väčší rozdiel toleruje: bez nich 15, 3 – 4 zápasy 20, 5+ 25.
  */
+/** Kategória tipu -> štatistika vzájomných zápasov, ktorú pre ňu model používa. */
+const H2H_STAT_KEY: Record<string, keyof H2HStats> = {
+  rohy: "corners",
+  karty: "cards",
+  strely: "shotsOnGoal",
+  fauly: "fouls",
+  ofsajdy: "offsides",
+  drzanie_lopty: "homePossession",
+};
 function marketConflictLimit(h2hMatchesUsed: number): number {
   return h2hMatchesUsed >= 5 ? 25 : h2hMatchesUsed >= 3 ? 20 : 15;
 }
@@ -724,7 +733,11 @@ export function predictMatch(
         const modelPct = c.probability;
         // Rozpor so stávkovkami: pri málo dátach a rozdiele 15+ bodov model
         // pravdepodobne nevidí niečo podstatné (typicky rozdiel v sile súperov).
-        if (Math.abs(modelPct - pMarket * 100) >= marketConflictLimit(h2hG ? h2hG.n : 0)) {
+        // Hranica podľa vzájomných zápasov, ktoré model naozaj použil PRE TENTO trh:
+        // pri štatistikách (rohy, karty…) len tie, ku ktorým sú štatistiky k dispozícii.
+        const statKey = H2H_STAT_KEY[c.category];
+        const h2hUsed = statKey ? h2hStat(statKey)?.n ?? 0 : h2hG ? h2hG.n : 0;
+        if (Math.abs(modelPct - pMarket * 100) >= marketConflictLimit(h2hUsed)) {
           c.marketConflict = `model a stávkovky sa výrazne rozchádzajú (model ${modelPct.toFixed(0)} %, stávkovky ${(pMarket * 100).toFixed(0)} %)`;
           c.modelProbability = modelPct;
           c.marketProbability = pMarket * 100;
