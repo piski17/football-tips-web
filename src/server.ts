@@ -1,3 +1,4 @@
+import { recordShadow, listShadow, updateShadow, shadowEntriesFrom, ShadowEntry } from "./shadowStore";
 import { startBacktest, getBacktest } from "./backtest";
 import { getDay, getAllDays, setDay } from "./dailyStore";
 import "dotenv/config";
@@ -251,6 +252,8 @@ app.post("/api/analyze", async (req, res) => {
       h2hStats
     );
 
+    // Tichá evidencia tipov vyradených pre rozpor so stávkovkami (na pozadí, nič neblokuje).
+    void recordShadow(shadowEntriesFrom(fixture, (result as any).lowValueBets ?? [])).catch(() => {});
     res.json(result);
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
@@ -793,6 +796,46 @@ app.get("/api/backtest/:id", (req, res) => {
   res.json(job);
 });
 
+
+// ---- Tichá evidencia vyradených tipov ----
+app.post("/api/shadow/record", async (req, res) => {
+  try {
+    const { fixture, picks } = req.body ?? {};
+    if (fixture && fixture.fixtureId) await recordShadow(shadowEntriesFrom(fixture, picks ?? []));
+    res.json({ ok: true });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
+app.get("/api/shadow/summary", async (_req, res) => {
+  try {
+    const all = await listShadow();
+    const settled = all.filter((e) => e.status === "won" || e.status === "lost");
+    const won = settled.filter((e) => e.status === "won").length;
+    const avg = (xs: (number | null)[]) => {
+      const v = xs.filter((x): x is number => typeof x === "number");
+      return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
+    };
+    const withOdds = settled.filter((e) => typeof e.odds === "number" && e.odds! > 1);
+    const profit = withOdds.reduce((sum, e) => sum + (e.status === "won" ? e.odds! - 1 : -1), 0);
+    res.json({
+      total: all.length,
+      pending: all.filter((e) => e.status === "pending").length,
+      settled: settled.length,
+      won,
+      hitRate: settled.length ? (won / settled.length) * 100 : null,
+      avgModel: avg(settled.map((e) => e.modelProbability)),
+      avgMarket: avg(settled.map((e) => e.marketProbability)),
+      withOdds: withOdds.length,
+      profit,
+      roi: withOdds.length ? (profit / withOdds.length) * 100 : null,
+    });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
 // Skrytie / vrátenie tipu v histórii (tip ostáva uložený, na prezentácii aj v štatistikách).
 app.post("/api/tips/:id/archive", async (req, res) => {
   try {
@@ -831,6 +874,15 @@ app.delete("/api/tips", async (_req, res) => {
 
 /** Vyhodnotí všetky čakajúce tipy a tikety, ktorých zápasy sa už skončili. */
 async function checkPendingResults(): Promise<void> {
+  // vyradené tipy z tichej evidencie vyhodnotíme rovnako ako bežné tipy
+  try {
+    for (const e of (await listShadow()).filter((x) => x.status === "pending")) {
+      const settled = await settleBet(e);
+      if (settled) await updateShadow({ ...e, status: settled.status } as ShadowEntry);
+    }
+  } catch {
+    // evidencia nesmie zastaviť vyhodnotenie skutočných tipov
+  }
   const tips = await listTips();
   const pending = tips.filter((t) => t.status === "pending");
 

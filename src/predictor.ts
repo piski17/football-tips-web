@@ -375,8 +375,14 @@ function h2hGoals(h2h: HeadToHeadMatch[], homeTeamId: number): H2HGoals | null {
 }
 const fmt1 = (n: number) => n.toFixed(1).replace(".", ",");
 
-/** Rozdiel (v percentuálnych bodoch) medzi modelom a stávkovkami, od ktorého sa tip pri málo dátach vyradí. */
-const MARKET_CONFLICT_POINTS = 15;
+/**
+ * Rozdiel (v percentuálnych bodoch) medzi modelom a stávkovkami, od ktorého sa tip
+ * pri málo dátach vyradí. Čím viac vzájomných zápasov model započítal, tým lepšie
+ * pozná vzťah tímov a tým väčší rozdiel toleruje: bez nich 15, 3 – 4 zápasy 20, 5+ 25.
+ */
+function marketConflictLimit(h2hMatchesUsed: number): number {
+  return h2hMatchesUsed >= 5 ? 25 : h2hMatchesUsed >= 3 ? 20 : 15;
+}
 
 export function predictMatch(
   fixture: Fixture,
@@ -718,8 +724,10 @@ export function predictMatch(
         const modelPct = c.probability;
         // Rozpor so stávkovkami: pri málo dátach a rozdiele 15+ bodov model
         // pravdepodobne nevidí niečo podstatné (typicky rozdiel v sile súperov).
-        if (Math.abs(modelPct - pMarket * 100) >= MARKET_CONFLICT_POINTS) {
+        if (Math.abs(modelPct - pMarket * 100) >= marketConflictLimit(h2hG ? h2hG.n : 0)) {
           c.marketConflict = `model a stávkovky sa výrazne rozchádzajú (model ${modelPct.toFixed(0)} %, stávkovky ${(pMarket * 100).toFixed(0)} %)`;
+          c.modelProbability = modelPct;
+          c.marketProbability = pMarket * 100;
         }
         c.probability = (1 - marketWeight) * modelPct + marketWeight * pMarket * 100;
         c.explanation =

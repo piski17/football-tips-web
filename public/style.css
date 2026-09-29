@@ -1399,3 +1399,8 @@ input, select, textarea { accent-color: var(--accent); }
   font: inherit;
   font-size: 14px;
 }
+
+.shadow-summary { margin: 2px 0 12px; line-height: 1.5; }
+.shadow-summary:empty { display: none; }
+.text-success { color: var(--success); }
+.text-danger { color: var(--danger); }

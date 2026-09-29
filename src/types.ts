@@ -68,6 +68,9 @@ export interface MarketPick {
   rejectReason?: string;
   /** Pri málo dátach: model a stávkovky sa líšia o 15+ bodov (dôvod vyradenia). */
   marketConflict?: string;
+  /** Pri rozpore: čistý odhad modelu a odhad stávkoviek (v %), pre tichú evidenciu. */
+  modelProbability?: number;
+  marketProbability?: number;
 }
 
 /** Odhad pre trh typu Over/Under (rohy, karty) založený na kombinovanom Poissonovom modeli. */
