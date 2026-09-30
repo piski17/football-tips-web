@@ -348,12 +348,12 @@ const TELEGRAM_CONTACT_USERNAME = process.env.TELEGRAM_CONTACT_USERNAME || "im_m
 const FAQ_ANSWERS: Record<string, string> = {
   faq_price:
     `💰 <b>Cenník</b>\n\n` +
-    `🟡 <b>PREMIUM</b> – 29 €/mesiac\n` +
+    `🟡 <b>PREMIUM</b> – 29 € mesačne\n` +
     `• <b>Denné tipy v súkromnom kanáli</b> – všetky odporúčania modelu na daný deň priamo v Telegrame\n` +
     `• <b>Transparentné odôvodnenie</b> – pri každom tipe kurz, miera dôvery a dôvod, prečo vznikol\n` +
     `• <b>Včasné doručenie</b> – tipy 2 – 3 hodiny pred výkopom, večer prehľad výsledkov dňa\n` +
     `• <b>Týždenný prehľad výkonnosti</b> – úspešnosť, zisk a ROI za uplynulý týždeň\n\n` +
-    `👑 <b>VIP</b> – 59 €/mesiac · <b>len 30 miest</b>\n` +
+    `👑 <b>VIP</b> – 59 € mesačne · <b>len 30 miest</b>\n` +
     `• <b>Kompletné členstvo Premium</b> – všetky denné tipy, odôvodnenia aj reporty\n` +
     `• <b>Tip týždňa</b> – najsilnejší tip týždňa s podrobnou analýzou, výhradne pre VIP\n` +
     `• <b>Osobné konzultácie</b> – videohovory so zakladateľom TipRadaru podľa dohody\n` +
@@ -407,22 +407,22 @@ const VIP_BENEFITS =
   `• <b>Priama linka na zakladateľa</b> – súkromný VIP chat pre vaše otázky`;
 const JOIN_MESSAGES: Record<string, string> = {
   premium:
-    `🟡 <b>Členstvo Premium</b> – 29 €/mesiac\n\n${PREMIUM_BENEFITS}\n\n` +
+    `🟡 <b>Členstvo Premium</b> – 29 € mesačne\n\n${PREMIUM_BENEFITS}\n\n` +
     `<b>Ako pokračovať:</b> napíšte sem krátku správu (napríklad „Mám záujem o Premium"). Pošleme vám platobné údaje a po platbe vás pridáme do súkromného kanála.\n\n` +
     `Ozveme sa vám zvyčajne do 24 hodín. Bez viazanosti.`,
   vip:
-    `👑 <b>Členstvo VIP</b> – 59 €/mesiac · <b>len 30 miest</b>\n\n${VIP_BENEFITS}\n\n` +
+    `👑 <b>Členstvo VIP</b> – 59 € mesačne · <b>len 30 miest</b>\n\n${VIP_BENEFITS}\n\n` +
     `<b>Ako pokračovať:</b> napíšte sem krátku správu (napríklad „Mám záujem o VIP"). Pošleme vám platobné údaje a miesto vám rezervujeme po potvrdení platby.\n\n` +
     `Ozveme sa vám zvyčajne do 24 hodín. Bez viazanosti.`,
   clenstvo:
     `✨ <b>Členstvo TipRadar</b>\n\n` +
-    `🟡 <b>Premium</b> – 29 €/mesiac\n${PREMIUM_BENEFITS}\n\n` +
-    `👑 <b>VIP</b> – 59 €/mesiac · <b>len 30 miest</b>\n${VIP_BENEFITS}\n\n` +
+    `🟡 <b>Premium</b> – 29 € mesačne\n${PREMIUM_BENEFITS}\n\n` +
+    `👑 <b>VIP</b> – 59 € mesačne · <b>len 30 miest</b>\n${VIP_BENEFITS}\n\n` +
     `<b>Ako pokračovať:</b> napíšte sem, ktoré členstvo vás zaujíma (napríklad „Mám záujem o VIP"). Pošleme vám platobné údaje a ďalší postup.\n\n` +
     `Ozveme sa vám zvyčajne do 24 hodín. Bez viazanosti.`,
   vip_waitlist:
     `👑 <b>VIP – poradovník</b>\n\nVšetkých 30 miest je momentálne obsadených. Váš záujem sme si zapísali – keď sa miesto uvoľní, ozveme sa vám ako prvým.\n\n` +
-    `Dovtedy môžete začať s členstvom <b>Premium</b> (29 €/mesiac) – stačí sem napísať „Mám záujem o Premium".`,
+    `Dovtedy môžete začať s členstvom <b>Premium</b> (29 € mesačne) – stačí sem napísať „Mám záujem o Premium".`,
 };
 const LEAD_LABEL: Record<string, string> = { premium: "Premium", vip: "VIP", vip_waitlist: "VIP – poradovník", clenstvo: "členstvo (zatiaľ nevybral)" };
 
