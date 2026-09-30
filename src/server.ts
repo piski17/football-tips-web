@@ -93,6 +93,7 @@ function basicAuth(req: Request, res: Response, next: NextFunction): void {
   if (
     req.path === "/api/telegram/webhook" ||
     req.path === "/api/public/track-record" ||
+    req.path === "/api/public/vip-seats" ||
     req.path === "/prezentacia" ||
     req.path === "/prezentacia/"
   ) {
@@ -478,6 +479,23 @@ app.get("/api/public/track-record", async (_req, res) => {
       recent,
       timeline: { unit: byWeek ? "week" : "day", points: timeline },
     });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
+
+// Verejné počítadlo VIP miest (len čísla, žiadne mená). Aktívny VIP = typ „group"
+// s platbou nie viac ako 7 dní po splatnosti. Počet miest: premenná VIP_SEATS (predvolene 30).
+app.get("/api/public/vip-seats", async (_req, res) => {
+  res.set("Access-Control-Allow-Origin", "*");
+  try {
+    const total = Math.max(1, Number(process.env.VIP_SEATS) || 30);
+    const graceMs = 7 * 24 * 60 * 60 * 1000;
+    const taken = (await listSubscribers()).filter(
+      (s) => s.tier === "group" && new Date(s.nextPaymentDue).getTime() + graceMs >= Date.now()
+    ).length;
+    res.json({ taken: Math.min(taken, total), total });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }

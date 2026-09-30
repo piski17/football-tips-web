@@ -229,6 +229,16 @@
   footer { border-top: 1px solid var(--line); padding: 26px 0 44px; color: var(--muted); font-size: 14px; }
   footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
   @media (max-width: 760px) { .closing .wrap { grid-template-columns: minmax(0, 1fr); } section { padding: 84px 0; } }
+
+  /* ---------- VIP: obmedzený počet miest ---------- */
+  .who-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .limit-tag { font-size: 12.5px; color: var(--gold); border: 1px solid rgba(214,190,138,.55); border-radius: 999px; padding: 4px 11px; letter-spacing: .02em; }
+  .seats { margin-top: 18px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--green-deep); }
+  .seats-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; color: var(--muted); }
+  .seats-top strong { font-family: var(--serif); font-size: 26px; font-weight: 600; color: var(--ivory); }
+  .seats-bar { height: 8px; border-radius: 99px; background: rgba(214,190,138,.14); margin-top: 10px; overflow: hidden; }
+  .seats-bar i { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, var(--gold-deep), var(--gold)); transition: width 1s cubic-bezier(.2,.7,.2,1); }
+  .seats-note { font-size: 13.5px; color: var(--gold); margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -389,18 +399,25 @@
           <div class="fine">Bez viazanosti, zrušiť sa dá kedykoľvek.</div>
         </article>
         <article class="plan dim" id="planVip">
-          <div class="who">Pre náročných členov</div>
+          <div class="who-row"><span class="who">Súkromný okruh členov</span><span class="limit-tag">Len 30 miest</span></div>
           <h3>VIP</h3>
           <div class="price"><b class="num">59 €</b><span>mesačne</span></div>
           <div class="note">Necelé 2 € na deň</div>
+          <div class="seats" id="vipSeats" hidden>
+            <div class="seats-top"><span>Obsadené miesta</span><strong class="num" id="vipSeatsText">– / 30</strong></div>
+            <div class="seats-bar" role="progressbar" aria-label="Obsadené VIP miesta" aria-valuemin="0" id="vipSeatsBar"><i id="vipSeatsFill"></i></div>
+            <div class="seats-note" id="vipSeatsNote"></div>
+          </div>
           <ul>
             <li>Všetko, čo obsahuje Premium</li>
+            <li>VIP tiket z najsilnejších tipov – v dňoch, keď sú aspoň 2 silné tipy</li>
             <li>Tipy o hodinu skôr, kým sa kurz nepohne</li>
-            <li>Denný VIP tiket z najsilnejších tipov dňa</li>
-            <li>Priamy kontakt – otázky k tipom v súkromnej správe</li>
+            <li>Osobný videohovor so zakladateľom TipRadaru, 1× mesačne</li>
+            <li>Rozbor ľubovoľného zápasu na požiadanie, 3× týždenne</li>
+            <li>Osobný plán stávok podľa vášho bankrollu</li>
           </ul>
-          <a class="btn btn-line" href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener">Požiadať o VIP</a>
-          <div class="fine">Bez viazanosti, zrušiť sa dá kedykoľvek.</div>
+          <a class="btn btn-line" id="vipCta" href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener">Požiadať o VIP</a>
+          <div class="fine">Bez viazanosti, zrušiť sa dá kedykoľvek. Počet miest je obmedzený, aby na každého člena ostal čas.</div>
         </article>
       </div>
     </div>
@@ -612,6 +629,27 @@
     $("calcNote").textContent = `Toľko by ste mali pri stávke ${stake} € na každý z ${calcData.count} vyhodnotených tipov so známym kurzom (spolu vložené ${fmt(calcData.count * stake, 0)} €). Minulé výsledky nezaručujú budúce.`;
   }
   $("stakeRange").addEventListener("input", drawCalc);
+
+
+  // ---------- VIP: obsadené miesta ----------
+  fetch("/api/public/vip-seats", { cache: "no-store" })
+    .then((r) => (r.ok ? r.json() : Promise.reject()))
+    .then((d) => {
+      const total = Number(d.total) || 30, taken = Math.min(Number(d.taken) || 0, total), free = total - taken;
+      $("vipSeatsText").textContent = `${taken} / ${total}`;
+      $("vipSeatsBar").setAttribute("aria-valuemax", String(total));
+      $("vipSeatsBar").setAttribute("aria-valuenow", String(taken));
+      requestAnimationFrame(() => { $("vipSeatsFill").style.width = (taken / total) * 100 + "%"; });
+      const word = (n) => (n === 1 ? "voľné miesto" : n >= 2 && n <= 4 ? "voľné miesta" : "voľných miest");
+      if (free <= 0) {
+        $("vipSeatsNote").textContent = "Všetky miesta sú obsadené – napíšte nám a zaradíme vás do poradovníka.";
+        $("vipCta").textContent = "Zapísať sa do poradovníka";
+      } else {
+        $("vipSeatsNote").textContent = free === 1 ? "Zostáva posledné voľné miesto." : `Zostáva ${free} ${word(free)}.`;
+      }
+      $("vipSeats").hidden = false;
+    })
+    .catch(() => {});
 
   fetch("/api/public/track-record", { cache: "no-store" })
     .then((r) => (r.ok ? r.json() : Promise.reject()))

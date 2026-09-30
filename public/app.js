@@ -1572,7 +1572,7 @@ addSubscriberBtn.addEventListener("click", async () => {
     return;
   }
   const tier = subTierSelect.value;
-  const priceEur = tier === "group" ? 99 : 29;
+  const priceEur = tier === "group" ? 59 : 29;
   const nextPaymentDue = new Date();
   nextPaymentDue.setDate(nextPaymentDue.getDate() + 30);
 
