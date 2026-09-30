@@ -348,8 +348,17 @@ const TELEGRAM_CONTACT_USERNAME = process.env.TELEGRAM_CONTACT_USERNAME || "im_m
 const FAQ_ANSWERS: Record<string, string> = {
   faq_price:
     `💰 <b>Cenník</b>\n\n` +
-    `🟡 <b>PREMIUM</b> – 29 €/mesiac\nVšetky tipy dňa v súkromnom kanáli, s kurzom, dôverou a vysvetlením. Večer vyhodnotenie a týždenný report.\n\n` +
-    `👑 <b>VIP</b> – 59 €/mesiac · <b>len 30 miest</b>\nVšetko z Premium, navyše tip týždňa s podrobným rozborom, osobné videohovory so zakladateľom, kovová členská karta s vaším menom a číslom členstva a súkromný VIP chat priamo so zakladateľom.\n\n` +
+    `🟡 <b>PREMIUM</b> – 29 €/mesiac\n` +
+    `• <b>Denné tipy v súkromnom kanáli</b> – všetky odporúčania modelu na daný deň priamo v Telegrame\n` +
+    `• <b>Transparentné odôvodnenie</b> – pri každom tipe kurz, miera dôvery a dôvod, prečo vznikol\n` +
+    `• <b>Včasné doručenie</b> – tipy 2 – 3 hodiny pred výkopom, večer prehľad výsledkov dňa\n` +
+    `• <b>Týždenný prehľad výkonnosti</b> – úspešnosť, zisk a ROI za uplynulý týždeň\n\n` +
+    `👑 <b>VIP</b> – 59 €/mesiac · <b>len 30 miest</b>\n` +
+    `• <b>Kompletné členstvo Premium</b> – všetky denné tipy, odôvodnenia aj reporty\n` +
+    `• <b>Tip týždňa</b> – najsilnejší tip týždňa s podrobnou analýzou, výhradne pre VIP\n` +
+    `• <b>Osobné konzultácie</b> – videohovory so zakladateľom TipRadaru podľa dohody\n` +
+    `• <b>Kovová členská karta</b> – personalizovaná vaším menom, číslom členstva a dátumom vstupu\n` +
+    `• <b>Priama linka na zakladateľa</b> – súkromný VIP chat pre vaše otázky\n\n` +
     `Kedykoľvek zrušiteľné, žiadna viazanosť.`,
   faq_how:
     `❓ <b>Ako to funguje</b>\n\n` +
