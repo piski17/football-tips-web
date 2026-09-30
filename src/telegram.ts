@@ -414,11 +414,17 @@ const JOIN_MESSAGES: Record<string, string> = {
     `👑 <b>Členstvo VIP</b> – 59 €/mesiac · <b>len 30 miest</b>\n\n${VIP_BENEFITS}\n\n` +
     `<b>Ako pokračovať:</b> napíšte sem krátku správu (napríklad „Mám záujem o VIP"). Pošleme vám platobné údaje a miesto vám rezervujeme po potvrdení platby.\n\n` +
     `Ozveme sa vám zvyčajne do 24 hodín. Bez viazanosti.`,
+  clenstvo:
+    `✨ <b>Členstvo TipRadar</b>\n\n` +
+    `🟡 <b>Premium</b> – 29 €/mesiac\n${PREMIUM_BENEFITS}\n\n` +
+    `👑 <b>VIP</b> – 59 €/mesiac · <b>len 30 miest</b>\n${VIP_BENEFITS}\n\n` +
+    `<b>Ako pokračovať:</b> napíšte sem, ktoré členstvo vás zaujíma (napríklad „Mám záujem o VIP"). Pošleme vám platobné údaje a ďalší postup.\n\n` +
+    `Ozveme sa vám zvyčajne do 24 hodín. Bez viazanosti.`,
   vip_waitlist:
     `👑 <b>VIP – poradovník</b>\n\nVšetkých 30 miest je momentálne obsadených. Váš záujem sme si zapísali – keď sa miesto uvoľní, ozveme sa vám ako prvým.\n\n` +
     `Dovtedy môžete začať s členstvom <b>Premium</b> (29 €/mesiac) – stačí sem napísať „Mám záujem o Premium".`,
 };
-const LEAD_LABEL: Record<string, string> = { premium: "Premium", vip: "VIP", vip_waitlist: "VIP – poradovník" };
+const LEAD_LABEL: Record<string, string> = { premium: "Premium", vip: "VIP", vip_waitlist: "VIP – poradovník", clenstvo: "členstvo (zatiaľ nevybral)" };
 
 function escapeTg(v: string): string {
   return String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -437,6 +443,7 @@ async function notifyAdminLead(plan: string, from: any, chatId: number): Promise
       `🔔 <b>Nový záujemca o ${LEAD_LABEL[plan] ?? plan}</b>\n\n` +
       `Meno: <b>${escapeTg(personName(from))}</b>\n` +
       (from?.username ? `Telegram: @${escapeTg(from.username)}\n` : "") +
+      `Telegram ID: <code>${chatId}</code>\n` +
       `<a href="tg://user?id=${chatId}">Otvoriť chat</a>`,
     parse_mode: "HTML",
   });
@@ -476,7 +483,7 @@ export async function handleTelegramUpdate(update: any): Promise<void> {
     await callTelegramApi("forwardMessage", { chat_id: TELEGRAM_ADMIN_CHAT_ID, from_chat_id: chatId, message_id: update.message.message_id });
     await callTelegramApi("sendMessage", {
       chat_id: TELEGRAM_ADMIN_CHAT_ID,
-      text: `✉️ Správa od <b>${escapeTg(personName(from))}</b>${from.username ? ` (@${escapeTg(from.username)})` : ""} · <a href="tg://user?id=${chatId}">otvoriť chat</a>`,
+      text: `✉️ Správa od <b>${escapeTg(personName(from))}</b>${from.username ? ` (@${escapeTg(from.username)})` : ""} · ID <code>${chatId}</code> · <a href="tg://user?id=${chatId}">otvoriť chat</a>`,
       parse_mode: "HTML",
     });
     await callTelegramApi("sendMessage", {
@@ -489,7 +496,10 @@ export async function handleTelegramUpdate(update: any): Promise<void> {
 
   await callTelegramApi("sendMessage", {
     chat_id: chatId,
-    text: `👋 Vitaj v <b>TipRadar</b>!\n\nVyber si, čo ťa zaujíma:\n\n<i>Tvoje Telegram ID: <code>${chatId}</code></i>`,
+    text:
+      `👋 Vitaj v <b>TipRadar</b>!\n\nVyber si, čo ťa zaujíma:` +
+      // Telegram ID vidí len administrátor (alebo ktokoľvek po príkaze /id).
+      (String(chatId) === String(TELEGRAM_ADMIN_CHAT_ID) || text === "/id" ? `\n\n<i>Tvoje Telegram ID: <code>${chatId}</code></i>` : ""),
     parse_mode: "HTML",
     reply_markup: MAIN_MENU_KEYBOARD,
   });
