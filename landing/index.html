@@ -256,7 +256,7 @@
       <a href="#clenstvo" data-sec="clenstvo">Členstvo</a>
       <a href="#otazky" data-sec="otazky">Otázky</a>
     </div>
-    <a class="btn btn-gold" href="https://t.me/TipRadarAiBot?start=clenstvo" target="_blank" rel="noopener">Požiadať o členstvo</a>
+    <a class="btn btn-gold" href="https://t.me/TipRadarAiBot?start=clenstvo" target="_blank" rel="noopener">Mám záujem</a>
   </div>
 </nav>
 
@@ -398,8 +398,8 @@
             <li><span><strong>Včasné doručenie</strong> – tipy 2 – 3 hodiny pred výkopom, večer prehľad výsledkov dňa</span></li>
             <li><span><strong>Týždenný prehľad výkonnosti</strong> – úspešnosť, zisk a ROI za uplynulý týždeň</span></li>
           </ul>
-          <a class="btn btn-gold" href="https://t.me/TipRadarAiBot?start=premium" target="_blank" rel="noopener">Stať sa členom Premium</a>
-          <div class="cta-note">Otvorí sa Telegram – ozveme sa vám do 24 hodín.</div>
+          <a class="btn btn-gold" id="premiumCta" href="https://t.me/TipRadarAiBot?start=premium" target="_blank" rel="noopener">Zapísať sa do poradovníka</a>
+          <div class="cta-note" data-cta-note>Predaj členstiev spúšťame čoskoro – ozveme sa vám ako prvým.</div>
           <div class="fine">Bez viazanosti, zrušiť sa dá kedykoľvek.</div>
         </article>
         <article class="plan dim" id="planVip">
@@ -419,8 +419,8 @@
             <li><span><strong>Kovová členská karta</strong> – personalizovaná vaším menom, číslom členstva a dátumom vstupu</span></li>
             <li><span><strong>Priama linka na zakladateľa</strong> – súkromný VIP chat pre vaše otázky</span></li>
           </ul>
-          <a class="btn btn-line" id="vipCta" href="https://t.me/TipRadarAiBot?start=vip" target="_blank" rel="noopener">Rezervovať miesto vo VIP</a>
-          <div class="cta-note">Otvorí sa Telegram – ozveme sa vám do 24 hodín.</div>
+          <a class="btn btn-line" id="vipCta" href="https://t.me/TipRadarAiBot?start=vip" target="_blank" rel="noopener">Zapísať sa do poradovníka</a>
+          <div class="cta-note" data-cta-note>Predaj členstiev spúšťame čoskoro – ozveme sa vám ako prvým.</div>
           <div class="fine">Bez viazanosti. Kovovú kartu posielame poštou po prvom mesiaci členstva. Počet miest je obmedzený, aby sa zakladateľ mohol každému členovi venovať osobne.</div>
         </article>
       </div>
@@ -450,7 +450,7 @@
         <h2>Napíšte nám a dohodneme sa</h2>
         <p class="contact">Telegram <a href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener">@TipRadarAiBot</a> alebo e-mail <a href="mailto:tipradarai@gmail.com">tipradarai@gmail.com</a></p>
       </div>
-      <a class="btn btn-gold" href="https://t.me/TipRadarAiBot?start=clenstvo" target="_blank" rel="noopener">Požiadať o členstvo</a>
+      <a class="btn btn-gold" href="https://t.me/TipRadarAiBot?start=clenstvo" target="_blank" rel="noopener">Mám záujem</a>
     </div>
     <div class="wrap">
       <p class="disclaimer">TipRadar je analytický nástroj založený na štatistickom modeli, nie stávková kancelária ani finančné poradenstvo. Tipy sú informatívne a nezaručujú výsledok. Minulé výsledky nie sú zárukou budúcich. O tom, či a koľko staviť, rozhodujete vždy vy. Stávkovanie je určené len osobám starším ako 18 rokov – hrajte zodpovedne.</p>
@@ -635,10 +635,16 @@
   $("stakeRange").addEventListener("input", drawCalc);
 
 
-  // ---------- VIP: obsadené miesta ----------
+  // ---------- Predaj členstiev a VIP miesta ----------
+  // Kým predaj nebeží (SALES_OPEN na serveri), stránka zbiera poradovník. Po spustení
+  // sa tlačidlá zmenia na objednávku a zobrazí sa počítadlo VIP miest.
   fetch("/api/public/vip-seats", { cache: "no-store" })
     .then((r) => (r.ok ? r.json() : Promise.reject()))
     .then((d) => {
+      if (!d.salesOpen) return; // režim poradovníka ostáva tak, ako je v HTML
+      document.querySelectorAll("[data-cta-note]").forEach((n) => { n.textContent = "Otvorí sa Telegram – ozveme sa vám do 24 hodín."; });
+      $("premiumCta").textContent = "Stať sa členom Premium";
+      document.querySelectorAll('a[href$="start=clenstvo"]').forEach((a) => { a.textContent = "Požiadať o členstvo"; });
       const total = Number(d.total) || 30, taken = Math.min(Number(d.taken) || 0, total), free = total - taken;
       $("vipSeatsText").textContent = `${taken} / ${total}`;
       $("vipSeatsBar").setAttribute("aria-valuemax", String(total));
@@ -651,6 +657,7 @@
         $("vipCta").href = "https://t.me/TipRadarAiBot?start=vip_waitlist";
       } else {
         $("vipSeatsNote").textContent = free === 1 ? "Zostáva posledné voľné miesto." : `Zostáva ${free} ${word(free)}.`;
+        $("vipCta").textContent = "Rezervovať miesto vo VIP";
       }
       $("vipSeats").hidden = false;
     })

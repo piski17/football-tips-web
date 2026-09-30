@@ -359,7 +359,8 @@ const FAQ_ANSWERS: Record<string, string> = {
     `• <b>Osobné konzultácie</b> – videohovory so zakladateľom TipRadaru podľa dohody\n` +
     `• <b>Kovová členská karta</b> – personalizovaná vaším menom, číslom členstva a dátumom vstupu\n` +
     `• <b>Priama linka na zakladateľa</b> – súkromný VIP chat pre vaše otázky\n\n` +
-    `Kedykoľvek zrušiteľné, žiadna viazanosť.`,
+    `Kedykoľvek zrušiteľné, žiadna viazanosť.` +
+    (process.env.SALES_OPEN === "true" ? "" : `\n\n🗓 <b>Predaj členstiev spúšťame čoskoro.</b> Napíšte sem „Mám záujem" a ozveme sa vám ako prvým.`),
   faq_how:
     `❓ <b>Ako to funguje</b>\n\n` +
     `TipRadar denne prepočíta desiatky zápasov cez vlastný štatistický model (Poissonovo rozdelenie gólov, vážená forma, vzájomné zápasy, historické dáta) a vyberie tipy s reálnou hodnotou naprieč 10 trhmi (výsledok, góly, oba tímy skórujú, rohy, karty, strely na bránu, fauly, ofsajdy, držanie lopty, strelci) — s vysvetlením, prečo.`,
@@ -424,6 +425,25 @@ const JOIN_MESSAGES: Record<string, string> = {
     `👑 <b>VIP – poradovník</b>\n\nVšetkých 30 miest je momentálne obsadených. Váš záujem sme si zapísali – keď sa miesto uvoľní, ozveme sa vám ako prvým.\n\n` +
     `Dovtedy môžete začať s členstvom <b>Premium</b> (29 € mesačne) – stačí sem napísať „Mám záujem o Premium".`,
 };
+/** Predaj členstiev je spustený (premenná SALES_OPEN=true na Renderi). Dovtedy len poradovník. */
+function salesOpen(): boolean {
+  return process.env.SALES_OPEN === "true";
+}
+/** Odpoveď pred spustením predaja: výhody zvoleného členstva + zápis do poradovníka. */
+function PRELAUNCH_MESSAGE(plan: string): string {
+  const benefits =
+    plan === "premium"
+      ? `🟡 <b>Premium</b> – 29 € mesačne\n${PREMIUM_BENEFITS}`
+      : plan === "clenstvo"
+        ? `🟡 <b>Premium</b> – 29 € mesačne\n${PREMIUM_BENEFITS}\n\n👑 <b>VIP</b> – 59 € mesačne · <b>len 30 miest</b>\n${VIP_BENEFITS}`
+        : `👑 <b>VIP</b> – 59 € mesačne · <b>len 30 miest</b>\n${VIP_BENEFITS}`;
+  return (
+    `✨ <b>Ďakujeme za záujem o TipRadar!</b>\n\n${benefits}\n\n` +
+    `🗓 <b>Predaj členstiev spúšťame čoskoro.</b> Váš záujem sme si zapísali – keď začneme, ozveme sa vám <b>ako prvým</b>.\n\n` +
+    `Ak máte otázku, pokojne ju napíšte sem.`
+  );
+}
+
 const LEAD_LABEL: Record<string, string> = { premium: "Premium", vip: "VIP", vip_waitlist: "VIP – poradovník", clenstvo: "členstvo (zatiaľ nevybral)" };
 
 function escapeTg(v: string): string {
@@ -440,7 +460,7 @@ async function notifyAdminLead(plan: string, from: any, chatId: number): Promise
   await callTelegramApi("sendMessage", {
     chat_id: adminId,
     text:
-      `🔔 <b>Nový záujemca o ${LEAD_LABEL[plan] ?? plan}</b>\n\n` +
+      `🔔 <b>Nový záujemca o ${LEAD_LABEL[plan] ?? plan}</b>${salesOpen() ? "" : " (poradovník – predaj ešte nebeží)"}\n\n` +
       `Meno: <b>${escapeTg(personName(from))}</b>\n` +
       (from?.username ? `Telegram: @${escapeTg(from.username)}\n` : "") +
       `Telegram ID: <code>${chatId}</code>\n` +
@@ -473,7 +493,8 @@ export async function handleTelegramUpdate(update: any): Promise<void> {
   // Príchod z tlačidla na tipradar.eu (odkaz t.me/TipRadarAiBot?start=premium / vip / vip_waitlist).
   const startParam = text.startsWith("/start ") ? text.slice(7).trim().toLowerCase() : "";
   if (startParam && JOIN_MESSAGES[startParam]) {
-    await callTelegramApi("sendMessage", { chat_id: chatId, text: JOIN_MESSAGES[startParam], parse_mode: "HTML", reply_markup: MAIN_MENU_KEYBOARD });
+    const reply = salesOpen() ? JOIN_MESSAGES[startParam] : PRELAUNCH_MESSAGE(startParam);
+    await callTelegramApi("sendMessage", { chat_id: chatId, text: reply, parse_mode: "HTML", reply_markup: MAIN_MENU_KEYBOARD });
     await notifyAdminLead(startParam, from, chatId);
     return;
   }

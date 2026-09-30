@@ -507,7 +507,8 @@ app.get("/api/public/vip-seats", async (_req, res) => {
     const taken = (await listSubscribers()).filter(
       (s) => s.tier === "group" && new Date(s.nextPaymentDue).getTime() + graceMs >= Date.now()
     ).length;
-    res.json({ taken: Math.min(taken, total), total });
+    // Predaj členstiev: SALES_OPEN=true na Renderi (kým nie je živnosť, len poradovník).
+    res.json({ taken: Math.min(taken, total), total, salesOpen: process.env.SALES_OPEN === "true" });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
