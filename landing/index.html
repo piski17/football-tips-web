@@ -213,6 +213,7 @@
   .plan li::before { content: ""; width: 12px; height: 7px; margin-top: 7px; border-left: 1.5px solid var(--gold); border-bottom: 1.5px solid var(--gold); transform: rotate(-45deg); }
   .plan .btn { margin-top: auto; align-self: flex-start; }
   .plan .fine { color: var(--muted); font-size: 13.5px; margin-top: 12px; }
+  .plan .cta-note { color: var(--muted); font-size: 13px; margin-top: 10px; }
   @media (max-width: 780px) { .plans { grid-template-columns: minmax(0, 1fr); } .plan { padding: 26px; } }
 
   /* ---------- Otázky a záver ---------- */
@@ -397,7 +398,8 @@
             <li><span><strong>Včasné doručenie</strong> – tipy 2 – 3 hodiny pred výkopom, večer prehľad výsledkov dňa</span></li>
             <li><span><strong>Týždenný prehľad výkonnosti</strong> – úspešnosť, zisk a ROI za uplynulý týždeň</span></li>
           </ul>
-          <a class="btn btn-gold" href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener">Požiadať o Premium</a>
+          <a class="btn btn-gold" href="https://t.me/TipRadarAiBot?start=premium" target="_blank" rel="noopener">Stať sa členom Premium</a>
+          <div class="cta-note">Otvorí sa Telegram – ozveme sa vám do 24 hodín.</div>
           <div class="fine">Bez viazanosti, zrušiť sa dá kedykoľvek.</div>
         </article>
         <article class="plan dim" id="planVip">
@@ -417,7 +419,8 @@
             <li><span><strong>Kovová členská karta</strong> – personalizovaná vaším menom, číslom členstva a dátumom vstupu</span></li>
             <li><span><strong>Priama linka na zakladateľa</strong> – súkromný VIP chat pre vaše otázky</span></li>
           </ul>
-          <a class="btn btn-line" id="vipCta" href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener">Požiadať o VIP</a>
+          <a class="btn btn-line" id="vipCta" href="https://t.me/TipRadarAiBot?start=vip" target="_blank" rel="noopener">Rezervovať miesto vo VIP</a>
+          <div class="cta-note">Otvorí sa Telegram – ozveme sa vám do 24 hodín.</div>
           <div class="fine">Bez viazanosti. Kovovú kartu posielame poštou po prvom mesiaci členstva. Počet miest je obmedzený, aby sa zakladateľ mohol každému členovi venovať osobne.</div>
         </article>
       </div>
@@ -645,6 +648,7 @@
       if (free <= 0) {
         $("vipSeatsNote").textContent = "Všetky miesta sú obsadené – napíšte nám a zaradíme vás do poradovníka.";
         $("vipCta").textContent = "Zapísať sa do poradovníka";
+        $("vipCta").href = "https://t.me/TipRadarAiBot?start=vip_waitlist";
       } else {
         $("vipSeatsNote").textContent = free === 1 ? "Zostáva posledné voľné miesto." : `Zostáva ${free} ${word(free)}.`;
       }

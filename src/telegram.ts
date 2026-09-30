@@ -393,6 +393,55 @@ async function callTelegramApi(method: string, body: Record<string, unknown>): P
 }
 
 /** Spracuje jednu prichádzajúcu udalosť z Telegram webhooku (nová správa alebo stlačenie tlačidla). */
+// ---- Záujemcovia o členstvo z tipradar.eu ----
+const PREMIUM_BENEFITS =
+  `• <b>Denné tipy v súkromnom kanáli</b> – všetky odporúčania modelu na daný deň priamo v Telegrame\n` +
+  `• <b>Transparentné odôvodnenie</b> – pri každom tipe kurz, miera dôvery a dôvod, prečo vznikol\n` +
+  `• <b>Včasné doručenie</b> – tipy 2 – 3 hodiny pred výkopom, večer prehľad výsledkov dňa\n` +
+  `• <b>Týždenný prehľad výkonnosti</b> – úspešnosť, zisk a ROI za uplynulý týždeň`;
+const VIP_BENEFITS =
+  `• <b>Kompletné členstvo Premium</b> – všetky denné tipy, odôvodnenia aj reporty\n` +
+  `• <b>Tip týždňa</b> – najsilnejší tip týždňa s podrobnou analýzou, výhradne pre VIP\n` +
+  `• <b>Osobné konzultácie</b> – videohovory so zakladateľom TipRadaru podľa dohody\n` +
+  `• <b>Kovová členská karta</b> – personalizovaná vaším menom, číslom členstva a dátumom vstupu\n` +
+  `• <b>Priama linka na zakladateľa</b> – súkromný VIP chat pre vaše otázky`;
+const JOIN_MESSAGES: Record<string, string> = {
+  premium:
+    `🟡 <b>Členstvo Premium</b> – 29 €/mesiac\n\n${PREMIUM_BENEFITS}\n\n` +
+    `<b>Ako pokračovať:</b> napíšte sem krátku správu (napríklad „Mám záujem o Premium"). Pošleme vám platobné údaje a po platbe vás pridáme do súkromného kanála.\n\n` +
+    `Ozveme sa vám zvyčajne do 24 hodín. Bez viazanosti.`,
+  vip:
+    `👑 <b>Členstvo VIP</b> – 59 €/mesiac · <b>len 30 miest</b>\n\n${VIP_BENEFITS}\n\n` +
+    `<b>Ako pokračovať:</b> napíšte sem krátku správu (napríklad „Mám záujem o VIP"). Pošleme vám platobné údaje a miesto vám rezervujeme po potvrdení platby.\n\n` +
+    `Ozveme sa vám zvyčajne do 24 hodín. Bez viazanosti.`,
+  vip_waitlist:
+    `👑 <b>VIP – poradovník</b>\n\nVšetkých 30 miest je momentálne obsadených. Váš záujem sme si zapísali – keď sa miesto uvoľní, ozveme sa vám ako prvým.\n\n` +
+    `Dovtedy môžete začať s členstvom <b>Premium</b> (29 €/mesiac) – stačí sem napísať „Mám záujem o Premium".`,
+};
+const LEAD_LABEL: Record<string, string> = { premium: "Premium", vip: "VIP", vip_waitlist: "VIP – poradovník" };
+
+function escapeTg(v: string): string {
+  return String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function personName(from: any): string {
+  return [from?.first_name, from?.last_name].filter(Boolean).join(" ") || "Neznámy";
+}
+
+/** Upozorní ťa (administrátora), že niekto klikol na tlačidlo členstva na webe. */
+async function notifyAdminLead(plan: string, from: any, chatId: number): Promise<void> {
+  const adminId = process.env.TELEGRAM_ADMIN_CHAT_ID;
+  if (!adminId || String(adminId) === String(chatId)) return;
+  await callTelegramApi("sendMessage", {
+    chat_id: adminId,
+    text:
+      `🔔 <b>Nový záujemca o ${LEAD_LABEL[plan] ?? plan}</b>\n\n` +
+      `Meno: <b>${escapeTg(personName(from))}</b>\n` +
+      (from?.username ? `Telegram: @${escapeTg(from.username)}\n` : "") +
+      `<a href="tg://user?id=${chatId}">Otvoriť chat</a>`,
+    parse_mode: "HTML",
+  });
+}
+
 export async function handleTelegramUpdate(update: any): Promise<void> {
   if (!TELEGRAM_BOT_TOKEN) return;
 
@@ -407,10 +456,36 @@ export async function handleTelegramUpdate(update: any): Promise<void> {
     return;
   }
 
-  // Akákoľvek správa od súkromného používateľa (nie z kanálu) spustí uvítacie menu.
+  // Správy od súkromného používateľa (nie z kanálu).
   const chatId = update.message?.chat?.id;
   const chatType = update.message?.chat?.type;
   if (!chatId || chatType !== "private") return;
+  const text: string = String(update.message?.text ?? "").trim();
+  const from = update.message?.from ?? {};
+
+  // Príchod z tlačidla na tipradar.eu (odkaz t.me/TipRadarAiBot?start=premium / vip / vip_waitlist).
+  const startParam = text.startsWith("/start ") ? text.slice(7).trim().toLowerCase() : "";
+  if (startParam && JOIN_MESSAGES[startParam]) {
+    await callTelegramApi("sendMessage", { chat_id: chatId, text: JOIN_MESSAGES[startParam], parse_mode: "HTML", reply_markup: MAIN_MENU_KEYBOARD });
+    await notifyAdminLead(startParam, from, chatId);
+    return;
+  }
+
+  // Bežná textová správa (nie príkaz): pošleme ju tebe a záujemcovi potvrdíme prijatie.
+  if (text && !text.startsWith("/") && TELEGRAM_ADMIN_CHAT_ID && String(chatId) !== String(TELEGRAM_ADMIN_CHAT_ID)) {
+    await callTelegramApi("forwardMessage", { chat_id: TELEGRAM_ADMIN_CHAT_ID, from_chat_id: chatId, message_id: update.message.message_id });
+    await callTelegramApi("sendMessage", {
+      chat_id: TELEGRAM_ADMIN_CHAT_ID,
+      text: `✉️ Správa od <b>${escapeTg(personName(from))}</b>${from.username ? ` (@${escapeTg(from.username)})` : ""} · <a href="tg://user?id=${chatId}">otvoriť chat</a>`,
+      parse_mode: "HTML",
+    });
+    await callTelegramApi("sendMessage", {
+      chat_id: chatId,
+      text: "Ďakujeme za správu 🙏 Ozveme sa vám čo najskôr, zvyčajne do 24 hodín.",
+      reply_markup: MAIN_MENU_KEYBOARD,
+    });
+    return;
+  }
 
   await callTelegramApi("sendMessage", {
     chat_id: chatId,
