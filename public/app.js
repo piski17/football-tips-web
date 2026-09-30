@@ -340,7 +340,7 @@ function guessSeasonFromDate(dateStr) {
 }
 
 async function init() {
-  matchDateInput.value = new Date().toISOString().slice(0, 10);
+  matchDateInput.value = localToday();
   seasonInput.value = String(guessSeasonFromDate(matchDateInput.value));
 
   matchDateInput.addEventListener("change", () => {
@@ -355,9 +355,20 @@ async function init() {
   loadFixtures();
 }
 
+/** Dnešný dátum podľa miestneho času (YYYY-MM-DD). toISOString() by po polnoci vrátil ešte včerajšok. */
+function localToday() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+// Počítadlo načítaní: zoznam smie vykresliť len posledné spustené načítanie
+// (inak by pomalšia staršia odpoveď, napr. na dnešok, prepísala zvolený deň).
+let fixturesRequestId = 0;
+
 async function loadFixtures(silent = false) {
+  const requestId = ++fixturesRequestId;
   const season = parseInt(seasonInput.value, 10);
-  const date = matchDateInput.value || new Date().toISOString().slice(0, 10);
+  const date = matchDateInput.value || localToday();
 
   const leagueIds = new Set(selectedLeagueIds);
 
@@ -381,20 +392,35 @@ async function loadFixtures(silent = false) {
             `/api/fixtures?league=${encodeURIComponent(leagueId)}&season=${season}&date=${date}`
           );
           return { leagueId, fixtures };
-        } catch {
-          return { leagueId, fixtures: [] };
+        } catch (err) {
+          return { leagueId, fixtures: [], error: String(err?.message ?? err) };
         }
       })
     );
 
+    if (requestId !== fixturesRequestId) return; // medzitým sa spustilo novšie načítanie
     currentFixtures = results.flatMap((r) => r.fixtures);
+    // Chyby API (napr. vyčerpaný denný limit) už nezamlčíme – inak by to vyzeralo ako deň bez zápasov.
+    const failed = results.filter((r) => r.error);
+    if (failed.length === results.length && failed.length > 0) {
+      if (!silent) {
+        fixtureListEl.innerHTML = `<p class="empty-state">Zápasy sa nepodarilo načítať: ${escapeHtml(failed[0].error)}<br><span class="muted small">Skús to o chvíľu znova. Ak ide o denný limit API, obnoví sa o polnoci.</span></p>`;
+      }
+      return;
+    }
     renderGroupedFixtureList(results);
+    if (failed.length && !silent) {
+      fixtureListEl.insertAdjacentHTML(
+        "afterbegin",
+        `<p class="muted small" style="margin:0 12px 10px;color:var(--danger);">Pri ${failed.length} ${failed.length === 1 ? "lige" : "ligách"} sa zápasy nepodarilo načítať: ${escapeHtml(failed[0].error)}</p>`
+      );
+    }
   } catch (err) {
     if (!silent) {
       fixtureListEl.innerHTML = `<p class="empty-state">Chyba pri načítaní: ${escapeHtml(err.message)}</p>`;
     }
   } finally {
-    if (!silent) loadFixturesBtn.disabled = false;
+    if (!silent && requestId === fixturesRequestId) loadFixturesBtn.disabled = false;
   }
 }
 
