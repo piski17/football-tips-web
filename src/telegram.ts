@@ -349,7 +349,7 @@ const FAQ_ANSWERS: Record<string, string> = {
   faq_price:
     `💰 <b>Cenník</b>\n\n` +
     `🟡 <b>PREMIUM</b> – 29 €/mesiac\nVšetky tipy dňa v súkromnom kanáli, s kurzom, dôverou a vysvetlením. Večer vyhodnotenie a týždenný report.\n\n` +
-    `👑 <b>VIP</b> – 59 €/mesiac · <b>len 30 miest</b>\nVšetko z Premium, navyše VIP tiket z najsilnejších tipov, tipy o hodinu skôr, osobný videohovor so zakladateľom 1× mesačne, rozbor zápasu na požiadanie 3× týždenne a osobný plán stávok podľa vášho bankrollu.\n\n` +
+    `👑 <b>VIP</b> – 59 €/mesiac · <b>len 30 miest</b>\nVšetko z Premium, navyše tip týždňa s podrobným rozborom, osobné videohovory so zakladateľom, kovová členská karta s vaším menom a číslom členstva a súkromný VIP chat priamo so zakladateľom.\n\n` +
     `Kedykoľvek zrušiteľné, žiadna viazanosť.`,
   faq_how:
     `❓ <b>Ako to funguje</b>\n\n` +
