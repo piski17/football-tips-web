@@ -450,9 +450,12 @@ export async function sendRenewalReminder(
 }
 
 /** Zaregistruje na Telegram serveri adresu, kam má posielať prichádzajúce správy (spustiť raz po nasadení). */
-export async function setTelegramWebhook(webhookUrl: string): Promise<void> {
+export async function setTelegramWebhook(webhookUrl: string, secretToken?: string): Promise<void> {
   try {
-    await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook`, { url: webhookUrl });
+    await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook`, {
+      url: webhookUrl,
+      ...(secretToken ? { secret_token: secretToken } : {}),
+    });
   } catch (err: any) {
     const reason = err?.response?.data?.description ?? err?.message ?? String(err);
     throw new Error(reason);
@@ -509,4 +512,20 @@ export function buildDailyResultsText(tips: SavedTip[], day: string): string {
     summary +
     `\n<i>Poctivá história – vrátane prehratých tipov.</i>`
   );
+}
+
+/**
+ * Pri štarte servera: ak je webhook už nastavený, zaregistruje ho znova s tajným
+ * kľúčom (rovnaká adresa). Tak overovanie správ funguje hneď po nasadení
+ * bez ručného otvárania /api/telegram/setup-webhook.
+ */
+export async function refreshTelegramWebhookSecret(secretToken: string | undefined): Promise<void> {
+  if (!TELEGRAM_BOT_TOKEN || !secretToken) return;
+  try {
+    const info = await axios.get(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getWebhookInfo`);
+    const url: string | undefined = info.data?.result?.url;
+    if (url) await setTelegramWebhook(url, secretToken);
+  } catch (err: any) {
+    console.error("Obnovenie Telegram webhooku zlyhalo:", err?.message ?? err);
+  }
 }

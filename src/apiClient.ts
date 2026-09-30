@@ -6,7 +6,6 @@ import {
   TeamStatistics,
   HeadToHeadMatch,
   LeagueAverages,
-  TeamGoalPriors,
   TeamGoalPriorsResult,
   SquadPlayer,
   PlayerSeasonStats,

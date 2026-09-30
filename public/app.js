@@ -525,7 +525,12 @@ function renderGroupedFixtureList(results) {
   });
 }
 
+// Počítadlo zobrazení v pravom stĺpci (analýza zápasu, Tipy dňa): vykresliť smie len
+// posledná požiadavka – pomalšia staršia odpoveď nesmie prepísať novší výber.
+let analysisViewId = 0;
+
 async function analyzeFixture(fixture, leagueId, season) {
+  const viewId = ++analysisViewId;
   analysisColumnEl.innerHTML = skeletonHtml(4);
 
   try {
@@ -534,9 +539,11 @@ async function analyzeFixture(fixture, leagueId, season) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ fixture, leagueId, season }),
     });
+    if (viewId !== analysisViewId) return; // medzitým bol vybraný iný zápas
     currentAnalysis = result;
     renderAnalysis(result);
   } catch (err) {
+    if (viewId !== analysisViewId) return;
     analysisColumnEl.innerHTML = `<div class="empty-state">Analýzu sa nepodarilo vypočítať: ${escapeHtml(err.message)}</div>`;
   }
 }
@@ -1756,6 +1763,7 @@ function kickoffTime(fixture) {
 }
 
 async function showDayTips() {
+  const viewId = ++analysisViewId;
   const fixtures = currentFixtures.filter((f) => !matchHasStarted(f));
   if (fixtures.length === 0) {
     analysisColumnEl.innerHTML = `<div class="empty-state">V tento deň už nie sú žiadne zápasy pred výkopom.</div>`;
@@ -1766,6 +1774,7 @@ async function showDayTips() {
   let done = 0;
   let failed = 0;
   const progress = () => {
+    if (viewId !== analysisViewId) return; // používateľ medzitým otvoril niečo iné
     analysisColumnEl.innerHTML = `<div class="empty-state">Analyzujem zápasy dňa… ${done} / ${fixtures.length}<br><span class="muted small">Prvé načítanie chvíľu trvá, ďalšie sú rýchle.</span></div>`;
   };
   progress();
@@ -1794,6 +1803,7 @@ async function showDayTips() {
     items.sort((a, b) => b.bet.probability - a.bet.probability);
     dayTipsItems = items;
     dayTipsInfo = { analyzed: fixtures.length, failed };
+    if (viewId !== analysisViewId) return; // zoznam je pripravený, ale nezobrazíme ho cez iný výber
     renderDayTips();
   } finally {
     dayTipsBtn.disabled = false;
@@ -1849,6 +1859,7 @@ function renderDayTips() {
     btn.onclick = () => {
       const item = dayTipsItems[Number(btn.dataset.open)];
       if (!item) return;
+      ++analysisViewId;
       currentAnalysis = item.r;
       try {
         renderAnalysis(item.r);
@@ -1858,7 +1869,7 @@ function renderDayTips() {
         back.className = "btn-ghost btn-mini";
         back.textContent = "‹ Späť na tipy dňa";
         back.style.marginBottom = "12px";
-        back.onclick = () => renderDayTips();
+        back.onclick = () => { ++analysisViewId; renderDayTips(); };
         analysisColumnEl.prepend(back);
         analysisColumnEl.scrollTop = 0;
       }

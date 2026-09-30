@@ -11,7 +11,6 @@ import {
   TeamStatistics,
   HeadToHeadMatch,
   LeagueAverages,
-  TeamGoalPriors,
   TeamGoalPriorsResult,
   PredictionWeights,
   OutcomeProbabilities,

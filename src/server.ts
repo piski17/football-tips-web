@@ -1,3 +1,5 @@
+import { getMeta, setMeta } from "./metaStore";
+import * as crypto from "crypto";
 import { recordShadow, listShadow, updateShadow, shadowEntriesFrom, ShadowEntry } from "./shadowStore";
 import { startBacktest, getBacktest } from "./backtest";
 import { getDay, getAllDays, setDay } from "./dailyStore";
@@ -33,7 +35,7 @@ import {
   notifyAdminExpiringSubscribers,
   sendCustomMessage,
   sendRenewalReminder,
-  sendTipResultToTelegram, buildDailyResultsText, translateTeamName, translateNamesInText } from "./telegram";
+  sendTipResultToTelegram, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret } from "./telegram";
 import { listSubscribers, addSubscriber, updateSubscriber, deleteSubscriber } from "./subscribersStore";
 import { Subscriber } from "./types";
 
@@ -87,6 +89,13 @@ const LEAGUE_PRESETS: LeaguePreset[] = [
  * Voliteľná ochrana heslom (HTTP Basic Auth). Ak nenastavíš APP_USER a
  * APP_PASSWORD, appka beží bez hesla.
  */
+/** Porovnanie reťazcov v konštantnom čase (heslo sa nedá uhádnuť podľa rýchlosti odpovede). */
+function safeEqual(a: string, b: string): boolean {
+  const ha = crypto.createHash("sha256").update(a).digest();
+  const hb = crypto.createHash("sha256").update(b).digest();
+  return crypto.timingSafeEqual(ha, hb);
+}
+
 function basicAuth(req: Request, res: Response, next: NextFunction): void {
   // Telegram servery a verejná prezentačná stránka volajú tieto endpointy
   // priamo, bez znalosti hesla appky - musia zostať verejne prístupné.
@@ -111,9 +120,12 @@ function basicAuth(req: Request, res: Response, next: NextFunction): void {
   const header = req.headers.authorization ?? "";
   const token = header.split(" ")[1] ?? "";
   const decoded = Buffer.from(token, "base64").toString("utf-8");
-  const [u, p] = decoded.split(":");
+  // Heslo môže obsahovať dvojbodku – delíme len podľa prvej.
+  const sep = decoded.indexOf(":");
+  const u = sep >= 0 ? decoded.slice(0, sep) : decoded;
+  const p = sep >= 0 ? decoded.slice(sep + 1) : "";
 
-  if (u === user && p === pass) {
+  if (safeEqual(u, user) && safeEqual(p, pass)) {
     next();
     return;
   }
@@ -669,7 +681,21 @@ app.post("/api/telegram/weekly-report", async (req, res) => {
 });
 
 // Sem posiela Telegram prichádzajúce správy od používateľov (nová správa, stlačenie tlačidla).
+/** Tajný kľúč webhooku odvodený od tokenu bota (bez ďalšieho nastavovania na Renderi). */
+function telegramWebhookSecret(): string | undefined {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) return undefined;
+  return crypto.createHash("sha256").update("tipradar-webhook:" + token).digest("hex").slice(0, 48);
+}
+
 app.post("/api/telegram/webhook", async (req, res) => {
+  // Správy prijímame len od Telegramu: pri nastavení webhooku dostal tajný kľúč,
+  // ktorý posiela v hlavičke. Podvrhnuté požiadavky sa ticho ignorujú.
+  const expected = telegramWebhookSecret();
+  if (expected && req.get("X-Telegram-Bot-Api-Secret-Token") !== expected) {
+    res.sendStatus(200);
+    return;
+  }
   try {
     await handleTelegramUpdate(req.body);
   } catch (err) {
@@ -685,7 +711,7 @@ app.get("/api/telegram/setup-webhook", async (req, res) => {
     // https - preto sa protokol nedá spoľahnúť na req.protocol a natvrdo
     // použijeme https (Telegram aj tak vyžaduje výhradne https adresu).
     const webhookUrl = `https://${req.get("host")}/api/telegram/webhook`;
-    await setTelegramWebhook(webhookUrl);
+    await setTelegramWebhook(webhookUrl, telegramWebhookSecret());
     res.send(`Hotovo! Webhook nastavený na: ${webhookUrl}`);
   } catch (err: any) {
     res.status(502).send(`Nastavenie webhooku zlyhalo: ${err.message ?? String(err)}`);
@@ -1006,11 +1032,15 @@ app.delete("/api/subscribers/:id", async (req, res) => {
 
 // ---- Pravidelná kontrola blížiacich sa/vypršaných platieb predplatiteľov ----
 
-let lastExpiryCheckDate: string | null = null;
-
 async function checkExpiringSubscribers(): Promise<void> {
-  const today = new Date().toISOString().slice(0, 10);
-  if (lastExpiryCheckDate === today) return; // dnes už bola kontrola spustená
+  // Deň podľa slovenského času. Uložené natrvalo, aby reštart servera (nasadenie,
+  // prebudenie na Renderi) neposlal pripomienky znova v ten istý deň.
+  const today = dayKeySk(new Date());
+  try {
+    if ((await getMeta("lastExpiryCheckDate")) === today) return;
+  } catch {
+    return; // bez prístupu k úložisku radšej nič neposielať (hrozili by duplicity)
+  }
 
   try {
     const subs = await listSubscribers();
@@ -1037,7 +1067,7 @@ async function checkExpiringSubscribers(): Promise<void> {
       }
     }
 
-    lastExpiryCheckDate = today;
+    await setMeta("lastExpiryCheckDate", today);
   } catch (err) {
     console.error("Kontrola vypršania predplatných zlyhala:", err);
   }
@@ -1048,4 +1078,5 @@ checkExpiringSubscribers(); // aj hneď po štarte appky
 
 app.listen(PORT, () => {
   console.log(`TipRadar beží na porte ${PORT}`);
+  void refreshTelegramWebhookSecret(telegramWebhookSecret());
 });
