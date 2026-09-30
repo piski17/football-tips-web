@@ -1,3 +1,4 @@
+import { listLeads, deleteLead } from "./leadsStore";
 import { getMeta, setMeta } from "./metaStore";
 import * as crypto from "crypto";
 import { recordShadow, listShadow, updateShadow, shadowEntriesFrom, ShadowEntry } from "./shadowStore";
@@ -508,7 +509,9 @@ app.get("/api/public/vip-seats", async (_req, res) => {
       (s) => s.tier === "group" && new Date(s.nextPaymentDue).getTime() + graceMs >= Date.now()
     ).length;
     // Predaj členstiev: SALES_OPEN=true na Renderi (kým nie je živnosť, len poradovník).
-    res.json({ taken: Math.min(taken, total), total, salesOpen: process.env.SALES_OPEN === "true" });
+    // Pred spustením predaja: koľko ľudí sa zapísalo do poradovníka o VIP (len počet).
+    const waitlistVip = (await listLeads().catch(() => [])).filter((l) => l.plan === "vip" || l.plan === "vip_waitlist").length;
+    res.json({ taken: Math.min(taken, total), total, salesOpen: process.env.SALES_OPEN === "true", waitlistVip });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
@@ -876,6 +879,24 @@ app.get("/api/shadow/summary", async (_req, res) => {
       profit,
       roi: withOdds.length ? (profit / withOdds.length) * 100 : null,
     });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
+
+// ---- Poradovník záujemcov (za heslom) ----
+app.get("/api/leads", async (_req, res) => {
+  try {
+    res.json(await listLeads());
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+app.delete("/api/leads/:chatId", async (req, res) => {
+  try {
+    await deleteLead(req.params.chatId);
+    res.json({ ok: true });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }

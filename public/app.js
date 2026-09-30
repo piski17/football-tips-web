@@ -1493,6 +1493,7 @@ function subscriberStatus(sub) {
 }
 
 async function openSubscribers() {
+  void renderLeads();
   subscribersModal.hidden = false;
   subscribersListEl.innerHTML = skeletonHtml(2);
   try {
@@ -2323,6 +2324,58 @@ async function renderShadowSummary() {
     el.innerHTML = t;
   } catch {
     el.textContent = "";
+  }
+}
+
+
+// ---- Poradovník záujemcov z webu ----
+const LEAD_PLAN_LABEL = { premium: "Premium", vip: "VIP", vip_waitlist: "VIP (náhradník)", clenstvo: "nevybral" };
+async function renderLeads() {
+  const el = document.getElementById("leadsList");
+  if (!el) return;
+  try {
+    const leads = await fetchJson("/api/leads");
+    if (!leads.length) {
+      el.innerHTML = `<p class="empty-state">Zatiaľ sa nikto nezapísal.</p>`;
+      return;
+    }
+    el.innerHTML = leads
+      .map((l, i) => {
+        const d = new Date(l.firstAt);
+        const date = isNaN(d.getTime()) ? "" : `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}`;
+        return `<div class="tip-row lead-row">
+          <div class="lead-main"><strong>${i + 1}. ${escapeHtml(l.name || "Neznámy")}</strong>${l.username ? ` <span class="muted">@${escapeHtml(l.username)}</span>` : ""}
+            <div class="muted small">${escapeHtml(LEAD_PLAN_LABEL[l.plan] || l.plan)} · zapísaný ${date} · ID ${escapeHtml(l.chatId)}</div></div>
+          <div class="lead-actions">
+            <a class="btn-ghost btn-mini" href="tg://user?id=${encodeURIComponent(l.chatId)}">Otvoriť chat</a>
+            <button class="btn-ghost btn-mini" data-lead-add="${escapeHtml(l.chatId)}">Pridať ako predplatiteľa</button>
+            <button class="btn-ghost btn-mini" data-lead-del="${escapeHtml(l.chatId)}">Odstrániť</button>
+          </div></div>`;
+      })
+      .join("");
+    el.querySelectorAll("[data-lead-add]").forEach((b) => {
+      b.onclick = () => {
+        const l = leads.find((x) => x.chatId === b.dataset.leadAdd);
+        if (!l) return;
+        document.getElementById("subName").value = l.name || "";
+        document.getElementById("subContact").value = l.username ? "@" + l.username : "";
+        document.getElementById("subTelegramChatId").value = l.chatId;
+        document.getElementById("subTier").value = l.plan === "vip" || l.plan === "vip_waitlist" ? "group" : "individual";
+        document.getElementById("subName")?.scrollIntoView({ behavior: "smooth", block: "center" });
+        showToast("Údaje sú vyplnené – skontroluj ich a klikni na Pridať.");
+      };
+    });
+    el.querySelectorAll("[data-lead-del]").forEach((b) => {
+      b.onclick = async () => {
+        if (!window.confirm("Odstrániť záujemcu z poradovníka?")) return;
+        try {
+          await fetchJson(`/api/leads/${encodeURIComponent(b.dataset.leadDel)}`, { method: "DELETE" });
+        } catch { /* ignorujeme */ }
+        renderLeads();
+      };
+    });
+  } catch {
+    el.innerHTML = `<p class="empty-state">Poradovník sa nepodarilo načítať.</p>`;
   }
 }
 

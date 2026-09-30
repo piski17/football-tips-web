@@ -1,3 +1,4 @@
+import { recordLead } from "./leadsStore";
 import axios from "axios";
 import { SavedTip } from "./types";
 
@@ -495,6 +496,7 @@ export async function handleTelegramUpdate(update: any): Promise<void> {
   if (startParam && JOIN_MESSAGES[startParam]) {
     const reply = salesOpen() ? JOIN_MESSAGES[startParam] : PRELAUNCH_MESSAGE(startParam);
     await callTelegramApi("sendMessage", { chat_id: chatId, text: reply, parse_mode: "HTML", reply_markup: MAIN_MENU_KEYBOARD });
+    await recordLead({ chatId: String(chatId), plan: startParam, name: personName(from), username: from?.username }).catch(() => {});
     await notifyAdminLead(startParam, from, chatId);
     return;
   }

@@ -1404,3 +1404,10 @@ input, select, textarea { accent-color: var(--accent); }
 .shadow-summary:empty { display: none; }
 .text-success { color: var(--success); }
 .text-danger { color: var(--danger); }
+
+/* ---------- Poradovník ---------- */
+.leads-title { margin: 22px 0 4px; font-size: 16px; }
+.lead-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.lead-main { min-width: 0; }
+.lead-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.lead-actions a { text-decoration: none; display: inline-flex; align-items: center; }
