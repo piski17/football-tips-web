@@ -550,7 +550,7 @@
       <div class="faq">
         <details><summary>Kedy a kam tipy prídu?</summary><p>Do súkromného Telegram kanála, vždy 2 – 3 hodiny pred výkopom konkrétneho zápasu. Večer, keď sa zápasy dohrajú, príde vyhodnotenie dňa.</p></details>
         <details><summary>Koľko tipov dostanem denne?</summary><p>Toľko, koľko prejde pravidlami modelu – niekedy jeden, inokedy viac. Keď žiadny zápas nemá tip s dostatočnou hodnotou, tip nepošleme a dáme vedieť.</p></details>
-        <details><summary>Čo presne znamená „hodnota“?</summary><p>Porovnanie šance podľa modelu s kurzom. Keď model dáva výsledku 68 % a kurz je 1,75, očakávaný návrat je 0,68 × 1,75 = 1,19 – teda hodnota +19 %. TipRadar posiela len tipy s hodnotou aspoň +5 % a kurzom aspoň <span class="minOdds">1,70</span>.</p></details>
+        <details><summary>Čo presne znamená „hodnota“?</summary><p>Porovnanie šance podľa modelu s kurzom. Keď model dáva výsledku 68 % a kurz je 1,75, očakávaný návrat je 0,68 × 1,75 = 1,19 – teda hodnota +19 %. TipRadar posiela len tipy s hodnotou aspoň +5 % a kurzom aspoň <span class="minOdds">1,60</span>.</p></details>
         <details><summary>Čo je zisk v jednotkách a ROI?</summary><p>Jednotka je rovnaká suma na každý tip, napríklad 10 €. Zisk +5 jednotiek pri stávke 10 € na tip znamená +50 €. ROI hovorí, koľko percent z vložených peňazí sa vrátilo navyše.</p></details>
         <details><summary>Zaručujete výhru?</summary><p>Nie. Žiadny model nevie zaručiť výsledok zápasu. TipRadar vyberá stávky, pri ktorých je podľa štatistík šanca vyššia, než naznačuje kurz. Hodnotí sa dlhodobý výsledok, preto zverejňujeme aj prehraté tipy.</p></details>
         <details><summary>Ako overujete, že model funguje?</summary><p>Spätným testom na odohraných zápasoch a mesačnou kontrolou kalibrácie – či tipy s dôverou 70 % naozaj vychádzajú približne v 70 % prípadov. Tipy, ktoré model vyradil pre veľký rozpor s kurzami, si ticho evidujeme a porovnávame, kto mal pravdu.</p></details>
@@ -658,8 +658,8 @@
   }
 
   // ---------- sito ----------
-  // Minimálny kurz tipu – web ho pošle z nastavenia MIN_ODDS v Renderi (predvolene 1,70).
-  let MIN_ODDS = 1.7, sieveIdx = 0;
+  // Minimálny kurz tipu – web ho pošle z nastavenia MIN_ODDS v Renderi (predvolene 1,60).
+  let MIN_ODDS = 1.6, sieveIdx = 0;
   const pois = [0.2, 0.32, 0.26, 0.14, 0.06, 0.02];
   const SIEVE = [
     { t: "Zápasy dňa", c: 120, h: "Zber dát o oboch tímoch", p: "Pri každom zápase model stiahne góly, rohy, karty, strely, fauly a ofsajdy z posledných zápasov – vlastné aj tie, ktoré tím dovoľuje súperom.",
@@ -669,7 +669,7 @@
     { t: "Dôvera 65 – 75 %", c: 140, h: "Len v pásme, ktoré dáva zmysel", p: "Príliš isté tipy mávajú nízky kurz, príliš neisté často nevychádzajú. Do ďalšieho kroku pustíme len tipy s dôverou 65 – 75 %.",
       v: () => `<div class="band" aria-label="Pásmo dôvery 65 až 75 percent"><div class="band-track"></div><div class="band-zone"></div><span class="band-lbl" style="left:0">0 %</span><span class="band-lbl" style="left:65%">65 %</span><span class="band-lbl" style="left:75%">75 %</span><span class="band-lbl" style="left:100%">100 %</span></div>` },
     { t: "Hodnota a kurz", c: 15, h: "Kurz musí byť vyšší, než šanca naznačuje", p: () => `Dôvera 68 % pri kurze 1,75 dáva 0,68 × 1,75 = 1,19, teda hodnotu +19 %. Tip s hodnotou pod +5 % alebo s kurzom pod ${fmt(MIN_ODDS, 2)} vypadne, rovnako ako trh, ktorý stávkové kancelárie neponúkajú.`,
-      v: () => `<ul class="checks"><li>Dôvera 68 %, kurz 1,75 → hodnota +19 %, tip prejde</li><li>Dôvera 70 %, kurz 1,45 → hodnota +2 %, tip vypadne</li>${MIN_ODDS > 1.6 ? `<li>Dôvera 70 %, kurz 1,60 → hodnota +12 %, ale kurz je pod ${fmt(MIN_ODDS, 2)}, tip vypadne</li>` : ""}</ul>` },
+      v: () => `<ul class="checks"><li>Dôvera 68 %, kurz 1,75 → hodnota +19 %, tip prejde</li><li>Dôvera 70 %, kurz 1,45 → hodnota +2 %, tip vypadne</li>${MIN_ODDS > 1.55 ? `<li>Dôvera 72 %, kurz 1,55 → hodnota +12 %, ale kurz je pod ${fmt(MIN_ODDS, 2)}, tip vypadne</li>` : ""}</ul>` },
     { t: "Kontrola rozporu", c: 7, h: "Keď sa model a trh príliš rozchádzajú", p: "Ak model vidí šancu o 15 – 25 bodov inak než stávkové kancelárie, radšej tip vyradí – takýto rozdiel často znamená informáciu, ktorú štatistika nevidí, napríklad zranenie. Vyradené tipy si ticho evidujeme a raz mesačne kontrolujeme, kto mal pravdu.",
       v: () => `<ul class="checks"><li>Pri tímoch s menej ako 5 zápasmi v sezóne sa odhad zmieša s kurzami</li><li>Hranica rozporu závisí od toho, koľko vzájomných zápasov máme</li></ul>` },
     { t: "Tipy pre členov", c: 3, h: "Do Telegramu pred výkopom", p: "Najviac jeden tip na trh v zápase. Prídu 2 – 3 hodiny pred výkopom a večer ich vyhodnotíme podľa skutočného výsledku.",

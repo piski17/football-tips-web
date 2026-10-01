@@ -760,7 +760,7 @@ export function predictMatch(
   );
   // Posúdenie hodnoty podľa skutočného kurzu:
   //  - pod +5 %: tip nemá hodnotu -> vyradiť,
-  //  - kurz pod MIN_ODDS (predvolene 1,70) -> vyradiť,
+  //  - kurz pod MIN_ODDS (predvolene 1,60) -> vyradiť,
   //  - nad +25 % a málo odohraných zápasov v sezóne: model stojí na slabých
   //    dátach a rozdiel oproti trhu je takmer iste jeho chyba -> vyradiť,
   //  - nad +25 % a dát je dosť: tip ostáva, ale s upozornením,
@@ -786,7 +786,7 @@ export function predictMatch(
       b.rejectReason = "nízky kurz, bez hodnoty";
       lowValueBets.push(b);
     } else if (b.odds != null && b.odds < MIN_ODDS) {
-      // Kurz pod minimom (predvolene 1,70) - tip má hodnotu, ale zisk z výhry je malý.
+      // Kurz pod minimom (predvolene 1,60) - tip má hodnotu, ale zisk z výhry je malý.
       b.rejectReason = `kurz pod ${MIN_ODDS.toFixed(2).replace(".", ",")}`;
       lowValueBets.push(b);
     } else if (ev > SUSPICIOUS_EXPECTED_VALUE && fewGames) {
