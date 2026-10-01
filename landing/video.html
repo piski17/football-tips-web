@@ -260,6 +260,27 @@
   .radar-sweep { transform-origin: 120px 120px; animation: radarSweep 6s linear infinite; }
   @keyframes radarSweep { to { transform: rotate(360deg); } }
   @media (prefers-reduced-motion: reduce) { .radar-sweep { animation: none; } }
+
+  /* ---------- Telefón: obsah nesmie zasahovať pod ovládanie dole ---------- */
+  @media (max-width: 600px) {
+    .slide { padding: 56px 20px 104px; }
+    .kicker { font-size: 14px; }
+    .mock-ticket-row { gap: 14px; }
+    .mock-ticket-row strong { white-space: nowrap; }
+    .channel-row, .price-row { gap: 14px; }
+  }
+  @media (max-width: 600px) and (max-height: 720px) {
+    .slide { padding-top: 48px; padding-bottom: 92px; }
+    .radar-illustration { width: min(150px, 40vw); margin-bottom: 14px; }
+    h1 { font-size: 30px; margin-bottom: 10px; }
+    .lede { font-size: 17px; }
+    .kicker { font-size: 13px; margin-bottom: 8px; }
+    .mini-steps { margin-top: 14px; gap: 6px; }
+    .mini-step { padding: 8px 12px; }
+    .mini-step-desc { font-size: 11.5px; }
+    .price-row { margin-top: 18px; } .price-card { padding: 18px 26px; }
+    .price-card .amount { font-size: 32px; }
+  }
 </style>
 </head>
 <body>
@@ -341,7 +362,7 @@
       <div class="mock-tip-icon">🎯</div>
       <div>
         <div class="mock-tip-title">Góly: nad 2,5</div>
-        <div class="mock-tip-meta">Najvyššia dôvera zo všetkých trhov · 71 %</div>
+        <div class="mock-tip-meta">Najvyššia dôvera zo všetkých trhov · 71 %</div>
         <div class="mock-tip-explain">💡 Očakávané góly 1,6 : 1,3 – oba tímy strieľajú pravidelne a v posledných 5 vzájomných zápasoch padli v priemere 3 góly.</div>
       </div>
     </div>
@@ -351,8 +372,8 @@
     <div class="kicker">Spájaj tipy do tiketov</div>
     <h1>Kombinovaná hodnota na jeden pohľad</h1>
     <div class="mock-ticket">
-      <div class="mock-ticket-row"><span>Arsenal — Leeds · Karty nad 3,5</span><strong>72 %</strong></div>
-      <div class="mock-ticket-row"><span>Chelsea — Bournemouth · Góly nad 1,5</span><strong>68 %</strong></div>
+      <div class="mock-ticket-row"><span>Arsenal — Leeds · Karty nad 3,5</span><strong>72 %</strong></div>
+      <div class="mock-ticket-row"><span>Chelsea — Bournemouth · Góly nad 1,5</span><strong>68 %</strong></div>
       <div class="mock-ticket-row"><span>Kombinovaný kurz</span><strong>~2,04</strong></div>
     </div>
   </div>
@@ -374,16 +395,16 @@
 
   <div class="slide" data-duration="4500">
     <div class="kicker">Predplatné</div>
-    <h1>Menej než 1 € na deň</h1>
+    <h1>Menej než 1 € na deň</h1>
     <div class="price-row">
       <div class="price-card">
         <div class="tag">PREMIUM</div>
-        <div class="amount">29 €</div>
+        <div class="amount">29 €</div>
         <div class="per">/ mesiac</div>
       </div>
       <div class="price-card vip">
         <div class="tag">VIP · tipy skôr + denný tiket</div>
-        <div class="amount">59 €</div>
+        <div class="amount">59 €</div>
         <div class="per">/ mesiac</div>
       </div>
     </div>
