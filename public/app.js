@@ -1113,6 +1113,7 @@ saveTicketBtn.addEventListener("click", async () => {
 
 async function openTipsHistory() {
   void renderShadowSummary();
+  void renderTicketWatch();
   tipsModal.hidden = false;
   tipsListEl.innerHTML = skeletonHtml(2);
   try {
@@ -2322,6 +2323,42 @@ async function renderShadowSummary() {
     if (d.withOdds) t += ` Keby sa stavili: <strong class="${d.profit >= 0 ? "text-success" : "text-danger"}">${d.profit >= 0 ? "+" : "−"}${Math.abs(d.profit).toFixed(1).replace(".", ",")} j.</strong>`;
     if (d.pending) t += ` Čaká: ${d.pending}.`;
     el.innerHTML = t;
+  } catch {
+    el.textContent = "";
+  }
+}
+
+
+// ---- Tiché sledovanie tiketu dňa (2 zápasy, kurz spolu aspoň 2,00) ----
+async function renderTicketWatch() {
+  const el = document.getElementById("ticketWatchSummary");
+  if (!el) return;
+  try {
+    const d = await fetchJson("/api/ticket-watch/summary");
+    if (!d || !d.total) {
+      el.innerHTML = d && d.candidates
+        ? `Tiché sledovanie tiketu dňa: ${d.candidates} vhodných tipov zapísaných, zatiaľ z nich nevznikol žiadny tiket.`
+        : "";
+      return;
+    }
+    const num = (v, k = 2) => Number(v).toFixed(k).replace(".", ",");
+    const sign = (v) => (v >= 0 ? "+" : "−") + num(Math.abs(v), 1);
+    let t = `Tiché sledovanie tiketu dňa (2 zápasy, kurz spolu aspoň 2,00): `;
+    if (d.settled) {
+      t += `<strong>${d.won} z ${d.settled}</strong> tiketov vyšlo (<strong>${Math.round(d.hitRate)} %</strong>), priemerný kurz ${num(d.avgOdds)}. `;
+      t += `Keby sa stavili: <strong class="${d.profit >= 0 ? "text-success" : "text-danger"}">${sign(d.profit)} j.</strong> (ROI ${sign(d.roi)} %).`;
+    } else {
+      t += `${d.total} ${d.total === 1 ? "tiket" : d.total <= 4 ? "tikety" : "tiketov"}, zatiaľ žiadny vyhodnotený.`;
+    }
+    if (d.pending) t += ` Čaká: ${d.pending}.`;
+    const icon = { won: "✓", lost: "✕", void: "↺", pending: "…" };
+    const day = (k) => { const [y, m, dd] = k.split("-").map(Number); return `${dd}. ${m}. ${y}`; };
+    const rows = (d.tickets || []).map((tk) => {
+      const legs = tk.legs.map((l) => `${icon[l.status]} ${escapeHtml(l.homeTeam)} – ${escapeHtml(l.awayTeam)}: ${escapeHtml(l.market)} ${escapeHtml(l.selection)} (${num(l.odds)}, ${Math.round(l.probability)} %)`).join("<br>");
+      const res = tk.profit == null ? "čaká" : tk.status === "void" ? "vrátený vklad" : `${sign(tk.profit)} j.`;
+      return `<div style="padding:6px 0;border-top:1px solid rgba(127,127,127,.2)"><strong>${day(tk.day)}</strong> – kurz ${num(tk.odds)}, hodnota +${Math.round((tk.value - 1) * 100)} %, ${icon[tk.status]} ${res}<br>${legs}</div>`;
+    }).join("");
+    el.innerHTML = `${t}<details style="margin-top:4px"><summary style="cursor:pointer">Zobraziť tikety</summary>${rows}</details>`;
   } catch {
     el.textContent = "";
   }

@@ -3,6 +3,7 @@ import { listLeads, deleteLead } from "./leadsStore";
 import { getMeta, setMeta } from "./metaStore";
 import * as crypto from "crypto";
 import { recordShadow, listShadow, updateShadow, shadowEntriesFrom, ShadowEntry } from "./shadowStore";
+import { recordLegs, listLegs, updateLeg, legCandidatesFrom, legQualifies, buildTickets, TicketLegCandidate, TICKET_RULES } from "./ticketWatchStore";
 import { startBacktest, getBacktest } from "./backtest";
 import { getDay, getAllDays, setDay } from "./dailyStore";
 import "dotenv/config";
@@ -269,6 +270,10 @@ app.post("/api/analyze", async (req, res) => {
 
     // Tichá evidencia tipov vyradených pre rozpor so stávkovkami (na pozadí, nič neblokuje).
     void recordShadow(shadowEntriesFrom(fixture, (result as any).lowValueBets ?? [])).catch(() => {});
+    // Tiché sledovanie tiketu dňa: kandidáti z odporúčaných aj vyradených tipov (na pozadí).
+    void recordLegs(
+      legCandidatesFrom(fixture, [...((result as any).bestBets ?? []), ...((result as any).lowValueBets ?? [])])
+    ).catch(() => {});
     res.json(result);
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
@@ -849,8 +854,12 @@ app.get("/api/backtest/:id", (req, res) => {
 // ---- Tichá evidencia vyradených tipov ----
 app.post("/api/shadow/record", async (req, res) => {
   try {
-    const { fixture, picks } = req.body ?? {};
-    if (fixture && fixture.fixtureId) await recordShadow(shadowEntriesFrom(fixture, picks ?? []));
+    const { fixture, picks, bestBets } = req.body ?? {};
+    if (fixture && fixture.fixtureId) {
+      await recordShadow(shadowEntriesFrom(fixture, picks ?? []));
+      // Appka posiela vyradené tipy (a po úprave aj odporúčané) – kandidáti na tiket dňa.
+      await recordLegs(legCandidatesFrom(fixture, [...(bestBets ?? []), ...(picks ?? [])])).catch(() => {});
+    }
     res.json({ ok: true });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
@@ -885,6 +894,56 @@ app.get("/api/shadow/summary", async (_req, res) => {
   }
 });
 
+
+// ---- Tiché sledovanie tiketu dňa (2 zápasy, kurz spolu aspoň 2,00) ----
+/** Kandidáti na tiket: zapísaní pri analýzach + uložené samostatné tipy, ktoré spĺňajú pravidlá. */
+async function allTicketLegs(): Promise<{ legs: TicketLegCandidate[]; fromStore: Set<string> }> {
+  const map = new Map<string, TicketLegCandidate>();
+  const fromStore = new Set<string>();
+  for (const l of await listLegs()) { map.set(l.id, l); fromStore.add(l.id); }
+  for (const t of await listTips()) {
+    if ((t.legs && t.legs.length) || t.manualEntry || typeof t.odds !== "number") continue;
+    if (!legQualifies(t.probability, t.odds)) continue;
+    if (!(new Date(t.savedAt).getTime() < new Date(t.matchDate).getTime())) continue;
+    const id = `${t.fixtureId}|${t.market}|${t.selection}`;
+    const prev = map.get(id);
+    const recordedAt = prev && prev.recordedAt < t.savedAt ? prev.recordedAt : t.savedAt;
+    // Uložený tip sa vyhodnocuje bežne – jeho výsledok má prednosť.
+    map.set(id, {
+      id, fixtureId: t.fixtureId, matchDate: t.matchDate, homeTeam: t.homeTeam, awayTeam: t.awayTeam,
+      market: t.market, selection: t.selection, ...(t.playerId ? { playerId: t.playerId } : {}),
+      probability: t.probability, odds: t.odds, recordedAt,
+      status: t.status !== "pending" ? t.status : prev?.status ?? "pending",
+    });
+    fromStore.delete(id);
+  }
+  return { legs: Array.from(map.values()), fromStore };
+}
+
+app.get("/api/ticket-watch/summary", async (_req, res) => {
+  try {
+    const { legs } = await allTicketLegs();
+    const tickets = buildTickets(legs);
+    const settled = tickets.filter((t) => t.status === "won" || t.status === "lost");
+    const won = settled.filter((t) => t.status === "won").length;
+    const profit = settled.reduce((sum, t) => sum + (t.profit ?? 0), 0);
+    res.json({
+      rules: TICKET_RULES,
+      candidates: legs.length,
+      total: tickets.length,
+      pending: tickets.filter((t) => t.status === "pending").length,
+      settled: settled.length,
+      won,
+      hitRate: settled.length ? (won / settled.length) * 100 : null,
+      avgOdds: tickets.length ? tickets.reduce((a, t) => a + t.odds, 0) / tickets.length : null,
+      profit,
+      roi: settled.length ? (profit / settled.length) * 100 : null,
+      tickets: tickets.slice(0, 60),
+    });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
 
 // ---- Poradovník záujemcov (za heslom) ----
 app.get("/api/leads", async (_req, res) => {
@@ -980,6 +1039,21 @@ async function checkPendingResults(): Promise<void> {
       actualHomeGoals: settled.homeGoals,
       actualAwayGoals: settled.awayGoals,
     });
+  }
+
+  // Tiché sledovanie tiketu dňa – vyhodnotíme len tipy, ktoré sú na niektorom tikete
+  // (šetrí to požiadavky na API). Uložené tipy sa vyhodnotili už vyššie.
+  try {
+    const { legs, fromStore } = await allTicketLegs();
+    const onTickets = buildTickets(legs).flatMap((t) => t.legs);
+    for (const leg of onTickets) {
+      if (leg.status !== "pending" || !fromStore.has(leg.id)) continue;
+      if (Date.now() < new Date(leg.matchDate).getTime() + 100 * 60 * 1000) continue; // zápas ešte beží
+      const settled = await settleBet(leg);
+      if (settled) await updateLeg({ ...leg, status: settled.status });
+    }
+  } catch {
+    // sledovanie nesmie zastaviť vyhodnotenie skutočných tipov
   }
 }
 
