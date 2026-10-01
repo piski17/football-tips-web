@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="theme-color" content="#0b1424" />
+<meta name="theme-color" content="#0d0b09" />
 <meta name="color-scheme" content="dark" />
 <title>TipRadar – predstavenie</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -11,24 +11,24 @@
 <link rel="apple-touch-icon" href="/favicon-256.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <style>
-  /* TipRadar „Salón“ – rovnaké farby a písmo ako tipradar.eu */
+  /* TipRadar „Onyx“ – rovnaké farby a písmo ako tipradar.eu */
   :root {
-    --bg: #0b1424;
-    --surface: #111d33;
-    --surface-2: #16243d;
-    --border: #213150;
-    --line: rgba(210,161,133,.2);
-    --gold: #d2a185;
-    --gold-bright: #f0cdb6;
-    --gold-deep: #9d6f56;
-    --danger: #e07d8c;
-    --success: #7cc4a9;
-    --text: #eceef2;
-    --text-muted: #aeb9cd;
-    --font-display: "DM Serif Display", "Didot", Georgia, serif;
-    --font-body: "DM Sans", "Avenir Next", "Helvetica Neue", system-ui, sans-serif;
+    --bg: #0d0b09;
+    --surface: #15120e;
+    --surface-2: #1b1712;
+    --border: #2e271d;
+    --line: rgba(201,165,92,.2);
+    --gold: #c9a55c;
+    --gold-bright: #e8d3a0;
+    --gold-deep: #8e6b2e;
+    --danger: #d07a84;
+    --success: #8fc4a2;
+    --text: #efe8d8;
+    --text-muted: #a89f8e;
+    --font-display: "Cormorant Garamond", "Cormorant", Garamond, Georgia, serif;
+    --font-body: "Manrope", "Avenir Next", "Helvetica Neue", system-ui, sans-serif;
     color-scheme: dark;
   }
 
@@ -169,7 +169,7 @@
     background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
     padding: 26px 30px; min-width: 160px;
   }
-  .price-card.vip { border-color: var(--gold); background: linear-gradient(180deg, rgba(210,161,133,0.12), rgba(210,161,133,0) 60%), var(--surface); }
+  .price-card.vip { border-color: var(--gold); background: linear-gradient(180deg, rgba(201,165,92,0.12), rgba(201,165,92,0) 60%), var(--surface); }
   .price-card .tag { font-size: 11.5px; color: var(--gold-bright); margin-bottom: 6px; }
   .price-card .amount { font-family: var(--font-display); font-size: 34px; font-weight: 800; letter-spacing: -0.02em; }
   .price-card .per { font-size: 12px; color: var(--text-muted); }
@@ -277,53 +277,53 @@
   }
 
   /* ================================================================
-     TipRadar „Salón“ – vzhľad ako tipradar.eu (nadpisy a čísla v DM Serif Display)
+     TipRadar „Onyx“ – vzhľad ako tipradar.eu (nadpisy a čísla v Cormorant Garamond)
      ================================================================ */
   body {
-    background: radial-gradient(900px 560px at 80% 0%, rgba(40,64,110,.42), transparent 70%), var(--bg);
+    background: radial-gradient(900px 560px at 80% 0%, rgba(92,72,34,.42), transparent 70%), var(--bg);
     font-size: 16px; line-height: 1.6;
   }
-  h1 { font-weight: 400; letter-spacing: -0.005em; line-height: 1.08; font-size: clamp(32px, 5.6vw, 52px); max-width: 15ch; text-wrap: balance; }
+  h1 { font-weight: 500; letter-spacing: 0; line-height: 1.04; font-size: clamp(36px, 6.2vw, 58px); max-width: 15ch; text-wrap: balance; }
   .kicker { color: var(--gold); font-weight: 500; letter-spacing: .02em; }
-  .lede { color: #bcc5d7; }
-  .brand-mark-fixed { font-family: var(--font-display); font-weight: 400; font-size: 18px; color: var(--text); gap: 10px; }
+  .lede { color: #c4baa6; }
+  .brand-mark-fixed { font-family: var(--font-display); font-weight: 500; font-size: 18px; color: var(--text); gap: 10px; }
   .brand-mark-fixed svg { width: 24px; height: 24px; }
 
   .mini-step, .market-chip, .mock-tip, .mock-ticket, .channel-card, .price-card { border-color: var(--border); }
   .mini-step { border-radius: 14px; }
-  .mini-step-num { font-family: var(--font-display); font-weight: 400; font-size: 16px; border: 1px solid var(--gold); color: var(--gold-bright); }
+  .mini-step-num { font-family: var(--font-display); font-weight: 500; font-size: 16px; border: 1px solid var(--gold); color: var(--gold-bright); }
   .mini-step-title { font-weight: 600; letter-spacing: 0; }
 
   .market-chip { border-radius: 14px; color: var(--text); display: flex; align-items: center; justify-content: center; line-height: 1.3; }
 
   .mock-tip {
     border: 1px solid var(--line); border-left: 2px solid var(--gold); border-radius: 14px;
-    background: linear-gradient(90deg, rgba(210,161,133,.12), transparent 70%), var(--surface);
+    background: linear-gradient(90deg, rgba(201,165,92,.12), transparent 70%), var(--surface);
   }
-  .mock-tip-title { font-family: var(--font-display); font-weight: 400; font-size: 22px; letter-spacing: 0; }
-  .mock-tip-explain { font-style: normal; color: #bcc5d7; }
+  .mock-tip-title { font-family: var(--font-display); font-weight: 500; font-size: 22px; letter-spacing: 0; }
+  .mock-tip-explain { font-style: normal; color: #c4baa6; }
 
   .mock-ticket { border-radius: 16px; }
-  .mock-ticket-row strong { font-family: var(--font-display); font-weight: 400; font-size: 19px; color: var(--gold-bright); font-variant-numeric: lining-nums tabular-nums; }
+  .mock-ticket-row strong { font-family: var(--font-display); font-weight: 500; font-size: 19px; color: var(--gold-bright); font-variant-numeric: lining-nums tabular-nums; }
   .mock-ticket-row { align-items: baseline; }
 
   .mock-bar { background: linear-gradient(180deg, var(--gold-bright), var(--gold) 45%, var(--gold-deep)); border-radius: 4px 4px 0 0; }
-  .mock-bar:last-child { background: linear-gradient(180deg, #b6e3d1, var(--success)); }
+  .mock-bar:last-child { background: linear-gradient(180deg, #c6e3cf, var(--success)); }
 
   .channel-card { border-radius: 16px; }
-  .channel-card .name { font-size: 20px; font-weight: 400; }
+  .channel-card .name { font-size: 22px; font-weight: 500; }
 
   .price-card { border-radius: 16px; }
   .price-card .tag { font-weight: 500; color: var(--gold-bright); }
-  .price-card .amount { font-weight: 400; letter-spacing: 0; font-size: 44px; font-variant-numeric: lining-nums; }
-  .price-card.vip { box-shadow: 0 24px 50px -30px rgba(210,161,133,.6); }
+  .price-card .amount { font-weight: 600; letter-spacing: 0; font-size: 46px; font-variant-numeric: lining-nums; }
+  .price-card.vip { box-shadow: 0 24px 50px -30px rgba(201,165,92,.6); }
 
   .contact-line { font-weight: 400; color: var(--gold-bright); }
 
   .progress-seg { background: var(--border); }
   .progress-seg-fill { background: linear-gradient(90deg, var(--gold), var(--gold-bright)); }
-  .play-btn { background: var(--surface); border-color: rgba(210,161,133,.35); color: var(--gold-bright); }
-  .play-btn:hover { background: rgba(210,161,133,.1); }
+  .play-btn { background: var(--surface); border-color: rgba(201,165,92,.35); color: var(--gold-bright); }
+  .play-btn:hover { background: rgba(201,165,92,.1); }
   :focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 2px; }
 
   @media (max-aspect-ratio: 3/4) {
@@ -340,8 +340,8 @@
 
 <div class="brand-mark-fixed">
   <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <defs><linearGradient id="rmBrand" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4d8c4"/><stop offset=".45" stop-color="#d2a185"/><stop offset="1" stop-color="#9d6f56"/></linearGradient></defs>
-    <circle cx="100" cy="100" r="92" fill="#111d33"/><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#d2a185" fill-opacity=".32"/><line x1="100" y1="100" x2="162.2" y2="37.8" stroke="url(#rmBrand)" stroke-width="7" stroke-linecap="round"/><circle cx="100" cy="100" r="92" fill="none" stroke="url(#rmBrand)" stroke-width="8"/><circle cx="100" cy="100" r="58" fill="none" stroke="#d2a185" stroke-opacity=".5" stroke-width="4"/><circle cx="100" cy="100" r="9" fill="#f0cdb6"/>
+    <defs><linearGradient id="rmBrand" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2e2b4"/><stop offset=".45" stop-color="#c9a55c"/><stop offset="1" stop-color="#8e6b2e"/></linearGradient></defs>
+    <circle cx="100" cy="100" r="92" fill="#15120e"/><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#c9a55c" fill-opacity=".32"/><line x1="100" y1="100" x2="162.2" y2="37.8" stroke="url(#rmBrand)" stroke-width="7" stroke-linecap="round"/><circle cx="100" cy="100" r="92" fill="none" stroke="url(#rmBrand)" stroke-width="8"/><circle cx="100" cy="100" r="58" fill="none" stroke="#c9a55c" stroke-opacity=".5" stroke-width="4"/><circle cx="100" cy="100" r="9" fill="#e8d3a0"/>
   </svg>
   TipRadar
 </div>
@@ -350,19 +350,19 @@
 
   <div class="slide" data-duration="4000">
     <svg class="radar-illustration" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <defs><linearGradient id="rmBig" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4d8c4"/><stop offset=".45" stop-color="#d2a185"/><stop offset="1" stop-color="#9d6f56"/></linearGradient>
-      <radialGradient id="rmGlow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#1a2a47"/><stop offset="1" stop-color="#111d33"/></radialGradient></defs>
+      <defs><linearGradient id="rmBig" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2e2b4"/><stop offset=".45" stop-color="#c9a55c"/><stop offset="1" stop-color="#8e6b2e"/></linearGradient>
+      <radialGradient id="rmGlow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#2a241b"/><stop offset="1" stop-color="#15120e"/></radialGradient></defs>
       <circle cx="120" cy="120" r="112" fill="url(#rmGlow)"/>
-      <circle cx="120" cy="120" r="82" fill="none" stroke="#d2a185" stroke-opacity=".28" stroke-width="1.5"/>
-      <circle cx="120" cy="120" r="47" fill="none" stroke="#d2a185" stroke-opacity=".28" stroke-width="1.5"/>
-      <line x1="8" y1="120" x2="232" y2="120" stroke="#d2a185" stroke-opacity=".14"/>
-      <line x1="120" y1="8" x2="120" y2="232" stroke="#d2a185" stroke-opacity=".14"/>
+      <circle cx="120" cy="120" r="82" fill="none" stroke="#c9a55c" stroke-opacity=".28" stroke-width="1.5"/>
+      <circle cx="120" cy="120" r="47" fill="none" stroke="#c9a55c" stroke-opacity=".28" stroke-width="1.5"/>
+      <line x1="8" y1="120" x2="232" y2="120" stroke="#c9a55c" stroke-opacity=".14"/>
+      <line x1="120" y1="8" x2="120" y2="232" stroke="#c9a55c" stroke-opacity=".14"/>
       <g class="radar-sweep">
-      <path d="M 120 120 L 120 14 A 106 106 0 0 1 197 61 Z" fill="#d2a185" fill-opacity="0.3"/>
+      <path d="M 120 120 L 120 14 A 106 106 0 0 1 197 61 Z" fill="#c9a55c" fill-opacity="0.3"/>
       <line x1="120" y1="120" x2="197" y2="61" stroke="url(#rmBig)" stroke-width="4" stroke-linecap="round"/>
       </g>
       <circle cx="120" cy="120" r="112" fill="none" stroke="url(#rmBig)" stroke-width="5"/>
-      <circle cx="120" cy="120" r="6" fill="#f0cdb6"/>
+      <circle cx="120" cy="120" r="6" fill="#e8d3a0"/>
     </svg>
     <div class="kicker">Štatistický model, nie odhad od oka</div>
     <h1>Futbalové tipy podložené číslami</h1>
