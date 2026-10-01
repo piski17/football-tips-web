@@ -15,11 +15,11 @@
 <link rel="apple-touch-icon" href="/favicon-256.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;0,6..96,600;1,6..96,400;1,6..96,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet" />
 <style>
   /* ============================================================
      TipRadar – „Salón“: nočný zafír, ružové zlato a perleť.
-     Art deco vejár ako radar, didotové písmo ako na pozvánke.
+     Art deco vejár ako radar, písmo DM Serif Display + DM Sans.
      ============================================================ */
   :root {
     --night: #0b1424;        /* nočný zafír – pozadie */
@@ -31,13 +31,13 @@
     --pearl: #eceef2;        /* perleť – text na tmavom */
     --porcelain: #e4e7ed;    /* svetlá sekcia */
     --ink: #0b1424;
-    --mist: #93a0b8;         /* tlmený text */
+    --mist: #aeb9cd;         /* tlmený text */
     --win: #7cc4a9;          /* vyšiel – patina */
     --loss: #e07d8c;         /* nevyšiel – granát */
     --void: #8d97aa;
     --line: rgba(210,161,133,.18);
-    --serif: "Bodoni Moda", "Didot", "Bodoni 72", "Bodoni MT", Georgia, serif;
-    --sans: "Jost", "Futura", "Century Gothic", "Avenir Next", system-ui, sans-serif;
+    --serif: "DM Serif Display", "Didot", Georgia, serif;
+    --sans: "DM Sans", "Avenir Next", "Helvetica Neue", system-ui, sans-serif;
   }
   *, *::before, *::after { box-sizing: border-box; }
   html { scroll-behavior: smooth; scroll-padding-top: 80px; -webkit-text-size-adjust: 100%; }
@@ -55,7 +55,7 @@
   h1, h2, h3 { font-family: var(--serif); font-weight: 400; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
   h2 { font-size: clamp(38px, 5.4vw, 68px); line-height: 1.04; }
   h3 { font-size: 28px; line-height: 1.15; }
-  .lede { color: var(--mist); font-size: 19px; line-height: 1.7; max-width: 58ch; margin: 22px 0 0; font-weight: 300; }
+  .lede { color: var(--mist); font-size: 19px; line-height: 1.7; max-width: 58ch; margin: 22px 0 0; font-weight: 400; color: #bcc5d7; }
 
   /* ---------- tlačidlá ---------- */
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 50px; padding: 0 28px; border-radius: 999px; font: 500 15px/1 var(--sans); letter-spacing: .02em; text-decoration: none; cursor: pointer; border: 1px solid transparent; transition: background .25s, color .25s, border-color .25s, transform .25s; }
@@ -71,7 +71,7 @@
   .nav { position: fixed; inset: 0 0 auto 0; z-index: 50; padding-top: env(safe-area-inset-top, 0px); transition: background .3s, border-color .3s; border-bottom: 1px solid transparent; }
   .nav.scrolled { background: rgba(11,20,36,.86); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom-color: var(--line); }
   .nav .wrap { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 24px; height: 72px; }
-  .brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; font: 500 22px/1 var(--serif); letter-spacing: .01em; }
+  .brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; font: 400 23px/1 var(--serif); letter-spacing: .01em; }
   .brand svg { width: 34px; height: 34px; }
   .nav-links { display: flex; justify-content: center; gap: 30px; }
   .nav-links a { text-decoration: none; font-size: 14.5px; color: var(--mist); position: relative; padding: 6px 0; transition: color .2s; }
@@ -83,7 +83,7 @@
   /* ---------- ÚVOD: art deco vejár ako radar ---------- */
   .hero { position: relative; padding: calc(150px + env(safe-area-inset-top, 0px)) 0 90px; text-align: center; overflow: hidden;
     background: radial-gradient(760px 420px at 50% 72%, rgba(210,161,133,.11), transparent 70%), radial-gradient(800px 500px at 50% -10%, rgba(40,64,110,.55), transparent 70%), var(--night); }
-  .hero h1 { font-size: clamp(46px, 8.4vw, 112px); line-height: .98; letter-spacing: -.02em; font-weight: 400; max-width: 13ch; margin-inline: auto; }
+  .hero h1 { font-size: clamp(44px, 7.6vw, 100px); line-height: 1.02; letter-spacing: -.015em; font-weight: 400; max-width: 13ch; margin-inline: auto; }
   .hero h1 span { display: block; font-style: italic; color: var(--rose-hi); }
   .hero .lede { margin: 30px auto 0; text-align: center; }
   .hero-cta { display: flex; justify-content: center; flex-wrap: wrap; gap: 14px; margin-top: 38px; }
@@ -246,7 +246,7 @@
   .card-deco { position: absolute; right: -22%; top: -38%; width: 70%; opacity: .22; pointer-events: none; }
   .face-back .card-deco { opacity: .35; }
   .card-top { display: flex; justify-content: space-between; align-items: baseline; position: relative; }
-  .card-brand { font: 500 clamp(22px, 3vw, 30px)/1 var(--serif); }
+  .card-brand { font: 400 clamp(22px, 3vw, 30px)/1 var(--serif); }
   .card-tier { font-size: 13px; letter-spacing: .04em; }
   .card-stats { display: grid; grid-template-columns: repeat(3, auto); justify-content: space-between; gap: 14px; position: relative; }
   .card-stats div { display: flex; flex-direction: column; }
@@ -360,7 +360,7 @@
   .closing .lede { margin-inline: auto; }
   .contact { color: var(--mist); font-size: 15px; margin-top: 40px; }
   .contact a { color: var(--rose-hi); }
-  .disclaimer { color: #6c7891; font-size: 12.5px; max-width: 76ch; margin: 34px auto 0; line-height: 1.7; }
+  .disclaimer { color: #8792aa; font-size: 12.5px; max-width: 76ch; margin: 34px auto 0; line-height: 1.7; }
   footer { border-top: 1px solid var(--line); padding: 28px 0 calc(28px + env(safe-area-inset-bottom, 0px)); font-size: 13px; color: var(--mist); }
   footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
   footer a { color: var(--mist); }
@@ -701,9 +701,9 @@
     [[1.5, "1,50"], [2.0, "2,00"], [2.5, "2,50"]].forEach(([o, lbl]) => {
       const r = oddsR(o);
       s += `<path d="${arc(r)}" fill="none" stroke="#d2a185" stroke-opacity=".3" stroke-width="1" stroke-dasharray="2 5"/>`;
-      s += `<text x="${CX + r}" y="${CY + 22}" text-anchor="middle" font-family="Jost, Futura, sans-serif" font-size="13" fill="#93a0b8">${lbl}</text>`;
+      s += `<text x="${CX + r}" y="${CY + 22}" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="13" fill="#aeb9cd">${lbl}</text>`;
     });
-    s += `<text x="${CX + oddsR(1.5) - 70}" y="${CY + 22}" text-anchor="end" font-family="Jost, Futura, sans-serif" font-size="13" fill="#93a0b8">kurz</text>`;
+    s += `<text x="${CX + oddsR(1.5) - 70}" y="${CY + 22}" text-anchor="end" font-family="DM Sans, sans-serif" font-size="13" fill="#aeb9cd">kurz</text>`;
     // vonkajší rám s ryskami
     s += `<path d="${arc(470)}" fill="none" stroke="#d2a185" stroke-opacity=".6" stroke-width="1.2"/>`;
     s += `<path d="${arc(492)}" fill="none" stroke="#f0cdb6" stroke-opacity=".45" stroke-width="1"/>`;
@@ -924,7 +924,7 @@
         s += `<circle data-k="${n}" style="--n:${n}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7" fill="none" stroke="rgba(210,161,133,.5)" stroke-width="1.2"/>`;
       }
     }
-    s += `<path d="M 104 168 A 56 56 0 0 1 216 168" fill="none" stroke="rgba(210,161,133,.35)"/><text x="160" y="160" text-anchor="middle" font-family="Jost, Futura, sans-serif" font-size="12" fill="#93a0b8">zakladateľ</text>`;
+    s += `<path d="M 104 168 A 56 56 0 0 1 216 168" fill="none" stroke="rgba(210,161,133,.35)"/><text x="160" y="160" text-anchor="middle" font-family="DM Sans, sans-serif" font-size="12" fill="#aeb9cd">zakladateľ</text>`;
     const map = $("seatMap");
     map.innerHTML = `<svg viewBox="0 8 320 168" aria-hidden="true">${s}</svg>`;
     map.setAttribute("aria-label", `Obsadené ${count} z ${total} VIP miest`);
