@@ -550,7 +550,7 @@
       <div class="faq">
         <details><summary>Kedy a kam tipy prídu?</summary><p>Do súkromného Telegram kanála, vždy 2 – 3 hodiny pred výkopom konkrétneho zápasu. Večer, keď sa zápasy dohrajú, príde vyhodnotenie dňa.</p></details>
         <details><summary>Koľko tipov dostanem denne?</summary><p>Toľko, koľko prejde pravidlami modelu – niekedy jeden, inokedy viac. Keď žiadny zápas nemá tip s dostatočnou hodnotou, tip nepošleme a dáme vedieť.</p></details>
-        <details><summary>Čo presne znamená „hodnota“?</summary><p>Porovnanie šance podľa modelu s kurzom. Keď model dáva výsledku 70 % a kurz je 1,60, očakávaný návrat je 0,70 × 1,60 = 1,12 – teda hodnota +12 %. TipRadar posiela len tipy s hodnotou aspoň +5 %.</p></details>
+        <details><summary>Čo presne znamená „hodnota“?</summary><p>Porovnanie šance podľa modelu s kurzom. Keď model dáva výsledku 68 % a kurz je 1,75, očakávaný návrat je 0,68 × 1,75 = 1,19 – teda hodnota +19 %. TipRadar posiela len tipy s hodnotou aspoň +5 % a kurzom aspoň <span class="minOdds">1,70</span>.</p></details>
         <details><summary>Čo je zisk v jednotkách a ROI?</summary><p>Jednotka je rovnaká suma na každý tip, napríklad 10 €. Zisk +5 jednotiek pri stávke 10 € na tip znamená +50 €. ROI hovorí, koľko percent z vložených peňazí sa vrátilo navyše.</p></details>
         <details><summary>Zaručujete výhru?</summary><p>Nie. Žiadny model nevie zaručiť výsledok zápasu. TipRadar vyberá stávky, pri ktorých je podľa štatistík šanca vyššia, než naznačuje kurz. Hodnotí sa dlhodobý výsledok, preto zverejňujeme aj prehraté tipy.</p></details>
         <details><summary>Ako overujete, že model funguje?</summary><p>Spätným testom na odohraných zápasoch a mesačnou kontrolou kalibrácie – či tipy s dôverou 70 % naozaj vychádzajú približne v 70 % prípadov. Tipy, ktoré model vyradil pre veľký rozpor s kurzami, si ticho evidujeme a porovnávame, kto mal pravdu.</p></details>
@@ -658,6 +658,8 @@
   }
 
   // ---------- sito ----------
+  // Minimálny kurz tipu – web ho pošle z nastavenia MIN_ODDS v Renderi (predvolene 1,70).
+  let MIN_ODDS = 1.7, sieveIdx = 0;
   const pois = [0.2, 0.32, 0.26, 0.14, 0.06, 0.02];
   const SIEVE = [
     { t: "Zápasy dňa", c: 120, h: "Zber dát o oboch tímoch", p: "Pri každom zápase model stiahne góly, rohy, karty, strely, fauly a ofsajdy z posledných zápasov – vlastné aj tie, ktoré tím dovoľuje súperom.",
@@ -666,21 +668,22 @@
       v: () => `<div class="pois" aria-label="Pravdepodobnosť počtu gólov">${pois.map((p, k) => `<div><span class="num">${Math.round(p * 100)} %</span><i class="${k === 1 ? "hot" : ""}" style="height:${(p / 0.32) * 100}%"></i><span>${k === 5 ? "5+" : k}</span></div>`).join("")}</div>` },
     { t: "Dôvera 65 – 75 %", c: 140, h: "Len v pásme, ktoré dáva zmysel", p: "Príliš isté tipy mávajú nízky kurz, príliš neisté často nevychádzajú. Do ďalšieho kroku pustíme len tipy s dôverou 65 – 75 %.",
       v: () => `<div class="band" aria-label="Pásmo dôvery 65 až 75 percent"><div class="band-track"></div><div class="band-zone"></div><span class="band-lbl" style="left:0">0 %</span><span class="band-lbl" style="left:65%">65 %</span><span class="band-lbl" style="left:75%">75 %</span><span class="band-lbl" style="left:100%">100 %</span></div>` },
-    { t: "Hodnota aspoň +5 %", c: 22, h: "Kurz musí byť vyšší, než šanca naznačuje", p: "Dôvera 70 % pri kurze 1,60 dáva 0,70 × 1,60 = 1,12, teda hodnotu +12 %. Tip s hodnotou pod +5 % vypadne, rovnako ako trh, ktorý stávkové kancelárie neponúkajú.",
-      v: () => `<ul class="checks"><li>Dôvera 70 %, kurz 1,60 → hodnota +12 %, tip prejde</li><li>Dôvera 70 %, kurz 1,45 → hodnota +2 %, tip vypadne</li></ul>` },
-    { t: "Kontrola rozporu", c: 9, h: "Keď sa model a trh príliš rozchádzajú", p: "Ak model vidí šancu o 15 – 25 bodov inak než stávkové kancelárie, radšej tip vyradí – takýto rozdiel často znamená informáciu, ktorú štatistika nevidí, napríklad zranenie. Vyradené tipy si ticho evidujeme a raz mesačne kontrolujeme, kto mal pravdu.",
+    { t: "Hodnota a kurz", c: 15, h: "Kurz musí byť vyšší, než šanca naznačuje", p: () => `Dôvera 68 % pri kurze 1,75 dáva 0,68 × 1,75 = 1,19, teda hodnotu +19 %. Tip s hodnotou pod +5 % alebo s kurzom pod ${fmt(MIN_ODDS, 2)} vypadne, rovnako ako trh, ktorý stávkové kancelárie neponúkajú.`,
+      v: () => `<ul class="checks"><li>Dôvera 68 %, kurz 1,75 → hodnota +19 %, tip prejde</li><li>Dôvera 70 %, kurz 1,45 → hodnota +2 %, tip vypadne</li>${MIN_ODDS > 1.6 ? `<li>Dôvera 70 %, kurz 1,60 → hodnota +12 %, ale kurz je pod ${fmt(MIN_ODDS, 2)}, tip vypadne</li>` : ""}</ul>` },
+    { t: "Kontrola rozporu", c: 7, h: "Keď sa model a trh príliš rozchádzajú", p: "Ak model vidí šancu o 15 – 25 bodov inak než stávkové kancelárie, radšej tip vyradí – takýto rozdiel často znamená informáciu, ktorú štatistika nevidí, napríklad zranenie. Vyradené tipy si ticho evidujeme a raz mesačne kontrolujeme, kto mal pravdu.",
       v: () => `<ul class="checks"><li>Pri tímoch s menej ako 5 zápasmi v sezóne sa odhad zmieša s kurzami</li><li>Hranica rozporu závisí od toho, koľko vzájomných zápasov máme</li></ul>` },
-    { t: "Tipy pre členov", c: 4, h: "Do Telegramu pred výkopom", p: "Najviac jeden tip na trh v zápase. Prídu 2 – 3 hodiny pred výkopom a večer ich vyhodnotíme podľa skutočného výsledku.",
+    { t: "Tipy pre členov", c: 3, h: "Do Telegramu pred výkopom", p: "Najviac jeden tip na trh v zápase. Prídu 2 – 3 hodiny pred výkopom a večer ich vyhodnotíme podľa skutočného výsledku.",
       v: () => `<div class="tg">⚽ <b>Nórsko – Portugalsko</b><br />🎯 Góly: <b>Pod 3,5</b><br />📈 Dôvera 66 % &nbsp; 💰 Kurz 1,72<br />💡 V posledných 5 vzájomných zápasoch padli v priemere 2 góly.<div class="tg-time">17:45</div></div>` },
   ];
   const maxLog = Math.log10(SIEVE[1].c);
   $("sieve").innerHTML = SIEVE.map((s, i) => `<li><button class="sv" role="tab" id="sv${i}" aria-controls="sievePanel" aria-selected="false"><span class="n">${i + 1}</span><span class="t">${s.t}</span><span class="c num">${s.c.toLocaleString("sk-SK")}</span><span class="bar"><i style="width:${Math.max(4, (Math.log10(s.c) / maxLog) * 100).toFixed(1)}%"></i></span></button></li>`).join("");
   const svs = Array.from(document.querySelectorAll(".sv"));
   function showSieve(i) {
+    sieveIdx = i;
     svs.forEach((b, k) => { b.setAttribute("aria-selected", String(k === i)); b.tabIndex = k === i ? 0 : -1; });
     $("sievePanel").setAttribute("aria-labelledby", svs[i].id);
     const s = SIEVE[i];
-    $("sievePanel").innerHTML = `<h3>${s.h}</h3><p>${s.p}</p><div class="viz">${s.v()}</div>`;
+    $("sievePanel").innerHTML = `<h3>${s.h}</h3><p>${typeof s.p === "function" ? s.p() : s.p}</p><div class="viz">${s.v()}</div>`;
   }
   svs.forEach((b, i) => {
     b.addEventListener("click", () => showSieve(i));
@@ -694,16 +697,16 @@
 
   // ---------- hodnota ----------
   const MARKETS = [
-    ["Výsledok zápasu", "Výhra domácich", 68, 1.62, "Domáci vyhrali 4 z posledných 5 domácich zápasov, hostia vonku pravidelne strácajú body."],
-    ["Góly", "Nad 2,5", 71, 1.58, "Očakávané góly 1,7 : 1,3 – obe mužstvá strieľajú aj inkasujú pravidelne."],
-    ["Oba tímy skórujú", "Áno", 67, 1.65, "Oba tímy skórovali v 8 z posledných 10 zápasov, obrany sú slabšie ako útoky."],
-    ["Rohy", "Nad 9,5", 69, 1.66, "Hostia púšťajú súperom v priemere 7 rohov na zápas a domáci ich radi využívajú."],
-    ["Karty", "Pod 3,5", 70, 1.6, "Pokojné tímy, v priemere 2,8 karty na zápas a bez veľkej rivality."],
-    ["Strely na bránu", "Nad 8,5", 66, 1.7, "Oba tímy smerujú na bránu 5 a viac striel za zápas."],
-    ["Fauly", "Pod 21,5", 67, 1.64, "Technické mužstvá s nízkym počtom faulov, spolu 18,9 na zápas."],
-    ["Ofsajdy", "Pod 3,5", 68, 1.62, "Hostia hrajú hlboko a zriedka chytajú ofsajd, spolu v priemere 2,4."],
-    ["Držanie lopty", "Domáci", 72, 1.55, "Domáci mávajú loptu 58 % času, hostia len 44 %."],
-    ["Strelec gólu", "Útočník domácich skóruje", 65, 1.7, "7 gólov v 9 zápasoch sezóny a v zostave je istý."],
+    ["Výsledok zápasu", "Výhra domácich", 68, 1.78, "Domáci vyhrali 4 z posledných 5 domácich zápasov, hostia vonku pravidelne strácajú body."],
+    ["Góly", "Nad 2,5", 71, 1.72, "Očakávané góly 1,7 : 1,3 – obe mužstvá strieľajú aj inkasujú pravidelne."],
+    ["Oba tímy skórujú", "Áno", 67, 1.74, "Oba tímy skórovali v 8 z posledných 10 zápasov, obrany sú slabšie ako útoky."],
+    ["Rohy", "Nad 9,5", 69, 1.75, "Hostia púšťajú súperom v priemere 7 rohov na zápas a domáci ich radi využívajú."],
+    ["Karty", "Pod 3,5", 70, 1.73, "Pokojné tímy, v priemere 2,8 karty na zápas a bez veľkej rivality."],
+    ["Strely na bránu", "Nad 8,5", 66, 1.76, "Oba tímy smerujú na bránu 5 a viac striel za zápas."],
+    ["Fauly", "Pod 21,5", 67, 1.72, "Technické mužstvá s nízkym počtom faulov, spolu 18,9 na zápas."],
+    ["Ofsajdy", "Pod 3,5", 68, 1.71, "Hostia hrajú hlboko a zriedka chytajú ofsajd, spolu v priemere 2,4."],
+    ["Držanie lopty", "Domáci", 72, 1.7, "Domáci mávajú loptu 58 % času, hostia len 44 %."],
+    ["Strelec gólu", "Útočník domácich skóruje", 65, 1.78, "7 gólov v 9 zápasoch sezóny a v zostave je istý."],
   ];
   let market = 1;
   $("chips").innerHTML = MARKETS.map((m, i) => `<button class="chip-btn" aria-pressed="false" data-i="${i}">${esc(m[0])}</button>`).join("");
@@ -724,9 +727,9 @@
     const lo = Math.min(pos(p), pos(implied)), hi = Math.max(pos(p), pos(implied));
     $("gap").style.left = lo + "%"; $("gap").style.width = (hi - lo) + "%"; $("gap").className = "scale-gap " + (p > implied ? "good" : "bad");
     $("vVal").textContent = `${value > 0 ? "+" : value < 0 ? "−" : ""}${Math.abs(value)} %`; $("vVal").className = "v-val num " + cls(value);
-    const band = p >= 65 && p <= 75, val = value >= 5;
-    $("vChecks").innerHTML = `<li class="${band ? "ok" : "no"}">Dôvera v pásme 65 – 75 %</li><li class="${val ? "ok" : "no"}">Hodnota aspoň +5 %</li>`;
-    $("vOut").innerHTML = band && val ? `<span class="pos">TipRadar by tento tip poslal.</span>` : `<span class="neg">Tento tip by sitom neprešiel.</span>`;
+    const band = p >= 65 && p <= 75, val = value >= 5, odd = o >= MIN_ODDS - 1e-9;
+    $("vChecks").innerHTML = `<li class="${band ? "ok" : "no"}">Dôvera v pásme 65 – 75 %</li><li class="${val ? "ok" : "no"}">Hodnota aspoň +5 %</li><li class="${odd ? "ok" : "no"}">Kurz aspoň ${fmt(MIN_ODDS, 2)}</li>`;
+    $("vOut").innerHTML = band && val && odd ? `<span class="pos">TipRadar by tento tip poslal.</span>` : `<span class="neg">Tento tip by sitom neprešiel.</span>`;
   }
   $("pRange").addEventListener("input", drawValue); $("oRange").addEventListener("input", drawValue);
   drawMarket();
@@ -812,6 +815,12 @@
   fetch("/api/public/vip-seats", { cache: "no-store" })
     .then((r) => (r.ok ? r.json() : Promise.reject()))
     .then((d) => {
+      const mo = Number(d.minOdds);
+      if (mo > 1 && Math.abs(mo - MIN_ODDS) > 1e-9) {
+        MIN_ODDS = mo;
+        document.querySelectorAll(".minOdds").forEach((el) => { el.textContent = fmt(mo, 2); });
+        drawValue(); showSieve(sieveIdx);
+      }
       const word = (n) => (n === 1 ? "voľné miesto" : n >= 2 && n <= 4 ? "voľné miesta" : "voľných miest");
       const fill = (count, total) => {
         $("vipSeatsText").textContent = `${count} / ${total}`;

@@ -1,3 +1,4 @@
+import { MIN_ODDS } from "./oddsMatcher";
 import { listLeads, deleteLead } from "./leadsStore";
 import { getMeta, setMeta } from "./metaStore";
 import * as crypto from "crypto";
@@ -511,7 +512,7 @@ app.get("/api/public/vip-seats", async (_req, res) => {
     // Predaj členstiev: SALES_OPEN=true na Renderi (kým nie je živnosť, len poradovník).
     // Pred spustením predaja: koľko ľudí sa zapísalo do poradovníka o VIP (len počet).
     const waitlistVip = (await listLeads().catch(() => [])).filter((l) => l.plan === "vip" || l.plan === "vip_waitlist").length;
-    res.json({ taken: Math.min(taken, total), total, salesOpen: process.env.SALES_OPEN === "true", waitlistVip });
+    res.json({ taken: Math.min(taken, total), total, salesOpen: process.env.SALES_OPEN === "true", waitlistVip, minOdds: MIN_ODDS });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
