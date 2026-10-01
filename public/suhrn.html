@@ -7,28 +7,28 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
   box-sizing: border-box;
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
   /* Svetlá verzia: porcelán (ako svetlá sekcia na tipradar.eu) */
-  --bg: #e4e7ed; --panel: #f3f4f7; --line: #cdd3de; --text: #0b1424; --muted: #4a5670;
-  --accent: #9d6f56; --accent-ink: #fbf7f3; --good: #2c7a62; --bad: #a8455a; --input: #fbfcfd;
-  --display: "DM Serif Display", "Didot", Georgia, serif;
-  --body: "DM Sans", "Avenir Next", "Helvetica Neue", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --bg: #eee6d4; --panel: #faf6ec; --line: #d9cdb3; --text: #0d0b09; --muted: #5a5244;
+  --accent: #8e6b2e; --accent-ink: #fff6df; --good: #2f6f4a; --bad: #8e3a47; --input: #fffaf0;
+  --display: "Cormorant Garamond", "Cormorant", Garamond, Georgia, serif;
+  --body: "Manrope", "Avenir Next", "Helvetica Neue", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
-/* Tmavá verzia: nočný zafír a ružové zlato ako na tipradar.eu */
+/* Tmavá verzia: ebenová čerň a zlato ako na tipradar.eu */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0b1424; --panel: #111d33; --line: #213150; --text: #eceef2; --muted: #aeb9cd;
-    --accent: #d2a185; --accent-ink: #2a1810; --good: #7cc4a9; --bad: #e07d8c; --input: #0e1830;
+    --bg: #0d0b09; --panel: #15120e; --line: #2e271d; --text: #efe8d8; --muted: #a89f8e;
+    --accent: #c9a55c; --accent-ink: #1f1607; --good: #8fc4a2; --bad: #d07a84; --input: #100e0b;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0b1424; --panel: #111d33; --line: #213150; --text: #eceef2; --muted: #aeb9cd;
-  --accent: #d2a185; --accent-ink: #2a1810; --good: #7cc4a9; --bad: #e07d8c; --input: #0e1830;
+  --bg: #0d0b09; --panel: #15120e; --line: #2e271d; --text: #efe8d8; --muted: #a89f8e;
+  --accent: #c9a55c; --accent-ink: #1f1607; --good: #8fc4a2; --bad: #d07a84; --input: #100e0b;
 }
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-padding-top: env(safe-area-inset-top, 0px); }
@@ -118,7 +118,7 @@ body.no-select { -webkit-user-select: none; user-select: none; }
 .seg button + button { border-left: 1px solid var(--line); }
 .seg button[aria-pressed="true"] { background: var(--accent); color: #141414; font-weight: 600; }
 .preview { position: sticky; top: calc(16px + env(safe-area-inset-top, 0px)); }
-canvas { display: block; width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--line); background: #0b1424; }
+canvas { display: block; width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--line); background: #0d0b09; }
 .preview.story canvas { width: auto; max-width: 100%; max-height: 78vh; margin: 0 auto; }
 textarea { min-height: 220px; resize: vertical; font-size: 14px; }
 .status { font-size: 13px; color: var(--muted); min-height: 1.5em; margin-top: 8px; }
@@ -173,17 +173,21 @@ h2 { font-size: 22px; }
 .top .brand { font-size: 24px; gap: 12px; }
 .radar-logo { width: 32px; height: 32px; display: block; flex: 0 0 auto; }
 .mono-badge { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--accent); display: grid; place-items: center; color: var(--accent); font-size: 17px; font-weight: 700; }
-.btn.primary { background: linear-gradient(180deg, #f0cdb6, #d2a185 60%, #c08f74); border-color: #c08f74; color: #2a1810; box-shadow: inset 0 1px 0 rgba(255,255,255,.45); }
-.seg button[aria-pressed="true"] { background: #d2a185; color: #2a1810; }
-/* DM Serif Display má jedinú hrúbku – nadpisy bez umelého stučnenia */
-h1, h2, .day-title, .stat b, .top .brand { font-weight: 400; letter-spacing: 0; }
+.btn.primary { background: linear-gradient(180deg, #e8d3a0, #c9a55c 60%, #b08d45); border-color: #b08d45; color: #1f1607; box-shadow: inset 0 1px 0 rgba(255,255,255,.45); }
+.seg button[aria-pressed="true"] { background: #c9a55c; color: #1f1607; }
+/* Cormorant Garamond je jemné písmo – nadpisy v hrúbke 600, o stupeň väčšie */
+h1, h2, .day-title, .stat b, .top .brand { font-weight: 600; letter-spacing: 0; }
+h2 { font-size: 24px; }
+.day-title { font-size: 34px; }
+.stat b { font-size: 31px; font-variant-numeric: lining-nums tabular-nums; }
+.top .brand { font-size: 27px; }
 .panel { border-radius: 18px; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="top">
-    <div class="brand"><svg class="radar-logo" viewBox="0 0 200 200" aria-hidden="true"><defs><linearGradient id="rmSuhrn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4d8c4"/><stop offset=".45" stop-color="#d2a185"/><stop offset="1" stop-color="#9d6f56"/></linearGradient></defs><circle cx="100" cy="100" r="92" fill="#111d33"/><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#d2a185" fill-opacity=".32"/><line x1="100" y1="100" x2="162.2" y2="37.8" stroke="url(#rmSuhrn)" stroke-width="7" stroke-linecap="round"/><circle cx="100" cy="100" r="92" fill="none" stroke="url(#rmSuhrn)" stroke-width="8"/><circle cx="100" cy="100" r="58" fill="none" stroke="#d2a185" stroke-opacity=".5" stroke-width="4"/><circle cx="100" cy="100" r="9" fill="#f0cdb6"/></svg>TipRadar</div>
+    <div class="brand"><svg class="radar-logo" viewBox="0 0 200 200" aria-hidden="true"><defs><linearGradient id="rmSuhrn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2e2b4"/><stop offset=".45" stop-color="#c9a55c"/><stop offset="1" stop-color="#8e6b2e"/></linearGradient></defs><circle cx="100" cy="100" r="92" fill="#15120e"/><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#c9a55c" fill-opacity=".32"/><line x1="100" y1="100" x2="162.2" y2="37.8" stroke="url(#rmSuhrn)" stroke-width="7" stroke-linecap="round"/><circle cx="100" cy="100" r="92" fill="none" stroke="url(#rmSuhrn)" stroke-width="8"/><circle cx="100" cy="100" r="58" fill="none" stroke="#c9a55c" stroke-opacity=".5" stroke-width="4"/><circle cx="100" cy="100" r="9" fill="#e8d3a0"/></svg>TipRadar</div>
     <span class="tag">Denný súhrn</span>
   </header>
   <h1>Denný súhrn výsledkov</h1>
@@ -648,9 +652,9 @@ h1, h2, .day-title, .stat b, .top .brand { font-weight: 400; letter-spacing: 0; 
   // ---------- kreslenie ----------
   const cv = $('cv'), ctx = cv.getContext('2d');
   // Farby a písma ako na tipradar.eu: závodná zelená, šampanské zlato, slonovinová.
-  const C = { bg: '#0b1424', bgDeep: '#070e1a', surface: '#111d33', line: '#22314f', gold: '#d2a185', goldDim: '#9d6f56', green: '#7cc4a9', red: '#e07d8c', text: '#eceef2', muted: '#aeb9cd' };
-  const F = (w, s) => w + ' ' + s + 'px "DM Sans", "Segoe UI", Arial, sans-serif';
-  const S = (w, s) => '400 ' + s + 'px "DM Serif Display", Georgia, serif'; // písmo má jedinú hrúbku
+  const C = { bg: '#0d0b09', bgDeep: '#080706', surface: '#15120e', line: '#2e271d', gold: '#c9a55c', goldDim: '#8e6b2e', green: '#8fc4a2', red: '#d07a84', text: '#efe8d8', muted: '#a89f8e' };
+  const F = (w, s) => w + ' ' + s + 'px "Manrope", "Segoe UI", Arial, sans-serif';
+  const S = (w, s) => (w >= 600 ? 700 : 600) + ' ' + Math.round(s * 1.12) + 'px "Cormorant Garamond", Georgia, serif'; // jemnejšie písmo – o stupeň väčšie a silnejšie
   function fit(text, max, font) {
     ctx.font = font;
     if (ctx.measureText(text).width <= max) return text;
@@ -662,12 +666,12 @@ h1, h2, .day-title, .stat b, .top .brand { font-weight: 400; letter-spacing: 0; 
     ctx.save(); ctx.translate(x, y);
     ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fillStyle = C.surface; ctx.fill();
     ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, r * 0.95, -Math.PI / 2, -Math.PI / 4); ctx.closePath();
-    ctx.fillStyle = 'rgba(210,161,133,0.32)'; ctx.fill();
+    ctx.fillStyle = 'rgba(201,165,92,0.32)'; ctx.fill();
     ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(-Math.PI / 4) * r * 0.95, Math.sin(-Math.PI / 4) * r * 0.95);
     ctx.strokeStyle = C.gold; ctx.lineWidth = r * 0.075; ctx.lineCap = 'round'; ctx.stroke();
     ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.strokeStyle = C.gold; ctx.lineWidth = r * 0.085; ctx.stroke();
-    ctx.beginPath(); ctx.arc(0, 0, r * 0.63, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(210,161,133,0.5)'; ctx.lineWidth = r * 0.045; ctx.stroke();
-    ctx.beginPath(); ctx.arc(0, 0, r * 0.1, 0, Math.PI * 2); ctx.fillStyle = '#f0cdb6'; ctx.fill();
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.63, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(201,165,92,0.5)'; ctx.lineWidth = r * 0.045; ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.1, 0, Math.PI * 2); ctx.fillStyle = '#e8d3a0'; ctx.fill();
     ctx.restore();
   }
   function badge(x, y, kind, r = 21) {
@@ -688,11 +692,11 @@ h1, h2, .day-title, .stat b, .top .brand { font-weight: 400; letter-spacing: 0; 
     ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, H);
     // jemné svetlo vpravo hore ako na webe
     const g = ctx.createRadialGradient(W * 0.8, H * 0.05, 0, W * 0.8, H * 0.05, H * 0.75);
-    g.addColorStop(0, 'rgba(40,64,110,0.95)'); g.addColorStop(1, 'rgba(40,64,110,0)');
+    g.addColorStop(0, 'rgba(64,50,22,0.9)'); g.addColorStop(1, 'rgba(64,50,22,0)');
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
     // zlatá linka pri spodnom okraji
     const lg = ctx.createLinearGradient(0, 0, W, 0);
-    lg.addColorStop(0, 'rgba(210,161,133,0)'); lg.addColorStop(0.5, 'rgba(210,161,133,0.55)'); lg.addColorStop(1, 'rgba(210,161,133,0)');
+    lg.addColorStop(0, 'rgba(201,165,92,0)'); lg.addColorStop(0.5, 'rgba(201,165,92,0.55)'); lg.addColorStop(1, 'rgba(201,165,92,0)');
     ctx.fillStyle = lg; ctx.fillRect(0, H - 3, W, 1.5);
     ctx.textBaseline = 'alphabetic';
   }
@@ -893,8 +897,8 @@ h1, h2, .day-title, .stat b, .top .brand { font-weight: 400; letter-spacing: 0; 
   initCloud();
   if (document.fonts && document.fonts.load) {
     Promise.all([
-      ...['700', '600', '500', '400'].map(w => document.fonts.load(w + ' 20px "DM Sans"')),
-      document.fonts.load('400 20px "DM Serif Display"'),
+      ...['700', '600', '500', '400'].map(w => document.fonts.load(w + ' 20px "Manrope"')),
+      document.fonts.load('600 20px "Cormorant Garamond"'), document.fonts.load('700 20px "Cormorant Garamond"'),
     ]).then(draw).catch(() => {});
     document.fonts.ready.then(draw);
   }
