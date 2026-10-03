@@ -27,13 +27,13 @@ const BTTS_MARKETS = ["Oba tímy skórujú", "Obaja tímy skórujú"];
 export const MIN_EXPECTED_VALUE = 1.05;
 
 /**
- * Minimálny kurz odporúčaného tipu (predvolene 1,60). Tip s nižším kurzom
+ * Minimálny kurz odporúčaného tipu (predvolene 1,50 – rovnako na webe aj v appke). Tip s nižším kurzom
  * do odporúčaní nepustíme, aj keď má dôveru aj hodnotu v poriadku.
  * Na webe sa dá zmeniť premennou MIN_ODDS v Renderi (napr. 1.70 alebo 1,70).
  */
 function parseMinOdds(raw: string | undefined): number {
   const n = Number(String(raw ?? "").trim().replace(",", "."));
-  return raw && Number.isFinite(n) && n >= 1.01 && n <= 10 ? n : 1.6;
+  return raw && Number.isFinite(n) && n >= 1.01 && n <= 10 ? n : 1.5;
 }
 export const MIN_ODDS = parseMinOdds(typeof process !== "undefined" ? process.env.MIN_ODDS : undefined);
 

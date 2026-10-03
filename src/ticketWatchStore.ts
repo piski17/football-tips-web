@@ -5,7 +5,7 @@ import axios from "axios";
 // Tiché sledovanie „tiketu dňa“ (skúška, nič sa neposiela členom).
 // Pri každej analýze zápasu si zapíšeme tipy, ktoré by mohli ísť na tiket:
 //   dôvera 70 – 75 %, kurz aspoň 1,50, hodnota aspoň +5 % (a nie podozrivo vysoká),
-//   bez rozporu so stávkovkami. Patria sem aj tipy vyradené len pre „kurz pod 1,60“.
+//   bez rozporu so stávkovkami. Patria sem aj tipy vyradené len pre „kurz pod minimom“ (MIN_ODDS).
 // Z nich sa každý deň poskladá najviac jeden tiket z 2 rôznych zápasov:
 //   spolu kurz aspoň 2,00 a hodnota aspoň +10 %. Po zápasoch sa tiket ticho vyhodnotí.
 // Úložisko: Upstash (hash id -> JSON), bez Upstash súbor data/ticket-legs.json.

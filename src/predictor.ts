@@ -759,12 +759,14 @@ export function predictMatch(
     (b) => b.probability >= MIN_PROBABILITY && b.probability <= MAX_PROBABILITY
   );
   // Posúdenie hodnoty podľa skutočného kurzu:
+  //  - stávkovky k zápasu zatiaľ nemajú kurzy -> vyradiť (hodnota sa nedá overiť;
+  //    odhadovaný kurz z dôvery 65 – 75 % by bol vždy len 1,33 – 1,54),
   //  - pod +5 %: tip nemá hodnotu -> vyradiť,
-  //  - kurz pod MIN_ODDS (predvolene 1,60) -> vyradiť,
+  //  - kurz pod MIN_ODDS (predvolene 1,50) -> vyradiť,
   //  - nad +25 % a málo odohraných zápasov v sezóne: model stojí na slabých
   //    dátach a rozdiel oproti trhu je takmer iste jeho chyba -> vyradiť,
   //  - nad +25 % a dát je dosť: tip ostáva, ale s upozornením,
-  //  - inak normálny tip. Tip bez dostupného kurzu ostáva bez zmeny.
+  //  - inak normálny tip. Keď sa kurzy objavia, pri ďalšej analýze tip prejde bežne.
   const fewGames =
     Math.min(homeStats.fixtures.played.total ?? 0, awayStats.fixtures.played.total ?? 0) < MIN_GAMES_FOR_TRUST;
   const pickPool: MarketPick[] = [];
@@ -780,13 +782,15 @@ export function predictMatch(
       b.rejectReason = "stávkovky tento trh neponúkajú";
       lowValueBets.push(b);
     } else if (ev == null) {
-      // Pre zápas zatiaľ nie sú žiadne kurzy - nevieme posúdiť, tip ostáva.
-      pickPool.push(b);
+      // Pre zápas zatiaľ nie sú žiadne kurzy - hodnotu ani minimálny kurz nevieme
+      // overiť, preto tip neodporučíme. Ručne ho stále možno pridať ("Uložiť aj tak").
+      b.rejectReason = "stávkovky zatiaľ neponúkajú kurz";
+      lowValueBets.push(b);
     } else if (ev < MIN_EXPECTED_VALUE) {
       b.rejectReason = "nízky kurz, bez hodnoty";
       lowValueBets.push(b);
     } else if (b.odds != null && b.odds < MIN_ODDS) {
-      // Kurz pod minimom (predvolene 1,60) - tip má hodnotu, ale zisk z výhry je malý.
+      // Kurz pod minimom (predvolene 1,50) - tip má hodnotu, ale zisk z výhry je malý.
       b.rejectReason = `kurz pod ${MIN_ODDS.toFixed(2).replace(".", ",")}`;
       lowValueBets.push(b);
     } else if (ev > SUSPICIOUS_EXPECTED_VALUE && fewGames) {
