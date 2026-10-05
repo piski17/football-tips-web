@@ -561,9 +561,21 @@ app.get("/api/public/track-record", async (_req, res) => {
         const sm = summarize(list);
         return { key, won: sm.won, total: sm.totalResolved, rate: sm.winRate, profit: sm.profit, withOdds: sm.withOdds };
       });
+    // Uzatvárací kurz: o koľko bol kurz pri tipe vyšší než kurz tesne pred výkopom.
+    const withClosing = all.filter(
+      (t) => typeof t.odds === "number" && t.odds > 1 && typeof t.closingOdds === "number" && t.closingOdds > 1
+    );
+    const clvAvg = withClosing.length
+      ? withClosing.reduce((sum, t) => sum + (t.odds! / t.closingOdds! - 1) * 100, 0) / withClosing.length
+      : null;
     res.json({
       ...summarize(all),
       month: { key: monthKey, ...summarize(inMonth) },
+      clv: {
+        total: withClosing.length,
+        beat: withClosing.filter((t) => t.odds! > t.closingOdds!).length,
+        avg: clvAvg === null ? null : Math.round(clvAvg * 10) / 10,
+      },
       recent,
       timeline: { unit: byWeek ? "week" : "day", points: timeline },
     });

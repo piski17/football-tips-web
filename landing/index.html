@@ -436,6 +436,17 @@
   @media (max-width: 640px) { .nav-links a.nav-tg .tg-text { display: none; } .nav-links a.nav-tg svg { width: 18px; height: 18px; } }
   .contact-strip a.tg-link { margin-left: 0; display: inline-flex; align-items: center; gap: 7px; }
   .contact-strip a.tg-link svg { width: 15px; height: 15px; }
+  .clv { display: grid; grid-template-columns: minmax(0, 240px) minmax(0, 1fr); gap: 40px; margin-top: 40px; padding: 30px 32px; border: 1px solid var(--rule-gold); background: var(--bg-2); }
+  .clv-num b { display: block; font: 400 clamp(44px, 5vw, 60px)/1 var(--serif); letter-spacing: -0.02em; }
+  .clv-num span { display: block; margin-top: 12px; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--faint); line-height: 1.6; }
+  .clv-text h3 { margin: 0 0 10px; }
+  .clv-text p { color: var(--muted); font-size: 15px; margin: 0; }
+  .clv-text .clv-line { margin-top: 14px; color: var(--text); }
+  @media (max-width: 760px) { .clv { grid-template-columns: minmax(0, 1fr); gap: 20px; padding: 24px 20px; } }
+  footer .rg { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 18px; font-size: 13.5px; color: var(--muted); text-align: left; max-width: 72ch; }
+  footer .rg > span:last-child { min-width: 0; }
+  footer .rg .age { display: inline-grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--gold); border-radius: 50%; color: var(--gold-hi); font: 600 12px/1 var(--sans); letter-spacing: 0; flex: none; }
+  footer .rg a { color: var(--gold-hi); text-decoration-color: var(--rule-gold); text-underline-offset: 3px; }
 </style>
 </head>
 <body>
@@ -554,6 +565,14 @@
         <div><b class="num" id="fRoi">–</b><span>ROI</span></div>
       </div>
       <p class="month-line" id="month">Načítavam…</p>
+      <div class="clv" id="clv" hidden>
+        <div class="clv-num"><b class="num" id="clvAvg">–</b><span>priemerný náskok pred uzatváracím kurzom</span></div>
+        <div class="clv-text">
+          <h3>Porážame uzatvárací kurz</h3>
+          <p>Tesne pred výkopom majú stávkové kancelárie najviac informácií a ich kurz je najpresnejší. Ak bol kurz v čase tipu vyšší, model odhalil hodnotu skôr ako trh. Je to najspoľahlivejší ukazovateľ kvality tipov, ešte skôr než sa to prejaví na zisku.</p>
+          <p class="clv-line" id="clvLine"></p>
+        </div>
+      </div>
 
       <div class="results">
         <div>
@@ -691,7 +710,8 @@
 
 <footer>
   <div class="wrap">
-    <p>TipRadar je analytický nástroj založený na štatistickom modeli, nie stávková kancelária ani finančné poradenstvo. Tipy sú informatívne a nezaručujú výsledok. Minulé výsledky nie sú zárukou budúcich. O tom, či a koľko staviť, rozhodujete vždy vy. Len pre osoby staršie ako 18 rokov, hrajte zodpovedne.</p>
+    <p>TipRadar je analytický nástroj založený na štatistickom modeli, nie stávková kancelária ani finančné poradenstvo. Tipy sú informatívne a nezaručujú výsledok. Minulé výsledky nie sú zárukou budúcich. O tom, či a koľko staviť, rozhodujete vždy vy.</p>
+    <p class="rg"><span class="age" aria-label="Len pre osoby staršie ako 18 rokov">18+</span><span>Hrajte zodpovedne a len za peniaze, ktorých stratu si môžete dovoliť. Ak vám stávkovanie prerastá cez hlavu, pomoc a register vylúčených osôb nájdete na <a href="https://www.urhh.sk" target="_blank" rel="noopener">urhh.sk</a>.</span></p>
     <p class="links"><a href="/ochrana-udajov">Ochrana osobných údajov</a></p>
   </div>
 </footer>
@@ -863,6 +883,17 @@
         t += ".";
       }
       $("month").innerHTML = t;
+      const c = d.clv;
+      if (c) {
+        $("clv").hidden = false;
+        if (c.total >= 10 && c.avg !== null) {
+          $("clvAvg").textContent = `${signed(c.avg, 1)} %`; $("clvAvg").className = "num " + cls(c.avg);
+          $("clvLine").innerHTML = `<strong>${c.beat} z ${c.total}</strong> ${ofTips(c.total)} malo v čase tipu vyšší kurz než tesne pred zápasom.`;
+        } else {
+          $("clvAvg").textContent = "zbierame";
+          $("clvLine").textContent = `Uzatvárací kurz sledujeme od 5. 10. 2026. Číslo zverejníme po prvých 10 tipoch${c.total ? `, zatiaľ ich je ${c.total}` : ""}.`;
+        }
+      }
     })
     .catch(() => {
       $("heroList").innerHTML = `<li class="empty">Tipy sa nepodarilo načítať. Skúste obnoviť stránku.</li>`;
