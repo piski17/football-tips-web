@@ -138,11 +138,27 @@ function basicAuth(req: Request, res: Response, next: NextFunction): void {
 }
 
 // Vlastná doména: tipradar.eu (a www) zobrazuje priamo prezentačnú stránku bez hesla,
-// appka s heslom beží na app.tipradar.eu (a naďalej aj na adrese .onrender.com).
+// appka s heslom beží na app.tipradar.eu (adresa .onrender.com na ňu presmeruje).
 const LANDING_HOSTS = (process.env.LANDING_HOSTS || "tipradar.eu,www.tipradar.eu")
   .split(",")
   .map((h) => h.trim().toLowerCase())
   .filter(Boolean);
+
+// Stará adresa *.onrender.com: návštevníkov stránok trvalo (301) presmerujeme na
+// vlastnú doménu – úvod a video na tipradar.eu, všetko ostatné na app.tipradar.eu.
+// API (vrátane Telegram webhooku a synchronizácie Mac appky), /health a POST
+// požiadavky necháme bez zmeny, aby nič neprestalo fungovať.
+app.use((req, res, next) => {
+  const host = (req.hostname || "").toLowerCase();
+  const isPage = (req.method === "GET" || req.method === "HEAD") && !req.path.startsWith("/api/") && req.path !== "/health";
+  if (!host.endsWith(".onrender.com") || !isPage) {
+    next();
+    return;
+  }
+  const toLanding = req.path === "/" || req.path === "/video" || req.path === "/video/";
+  res.redirect(301, (toLanding ? "https://tipradar.eu" : "https://app.tipradar.eu") + req.originalUrl);
+});
+
 app.get("/", (req, res, next) => {
   if (LANDING_HOSTS.includes((req.hostname || "").toLowerCase())) {
     res.sendFile(path.join(__dirname, "..", "landing", "index.html"));
