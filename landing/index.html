@@ -570,7 +570,7 @@
     <div class="wrap">
       <div class="eyebrow"><b>IV.</b>Členstvo</div>
       <h2>Dva spôsoby, ako sa pridať</h2>
-      <p class="muted" style="margin-top:16px;max-width:60ch">Oba plány dostávajú rovnaké denné tipy. VIP pridáva osobný kontakt so mnou, preto má len obmedzený počet miest. Vyberte si plán a zapíšte sa nižšie vo formulári.</p>
+      <p class="muted" style="margin-top:16px;max-width:60ch">Oba plány dostávajú rovnaké denné tipy. VIP pridáva osobný kontakt so mnou, preto má len obmedzený počet miest. Predaj zatiaľ nebeží. Zápis do poradovníka prebehne cez Telegram a zapísaným sa ozvem ako prvým.</p>
       <div class="plans">
         <article class="plan">
           <div class="plan-top"><h3>Premium</h3><span>pre jednotlivcov</span></div>
@@ -582,7 +582,7 @@
             <li><strong>Týždenný prehľad</strong> úspešnosti, zisku a ROI</li>
           </ul>
           <div class="plan-foot">
-            <a class="btn btn-ghost" id="premiumCta" href="#zapis" data-plan="premium">Vybrať Premium</a>
+            <a class="btn btn-ghost" id="premiumCta" href="https://t.me/TipRadarAiBot?start=premium" target="_blank" rel="noopener">Zapísať sa do poradovníka</a>
             <p class="small">Bez viazanosti, zrušíte jednou správou.</p>
           </div>
         </article>
@@ -597,7 +597,7 @@
             <li><strong>Kovová členská karta</strong> s vaším menom a číslom členstva</li>
           </ul>
           <div class="plan-foot">
-            <a class="btn" id="vipCta" href="#zapis" data-plan="vip">Vybrať VIP</a>
+            <a class="btn" id="vipCta" href="https://t.me/TipRadarAiBot?start=vip" target="_blank" rel="noopener">Zapísať sa do poradovníka</a>
             <p class="small">Kartu posielame poštou po prvom mesiaci členstva.</p>
             <div class="seats" id="vipSeats" hidden>
               <div id="vipSeatsText"></div>
@@ -612,27 +612,26 @@
   <section class="sec alt" id="zapis">
     <div class="wrap join">
       <div>
-        <div class="eyebrow"><b>V.</b>Poradovník</div>
-        <h2>Zapíšte sa medzi prvých</h2>
-        <p id="joinIntro">Predaj členstiev zatiaľ nebeží. Kto sa zapíše teraz, tomu sa ozvem ako prvému, a pri VIP má prednosť prvých 30 ľudí.</p>
-        <p>Stačí meno a e-mail. Nič neplatíte a k ničomu sa nezaväzujete. Zápis vás môžete kedykoľvek zrušiť jednou správou.</p>
+        <div class="eyebrow"><b>V.</b>Dotazník</div>
+        <h2>Máte otázku?</h2>
+        <p>Napíšte mi, čo vás zaujíma o modeli, tipoch alebo členstve. Odpoviem vám osobne na e-mail.</p>
       </div>
       <form class="form" id="joinForm" novalidate>
         <div class="fields">
-          <label class="field wide"><span class="lbl">Členstvo</span><span class="select"><select name="plan"><option value="vip" selected>VIP – 59 € mesačne</option><option value="premium">Premium – 29 € mesačne</option></select></span></label>
           <label class="field"><span class="lbl">Meno</span><input type="text" name="name" autocomplete="name" maxlength="80" required /></label>
           <label class="field"><span class="lbl">E-mail</span><input type="email" name="email" autocomplete="email" inputmode="email" maxlength="120" required /></label>
-          <label class="field wide"><span class="lbl">Otázka alebo poznámka <em>nepovinné</em></span><textarea name="note" rows="3" maxlength="500"></textarea></label>
+          <label class="field wide"><span class="lbl">Čo vás zaujíma</span><span class="select"><select name="plan"><option value="otazka" selected>Všeobecná otázka</option><option value="premium">Členstvo Premium</option><option value="vip">Členstvo VIP</option></select></span></label>
+          <label class="field wide"><span class="lbl">Vaša otázka</span><textarea name="note" rows="5" maxlength="500" required></textarea></label>
           <label class="hp" aria-hidden="true">Web <input type="text" name="web" tabindex="-1" autocomplete="off" /></label>
         </div>
-        <label class="consent"><input type="checkbox" name="consent" required /><span>Súhlasím so spracovaním mena a e-mailu na účel poradovníka. Podrobnosti v <a class="link" href="/ochrana-udajov" target="_blank">zásadách ochrany údajov</a>.</span></label>
+        <label class="consent"><input type="checkbox" name="consent" required /><span>Súhlasím so spracovaním mena a e-mailu, aby ste mi mohli odpovedať. Podrobnosti v <a class="link" href="/ochrana-udajov" target="_blank">zásadách ochrany údajov</a>.</span></label>
         <div class="submit">
-          <button class="btn" type="submit" id="joinBtn">Zapísať sa do poradovníka</button>
+          <button class="btn" type="submit" id="joinBtn">Odoslať otázku</button>
         </div>
         <p class="form-msg" id="joinMsg" role="status" aria-live="polite"></p>
         <div class="form-done" id="joinDone" hidden>
-          <b>Ďakujem, ste v poradovníku.</b>
-          <p>Keď spustím predaj, ozvem sa vám na e-mail ako prvým. Ak chcete dostávať novinky aj v Telegrame, <a class="link" id="joinDoneTg" href="https://t.me/TipRadarAiBot?start=vip" target="_blank" rel="noopener">otvorte TipRadar bota</a>.</p>
+          <b>Ďakujem, otázka je odoslaná.</b>
+          <p>Odpoviem vám osobne na e-mail.</p>
         </div>
       </form>
     </div>
@@ -766,15 +765,9 @@
   }
   $("stakeRange").addEventListener("input", drawCalc);
 
-  // ---------- formulár zápisu do poradovníka ----------
+  // ---------- dotazník (otázka na e-mail) ----------
   const form = $("joinForm");
-  const joinPlan = () => form.elements.plan.value || "vip";
-  const syncTg = () => { $("joinDoneTg").href = `https://t.me/TipRadarAiBot?start=${joinPlan()}`; };
-  form.elements.plan.addEventListener("change", syncTg);
-  document.querySelectorAll("[data-plan]").forEach((a) => a.addEventListener("click", () => {
-    form.elements.plan.value = a.dataset.plan; syncTg();
-  }));
-  syncTg();
+  const joinPlan = () => form.elements.plan.value || "otazka";
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const f = form.elements, msg = $("joinMsg"), btn = $("joinBtn");
@@ -783,8 +776,9 @@
     f.email.setAttribute("aria-invalid", String(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)));
     if (name.length < 2) { msg.textContent = "Napíšte prosím svoje meno."; f.name.focus(); return; }
     if (f.email.getAttribute("aria-invalid") === "true") { msg.textContent = "Skontrolujte prosím e-mail."; f.email.focus(); return; }
+    if (f.note.value.trim().length < 3) { msg.textContent = "Napíšte prosím svoju otázku."; f.note.focus(); return; }
     if (!f.consent.checked) { msg.textContent = "Bez súhlasu so spracovaním údajov vás nemôžeme zapísať."; return; }
-    msg.textContent = ""; btn.disabled = true; btn.textContent = "Zapisujem…";
+    msg.textContent = ""; btn.disabled = true; btn.textContent = "Odosielam…";
     try {
       const r = await fetch("/api/public/waitlist", { method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ plan: joinPlan(), name, email, note: f.note.value.trim(), consent: true, web: f.web.value }) });
@@ -793,7 +787,7 @@
       form.classList.add("sent"); $("joinDone").hidden = false;
     } catch (err) {
       msg.textContent = err.message || "Zápis sa nepodaril. Skúste to prosím o chvíľu znova.";
-      btn.disabled = false; btn.textContent = "Zapísať sa do poradovníka";
+      btn.disabled = false; btn.textContent = "Odoslať otázku";
     }
   });
 
@@ -812,11 +806,11 @@
       };
       if (!d.salesOpen) { show(Math.min(Number(d.waitlistVip) || 0, total), "V poradovníku na VIP"); return; }
       // Predaj beží (SALES_OPEN=true na Renderi)
-      $("joinBtn").textContent = "Požiadať o členstvo";
-      $("joinIntro").textContent = "Nechajte nám kontakt a do 24 hodín sa vám ozveme s prístupom do súkromného kanála.";
+      $("premiumCta").textContent = "Stať sa členom Premium";
       const taken = Math.min(Number(d.taken) || 0, total);
       show(taken, "Obsadené VIP miesta");
-      if (taken >= total) $("vipCta").textContent = "Zapísať sa ako náhradník";
+      if (taken >= total) { $("vipCta").textContent = "Zapísať sa ako náhradník"; $("vipCta").href = "https://t.me/TipRadarAiBot?start=vip_waitlist"; }
+      else $("vipCta").textContent = "Rezervovať miesto vo VIP";
     })
     .catch(() => {});
 

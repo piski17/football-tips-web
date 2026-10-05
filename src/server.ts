@@ -181,8 +181,8 @@ app.get(["/ochrana-udajov", "/ochrana-udajov/"], (_req, res) => {
   res.sendFile(path.join(__dirname, "..", "landing", "ochrana-udajov.html"));
 });
 
-// Formulár „Zapísať sa do poradovníka" na tipradar.eu (bez hesla).
-// Zapíše záujemcu do rovnakého poradovníka ako Telegram bot a pošle upozornenie adminovi.
+// Dotazník na tipradar.eu (bez hesla): meno, e-mail, téma a otázka.
+// Uloží sa do zoznamu záujemcov ako „otázka z webu" (nepočíta sa do VIP miest) a admin dostane upozornenie do Telegramu.
 const waitlistHits = new Map<string, number[]>();
 app.post("/api/public/waitlist", express.json({ limit: "10kb" }), async (req, res) => {
   const ip = String(req.headers["x-forwarded-for"] ?? req.ip ?? "").split(",")[0].trim();
@@ -203,13 +203,16 @@ app.post("/api/public/waitlist", express.json({ limit: "10kb" }), async (req, re
   const name = clean(b.name, 80);
   const email = clean(b.email, 120).toLowerCase();
   const note = clean(b.note, 500);
-  const plan = b.plan === "vip" ? "vip" : b.plan === "premium" ? "premium" : "";
+  const plan = b.plan === "vip" ? "vip" : b.plan === "premium" ? "premium" : b.plan === "otazka" ? "otazka" : "";
   if (name.length < 2) { res.status(400).json({ error: "Napíšte prosím svoje meno." }); return; }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { res.status(400).json({ error: "Skontrolujte prosím e-mail." }); return; }
-  if (!plan) { res.status(400).json({ error: "Vyberte prosím členstvo." }); return; }
+  if (!plan) { res.status(400).json({ error: "Vyberte prosím, čo vás zaujíma." }); return; }
+  if (note.length < 3) { res.status(400).json({ error: "Napíšte prosím svoju otázku." }); return; }
   if (b.consent !== true) { res.status(400).json({ error: "Bez súhlasu so spracovaním údajov vás nemôžeme zapísať." }); return; }
   try {
-    await recordLead({ chatId: `web:${email}`, plan, name, email, note: note || undefined, source: "web" });
+    // Otázka z dotazníka sa nepočíta do poradovníka VIP – téma ide len do poznámky.
+    const topic = plan === "vip" ? "Členstvo VIP: " : plan === "premium" ? "Členstvo Premium: " : "";
+    await recordLead({ chatId: `web:${email}`, plan: "otazka", name, email, note: topic + note, source: "web" });
     notifyAdminWebLead({ plan, name, email, note }).catch(() => {});
     res.json({ ok: true });
   } catch {
