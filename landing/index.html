@@ -69,7 +69,7 @@
   .nav .wrap { display: flex; align-items: center; gap: 32px; height: 64px; }
   .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font: 600 21px/1 var(--serif); letter-spacing: -0.01em; }
   .brand svg { width: 26px; height: 26px; }
-  .nav-links { display: flex; gap: 24px; margin-left: auto; }
+  .nav-links { display: flex; gap: 22px; margin-left: auto; }
   .nav-links a { text-decoration: none; font-size: 14.5px; color: var(--muted); }
   .nav-links a:hover { color: var(--text); }
   .nav .btn { min-height: 38px; padding: 0 16px; font-size: 14px; }
@@ -392,6 +392,8 @@
   .nav-links a.nav-form { color: var(--gold-hi); }
   .nav-links a, .nav .btn { white-space: nowrap; }
   @media (max-width: 1180px) { .nav-links { display: none; } .nav .btn { margin-left: auto; } }
+  .nav-links a.nav-tg { display: inline-flex; align-items: center; gap: 7px; }
+  .nav-links a.nav-tg svg { width: 14px; height: 14px; color: var(--gold); }
 </style>
 </head>
 <body>
@@ -408,9 +410,9 @@
       <a href="#hodnota">Hodnota</a>
       <a href="#vysledky">Výsledky</a>
       <a href="#clenstvo">Členstvo</a>
-      <a href="#zapis" class="nav-form">Formulár</a>
       <a href="#otazky">Otázky</a>
       <a href="/video">Video</a>
+      <a href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener" class="nav-tg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 4.2 2.9 11.4c-1.3.5-1.3 1.2-.2 1.6l4.8 1.5 1.8 5.6c.2.6.4.8.8.8.4 0 .6-.2.9-.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.8-1.3-1.5Zm-4 3.4-8.6 7.8-.3 3.4-1.6-5 10.2-6.4c.5-.3.9 0 .3.2Z" fill="currentColor"/></svg>Telegram</a>
     </div>
     <a class="btn" data-join href="#zapis">Zapísať sa</a>
   </div>
@@ -621,7 +623,6 @@
         <label class="consent"><input type="checkbox" name="consent" required /><span>Súhlasím so spracovaním mena a e-mailu na účel poradovníka. Podrobnosti v <a class="link" href="/ochrana-udajov" target="_blank">zásadách ochrany údajov</a>.</span></label>
         <div class="submit">
           <button class="btn" type="submit" id="joinBtn">Zapísať sa do poradovníka</button>
-          <span class="alt">Alebo cez <a class="link" id="joinTg" href="https://t.me/TipRadarAiBot?start=vip" target="_blank" rel="noopener">Telegram</a></span>
         </div>
         <p class="form-msg" id="joinMsg" role="status" aria-live="polite"></p>
         <div class="form-done" id="joinDone" hidden>
@@ -761,7 +762,7 @@
   // ---------- formulár zápisu do poradovníka ----------
   const form = $("joinForm");
   const joinPlan = () => (form.querySelector('input[name="plan"]:checked') || {}).value || "vip";
-  const syncTg = () => { const u = `https://t.me/TipRadarAiBot?start=${joinPlan()}`; $("joinTg").href = u; $("joinDoneTg").href = u; };
+  const syncTg = () => { $("joinDoneTg").href = `https://t.me/TipRadarAiBot?start=${joinPlan()}`; };
   form.querySelectorAll('input[name="plan"]').forEach((r) => r.addEventListener("change", syncTg));
   syncTg();
   form.addEventListener("submit", async (e) => {
