@@ -334,17 +334,24 @@
     h1 { font-size: 32px; }
     .price-card .amount { font-size: 38px; }
   }
+
+  /* odkaz späť na tipradar.eu */
+  a.brand-mark-fixed { text-decoration: none; z-index: 5; }
+  .back-home { position: absolute; z-index: 5; top: max(12px, env(safe-area-inset-top, 0px)); right: 20px; display: inline-flex; align-items: center; min-height: 38px; padding: 0 16px; border: 1px solid rgba(201,165,92,.45); border-radius: 2px; color: var(--gold-bright, #E8D3A0); font: 600 11.5px/1 var(--font-body); letter-spacing: .16em; text-transform: uppercase; text-decoration: none; background: rgba(11,11,12,.7); }
+  .back-home:hover { border-color: #C9A55C; }
+  @media (max-width: 480px) { .back-home { right: 12px; padding: 0 12px; font-size: 10.5px; letter-spacing: .12em; } }
 </style>
 </head>
 <body>
 
-<div class="brand-mark-fixed">
+<a class="brand-mark-fixed" href="https://tipradar.eu/" aria-label="TipRadar – späť na úvodnú stránku">
   <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <defs><linearGradient id="rmBrand" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2e2b4"/><stop offset=".45" stop-color="#c9a55c"/><stop offset="1" stop-color="#8e6b2e"/></linearGradient></defs>
     <circle cx="100" cy="100" r="92" fill="#15120e"/><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#c9a55c" fill-opacity=".32"/><line x1="100" y1="100" x2="162.2" y2="37.8" stroke="url(#rmBrand)" stroke-width="7" stroke-linecap="round"/><circle cx="100" cy="100" r="92" fill="none" stroke="url(#rmBrand)" stroke-width="8"/><circle cx="100" cy="100" r="58" fill="none" stroke="#c9a55c" stroke-opacity=".5" stroke-width="4"/><circle cx="100" cy="100" r="9" fill="#e8d3a0"/>
   </svg>
   TipRadar
-</div>
+</a>
+<a class="back-home" href="https://tipradar.eu/">← Späť na tipradar.eu</a>
 
 <div class="stage" id="stage">
 
