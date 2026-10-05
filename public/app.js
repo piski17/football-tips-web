@@ -2430,9 +2430,9 @@ async function renderLeads() {
         const date = isNaN(d.getTime()) ? "" : `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}`;
         return `<div class="tip-row lead-row">
           <div class="lead-main"><strong>${i + 1}. ${escapeHtml(l.name || "Neznámy")}</strong>${l.username ? ` <span class="muted">@${escapeHtml(l.username)}</span>` : ""}
-            <div class="muted small">${escapeHtml(LEAD_PLAN_LABEL[l.plan] || l.plan)} · zapísaný ${date} · ID ${escapeHtml(l.chatId)}</div></div>
+            <div class="muted small">${escapeHtml(LEAD_PLAN_LABEL[l.plan] || l.plan)} · zapísaný ${date} · ${l.email ? `formulár na webe · ${escapeHtml(l.email)}` : `ID ${escapeHtml(l.chatId)}`}</div>${l.note ? `<div class="muted small">„${escapeHtml(l.note)}“</div>` : ""}</div>
           <div class="lead-actions">
-            <a class="btn-ghost btn-mini" href="tg://user?id=${encodeURIComponent(l.chatId)}">Otvoriť chat</a>
+            ${l.email ? `<a class="btn-ghost btn-mini" href="mailto:${encodeURIComponent(l.email)}">Napísať e-mail</a>` : `<a class="btn-ghost btn-mini" href="tg://user?id=${encodeURIComponent(l.chatId)}">Otvoriť chat</a>`}
             <button class="btn-ghost btn-mini" data-lead-add="${escapeHtml(l.chatId)}">Pridať ako predplatiteľa</button>
             <button class="btn-ghost btn-mini" data-lead-del="${escapeHtml(l.chatId)}">Odstrániť</button>
           </div></div>`;
@@ -2443,8 +2443,8 @@ async function renderLeads() {
         const l = leads.find((x) => x.chatId === b.dataset.leadAdd);
         if (!l) return;
         document.getElementById("subName").value = l.name || "";
-        document.getElementById("subContact").value = l.username ? "@" + l.username : "";
-        document.getElementById("subTelegramChatId").value = l.chatId;
+        document.getElementById("subContact").value = l.email || (l.username ? "@" + l.username : "");
+        document.getElementById("subTelegramChatId").value = l.email ? "" : l.chatId;
         document.getElementById("subTier").value = l.plan === "vip" || l.plan === "vip_waitlist" ? "group" : "individual";
         document.getElementById("subName")?.scrollIntoView({ behavior: "smooth", block: "center" });
         showToast("Údaje sú vyplnené – skontroluj ich a klikni na Pridať.");

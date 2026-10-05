@@ -1,5 +1,5 @@
 import { MIN_ODDS, findOdds } from "./oddsMatcher";
-import { listLeads, deleteLead } from "./leadsStore";
+import { listLeads, deleteLead, recordLead } from "./leadsStore";
 import { getMeta, setMeta } from "./metaStore";
 import * as crypto from "crypto";
 import { recordShadow, listShadow, updateShadow, shadowEntriesFrom, ShadowEntry } from "./shadowStore";
@@ -38,7 +38,7 @@ import {
   notifyAdminExpiringSubscribers,
   sendCustomMessage,
   sendRenewalReminder,
-  sendTipResultToTelegram, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret } from "./telegram";
+  sendTipResultToTelegram, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, notifyAdminWebLead } from "./telegram";
 import { listSubscribers, addSubscriber, updateSubscriber, deleteSubscriber } from "./subscribersStore";
 import { Subscriber } from "./types";
 
@@ -106,6 +106,7 @@ function basicAuth(req: Request, res: Response, next: NextFunction): void {
     req.path === "/api/telegram/webhook" ||
     req.path === "/api/public/track-record" ||
     req.path === "/api/public/vip-seats" ||
+    req.path === "/api/public/waitlist" ||
     req.path === "/prezentacia" ||
     req.path === "/prezentacia/"
   ) {
@@ -173,6 +174,47 @@ app.get(["/video", "/video/"], (_req, res) => {
 // Ikonka stránky musí byť dostupná aj bez hesla (používa ju verejná prezentácia).
 app.get(["/favicon.svg", "/favicon-32.png", "/favicon-256.png"], (req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", req.path.slice(1)));
+});
+
+// Zásady ochrany osobných údajov (tipradar.eu/ochrana-udajov) – bez hesla.
+app.get(["/ochrana-udajov", "/ochrana-udajov/"], (_req, res) => {
+  res.sendFile(path.join(__dirname, "..", "landing", "ochrana-udajov.html"));
+});
+
+// Formulár „Zapísať sa do poradovníka" na tipradar.eu (bez hesla).
+// Zapíše záujemcu do rovnakého poradovníka ako Telegram bot a pošle upozornenie adminovi.
+const waitlistHits = new Map<string, number[]>();
+app.post("/api/public/waitlist", express.json({ limit: "10kb" }), async (req, res) => {
+  const ip = String(req.headers["x-forwarded-for"] ?? req.ip ?? "").split(",")[0].trim();
+  const now = Date.now();
+  const hits = (waitlistHits.get(ip) ?? []).filter((t) => now - t < 60 * 60 * 1000);
+  if (hits.length >= 10) {
+    res.status(429).json({ error: "Príliš veľa pokusov. Skúste to prosím o hodinu." });
+    return;
+  }
+  hits.push(now);
+  waitlistHits.set(ip, hits);
+  const b = req.body ?? {};
+  const clean = (v: unknown, max: number) => String(v ?? "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, max);
+  if (clean(b.web, 200)) {
+    res.json({ ok: true }); // pasca na roboty – tichý úspech
+    return;
+  }
+  const name = clean(b.name, 80);
+  const email = clean(b.email, 120).toLowerCase();
+  const note = clean(b.note, 500);
+  const plan = b.plan === "vip" ? "vip" : b.plan === "premium" ? "premium" : "";
+  if (name.length < 2) { res.status(400).json({ error: "Napíšte prosím svoje meno." }); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { res.status(400).json({ error: "Skontrolujte prosím e-mail." }); return; }
+  if (!plan) { res.status(400).json({ error: "Vyberte prosím členstvo." }); return; }
+  if (b.consent !== true) { res.status(400).json({ error: "Bez súhlasu so spracovaním údajov vás nemôžeme zapísať." }); return; }
+  try {
+    await recordLead({ chatId: `web:${email}`, plan, name, email, note: note || undefined, source: "web" });
+    notifyAdminWebLead({ plan, name, email, note }).catch(() => {});
+    res.json({ ok: true });
+  } catch {
+    res.status(502).json({ error: "Zápis sa nepodaril. Skúste to prosím o chvíľu znova." });
+  }
 });
 
 app.use(basicAuth);

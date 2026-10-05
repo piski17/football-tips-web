@@ -15,6 +15,9 @@ export interface Lead {
   plan: string; // premium | vip | vip_waitlist | clenstvo
   name: string;
   username?: string;
+  email?: string; // zápis cez formulár na tipradar.eu
+  note?: string;
+  source?: "telegram" | "web";
   firstAt: string; // kedy sa zapísal prvýkrát (poradie v poradovníku)
   lastAt: string;
 }
@@ -45,7 +48,7 @@ export async function listLeads(): Promise<Lead[]> {
 }
 
 /** Zapíše záujemcu. Pri opakovanom kliknutí zachová pôvodný dátum (poradie) a VIP má prednosť pred ostatnými. */
-export async function recordLead(input: { chatId: string; plan: string; name: string; username?: string }): Promise<void> {
+export async function recordLead(input: { chatId: string; plan: string; name: string; username?: string; email?: string; note?: string; source?: "telegram" | "web" }): Promise<void> {
   const now = new Date().toISOString();
   const existing = (await listLeads()).find((l) => l.chatId === input.chatId);
   const isVip = (p: string) => p === "vip" || p === "vip_waitlist";

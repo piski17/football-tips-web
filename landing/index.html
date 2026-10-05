@@ -369,6 +369,26 @@
   .form .submit .btn { flex: 0 0 auto; }
   .form .alt { font-size: 14px; color: var(--muted); }
   @media (max-width: 520px) { .form { padding: 28px 20px; } .opts { grid-template-columns: minmax(0, 1fr); } .form .submit .btn { width: 100%; } }
+  .fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 28px; }
+  .field { display: block; }
+  .field.wide { grid-column: 1 / -1; }
+  .field .lbl { display: block; margin-bottom: 8px; }
+  .field .lbl em { font-style: normal; color: var(--faint); letter-spacing: .12em; margin-left: 6px; }
+  .field input, .field textarea { width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--rule); border-radius: 0; padding: 14px 16px; font: 400 16px/1.4 var(--sans); transition: border-color .2s; }
+  .field textarea { resize: vertical; min-height: 92px; }
+  .field input:focus, .field textarea:focus { outline: none; border-color: var(--gold); }
+  .field input[aria-invalid="true"] { border-color: var(--loss); }
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+  .form { position: relative; }
+  .consent { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 12px; margin-top: 22px; font-size: 14px; color: var(--muted); cursor: pointer; }
+  .consent input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--gold); }
+  .form-msg { margin-top: 14px; font-size: 14.5px; color: var(--loss); min-height: 1.4em; }
+  .form-done { margin-top: 8px; border-top: 1px solid var(--rule-gold); padding-top: 22px; }
+  .form-done b { font: italic 400 26px/1.2 var(--serif); color: var(--gold-hi); }
+  .form-done p { margin-top: 10px; color: var(--muted); }
+  .form.sent .form-done { margin-top: 0; border-top: 0; padding-top: 0; }
+  .form.sent fieldset, .form.sent .fields, .form.sent .consent, .form.sent .submit { display: none; }
+  @media (max-width: 520px) { .fields { grid-template-columns: minmax(0, 1fr); } }
 </style>
 </head>
 <body>
@@ -576,7 +596,7 @@
         <div class="eyebrow"><b>V.</b>Poradovník</div>
         <h2>Zapíšte sa medzi prvých</h2>
         <p id="joinIntro">Predaj členstiev zatiaľ nebeží. Kto sa zapíše teraz, tomu sa ozvem ako prvému, a pri VIP má prednosť prvých 30 ľudí.</p>
-        <p>Zápis prebieha cez Telegram, kam potom chodia aj tipy. Nič neplatíte a k ničomu sa nezaväzujete.</p>
+        <p>Stačí meno a e-mail. Nič neplatíte a k ničomu sa nezaväzujete. Zápis vás môžete kedykoľvek zrušiť jednou správou.</p>
       </div>
       <form class="form" id="joinForm" novalidate>
         <fieldset>
@@ -586,14 +606,21 @@
             <label class="opt"><input type="radio" name="plan" value="vip" checked /><b>VIP</b><span>59 € mesačne, len 30 miest</span></label>
           </div>
         </fieldset>
-        <ol class="steps">
-          <li>Otvorí sa TipRadar v Telegrame.</li>
-          <li>Ťuknite na „Spustiť“ a bot vás zapíše do poradovníka.</li>
-          <li>Keď spustíme predaj, ozvem sa vám osobne.</li>
-        </ol>
+        <div class="fields">
+          <label class="field"><span class="lbl">Meno</span><input type="text" name="name" autocomplete="name" maxlength="80" required /></label>
+          <label class="field"><span class="lbl">E-mail</span><input type="email" name="email" autocomplete="email" inputmode="email" maxlength="120" required /></label>
+          <label class="field wide"><span class="lbl">Otázka alebo poznámka <em>nepovinné</em></span><textarea name="note" rows="3" maxlength="500"></textarea></label>
+          <label class="hp" aria-hidden="true">Web <input type="text" name="web" tabindex="-1" autocomplete="off" /></label>
+        </div>
+        <label class="consent"><input type="checkbox" name="consent" required /><span>Súhlasím so spracovaním mena a e-mailu na účel poradovníka. Podrobnosti v <a class="link" href="/ochrana-udajov" target="_blank">zásadách ochrany údajov</a>.</span></label>
         <div class="submit">
-          <button class="btn" type="submit" id="joinBtn">Zapísať sa cez Telegram</button>
-          <span class="alt">Nemáte Telegram? Napíšte na <a class="link" id="joinMail" href="mailto:tipradarai@gmail.com?subject=Poradovn%C3%ADk%20VIP">tipradarai@gmail.com</a></span>
+          <button class="btn" type="submit" id="joinBtn">Zapísať sa do poradovníka</button>
+          <span class="alt">Alebo cez <a class="link" id="joinTg" href="https://t.me/TipRadarAiBot?start=vip" target="_blank" rel="noopener">Telegram</a></span>
+        </div>
+        <p class="form-msg" id="joinMsg" role="status" aria-live="polite"></p>
+        <div class="form-done" id="joinDone" hidden>
+          <b>Ďakujem, ste v poradovníku.</b>
+          <p>Keď spustím predaj, ozvem sa vám na e-mail ako prvým. Ak chcete dostávať novinky aj v Telegrame, <a class="link" id="joinDoneTg" href="https://t.me/TipRadarAiBot?start=vip" target="_blank" rel="noopener">otvorte TipRadar bota</a>.</p>
         </div>
       </form>
     </div>
@@ -631,7 +658,7 @@
 <footer>
   <div class="wrap">
     <p>TipRadar je analytický nástroj založený na štatistickom modeli, nie stávková kancelária ani finančné poradenstvo. Tipy sú informatívne a nezaručujú výsledok. Minulé výsledky nie sú zárukou budúcich. O tom, či a koľko staviť, rozhodujete vždy vy. Len pre osoby staršie ako 18 rokov, hrajte zodpovedne.</p>
-    <p class="links">Telegram <a href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener">@TipRadarAiBot</a><br />E-mail <a href="mailto:tipradarai@gmail.com">tipradarai@gmail.com</a><br /><a href="/video">Video prezentácia</a></p>
+    <p class="links">Telegram <a href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener">@TipRadarAiBot</a><br />E-mail <a href="mailto:tipradarai@gmail.com">tipradarai@gmail.com</a><br /><a href="/video">Video prezentácia</a><br /><a href="/ochrana-udajov">Ochrana osobných údajov</a></p>
   </div>
 </footer>
 
@@ -725,15 +752,33 @@
   }
   $("stakeRange").addEventListener("input", drawCalc);
 
-  // ---------- formulár zápisu (otvorí Telegram bota s vybraným členstvom) ----------
-  const joinPlan = () => (document.querySelector('#joinForm input[name="plan"]:checked') || {}).value || "clenstvo";
-  const joinMail = () => { $("joinMail").href = `mailto:tipradarai@gmail.com?subject=${encodeURIComponent("Poradovník " + (joinPlan() === "vip" ? "VIP" : "Premium"))}`; };
-  document.querySelectorAll('#joinForm input[name="plan"]').forEach((r) => r.addEventListener("change", joinMail));
-  $("joinForm").addEventListener("submit", (e) => {
+  // ---------- formulár zápisu do poradovníka ----------
+  const form = $("joinForm");
+  const joinPlan = () => (form.querySelector('input[name="plan"]:checked') || {}).value || "vip";
+  const syncTg = () => { const u = `https://t.me/TipRadarAiBot?start=${joinPlan()}`; $("joinTg").href = u; $("joinDoneTg").href = u; };
+  form.querySelectorAll('input[name="plan"]').forEach((r) => r.addEventListener("change", syncTg));
+  syncTg();
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    window.open(`https://t.me/TipRadarAiBot?start=${joinPlan()}`, "_blank", "noopener");
+    const f = form.elements, msg = $("joinMsg"), btn = $("joinBtn");
+    const name = f.name.value.trim(), email = f.email.value.trim();
+    f.name.setAttribute("aria-invalid", String(name.length < 2));
+    f.email.setAttribute("aria-invalid", String(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)));
+    if (name.length < 2) { msg.textContent = "Napíšte prosím svoje meno."; f.name.focus(); return; }
+    if (f.email.getAttribute("aria-invalid") === "true") { msg.textContent = "Skontrolujte prosím e-mail."; f.email.focus(); return; }
+    if (!f.consent.checked) { msg.textContent = "Bez súhlasu so spracovaním údajov vás nemôžeme zapísať."; return; }
+    msg.textContent = ""; btn.disabled = true; btn.textContent = "Zapisujem…";
+    try {
+      const r = await fetch("/api/public/waitlist", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: joinPlan(), name, email, note: f.note.value.trim(), consent: true, web: f.web.value }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || "Zápis sa nepodaril. Skúste to prosím o chvíľu znova.");
+      form.classList.add("sent"); $("joinDone").hidden = false;
+    } catch (err) {
+      msg.textContent = err.message || "Zápis sa nepodaril. Skúste to prosím o chvíľu znova.";
+      btn.disabled = false; btn.textContent = "Zapísať sa do poradovníka";
+    }
   });
-  joinMail();
 
   // ---------- VIP miesta a predaj ----------
   fetch("/api/public/vip-seats", { cache: "no-store" })
@@ -753,8 +798,7 @@
       document.querySelectorAll("[data-join]").forEach((a) => { a.textContent = "Požiadať o členstvo"; });
       $("premiumCta").textContent = "Stať sa členom Premium";
       $("closingText").textContent = "Napíšte cez Telegram a do 24 hodín vás pridáme do súkromného kanála.";
-      $("joinBtn").textContent = "Pokračovať v Telegrame";
-      $("joinIntro").textContent = "Vyberte členstvo a pokračujte v Telegrame. Do 24 hodín vás pridáme do súkromného kanála.";
+      $("joinIntro").textContent = "Nechajte nám kontakt a do 24 hodín sa vám ozveme s prístupom do súkromného kanála.";
       const taken = Math.min(Number(d.taken) || 0, total);
       show(taken, "Obsadené VIP miesta");
       if (taken >= total) { $("vipCta").textContent = "Zapísať sa ako náhradník"; $("vipCta").href = "https://t.me/TipRadarAiBot?start=vip_waitlist"; }

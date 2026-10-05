@@ -470,6 +470,21 @@ async function notifyAdminLead(plan: string, from: any, chatId: number): Promise
   });
 }
 
+/** Upozorní administrátora na zápis cez formulár na tipradar.eu. */
+export async function notifyAdminWebLead(lead: { plan: string; name: string; email: string; note?: string }): Promise<void> {
+  const adminId = process.env.TELEGRAM_ADMIN_CHAT_ID;
+  if (!TELEGRAM_BOT_TOKEN || !adminId) return;
+  await callTelegramApi("sendMessage", {
+    chat_id: adminId,
+    text:
+      `🔔 <b>Nový záujemca o ${LEAD_LABEL[lead.plan] ?? lead.plan}</b> – formulár na tipradar.eu${salesOpen() ? "" : " (poradovník – predaj ešte nebeží)"}\n\n` +
+      `Meno: <b>${escapeTg(lead.name)}</b>\n` +
+      `E-mail: ${escapeTg(lead.email)}\n` +
+      (lead.note ? `Správa: ${escapeTg(lead.note)}\n` : ""),
+    parse_mode: "HTML",
+  });
+}
+
 export async function handleTelegramUpdate(update: any): Promise<void> {
   if (!TELEGRAM_BOT_TOKEN) return;
 
