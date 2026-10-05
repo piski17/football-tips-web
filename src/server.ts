@@ -1,4 +1,4 @@
-import { MIN_ODDS } from "./oddsMatcher";
+import { MIN_ODDS, findOdds } from "./oddsMatcher";
 import { listLeads, deleteLead } from "./leadsStore";
 import { getMeta, setMeta } from "./metaStore";
 import * as crypto from "crypto";
@@ -281,7 +281,8 @@ app.post("/api/analyze", async (req, res) => {
         awayCards: mixStat(awayExtStats.cards, homeExtStats.cardsAgainst),
       },
       marketOdds,
-      h2hStats
+      h2hStats,
+      { home: { goalsFor: homeExtStats.goalsFor ?? null, goalsAgainst: homeExtStats.goalsAgainst ?? null, games: homeExtStats.goalsGames ?? 0 }, away: { goalsFor: awayExtStats.goalsFor ?? null, goalsAgainst: awayExtStats.goalsAgainst ?? null, games: awayExtStats.goalsGames ?? 0 } }
     );
 
     // Tichá evidencia tipov vyradených pre rozpor so stávkovkami (na pozadí, nič neblokuje).
@@ -911,6 +912,87 @@ app.get("/api/shadow/summary", async (_req, res) => {
 });
 
 
+// ---- Uzatvárací kurz (CLV) ----
+// Tesne pred výkopom sa ku každému uloženému tipu zistí kurz ešte raz. Ak bol kurz
+// pri zverejnení tipu vyšší ako tesne pred zápasom, trh sa posunul smerom k nášmu
+// tipu – to je najspoľahlivejší znak, že model naozaj predbieha stávkovky, aj keď
+// je tipov zatiaľ málo a výsledky kolíšu.
+const CLOSING_BEFORE_KICKOFF_MS = 15 * 60 * 1000; // zisťuje sa najskôr 15 minút pred výkopom
+const CLOSING_GIVE_UP_MS = 3 * 24 * 60 * 60 * 1000; // ak server pred výkopom spal, skúša sa ešte 3 dni po zápase
+const CLOSING_RETRY_AFTER_KICKOFF_MS = 6 * 60 * 60 * 1000; // po výkope najviac raz za 6 hodín (šetrí API)
+let closingOddsRunning = false;
+const closingLastTry = new Map<number, number>();
+
+/** Tip čaká na uzatvárací kurz (staršie tipy spred zavedenia sa nedopĺňajú). */
+function needsClosingOdds(t: SavedTip, now = Date.now()): boolean {
+  return (
+    !(t.legs && t.legs.length) &&
+    !t.manualEntry &&
+    typeof t.odds === "number" &&
+    t.odds > 1 &&
+    t.closingOdds === undefined &&
+    now - new Date(t.matchDate).getTime() <= CLOSING_GIVE_UP_MS
+  );
+}
+
+async function captureClosingOdds(): Promise<void> {
+  if (closingOddsRunning) return;
+  closingOddsRunning = true;
+  try {
+    const now = Date.now();
+    const due = (await listTips()).filter((t) => {
+      const kickoff = new Date(t.matchDate).getTime();
+      if (!needsClosingOdds(t, now) || kickoff - now > CLOSING_BEFORE_KICKOFF_MS) return false;
+      const last = closingLastTry.get(t.fixtureId);
+      return !(now > kickoff && last && now - last < CLOSING_RETRY_AFTER_KICKOFF_MS);
+    });
+    const byFixture = new Map<number, SavedTip[]>();
+    for (const t of due) byFixture.set(t.fixtureId, [...(byFixture.get(t.fixtureId) ?? []), t]);
+    for (const [fixtureId, tips] of byFixture) {
+      closingLastTry.set(fixtureId, now);
+      const odds = await getFixtureOdds(fixtureId, true);
+      for (const t of tips) {
+        const match = odds.length ? findOdds(odds, t, t.homeTeam, t.awayTeam) : null;
+        if (match) await updateTip(t.id, { closingOdds: match.odd, closingOddsAt: new Date().toISOString() });
+      }
+    }
+  } catch (err) {
+    console.error("Uzatvárací kurz sa nepodarilo zistiť:", err);
+  } finally {
+    closingOddsRunning = false;
+  }
+}
+
+setInterval(() => void captureClosingOdds(), 10 * 60 * 1000); // kontrola každých 10 minút
+void captureClosingOdds();
+
+app.get("/api/clv/summary", async (_req, res) => {
+  try {
+    const tips = await listTips();
+    const done = tips.filter(
+      (t) => typeof t.odds === "number" && t.odds > 1 && typeof t.closingOdds === "number" && t.closingOdds > 1
+    );
+    const clv = (t: SavedTip) => (t.odds! / t.closingOdds! - 1) * 100;
+    const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
+    const markets = Array.from(new Set(done.map((t) => t.market)));
+    res.json({
+      total: done.length,
+      pending: tips.filter(needsClosingOdds).length,
+      avgClv: avg(done.map(clv)),
+      beat: done.filter((t) => t.odds! > t.closingOdds!).length,
+      worse: done.filter((t) => t.odds! < t.closingOdds!).length,
+      byMarket: markets
+        .map((m) => {
+          const list = done.filter((t) => t.market === m);
+          return { market: m, total: list.length, avgClv: avg(list.map(clv)) };
+        })
+        .sort((a, b) => b.total - a.total),
+    });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
 // ---- Tiché sledovanie tiketu dňa (2 zápasy, kurz spolu aspoň 2,00) ----
 /** Kandidáti na tiket: zapísaní pri analýzach + uložené samostatné tipy, ktoré spĺňajú pravidlá. */
 async function allTicketLegs(): Promise<{ legs: TicketLegCandidate[]; fromStore: Set<string> }> {
@@ -1016,6 +1098,8 @@ app.delete("/api/tips", async (_req, res) => {
 
 /** Vyhodnotí všetky čakajúce tipy a tikety, ktorých zápasy sa už skončili. */
 async function checkPendingResults(): Promise<void> {
+  // Ak server pred výkopom spal, uzatvárací kurz sa doplní aspoň teraz.
+  await captureClosingOdds();
   // vyradené tipy z tichej evidencie vyhodnotíme rovnako ako bežné tipy
   try {
     for (const e of (await listShadow()).filter((x) => x.status === "pending")) {

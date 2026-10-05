@@ -277,6 +277,11 @@ export interface TeamExtendedStatsAverages {
   /** Karty tímu (žlté + červené) a karty jeho súperov, priemer na zápas. */
   cards?: number | null;
   cardsAgainst?: number | null;
+  /** Góly tímu a jeho súperov v posledných zápasoch (novšie s väčšou váhou) – aktuálna forma. */
+  goalsFor?: number | null;
+  goalsAgainst?: number | null;
+  /** Z koľkých zápasov sa forma gólov počítala. */
+  goalsGames?: number;
 }
 
 /** Hodnota štatistiky z API - číslo, alebo percento ako text ("55%"). */
@@ -296,7 +301,7 @@ export async function getTeamExtendedStatsAverages(
   lastN: number = 10,
   asOf?: string
 ): Promise<TeamExtendedStatsAverages> {
-  const cacheKey = `extStatsAvg3:${leagueId}:${season}:${teamId}:${lastN}:${asOf ?? ""}`;
+  const cacheKey = `extStatsAvg4:${leagueId}:${season}:${teamId}:${lastN}:${asOf ?? ""}`;
   // Pri spätnom teste načítame viac zápasov a ponecháme len tie spred výkopu.
   const extra = asOf ? 15 : 0;
   const cached = getCached<TeamExtendedStatsAverages>(cacheKey);
@@ -417,7 +422,24 @@ export async function getTeamExtendedStatsAverages(
       return values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : null;
     };
 
+    // Forma podľa gólov: posledné zápasy tímu, každý starší zápas má váhu × 0,9.
+    const goalRows = fixtures
+      .filter((f: any) => f?.goals?.home != null && f?.goals?.away != null)
+      .sort((a: any, b: any) => new Date(b.fixture?.date).getTime() - new Date(a.fixture?.date).getTime())
+      .map((f: any) => {
+        const isHome = f.teams?.home?.id === teamId;
+        return { gf: Number(isHome ? f.goals.home : f.goals.away), ga: Number(isHome ? f.goals.away : f.goals.home) };
+      });
+    let gw = 0, gfSum = 0, gaSum = 0;
+    goalRows.forEach((r, i) => {
+      const w = Math.pow(0.9, i);
+      gw += w; gfSum += r.gf * w; gaSum += r.ga * w;
+    });
+
     const result: TeamExtendedStatsAverages = {
+      goalsFor: gw > 0 ? gfSum / gw : null,
+      goalsAgainst: gw > 0 ? gaSum / gw : null,
+      goalsGames: goalRows.length,
       corners: average("corners"),
       shotsOnGoal: average("shotsOnGoal"),
       fouls: average("fouls"),
@@ -890,9 +912,10 @@ export async function getFixtureLineupPlayerIds(
  * Pri chybe alebo chýbajúcich kurzoch vráti prázdny zoznam - analýza zápasu
  * tým nikdy nezlyhá, len tipy nebudú mať skutočný kurz.
  */
-export async function getFixtureOdds(fixtureId: number): Promise<MarketOdds[]> {
+export async function getFixtureOdds(fixtureId: number, fresh = false): Promise<MarketOdds[]> {
   const cacheKey = `odds:${fixtureId}`;
-  const cached = getCached<MarketOdds[]>(cacheKey);
+  // fresh = vždy čerstvé kurzy (uzatvárací kurz tesne pred výkopom), nie z pamäte.
+  const cached = fresh ? undefined : getCached<MarketOdds[]>(cacheKey);
   if (cached !== undefined) return cached;
   try {
     const collected = new Map<string, { bet: string; value: string; odds: number[] }>();

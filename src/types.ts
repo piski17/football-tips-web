@@ -245,6 +245,9 @@ export interface SavedTip {
   probability: number;
   /** Skutočný kurz v čase uloženia (medián stávkoviek), ak bol k dispozícii. */
   odds?: number | null;
+  /** Uzatvárací kurz – kurz toho istého tipu tesne pred výkopom (null = nepodarilo sa zistiť). */
+  closingOdds?: number | null;
+  closingOddsAt?: string;
   /** Tip (alebo niektorý zápas tiketu) bol vyradený kontrolou kurzu, ale uložený ručne - "mimo filtra". */
   overrideFilter?: boolean;
   /** Tip doplnený ručne po zápase (s výsledkom) - neprechádza automatickým vyhodnotením. */

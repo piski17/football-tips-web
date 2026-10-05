@@ -21,12 +21,33 @@ import {
   PlayerGoalPrediction,
   RawPlayerStat, H2HStats } from "./types";
 
-// Predvolené váhy jednotlivých faktorov v celkovom modeli.
+// Predvolené váhy jednotlivých faktorov pri výsledku zápasu (1/X/2).
+// Forma aj vzájomné zápasy sú už započítané v očakávaných góloch (forma podľa
+// gólov v posledných zápasoch, vzájomné zápasy 15/20/25 %), preto výsledok
+// vychádza len z Poissona (s korekciou remíz Dixona a Colesa). Predtým mala forma 22 % s pevným základom 40/28/32,
+// ktorý ťahal favoritov aj outsiderov k rovnakému odhadu, a vzájomné zápasy
+// sa rátali druhýkrát (13 %) aj zo zápasov starších ako 10 rokov.
 export const DEFAULT_WEIGHTS: PredictionWeights = {
-  poisson: 0.65,
-  form: 0.22,
-  h2h: 0.13,
+  poisson: 1,
+  form: 0,
+  h2h: 0,
 };
+
+/** Forma podľa gólov v posledných zápasoch (vážený priemer, novšie zápasy viac). */
+export interface RecentGoals {
+  goalsFor: number | null;
+  goalsAgainst: number | null;
+  games: number;
+}
+// Forma posunie očakávané góly približne o štvrtinu svojej odchýlky od sezóny
+// (tím, ktorý v posledných zápasoch dáva o 40 % viac, dostane približne +9 %).
+const FORM_WEIGHT = 0.25;
+const FORM_MIN_GAMES = 5;
+/** Pomer aktuálnej formy k sezónnemu priemeru (ohraničený, aby jeden výkyv nerozhodol). */
+function formRatio(recent: number | null | undefined, seasonAvg: number, seasonGames: number, recentGames: number): number {
+  if (recent == null || !isFinite(recent) || recentGames < FORM_MIN_GAMES || seasonGames < FORM_MIN_GAMES) return 1;
+  return clamp(recent / Math.max(seasonAvg || 0, 0.3), 0.67, 1.5);
+}
 
 // Záložné hodnoty, ak by sa ligový priemer nepodarilo dopočítať (napr. začiatok sezóny bez dát).
 const FALLBACK_LEAGUE_AVG_HOME_GOALS = 1.5;
@@ -231,6 +252,33 @@ export function poissonOutcomes(
   };
 }
 
+/**
+ * Výsledok zápasu (1/X/2) s korekciou Dixona a Colesa: obyčajný Poisson
+ * podceňuje remízy 0:0 a 1:1 a preceňuje 1:0 a 0:1. RHO = -0,13 je bežná
+ * hodnota z odbornej literatúry pre európske ligy. Používa sa len pri výsledku
+ * zápasu – góly a „oba tímy skórujú" sú kalibrované podľa spätného testu zvlášť.
+ */
+const DIXON_COLES_RHO = -0.13;
+export function dixonColesOutcomes(homeExpected: number, awayExpected: number, rho: number = DIXON_COLES_RHO): OutcomeProbabilities {
+  let homeWin = 0;
+  let draw = 0;
+  let awayWin = 0;
+  for (let h = 0; h <= MAX_GOALS; h++) {
+    for (let a = 0; a <= MAX_GOALS; a++) {
+      let tau = 1;
+      if (h === 0 && a === 0) tau = 1 - homeExpected * awayExpected * rho;
+      else if (h === 0 && a === 1) tau = 1 + homeExpected * rho;
+      else if (h === 1 && a === 0) tau = 1 + awayExpected * rho;
+      else if (h === 1 && a === 1) tau = 1 - rho;
+      const p = Math.max(0, tau) * poissonPmf(h, homeExpected) * poissonPmf(a, awayExpected);
+      if (h > a) homeWin += p;
+      else if (h === a) draw += p;
+      else awayWin += p;
+    }
+  }
+  return normalizeProbs({ homeWin, draw, awayWin });
+}
+
 export function formToScore(form: string): number {
   if (!form) return 1.3;
 
@@ -421,9 +469,20 @@ export function predictMatch(
     awayCards?: number | null;
   },
   marketOdds?: MarketOdds[],
-  h2hStats?: H2HStats[]
+  h2hStats?: H2HStats[],
+  recentGoals?: { home?: RecentGoals | null; away?: RecentGoals | null }
 ): PredictionResult {
   const xg = expectedGoals(homeStats, awayStats, leagueAvg, homePriorsResult, awayPriorsResult);
+  // Aktuálna forma podľa gólov: útok tímu v posledných zápasoch oproti sezóne
+  // a to, koľko v nich dostáva súper.
+  const rh = recentGoals?.home;
+  const ra = recentGoals?.away;
+  const homeAttackForm = formRatio(rh?.goalsFor, homeStats.goals.for.average.total, homeStats.fixtures.played.total, rh?.games ?? 0);
+  const homeDefenseForm = formRatio(rh?.goalsAgainst, homeStats.goals.against.average.total, homeStats.fixtures.played.total, rh?.games ?? 0);
+  const awayAttackForm = formRatio(ra?.goalsFor, awayStats.goals.for.average.total, awayStats.fixtures.played.total, ra?.games ?? 0);
+  const awayDefenseForm = formRatio(ra?.goalsAgainst, awayStats.goals.against.average.total, awayStats.fixtures.played.total, ra?.games ?? 0);
+  xg.home = clamp(xg.home * Math.pow(homeAttackForm * awayDefenseForm, FORM_WEIGHT), 0.15, 5);
+  xg.away = clamp(xg.away * Math.pow(awayAttackForm * homeDefenseForm, FORM_WEIGHT), 0.15, 5);
   // Vzájomné zápasy spresnia očakávané góly (výsledok, góly, oba tímy skórujú…).
   const h2hG = h2hGoals(h2h, fixture.homeTeam.id);
   if (h2hG && h2hG.weight > 0) {
@@ -447,7 +506,7 @@ export function predictMatch(
 
   const h2hResult = headToHeadOutcomes(h2h, fixture.homeTeam.id);
 
-  const finalProbs = combineProbs(poisson.probs, formProbs, h2hResult.probs, weights);
+  const finalProbs = combineProbs(dixonColesOutcomes(xg.home, xg.away), formProbs, h2hResult.probs, weights);
 
   const sorted = [finalProbs.homeWin, finalProbs.draw, finalProbs.awayWin].slice().sort((a, b) => b - a);
   const confidence = confidenceFromMargin(sorted);
@@ -541,13 +600,22 @@ export function predictMatch(
   const homeFormText = homeStats.form ? `forma: ${homeStats.form} (skóre ${homeFormScore.toFixed(1)})` : "forma zatiaľ neznáma (odohraných 0 zápasov, použitý priemerný odhad)";
   const awayFormText = awayStats.form ? `forma: ${awayStats.form} (skóre ${awayFormScore.toFixed(1)})` : "forma zatiaľ neznáma (odohraných 0 zápasov, použitý priemerný odhad)";
 
+  const recentLine = (name: string, r?: RecentGoals | null) =>
+    r && r.games >= FORM_MIN_GAMES && r.goalsFor != null && r.goalsAgainst != null
+      ? `${name} ${fmt1(r.goalsFor)}:${fmt1(r.goalsAgainst)}`
+      : null;
+  const recentParts = [recentLine(fixture.homeTeam.name, rh), recentLine(fixture.awayTeam.name, ra)].filter(Boolean);
+  const recentGoalsText = recentParts.length
+    ? ` Góly v posledných zápasoch (priemer, dané:dostané): ${recentParts.join(", ")}.`
+    : "";
+
   const resultExplanation = `${fixture.homeTeam.name} ${homeFormText}, ${
     fixture.awayTeam.name
   } ${awayFormText}. Posledných ${h2hResult.homeWins + h2hResult.draws + h2hResult.awayWins} vzájomných zápasov: ${
     h2hResult.homeWins
   }-${h2hResult.draws}-${h2hResult.awayWins} (výhry domáci-remízy-výhry hostia). Očakávané góly ${xg.home.toFixed(
     1
-  )}:${xg.away.toFixed(1)}.`;
+  )}:${xg.away.toFixed(1)}.${recentGoalsText}`;
 
   const golyExplanation = `Očakávaný súčet gólov v zápase je ${(xg.home + xg.away).toFixed(1)} (${
     fixture.homeTeam.name

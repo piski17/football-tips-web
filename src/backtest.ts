@@ -136,7 +136,8 @@ async function predictAsOf(fixture: Fixture, leagueId: number, season: number): 
       awayCards: mixStat(awayExt.cards, homeExt.cardsAgainst),
     },
     undefined,
-    h2hStats
+    h2hStats,
+    { home: { goalsFor: homeExt.goalsFor ?? null, goalsAgainst: homeExt.goalsAgainst ?? null, games: homeExt.goalsGames ?? 0 }, away: { goalsFor: awayExt.goalsFor ?? null, goalsAgainst: awayExt.goalsAgainst ?? null, games: awayExt.goalsGames ?? 0 } }
   );
   return (result.allCandidates ?? []).filter((c) => c.market !== "Strelec gólov");
 }

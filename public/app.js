@@ -1113,6 +1113,7 @@ saveTicketBtn.addEventListener("click", async () => {
 
 async function openTipsHistory() {
   void renderShadowSummary();
+  void renderClvSummary();
   void renderTicketWatch();
   tipsModal.hidden = false;
   tipsListEl.innerHTML = skeletonHtml(2);
@@ -2304,6 +2305,31 @@ document.getElementById("btStartBtn").addEventListener("click", async () => {
   }
 });
 
+
+// ---- Uzatvárací kurz (CLV): bol kurz pri zverejnení tipu lepší ako tesne pred výkopom? ----
+async function renderClvSummary() {
+  const el = document.getElementById("clvSummary");
+  if (!el) return;
+  try {
+    const d = await fetchJson("/api/clv/summary");
+    if (!d || (!d.total && !d.pending)) { el.textContent = ""; return; }
+    const sign = (v) => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(1).replace(".", ",") + " %";
+    let t = `Uzatvárací kurz: `;
+    if (d.total) {
+      t += `pri <strong>${d.beat} z ${d.total}</strong> tipov kurz do výkopu klesol (trh sa posunul k nášmu tipu), pri ${d.worse} stúpol. `;
+      t += `Priemerne sme mali o <strong class="${d.avgClv >= 0 ? "text-success" : "text-danger"}">${sign(d.avgClv)}</strong> lepší kurz ako tesne pred zápasom.`;
+      const markets = (d.byMarket || []).filter((m) => m.total >= 3);
+      if (markets.length) t += ` Podľa trhov: ${markets.map((m) => `${escapeHtml(m.market)} ${sign(m.avgClv)} (${m.total})`).join(", ")}.`;
+    } else {
+      t += `zatiaľ žiadny tip so zisteným kurzom tesne pred výkopom.`;
+    }
+    if (d.pending) t += ` Čaká: ${d.pending}.`;
+    el.innerHTML = t;
+    el.title = "Ak je kurz pri zverejnení tipu dlhodobo vyšší ako tesne pred výkopom, model predbieha stávkovky – to je spoľahlivejší znak kvality ako samotná úspešnosť pri malom počte tipov.";
+  } catch {
+    el.textContent = "";
+  }
+}
 
 // ---- Tichá evidencia tipov vyradených pre rozpor so stávkovkami ----
 async function renderShadowSummary() {
