@@ -387,7 +387,7 @@
   .form-done b { font: italic 400 26px/1.2 var(--serif); color: var(--gold-hi); }
   .form-done p { margin-top: 10px; color: var(--muted); }
   .form.sent .form-done { margin-top: 0; border-top: 0; padding-top: 0; }
-  .form.sent fieldset, .form.sent .fields, .form.sent .consent, .form.sent .submit { display: none; }
+  .form.sent .fields, .form.sent .consent, .form.sent .submit { display: none; }
   @media (max-width: 520px) { .fields { grid-template-columns: minmax(0, 1fr); } }
   .nav-links a.nav-form { color: var(--gold-hi); }
   .nav-links a, .nav .btn { white-space: nowrap; }
@@ -400,6 +400,11 @@
   .closing .eyebrow { justify-content: center; }
   .closing .eyebrow::before { content: ""; width: 48px; height: 1px; background: var(--gold); opacity: .6; }
   .closing .small { margin-top: 18px; letter-spacing: .08em; }
+  .select { position: relative; display: block; }
+  .select select { -webkit-appearance: none; appearance: none; width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--rule); border-radius: 0; padding: 14px 44px 14px 16px; font: 400 16px/1.4 var(--sans); cursor: pointer; }
+  .select select:focus { outline: none; border-color: var(--gold); }
+  .select::after { content: ""; position: absolute; right: 18px; top: 50%; width: 8px; height: 8px; border-right: 1.5px solid var(--gold); border-bottom: 1.5px solid var(--gold); transform: translateY(-70%) rotate(45deg); pointer-events: none; }
+  .form .fields { margin-top: 0; }
 </style>
 </head>
 <body>
@@ -613,14 +618,8 @@
         <p>Stačí meno a e-mail. Nič neplatíte a k ničomu sa nezaväzujete. Zápis vás môžete kedykoľvek zrušiť jednou správou.</p>
       </div>
       <form class="form" id="joinForm" novalidate>
-        <fieldset>
-          <legend>Ktoré členstvo vás zaujíma</legend>
-          <div class="opts">
-            <label class="opt"><input type="radio" name="plan" value="premium" /><b>Premium</b><span>29 € mesačne, denné tipy</span></label>
-            <label class="opt"><input type="radio" name="plan" value="vip" checked /><b>VIP</b><span>59 € mesačne, len 30 miest</span></label>
-          </div>
-        </fieldset>
         <div class="fields">
+          <label class="field wide"><span class="lbl">Členstvo</span><span class="select"><select name="plan"><option value="vip" selected>VIP – 59 € mesačne</option><option value="premium">Premium – 29 € mesačne</option></select></span></label>
           <label class="field"><span class="lbl">Meno</span><input type="text" name="name" autocomplete="name" maxlength="80" required /></label>
           <label class="field"><span class="lbl">E-mail</span><input type="email" name="email" autocomplete="email" inputmode="email" maxlength="120" required /></label>
           <label class="field wide"><span class="lbl">Otázka alebo poznámka <em>nepovinné</em></span><textarea name="note" rows="3" maxlength="500"></textarea></label>
@@ -769,12 +768,11 @@
 
   // ---------- formulár zápisu do poradovníka ----------
   const form = $("joinForm");
-  const joinPlan = () => (form.querySelector('input[name="plan"]:checked') || {}).value || "vip";
+  const joinPlan = () => form.elements.plan.value || "vip";
   const syncTg = () => { $("joinDoneTg").href = `https://t.me/TipRadarAiBot?start=${joinPlan()}`; };
-  form.querySelectorAll('input[name="plan"]').forEach((r) => r.addEventListener("change", syncTg));
+  form.elements.plan.addEventListener("change", syncTg);
   document.querySelectorAll("[data-plan]").forEach((a) => a.addEventListener("click", () => {
-    const r = form.querySelector(`input[name="plan"][value="${a.dataset.plan}"]`);
-    if (r) { r.checked = true; syncTg(); }
+    form.elements.plan.value = a.dataset.plan; syncTg();
   }));
   syncTg();
   form.addEventListener("submit", async (e) => {
