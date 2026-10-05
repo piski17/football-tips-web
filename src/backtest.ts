@@ -19,7 +19,7 @@ import {
   getFixtureResult,
   getFixtureCornersAndCards,
 } from "./apiClient";
-import { predictMatch, DEFAULT_WEIGHTS } from "./predictor";
+import { predictMatch, DEFAULT_WEIGHTS, LEGACY_WEIGHTS } from "./predictor";
 import { evaluateTip } from "./tipEvaluator";
 import { Fixture, MarketPick } from "./types";
 
@@ -71,6 +71,8 @@ export interface BacktestJob {
   finishedAt?: string;
   error?: string;
   report?: BacktestReport;
+  /** Ten istý test s pôvodným modelom (do 5. 10. 2026) – na porovnanie. */
+  reportLegacy?: BacktestReport;
 }
 
 const jobs = new Map<string, BacktestJob>();
@@ -81,8 +83,8 @@ function mixStat(own: number | null | undefined, opponentAllows: number | null |
   return (own + opponentAllows) / 2;
 }
 
-/** Tipy pre zápas výhradne z údajov spred výkopu. */
-async function predictAsOf(fixture: Fixture, leagueId: number, season: number): Promise<MarketPick[]> {
+/** Tipy pre zápas výhradne z údajov spred výkopu – nový aj pôvodný model z rovnakých údajov. */
+async function predictAsOf(fixture: Fixture, leagueId: number, season: number): Promise<{ current: MarketPick[]; legacy: MarketPick[] }> {
   const asOf = fixture.date;
   let [homeStats, awayStats, h2hAll, leagueAvg, homePriors, awayPriors, homeExt, awayExt] = await Promise.all([
     getTeamStatistics(leagueId, season, fixture.homeTeam.id, asOf),
@@ -108,13 +110,13 @@ async function predictAsOf(fixture: Fixture, leagueId: number, season: number): 
   }
   const h2hStats = await getHeadToHeadStats(h2h, fixture.homeTeam.name).catch(() => []);
 
-  const result = predictMatch(
+  const run = (legacy: boolean) => predictMatch(
     fixture,
     homeStats,
     awayStats,
     h2h,
     leagueAvg,
-    DEFAULT_WEIGHTS,
+    legacy ? LEGACY_WEIGHTS : DEFAULT_WEIGHTS,
     homePriors,
     awayPriors,
     mixStat(homeExt.corners, awayExt.cornersAgainst),
@@ -137,37 +139,43 @@ async function predictAsOf(fixture: Fixture, leagueId: number, season: number): 
     },
     undefined,
     h2hStats,
-    { home: { goalsFor: homeExt.goalsFor ?? null, goalsAgainst: homeExt.goalsAgainst ?? null, games: homeExt.goalsGames ?? 0 }, away: { goalsFor: awayExt.goalsFor ?? null, goalsAgainst: awayExt.goalsAgainst ?? null, games: awayExt.goalsGames ?? 0 } }
+    { home: { goalsFor: homeExt.goalsFor ?? null, goalsAgainst: homeExt.goalsAgainst ?? null, games: homeExt.goalsGames ?? 0 }, away: { goalsFor: awayExt.goalsFor ?? null, goalsAgainst: awayExt.goalsAgainst ?? null, games: awayExt.goalsGames ?? 0 } },
+    legacy
   );
-  return (result.allCandidates ?? []).filter((c) => c.market !== "Strelec gólov");
+  const picks = (legacy: boolean) => (run(legacy).allCandidates ?? []).filter((c) => c.market !== "Strelec gólov");
+  return { current: picks(false), legacy: picks(true) };
 }
 
 /** Skutočný výsledok každého kandidáta (vyšiel / nevyšiel), vrátené a neznáme vynechá. */
-async function outcomes(fixture: Fixture, picks: MarketPick[]): Promise<Sample[]> {
+async function outcomes(fixture: Fixture, pickSets: MarketPick[][]): Promise<Sample[][]> {
   const result = await getFixtureResult(fixture.fixtureId);
-  if (!result || result.homeGoals == null || result.awayGoals == null) return [];
+  if (!result || result.homeGoals == null || result.awayGoals == null) return pickSets.map(() => []);
   const extraTime = result.status !== "FT";
   const stats = await getFixtureCornersAndCards(fixture.fixtureId);
-  const out: Sample[] = [];
-  for (const p of picks) {
-    const bet = { homeTeam: fixture.homeTeam.name, awayTeam: fixture.awayTeam.name, market: p.market, selection: p.selection };
-    const isStat = ["Rohy", "Karty", "Strely na bránu", "Fauly", "Ofsajdy", "Vyššie držanie lopty"].includes(p.market);
-    if (isStat && extraTime) continue; // štatistiky s predĺžením nie sú porovnateľné
-    const status = evaluateTip(
-      bet,
-      result.homeGoals,
-      result.awayGoals,
-      stats.corners,
-      stats.cards,
-      null,
-      stats.shotsOnGoal,
-      stats.fouls,
-      stats.offsides,
-      stats.possession
-    );
-    if (status === "won" || status === "lost") out.push({ market: p.market, probability: p.probability, outcome: status });
-  }
-  return out;
+  const homeGoals = result.homeGoals;
+  const awayGoals = result.awayGoals;
+  return pickSets.map((picks) => {
+    const out: Sample[] = [];
+    for (const p of picks) {
+      const bet = { homeTeam: fixture.homeTeam.name, awayTeam: fixture.awayTeam.name, market: p.market, selection: p.selection };
+      const isStat = ["Rohy", "Karty", "Strely na bránu", "Fauly", "Ofsajdy", "Vyššie držanie lopty"].includes(p.market);
+      if (isStat && extraTime) continue; // štatistiky s predĺžením nie sú porovnateľné
+      const status = evaluateTip(
+        bet,
+        homeGoals,
+        awayGoals,
+        stats.corners,
+        stats.cards,
+        null,
+        stats.shotsOnGoal,
+        stats.fouls,
+        stats.offsides,
+        stats.possession
+      );
+      if (status === "won" || status === "lost") out.push({ market: p.market, probability: p.probability, outcome: status });
+    }
+    return out;
+  });
 }
 
 function buildReport(samples: Sample[], analyzed: number, failed: number): BacktestReport {
@@ -234,11 +242,14 @@ async function run(job: BacktestJob): Promise<void> {
     job.progress = { done: 0, total: selected.length };
 
     const samples: Sample[] = [];
+    const samplesLegacy: Sample[] = [];
     let analyzed = 0, failed = 0;
     for (const { f, leagueId } of selected) {
       try {
         const picks = await predictAsOf(f, leagueId, season);
-        samples.push(...(await outcomes(f, picks)));
+        const [cur, old] = await outcomes(f, [picks.current, picks.legacy]);
+        samples.push(...cur);
+        samplesLegacy.push(...old);
         analyzed++;
       } catch {
         failed++;
@@ -246,8 +257,10 @@ async function run(job: BacktestJob): Promise<void> {
       job.progress.done++;
       // priebežný výsledok, aby sa dal zobraziť už počas behu
       job.report = buildReport(samples, analyzed, failed);
+      job.reportLegacy = buildReport(samplesLegacy, analyzed, failed);
     }
     job.report = buildReport(samples, analyzed, failed);
+    job.reportLegacy = buildReport(samplesLegacy, analyzed, failed);
     job.status = "done";
   } catch (err: any) {
     job.status = "error";

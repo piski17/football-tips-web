@@ -33,6 +33,13 @@ export const DEFAULT_WEIGHTS: PredictionWeights = {
   h2h: 0,
 };
 
+/** Pôvodné váhy (do 5. 10. 2026) – len pre porovnanie starého a nového modelu v spätnom teste. */
+export const LEGACY_WEIGHTS: PredictionWeights = {
+  poisson: 0.65,
+  form: 0.22,
+  h2h: 0.13,
+};
+
 /** Forma podľa gólov v posledných zápasoch (vážený priemer, novšie zápasy viac). */
 export interface RecentGoals {
   goalsFor: number | null;
@@ -470,13 +477,15 @@ export function predictMatch(
   },
   marketOdds?: MarketOdds[],
   h2hStats?: H2HStats[],
-  recentGoals?: { home?: RecentGoals | null; away?: RecentGoals | null }
+  recentGoals?: { home?: RecentGoals | null; away?: RecentGoals | null },
+  /** true = pôvodný model (bez formy z gólov a bez korekcie remíz) – len pre spätný test. */
+  legacy: boolean = false
 ): PredictionResult {
   const xg = expectedGoals(homeStats, awayStats, leagueAvg, homePriorsResult, awayPriorsResult);
   // Aktuálna forma podľa gólov: útok tímu v posledných zápasoch oproti sezóne
   // a to, koľko v nich dostáva súper.
-  const rh = recentGoals?.home;
-  const ra = recentGoals?.away;
+  const rh = legacy ? null : recentGoals?.home;
+  const ra = legacy ? null : recentGoals?.away;
   const homeAttackForm = formRatio(rh?.goalsFor, homeStats.goals.for.average.total, homeStats.fixtures.played.total, rh?.games ?? 0);
   const homeDefenseForm = formRatio(rh?.goalsAgainst, homeStats.goals.against.average.total, homeStats.fixtures.played.total, rh?.games ?? 0);
   const awayAttackForm = formRatio(ra?.goalsFor, awayStats.goals.for.average.total, awayStats.fixtures.played.total, ra?.games ?? 0);
@@ -506,7 +515,8 @@ export function predictMatch(
 
   const h2hResult = headToHeadOutcomes(h2h, fixture.homeTeam.id);
 
-  const finalProbs = combineProbs(dixonColesOutcomes(xg.home, xg.away), formProbs, h2hResult.probs, weights);
+  const base1x2 = legacy ? poisson.probs : dixonColesOutcomes(xg.home, xg.away);
+  const finalProbs = combineProbs(base1x2, formProbs, h2hResult.probs, weights);
 
   const sorted = [finalProbs.homeWin, finalProbs.draw, finalProbs.awayWin].slice().sort((a, b) => b - a);
   const confidence = confidenceFromMargin(sorted);

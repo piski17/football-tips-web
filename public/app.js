@@ -2264,7 +2264,28 @@ function renderBacktest(job) {
     <table class="bt-table"><thead><tr><th>Pásmo</th><th class="num">Tipov</th><th class="num">Model</th><th class="num">Realita</th><th class="num">Rozdiel</th></tr></thead><tbody>${buckets}</tbody></table>
     <h4 style="margin:4px 0 0;">Podľa trhov</h4>
     <table class="bt-table"><thead><tr><th>Trh</th><th class="num">Tipov</th><th class="num">Model</th><th class="num">Realita</th><th class="num">Rozdiel</th><th class="num">V pásme 65–75 %</th></tr></thead><tbody>${markets}</tbody></table>
-    <p class="muted small">Rozdiel = realita mínus predpoveď v percentuálnych bodoch. Zelená: model sedí (do ±5 b.). Červená: model <strong>preceňuje</strong> – tipy vychádzajú menej často, než hovorí. Pri menej ako ~50 tipoch v riadku berte čísla len orientačne.</p>`;
+    <p class="muted small">Rozdiel = realita mínus predpoveď v percentuálnych bodoch. Zelená: model sedí (do ±5 b.). Červená: model <strong>preceňuje</strong> – tipy vychádzajú menej často, než hovorí. Pri menej ako ~50 tipoch v riadku berte čísla len orientačne.</p>
+    ${renderBacktestComparison(r, job.reportLegacy)}`;
+}
+
+/** Porovnanie nového modelu s pôvodným (do 5. 10. 2026) na tých istých zápasoch. */
+function renderBacktestComparison(r, old) {
+  if (!old || !old.samples) return "";
+  const err = (v) => (v == null ? "–" : fmtNum(v * 100, 1));
+  const band = (x) => (x && x.count ? `${pct(x.hitRate)} <span class="muted">(${x.count})</span>` : "–");
+  const rows = r.markets.map((m) => {
+    const o = old.markets.find((x) => x.market === m.market);
+    if (!o) return "";
+    const same = Math.abs(o.brier - m.brier) < 0.0005 && o.inBand.count === m.inBand.count;
+    const cls = same ? "" : m.brier < o.brier ? "bt-good" : "bt-bad";
+    return `<tr><td>${escapeHtml(m.market)}</td><td class="num">${err(o.brier)}</td><td class="num ${cls}">${err(m.brier)}</td><td class="num">${band(o.inBand)}</td><td class="num">${band(m.inBand)}</td></tr>`;
+  }).join("");
+  const ob = old.bandOverall, nb = r.bandOverall;
+  return `
+    <h4 style="margin:14px 0 0;">Nový model oproti pôvodnému (tie isté zápasy)</h4>
+    <div class="bt-summary">Pásmo 65 – 75 %: pôvodný model <strong>${ob.count}</strong> tipov, vyšlo <strong>${pct(ob.hitRate)}</strong> · nový model <strong>${nb.count}</strong> tipov, vyšlo <strong>${pct(nb.hitRate)}</strong>.</div>
+    <table class="bt-table"><thead><tr><th>Trh</th><th class="num">Chyba – pôvodný</th><th class="num">Chyba – nový</th><th class="num">V pásme – pôvodný</th><th class="num">V pásme – nový</th></tr></thead><tbody>${rows}</tbody></table>
+    <p class="muted small">Chyba = ako ďaleko boli percentá modelu od skutočnosti (Brierovo skóre × 100). <strong>Nižšia je lepšia.</strong> Zelená: nový model je presnejší, červená: horší. Trhy bez zmeny (rohy, karty…) vychádzajú rovnako.</p>`;
 }
 
 async function pollBacktest(id) {
