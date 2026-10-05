@@ -172,8 +172,8 @@ app.get("/", (req, res, next) => {
 app.get(["/video", "/video/"], (_req, res) => {
   res.sendFile(path.join(__dirname, "..", "landing", "video.html"));
 });
-// Ikonka stránky musí byť dostupná aj bez hesla (používa ju verejná prezentácia).
-app.get(["/favicon.svg", "/favicon-32.png", "/favicon-256.png"], (req, res) => {
+// Ikonka stránky a obrázok náhľadu pri zdieľaní musia byť dostupné aj bez hesla.
+app.get(["/favicon.svg", "/favicon-32.png", "/favicon-256.png", "/og-image.png"], (req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", req.path.slice(1)));
 });
 
