@@ -34,19 +34,31 @@ export const DEFAULT_WEIGHTS: PredictionWeights = {
 /** Pôvodné váhy – pre porovnanie v spätnom teste (rovnaké ako DEFAULT_WEIGHTS). */
 export const LEGACY_WEIGHTS: PredictionWeights = DEFAULT_WEIGHTS;
 
-// Kalibrácia podľa spätného testu (5. 10. 2026, 150 zápasov za 2 mesiace): pri týchto
-// trhoch model preceňoval istotu (napr. góly: model 71 %, realita 64 %; tipy v pásme
-// 65 – 75 % vychádzali len na 63 %). Odchýlku od 50 % preto zmenšíme koeficientom.
-// Rohy, ofsajdy a držanie lopty sedeli (±2 b.) – bez zmeny. Pri „oba tímy skórujú"
-// je to ďalšie zmenšenie navyše k BTTS_SHRINK. Hodnoty sú zaokrúhlené a nikde pod 0,5,
-// aby jeden test neurčil príliš veľa.
+// Kalibrácia podľa dvoch spätných testov (5. 10. 2026, po ~150 zápasoch): začiatok
+// sezóny (aug. – okt. 2026) a koniec sezóny (mar. – máj 2025). Odchýlka percent
+// od 50 % sa zmenší koeficientom k: p' = 50 + k × (p − 50).
+//  - MARKET_CALIBRATION: trhy, kde model preceňoval istotu v OBOCH testoch
+//    (fauly 69 → 64 %, strely 59 → 52 %, rohy 58 → 51 %) – platí celú sezónu.
+//  - EARLY_SEASON_CALIBRATION: trhy, kde model preceňoval len na začiatku sezóny
+//    (góly 71 → 64 %, karty, „oba tímy skórujú"), no na konci sezóny sedel
+//    (góly 69 → 70 %). Platí naplno do 5 odohraných zápasov, potom slabne a od
+//    15 zápasov sa nepoužije. Pri „oba tímy skórujú" je to navyše k BTTS_SHRINK.
 const MARKET_CALIBRATION: Record<string, number> = {
-  goly: 0.67,
   strely: 0.5,
   fauly: 0.72,
+  rohy: 0.6,
+};
+const EARLY_SEASON_CALIBRATION: Record<string, number> = {
+  goly: 0.67,
   karty: 0.5,
   btts: 0.5,
 };
+/** Koeficient kalibrácie pre trh pri danom počte odohraných zápasov v sezóne. */
+function calibrationFactor(category: string, gamesPlayed: number): number {
+  const early = clamp((15 - gamesPlayed) / 10, 0, 1);
+  const ke = EARLY_SEASON_CALIBRATION[category] ?? 1;
+  return (MARKET_CALIBRATION[category] ?? 1) * (1 - (1 - ke) * early);
+}
 
 /** Forma podľa gólov v posledných zápasoch (vážený priemer, novšie zápasy viac). */
 export interface RecentGoals {
@@ -747,8 +759,8 @@ export function predictMatch(
 
   if (!legacy) {
     for (const c of candidates) {
-      const k = MARKET_CALIBRATION[c.category];
-      if (k) c.probability = 50 + k * (c.probability - 50);
+      const k = calibrationFactor(c.category, minGamesPlayed);
+      if (k < 1) c.probability = 50 + k * (c.probability - 50);
     }
   }
 
