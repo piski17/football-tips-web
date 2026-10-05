@@ -230,12 +230,17 @@ async function run(job: BacktestJob): Promise<void> {
   try {
     const { leagueIds, season, from, to, maxFixtures } = job.params;
     const fixtures: { f: Fixture; leagueId: number }[] = [];
+    let lastError: string | null = null;
     for (const leagueId of leagueIds) {
       try {
         for (const f of await getFinishedFixtures(leagueId, season, from, to)) fixtures.push({ f, leagueId });
-      } catch {
-        // liga bez zápasov v období
+      } catch (err: any) {
+        // liga bez zápasov v období – alebo chyba API (napr. vyčerpaný denný limit požiadaviek)
+        lastError = err?.message ?? String(err);
       }
+    }
+    if (fixtures.length === 0 && lastError) {
+      throw new Error(`API-Football odmietlo požiadavku: ${lastError}`);
     }
     fixtures.sort((a, b) => new Date(b.f.date).getTime() - new Date(a.f.date).getTime());
     const selected = fixtures.slice(0, maxFixtures);
