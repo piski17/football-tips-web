@@ -73,7 +73,7 @@
   .nav-links a { text-decoration: none; font-size: 14.5px; color: var(--muted); }
   .nav-links a:hover { color: var(--text); }
   .nav .btn { min-height: 38px; padding: 0 16px; font-size: 14px; }
-  @media (max-width: 860px) { .nav-links { display: none; } .nav .btn { margin-left: auto; } }
+
 
   /* úvod */
   .hero { padding: 88px 0 96px; border-bottom: 1px solid var(--rule); }
@@ -391,9 +391,15 @@
   @media (max-width: 520px) { .fields { grid-template-columns: minmax(0, 1fr); } }
   .nav-links a.nav-form { color: var(--gold-hi); }
   .nav-links a, .nav .btn { white-space: nowrap; }
-  @media (max-width: 1180px) { .nav-links { display: none; } .nav .btn { margin-left: auto; } }
+  @media (max-width: 1180px) { .nav-links a:not(.nav-form):not(.nav-tg) { display: none; } }
+  @media (max-width: 420px) { .nav-links { gap: 16px; } .nav-links a { letter-spacing: .12em; font-size: 11px; } .brand { font-size: 20px; } .brand svg { width: 24px; height: 24px; } }
   .nav-links a.nav-tg { display: inline-flex; align-items: center; gap: 7px; }
   .nav-links a.nav-tg svg { width: 14px; height: 14px; color: var(--gold); }
+  .btn-tg { gap: 10px; }
+  .btn-tg svg { width: 16px; height: 16px; }
+  .closing .eyebrow { justify-content: center; }
+  .closing .eyebrow::before { content: ""; width: 48px; height: 1px; background: var(--gold); opacity: .6; }
+  .closing .small { margin-top: 18px; letter-spacing: .08em; }
 </style>
 </head>
 <body>
@@ -410,11 +416,11 @@
       <a href="#hodnota">Hodnota</a>
       <a href="#vysledky">Výsledky</a>
       <a href="#clenstvo">Členstvo</a>
+      <a href="#zapis" class="nav-form">Formulár</a>
       <a href="#otazky">Otázky</a>
+      <a href="#telegram" class="nav-tg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 4.2 2.9 11.4c-1.3.5-1.3 1.2-.2 1.6l4.8 1.5 1.8 5.6c.2.6.4.8.8.8.4 0 .6-.2.9-.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.8-1.3-1.5Zm-4 3.4-8.6 7.8-.3 3.4-1.6-5 10.2-6.4c.5-.3.9 0 .3.2Z" fill="currentColor"/></svg>Telegram</a>
       <a href="/video">Video</a>
-      <a href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener" class="nav-tg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 4.2 2.9 11.4c-1.3.5-1.3 1.2-.2 1.6l4.8 1.5 1.8 5.6c.2.6.4.8.8.8.4 0 .6-.2.9-.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.8-1.3-1.5Zm-4 3.4-8.6 7.8-.3 3.4-1.6-5 10.2-6.4c.5-.3.9 0 .3.2Z" fill="currentColor"/></svg>Telegram</a>
     </div>
-    <a class="btn" data-join href="#zapis">Zapísať sa</a>
   </div>
 </nav>
 
@@ -559,7 +565,7 @@
     <div class="wrap">
       <div class="eyebrow"><b>IV.</b>Členstvo</div>
       <h2>Dva spôsoby, ako sa pridať</h2>
-      <p class="muted" style="margin-top:16px;max-width:60ch">Oba plány dostávajú rovnaké denné tipy. VIP pridáva osobný kontakt so mnou, preto má len obmedzený počet miest. Predaj zatiaľ nebeží, zapísaným sa ozvem ako prvým.</p>
+      <p class="muted" style="margin-top:16px;max-width:60ch">Oba plány dostávajú rovnaké denné tipy. VIP pridáva osobný kontakt so mnou, preto má len obmedzený počet miest. Vyberte si plán a zapíšte sa nižšie vo formulári.</p>
       <div class="plans">
         <article class="plan">
           <div class="plan-top"><h3>Premium</h3><span>pre jednotlivcov</span></div>
@@ -571,7 +577,7 @@
             <li><strong>Týždenný prehľad</strong> úspešnosti, zisku a ROI</li>
           </ul>
           <div class="plan-foot">
-            <a class="btn btn-ghost" id="premiumCta" href="https://t.me/TipRadarAiBot?start=premium" target="_blank" rel="noopener">Zapísať sa do poradovníka</a>
+            <a class="btn btn-ghost" id="premiumCta" href="#zapis" data-plan="premium">Vybrať Premium</a>
             <p class="small">Bez viazanosti, zrušíte jednou správou.</p>
           </div>
         </article>
@@ -586,7 +592,7 @@
             <li><strong>Kovová členská karta</strong> s vaším menom a číslom členstva</li>
           </ul>
           <div class="plan-foot">
-            <a class="btn" id="vipCta" href="https://t.me/TipRadarAiBot?start=vip" target="_blank" rel="noopener">Zapísať sa do poradovníka</a>
+            <a class="btn" id="vipCta" href="#zapis" data-plan="vip">Vybrať VIP</a>
             <p class="small">Kartu posielame poštou po prvom mesiaci členstva.</p>
             <div class="seats" id="vipSeats" hidden>
               <div id="vipSeatsText"></div>
@@ -647,17 +653,19 @@
     </div>
   </section>
 
-  <section class="closing">
+  <section class="closing" id="telegram">
     <div class="wrap">
       <svg class="closing-mark" aria-hidden="true"><use href="#logo"/></svg>
       <div>
-        <h2>Chcete tipy od prvého dňa?</h2>
-        <p id="closingText">Zapíšte sa cez Telegram. Keď spustím predaj členstiev, ozvem sa vám ako prvým.</p>
+        <div class="eyebrow"><b>VII.</b>Telegram</div>
+        <h2>Chcete vedieť viac?</h2>
+        <p>Napíšte mi na Telegram. Rád odpoviem na otázky o modeli, tipoch aj členstve. Práve v Telegrame potom chodia členom aj všetky tipy.</p>
       </div>
       <div class="actions" style="margin-top:0">
-        <a class="btn" data-join href="#zapis">Zapísať sa</a>
+        <a class="btn btn-tg" href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 4.2 2.9 11.4c-1.3.5-1.3 1.2-.2 1.6l4.8 1.5 1.8 5.6c.2.6.4.8.8.8.4 0 .6-.2.9-.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.8-1.3-1.5Zm-4 3.4-8.6 7.8-.3 3.4-1.6-5 10.2-6.4c.5-.3.9 0 .3.2Z" fill="currentColor"/></svg>Otvoriť Telegram</a>
         <a class="btn btn-ghost" href="/video">Video prezentácia</a>
       </div>
+      <p class="small">@TipRadarAiBot</p>
     </div>
   </section>
 </main>
@@ -764,6 +772,10 @@
   const joinPlan = () => (form.querySelector('input[name="plan"]:checked') || {}).value || "vip";
   const syncTg = () => { $("joinDoneTg").href = `https://t.me/TipRadarAiBot?start=${joinPlan()}`; };
   form.querySelectorAll('input[name="plan"]').forEach((r) => r.addEventListener("change", syncTg));
+  document.querySelectorAll("[data-plan]").forEach((a) => a.addEventListener("click", () => {
+    const r = form.querySelector(`input[name="plan"][value="${a.dataset.plan}"]`);
+    if (r) { r.checked = true; syncTg(); }
+  }));
   syncTg();
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -802,14 +814,11 @@
       };
       if (!d.salesOpen) { show(Math.min(Number(d.waitlistVip) || 0, total), "V poradovníku na VIP"); return; }
       // Predaj beží (SALES_OPEN=true na Renderi)
-      document.querySelectorAll("[data-join]").forEach((a) => { a.textContent = "Požiadať o členstvo"; });
-      $("premiumCta").textContent = "Stať sa členom Premium";
-      $("closingText").textContent = "Napíšte cez Telegram a do 24 hodín vás pridáme do súkromného kanála.";
+      $("joinBtn").textContent = "Požiadať o členstvo";
       $("joinIntro").textContent = "Nechajte nám kontakt a do 24 hodín sa vám ozveme s prístupom do súkromného kanála.";
       const taken = Math.min(Number(d.taken) || 0, total);
       show(taken, "Obsadené VIP miesta");
-      if (taken >= total) { $("vipCta").textContent = "Zapísať sa ako náhradník"; $("vipCta").href = "https://t.me/TipRadarAiBot?start=vip_waitlist"; }
-      else $("vipCta").textContent = "Rezervovať miesto vo VIP";
+      if (taken >= total) $("vipCta").textContent = "Zapísať sa ako náhradník";
     })
     .catch(() => {});
 
