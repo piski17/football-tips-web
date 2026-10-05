@@ -15,11 +15,11 @@
 <link rel="apple-touch-icon" href="/favicon-256.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <style>
   /* ============================================================
      TipRadar – „Onyx“: ebenová čerň, ušľachtilé zlato a slonovina.
-     Art deco vejár ako radar, písmo Cormorant Garamond + Manrope.
+     Art deco vejár ako radar, písmo Playfair Display + Plus Jakarta Sans.
      ============================================================ */
   :root {
     --night: #0d0b09;        /* ebenová čerň – pozadie */
@@ -36,8 +36,8 @@
     --loss: #d07a84;         /* nevyšiel – bordó */
     --void: #8f887c;
     --line: rgba(201,165,92,.18);
-    --serif: "Cormorant Garamond", "Cormorant", Garamond, Georgia, serif;
-    --sans: "Manrope", "Avenir Next", "Helvetica Neue", system-ui, sans-serif;
+    --serif: "Playfair Display", Georgia, "Times New Roman", serif;
+    --sans: "Plus Jakarta Sans", "Avenir Next", "Helvetica Neue", system-ui, sans-serif;
   }
   *, *::before, *::after { box-sizing: border-box; }
   html { scroll-behavior: smooth; scroll-padding-top: 80px; -webkit-text-size-adjust: 100%; }
@@ -463,6 +463,9 @@
   ::selection { background: rgba(201,165,92,.35); color: #fff6df; }
 
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition-duration: .01ms !important; animation: none !important; } }
+
+  /* ---------- Písma: Playfair Display (nadpisy) + Plus Jakarta Sans (text) ---------- */
+  h1, h2, h3, .hero h1 { letter-spacing: -0.02em; }
 </style>
 </head>
 <body>
@@ -798,9 +801,9 @@
     [[1.5, "1,50"], [2.0, "2,00"], [2.5, "2,50"]].forEach(([o, lbl]) => {
       const r = oddsR(o);
       s += `<path d="${arc(r)}" fill="none" stroke="#c9a55c" stroke-opacity=".3" stroke-width="1" stroke-dasharray="2 5"/>`;
-      s += `<text x="${CX + r}" y="${CY + 22}" text-anchor="middle" font-family="Manrope, sans-serif" font-size="13" fill="#a89f8e">${lbl}</text>`;
+      s += `<text x="${CX + r}" y="${CY + 22}" text-anchor="middle" font-family="Plus Jakarta Sans, sans-serif" font-size="13" fill="#a89f8e">${lbl}</text>`;
     });
-    s += `<text x="${CX + oddsR(1.5) - 70}" y="${CY + 22}" text-anchor="end" font-family="Manrope, sans-serif" font-size="13" fill="#a89f8e">kurz</text>`;
+    s += `<text x="${CX + oddsR(1.5) - 70}" y="${CY + 22}" text-anchor="end" font-family="Plus Jakarta Sans, sans-serif" font-size="13" fill="#a89f8e">kurz</text>`;
     // vonkajší rám s ryskami
     s += `<path d="${arc(470)}" fill="none" stroke="#c9a55c" stroke-opacity=".6" stroke-width="1.2"/>`;
     s += `<path d="${arc(492)}" fill="none" stroke="#e8d3a0" stroke-opacity=".45" stroke-width="1"/>`;
@@ -1038,7 +1041,7 @@
         s += `<circle data-k="${n}" style="--n:${n}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7" fill="none" stroke="rgba(201,165,92,.5)" stroke-width="1.2"/>`;
       }
     }
-    s += `<path d="M 104 168 A 56 56 0 0 1 216 168" fill="none" stroke="rgba(201,165,92,.35)"/><text x="160" y="160" text-anchor="middle" font-family="Manrope, sans-serif" font-size="12" fill="#a89f8e">zakladateľ</text>`;
+    s += `<path d="M 104 168 A 56 56 0 0 1 216 168" fill="none" stroke="rgba(201,165,92,.35)"/><text x="160" y="160" text-anchor="middle" font-family="Plus Jakarta Sans, sans-serif" font-size="12" fill="#a89f8e">zakladateľ</text>`;
     const map = $("seatMap");
     map.innerHTML = `<svg viewBox="0 8 320 168" aria-hidden="true">${s}</svg>`;
     map.setAttribute("aria-label", `Obsadené ${count} z ${total} VIP miest`);
