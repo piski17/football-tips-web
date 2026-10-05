@@ -2430,7 +2430,7 @@ async function renderLeads() {
         const date = isNaN(d.getTime()) ? "" : `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}`;
         return `<div class="tip-row lead-row">
           <div class="lead-main"><strong>${i + 1}. ${escapeHtml(l.name || "Neznámy")}</strong>${l.username ? ` <span class="muted">@${escapeHtml(l.username)}</span>` : ""}
-            <div class="muted small">${escapeHtml(LEAD_PLAN_LABEL[l.plan] || l.plan)} · zapísaný ${date} · ${l.email ? `dotazník na webe · ${escapeHtml(l.email)}` : `ID ${escapeHtml(l.chatId)}`}</div>${l.note ? `<div class="muted small">„${escapeHtml(l.note)}“</div>` : ""}</div>
+            <div class="muted small">${escapeHtml(LEAD_PLAN_LABEL[l.plan] || l.plan)} · zapísaný ${date} · ${l.email ? `formulár na webe · ${escapeHtml(l.email)}` : `ID ${escapeHtml(l.chatId)}`}</div>${l.note ? `<div class="muted small">„${escapeHtml(l.note)}“</div>` : ""}</div>
           <div class="lead-actions">
             ${l.email ? `<a class="btn-ghost btn-mini" href="mailto:${encodeURIComponent(l.email)}">Napísať e-mail</a>` : `<a class="btn-ghost btn-mini" href="tg://user?id=${encodeURIComponent(l.chatId)}">Otvoriť chat</a>`}
             <button class="btn-ghost btn-mini" data-lead-add="${escapeHtml(l.chatId)}">Pridať ako predplatiteľa</button>

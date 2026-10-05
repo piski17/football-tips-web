@@ -38,7 +38,8 @@ import {
   notifyAdminExpiringSubscribers,
   sendCustomMessage,
   sendRenewalReminder,
-  sendTipResultToTelegram, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, notifyAdminWebLead } from "./telegram";
+  sendTipResultToTelegram, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret } from "./telegram";
+import { sendAdminEmail } from "./mailer";
 import { listSubscribers, addSubscriber, updateSubscriber, deleteSubscriber } from "./subscribersStore";
 import { Subscriber } from "./types";
 
@@ -181,8 +182,8 @@ app.get(["/ochrana-udajov", "/ochrana-udajov/"], (_req, res) => {
   res.sendFile(path.join(__dirname, "..", "landing", "ochrana-udajov.html"));
 });
 
-// Dotazník na tipradar.eu (bez hesla): meno, e-mail, téma a otázka.
-// Uloží sa do zoznamu záujemcov ako „otázka z webu" (nepočíta sa do VIP miest) a admin dostane upozornenie do Telegramu.
+// Formulár „Máte otázku?" na tipradar.eu (bez hesla): meno, e-mail, téma a otázka.
+// Uloží sa do zoznamu záujemcov ako „otázka z webu" (nepočíta sa do VIP miest) a admin dostane e-mail (odpoveď ide priamo pisateľovi).
 const waitlistHits = new Map<string, number[]>();
 app.post("/api/public/waitlist", express.json({ limit: "10kb" }), async (req, res) => {
   const ip = String(req.headers["x-forwarded-for"] ?? req.ip ?? "").split(",")[0].trim();
@@ -213,7 +214,13 @@ app.post("/api/public/waitlist", express.json({ limit: "10kb" }), async (req, re
     // Otázka z dotazníka sa nepočíta do poradovníka VIP – téma ide len do poznámky.
     const topic = plan === "vip" ? "Členstvo VIP: " : plan === "premium" ? "Členstvo Premium: " : "";
     await recordLead({ chatId: `web:${email}`, plan: "otazka", name, email, note: topic + note, source: "web" });
-    notifyAdminWebLead({ plan, name, email, note }).catch(() => {});
+    const topicLabel = plan === "vip" ? "Členstvo VIP" : plan === "premium" ? "Členstvo Premium" : "Všeobecná otázka";
+    sendAdminEmail(`Nová správa z formulára na tipradar.eu – ${name}`, [
+      ["Meno", name],
+      ["E-mail", email],
+      ["Téma", topicLabel],
+      ["Správa", note],
+    ], email).catch(() => {});
     res.json({ ok: true });
   } catch {
     res.status(502).json({ error: "Zápis sa nepodaril. Skúste to prosím o chvíľu znova." });

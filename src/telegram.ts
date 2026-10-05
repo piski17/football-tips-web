@@ -1,5 +1,6 @@
 import { recordLead } from "./leadsStore";
 import axios from "axios";
+import { sendAdminEmail } from "./mailer";
 import { SavedTip } from "./types";
 
 /** Slovenský tvar podľa počtu: plural(3, "tip", "tipy", "tipov") -> "3 tipy". */
@@ -456,6 +457,14 @@ function personName(from: any): string {
 
 /** Upozorní ťa (administrátora), že niekto klikol na tlačidlo členstva na webe. */
 async function notifyAdminLead(plan: string, from: any, chatId: number): Promise<void> {
+  // Zápis do poradovníka príde aj na e-mail (ak je nastavený RESEND_API_KEY a ADMIN_EMAIL).
+  await sendAdminEmail(`Nový záujemca o ${LEAD_LABEL[plan] ?? plan} – TipRadar`, [
+    ["Členstvo", LEAD_LABEL[plan] ?? plan],
+    ["Meno", personName(from)],
+    ...(from?.username ? ([["Telegram", "@" + from.username]] as [string, string][]) : []),
+    ["Telegram ID", String(chatId)],
+    ["Stav", salesOpen() ? "predaj beží" : "poradovník – predaj ešte nebeží"],
+  ]);
   const adminId = process.env.TELEGRAM_ADMIN_CHAT_ID;
   if (!adminId || String(adminId) === String(chatId)) return;
   await callTelegramApi("sendMessage", {
@@ -466,21 +475,6 @@ async function notifyAdminLead(plan: string, from: any, chatId: number): Promise
       (from?.username ? `Telegram: @${escapeTg(from.username)}\n` : "") +
       `Telegram ID: <code>${chatId}</code>\n` +
       `<a href="tg://user?id=${chatId}">Otvoriť chat</a>`,
-    parse_mode: "HTML",
-  });
-}
-
-/** Upozorní administrátora na správu z dotazníka na tipradar.eu. */
-export async function notifyAdminWebLead(lead: { plan: string; name: string; email: string; note?: string }): Promise<void> {
-  const adminId = process.env.TELEGRAM_ADMIN_CHAT_ID;
-  if (!TELEGRAM_BOT_TOKEN || !adminId) return;
-  await callTelegramApi("sendMessage", {
-    chat_id: adminId,
-    text:
-      `✉️ <b>Nová správa z dotazníka na tipradar.eu</b>\nTéma: ${LEAD_LABEL[lead.plan] ?? lead.plan}\n\n` +
-      `Meno: <b>${escapeTg(lead.name)}</b>\n` +
-      `E-mail: ${escapeTg(lead.email)}\n` +
-      (lead.note ? `Správa: ${escapeTg(lead.note)}\n` : ""),
     parse_mode: "HTML",
   });
 }
