@@ -22,22 +22,30 @@ import {
   RawPlayerStat, H2HStats } from "./types";
 
 // Predvolené váhy jednotlivých faktorov pri výsledku zápasu (1/X/2).
-// Forma aj vzájomné zápasy sú už započítané v očakávaných góloch (forma podľa
-// gólov v posledných zápasoch, vzájomné zápasy 15/20/25 %), preto výsledok
-// vychádza len z Poissona (s korekciou remíz Dixona a Colesa). Predtým mala forma 22 % s pevným základom 40/28/32,
-// ktorý ťahal favoritov aj outsiderov k rovnakému odhadu, a vzájomné zápasy
-// sa rátali druhýkrát (13 %) aj zo zápasov starších ako 10 rokov.
+// Pokus z 5. 10. 2026 (len Poisson s korekciou remíz, bez formy a vzájomných
+// zápasov) vyšiel v spätnom teste horšie (chyba 24,4 oproti 22,9) – model ešte
+// viac preceňoval favoritov. Zmes s formou a vzájomnými zápasmi ostáva.
 export const DEFAULT_WEIGHTS: PredictionWeights = {
-  poisson: 1,
-  form: 0,
-  h2h: 0,
-};
-
-/** Pôvodné váhy (do 5. 10. 2026) – len pre porovnanie starého a nového modelu v spätnom teste. */
-export const LEGACY_WEIGHTS: PredictionWeights = {
   poisson: 0.65,
   form: 0.22,
   h2h: 0.13,
+};
+
+/** Pôvodné váhy – pre porovnanie v spätnom teste (rovnaké ako DEFAULT_WEIGHTS). */
+export const LEGACY_WEIGHTS: PredictionWeights = DEFAULT_WEIGHTS;
+
+// Kalibrácia podľa spätného testu (5. 10. 2026, 150 zápasov za 2 mesiace): pri týchto
+// trhoch model preceňoval istotu (napr. góly: model 71 %, realita 64 %; tipy v pásme
+// 65 – 75 % vychádzali len na 63 %). Odchýlku od 50 % preto zmenšíme koeficientom.
+// Rohy, ofsajdy a držanie lopty sedeli (±2 b.) – bez zmeny. Pri „oba tímy skórujú"
+// je to ďalšie zmenšenie navyše k BTTS_SHRINK. Hodnoty sú zaokrúhlené a nikde pod 0,5,
+// aby jeden test neurčil príliš veľa.
+const MARKET_CALIBRATION: Record<string, number> = {
+  goly: 0.67,
+  strely: 0.5,
+  fauly: 0.72,
+  karty: 0.5,
+  btts: 0.5,
 };
 
 /** Forma podľa gólov v posledných zápasoch (vážený priemer, novšie zápasy viac). */
@@ -259,33 +267,6 @@ export function poissonOutcomes(
   };
 }
 
-/**
- * Výsledok zápasu (1/X/2) s korekciou Dixona a Colesa: obyčajný Poisson
- * podceňuje remízy 0:0 a 1:1 a preceňuje 1:0 a 0:1. RHO = -0,13 je bežná
- * hodnota z odbornej literatúry pre európske ligy. Používa sa len pri výsledku
- * zápasu – góly a „oba tímy skórujú" sú kalibrované podľa spätného testu zvlášť.
- */
-const DIXON_COLES_RHO = -0.13;
-export function dixonColesOutcomes(homeExpected: number, awayExpected: number, rho: number = DIXON_COLES_RHO): OutcomeProbabilities {
-  let homeWin = 0;
-  let draw = 0;
-  let awayWin = 0;
-  for (let h = 0; h <= MAX_GOALS; h++) {
-    for (let a = 0; a <= MAX_GOALS; a++) {
-      let tau = 1;
-      if (h === 0 && a === 0) tau = 1 - homeExpected * awayExpected * rho;
-      else if (h === 0 && a === 1) tau = 1 + homeExpected * rho;
-      else if (h === 1 && a === 0) tau = 1 + awayExpected * rho;
-      else if (h === 1 && a === 1) tau = 1 - rho;
-      const p = Math.max(0, tau) * poissonPmf(h, homeExpected) * poissonPmf(a, awayExpected);
-      if (h > a) homeWin += p;
-      else if (h === a) draw += p;
-      else awayWin += p;
-    }
-  }
-  return normalizeProbs({ homeWin, draw, awayWin });
-}
-
 export function formToScore(form: string): number {
   if (!form) return 1.3;
 
@@ -478,7 +459,7 @@ export function predictMatch(
   marketOdds?: MarketOdds[],
   h2hStats?: H2HStats[],
   recentGoals?: { home?: RecentGoals | null; away?: RecentGoals | null },
-  /** true = pôvodný model (bez formy z gólov a bez korekcie remíz) – len pre spätný test. */
+  /** true = pôvodný model (bez formy z gólov a bez kalibrácie trhov) – len pre spätný test. */
   legacy: boolean = false
 ): PredictionResult {
   const xg = expectedGoals(homeStats, awayStats, leagueAvg, homePriorsResult, awayPriorsResult);
@@ -515,8 +496,7 @@ export function predictMatch(
 
   const h2hResult = headToHeadOutcomes(h2h, fixture.homeTeam.id);
 
-  const base1x2 = legacy ? poisson.probs : dixonColesOutcomes(xg.home, xg.away);
-  const finalProbs = combineProbs(base1x2, formProbs, h2hResult.probs, weights);
+  const finalProbs = combineProbs(poisson.probs, formProbs, h2hResult.probs, weights);
 
   const sorted = [finalProbs.homeWin, finalProbs.draw, finalProbs.awayWin].slice().sort((a, b) => b - a);
   const confidence = confidenceFromMargin(sorted);
@@ -763,6 +743,13 @@ export function predictMatch(
         0
       )}:${(100 - expectedHome).toFixed(0)}.`,
     });
+  }
+
+  if (!legacy) {
+    for (const c of candidates) {
+      const k = MARKET_CALIBRATION[c.category];
+      if (k) c.probability = 50 + k * (c.probability - 50);
+    }
   }
 
   const sortedBets = candidates.sort((a, b) => b.probability - a.probability);

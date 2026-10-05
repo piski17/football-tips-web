@@ -2278,14 +2278,15 @@ function renderBacktestComparison(r, old) {
     if (!o) return "";
     const same = Math.abs(o.brier - m.brier) < 0.0005 && o.inBand.count === m.inBand.count;
     const cls = same ? "" : m.brier < o.brier ? "bt-good" : "bt-bad";
-    return `<tr><td>${escapeHtml(m.market)}</td><td class="num">${err(o.brier)}</td><td class="num ${cls}">${err(m.brier)}</td><td class="num">${band(o.inBand)}</td><td class="num">${band(m.inBand)}</td></tr>`;
+    const mr = (x) => `${pct(x.avgPredicted)} → ${pct(x.hitRate)}`;
+    return `<tr><td>${escapeHtml(m.market)}</td><td class="num">${mr(o)}</td><td class="num">${mr(m)}</td><td class="num">${err(o.brier)}</td><td class="num ${cls}">${err(m.brier)}</td><td class="num">${band(o.inBand)}</td><td class="num">${band(m.inBand)}</td></tr>`;
   }).join("");
   const ob = old.bandOverall, nb = r.bandOverall;
   return `
     <h4 style="margin:14px 0 0;">Nový model oproti pôvodnému (tie isté zápasy)</h4>
     <div class="bt-summary">Pásmo 65 – 75 %: pôvodný model <strong>${ob.count}</strong> tipov, vyšlo <strong>${pct(ob.hitRate)}</strong> · nový model <strong>${nb.count}</strong> tipov, vyšlo <strong>${pct(nb.hitRate)}</strong>.</div>
-    <table class="bt-table"><thead><tr><th>Trh</th><th class="num">Chyba – pôvodný</th><th class="num">Chyba – nový</th><th class="num">V pásme – pôvodný</th><th class="num">V pásme – nový</th></tr></thead><tbody>${rows}</tbody></table>
-    <p class="muted small">Chyba = ako ďaleko boli percentá modelu od skutočnosti (Brierovo skóre × 100). <strong>Nižšia je lepšia.</strong> Zelená: nový model je presnejší, červená: horší. Trhy bez zmeny (rohy, karty…) vychádzajú rovnako.</p>`;
+    <table class="bt-table"><thead><tr><th>Trh</th><th class="num">Model → realita – pôvodný</th><th class="num">Model → realita – nový</th><th class="num">Chyba – pôvodný</th><th class="num">Chyba – nový</th><th class="num">V pásme – pôvodný</th><th class="num">V pásme – nový</th></tr></thead><tbody>${rows}</tbody></table>
+    <p class="muted small">Chyba = ako ďaleko boli percentá modelu od skutočnosti (Brierovo skóre × 100). <strong>Nižšia je lepšia.</strong> Zelená: nový model je presnejší, červená: horší. Nový model = forma z gólov + kalibrácia gólov, striel, faulov, kariet a „oba tímy skórujú". Pre poctivé porovnanie testuj iné obdobie, než z ktorého vznikla kalibrácia (2 mesiace pred 5. 10. 2026), napríklad marec – máj minulej sezóny.</p>`;
 }
 
 async function pollBacktest(id) {
