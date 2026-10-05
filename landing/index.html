@@ -391,7 +391,7 @@
   @media (max-width: 520px) { .fields { grid-template-columns: minmax(0, 1fr); } }
   .nav-links a.nav-form { color: var(--gold-hi); }
   .nav-links a, .nav .btn { white-space: nowrap; }
-  @media (max-width: 1180px) { .nav-links a:not(.nav-form):not(.nav-video) { display: none; } }
+  @media (max-width: 1180px) { .nav-links a:not(.nav-form):not(.nav-video):not(.nav-tg) { display: none; } }
   @media (max-width: 420px) { .nav-links { gap: 16px; } .nav-links a { letter-spacing: .12em; font-size: 11px; } .brand { font-size: 20px; } .brand svg { width: 24px; height: 24px; } }
   .nav-links a.nav-tg { display: inline-flex; align-items: center; gap: 7px; }
   .nav-links a.nav-tg svg { width: 14px; height: 14px; color: var(--gold); }
@@ -421,6 +421,12 @@
   .contact-strip a:hover { text-decoration: underline; text-underline-offset: 3px; }
   @media (max-width: 640px) { .contact-strip .wrap { justify-content: center; gap: 4px 20px; } .contact-strip { font-size: 12.5px; } }
   @media (max-width: 380px) { .nav .wrap { gap: 12px; } .nav-links { gap: 12px; } .nav-links a { font-size: 10px; letter-spacing: .08em; } .brand { font-size: 18px; gap: 8px; } .brand svg { width: 22px; height: 22px; } }
+  .contact-strip .wrap { align-items: center; }
+  @media (max-width: 440px) { .nav .wrap { gap: 10px; } .nav-links { gap: 12px; } .nav-links a { font-size: 10px; letter-spacing: .08em; } .brand { font-size: 18px; gap: 8px; } .brand svg { width: 22px; height: 22px; } }
+  @media (max-width: 340px) { .nav-links { gap: 9px; } .nav-links a { letter-spacing: .04em; } .brand { font-size: 16px; gap: 6px; } .brand svg { width: 20px; height: 20px; } .nav-links a.nav-tg svg { width: 16px; height: 16px; } }
+  @media (max-width: 640px) { .nav-links a.nav-tg .tg-text { display: none; } .nav-links a.nav-tg svg { width: 18px; height: 18px; } }
+  .contact-strip a.tg-link { margin-left: 0; display: inline-flex; align-items: center; gap: 7px; }
+  .contact-strip a.tg-link svg { width: 15px; height: 15px; }
 </style>
 </head>
 <body>
@@ -440,12 +446,12 @@
       <a href="#zapis" class="nav-form">Formulár</a>
       <a href="#otazky">Otázky</a>
       <a href="/video" class="nav-video">Videoprezentácia</a>
+      <a class="nav-tg" href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener" aria-label="Telegram – TipRadar bot"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 4.2 2.9 11.4c-1.3.5-1.3 1.2-.2 1.6l4.8 1.5 1.8 5.6c.2.6.4.8.8.8.4 0 .6-.2.9-.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.8-1.3-1.5Zm-4 3.4-8.6 7.8-.3 3.4-1.6-5 10.2-6.4c.5-.3.9 0 .3.2Z" fill="currentColor"/></svg><span class="tg-text">Telegram</span></a>
     </div>
   </div>
 </nav>
 <div class="contact-strip">
   <div class="wrap">
-    <span>Telegram <a href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener">@TipRadarAiBot</a></span>
     <span>E-mail <a href="mailto:tipradarai@gmail.com">tipradarai@gmail.com</a></span>
   </div>
 </div>
