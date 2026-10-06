@@ -549,7 +549,7 @@ async function analyzeFixture(fixture, leagueId, season) {
 }
 
 function renderAnalysis(r) {
-  // Zobrazí všetky tipy zápasu v pásme 65–75 % (predictor.ts vracia max. 1 na trh).
+  // Zobrazí všetky tipy zápasu v pásme 68–80 % (predictor.ts vracia max. 1 na trh).
   const topBets = r.bestBets || [];
 
   const gamesPlayedHtml = r.seasonGamesPlayed
@@ -584,7 +584,7 @@ function renderAnalysis(r) {
 
   const noBetsHtml =
     topBets.length === 0
-      ? `<div class="empty-state" style="margin-bottom:16px;">Pri tomto zápase nie je žiadny tip v pásme 65–75 %${
+      ? `<div class="empty-state" style="margin-bottom:16px;">Pri tomto zápase nie je žiadny tip v pásme 68–80 %${
           (r.lowValueBets || []).length > 0 ? ", ktorý by prešiel kontrolou kurzu" : ""
         }.</div>`
       : "";
@@ -1855,7 +1855,7 @@ function renderDayTips() {
         dayTipsInfo.failed ? ` · ${dayTipsInfo.failed} sa nepodarilo analyzovať` : ""
       }
     </p>
-    ${rows || `<div class="empty-state">V tento deň nie je žiadny tip, ktorý by prešiel pravidlami (65–75 % a kontrola kurzu).</div>`}
+    ${rows || `<div class="empty-state">V tento deň nie je žiadny tip, ktorý by prešiel pravidlami (68–80 % a kontrola kurzu).</div>`}
   `;
 
   analysisColumnEl.querySelectorAll("[data-open]").forEach((btn) => {
@@ -2257,7 +2257,7 @@ function renderBacktest(job) {
 
   const b = r.bandOverall;
   const summary = b.count
-    ? `<div class="bt-summary">Tipy v pásme 65 – 75 % (tie, ktoré by appka odporučila): <strong>${b.count}</strong>, model v priemere <strong>${pct(b.avgPredicted)}</strong>, reálne vyšlo <strong class="${b.hitRate < b.avgPredicted - 5 ? "bt-bad" : "bt-good"}">${pct(b.hitRate)}</strong>.</div>`
+    ? `<div class="bt-summary">Tipy v pásme 68 – 80 % (tie, ktoré by appka odporučila): <strong>${b.count}</strong>, model v priemere <strong>${pct(b.avgPredicted)}</strong>, reálne vyšlo <strong class="${b.hitRate < b.avgPredicted - 5 ? "bt-bad" : "bt-good"}">${pct(b.hitRate)}</strong>.</div>`
     : "";
   const buckets = r.buckets.filter((x) => x.count > 0).map((x) =>
     `<tr><td>${x.label}</td><td class="num">${x.count}</td><td class="num">${pct(x.avgPredicted)}</td><td class="num">${pct(x.hitRate)}</td>${diffCell(x.avgPredicted, x.hitRate)}</tr>`).join("");
@@ -2268,7 +2268,7 @@ function renderBacktest(job) {
     <h4 style="margin:14px 0 0;">Podľa dôvery modelu</h4>
     <table class="bt-table"><thead><tr><th>Pásmo</th><th class="num">Tipov</th><th class="num">Model</th><th class="num">Realita</th><th class="num">Rozdiel</th></tr></thead><tbody>${buckets}</tbody></table>
     <h4 style="margin:4px 0 0;">Podľa trhov</h4>
-    <table class="bt-table"><thead><tr><th>Trh</th><th class="num">Tipov</th><th class="num">Model</th><th class="num">Realita</th><th class="num">Rozdiel</th><th class="num">V pásme 65–75 %</th></tr></thead><tbody>${markets}</tbody></table>
+    <table class="bt-table"><thead><tr><th>Trh</th><th class="num">Tipov</th><th class="num">Model</th><th class="num">Realita</th><th class="num">Rozdiel</th><th class="num">V pásme 68–80 %</th></tr></thead><tbody>${markets}</tbody></table>
     <p class="muted small">Rozdiel = realita mínus predpoveď v percentuálnych bodoch. Zelená: model sedí (do ±5 b.). Červená: model <strong>preceňuje</strong> – tipy vychádzajú menej často, než hovorí. Pri menej ako ~50 tipoch v riadku berte čísla len orientačne.</p>
     ${renderBacktestComparison(r, job.reportLegacy)}
     ${running ? "" : renderBacktestOptimizer(r.optimizer)}`;
@@ -2319,9 +2319,9 @@ function renderBacktestComparison(r, old) {
   const ob = old.bandOverall, nb = r.bandOverall;
   return `
     <h4 style="margin:14px 0 0;">Nový model oproti pôvodnému (tie isté zápasy)</h4>
-    <div class="bt-summary">Pásmo 65 – 75 %: pôvodný model <strong>${ob.count}</strong> tipov, vyšlo <strong>${pct(ob.hitRate)}</strong> · nový model <strong>${nb.count}</strong> tipov, vyšlo <strong>${pct(nb.hitRate)}</strong>.</div>
+    <div class="bt-summary">Pásmo 68 – 80 %: pôvodný model <strong>${ob.count}</strong> tipov, vyšlo <strong>${pct(ob.hitRate)}</strong> · nový model <strong>${nb.count}</strong> tipov, vyšlo <strong>${pct(nb.hitRate)}</strong>.</div>
     <table class="bt-table"><thead><tr><th>Trh</th><th class="num">Model → realita – pôvodný</th><th class="num">Model → realita – nový</th><th class="num">Chyba – pôvodný</th><th class="num">Chyba – nový</th><th class="num">V pásme – pôvodný</th><th class="num">V pásme – nový</th></tr></thead><tbody>${rows}</tbody></table>
-    <p class="muted small">Chyba = ako ďaleko boli percentá modelu od skutočnosti (Brierovo skóre × 100). <strong>Nižšia je lepšia.</strong> Zelená: nový model je presnejší, červená: horší. Nový model = forma z gólov + kalibrácia striel, faulov a rohov (celá sezóna) a gólov, kariet a „oba tímy skórujú" (len začiatok sezóny). Kalibrácia vznikla z testov aug. – okt. 2026 a mar. – máj 2025 – na poctivé overenie testuj iné obdobie.</p>`;
+    <p class="muted small">Chyba = ako ďaleko boli percentá modelu od skutočnosti (Brierovo skóre × 100). <strong>Nižšia je lepšia.</strong> Zelená: nový model je presnejší, červená: horší. Nový model = forma z gólov + kalibrácia striel, faulov, rohov a kariet (celá sezóna) a gólov a kariet navyše na začiatku sezóny. Kalibrácia (6. 10. 2026) vznikla z testov aug. – okt. 2024 a mar. – máj 2025 – na poctivé overenie testuj iné obdobie, napr. aug. – dec. 2023 (sezóna 2023).</p>`;
 }
 
 async function pollBacktest(id) {

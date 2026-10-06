@@ -20,6 +20,7 @@ import {
   getFixtureCornersAndCards,
 } from "./apiClient";
 import { predictMatch, DEFAULT_WEIGHTS, LEGACY_WEIGHTS } from "./predictor";
+import { MIN_PROBABILITY, MAX_PROBABILITY, MIN_GAMES_TO_RECOMMEND } from "./oddsMatcher";
 import { evaluateTip, STATS_MARKETS } from "./tipEvaluator";
 import { Fixture, MarketPick } from "./types";
 
@@ -297,12 +298,12 @@ export function optimize(all: Sample[]): OptimizerReport {
       avgPredicted: list.length ? list.reduce((a, s) => a + s.p, 0) / list.length : null,
     };
   };
-  const now = evalSetting(65, 75, 3, false);
-  const settings: SettingRow[] = [{ lo: 65, hi: 75, minGames: 3, ...now, current: true, best: false }];
+  const now = evalSetting(MIN_PROBABILITY, MAX_PROBABILITY, MIN_GAMES_TO_RECOMMEND, false);
+  const settings: SettingRow[] = [{ lo: MIN_PROBABILITY, hi: MAX_PROBABILITY, minGames: MIN_GAMES_TO_RECOMMEND, ...now, current: true, best: false }];
   // Horná hranica najviac 80 %: nad ňou majú tipy kurz spravidla pod minimom 1,50.
   // Min. 3 zápasy platí od 6. 10. 2026 vždy, preto sa skúša len 3 a 5.
   const seen = new Set<string>();
-  for (const lo of [60, 62, 65, 68, 70])
+  for (const lo of [62, 65, 68, 70, 72])
     for (const width of [10, 15])
       for (const minGames of [3, 5]) {
         const hi = Math.min(lo + width, 80), key = `${lo}-${hi}-${minGames}`;
@@ -334,7 +335,7 @@ function buildReport(samples: Sample[], analyzed: number, failed: number): Backt
     .map((market) => {
       const list = samples.filter((s) => s.market === market);
       const won = list.filter((s) => s.outcome === "won").length;
-      const band = list.filter((s) => s.probability >= 65 && s.probability <= 75);
+      const band = list.filter((s) => s.probability >= MIN_PROBABILITY && s.probability <= MAX_PROBABILITY);
       const bandWon = band.filter((s) => s.outcome === "won").length;
       return {
         market,
@@ -347,7 +348,7 @@ function buildReport(samples: Sample[], analyzed: number, failed: number): Backt
     })
     .sort((a, b) => b.count - a.count);
 
-  const edges = [50, 60, 65, 70, 75, 80, 90, 101];
+  const edges = [50, 60, 65, 68, 70, 75, 80, 90, 101];
   const buckets: BucketRow[] = [];
   for (let i = 0; i < edges.length - 1; i++) {
     const lo = edges[i], hi = edges[i + 1];
@@ -360,7 +361,7 @@ function buildReport(samples: Sample[], analyzed: number, failed: number): Backt
       hitRate: list.length ? (won / list.length) * 100 : null,
     });
   }
-  const band = samples.filter((s) => s.probability >= 65 && s.probability <= 75);
+  const band = samples.filter((s) => s.probability >= MIN_PROBABILITY && s.probability <= MAX_PROBABILITY);
   const bandWon = band.filter((s) => s.outcome === "won").length;
   return {
     fixturesAnalyzed: analyzed,

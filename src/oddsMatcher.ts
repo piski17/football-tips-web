@@ -51,6 +51,14 @@ export const MIN_GAMES_FOR_TRUST = 5;
  * model o ňom vie príliš málo a tip sa neodporučí.
  */
 export const MIN_GAMES_TO_RECOMMEND = 3;
+/**
+ * Pásmo dôvery odporúčaných tipov. Od 6. 10. 2026 68 – 80 % (predtým 65 – 75 %):
+ * po novej kalibrácii vyšli v oboch spätných testoch (aug. – okt. 2024
+ * a mar. – máj 2025, po 300 zápasov) tipy 68 – 80 % na 73 – 74 %, kým
+ * 65 – 75 % len na 69 – 71 %.
+ */
+export const MIN_PROBABILITY = 68;
+export const MAX_PROBABILITY = 80;
 /** Pri málo dátach v sezóne (pod MIN_GAMES_FOR_TRUST) musí kurz ponúkať aspoň toľko stávkoviek. */
 export const MIN_BOOKMAKERS_FEW_GAMES = 2;
 

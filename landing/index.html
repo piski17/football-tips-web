@@ -502,7 +502,7 @@
   .duel-row .top b { font: 400 26px/1 var(--serif); letter-spacing: 0; color: var(--text); }
   .duel-row .top small { font-size: 11px; letter-spacing: .06em; text-transform: none; color: var(--faint); }
   .duel-track { position: relative; height: 8px; margin-top: 10px; background: rgba(237,230,214,.07); }
-  .duel-band { position: absolute; top: -4px; bottom: -4px; left: 65%; width: 10%; border: 1px dashed rgba(201,165,92,.45); }
+  .duel-band { position: absolute; top: -4px; bottom: -4px; left: 68%; width: 12%; border: 1px dashed rgba(201,165,92,.45); }
   .duel-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; transition: width 1.1s cubic-bezier(.2,.7,.2,1); }
   .duel-row.model .duel-fill { background: linear-gradient(90deg, rgba(201,165,92,.5), var(--gold-hi)); }
   .duel-row.book .duel-fill { background: rgba(237,230,214,.38); }
@@ -565,15 +565,15 @@
         <div class="duel-head"><span>Model vs. kancelária</span><span class="duel-live"><i></i>práve porovnáva</span></div>
         <div class="duel-mkt"><span id="duelCat">Góly v zápase</span><b id="duelLine">Viac ako <em>2,5</em></b></div>
         <div class="duel-row model">
-          <div class="top"><span>Náš model</span><b class="num" id="duelModel">68&nbsp;%</b></div>
-          <div class="duel-track"><div class="duel-band" title="pásmo dôvery 65–75 %"></div><div class="duel-fill" id="duelModelBar"></div></div>
+          <div class="top"><span>Náš model</span><b class="num" id="duelModel">71&nbsp;%</b></div>
+          <div class="duel-track"><div class="duel-band" title="pásmo dôvery 68–80 %"></div><div class="duel-fill" id="duelModelBar"></div></div>
         </div>
         <div class="duel-row book">
-          <div class="top"><span>Kancelária <small id="duelOdds">kurz 1,72</small></span><b class="num" id="duelBook">58&nbsp;%</b></div>
+          <div class="top"><span>Kancelária <small id="duelOdds">kurz 1,66</small></span><b class="num" id="duelBook">60&nbsp;%</b></div>
           <div class="duel-track"><div class="duel-fill" id="duelBookBar"></div></div>
-          <div class="duel-axis"><span>0&nbsp;%</span><em>pásmo dôvery 65–75&nbsp;%</em><span>100&nbsp;%</span></div>
+          <div class="duel-axis"><span>0&nbsp;%</span><em>pásmo dôvery 68–80&nbsp;%</em><span>100&nbsp;%</span></div>
         </div>
-        <div class="duel-verdict" id="duelVerdict"><span><strong id="duelTitle">Tip odošleme</strong><span id="duelWhy">Model vidí vyššiu šancu, než naznačuje kurz.</span></span><b class="num" id="duelEv">+17&nbsp;%</b></div>
+        <div class="duel-verdict" id="duelVerdict"><span><strong id="duelTitle">Tip odošleme</strong><span id="duelWhy">Model vidí vyššiu šancu, než naznačuje kurz.</span></span><b class="num" id="duelEv">+18&nbsp;%</b></div>
         <div class="duel-dots" id="duelDots" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></div>
         <figcaption>Ilustrácia. Väčšina trhov neprejde a vtedy tip nepošleme.</figcaption>
       </figure>
@@ -597,7 +597,7 @@
         <ol class="funnel">
           <li><div class="c num">120</div><div><h3>zápasov v bežný deň</h3><p>Pri každom model zoberie góly, rohy, karty, strely, fauly a držanie lopty z posledných zápasov oboch tímov, vlastné aj tie, ktoré tím dovolí súperovi. Keď je dát málo, pomôžu tri minulé sezóny.</p></div></li>
           <li><div class="c num">1 200</div><div><h3>vypočítaných trhov</h3><p>Model počíta osem trhov: góly v zápase aj góly každého tímu, rohy v zápase aj rohy každého tímu, karty, strely na bránu, fauly a držanie lopty. Pri kartách a strelách počíta s väčším rozptylom, lebo kolíšu viac.</p></div></li>
-          <li><div class="c num">140</div><div><h3>s dôverou 65 – 75&nbsp;%</h3><p>Veľmi isté tipy mávajú nízky kurz a veľmi neisté často nevychádzajú. Ďalej idú len tipy v tomto pásme.</p></div></li>
+          <li><div class="c num">140</div><div><h3>s dôverou 68 – 80&nbsp;%</h3><p>Veľmi isté tipy mávajú nízky kurz a veľmi neisté často nevychádzajú. Ďalej idú len tipy v tomto pásme.</p></div></li>
           <li><div class="c num">15</div><div><h3>s hodnotou a kurzom</h3><p>Model vyskúša všetky hranice, ktoré stávkové kancelárie ponúkajú (napríklad rohy 8,5 / 9,5 / 10,5), a vyberie tú s najväčšou hodnotou. Tip musí mať hodnotu aspoň +5&nbsp;% a kurz aspoň <span class="minOdds">1,50</span>.</p></div></li>
           <li><div class="c num">7</div><div><h3>bez veľkého rozporu s trhom</h3><p>Keď model vidí šancu o 15 – 25 bodov inak ako stávkové kancelárie, tip vyradíme. Taký rozdiel často znamená niečo, čo štatistika nevidí, napríklad zranenie. Vyradené tipy si zapisujeme a raz za mesiac kontrolujeme, kto mal pravdu.</p></div></li>
           <li><div class="c num">2 – 3</div><div><h3>tipy pre členov</h3><p>Najviac jeden tip na trh v zápase, 2 – 3 hodiny pred výkopom. Večer ich vyhodnotíme podľa skutočného výsledku.</p></div></li>
@@ -832,8 +832,8 @@
     $("vVal").textContent = `${value > 0 ? "+" : value < 0 ? "−" : ""}${Math.abs(value)} %`;
     $("vVal").className = "v num " + cls(value);
     $("vMath").textContent = `${fmt(p / 100, 2)} × ${fmt(o, 2)} = ${fmt(ret, 2)}`;
-    const band = p >= 65 && p <= 75, val = value >= 5, odd = o >= MIN_ODDS - 1e-9;
-    $("vChecks").innerHTML = `<li class="${band ? "ok" : "no"}">šanca v pásme 65 – 75 %</li><li class="${val ? "ok" : "no"}">hodnota aspoň +5 %</li><li class="${odd ? "ok" : "no"}">kurz aspoň ${fmt(MIN_ODDS, 2)}</li>`;
+    const band = p >= 68 && p <= 80, val = value >= 5, odd = o >= MIN_ODDS - 1e-9;
+    $("vChecks").innerHTML = `<li class="${band ? "ok" : "no"}">šanca v pásme 68 – 80 %</li><li class="${val ? "ok" : "no"}">hodnota aspoň +5 %</li><li class="${odd ? "ok" : "no"}">kurz aspoň ${fmt(MIN_ODDS, 2)}</li>`;
     $("vOut").innerHTML = band && val && odd ? `<span class="pos">Taký tip by sme poslali.</span>` : `<span class="neg">Taký tip by sme neposlali.</span>`;
   }
   $("pRange").addEventListener("input", drawValue); $("oRange").addEventListener("input", drawValue);
@@ -994,14 +994,14 @@
   const $ = (id) => document.getElementById(id);
   const fmt = (x) => String(x).replace(".", ",");
   const SCENES = [
-    { cat: "Góly v zápase", line: "Viac ako <em>2,5</em>", p: 68, odds: 1.72 },
+    { cat: "Góly v zápase", line: "Viac ako <em>2,5</em>", p: 71, odds: 1.66 },
     { cat: "Rohy v zápase", line: "Viac ako <em>8,5</em>", p: 71, odds: 1.36 },
-    { cat: "Fauly v zápase", line: "Menej ako <em>24,5</em>", p: 66, odds: 1.68 },
+    { cat: "Fauly v zápase", line: "Menej ako <em>24,5</em>", p: 70, odds: 1.60 },
     { cat: "Karty v zápase", line: "Viac ako <em>4,5</em>", p: 57, odds: 1.88 },
   ];
   const judge = (sc) => {
     const ev = Math.round((sc.p / 100 * sc.odds - 1) * 100);
-    if (sc.p < 65 || sc.p > 75) return { ok: false, t: "Tip nepošleme", w: "Dôvera modelu je mimo pásma 65–75\u00a0%.", v: "—" };
+    if (sc.p < 68 || sc.p > 80) return { ok: false, t: "Tip nepošleme", w: "Dôvera modelu je mimo pásma 68–80\u00a0%.", v: "—" };
     if (sc.odds < 1.5 || ev < 5) return { ok: false, t: "Tip nepošleme", w: "Kurz je príliš nízky, hodnota tu nie je.", v: (ev > 0 ? "+" : "\u2212") + Math.abs(ev) + "\u00a0%" };
     return { ok: true, t: "Tip odošleme", w: "Model vidí vyššiu šancu, než naznačuje kurz.", v: "+" + ev + "\u00a0%" };
   };

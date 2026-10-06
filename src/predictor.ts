@@ -8,6 +8,8 @@ import {
   SUSPICIOUS_EXPECTED_VALUE,
   MIN_GAMES_FOR_TRUST,
   MIN_GAMES_TO_RECOMMEND,
+  MIN_PROBABILITY,
+  MAX_PROBABILITY,
   MIN_BOOKMAKERS_FEW_GAMES,
 } from "./oddsMatcher";
 import {
@@ -46,17 +48,24 @@ export const LEGACY_WEIGHTS: PredictionWeights = DEFAULT_WEIGHTS;
 //    (góly 71 → 64 %, karty, „oba tímy skórujú"), no na konci sezóny sedel
 //    (góly 69 → 70 %). Platí naplno do 5 odohraných zápasov, potom slabne a od
 //    15 zápasov sa nepoužije. Pri „oba tímy skórujú" je to navyše k BTTS_SHRINK.
+// 6. 10. 2026 prepočítané podľa dvoch spätných testov po 300 zápasov
+// (aug. – okt. 2024 a mar. – máj 2025, „Hľadanie najlepšieho nastavenia").
+// Hodnoty, pri ktorých sa oba testy zhodli: rohy 0,70 – 0,75, rohy tímu 0,75,
+// fauly 0,80, strely 0,85 – 0,95, karty 0,80 (koniec sezóny) / 0,60 (začiatok),
+// góly a góly tímu 0,90 – 1,00. Pôvodná kalibrácia (strely 0,5, góly 0,67)
+// bola príliš prísna – model potom podceňoval.
 const MARKET_CALIBRATION: Record<string, number> = {
-  strely: 0.5,
-  fauly: 0.72,
-  rohy: 0.6,
-  // Rohy jedného tímu: zatiaľ rovnako ako rohy v zápase, kým ich nepreverí spätný test.
-  rohy_timu: 0.6,
+  strely: 0.9,
+  fauly: 0.8,
+  rohy: 0.72,
+  rohy_timu: 0.75,
+  karty: 0.8,
 };
 const EARLY_SEASON_CALIBRATION: Record<string, number> = {
-  goly: 0.67,
-  goly_timu: 0.67,
-  karty: 0.5,
+  goly: 0.9,
+  goly_timu: 0.9,
+  // spolu s MARKET_CALIBRATION 0,8 × 0,75 = 0,6 na začiatku sezóny
+  karty: 0.75,
   btts: 0.5,
 };
 /** Koeficient kalibrácie pre trh pri danom počte odohraných zápasov v sezóne. */
@@ -798,13 +807,11 @@ export function predictMatch(
   const sortedBets = candidates.sort((a, b) => b.probability - a.probability);
 
   // Appka odporúča len tipy v pásme MIN_PROBABILITY – MAX_PROBABILITY:
-  // - pod 65 % tipy vychádzajú príliš nepravidelne (dlhé série prehier),
-  // - nad 75 % má tip v stávkovej kancelárii spravidla príliš nízky kurz
+  // - pod 68 % tipy vychádzajú príliš nepravidelne (dlhé série prehier),
+  // - nad 80 % má tip v stávkovej kancelárii spravidla príliš nízky kurz
   //   (férový kurz pod 1,33 a po marži bookmakera ešte menej).
   // Ak žiadny tip zápasu nespadá do pásma, zápas ostane BEZ odporúčania -
   // appka radšej nič neodporučí, ako by ponúkla horší tip.
-  const MIN_PROBABILITY = 65;
-  const MAX_PROBABILITY = 75;
   // Skutočné kurzy stávkoviek: ku každému tipu priradíme kurz (ak ho stávkovky
   // ponúkajú) a očakávanú hodnotu = pravdepodobnosť × kurz. Tip s kurzom,
   // ktorý nedosahuje MIN_EXPECTED_VALUE, nemá hodnotu a do odporúčaní sa
@@ -868,7 +875,7 @@ export function predictMatch(
   );
   // Posúdenie hodnoty podľa skutočného kurzu:
   //  - stávkovky k zápasu zatiaľ nemajú kurzy -> vyradiť (hodnota sa nedá overiť;
-  //    odhadovaný kurz z dôvery 65 – 75 % by bol vždy len 1,33 – 1,54),
+  //    odhadovaný kurz z dôvery 68 – 80 % by bol vždy len 1,25 – 1,47),
   //  - pod +5 %: tip nemá hodnotu -> vyradiť,
   //  - kurz pod MIN_ODDS (predvolene 1,50) -> vyradiť,
   //  - nad +25 % a málo odohraných zápasov v sezóne: model stojí na slabých
