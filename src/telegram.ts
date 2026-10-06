@@ -372,8 +372,7 @@ const FAQ_ANSWERS: Record<string, string> = {
   faq_time:
     `🕒 <b>Kedy prídu tipy</b>\n\n` +
     `Tipy posielame v deň zápasu, <b>2 – 3 hodiny pred výkopom</b> – vtedy sú kurzy aj dáta najpresnejšie a zostane dosť času na stávku.\n\n` +
-    `📋 Večer, keď sa zápasy dohrajú, pošleme <b>vyhodnotenie dňa</b> – vrátane tipov, ktoré nevyšli.\n\n` +
-    `Ak sa pred zápasom stane niečo dôležité (napr. v zostave chýba kľúčový hráč), dáme vedieť.`,
+    `📋 Večer, keď sa zápasy dohrajú, pošleme <b>vyhodnotenie dňa</b> – vrátane tipov, ktoré nevyšli.`,
   faq_sample:
     `📊 <b>Ukážka tipu</b>\n\n` +
     `🎯 Góly: Nad 2,5\n📈 Dôvera: 71 %\n💰 Kurz: 1,75\n💵 Odporúčaná sadzba: 3 % bankrollu\n\n` +
