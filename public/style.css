@@ -1615,3 +1615,10 @@ h1, h2, h3, h4,
 .live-score { font-size: 19px; font-weight: 600; }
 .fixture-row .time strong { font-size: 20px; font-weight: 600; }
 .day-tip-rank { font-size: 27px; font-weight: 600; }
+
+/* Spätný test: širšie okno, tabuľky sa zmestia na šírku */
+#backtestModal .modal-large { max-width: min(1240px, 96vw); max-height: 90vh; }
+#btReport { overflow-x: auto; }
+#btReport .bt-table td, #btReport .bt-table th { white-space: nowrap; }
+#btReport .bt-table td:first-child { white-space: normal; min-width: 160px; }
+#backtestModal .modal-actions { flex-wrap: wrap; }

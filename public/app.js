@@ -2238,7 +2238,9 @@ function diffCell(pred, real) {
   return `<td class="num ${cls}">${d > 0 ? "+" : d < 0 ? "−" : ""}${fmtNum(Math.abs(d), 0)} b.</td>`;
 }
 
+let btLastJob = null;
 function renderBacktest(job) {
+  btLastJob = job;
   const r = job.report;
   const p = job.progress || { done: 0, total: 0 };
   const running = job.status === "running";
@@ -2248,6 +2250,9 @@ function renderBacktest(job) {
       ? `Test zlyhal: ${escapeHtml(job.error || "")}`
       : `Hotovo – ${r ? r.fixturesAnalyzed : 0} zápasov${r && r.fixturesFailed ? `, ${r.fixturesFailed} sa nepodarilo spracovať` : ""}.`;
   document.getElementById("btStartBtn").disabled = running;
+  const canExport = job.status === "done" && !!(r && r.samples);
+  document.getElementById("btCopyBtn").hidden = !canExport;
+  document.getElementById("btImgBtn").hidden = !canExport;
   if (!r || !r.samples) { document.getElementById("btReport").innerHTML = running ? "" : `<p class="muted">Pre zvolené obdobie a ligy sa nenašli žiadne vyhodnotiteľné zápasy.</p>`; return; }
 
   const b = r.bandOverall;
@@ -2333,6 +2338,70 @@ async function pollBacktest(id) {
 }
 
 document.getElementById("openBacktestBtn").addEventListener("click", openBacktest);
+
+/** Hlavička exportu: obdobie, sezóna, počet zápasov. */
+function btExportTitle() {
+  const p = (btLastJob && btLastJob.params) || {};
+  const r = btLastJob && btLastJob.report;
+  return `TipRadar – spätný test ${p.from || ""} až ${p.to || ""}, sezóna ${p.season || ""}, ${r ? r.fixturesAnalyzed : 0} zápasov`;
+}
+
+document.getElementById("btCopyBtn").addEventListener("click", async () => {
+  const text = `${btExportTitle()}\n\n${document.getElementById("btReport").innerText}`;
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast("Výsledok je skopírovaný – vlož ho do správy (Cmd+V).");
+  } catch {
+    // schránka nedostupná – stiahne sa ako textový súbor
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([text], { type: "text/plain;charset=utf-8" }));
+    a.download = "spatny-test.txt";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+});
+
+let html2canvasLoading = null;
+function loadHtml2canvas() {
+  if (window.html2canvas) return Promise.resolve(window.html2canvas);
+  if (!html2canvasLoading) {
+    html2canvasLoading = new Promise((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = "vendor/html2canvas.min.js";
+      s.onload = () => resolve(window.html2canvas);
+      s.onerror = () => { html2canvasLoading = null; reject(new Error("knižnica sa nenačítala")); };
+      document.head.appendChild(s);
+    });
+  }
+  return html2canvasLoading;
+}
+
+document.getElementById("btImgBtn").addEventListener("click", async (e) => {
+  const btn = e.currentTarget;
+  btn.disabled = true;
+  const old = btn.textContent;
+  btn.textContent = "Ukladám…";
+  // celý výsledok (bez rolovania) do jedného širokého obrázka
+  const box = document.createElement("div");
+  box.style.cssText = "position:absolute;left:-10000px;top:0;width:1200px;padding:28px;background:#141416;color:#EDE6D6;";
+  box.innerHTML = `<h3 style="margin:0 0 12px;font-size:20px;">${escapeHtml(btExportTitle())}</h3>${document.getElementById("btReport").innerHTML}`;
+  document.body.appendChild(box);
+  try {
+    const h2c = await loadHtml2canvas();
+    const canvas = await h2c(box, { backgroundColor: "#141416", scale: 1.5 });
+    const p = (btLastJob && btLastJob.params) || {};
+    const a = document.createElement("a");
+    a.href = canvas.toDataURL("image/png");
+    a.download = `spatny-test-${p.from || ""}-${p.to || ""}.png`;
+    a.click();
+  } catch (err) {
+    showToast(`Obrázok sa nepodarilo uložiť (${err.message}). Použi „Kopírovať ako text“.`);
+  } finally {
+    box.remove();
+    btn.disabled = false;
+    btn.textContent = old;
+  }
+});
 document.getElementById("btCloseBtn").addEventListener("click", () => { backtestModal.hidden = true; clearTimeout(btPollTimer); });
 document.getElementById("btMax").addEventListener("input", btCost);
 document.getElementById("btStartBtn").addEventListener("click", async () => {
