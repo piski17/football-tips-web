@@ -78,7 +78,7 @@
   .nav .wrap { display: flex; align-items: center; gap: 32px; height: 64px; }
   .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font: 600 21px/1 var(--serif); letter-spacing: -0.01em; }
   .brand svg { width: 26px; height: 26px; }
-  .nav-links { display: flex; gap: 22px; margin-left: auto; }
+  .nav-links { display: flex; gap: 2px; margin-left: auto; }
   .nav-links a { text-decoration: none; font-size: 14.5px; color: var(--muted); }
   .nav-links a:hover { color: var(--text); }
   .nav .btn { min-height: 38px; padding: 0 16px; font-size: 14px; }
@@ -398,7 +398,10 @@
   .form.sent .form-done { margin-top: 0; border-top: 0; padding-top: 0; }
   .form.sent .fields, .form.sent .consent, .form.sent .submit { display: none; }
   @media (max-width: 520px) { .fields { grid-template-columns: minmax(0, 1fr); } }
-  .nav-links a.nav-form { color: var(--gold-hi); }
+  /* aktívna položka menu (na ktorú sa kliklo / sekcia na obrazovke) – zlaté pozadie */
+  .nav-links a { padding: 8px 12px; border-radius: 2px; transition: background .2s, color .2s; }
+  .nav-links a.active { background: var(--gold); color: #141210; }
+  .nav-links a.active svg { color: #141210; }
   .nav-links a, .nav .btn { white-space: nowrap; }
   .nav-links a.nav-tg { display: inline-flex; align-items: center; gap: 7px; }
   .nav-links a.nav-tg svg { width: 14px; height: 14px; color: var(--gold); }
@@ -457,6 +460,7 @@
     .nav.open .nav-links { display: flex; }
     .nav-links a { padding: 16px 0; border-bottom: 1px solid var(--rule); font-size: 12.5px; letter-spacing: .2em; }
     .nav-links a:last-child { border-bottom: 0; }
+    .nav-links a { padding-left: 14px; padding-right: 14px; }
     .nav-links a.nav-tg svg { width: 15px; height: 15px; }
   }
   @media (max-width: 640px) {
@@ -836,6 +840,23 @@
   tog.addEventListener("click", () => setOpen(!nav.classList.contains("open")));
   document.querySelectorAll(".nav-links a").forEach((a) => a.addEventListener("click", () => setOpen(false)));
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") setOpen(false); });
+
+  // zvýraznenie položky menu: po kliknutí hneď, pri rolovaní podľa sekcie na obrazovke
+  const links = Array.from(document.querySelectorAll('.nav-links a[href^="#"]'));
+  const setActive = (id) => links.forEach((a) => a.classList.toggle("active", a.getAttribute("href") === "#" + id));
+  let lockUntil = 0;
+  links.forEach((a) => a.addEventListener("click", () => { setActive(a.getAttribute("href").slice(1)); lockUntil = Date.now() + 1200; }));
+  const sections = links.map((a) => document.getElementById(a.getAttribute("href").slice(1))).filter(Boolean);
+  const spy = () => {
+    if (Date.now() < lockUntil) return;
+    const y = window.innerHeight * 0.35;
+    let cur = null;
+    for (const sec of sections) if (sec.getBoundingClientRect().top <= y) cur = sec.id;
+    if (cur && window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) cur = sections[sections.length - 1].id;
+    setActive(cur);
+  };
+  window.addEventListener("scroll", spy, { passive: true });
+  spy();
 })();
 (function () {
   const $ = (id) => document.getElementById(id);
