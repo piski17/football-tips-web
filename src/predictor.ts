@@ -844,13 +844,19 @@ export function predictMatch(
   //    dátach a rozdiel oproti trhu je takmer iste jeho chyba -> vyradiť,
   //  - nad +25 % a dát je dosť: tip ostáva, ale s upozornením,
   //  - inak normálny tip. Keď sa kurzy objavia, pri ďalšej analýze tip prejde bežne.
+  const NOT_RECOMMENDED_MARKETS = ["Ofsajdy"];
   const fewGames =
     Math.min(homeStats.fixtures.played.total ?? 0, awayStats.fixtures.played.total ?? 0) < MIN_GAMES_FOR_TRUST;
   const pickPool: MarketPick[] = [];
   const lowValueBets: MarketPick[] = [];
   for (const b of inBand) {
     const ev = b.expectedValue;
-    if (b.marketConflict) {
+    if (NOT_RECOMMENDED_MARKETS.includes(b.market)) {
+      // Ofsajdy: v spätných testoch model ich šancu preceňoval (čakal 61 %, vyšlo 45 %),
+      // preto sa neodporúčajú. V analýze zápasu ostávajú viditeľné, ručne sa dajú uložiť.
+      b.rejectReason = "tento trh neodporúčame (model ho v testoch preceňoval)";
+      lowValueBets.push(b);
+    } else if (b.marketConflict) {
       b.rejectReason = b.marketConflict;
       lowValueBets.push(b);
     } else if (ev == null && oddsAvailable) {
