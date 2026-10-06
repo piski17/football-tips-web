@@ -59,6 +59,11 @@ export const MIN_GAMES_TO_RECOMMEND = 3;
  */
 export const MIN_PROBABILITY = 68;
 export const MAX_PROBABILITY = 80;
+/**
+ * Od tejto dôvery je odporúčaný tip označený „★ Silný tip“. V troch spätných
+ * testoch vyšli tipy 70 – 80 % o ~3 body častejšie ako celé pásmo 68 – 80 %.
+ */
+export const STRONG_TIP_MIN_PROBABILITY = 70;
 /** Pri málo dátach v sezóne (pod MIN_GAMES_FOR_TRUST) musí kurz ponúkať aspoň toľko stávkoviek. */
 export const MIN_BOOKMAKERS_FEW_GAMES = 2;
 

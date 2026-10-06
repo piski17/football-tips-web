@@ -2,6 +2,7 @@ import { recordLead } from "./leadsStore";
 import axios from "axios";
 import { sendAdminEmail } from "./mailer";
 import { SavedTip } from "./types";
+import { STRONG_TIP_MIN_PROBABILITY } from "./oddsMatcher";
 
 /** Slovenský tvar podľa počtu: plural(3, "tip", "tipy", "tipov") -> "3 tipy". */
 /** Číslo so slovenskou desatinnou čiarkou: fmtNum(1.845, 2) -> "1,85". */
@@ -224,7 +225,7 @@ function buildMessageText(tip: SavedTip, headerOverride?: string): string {
     `${headerOverride ?? `🎯 <b>Nový tip</b>`}\n\n` +
     `⚽ ${escapeHtml(translateTeamName(tip.homeTeam))} — ${escapeHtml(translateTeamName(tip.awayTeam))}\n` +
     `📊 ${escapeHtml(tip.market)}: <b>${escapeHtml(translateNamesInText(tip.selection, tip.homeTeam, tip.awayTeam))}</b>\n` +
-    `📈 Dôvera: <b>${tip.probability.toFixed(0)} %</b>\n` +
+    `📈 Dôvera: <b>${tip.probability.toFixed(0)} %</b>${tip.probability >= STRONG_TIP_MIN_PROBABILITY ? " · ⭐ <b>Silný tip</b>" : ""}\n` +
     oddsLine +
     `💵 Odporúčaná sadzba: <b>${stakePct} % bankrollu</b>\n\n` +
     oddsNote

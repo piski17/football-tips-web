@@ -1622,3 +1622,6 @@ h1, h2, h3, h4,
 #btReport .bt-table td, #btReport .bt-table th { white-space: nowrap; }
 #btReport .bt-table td:first-child { white-space: normal; min-width: 160px; }
 #backtestModal .modal-actions { flex-wrap: wrap; }
+
+/* ★ Silný tip – odporúčaný tip s dôverou 70 % a viac */
+.strong-tip { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: 0.85em; font-weight: 600; color: var(--gold); border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent); background: color-mix(in srgb, var(--gold) 12%, transparent); white-space: nowrap; }
