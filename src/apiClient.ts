@@ -9,7 +9,7 @@ import {
   TeamGoalPriorsResult,
   SquadPlayer,
   PlayerSeasonStats,
-  RawPlayerStat, H2HStats } from "./types";
+  RawPlayerStat, H2HStats, MissingPlayer } from "./types";
 
 const BASE_URL = "https://v3.football.api-sports.io";
 
@@ -766,6 +766,9 @@ export async function getTeamPlayersWithStats(
         name: item.player.name,
         goals: entry.goals?.total ?? 0,
         appearances: entry.games?.appearences ?? 0,
+        assists: entry.goals?.assists ?? 0,
+        minutes: entry.games?.minutes ?? 0,
+        position: entry.games?.position ?? undefined,
       });
     }
 
@@ -1002,4 +1005,26 @@ export async function getHeadToHeadStats(
     });
   }
   return out;
+}
+
+/**
+ * Hráči, ktorí v zápase určite chýbajú (zranenie, trest). API-Football ich
+ * zverejňuje zvyčajne 1 – 2 dni pred zápasom; typ „Questionable" (neistý
+ * štart) sa nepočíta. Funguje aj pre odohrané zápasy (spätný test).
+ */
+export async function getFixtureMissingPlayers(fixtureId: number): Promise<MissingPlayer[]> {
+  const cacheKey = `injuries:${fixtureId}`;
+  const cached = getCached<MissingPlayer[]>(cacheKey);
+  if (cached !== undefined) return cached;
+  try {
+    const res = await client().get("/injuries", { params: { fixture: fixtureId } });
+    checkApiErrors(res.data);
+    const out: MissingPlayer[] = (res.data?.response ?? [])
+      .filter((x: any) => x?.player?.id && x?.team?.id && x?.player?.type === "Missing Fixture")
+      .map((x: any) => ({ playerId: x.player.id, name: x.player.name ?? "", teamId: x.team.id, reason: x.player.reason ?? "" }));
+    setCached(cacheKey, out, TTL_ODDS);
+    return out;
+  } catch {
+    return [];
+  }
 }

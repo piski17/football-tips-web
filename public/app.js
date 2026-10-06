@@ -2271,7 +2271,27 @@ function renderBacktest(job) {
     <table class="bt-table"><thead><tr><th>Trh</th><th class="num">Tipov</th><th class="num">Model</th><th class="num">Realita</th><th class="num">Rozdiel</th><th class="num">V pásme 68–80 %</th></tr></thead><tbody>${markets}</tbody></table>
     <p class="muted small">Rozdiel = realita mínus predpoveď v percentuálnych bodoch. Zelená: model sedí (do ±5 b.). Červená: model <strong>preceňuje</strong> – tipy vychádzajú menej často, než hovorí. Pri menej ako ~50 tipoch v riadku berte čísla len orientačne.</p>
     ${renderBacktestComparison(r, job.reportLegacy)}
+    ${running ? "" : renderAbsenceImpact(job.absenceImpact)}
     ${running ? "" : renderBacktestOptimizer(r.optimizer)}`;
+}
+
+/** Vplyv chýbajúcich hráčov (zranenia, tresty) na presnosť – len zápasy, kde niekto chýbal. */
+function renderAbsenceImpact(a) {
+  if (!a || !a.fixtures || !a.withAbsences || !a.withAbsences.samples) return "";
+  const err = (v) => (v == null ? "–" : fmtNum(v * 100, 1));
+  const band = (x) => (x && x.inBand && x.inBand.count ? `${pct(x.inBand.hitRate)} <span class="muted">(${x.inBand.count})</span>` : "–");
+  const rows = a.withAbsences.markets.filter((m) => /^Góly/.test(m.market)).map((m) => {
+    const o = a.withoutAbsences.markets.find((x) => x.market === m.market);
+    if (!o) return "";
+    const cls = Math.abs(o.brier - m.brier) < 0.0005 ? "" : m.brier < o.brier ? "bt-good" : "bt-bad";
+    return `<tr><td>${escapeHtml(m.market)}</td><td class="num">${m.count}</td><td class="num">${err(o.brier)}</td><td class="num ${cls}">${err(m.brier)}</td><td class="num">${band(o)}</td><td class="num">${band(m)}</td></tr>`;
+  }).join("");
+  const wb = a.withAbsences.bandOverall, ob = a.withoutAbsences.bandOverall;
+  return `
+    <h4 style="margin:18px 0 0;">Vplyv chýbajúcich hráčov</h4>
+    <div class="bt-summary">Zápasy, kde niekto chýbal (zranenie, trest): <strong>${a.fixtures}</strong>. Tipy v pásme bez zohľadnenia: <strong>${ob.count}</strong>, vyšlo <strong>${pct(ob.hitRate)}</strong> · so zohľadnením: <strong>${wb.count}</strong>, vyšlo <strong>${pct(wb.hitRate)}</strong>.</div>
+    <table class="bt-table"><thead><tr><th>Trh</th><th class="num">Tipov</th><th class="num">Chyba – bez</th><th class="num">Chyba – s chýbajúcimi</th><th class="num">V pásme – bez</th><th class="num">V pásme – s</th></tr></thead><tbody>${rows}</tbody></table>
+    <p class="muted small">Chýbajúci hráči menia len očakávané góly, preto sú tu len gólové trhy. Zelená: so zohľadnením chýbajúcich je model presnejší.</p>`;
 }
 
 /** Hľadanie najlepšieho nastavenia (kalibrácia trhov, pásmo dôvery, min. zápasov). */

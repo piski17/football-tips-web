@@ -24,7 +24,7 @@ import {
   MarketPick,
   OverUnderMarket,
   PlayerGoalPrediction,
-  RawPlayerStat, H2HStats } from "./types";
+  RawPlayerStat, H2HStats, MissingPlayer } from "./types";
 
 // Predvolené váhy jednotlivých faktorov pri výsledku zápasu (1/X/2).
 // Pokus z 5. 10. 2026 (len Poisson s korekciou remíz, bez formy a vzájomných
@@ -171,6 +171,63 @@ function overdispersedOverUnder(mean: number, line: number, varRatio: number): {
 }
 // Pomer rozptylu k priemeru (z väčšej nestability týchto štatistík).
 const VAR_RATIO = { cards: 1.4, shotsOnGoal: 1.35, offsides: 1.3 };
+
+// Vplyv chýbajúcich hráčov (6. 10. 2026). Útok: podiel chýbajúcich na góloch
+// a asistenciách tímu (asistencia = pol gólu) × ATTACK_WEIGHT, najviac −15 %.
+// Obrana: podiel chýbajúcich obrancov a brankára na ich odohraných minútach
+// × DEFENSE_WEIGHT, súperovi najviac +10 %. Ak by hráči chýbali celú sezónu,
+// ich góly v štatistikách tímu aj tak nie sú – preto sa rátajú len hráči,
+// ktorí v sezóne naozaj hrali.
+const ABSENCE_ATTACK_WEIGHT = 0.5;
+const ABSENCE_ATTACK_MIN = 0.85;
+const ABSENCE_DEFENSE_WEIGHT = 0.35;
+const ABSENCE_DEFENSE_MAX = 1.1;
+
+interface TeamAbsence { attack: number; defense: number; names: string[] }
+
+function teamAbsence(players: RawPlayerStat[] | undefined, missingIds: Set<number>): TeamAbsence {
+  const none = { attack: 1, defense: 1, names: [] as string[] };
+  if (!players || players.length === 0 || missingIds.size === 0) return none;
+  const contrib = (p: RawPlayerStat) => (p.goals ?? 0) + 0.5 * (p.assists ?? 0);
+  const total = players.reduce((a, p) => a + contrib(p), 0);
+  const missing = players.filter((p) => missingIds.has(p.id) && (p.appearances ?? 0) > 0);
+  if (missing.length === 0) return none;
+  const attackShare = total > 0 ? missing.reduce((a, p) => a + contrib(p), 0) / total : 0;
+  const isDef = (p: RawPlayerStat) => p.position === "Defender" || p.position === "Goalkeeper";
+  const defMinutes = players.filter(isDef).reduce((a, p) => a + (p.minutes ?? 0), 0);
+  // pomer k jednej základnej zostave (4 obrancovia + brankár), nie k celému kádru
+  const games = Math.max(1, ...players.map((p) => p.appearances ?? 0));
+  const defLineupMinutes = Math.min(defMinutes, 5 * 90 * games);
+  const defShare = defLineupMinutes > 0 ? missing.filter(isDef).reduce((a, p) => a + (p.minutes ?? 0), 0) / defLineupMinutes : 0;
+  return {
+    attack: clamp(1 - ABSENCE_ATTACK_WEIGHT * attackShare, ABSENCE_ATTACK_MIN, 1),
+    defense: clamp(1 + ABSENCE_DEFENSE_WEIGHT * defShare, 1, ABSENCE_DEFENSE_MAX),
+    names: missing
+      .sort((a, b) => contrib(b) - contrib(a) || (b.minutes ?? 0) - (a.minutes ?? 0))
+      .map((p) => p.name),
+  };
+}
+
+function absenceEffects(
+  fixture: Fixture,
+  homePlayers: RawPlayerStat[] | undefined,
+  awayPlayers: RawPlayerStat[] | undefined,
+  missing: MissingPlayer[] | undefined
+): { home: TeamAbsence; away: TeamAbsence; text: string } | null {
+  if (!missing || missing.length === 0) return null;
+  const ids = (teamId: number) => new Set(missing.filter((m) => m.teamId === teamId).map((m) => m.playerId));
+  const home = teamAbsence(homePlayers, ids(fixture.homeTeam.id));
+  const away = teamAbsence(awayPlayers, ids(fixture.awayTeam.id));
+  if (!home.names.length && !away.names.length) return null;
+  const part = (name: string, t: TeamAbsence) => {
+    if (!t.names.length) return null;
+    const shown = t.names.slice(0, 3).join(", ") + (t.names.length > 3 ? ` a ďalší (${t.names.length - 3})` : "");
+    const eff = t.attack < 0.995 ? ` (útok −${Math.round((1 - t.attack) * 100)} %)` : "";
+    return `${name}: ${shown}${eff}`;
+  };
+  const parts = [part(fixture.homeTeam.name, home), part(fixture.awayTeam.name, away)].filter(Boolean);
+  return { home, away, text: `Chýbajú – ${parts.join("; ")}.` };
+}
 
 /** Očakávané góly domáceho a hosťujúceho tímu na základe sily útoku/obrany a skutočného ligového priemeru. */
 export function expectedGoals(
@@ -501,7 +558,9 @@ export function predictMatch(
   h2hStats?: H2HStats[],
   recentGoals?: { home?: RecentGoals | null; away?: RecentGoals | null },
   /** true = pôvodný model (bez formy z gólov a bez kalibrácie trhov) – len pre spätný test. */
-  legacy: boolean = false
+  legacy: boolean = false,
+  /** Hráči, ktorí v zápase chýbajú (zranenia, tresty). */
+  missingPlayers?: MissingPlayer[]
 ): PredictionResult {
   const xg = expectedGoals(homeStats, awayStats, leagueAvg, homePriorsResult, awayPriorsResult);
   // Aktuálna forma podľa gólov: útok tímu v posledných zápasoch oproti sezóne
@@ -519,6 +578,13 @@ export function predictMatch(
   if (h2hG && h2hG.weight > 0) {
     xg.home = (1 - h2hG.weight) * xg.home + h2hG.weight * h2hG.home;
     xg.away = (1 - h2hG.weight) * xg.away + h2hG.weight * h2hG.away;
+  }
+  // Chýbajúci hráči (zranenia, tresty): útok tímu oslabí podiel chýbajúcich na
+  // góloch a asistenciách, súperovi pridá výpadok obrancov a brankára.
+  const absences = legacy ? null : absenceEffects(fixture, homePlayers, awayPlayers, missingPlayers);
+  if (absences) {
+    xg.home = clamp(xg.home * absences.home.attack * absences.away.defense, 0.15, 5);
+    xg.away = clamp(xg.away * absences.away.attack * absences.home.defense, 0.15, 5);
   }
   // Štatistiky vzájomných zápasov spresnia rohy, karty, strely, fauly, ofsajdy a držanie lopty.
   const h2hStat = (key: keyof H2HStats) => recencyAverage((h2hStats ?? []).map((x) => x[key]));
@@ -636,9 +702,9 @@ export function predictMatch(
       ? `${name} ${fmt1(r.goalsFor)}:${fmt1(r.goalsAgainst)}`
       : null;
   const recentParts = [recentLine(fixture.homeTeam.name, rh), recentLine(fixture.awayTeam.name, ra)].filter(Boolean);
-  const recentGoalsText = recentParts.length
-    ? ` Góly v posledných zápasoch (priemer, dané:dostané): ${recentParts.join(", ")}.`
-    : "";
+  const recentGoalsText =
+    (recentParts.length ? ` Góly v posledných zápasoch (priemer, dané:dostané): ${recentParts.join(", ")}.` : "") +
+    (absences?.text ? ` ${absences.text}` : "");
 
   const resultExplanation = `${fixture.homeTeam.name} ${homeFormText}, ${
     fixture.awayTeam.name
@@ -650,7 +716,7 @@ export function predictMatch(
 
   const golyExplanation = `Očakávaný súčet gólov v zápase je ${(xg.home + xg.away).toFixed(1)} (${
     fixture.homeTeam.name
-  } ${xg.home.toFixed(1)}, ${fixture.awayTeam.name} ${xg.away.toFixed(1)}).`;
+  } ${xg.home.toFixed(1)}, ${fixture.awayTeam.name} ${xg.away.toFixed(1)}).${absences?.text ? ` ${absences.text}` : ""}`;
 
   const bttsExplanation = `Očakávané góly: ${fixture.homeTeam.name} ${xg.home.toFixed(1)}, ${
     fixture.awayTeam.name
@@ -701,10 +767,10 @@ export function predictMatch(
   // Góly jedného tímu: Poissonovo rozdelenie z očakávaných gólov tímu.
   // Z oboch tímov spolu najviac jeden tip (kategória „goly_timu“).
   addOverUnder("Góly domácich", "goly_timu", (line) => poissonOverUnder(xg.home, line), () =>
-    `Očakávané góly ${fixture.homeTeam.name}: ${xg.home.toFixed(1)} (súper ${fixture.awayTeam.name} ${xg.away.toFixed(1)}).`
+    `Očakávané góly ${fixture.homeTeam.name}: ${xg.home.toFixed(1)} (súper ${fixture.awayTeam.name} ${xg.away.toFixed(1)}).${absences?.text ? ` ${absences.text}` : ""}`
   );
   addOverUnder("Góly hostí", "goly_timu", (line) => poissonOverUnder(xg.away, line), () =>
-    `Očakávané góly ${fixture.awayTeam.name}: ${xg.away.toFixed(1)} (súper ${fixture.homeTeam.name} ${xg.home.toFixed(1)}).`
+    `Očakávané góly ${fixture.awayTeam.name}: ${xg.away.toFixed(1)} (súper ${fixture.homeTeam.name} ${xg.home.toFixed(1)}).${absences?.text ? ` ${absences.text}` : ""}`
   );
 
   // Kalibrácia podľa spätného testu (~106 zápasov): Poisson pri „oba tímy skórujú"

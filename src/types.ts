@@ -303,6 +303,20 @@ export interface RawPlayerStat {
   name: string;
   goals: number;
   appearances: number;
+  /** Asistencie v sezóne (na odhad dôležitosti chýbajúceho hráča). */
+  assists?: number;
+  /** Odohrané minúty v sezóne. */
+  minutes?: number;
+  /** Pozícia: Goalkeeper / Defender / Midfielder / Attacker. */
+  position?: string;
+}
+
+/** Hráč, ktorý v zápase chýba (zranenie, trest) – z API-Football /injuries. */
+export interface MissingPlayer {
+  playerId: number;
+  name: string;
+  teamId: number;
+  reason: string;
 }
 
 /** Výsledok odhadu pravdepodobnosti, že hráč v danom zápase skóruje. */
