@@ -58,6 +58,57 @@ const OU_PATTERNS: Record<string, RegExp> = {
   "Ofsajdy": /offside/i,
 };
 
+/** Trhy na jeden tím: názov trhu v TipRadare -> strana a druh štatistiky. */
+export const TEAM_OU_MARKETS: Record<string, { side: "home" | "away"; kind: "goals" | "corners" }> = {
+  "Góly domácich": { side: "home", kind: "goals" },
+  "Góly hostí": { side: "away", kind: "goals" },
+  "Rohy domácich": { side: "home", kind: "corners" },
+  "Rohy hostí": { side: "away", kind: "corners" },
+};
+
+// Pri trhoch jedného tímu nechceme polčasy, handicapy, preteky a kombinácie.
+const TEAM_EXCLUDED = /(1st|2nd|first|second|half|asian|handicap|exact|odd\/even|european|race|interval|minute|min\b|player|&|both|result|winner|draw)/i;
+
+/**
+ * Stávka jedného tímu, napr. „Total - Home“ (góly domácich), „Home Corners Over/Under“.
+ * Názvy sa u API-Football líšia, preto je porovnanie voľnejšie: musí obsahovať
+ * stranu (home/away, nie obe) a pri rohoch slovo corner, pri góloch žiadnu inú štatistiku.
+ */
+function isTeamBet(bet: string, side: "home" | "away", kind: "goals" | "corners"): boolean {
+  const b = bet.trim().toLowerCase();
+  const other = side === "home" ? "away" : "home";
+  if (!b.includes(side) || b.includes(other) || TEAM_EXCLUDED.test(b)) return false;
+  if (kind === "corners") return /corner/.test(b);
+  if (/(corner|card|booking|shot|foul|offside|throw|goal ?kick|tackle|save|possession)/.test(b)) return false;
+  return /^total\s*-\s*(home|away)$/.test(b) || /(goal|total|over)/.test(b);
+}
+
+/** Patrí stávka z API k trhu nad/pod v TipRadare (bez ohľadu na hranicu)? */
+function isOverUnderBet(bet: string, market: string): boolean {
+  const team = TEAM_OU_MARKETS[market];
+  if (team) return isTeamBet(bet, team.side, team.kind);
+  const pattern = OU_PATTERNS[market];
+  if (!pattern || !pattern.test(bet) || EXCLUDED.test(bet)) return false;
+  if (market === "Góly" && !/^goals? over\s*\/?\s*under$/i.test(bet.trim())) return false;
+  return true;
+}
+
+/**
+ * Hranice (napr. 8,5 / 9,5 / 10,5), ktoré stávkovky pre daný trh nad/pod ponúkajú.
+ * Model potom vyhodnotí každú z nich a vyberie tú s najväčšou hodnotou.
+ */
+export function offeredLines(odds: MarketOdds[] | undefined, market: string): number[] {
+  if (!odds || odds.length === 0) return [];
+  const lines = new Set<number>();
+  for (const o of odds) {
+    if (!isOverUnderBet(o.bet, market)) continue;
+    const v = parseOverUnder(o.value);
+    // len polovičné hranice (x,5) – pri celých číslach (napr. 10) sa stávka môže vracať
+    if (v && Math.abs((v.line % 1) - 0.5) < 0.001) lines.add(v.line);
+  }
+  return Array.from(lines).sort((a, b) => a - b);
+}
+
 function parseOverUnder(text: string): { dir: "over" | "under"; line: number } | null {
   const m = String(text).trim().match(/^(over|under)\s*([\d]+(?:[.,]\d+)?)$/i);
   if (!m) return null;
@@ -97,14 +148,12 @@ export function findOdds(
     );
   }
 
-  const pattern = OU_PATTERNS[pick.market];
-  if (pattern) {
+  if (OU_PATTERNS[pick.market] || TEAM_OU_MARKETS[pick.market]) {
     const target = parseOverUnder(pick.selection);
     if (!target) return null;
     return best(
       odds.filter((o) => {
-        if (!pattern.test(o.bet) || EXCLUDED.test(o.bet)) return false;
-        if (pick.market === "Góly" && !/^goals? over\s*\/?\s*under$/i.test(o.bet.trim())) return false;
+        if (!isOverUnderBet(o.bet, pick.market)) return false;
         const v = parseOverUnder(o.value);
         return !!v && v.dir === target.dir && Math.abs(v.line - target.line) < 0.001;
       })

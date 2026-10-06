@@ -20,7 +20,7 @@ import {
   getFixtureCornersAndCards,
 } from "./apiClient";
 import { predictMatch, DEFAULT_WEIGHTS, LEGACY_WEIGHTS } from "./predictor";
-import { evaluateTip } from "./tipEvaluator";
+import { evaluateTip, STATS_MARKETS } from "./tipEvaluator";
 import { Fixture, MarketPick } from "./types";
 
 export interface BacktestParams {
@@ -158,7 +158,7 @@ async function outcomes(fixture: Fixture, pickSets: MarketPick[][]): Promise<Sam
     const out: Sample[] = [];
     for (const p of picks) {
       const bet = { homeTeam: fixture.homeTeam.name, awayTeam: fixture.awayTeam.name, market: p.market, selection: p.selection };
-      const isStat = ["Rohy", "Karty", "Strely na bránu", "Fauly", "Ofsajdy", "Vyššie držanie lopty"].includes(p.market);
+      const isStat = STATS_MARKETS.includes(p.market);
       if (isStat && extraTime) continue; // štatistiky s predĺžením nie sú porovnateľné
       const status = evaluateTip(
         bet,
@@ -170,7 +170,8 @@ async function outcomes(fixture: Fixture, pickSets: MarketPick[][]): Promise<Sam
         stats.shotsOnGoal,
         stats.fouls,
         stats.offsides,
-        stats.possession
+        stats.possession,
+        stats.cornersByTeam ?? null
       );
       if (status === "won" || status === "lost") out.push({ market: p.market, probability: p.probability, outcome: status });
     }

@@ -810,6 +810,8 @@ export async function getFixtureCornersAndCards(
   offsides: number | null;
   /** Držanie lopty v % podľa názvu tímu (tak, ako ho vracia API). */
   possession: { team: string; value: number }[] | null;
+  /** Rohy jednotlivých tímov (v poradí domáci, hostia, tak ako ich vracia API). */
+  cornersByTeam?: { team: string; value: number }[] | null;
 }> {
   try {
     const res = await client().get("/fixtures/statistics", { params: { fixture: fixtureId } });
@@ -846,6 +848,14 @@ export async function getFixtureCornersAndCards(
       if (value !== null && t.team?.name) possession.push({ team: t.team.name, value });
     }
 
+    const cornersByTeam: { team: string; value: number }[] = [];
+    for (const t of teams) {
+      const stat = (t.statistics ?? []).find((s: any) => s.type === "Corner Kicks");
+      // chýbajúci údaj pri jednom tíme API vracia ako null = 0 rohov, ak má druhý tím číslo
+      const value = typeof stat?.value === "number" ? stat.value : stat && stat.value == null ? 0 : null;
+      if (value !== null && t.team?.name) cornersByTeam.push({ team: t.team.name, value });
+    }
+
     return {
       corners: found.corners ? totals.corners : null,
       cards: found.cardsYellow || found.cardsRed ? (totals.cardsYellow ?? 0) + (totals.cardsRed ?? 0) : null,
@@ -853,9 +863,10 @@ export async function getFixtureCornersAndCards(
       fouls: found.fouls ? totals.fouls : null,
       offsides: found.offsides ? totals.offsides : null,
       possession: possession.length === 2 ? possession : null,
+      cornersByTeam: found.corners && cornersByTeam.length === 2 ? cornersByTeam : null,
     };
   } catch {
-    return { corners: null, cards: null, shotsOnGoal: null, fouls: null, offsides: null, possession: null };
+    return { corners: null, cards: null, shotsOnGoal: null, fouls: null, offsides: null, possession: null, cornersByTeam: null };
   }
 }
 

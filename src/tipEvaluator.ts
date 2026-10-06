@@ -26,9 +26,33 @@ export function evaluateTip(
   actualShotsOnGoal: number | null = null,
   actualFouls: number | null = null,
   actualOffsides: number | null = null,
-  actualPossession: { team: string; value: number }[] | null = null
+  actualPossession: { team: string; value: number }[] | null = null,
+  actualCornersByTeam: { team: string; value: number }[] | null = null
 ): "won" | "lost" | "void" {
+  const overUnder = (actual: number | null): "won" | "lost" | "void" => {
+    if (actual === null) return "void";
+    const line = extractLine(tip.selection);
+    if (line === null) return "void";
+    const isOver = tip.selection.startsWith("Over");
+    return actual > line === isOver ? "won" : "lost";
+  };
+  // Rohy jedného tímu: podľa názvu tímu, inak podľa poradia (API vracia najprv domácich).
+  const teamCorners = (side: "home" | "away"): number | null => {
+    if (!actualCornersByTeam || actualCornersByTeam.length !== 2) return null;
+    const name = side === "home" ? tip.homeTeam : tip.awayTeam;
+    const byName = actualCornersByTeam.find((c) => c.team === name);
+    return (byName ?? actualCornersByTeam[side === "home" ? 0 : 1]).value;
+  };
   switch (tip.market) {
+    case "Góly domácich":
+      return overUnder(homeGoals);
+    case "Góly hostí":
+      return overUnder(awayGoals);
+    case "Rohy domácich":
+      return overUnder(teamCorners("home"));
+    case "Rohy hostí":
+      return overUnder(teamCorners("away"));
+
     case "Vyššie držanie lopty": {
       if (actualPossession === null) return "void";
       const picked = actualPossession.find((p) => p.team === tip.selection);
@@ -159,7 +183,7 @@ const VOID_STATUSES = ["CANC", "ABD", "AWD", "WO"];
 /** Odložený / prerušený zápas - ak sa neodohrá do 3 dní, stávka sa vracia. */
 const DELAYED_STATUSES = ["PST", "TBD", "SUSP", "INT"];
 const DELAYED_VOID_AFTER_MS = 3 * 24 * 60 * 60 * 1000;
-const STATS_MARKETS = ["Rohy", "Karty", "Strely na bránu", "Fauly", "Ofsajdy", "Vyššie držanie lopty"];
+export const STATS_MARKETS = ["Rohy", "Rohy domácich", "Rohy hostí", "Karty", "Strely na bránu", "Fauly", "Ofsajdy", "Vyššie držanie lopty"];
 
 export interface SettledBet {
   status: "won" | "lost" | "void";
@@ -202,6 +226,7 @@ export async function settleBet(
   let fouls: number | null = null;
   let offsides: number | null = null;
   let possession: { team: string; value: number }[] | null = null;
+  let cornersByTeam: { team: string; value: number }[] | null = null;
   // Štatistiky z API zahŕňajú aj predĺženie - pri takom zápase sa nedá určiť
   // stav po 90 minútach, preto takýto tip vraciame (void).
   if (STATS_MARKETS.includes(bet.market) && !wentToExtraTime) {
@@ -212,6 +237,7 @@ export async function settleBet(
     fouls = stats.fouls;
     offsides = stats.offsides;
     possession = stats.possession;
+    cornersByTeam = stats.cornersByTeam ?? null;
   }
 
   let scorerIds: number[] | null = null;
@@ -230,7 +256,8 @@ export async function settleBet(
     shotsOnGoal,
     fouls,
     offsides,
-    possession
+    possession,
+    cornersByTeam
   );
   return { status, homeGoals: result.homeGoals, awayGoals: result.awayGoals };
 }
