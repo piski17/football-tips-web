@@ -45,6 +45,14 @@ export const SUSPICIOUS_EXPECTED_VALUE = 1.25;
 
 /** Pod týmto počtom odohraných zápasov v sezóne (pri ktoromkoľvek tíme) má model málo dát. */
 export const MIN_GAMES_FOR_TRUST = 5;
+/**
+ * Spoľahlivosť (6. 10. 2026): kým jeden z tímov neodohral v sezóne aspoň
+ * MIN_GAMES_TO_RECOMMEND zápasy (typicky reprezentácie v Lige národov),
+ * model o ňom vie príliš málo a tip sa neodporučí.
+ */
+export const MIN_GAMES_TO_RECOMMEND = 3;
+/** Pri málo dátach v sezóne (pod MIN_GAMES_FOR_TRUST) musí kurz ponúkať aspoň toľko stávkoviek. */
+export const MIN_BOOKMAKERS_FEW_GAMES = 2;
 
 // Stávky na polčasy, jednotlivé tímy, handicapy a pod. - tie nechceme.
 const EXCLUDED = /(1st|2nd|first|second|half|home|away|team|exact|asian|handicap|odd\/even|european|double|draw no|interval|minute|min\b|1x2|race|highest|player|&|\/ ?both|result\/)/i;

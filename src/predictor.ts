@@ -7,6 +7,8 @@ import {
   MIN_ODDS,
   SUSPICIOUS_EXPECTED_VALUE,
   MIN_GAMES_FOR_TRUST,
+  MIN_GAMES_TO_RECOMMEND,
+  MIN_BOOKMAKERS_FEW_GAMES,
 } from "./oddsMatcher";
 import {
   Fixture,
@@ -884,6 +886,11 @@ export function predictMatch(
       // ručne sa dajú uložiť.
       b.rejectReason = "tento trh neodporúčame";
       lowValueBets.push(b);
+    } else if (minGamesPlayed < MIN_GAMES_TO_RECOMMEND) {
+      // Príliš málo zápasov v sezóne (napr. začiatok Ligy národov) - odhad stojí
+      // hlavne na minulých sezónach a kurzoch, nie na aktuálnej forme.
+      b.rejectReason = `málo odohraných zápasov v sezóne (${minGamesPlayed}, treba aspoň ${MIN_GAMES_TO_RECOMMEND})`;
+      lowValueBets.push(b);
     } else if (b.marketConflict) {
       b.rejectReason = b.marketConflict;
       lowValueBets.push(b);
@@ -903,6 +910,10 @@ export function predictMatch(
     } else if (b.odds != null && b.odds < MIN_ODDS) {
       // Kurz pod minimom (predvolene 1,50) - tip má hodnotu, ale zisk z výhry je malý.
       b.rejectReason = `kurz pod ${MIN_ODDS.toFixed(2).replace(".", ",")}`;
+      lowValueBets.push(b);
+    } else if (fewGames && (b.oddsBookmakers ?? 0) < MIN_BOOKMAKERS_FEW_GAMES) {
+      // Málo dát a kurz len od jednej stávkovky - hodnota sa nedá spoľahlivo overiť.
+      b.rejectReason = "kurz len od 1 stávkovky pri málo dátach v sezóne";
       lowValueBets.push(b);
     } else if (ev > SUSPICIOUS_EXPECTED_VALUE && fewGames) {
       b.rejectReason = "podozrivo vysoká hodnota pri málo dátach v sezóne";
