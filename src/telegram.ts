@@ -360,7 +360,6 @@ const FAQ_ANSWERS: Record<string, string> = {
     `👑 <b>VIP</b> – 59 € / mesiac · 139 € / 3 mesiace · 299 € / sezóna · <b>len 30 miest</b>\n` +
     `• <b>Kompletné členstvo Premium</b> – všetky denné tipy, odôvodnenia aj reporty\n` +
   `• <b>⭐ Silné tipy</b> – tipy s dôverou 70 % a viac označené hviezdičkou, len vo VIP kanáli\n` +
-    `• <b>Tip týždňa</b> – najsilnejší tip týždňa s podrobnou analýzou, výhradne pre VIP\n` +
     `• <b>Osobné konzultácie</b> – videohovory so zakladateľom TipRadaru podľa dohody\n` +
     `• <b>Kovová členská karta</b> – personalizovaná vaším menom, číslom členstva a dátumom vstupu\n` +
     `• <b>Priama linka na zakladateľa</b> – súkromný VIP chat pre vaše otázky\n\n` +
@@ -407,7 +406,6 @@ const PREMIUM_BENEFITS =
 const VIP_BENEFITS =
   `• <b>Kompletné členstvo Premium</b> – všetky denné tipy, odôvodnenia aj reporty\n` +
   `• <b>⭐ Silné tipy</b> – tipy s dôverou 70 % a viac označené hviezdičkou, len vo VIP kanáli\n` +
-  `• <b>Tip týždňa</b> – najsilnejší tip týždňa s podrobnou analýzou, výhradne pre VIP\n` +
   `• <b>Osobné konzultácie</b> – videohovory so zakladateľom TipRadaru podľa dohody\n` +
   `• <b>Kovová členská karta</b> – personalizovaná vaším menom, číslom členstva a dátumom vstupu\n` +
   `• <b>Priama linka na zakladateľa</b> – súkromný VIP chat pre vaše otázky`;

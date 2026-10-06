@@ -349,6 +349,13 @@
   .back-home { position: absolute; z-index: 5; top: max(12px, env(safe-area-inset-top, 0px)); right: 20px; display: inline-flex; align-items: center; min-height: 38px; padding: 0 16px; border: 1px solid rgba(201,165,92,.45); border-radius: 2px; color: var(--gold-bright, #E8D3A0); font: 600 11.5px/1 var(--font-body); letter-spacing: .16em; text-transform: uppercase; text-decoration: none; background: rgba(11,11,12,.7); }
   .back-home:hover { border-color: #C9A55C; }
   @media (max-width: 480px) { .back-home { right: 12px; padding: 0 12px; font-size: 10.5px; letter-spacing: .12em; } }
+
+  /* ---------- Väčšie snímky: obsah sa zväčší podľa okna (--s nastavuje skript) ---------- */
+  .stage { max-width: none; }
+  .slide > * { zoom: var(--s, 1); }
+  .ctrl-row { display: flex; gap: 10px; }
+  .fs-btn { font-size: 16px; }
+  .progress-track { max-width: 900px; }
 </style>
 </head>
 <body>
@@ -440,13 +447,13 @@
   </div>
 
   <div class="slide" data-duration="4000">
-    <div class="kicker">Spájaj tipy do tiketov</div>
-    <h1>Kombinovaná hodnota na jeden pohľad</h1>
+    <div class="kicker">Len pre VIP</div>
+    <h1>★ Silný tip</h1>
     <div class="mock-ticket">
-      <div class="mock-ticket-row"><span>Arsenal — Leeds · Karty nad 3,5</span><strong>72 %</strong></div>
-      <div class="mock-ticket-row"><span>Chelsea — Bournemouth · Góly nad 1,5</span><strong>68 %</strong></div>
-      <div class="mock-ticket-row"><span>Kombinovaný kurz</span><strong>~2,04</strong></div>
+      <div class="mock-ticket-row"><span>Arsenal — Leeds · Fauly pod 24,5</span><strong>74 % ★</strong></div>
+      <div class="mock-ticket-row"><span>Chelsea — Bournemouth · Góly nad 2,5</span><strong>71 % ★</strong></div>
     </div>
+    <p class="lede" style="margin-top:18px">Tipy s dôverou 70 % a viac. V spätných testoch vychádzali najčastejšie.</p>
   </div>
 
   <div class="slide" data-duration="4000">
@@ -471,12 +478,12 @@
       <div class="price-card">
         <div class="tag">PREMIUM</div>
         <div class="amount">29 €</div>
-        <div class="per">/ mesiac</div>
+        <div class="per">/ mesiac · sezóna 149&nbsp;€</div>
       </div>
       <div class="price-card vip">
-        <div class="tag">VIP · tipy skôr + denný tiket</div>
+        <div class="tag">VIP · ★ silné tipy + osobný chat</div>
         <div class="amount">59 €</div>
-        <div class="per">/ mesiac</div>
+        <div class="per">/ mesiac · sezóna 299&nbsp;€</div>
       </div>
     </div>
   </div>
@@ -493,7 +500,7 @@
 
 <div class="controls">
   <div class="progress-track" id="progressTrack"></div>
-  <button class="play-btn" id="playBtn" aria-label="Pauza/Prehrať">⏸</button>
+  <div class="ctrl-row"><button class="play-btn" id="playBtn" aria-label="Pauza/Prehrať">⏸</button><button class="play-btn fs-btn" id="fsBtn" aria-label="Celá obrazovka" title="Celá obrazovka">⛶</button></div>
 </div>
 
 <script>
@@ -591,6 +598,24 @@
 
   showSlide(current);
   scheduleNext();
+
+  // zväčšenie obsahu podľa veľkosti okna (základ 900 × 680 px, najviac 1,9×)
+  function fitSlides() {
+    const s = Math.max(1, Math.min(1.9, window.innerWidth / 900, (window.innerHeight - 90) / 680));
+    document.documentElement.style.setProperty("--s", s.toFixed(3));
+  }
+  fitSlides();
+  window.addEventListener("resize", fitSlides);
+  const fsBtn = document.getElementById("fsBtn");
+  const fsEl = document.documentElement;
+  if (!fsEl.requestFullscreen && !fsEl.webkitRequestFullscreen) fsBtn.hidden = true;
+  fsBtn.addEventListener("click", () => {
+    if (document.fullscreenElement || document.webkitFullscreenElement) {
+      (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    } else {
+      (fsEl.requestFullscreen || fsEl.webkitRequestFullscreen).call(fsEl);
+    }
+  });
 </script>
 
 </body>
