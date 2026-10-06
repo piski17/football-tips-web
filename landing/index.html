@@ -527,6 +527,19 @@
     .hero h1, .hero .intro { margin-left: auto; margin-right: auto; }
     .hero .actions { justify-content: center; }
   }
+
+  /* členstvo: dĺžka */
+  .term-switch { display: inline-flex; flex-wrap: wrap; gap: 4px; margin-top: 40px; padding: 4px; border: 1px solid var(--rule-gold); border-radius: 999px; }
+  .term-switch button { font: 500 14px/1 var(--sans); color: var(--muted); background: none; border: 0; border-radius: 999px; padding: 11px 18px; cursor: pointer; }
+  .term-switch button em { font-style: normal; color: var(--gold); margin-left: 4px; }
+  .term-switch button[aria-selected="true"] { background: var(--gold); color: #141210; }
+  .term-switch button[aria-selected="true"] em { color: #141210; }
+  .term-switch + .plans { margin-top: 28px; }
+  .per-month { margin: 10px 0 0; font-size: 14px; color: var(--gold); min-height: 1.4em; }
+  .founder { margin-top: 28px; padding: 22px 26px; border: 1px dashed var(--rule-gold); display: flex; gap: 18px; align-items: baseline; flex-wrap: wrap; }
+  .founder b { font: 400 20px/1.2 var(--serif); color: var(--gold-hi); font-weight: 400; }
+  .founder p { margin: 0; color: var(--muted); flex: 1 1 320px; }
+  @media (max-width: 640px) { .term-switch { display: grid; grid-template-columns: repeat(3, 1fr); border-radius: 18px; } .term-switch button { padding: 10px 6px; font-size: 13px; line-height: 1.3; border-radius: 14px; } .term-switch button em { display: block; margin: 2px 0 0; } }
 </style>
 </head>
 <body>
@@ -715,41 +728,52 @@
     <div class="wrap">
       <div class="eyebrow"><b>IV.</b>Členstvo</div>
       <h2>Dva spôsoby, ako sa pridať</h2>
-      <p class="muted" style="margin-top:16px;max-width:60ch">Oba plány dostávajú rovnaké denné tipy. VIP pridáva osobný kontakt so mnou, preto má len obmedzený počet miest. Predaj zatiaľ nebeží. Zápis do poradovníka prebehne cez Telegram a zapísaným sa ozvem ako prvým.</p>
+      <p class="muted" style="margin-top:16px;max-width:62ch">Každý tip má kurz, šancu podľa modelu aj dôvod. Prehraté tipy nemažeme a každý týždeň zverejňujeme úspešnosť. Čím dlhšie členstvo, tým nižšia cena za mesiac. Predaj zatiaľ nebeží, zápis do poradovníka prebehne cez Telegram.</p>
+      <div class="term-switch" role="tablist" aria-label="Dĺžka členstva">
+        <button type="button" role="tab" data-term="m1" aria-selected="false">1 mesiac</button>
+        <button type="button" role="tab" data-term="m3" aria-selected="true">3 mesiace <em>−20&nbsp;%</em></button>
+        <button type="button" role="tab" data-term="season" aria-selected="false">Celá sezóna <em>−35&nbsp;%</em></button>
+      </div>
       <div class="plans">
         <article class="plan">
           <div class="plan-top"><h3>Premium</h3><span>pre jednotlivcov</span></div>
-          <div class="price"><b class="num">29 €</b><span>mesačne</span></div>
+          <div class="price"><b class="num" data-price-premium>69 €</b><span data-price-unit>za 3 mesiace</span></div>
+          <p class="per-month" data-permonth-premium>23 € mesačne · ušetríte 18 €</p>
           <ul>
-            <li><strong>Denné tipy</strong> v súkromnom Telegram kanáli</li>
-            <li><strong>Pri každom tipe</strong> kurz, dôvera modelu a dôvod</li>
-            <li><strong>2 – 3 hodiny pred výkopom</strong>, večer vyhodnotenie dňa</li>
-            <li><strong>Týždenný prehľad</strong> úspešnosti, zisku a ROI</li>
+            <li><strong>Denné tipy</strong> v súkromnom Telegram kanáli, 2 – 3 hodiny pred výkopom</li>
+            <li><strong>Pri každom tipe</strong> kurz, šanca podľa modelu, dôvod a odporúčaná sadzba</li>
+            <li><strong>Upozornenie na zmenu</strong>, keď pred zápasom vypadne dôležitý hráč</li>
+            <li><strong>Vyhodnotenie</strong> každý večer a týždenný prehľad úspešnosti, zisku a ROI</li>
           </ul>
           <div class="plan-foot">
             <a class="btn btn-ghost" id="premiumCta" href="https://t.me/TipRadarAiBot?start=premium" target="_blank" rel="noopener">Zapísať sa do poradovníka</a>
-            <p class="small">Bez viazanosti, zrušíte jednou správou.</p>
+            <p class="small">Bez automatického predlžovania. Mesačné členstvo zrušíte jednou správou.</p>
           </div>
         </article>
         <article class="plan vip">
           <div class="plan-top"><h3>VIP</h3><span class="limit-tag">len 30 miest</span></div>
-          <div class="price"><b class="num">59 €</b><span>mesačne</span></div>
+          <div class="price"><b class="num" data-price-vip>139 €</b><span data-price-unit>za 3 mesiace</span></div>
+          <p class="per-month" data-permonth-vip>46 € mesačne · ušetríte 38 €</p>
           <ul>
             <li><strong>Všetko z Premium</strong></li>
+            <li><strong>★ Silné tipy</strong> s dôverou 70&nbsp;% a viac, označené hviezdičkou len vo VIP kanáli. V spätných testoch vychádzali najčastejšie.</li>
             <li><strong>Tip týždňa</strong> s podrobným rozborom</li>
-            <li><strong>Osobné konzultácie</strong> cez videohovor podľa dohody</li>
-            <li><strong>Súkromný VIP chat</strong>, kde odpisujem priamo ja</li>
+            <li><strong>Súkromný VIP chat</strong>, kde odpisujem priamo ja, a videohovor podľa dohody</li>
             <li><strong>Kovová členská karta</strong> s vaším menom a číslom členstva</li>
           </ul>
           <div class="plan-foot">
             <a class="btn" id="vipCta" href="https://t.me/TipRadarAiBot?start=vip" target="_blank" rel="noopener">Zapísať sa do poradovníka</a>
-            <p class="small">Kartu posielame poštou po prvom mesiaci členstva.</p>
+            <p class="small" data-card-note>Kartu posielame poštou po prvom mesiaci členstva.</p>
             <div class="seats" id="vipSeats" hidden>
               <div id="vipSeatsText"></div>
               <div class="bar"><i id="seatBar"></i></div>
             </div>
           </div>
         </article>
+      </div>
+      <div class="founder">
+        <b>Prví členovia</b>
+        <p>Kto sa pridá medzi prvými, má svoju cenu zamknutú, kým členstvo nepreruší. Aj keď ceny neskôr zvýšime.</p>
       </div>
     </div>
   </section>
@@ -791,7 +815,8 @@
         <details><summary>Čo je zisk v jednotkách a ROI?</summary><p>Jednotka je rovnaká suma na každý tip, napríklad 10 €. Zisk +5 jednotiek pri 10 € na tip je +50 €. ROI hovorí, koľko percent z vložených peňazí sa vrátilo navyše.</p></details>
         <details><summary>Zaručujete výhru?</summary><p>Nie. Žiadny model nevie zaručiť výsledok zápasu. TipRadar vyberá stávky, pri ktorých je šanca podľa štatistík vyššia, než naznačuje kurz. Rozhoduje dlhodobý výsledok, preto zverejňujeme aj prehraté tipy.</p></details>
         <details><summary>Ako overujete, že model funguje?</summary><p>Spätným testom na odohraných zápasoch a mesačnou kontrolou, či tipy s dôverou 70&nbsp;% naozaj vychádzajú zhruba v 70&nbsp;% prípadov. Tipy vyradené pre veľký rozpor s kurzami si zapisujeme a porovnávame, kto mal pravdu.</p></details>
-        <details><summary>Ako členstvo zruším?</summary><p>Stačí napísať. Členstvo je bez viazanosti a platí do konca zaplateného obdobia.</p></details>
+        <details><summary>Aké dlhé je členstvo?</summary><p>Na 1 mesiac, na 3 mesiace alebo na celú sezónu do 31. 5. 2027. Dlhšie členstvo vychádza lacnejšie na mesiac. Žiadne sa samo nepredlžuje, pred koncom vám pripomenieme, že končí.</p></details>
+        <details><summary>Ako členstvo zruším?</summary><p>Stačí napísať. Členstvo platí do konca zaplateného obdobia a samo sa nepredlžuje.</p></details>
       </div>
     </div>
   </section>
@@ -928,6 +953,34 @@
       btn.disabled = false; btn.textContent = "Odoslať otázku";
     }
   });
+
+  // ---------- dĺžka členstva ----------
+  (function () {
+    const PRICES = {
+      m1: { premium: 29, vip: 59, unit: "mesačne", months: 1 },
+      m3: { premium: 69, vip: 139, unit: "za 3 mesiace", months: 3 },
+      season: { premium: 149, vip: 299, unit: "do 31. 5. 2027", months: 8 },
+    };
+    const eur = (n) => `${Math.round(n)} €`;
+    const set = (sel, txt) => document.querySelectorAll(sel).forEach((el) => (el.textContent = txt));
+    function apply(term) {
+      const t = PRICES[term];
+      document.querySelectorAll(".term-switch [data-term]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.term === term)));
+      set("[data-price-premium]", eur(t.premium));
+      set("[data-price-vip]", eur(t.vip));
+      set("[data-price-unit]", t.unit);
+      const note = (plan) => {
+        if (t.months === 1) return "";
+        const full = PRICES.m1[plan] * t.months;
+        return `${eur(t[plan] / t.months)} mesačne · ušetríte ${eur(full - t[plan])}`;
+      };
+      set("[data-permonth-premium]", note("premium"));
+      set("[data-permonth-vip]", note("vip"));
+      set("[data-card-note]", t.months === 1 ? "Kartu posielame poštou po prvom mesiaci členstva." : "Kartu posielame poštou hneď po zaplatení.");
+    }
+    document.querySelectorAll(".term-switch [data-term]").forEach((b) => b.addEventListener("click", () => apply(b.dataset.term)));
+    apply("m3");
+  })();
 
   // ---------- VIP miesta a predaj ----------
   fetch("/api/public/vip-seats", { cache: "no-store" })

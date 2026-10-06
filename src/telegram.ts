@@ -190,7 +190,8 @@ function impliedOdds(probability: number): string {
   return probability > 0 ? (100 / probability).toFixed(2) : "-";
 }
 
-function buildMessageText(tip: SavedTip, headerOverride?: string): string {
+/** vip = správa ide do VIP kanála – len tam má silný tip (≥ 70 %) hviezdičku. */
+function buildMessageText(tip: SavedTip, headerOverride?: string, vip = false): string {
   const odds = impliedOdds(tip.probability);
   const stakePct = stakeTierPercent(tip.probability);
   // Skutočný kurz stávkoviek (ak bol pri uložení k dispozícii), inak odhad z modelu.
@@ -225,7 +226,7 @@ function buildMessageText(tip: SavedTip, headerOverride?: string): string {
     `${headerOverride ?? `🎯 <b>Nový tip</b>`}\n\n` +
     `⚽ ${escapeHtml(translateTeamName(tip.homeTeam))} — ${escapeHtml(translateTeamName(tip.awayTeam))}\n` +
     `📊 ${escapeHtml(tip.market)}: <b>${escapeHtml(translateNamesInText(tip.selection, tip.homeTeam, tip.awayTeam))}</b>\n` +
-    `📈 Dôvera: <b>${tip.probability.toFixed(0)} %</b>${tip.probability >= STRONG_TIP_MIN_PROBABILITY ? " · ⭐ <b>Silný tip</b>" : ""}\n` +
+    `📈 Dôvera: <b>${tip.probability.toFixed(0)} %</b>${vip && tip.probability >= STRONG_TIP_MIN_PROBABILITY ? " · ⭐ <b>Silný tip</b>" : ""}\n` +
     oddsLine +
     `💵 Odporúčaná sadzba: <b>${stakePct} % bankrollu</b>\n\n` +
     oddsNote
@@ -267,10 +268,10 @@ export async function sendTipToTelegram(
   const chatIds = resolveChatIds(target);
   if (chatIds.length === 0) return [];
 
-  const text = buildMessageText(tip, headerOverride);
   const sent: { chatId: string; messageId: number }[] = [];
 
   for (const chatId of chatIds) {
+    const text = buildMessageText(tip, headerOverride, chatId === TELEGRAM_CHAT_ID_VIP);
     const messageId = await sendToChat(chatId, text);
     if (messageId) sent.push({ chatId, messageId });
   }
@@ -351,18 +352,19 @@ const TELEGRAM_CONTACT_USERNAME = process.env.TELEGRAM_CONTACT_USERNAME || "im_m
 const FAQ_ANSWERS: Record<string, string> = {
   faq_price:
     `💰 <b>Cenník</b>\n\n` +
-    `🟡 <b>PREMIUM</b> – 29 € mesačne\n` +
+    `🟡 <b>PREMIUM</b> – 29 € / mesiac · 69 € / 3 mesiace · 149 € / sezóna\n` +
     `• <b>Denné tipy v súkromnom kanáli</b> – všetky odporúčania modelu na daný deň priamo v Telegrame\n` +
     `• <b>Transparentné odôvodnenie</b> – pri každom tipe kurz, miera dôvery a dôvod, prečo vznikol\n` +
     `• <b>Včasné doručenie</b> – tipy 2 – 3 hodiny pred výkopom, večer prehľad výsledkov dňa\n` +
     `• <b>Týždenný prehľad výkonnosti</b> – úspešnosť, zisk a ROI za uplynulý týždeň\n\n` +
-    `👑 <b>VIP</b> – 59 € mesačne · <b>len 30 miest</b>\n` +
+    `👑 <b>VIP</b> – 59 € / mesiac · 139 € / 3 mesiace · 299 € / sezóna · <b>len 30 miest</b>\n` +
     `• <b>Kompletné členstvo Premium</b> – všetky denné tipy, odôvodnenia aj reporty\n` +
+  `• <b>⭐ Silné tipy</b> – tipy s dôverou 70 % a viac označené hviezdičkou, len vo VIP kanáli\n` +
     `• <b>Tip týždňa</b> – najsilnejší tip týždňa s podrobnou analýzou, výhradne pre VIP\n` +
     `• <b>Osobné konzultácie</b> – videohovory so zakladateľom TipRadaru podľa dohody\n` +
     `• <b>Kovová členská karta</b> – personalizovaná vaším menom, číslom členstva a dátumom vstupu\n` +
     `• <b>Priama linka na zakladateľa</b> – súkromný VIP chat pre vaše otázky\n\n` +
-    `Kedykoľvek zrušiteľné, žiadna viazanosť.` +
+    `Sezóna = do 31. 5. 2027. Členstvo sa samo nepredlžuje, žiadna viazanosť. Prví členovia majú cenu zamknutú, kým členstvo neprerušia.` +
     (process.env.SALES_OPEN === "true" ? "" : `\n\n🗓 <b>Predaj členstiev spúšťame čoskoro.</b> Napíšte sem „Mám záujem" a ozveme sa vám ako prvým.`),
   faq_how:
     `❓ <b>Ako to funguje</b>\n\n` +
@@ -405,25 +407,26 @@ const PREMIUM_BENEFITS =
   `• <b>Týždenný prehľad výkonnosti</b> – úspešnosť, zisk a ROI za uplynulý týždeň`;
 const VIP_BENEFITS =
   `• <b>Kompletné členstvo Premium</b> – všetky denné tipy, odôvodnenia aj reporty\n` +
+  `• <b>⭐ Silné tipy</b> – tipy s dôverou 70 % a viac označené hviezdičkou, len vo VIP kanáli\n` +
   `• <b>Tip týždňa</b> – najsilnejší tip týždňa s podrobnou analýzou, výhradne pre VIP\n` +
   `• <b>Osobné konzultácie</b> – videohovory so zakladateľom TipRadaru podľa dohody\n` +
   `• <b>Kovová členská karta</b> – personalizovaná vaším menom, číslom členstva a dátumom vstupu\n` +
   `• <b>Priama linka na zakladateľa</b> – súkromný VIP chat pre vaše otázky`;
 const JOIN_MESSAGES: Record<string, string> = {
   premium:
-    `🟡 <b>Členstvo Premium</b> – 29 € mesačne\n\n${PREMIUM_BENEFITS}\n\n` +
+    `🟡 <b>Členstvo Premium</b> – 29 € / mesiac · 69 € / 3 mesiace · 149 € / sezóna\n\n${PREMIUM_BENEFITS}\n\n` +
     `<b>Ako pokračovať:</b> napíšte sem krátku správu (napríklad „Mám záujem o Premium"). Pošleme vám platobné údaje a po platbe vás pridáme do súkromného kanála.\n\n` +
-    `Ozveme sa vám zvyčajne do 24 hodín. Bez viazanosti.`,
+    `Ozveme sa vám zvyčajne do 24 hodín. Bez viazanosti, členstvo sa samo nepredlžuje.`,
   vip:
-    `👑 <b>Členstvo VIP</b> – 59 € mesačne · <b>len 30 miest</b>\n\n${VIP_BENEFITS}\n\n` +
+    `👑 <b>Členstvo VIP</b> – 59 € / mesiac · 139 € / 3 mesiace · 299 € / sezóna · <b>len 30 miest</b>\n\n${VIP_BENEFITS}\n\n` +
     `<b>Ako pokračovať:</b> napíšte sem krátku správu (napríklad „Mám záujem o VIP"). Pošleme vám platobné údaje a miesto vám rezervujeme po potvrdení platby.\n\n` +
-    `Ozveme sa vám zvyčajne do 24 hodín. Bez viazanosti.`,
+    `Ozveme sa vám zvyčajne do 24 hodín. Bez viazanosti, členstvo sa samo nepredlžuje.`,
   clenstvo:
     `✨ <b>Členstvo TipRadar</b>\n\n` +
-    `🟡 <b>Premium</b> – 29 € mesačne\n${PREMIUM_BENEFITS}\n\n` +
-    `👑 <b>VIP</b> – 59 € mesačne · <b>len 30 miest</b>\n${VIP_BENEFITS}\n\n` +
+    `🟡 <b>Premium</b> – 29 € / mesiac · 69 € / 3 mesiace · 149 € / sezóna\n${PREMIUM_BENEFITS}\n\n` +
+    `👑 <b>VIP</b> – 59 € / mesiac · 139 € / 3 mesiace · 299 € / sezóna · <b>len 30 miest</b>\n${VIP_BENEFITS}\n\n` +
     `<b>Ako pokračovať:</b> napíšte sem, ktoré členstvo vás zaujíma (napríklad „Mám záujem o VIP"). Pošleme vám platobné údaje a ďalší postup.\n\n` +
-    `Ozveme sa vám zvyčajne do 24 hodín. Bez viazanosti.`,
+    `Ozveme sa vám zvyčajne do 24 hodín. Bez viazanosti, členstvo sa samo nepredlžuje.`,
   vip_waitlist:
     `👑 <b>VIP – poradovník</b>\n\nVšetkých 30 miest je momentálne obsadených. Váš záujem sme si zapísali – keď sa miesto uvoľní, ozveme sa vám ako prvým.\n\n` +
     `Dovtedy môžete začať s členstvom <b>Premium</b> (29 € mesačne) – stačí sem napísať „Mám záujem o Premium".`,
@@ -436,10 +439,10 @@ function salesOpen(): boolean {
 function PRELAUNCH_MESSAGE(plan: string): string {
   const benefits =
     plan === "premium"
-      ? `🟡 <b>Premium</b> – 29 € mesačne\n${PREMIUM_BENEFITS}`
+      ? `🟡 <b>Premium</b> – 29 € / mesiac · 69 € / 3 mesiace · 149 € / sezóna\n${PREMIUM_BENEFITS}`
       : plan === "clenstvo"
-        ? `🟡 <b>Premium</b> – 29 € mesačne\n${PREMIUM_BENEFITS}\n\n👑 <b>VIP</b> – 59 € mesačne · <b>len 30 miest</b>\n${VIP_BENEFITS}`
-        : `👑 <b>VIP</b> – 59 € mesačne · <b>len 30 miest</b>\n${VIP_BENEFITS}`;
+        ? `🟡 <b>Premium</b> – 29 € / mesiac · 69 € / 3 mesiace · 149 € / sezóna\n${PREMIUM_BENEFITS}\n\n👑 <b>VIP</b> – 59 € / mesiac · 139 € / 3 mesiace · 299 € / sezóna · <b>len 30 miest</b>\n${VIP_BENEFITS}`
+        : `👑 <b>VIP</b> – 59 € / mesiac · 139 € / 3 mesiace · 299 € / sezóna · <b>len 30 miest</b>\n${VIP_BENEFITS}`;
   return (
     `✨ <b>Ďakujeme za záujem o TipRadar!</b>\n\n${benefits}\n\n` +
     `🗓 <b>Predaj členstiev spúšťame čoskoro.</b> Váš záujem sme si zapísali – keď začneme, ozveme sa vám <b>ako prvým</b>.\n\n` +
