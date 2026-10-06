@@ -407,7 +407,7 @@
         <div class="mini-step-num">3</div>
         <div>
           <div class="mini-step-title">Vyberieme tip</div>
-          <div class="mini-step-desc">Len stávky s reálnou hodnotou, naprieč 10 trhmi.</div>
+          <div class="mini-step-desc">Len stávky s reálnou hodnotou, naprieč 8 trhmi.</div>
         </div>
       </div>
       <div class="mini-step">
@@ -421,7 +421,7 @@
   </div>
 
   <div class="slide" data-duration="4200">
-    <div class="kicker">Jeden model, desať trhov</div>
+    <div class="kicker">Jeden model, osem trhov</div>
     <h1>Nič nenecháva náhode</h1>
     <div class="market-grid" id="marketGrid"></div>
   </div>
@@ -505,7 +505,7 @@
   let timer = null;
 
   // Market grid content
-  const markets = ["Výsledok", "Góly O/U", "Oba skórujú", "Rohy", "Karty", "Strely na bránu", "Fauly", "Ofsajdy", "Držanie lopty", "Strelci", "+ tikety", "+ vyhodnotenie"];
+  const markets = ["Góly v zápase", "Góly tímu", "Rohy v zápase", "Rohy tímu", "Karty", "Strely na bránu", "Fauly", "Držanie lopty", "+ všetky hranice"];
   const marketGrid = document.getElementById("marketGrid");
   markets.forEach((m, i) => {
     const chip = document.createElement("div");

@@ -365,7 +365,7 @@ const FAQ_ANSWERS: Record<string, string> = {
     (process.env.SALES_OPEN === "true" ? "" : `\n\n🗓 <b>Predaj členstiev spúšťame čoskoro.</b> Napíšte sem „Mám záujem" a ozveme sa vám ako prvým.`),
   faq_how:
     `❓ <b>Ako to funguje</b>\n\n` +
-    `TipRadar denne prepočíta desiatky zápasov cez vlastný štatistický model (Poissonovo rozdelenie gólov, vážená forma, vzájomné zápasy, historické dáta) a vyberie tipy s reálnou hodnotou naprieč 10 trhmi (výsledok, góly, oba tímy skórujú, rohy, karty, strely na bránu, fauly, ofsajdy, držanie lopty, strelci) — s vysvetlením, prečo.`,
+    `TipRadar denne prepočíta desiatky zápasov cez vlastný štatistický model (Poissonovo rozdelenie gólov, vážená forma, vzájomné zápasy, historické dáta) a vyberie tipy s reálnou hodnotou naprieč 8 trhmi (góly v zápase, góly tímu, rohy v zápase, rohy tímu, karty, strely na bránu, fauly, držanie lopty) — s vysvetlením, prečo. Pri každom trhu vyskúša všetky hranice, ktoré stávkové kancelárie ponúkajú, a vyberie tú s najväčšou hodnotou.`,
   faq_time:
     `🕒 <b>Kedy prídu tipy</b>\n\n` +
     `Tipy posielame v deň zápasu, <b>2 – 3 hodiny pred výkopom</b> – vtedy sú kurzy aj dáta najpresnejšie a zostane dosť času na stávku.\n\n` +
