@@ -400,8 +400,6 @@
   @media (max-width: 520px) { .fields { grid-template-columns: minmax(0, 1fr); } }
   .nav-links a.nav-form { color: var(--gold-hi); }
   .nav-links a, .nav .btn { white-space: nowrap; }
-  @media (max-width: 1180px) { .nav-links a:not(.nav-form):not(.nav-video):not(.nav-tg) { display: none; } }
-  @media (max-width: 420px) { .nav-links { gap: 16px; } .nav-links a { letter-spacing: .12em; font-size: 11px; } .brand { font-size: 20px; } .brand svg { width: 24px; height: 24px; } }
   .nav-links a.nav-tg { display: inline-flex; align-items: center; gap: 7px; }
   .nav-links a.nav-tg svg { width: 14px; height: 14px; color: var(--gold); }
   .btn-tg { gap: 10px; }
@@ -429,11 +427,7 @@
   .contact-strip a { color: var(--gold-hi); text-decoration: none; margin-left: 6px; }
   .contact-strip a:hover { text-decoration: underline; text-underline-offset: 3px; }
   @media (max-width: 640px) { .contact-strip .wrap { justify-content: center; gap: 4px 20px; } .contact-strip { font-size: 12.5px; } }
-  @media (max-width: 380px) { .nav .wrap { gap: 12px; } .nav-links { gap: 12px; } .nav-links a { font-size: 10px; letter-spacing: .08em; } .brand { font-size: 18px; gap: 8px; } .brand svg { width: 22px; height: 22px; } }
   .contact-strip .wrap { align-items: center; }
-  @media (max-width: 440px) { .nav .wrap { gap: 10px; } .nav-links { gap: 12px; } .nav-links a { font-size: 10px; letter-spacing: .08em; } .brand { font-size: 18px; gap: 8px; } .brand svg { width: 22px; height: 22px; } }
-  @media (max-width: 340px) { .nav-links { gap: 9px; } .nav-links a { letter-spacing: .04em; } .brand { font-size: 16px; gap: 6px; } .brand svg { width: 20px; height: 20px; } .nav-links a.nav-tg svg { width: 16px; height: 16px; } }
-  @media (max-width: 640px) { .nav-links a.nav-tg .tg-text { display: none; } .nav-links a.nav-tg svg { width: 18px; height: 18px; } }
   .contact-strip a.tg-link { margin-left: 0; display: inline-flex; align-items: center; gap: 7px; }
   .contact-strip a.tg-link svg { width: 15px; height: 15px; }
   .clv { display: grid; grid-template-columns: minmax(0, 240px) minmax(0, 1fr); gap: 40px; margin-top: 40px; padding: 30px 32px; border: 1px solid var(--rule-gold); background: var(--bg-2); }
@@ -447,6 +441,49 @@
   footer .rg > span:last-child { min-width: 0; }
   footer .rg .age { display: inline-grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--gold); border-radius: 50%; color: var(--gold-hi); font: 600 12px/1 var(--sans); letter-spacing: 0; flex: none; }
   footer .rg a { color: var(--gold-hi); text-decoration-color: var(--rule-gold); text-underline-offset: 3px; }
+  /* ---------- mobil: menu a menšie písmo ---------- */
+  .nav { background: var(--bg); }
+  .nav-toggle { display: none; margin-left: auto; align-items: center; gap: 10px; min-height: 40px; padding: 0 14px; border: 1px solid var(--rule-gold); border-radius: 2px; background: none; color: var(--gold-hi); font: 600 11px/1 var(--sans); letter-spacing: .2em; text-transform: uppercase; cursor: pointer; }
+  .nav-toggle i { position: relative; display: block; width: 16px; height: 1px; background: currentColor; }
+  .nav-toggle i::before, .nav-toggle i::after { content: ""; position: absolute; left: 0; width: 16px; height: 1px; background: currentColor; transition: transform .2s; }
+  .nav-toggle i::before { top: -5px; } .nav-toggle i::after { top: 5px; }
+  .nav.open .nav-toggle i { background: transparent; }
+  .nav.open .nav-toggle i::before { transform: translateY(5px) rotate(45deg); }
+  .nav.open .nav-toggle i::after { transform: translateY(-5px) rotate(-45deg); }
+  @media (max-width: 1180px) {
+    .nav .wrap { position: relative; }
+    .nav-toggle { display: inline-flex; }
+    .nav-links { display: none; position: absolute; top: 100%; left: -24px; right: -24px; flex-direction: column; gap: 0; margin: 0; padding: 8px 24px 20px; background: var(--bg); border-bottom: 1px solid var(--rule-gold); box-shadow: 0 24px 40px rgba(0,0,0,.5); }
+    .nav.open .nav-links { display: flex; }
+    .nav-links a { padding: 16px 0; border-bottom: 1px solid var(--rule); font-size: 12.5px; letter-spacing: .2em; }
+    .nav-links a:last-child { border-bottom: 0; }
+    .nav-links a.nav-tg svg { width: 15px; height: 15px; }
+  }
+  @media (max-width: 640px) {
+    .nav-links { left: -16px; right: -16px; padding-inline: 16px; }
+    .nav .wrap { height: 64px; }
+    .brand { font-size: 20px; } .brand svg { width: 26px; height: 26px; }
+    body { font-size: 15.5px; line-height: 1.6; }
+    h1, .hero h1 { font-size: 40px; line-height: 1.04; }
+    h2 { font-size: 32px; }
+    h3 { font-size: 20px; }
+    .hero .intro { font-size: 16px; line-height: 1.65; margin-top: 20px; }
+    .split > :first-child p, .muted { font-size: 15px; }
+    .funnel li { grid-template-columns: 58px minmax(0, 1fr); gap: 16px; padding: 18px 0; }
+    .funnel .c { font-size: 22px; white-space: nowrap; }
+    .funnel h3 { font-size: 11.5px; }
+    .funnel p { font-size: 14.5px; }
+    .letter p { font-size: 17px; line-height: 1.65; }
+    .faq summary { font-size: 18px; padding: 20px 36px 20px 0; }
+    .faq p, .plan li, .calc label, .stake label, .ch-detail, .clv-text p { font-size: 14.5px; }
+    .figures b { font-size: 36px; }
+    .price b { font-size: 48px; }
+    .plan h3 { font-size: 26px; }
+    .verdict .v { font-size: 44px; }
+    .stake .big { font-size: 38px; }
+    .eyebrow { margin-bottom: 18px; }
+  }
+  @media (max-width: 360px) { .funnel li { grid-template-columns: 50px minmax(0, 1fr); gap: 12px; } .funnel .c { font-size: 21px; } h1, .hero h1 { font-size: 36px; } }
 </style>
 </head>
 <body>
@@ -458,7 +495,8 @@
 <nav class="nav" aria-label="Hlavná navigácia">
   <div class="wrap">
     <a class="brand" href="#top"><svg aria-hidden="true"><use href="#logo"/></svg>TipRadar</a>
-    <div class="nav-links">
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="navLinks"><i aria-hidden="true"></i>Menu</button>
+    <div class="nav-links" id="navLinks">
       <a href="#ako">Ako vzniká tip</a>
       <a href="#hodnota">Hodnota</a>
       <a href="#vysledky">Výsledky</a>
@@ -507,7 +545,7 @@
         <div class="sample">
           <div class="lbl">Takto tip príde do Telegramu</div>
           <b>Nórsko – Portugalsko</b>, 20:45<br />
-          Góly: <b>pod 3,5</b> · dôvera 66 % · kurz 1,72
+          Góly: <b>pod 3,5</b> · dôvera 66&nbsp;% · kurz 1,72
           <p class="why">V posledných piatich vzájomných zápasoch padli v priemere dva góly.</p>
         </div>
       </div>
@@ -515,8 +553,8 @@
         <ol class="funnel">
           <li><div class="c num">120</div><div><h3>zápasov v bežný deň</h3><p>Pri každom model zoberie góly, rohy, karty, strely, fauly a ofsajdy z posledných zápasov oboch tímov, vlastné aj tie, ktoré tím dovolí súperovi. Keď je dát málo, pomôžu tri minulé sezóny.</p></div></li>
           <li><div class="c num">1 200</div><div><h3>vypočítaných trhov</h3><p>Z priemerov vyjde očakávaný počet gólov a z neho šanca na každý výsledok. Pri kartách, strelách a ofsajdoch model počíta s väčším rozptylom, lebo kolíšu viac.</p></div></li>
-          <li><div class="c num">140</div><div><h3>s dôverou 65 – 75 %</h3><p>Veľmi isté tipy mávajú nízky kurz a veľmi neisté často nevychádzajú. Ďalej idú len tipy v tomto pásme.</p></div></li>
-          <li><div class="c num">15</div><div><h3>s hodnotou a kurzom</h3><p>Tip musí mať hodnotu aspoň +5 % a kurz aspoň <span class="minOdds">1,50</span>. Trh, ktorý stávkové kancelárie neponúkajú, vypadne.</p></div></li>
+          <li><div class="c num">140</div><div><h3>s dôverou 65 – 75&nbsp;%</h3><p>Veľmi isté tipy mávajú nízky kurz a veľmi neisté často nevychádzajú. Ďalej idú len tipy v tomto pásme.</p></div></li>
+          <li><div class="c num">15</div><div><h3>s hodnotou a kurzom</h3><p>Tip musí mať hodnotu aspoň +5&nbsp;% a kurz aspoň <span class="minOdds">1,50</span>. Trh, ktorý stávkové kancelárie neponúkajú, vypadne.</p></div></li>
           <li><div class="c num">7</div><div><h3>bez veľkého rozporu s trhom</h3><p>Keď model vidí šancu o 15 – 25 bodov inak ako stávkové kancelárie, tip vyradíme. Taký rozdiel často znamená niečo, čo štatistika nevidí, napríklad zranenie. Vyradené tipy si zapisujeme a raz za mesiac kontrolujeme, kto mal pravdu.</p></div></li>
           <li><div class="c num">2 – 3</div><div><h3>tipy pre členov</h3><p>Najviac jeden tip na trh v zápase, 2 – 3 hodiny pred výkopom. Večer ich vyhodnotíme podľa skutočného výsledku.</p></div></li>
         </ol>
@@ -530,12 +568,12 @@
       <div>
         <div class="eyebrow"><b>II.</b>Hodnota</div>
         <h2>Kedy má tip hodnotu</h2>
-        <p>Keď model dáva výsledku 68 % a kurz je 1,75, z každého eura sa v priemere vráti 0,68 × 1,75 = 1,19 €. To je hodnota +19 %. Pri kurze 1,45 by to bolo len +2 % a tip by sme neposlali.</p>
+        <p>Keď model dáva výsledku 68&nbsp;% a kurz je 1,75, z každého eura sa v priemere vráti 0,68 × 1,75 = 1,19 €. To je hodnota +19&nbsp;%. Pri kurze 1,45 by to bolo len +2&nbsp;% a tip by sme neposlali.</p>
         <p>Skúste si to sami posunutím oboch čísel.</p>
       </div>
       <div class="calc">
         <div>
-          <label for="pRange"><span>Šanca podľa modelu</span><b class="num" id="pOut">68 %</b></label>
+          <label for="pRange"><span>Šanca podľa modelu</span><b class="num" id="pOut">68&nbsp;%</b></label>
           <input type="range" id="pRange" min="50" max="90" step="1" value="68" />
         </div>
         <div>
@@ -543,7 +581,7 @@
           <input type="range" id="oRange" min="1.2" max="2.6" step="0.01" value="1.75" />
         </div>
         <div class="verdict" aria-live="polite">
-          <div class="v num" id="vVal">+19 %</div>
+          <div class="v num" id="vVal">+19&nbsp;%</div>
           <div class="math" id="vMath"></div>
           <ul class="checks" id="vChecks"></ul>
           <div class="v-out" id="vOut"></div>
@@ -700,7 +738,7 @@
         <details><summary>Koľko tipov denne dostanem?</summary><p>Toľko, koľko prejde pravidlami. Niekedy jeden, inokedy viac. Keď neprejde žiadny, tip nepošleme a dáme vedieť.</p></details>
         <details><summary>Čo je zisk v jednotkách a ROI?</summary><p>Jednotka je rovnaká suma na každý tip, napríklad 10 €. Zisk +5 jednotiek pri 10 € na tip je +50 €. ROI hovorí, koľko percent z vložených peňazí sa vrátilo navyše.</p></details>
         <details><summary>Zaručujete výhru?</summary><p>Nie. Žiadny model nevie zaručiť výsledok zápasu. TipRadar vyberá stávky, pri ktorých je šanca podľa štatistík vyššia, než naznačuje kurz. Rozhoduje dlhodobý výsledok, preto zverejňujeme aj prehraté tipy.</p></details>
-        <details><summary>Ako overujete, že model funguje?</summary><p>Spätným testom na odohraných zápasoch a mesačnou kontrolou, či tipy s dôverou 70 % naozaj vychádzajú zhruba v 70 % prípadov. Tipy vyradené pre veľký rozpor s kurzami si zapisujeme a porovnávame, kto mal pravdu.</p></details>
+        <details><summary>Ako overujete, že model funguje?</summary><p>Spätným testom na odohraných zápasoch a mesačnou kontrolou, či tipy s dôverou 70&nbsp;% naozaj vychádzajú zhruba v 70&nbsp;% prípadov. Tipy vyradené pre veľký rozpor s kurzami si zapisujeme a porovnávame, kto mal pravdu.</p></details>
         <details><summary>Ako členstvo zruším?</summary><p>Stačí napísať. Členstvo je bez viazanosti a platí do konca zaplateného obdobia.</p></details>
       </div>
     </div>
@@ -717,6 +755,13 @@
 </footer>
 
 <script>
+(function () {
+  const nav = document.querySelector(".nav"), tog = document.querySelector(".nav-toggle");
+  const setOpen = (o) => { nav.classList.toggle("open", o); tog.setAttribute("aria-expanded", o ? "true" : "false"); };
+  tog.addEventListener("click", () => setOpen(!nav.classList.contains("open")));
+  document.querySelectorAll(".nav-links a").forEach((a) => a.addEventListener("click", () => setOpen(false)));
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") setOpen(false); });
+})();
 (function () {
   const $ = (id) => document.getElementById(id);
   const fmt = (n, d) => Number(n).toFixed(d).replace(".", ",");
@@ -739,8 +784,8 @@
     const p = Number($("pRange").value), o = Number($("oRange").value);
     paintRange($("pRange")); paintRange($("oRange"));
     const ret = (p / 100) * o, value = Math.round((ret - 1) * 100);
-    $("pOut").textContent = `${p} %`; $("oOut").textContent = fmt(o, 2);
-    $("vVal").textContent = `${value > 0 ? "+" : value < 0 ? "−" : ""}${Math.abs(value)} %`;
+    $("pOut").textContent = `${p} %`; $("oOut").textContent = fmt(o, 2);
+    $("vVal").textContent = `${value > 0 ? "+" : value < 0 ? "−" : ""}${Math.abs(value)} %`;
     $("vVal").className = "v num " + cls(value);
     $("vMath").textContent = `${fmt(p / 100, 2)} × ${fmt(o, 2)} = ${fmt(ret, 2)}`;
     const band = p >= 65 && p <= 75, val = value >= 5, odd = o >= MIN_ODDS - 1e-9;
@@ -865,13 +910,13 @@
       if (!d.totalResolved) { $("month").textContent = "Čísla sa zobrazia po prvých vyhodnotených tipoch."; return; }
       const n = d.totalResolved;
       $("fCount").textContent = n; $("fCountLbl").textContent = tipsWord(n);
-      $("fRate").textContent = `${d.winRate} %`;
+      $("fRate").textContent = `${d.winRate} %`;
       if (d.withOdds > 0) {
         $("fProfit").textContent = signed(d.profit, 1); $("fProfit").className = "num " + cls(d.profit);
-        $("fRoi").textContent = `${signed(d.roi, 0)} %`; $("fRoi").className = "num " + cls(d.roi);
+        $("fRoi").textContent = `${signed(d.roi, 0)} %`; $("fRoi").className = "num " + cls(d.roi);
         calcData = { profit: d.profit, count: d.withOdds }; $("stake").hidden = false; drawCalc();
       }
-      $("heroFoot").innerHTML = `<span>Spolu <b class="num">${n}</b> ${tipsWord(n)}, vyšlo <b class="num">${d.winRate} %</b>${d.withOdds > 0 ? `, ROI <b class="num ${cls(d.roi)}">${signed(d.roi, 0)} %</b>` : ""}</span><a class="link" href="#vysledky">Všetky výsledky</a>`;
+      $("heroFoot").innerHTML = `<span>Spolu <b class="num">${n}</b> ${tipsWord(n)}, vyšlo <b class="num">${d.winRate} %</b>${d.withOdds > 0 ? `, ROI <b class="num ${cls(d.roi)}">${signed(d.roi, 0)} %</b>` : ""}</span><a class="link" href="#vysledky">Všetky výsledky</a>`;
       $("heroFoot").hidden = false;
       let t = `Od začiatku ${n} ${tipsWord(n)}, ${d.won} ${verb(d.won)}.`;
       const m = d.month;
@@ -879,7 +924,7 @@
         const [y, mo] = String(m.key).split("-").map(Number);
         const name = MONTHS[mo - 1][0].toUpperCase() + MONTHS[mo - 1].slice(1);
         t += ` <strong>${name} ${y}:</strong> ${m.won} z ${m.totalResolved} ${ofTips(m.totalResolved)} ${verb(m.won)}`;
-        if (m.withOdds > 0) t += `, zisk <span class="${cls(m.profit)}">${signed(m.profit, 1)} j.</span>, ROI <span class="${cls(m.roi)}">${signed(m.roi, 0)} %</span>`;
+        if (m.withOdds > 0) t += `, zisk <span class="${cls(m.profit)}">${signed(m.profit, 1)} j.</span>, ROI <span class="${cls(m.roi)}">${signed(m.roi, 0)} %</span>`;
         t += ".";
       }
       $("month").innerHTML = t;
@@ -887,7 +932,7 @@
       if (c) {
         $("clv").hidden = false;
         if (c.total >= 10 && c.avg !== null) {
-          $("clvAvg").textContent = `${signed(c.avg, 1)} %`; $("clvAvg").className = "num " + cls(c.avg);
+          $("clvAvg").textContent = `${signed(c.avg, 1)} %`; $("clvAvg").className = "num " + cls(c.avg);
           $("clvLine").innerHTML = `<strong>${c.beat} z ${c.total}</strong> ${ofTips(c.total)} malo v čase tipu vyšší kurz než tesne pred zápasom.`;
         } else {
           $("clvAvg").textContent = "zbierame";
