@@ -519,6 +519,14 @@
   .duel-dots i.on { background: var(--gold); }
   .duel figcaption { margin-top: 14px; font-size: 12px; line-height: 1.5; color: var(--faint); }
   @media (max-width: 640px) { .duel { padding: 24px 18px 20px; } .duel-head { font-size: 10px; letter-spacing: .14em; } .duel-head span { white-space: nowrap; } .duel-live { letter-spacing: .1em; } .duel-mkt { min-height: 66px; } .duel-mkt b { font-size: 30px; } .duel-row .top b { font-size: 22px; } .duel-row .top { font-size: 11px; letter-spacing: .1em; } .duel-verdict { padding: 14px 14px; } .duel-verdict b { font-size: 24px; } }
+  /* úvod na telefóne: všetko na stred */
+  @media (max-width: 640px) {
+    .hero .wrap > div:first-child { text-align: center; }
+    .hero .eyebrow { flex-direction: column; justify-content: center; gap: 12px; line-height: 1.7; text-wrap: balance; }
+    .hero .intro { text-wrap: pretty; }
+    .hero h1, .hero .intro { margin-left: auto; margin-right: auto; }
+    .hero .actions { justify-content: center; }
+  }
 </style>
 </head>
 <body>
