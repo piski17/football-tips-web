@@ -54,8 +54,11 @@ export const LEGACY_WEIGHTS: PredictionWeights = DEFAULT_WEIGHTS;
 // fauly 0,80, strely 0,85 – 0,95, karty 0,80 (koniec sezóny) / 0,60 (začiatok),
 // góly a góly tímu 0,90 – 1,00. Pôvodná kalibrácia (strely 0,5, góly 0,67)
 // bola príliš prísna – model potom podceňoval.
+// 3. test (aug. – dec. 2023, 298 zápasov, mimo obdobia kalibrácie): pásmo 68 – 80 %
+// model 73 % → realita 73 %. Strely tam v pásme vychádzali len na 65 % (najlepšie k
+// 0,70), preto 0,8 = priemer troch testov (0,85 / 0,95 / 0,70).
 const MARKET_CALIBRATION: Record<string, number> = {
-  strely: 0.9,
+  strely: 0.8,
   fauly: 0.8,
   rohy: 0.72,
   rohy_timu: 0.75,
