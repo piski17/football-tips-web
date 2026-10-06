@@ -56,6 +56,10 @@ export interface MarketPick {
   probability: number; // 0-100
   category: string; // na skupinovanie podobných trhov, aby appka nedávala 2 podobné tipy naraz
   explanation?: string; // krátke vysvetlenie, prečo model tento tip odporúča
+  /** Pravdepodobnosť pred kalibráciou (pre hľadanie najlepšieho nastavenia v spätnom teste). */
+  rawProbability?: number;
+  /** Menší z počtov odohraných zápasov oboch tímov v sezóne. */
+  minGamesPlayed?: number;
   /** Skutočný kurz (medián stávkoviek z API-Football), ak je k dispozícii. */
   odds?: number | null;
   /** Z koľkých stávkoviek kurz pochádza. */

@@ -2265,7 +2265,37 @@ function renderBacktest(job) {
     <h4 style="margin:4px 0 0;">Podľa trhov</h4>
     <table class="bt-table"><thead><tr><th>Trh</th><th class="num">Tipov</th><th class="num">Model</th><th class="num">Realita</th><th class="num">Rozdiel</th><th class="num">V pásme 65–75 %</th></tr></thead><tbody>${markets}</tbody></table>
     <p class="muted small">Rozdiel = realita mínus predpoveď v percentuálnych bodoch. Zelená: model sedí (do ±5 b.). Červená: model <strong>preceňuje</strong> – tipy vychádzajú menej často, než hovorí. Pri menej ako ~50 tipoch v riadku berte čísla len orientačne.</p>
-    ${renderBacktestComparison(r, job.reportLegacy)}`;
+    ${renderBacktestComparison(r, job.reportLegacy)}
+    ${running ? "" : renderBacktestOptimizer(r.optimizer)}`;
+}
+
+/** Hľadanie najlepšieho nastavenia (kalibrácia trhov, pásmo dôvery, min. zápasov). */
+function renderBacktestOptimizer(o) {
+  if (!o || !o.calibration || !o.calibration.length) return "";
+  const k = (v) => (v == null || Number.isNaN(v) ? "–" : fmtNum(v, 2));
+  const err = (v) => (v == null || Number.isNaN(v) ? "–" : fmtNum(v * 100, 1));
+  const cal = o.calibration.map((c) => {
+    const enough = c.bestK != null && !Number.isNaN(c.bestK);
+    const better = enough && c.brierNow - c.brierBest > 0.002;
+    return `<tr><td>${escapeHtml(c.markets.join(", "))}</td><td class="num">${c.count}</td><td class="num">${k(c.currentK)}</td><td class="num ${better ? "bt-good" : ""}">${enough ? k(c.bestK) : '<span class="muted">málo tipov</span>'}</td><td class="num">${err(c.brierNow)}</td><td class="num">${enough ? err(c.brierBest) : "–"}</td><td class="num">${enough ? `${pct(c.avgPredictedBest)} → ${pct(c.hitRate)}` : "–"}</td></tr>`;
+  }).join("");
+  const set = o.settings.map((r) => {
+    const label = `${r.lo}–${r.hi} %, min. ${r.minGames} ${r.minGames >= 5 ? "zápasov" : "zápasy"}`;
+    const tag = r.current ? ' <span class="muted">(teraz)</span>' : r.best ? ' <strong class="bt-good">← najlepšie</strong>' : "";
+    return `<tr${r.best ? ' style="background:rgba(127,191,154,.08)"' : ""}><td>${label}${tag}</td><td class="num">${r.count}</td><td class="num">${pct(r.avgPredicted)}</td><td class="num">${pct(r.hitRate)}</td>${diffCell(r.avgPredicted, r.hitRate)}</tr>`;
+  }).join("");
+  const best = o.settings.find((r) => r.best);
+  const mk = o.marketsInBest.map((m) =>
+    `<tr><td>${escapeHtml(m.market)}</td><td class="num">${m.count}</td><td class="num ${m.hitRate >= 66.7 ? "bt-good" : "bt-bad"}">${pct(m.hitRate)}</td></tr>`).join("");
+  return `
+    <h4 style="margin:18px 0 0;">Hľadanie najlepšieho nastavenia</h4>
+    <p class="muted small">1. krok: pre každý trh koeficient kalibrácie k, pri ktorom percentá modelu najlepšie sedia s realitou (1,00 = bez úpravy, nižšie = model je opatrnejší). Zelená: zmena by model spresnila.</p>
+    <table class="bt-table"><thead><tr><th>Trh</th><th class="num">Tipov</th><th class="num">k teraz</th><th class="num">k najlepšie</th><th class="num">Chyba teraz</th><th class="num">Chyba najlepšie</th><th class="num">Model → realita</th></tr></thead><tbody>${cal}</tbody></table>
+    <p class="muted small">2. krok: s najlepšou kalibráciou všetky kombinácie pásma dôvery a minimálneho počtu odohraných zápasov. Najlepšie = najvyššia úspešnosť pri aspoň polovici tipov oproti terajšku.</p>
+    <table class="bt-table"><thead><tr><th>Nastavenie</th><th class="num">Tipov</th><th class="num">Model</th><th class="num">Realita</th><th class="num">Rozdiel</th></tr></thead><tbody>${set}</tbody></table>
+    ${best && mk ? `<p class="muted small">Trhy v najlepšom nastavení (${best.lo}–${best.hi} %). Pri kurze 1,50 je tip v zisku od úspešnosti 66,7 % – červené trhy by pri takých kurzoch prerábali.</p>
+    <table class="bt-table"><thead><tr><th>Trh</th><th class="num">Tipov</th><th class="num">Vyšlo</th></tr></thead><tbody>${mk}</tbody></table>` : ""}
+    <p class="muted small"><strong>Pozor:</strong> nastavenie nájdené na jednom období môže sedieť len náhodou. Zmenu sa oplatí urobiť, až keď podobné čísla vyjdú aj na inom období (napr. aug. – okt. 2024 a mar. – máj 2025).</p>`;
 }
 
 /** Porovnanie nového modelu s pôvodným (do 5. 10. 2026) na tých istých zápasoch. */

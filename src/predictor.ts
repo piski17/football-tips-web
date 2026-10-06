@@ -784,6 +784,10 @@ export function predictMatch(
     });
   }
 
+  for (const c of candidates) {
+    c.rawProbability = c.probability;
+    c.minGamesPlayed = minGamesPlayed;
+  }
   if (!legacy) {
     for (const c of candidates) {
       const k = calibrationFactor(c.category, minGamesPlayed);

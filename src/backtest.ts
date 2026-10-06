@@ -31,9 +31,14 @@ export interface BacktestParams {
   maxFixtures: number;
 }
 
-interface Sample {
+export interface Sample {
   market: string;
+  category: string;
   probability: number;
+  /** Pravdepodobnosť pred kalibráciou. */
+  raw: number;
+  /** Menší z počtov odohraných zápasov oboch tímov v sezóne. */
+  games: number;
   outcome: "won" | "lost";
 }
 
@@ -60,6 +65,46 @@ export interface BacktestReport {
   markets: MarketRow[];
   buckets: BucketRow[];
   bandOverall: { count: number; hitRate: number | null; avgPredicted: number | null };
+  /** Hľadanie najlepšieho nastavenia (kalibrácia, pásmo, min. zápasov). */
+  optimizer?: OptimizerReport;
+}
+
+interface CalibrationRow {
+  category: string;
+  markets: string[];
+  count: number;
+  /** Koeficient, ktorý model používa teraz (pri priemernom počte zápasov v teste). */
+  currentK: number;
+  brierNow: number;
+  bestK: number;
+  brierBest: number;
+  /** Pri najlepšom k: priemer modelu a realita. */
+  avgPredictedBest: number;
+  hitRate: number;
+}
+
+interface SettingRow {
+  lo: number;
+  hi: number;
+  minGames: number;
+  count: number;
+  hitRate: number | null;
+  avgPredicted: number | null;
+  current: boolean;
+  best: boolean;
+}
+
+interface BandMarketRow {
+  market: string;
+  count: number;
+  hitRate: number;
+}
+
+export interface OptimizerReport {
+  calibration: CalibrationRow[];
+  settings: SettingRow[];
+  /** Úspešnosť trhov v najlepšom nastavení (s najlepšou kalibráciou). */
+  marketsInBest: BandMarketRow[];
 }
 
 export interface BacktestJob {
@@ -173,10 +218,114 @@ async function outcomes(fixture: Fixture, pickSets: MarketPick[][]): Promise<Sam
         stats.possession,
         stats.cornersByTeam ?? null
       );
-      if (status === "won" || status === "lost") out.push({ market: p.market, probability: p.probability, outcome: status });
+      if (status === "won" || status === "lost")
+        out.push({
+          market: p.market,
+          category: p.category,
+          probability: p.probability,
+          raw: p.rawProbability ?? p.probability,
+          games: p.minGamesPlayed ?? 99,
+          outcome: status,
+        });
     }
     return out;
   });
+}
+
+// Trhy, ktoré sa neodporúčajú (rovnaký zoznam ako v predictor.ts) – do hľadania nastavenia nevstupujú.
+const NOT_RECOMMENDED = ["Ofsajdy", "Výsledok zápasu", "Oba tímy skórujú", "Obaja tímy skórujú"];
+const MIN_SAMPLES_FOR_K = 30;
+
+const brier = (list: { p: number; won: boolean }[]) =>
+  list.reduce((a, x) => a + Math.pow(x.p / 100 - (x.won ? 1 : 0), 2), 0) / list.length;
+const calibrate = (raw: number, k: number) => 50 + k * (raw - 50);
+
+/**
+ * Hľadanie najlepšieho nastavenia na odohraných zápasoch testu:
+ *  1. pre každý trh koeficient kalibrácie k (0,30 – 1,00), pri ktorom sú percentá
+ *     modelu najbližšie realite (najnižšie Brierovo skóre),
+ *  2. s týmito k všetky kombinácie pásma dôvery a minimálneho počtu zápasov –
+ *     koľko tipov by prešlo a koľko by ich vyšlo.
+ * Kurzy test nepozná, preto „najlepšie" = najvyššia úspešnosť pri aspoň polovici
+ * tipov oproti terajšiemu nastaveniu (inak by vyhralo pásmo s 5 tipmi).
+ */
+export function optimize(all: Sample[]): OptimizerReport {
+  const samples = all.filter((s) => !NOT_RECOMMENDED.includes(s.market));
+  const cats = Array.from(new Set(samples.map((s) => s.category)));
+  const bestK = new Map<string, number>();
+  const calibration: CalibrationRow[] = [];
+  for (const category of cats) {
+    const list = samples.filter((s) => s.category === category);
+    const won = list.filter((s) => s.outcome === "won").length;
+    let best = { k: 1, b: Infinity };
+    for (let k = 0.3; k <= 1.0001; k += 0.05) {
+      const b = brier(list.map((s) => ({ p: calibrate(s.raw, k), won: s.outcome === "won" })));
+      if (b < best.b - 1e-9) best = { k: Math.round(k * 100) / 100, b };
+    }
+    // Pri málo tipoch by k „sedelo" na náhodu – necháme terajšiu kalibráciu.
+    const enough = list.length >= MIN_SAMPLES_FOR_K;
+    const avgRaw = list.reduce((a, s) => a + Math.abs(s.raw - 50), 0);
+    const avgNow = list.reduce((a, s) => a + Math.abs(s.probability - 50), 0);
+    calibration.push({
+      category,
+      markets: Array.from(new Set(list.map((s) => s.market))),
+      count: list.length,
+      currentK: avgRaw > 0 ? Math.round((avgNow / avgRaw) * 100) / 100 : 1,
+      brierNow: brier(list.map((s) => ({ p: s.probability, won: s.outcome === "won" }))),
+      bestK: enough ? best.k : NaN,
+      brierBest: enough ? best.b : NaN,
+      avgPredictedBest: enough ? list.reduce((a, s) => a + calibrate(s.raw, best.k), 0) / list.length : NaN,
+      hitRate: (won / list.length) * 100,
+    });
+    if (enough) bestK.set(category, best.k);
+  }
+  calibration.sort((a, b) => b.count - a.count);
+
+  // percentá s najlepšou kalibráciou (trhy s málo tipmi ostávajú ako teraz)
+  const tuned = samples.map((s) => ({
+    ...s,
+    p: bestK.has(s.category) ? calibrate(s.raw, bestK.get(s.category)!) : s.probability,
+  }));
+  const evalSetting = (lo: number, hi: number, minGames: number, useTuned: boolean) => {
+    const list = (useTuned ? tuned : samples.map((s) => ({ ...s, p: s.probability }))).filter(
+      (s) => s.p >= lo && s.p <= hi && s.games >= minGames
+    );
+    const won = list.filter((s) => s.outcome === "won").length;
+    return {
+      count: list.length,
+      hitRate: list.length ? (won / list.length) * 100 : null,
+      avgPredicted: list.length ? list.reduce((a, s) => a + s.p, 0) / list.length : null,
+    };
+  };
+  const now = evalSetting(65, 75, 3, false);
+  const settings: SettingRow[] = [{ lo: 65, hi: 75, minGames: 3, ...now, current: true, best: false }];
+  // Horná hranica najviac 80 %: nad ňou majú tipy kurz spravidla pod minimom 1,50.
+  // Min. 3 zápasy platí od 6. 10. 2026 vždy, preto sa skúša len 3 a 5.
+  const seen = new Set<string>();
+  for (const lo of [60, 62, 65, 68, 70])
+    for (const width of [10, 15])
+      for (const minGames of [3, 5]) {
+        const hi = Math.min(lo + width, 80), key = `${lo}-${hi}-${minGames}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        settings.push({ lo, hi, minGames, ...evalSetting(lo, hi, minGames, true), current: false, best: false });
+      }
+  const minCount = Math.max(20, Math.ceil(now.count / 2));
+  const candidates = settings.filter((r) => !r.current && r.count >= minCount && r.hitRate != null);
+  const top = candidates.sort((a, b) => b.hitRate! - a.hitRate! || b.count - a.count)[0];
+  if (top) top.best = true;
+  const ordered = [settings[0], ...settings.slice(1).filter((r) => r.count > 0).sort((a, b) => (b.hitRate ?? 0) - (a.hitRate ?? 0) || b.count - a.count)];
+
+  const marketsInBest: BandMarketRow[] = [];
+  if (top) {
+    const inBest = tuned.filter((s) => s.p >= top.lo && s.p <= top.hi && s.games >= top.minGames);
+    for (const market of Array.from(new Set(inBest.map((s) => s.market)))) {
+      const list = inBest.filter((s) => s.market === market);
+      marketsInBest.push({ market, count: list.length, hitRate: (list.filter((s) => s.outcome === "won").length / list.length) * 100 });
+    }
+    marketsInBest.sort((a, b) => b.hitRate - a.hitRate);
+  }
+  return { calibration, settings: ordered.slice(0, 16), marketsInBest };
 }
 
 function buildReport(samples: Sample[], analyzed: number, failed: number): BacktestReport {
@@ -266,6 +415,7 @@ async function run(job: BacktestJob): Promise<void> {
       job.reportLegacy = buildReport(samplesLegacy, analyzed, failed);
     }
     job.report = buildReport(samples, analyzed, failed);
+    job.report.optimizer = optimize(samples);
     job.reportLegacy = buildReport(samplesLegacy, analyzed, failed);
     job.status = "done";
   } catch (err: any) {
