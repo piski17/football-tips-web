@@ -443,6 +443,7 @@
   .contact-strip a.video-link { margin-left: 0; display: inline-flex; align-items: center; gap: 7px; }
   .contact-strip a.video-link svg { width: 13px; height: 13px; }
   @media (max-width: 640px) { .contact-strip .wrap { justify-content: center; } }
+  .contact-strip { position: sticky; top: var(--nav-h, 76px); z-index: 19; background: var(--bg); }
   .clv { display: grid; grid-template-columns: minmax(0, 240px) minmax(0, 1fr); gap: 40px; margin-top: 40px; padding: 30px 32px; border: 1px solid var(--rule-gold); background: var(--bg-2); }
   .clv-num b { display: block; font: 400 clamp(44px, 5vw, 60px)/1 var(--serif); letter-spacing: -0.02em; }
   .clv-num span { display: block; margin-top: 12px; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--faint); line-height: 1.6; }
@@ -1028,6 +1029,17 @@
     f.plan.value = "kurz";
     if (!f.note.value.trim()) f.note.value = "Mám záujem o kurz Škola stávkovania. Pošlite mi prosím platobné údaje.";
   }));
+  // Lišta s Telegramom, Instagramom a e-mailom je pripnutá pod hornou lištou.
+  (() => {
+    const nav = document.querySelector(".nav"), strip = document.querySelector(".contact-strip");
+    if (!nav || !strip) return;
+    const fit = () => {
+      const h = nav.offsetHeight;
+      document.documentElement.style.setProperty("--nav-h", h + "px");
+      document.documentElement.style.scrollPaddingTop = h + strip.offsetHeight + "px";
+    };
+    fit(); window.addEventListener("resize", fit); window.addEventListener("load", fit);
+  })();
   const form = $("joinForm");
   const joinPlan = () => form.elements.plan.value || "otazka";
   form.addEventListener("submit", async (e) => {
