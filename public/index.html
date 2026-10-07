@@ -15,17 +15,40 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="splashScreen" class="splash-screen">
-    <svg class="splash-logo" viewBox="0 0 640 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="TipRadar">
-      <defs><linearGradient id="rmSplash" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E8D3A0"/><stop offset=".45" stop-color="#c9a55c"/><stop offset="1" stop-color="#A8823E"/></linearGradient></defs>
-      <g><circle cx="100" cy="100" r="92" fill="#141416"/><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#c9a55c" fill-opacity=".32"/><line x1="100" y1="100" x2="162.2" y2="37.8" stroke="#C9A55C" stroke-width="7" stroke-linecap="round"/><circle cx="100" cy="100" r="92" fill="none" stroke="#C9A55C" stroke-width="8"/><circle cx="100" cy="100" r="58" fill="none" stroke="#c9a55c" stroke-opacity=".5" stroke-width="4"/><circle cx="100" cy="100" r="9" fill="#e8d3a0"/></g>
-      <text x="232" y="132" font-family="Playfair Display, Georgia, serif" font-weight="600" font-size="84" fill="#EDE6D6">TipRadar</text>
-    </svg>
-    <div class="splash-progress">
-      <div class="splash-progress-track">
-        <div class="splash-progress-fill" id="splashProgressFill"></div>
+  <div id="splashScreen" class="splash-screen" role="status" aria-label="TipRadar sa načítava">
+    <div class="splash-inner">
+      <svg class="splash-radar" viewBox="0 0 200 200" aria-hidden="true">
+        <defs>
+          <linearGradient id="spSweep" gradientUnits="userSpaceOnUse" x1="29.5" y1="40.9" x2="100" y2="8">
+            <stop offset="0" stop-color="#C9A55C" stop-opacity="0"/>
+            <stop offset="1" stop-color="#C9A55C" stop-opacity=".38"/>
+          </linearGradient>
+        </defs>
+        <circle cx="100" cy="100" r="94" fill="#111113"/>
+        <circle cx="100" cy="100" r="86" fill="none" stroke="#C9A55C" stroke-opacity=".45" stroke-width="5" stroke-dasharray="1.1 13.91"/>
+        <circle cx="100" cy="100" r="64" fill="none" stroke="#C9A55C" stroke-opacity=".22" stroke-width="1"/>
+        <circle cx="100" cy="100" r="34" fill="none" stroke="#C9A55C" stroke-opacity=".22" stroke-width="1"/>
+        <path d="M100 8V192M8 100H192" stroke="#C9A55C" stroke-opacity=".12" stroke-width="1"/>
+        <g class="splash-blips" fill="#E8D3A0">
+          <circle cx="134" cy="58" r="3.2"/>
+          <circle cx="62" cy="128" r="2.6"/>
+          <circle cx="146" cy="132" r="2.2"/>
+        </g>
+        <g class="splash-sweep">
+          <path d="M100 100 L29.5 40.9 A92 92 0 0 1 100 8 Z" fill="url(#spSweep)"/>
+          <path d="M100 100 L100 8" stroke="#E8D3A0" stroke-width="2" stroke-linecap="round"/>
+        </g>
+        <circle cx="100" cy="100" r="94" fill="none" stroke="#C9A55C" stroke-width="2"/>
+        <circle cx="100" cy="100" r="4.5" fill="#E8D3A0"/>
+      </svg>
+      <div class="splash-word">TipRadar</div>
+      <div class="splash-tag">Štatistický model <i></i> Tipy s hodnotou</div>
+      <div class="splash-progress">
+        <div class="splash-progress-track">
+          <div class="splash-progress-fill" id="splashProgressFill"></div>
+        </div>
+        <div class="splash-progress-row"><span>Pripravujem dnešné zápasy</span><span class="splash-progress-pct" id="splashProgressPct">0 %</span></div>
       </div>
-      <div class="splash-progress-pct" id="splashProgressPct">0 %</div>
     </div>
   </div>
 
