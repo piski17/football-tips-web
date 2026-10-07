@@ -362,6 +362,7 @@ const FAQ_ANSWERS: Record<string, string> = {
   `• <b>⭐ Silné tipy</b> – tipy s dôverou 70 % a viac označené hviezdičkou, len vo VIP kanáli\n` +
     `• <b>Osobné konzultácie</b> – videohovory so zakladateľom TipRadaru podľa dohody\n` +
     `• <b>Kovová členská karta</b> – personalizovaná vaším menom, číslom členstva a dátumom vstupu\n` +
+  `• <b>📚 Kurz Škola stávkovania</b> (99 €) zadarmo pri VIP na 3 mesiace alebo celú sezónu\n` +
     `• <b>Priama linka na zakladateľa</b> – súkromný VIP chat pre vaše otázky\n\n` +
     `Sezóna = do 31. 5. 2027. Členstvo sa samo nepredlžuje, žiadna viazanosť. Prví členovia majú cenu zamknutú, kým členstvo neprerušia.` +
     (process.env.SALES_OPEN === "true" ? "" : `\n\n🗓 <b>Predaj členstiev spúšťame čoskoro.</b> Napíšte sem „Mám záujem" a ozveme sa vám ako prvým.`),
@@ -408,6 +409,7 @@ const VIP_BENEFITS =
   `• <b>⭐ Silné tipy</b> – tipy s dôverou 70 % a viac označené hviezdičkou, len vo VIP kanáli\n` +
   `• <b>Osobné konzultácie</b> – videohovory so zakladateľom TipRadaru podľa dohody\n` +
   `• <b>Kovová členská karta</b> – personalizovaná vaším menom, číslom členstva a dátumom vstupu\n` +
+  `• <b>📚 Kurz Škola stávkovania</b> (99 €) zadarmo pri VIP na 3 mesiace alebo celú sezónu\n` +
   `• <b>Priama linka na zakladateľa</b> – súkromný VIP chat pre vaše otázky`;
 const JOIN_MESSAGES: Record<string, string> = {
   premium:

@@ -178,6 +178,9 @@ app.get(["/favicon.svg", "/favicon-32.png", "/favicon-256.png", "/og-image.png"]
   res.sendFile(path.join(__dirname, "..", "public", req.path.slice(1)));
 });
 
+// Ukážky z kurzu Škola stávkovania na tipradar.eu – bez hesla.
+app.use("/skola", express.static(path.join(__dirname, "..", "landing", "skola")));
+
 // Zásady ochrany osobných údajov (tipradar.eu/ochrana-udajov) – bez hesla.
 app.get(["/ochrana-udajov", "/ochrana-udajov/"], (_req, res) => {
   res.sendFile(path.join(__dirname, "..", "landing", "ochrana-udajov.html"));
@@ -205,7 +208,7 @@ app.post("/api/public/waitlist", express.json({ limit: "10kb" }), async (req, re
   const name = clean(b.name, 80);
   const email = clean(b.email, 120).toLowerCase();
   const note = clean(b.note, 500);
-  const plan = b.plan === "vip" ? "vip" : b.plan === "premium" ? "premium" : b.plan === "otazka" ? "otazka" : "";
+  const plan = b.plan === "vip" ? "vip" : b.plan === "premium" ? "premium" : b.plan === "kurz" ? "kurz" : b.plan === "otazka" ? "otazka" : "";
   if (name.length < 2) { res.status(400).json({ error: "Napíšte prosím svoje meno." }); return; }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { res.status(400).json({ error: "Skontrolujte prosím e-mail." }); return; }
   if (!plan) { res.status(400).json({ error: "Vyberte prosím, čo vás zaujíma." }); return; }
@@ -213,9 +216,9 @@ app.post("/api/public/waitlist", express.json({ limit: "10kb" }), async (req, re
   if (b.consent !== true) { res.status(400).json({ error: "Bez súhlasu so spracovaním údajov vás nemôžeme zapísať." }); return; }
   try {
     // Otázka z dotazníka sa nepočíta do poradovníka VIP – téma ide len do poznámky.
-    const topic = plan === "vip" ? "Členstvo VIP: " : plan === "premium" ? "Členstvo Premium: " : "";
+    const topic = plan === "vip" ? "Členstvo VIP: " : plan === "premium" ? "Členstvo Premium: " : plan === "kurz" ? "Kurz Škola stávkovania: " : "";
     await recordLead({ chatId: `web:${email}`, plan: "otazka", name, email, note: topic + note, source: "web" });
-    const topicLabel = plan === "vip" ? "Členstvo VIP" : plan === "premium" ? "Členstvo Premium" : "Všeobecná otázka";
+    const topicLabel = plan === "vip" ? "Členstvo VIP" : plan === "premium" ? "Členstvo Premium" : plan === "kurz" ? "Kurz Škola stávkovania (99 €)" : "Všeobecná otázka";
     sendAdminEmail(`Nová správa z formulára na tipradar.eu – ${name}`, [
       ["Meno", name],
       ["E-mail", email],

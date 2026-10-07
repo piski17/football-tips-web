@@ -550,6 +550,26 @@
   .term-switch button[aria-selected="true"] em { color: #141210; }
   .term-switch + .plans { margin-top: 28px; }
   .per-month { margin: 10px 0 0; font-size: 14px; color: var(--gold); min-height: 1.4em; }
+  .skola { background: radial-gradient(900px 500px at 0% 0%, rgba(201,165,92,.07), transparent 60%), var(--bg); }
+  .skola-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 72px; align-items: center; }
+  .skola-cover { display: block; border: 1px solid var(--gold); outline: 1px solid rgba(201,165,92,.22); outline-offset: 8px; box-shadow: 0 30px 60px rgba(0,0,0,.55); }
+  .skola-cover img, .skola-thumbs img { display: block; width: 100%; height: auto; }
+  .skola-thumbs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 28px; }
+  .skola-thumbs img { border: 1px solid var(--rule-gold); }
+  .skola-text .muted { margin-top: 18px; max-width: 56ch; }
+  .skola-chaps { list-style: none; counter-reset: ch; margin: 28px 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; column-gap: 28px; border-top: 1px solid var(--rule-gold); }
+  .skola-chaps li { counter-increment: ch; display: flex; gap: 12px; align-items: baseline; padding: 10px 0; border-bottom: 1px solid var(--rule); font-size: 14.5px; color: var(--text); }
+  .skola-chaps li::before { content: counter(ch, decimal-leading-zero); font: italic 500 15px/1 var(--serif); color: var(--gold); min-width: 22px; }
+  .skola-buy { margin-top: 32px; padding: 28px 30px; border: 1px solid var(--gold); background: linear-gradient(180deg, #1F1C17, var(--card) 70%); }
+  .skola-price { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+  .skola-price b { font: 500 52px/1 var(--serif); color: var(--gold-hi); }
+  .skola-price span { font-size: 13px; color: var(--faint); letter-spacing: .04em; }
+  .skola-vip { margin-top: 12px; font-size: 15px; color: var(--muted); }
+  .skola-vip strong { color: var(--gold-hi); font-weight: 600; }
+  .skola-actions { display: flex; gap: 12px; margin-top: 22px; flex-wrap: wrap; }
+  .skola-actions .btn { flex: 1 1 180px; }
+  @media (max-width: 960px) { .skola-grid { grid-template-columns: minmax(0, 1fr); gap: 48px; } }
+  @media (max-width: 520px) { .skola-chaps { grid-template-columns: minmax(0, 1fr); } .skola-buy { padding: 24px 20px; } .skola-thumbs { gap: 8px; } .skola-cover { outline-offset: 5px; } }
   .founder { margin-top: 28px; padding: 22px 26px; border: 1px dashed var(--rule-gold); display: flex; gap: 18px; align-items: baseline; flex-wrap: wrap; }
   .founder b { font: 400 20px/1.2 var(--serif); color: var(--gold-hi); font-weight: 400; }
   .founder p { margin: 0; color: var(--muted); flex: 1 1 320px; }
@@ -572,6 +592,7 @@
       <a href="#vysledky">Výsledky</a>
       <a href="#kto">O mne</a>
       <a href="#clenstvo">Členstvo</a>
+      <a href="#skola">Škola</a>
       <a href="#zapis" class="nav-form">Formulár</a>
       <a href="#otazky">Otázky</a>
       <a href="/video" class="nav-tg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>Video</a>
@@ -774,6 +795,7 @@
             <li><strong>★ Silné tipy</strong> s dôverou 70&nbsp;% a viac, označené hviezdičkou len vo VIP kanáli. V spätných testoch vychádzali najčastejšie.</li>
             <li><strong>Súkromný VIP chat</strong>, kde odpisujem priamo ja, a videohovor podľa dohody</li>
             <li><strong>Kovová členská karta</strong> s vaším menom a číslom členstva</li>
+            <li data-kurz-li hidden><strong>Kurz Škola stávkovania</strong> v hodnote 99&nbsp;€ zadarmo</li>
           </ul>
           <div class="plan-foot">
             <a class="btn" id="vipCta" href="https://t.me/TipRadarAiBot?start=vip" target="_blank" rel="noopener">Zapísať sa do poradovníka</a>
@@ -792,10 +814,41 @@
     </div>
   </section>
 
+  <section class="sec skola" id="skola">
+    <div class="wrap">
+      <div class="skola-grid">
+        <div class="skola-media">
+          <a class="skola-cover" href="#skola-ukazka"><img src="/skola/kurz-01.jpg" width="1200" height="675" alt="Titulná strana kurzu Škola stávkovania" loading="lazy" /></a>
+          <div class="skola-thumbs" id="skola-ukazka" aria-label="Ukážky z kurzu">
+            <img src="/skola/kurz-06.jpg" width="1200" height="675" alt="Ukážka: koľko vložiť na jeden tip" loading="lazy" />
+            <img src="/skola/kurz-18.jpg" width="1200" height="675" alt="Ukážka: výpočet hodnotnej stávky" loading="lazy" />
+            <img src="/skola/kurz-30.jpg" width="1200" height="675" alt="Ukážka: prečo nefunguje Martingale" loading="lazy" />
+          </div>
+        </div>
+        <div class="skola-text">
+          <div class="eyebrow"><b>V.</b>Škola</div>
+          <h2>Škola stávkovania</h2>
+          <p class="muted">Kurz, ktorý ťa naučí to, čo väčšina tipérov preskočí: ako chrániť bank, ako spoznať stávku s hodnotou a ako nenechať emócie rozhodovať za teba. Bez sľubov istej výhry, s výpočtami a príkladmi.</p>
+          <ol class="skola-chaps">
+            <li>Money management</li><li>Systémy vkladov</li><li>Value betting</li><li>Sure bets a Kellyho kritérium</li><li>Systémy, ktoré neodporúčame</li><li>Psychológia stávkovania</li><li>Aký šport si vybrať</li><li>15 rád pre rozumné tipovanie</li><li>Ako používať TipRadar</li><li>Zodpovedné hranie</li>
+          </ol>
+          <div class="skola-buy">
+            <div class="skola-price"><b class="num">99 €</b><span>jednorazovo · PDF, 48 strán, 10 kapitol</span></div>
+            <p class="skola-vip"><strong>Zadarmo pri VIP</strong> na 3 mesiace alebo celú sezónu.</p>
+            <div class="skola-actions">
+              <a class="btn" href="#zapis" data-kurz-cta>Chcem kurz</a>
+              <a class="btn btn-ghost" href="#clenstvo">Pozrieť VIP</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="sec alt" id="zapis">
     <div class="wrap join">
       <div>
-        <div class="eyebrow"><b>V.</b>Formulár</div>
+        <div class="eyebrow"><b>VI.</b>Formulár</div>
         <h2>Máte otázku?</h2>
         <p>Napíšte mi, čo vás zaujíma o modeli, tipoch alebo členstve. Odpoviem vám osobne na e-mail.</p>
       </div>
@@ -803,7 +856,7 @@
         <div class="fields">
           <label class="field"><span class="lbl">Meno</span><input type="text" name="name" autocomplete="name" maxlength="80" required /></label>
           <label class="field"><span class="lbl">E-mail</span><input type="email" name="email" autocomplete="email" inputmode="email" maxlength="120" required /></label>
-          <label class="field wide"><span class="lbl">Čo vás zaujíma</span><span class="select"><select name="plan"><option value="otazka" selected>Všeobecná otázka</option><option value="premium">Členstvo Premium</option><option value="vip">Členstvo VIP</option></select></span></label>
+          <label class="field wide"><span class="lbl">Čo vás zaujíma</span><span class="select"><select name="plan"><option value="otazka" selected>Všeobecná otázka</option><option value="premium">Členstvo Premium</option><option value="vip">Členstvo VIP</option><option value="kurz">Kurz Škola stávkovania (99 €)</option></select></span></label>
           <label class="field wide"><span class="lbl">Vaša otázka</span><textarea name="note" rows="5" maxlength="500" required></textarea></label>
           <label class="hp" aria-hidden="true">Web <input type="text" name="web" tabindex="-1" autocomplete="off" /></label>
         </div>
@@ -822,7 +875,7 @@
 
   <section class="sec" id="otazky">
     <div class="wrap split">
-      <div><div class="eyebrow"><b>VI.</b>Otázky</div><h2>Čo sa ľudia pýtajú</h2></div>
+      <div><div class="eyebrow"><b>VII.</b>Otázky</div><h2>Čo sa ľudia pýtajú</h2></div>
       <div class="faq">
         <details><summary>Kedy a kam tipy prídu?</summary><p>Do súkromného Telegram kanála, 2 – 3 hodiny pred výkopom zápasu. Večer, keď sa zápasy dohrajú, príde vyhodnotenie dňa.</p></details>
         <details><summary>Koľko tipov denne dostanem?</summary><p>Toľko, koľko prejde pravidlami. Niekedy jeden, inokedy viac. Keď neprejde žiadny, tip nepošleme a dáme vedieť.</p></details>
@@ -970,6 +1023,11 @@
   $("stakeRange").addEventListener("input", drawCalc);
 
   // ---------- formulár „Máte otázku?" (príde na e-mail) ----------
+  document.querySelectorAll("[data-kurz-cta]").forEach((a) => a.addEventListener("click", () => {
+    const f = document.getElementById("joinForm"); if (!f) return;
+    f.plan.value = "kurz";
+    if (!f.note.value.trim()) f.note.value = "Mám záujem o kurz Škola stávkovania. Pošlite mi prosím platobné údaje.";
+  }));
   const form = $("joinForm");
   const joinPlan = () => form.elements.plan.value || "otazka";
   form.addEventListener("submit", async (e) => {
@@ -1017,6 +1075,7 @@
       };
       set("[data-permonth-premium]", note("premium"));
       set("[data-permonth-vip]", note("vip"));
+      document.querySelectorAll("[data-kurz-li]").forEach((el) => (el.hidden = t.months === 1));
       set("[data-card-note]", t.months === 1 ? "Kartu posielame poštou po prvom mesiaci členstva." : "Kartu posielame poštou hneď po zaplatení.");
     }
     document.querySelectorAll(".term-switch [data-term]").forEach((b) => b.addEventListener("click", () => apply(b.dataset.term)));
