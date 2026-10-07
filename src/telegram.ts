@@ -356,7 +356,8 @@ const FAQ_ANSWERS: Record<string, string> = {
     `• <b>Denné tipy v súkromnom kanáli</b> – všetky odporúčania modelu na daný deň priamo v Telegrame\n` +
     `• <b>Transparentné odôvodnenie</b> – pri každom tipe kurz, miera dôvery a dôvod, prečo vznikol\n` +
     `• <b>Včasné doručenie</b> – tipy 2 – 3 hodiny pred výkopom, večer prehľad výsledkov dňa\n` +
-    `• <b>Týždenný prehľad výkonnosti</b> – úspešnosť, zisk a ROI za uplynulý týždeň\n\n` +
+    `• <b>Týždenný prehľad výkonnosti</b> – úspešnosť, zisk a ROI za uplynulý týždeň\n` +
+    `• <b>📚 Kurz Škola stávkovania</b> (99 €) zadarmo pri Premium na celú sezónu\n\n` +
     `👑 <b>VIP</b> – 59 € / mesiac · 139 € / 3 mesiace · 299 € / sezóna · <b>len 30 miest</b>\n` +
     `• <b>Kompletné členstvo Premium</b> – všetky denné tipy, odôvodnenia aj reporty\n` +
   `• <b>⭐ Silné tipy</b> – tipy s dôverou 70 % a viac označené hviezdičkou, len vo VIP kanáli\n` +
@@ -403,7 +404,8 @@ const PREMIUM_BENEFITS =
   `• <b>Denné tipy v súkromnom kanáli</b> – všetky odporúčania modelu na daný deň priamo v Telegrame\n` +
   `• <b>Transparentné odôvodnenie</b> – pri každom tipe kurz, miera dôvery a dôvod, prečo vznikol\n` +
   `• <b>Včasné doručenie</b> – tipy 2 – 3 hodiny pred výkopom, večer prehľad výsledkov dňa\n` +
-  `• <b>Týždenný prehľad výkonnosti</b> – úspešnosť, zisk a ROI za uplynulý týždeň`;
+  `• <b>Týždenný prehľad výkonnosti</b> – úspešnosť, zisk a ROI za uplynulý týždeň\n` +
+  `• <b>📚 Kurz Škola stávkovania</b> (99 €) zadarmo pri Premium na celú sezónu`;
 const VIP_BENEFITS =
   `• <b>Kompletné členstvo Premium</b> – všetky denné tipy, odôvodnenia aj reporty\n` +
   `• <b>⭐ Silné tipy</b> – tipy s dôverou 70 % a viac označené hviezdičkou, len vo VIP kanáli\n` +

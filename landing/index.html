@@ -781,6 +781,7 @@
             <li><strong>Denné tipy</strong> v súkromnom Telegram kanáli, 2 – 3 hodiny pred výkopom</li>
             <li><strong>Pri každom tipe</strong> kurz, šanca podľa modelu, dôvod a odporúčaná sadzba</li>
             <li><strong>Vyhodnotenie</strong> každý večer a týždenný prehľad úspešnosti, zisku a ROI</li>
+            <li data-kurz-premium hidden><strong>Kurz Škola stávkovania</strong> v hodnote 99&nbsp;€ zadarmo</li>
           </ul>
           <div class="plan-foot">
             <a class="btn btn-ghost" id="premiumCta" href="https://t.me/TipRadarAiBot?start=premium" target="_blank" rel="noopener">Zapísať sa do poradovníka</a>
@@ -835,10 +836,10 @@
           </ol>
           <div class="skola-buy">
             <div class="skola-price"><b class="num">99 €</b><span>jednorazovo · PDF, 48 strán, 10 kapitol</span></div>
-            <p class="skola-vip"><strong>Zadarmo pri VIP</strong> na 3 mesiace alebo celú sezónu.</p>
+            <p class="skola-vip"><strong>Zadarmo</strong> pri VIP na 3 mesiace alebo celú sezónu a pri Premium na celú sezónu.</p>
             <div class="skola-actions">
               <a class="btn" href="#zapis" data-kurz-cta>Chcem kurz</a>
-              <a class="btn btn-ghost" href="#clenstvo">Pozrieť VIP</a>
+              <a class="btn btn-ghost" href="#clenstvo">Pozrieť členstvá</a>
             </div>
           </div>
         </div>
@@ -1088,6 +1089,7 @@
       set("[data-permonth-premium]", note("premium"));
       set("[data-permonth-vip]", note("vip"));
       document.querySelectorAll("[data-kurz-li]").forEach((el) => (el.hidden = t.months === 1));
+      document.querySelectorAll("[data-kurz-premium]").forEach((el) => (el.hidden = term !== "season"));
       set("[data-card-note]", t.months === 1 ? "Kartu posielame poštou po prvom mesiaci členstva." : "Kartu posielame poštou hneď po zaplatení.");
     }
     document.querySelectorAll(".term-switch [data-term]").forEach((b) => b.addEventListener("click", () => apply(b.dataset.term)));
