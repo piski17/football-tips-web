@@ -357,13 +357,13 @@ const FAQ_ANSWERS: Record<string, string> = {
     `• <b>Transparentné odôvodnenie</b> – pri každom tipe kurz, miera dôvery a dôvod, prečo vznikol\n` +
     `• <b>Včasné doručenie</b> – tipy 2 – 3 hodiny pred výkopom, večer prehľad výsledkov dňa\n` +
     `• <b>Týždenný prehľad výkonnosti</b> – úspešnosť, zisk a ROI za uplynulý týždeň\n` +
-    `• <b>📚 Kurz Škola stávkovania</b> (99 €) zadarmo pri Premium na celú sezónu\n\n` +
+    `• <b>📚 Kurz stávkovania</b> (99 €) zadarmo pri Premium na celú sezónu\n\n` +
     `👑 <b>VIP</b> – 59 € / mesiac · 139 € / 3 mesiace · 299 € / sezóna · <b>len 30 miest</b>\n` +
     `• <b>Kompletné členstvo Premium</b> – všetky denné tipy, odôvodnenia aj reporty\n` +
   `• <b>⭐ Silné tipy</b> – tipy s dôverou 70 % a viac označené hviezdičkou, len vo VIP kanáli\n` +
     `• <b>Osobné konzultácie</b> – videohovory so zakladateľom TipRadaru podľa dohody\n` +
     `• <b>Kovová členská karta</b> – personalizovaná vaším menom, číslom členstva a dátumom vstupu\n` +
-  `• <b>📚 Kurz Škola stávkovania</b> (99 €) zadarmo pri VIP na 3 mesiace alebo celú sezónu\n` +
+  `• <b>📚 Kurz stávkovania</b> (99 €) zadarmo pri VIP na 3 mesiace alebo celú sezónu\n` +
     `• <b>Priama linka na zakladateľa</b> – súkromný VIP chat pre vaše otázky\n\n` +
     `Sezóna = do 31. 5. 2027. Členstvo sa samo nepredlžuje, žiadna viazanosť. Prví členovia majú cenu zamknutú, kým členstvo neprerušia.` +
     (process.env.SALES_OPEN === "true" ? "" : `\n\n🗓 <b>Predaj členstiev spúšťame čoskoro.</b> Napíšte sem „Mám záujem" a ozveme sa vám ako prvým.`),
@@ -405,13 +405,13 @@ const PREMIUM_BENEFITS =
   `• <b>Transparentné odôvodnenie</b> – pri každom tipe kurz, miera dôvery a dôvod, prečo vznikol\n` +
   `• <b>Včasné doručenie</b> – tipy 2 – 3 hodiny pred výkopom, večer prehľad výsledkov dňa\n` +
   `• <b>Týždenný prehľad výkonnosti</b> – úspešnosť, zisk a ROI za uplynulý týždeň\n` +
-  `• <b>📚 Kurz Škola stávkovania</b> (99 €) zadarmo pri Premium na celú sezónu`;
+  `• <b>📚 Kurz stávkovania</b> (99 €) zadarmo pri Premium na celú sezónu`;
 const VIP_BENEFITS =
   `• <b>Kompletné členstvo Premium</b> – všetky denné tipy, odôvodnenia aj reporty\n` +
   `• <b>⭐ Silné tipy</b> – tipy s dôverou 70 % a viac označené hviezdičkou, len vo VIP kanáli\n` +
   `• <b>Osobné konzultácie</b> – videohovory so zakladateľom TipRadaru podľa dohody\n` +
   `• <b>Kovová členská karta</b> – personalizovaná vaším menom, číslom členstva a dátumom vstupu\n` +
-  `• <b>📚 Kurz Škola stávkovania</b> (99 €) zadarmo pri VIP na 3 mesiace alebo celú sezónu\n` +
+  `• <b>📚 Kurz stávkovania</b> (99 €) zadarmo pri VIP na 3 mesiace alebo celú sezónu\n` +
   `• <b>Priama linka na zakladateľa</b> – súkromný VIP chat pre vaše otázky`;
 const JOIN_MESSAGES: Record<string, string> = {
   premium:

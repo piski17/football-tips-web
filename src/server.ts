@@ -194,7 +194,7 @@ app.post("/api/public/waitlist", express.json({ limit: "10kb" }), async (req, re
   const now = Date.now();
   const hits = (waitlistHits.get(ip) ?? []).filter((t) => now - t < 60 * 60 * 1000);
   if (hits.length >= 10) {
-    res.status(429).json({ error: "Príliš veľa pokusov. Skúste to prosím o hodinu." });
+    res.status(429).json({ error: "Príliš veľa pokusov. Skúste to, prosím, o hodinu." });
     return;
   }
   hits.push(now);
@@ -209,16 +209,16 @@ app.post("/api/public/waitlist", express.json({ limit: "10kb" }), async (req, re
   const email = clean(b.email, 120).toLowerCase();
   const note = clean(b.note, 500);
   const plan = b.plan === "vip" ? "vip" : b.plan === "premium" ? "premium" : b.plan === "kurz" ? "kurz" : b.plan === "otazka" ? "otazka" : "";
-  if (name.length < 2) { res.status(400).json({ error: "Napíšte prosím svoje meno." }); return; }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { res.status(400).json({ error: "Skontrolujte prosím e-mail." }); return; }
-  if (!plan) { res.status(400).json({ error: "Vyberte prosím, čo vás zaujíma." }); return; }
-  if (note.length < 3) { res.status(400).json({ error: "Napíšte prosím svoju otázku." }); return; }
+  if (name.length < 2) { res.status(400).json({ error: "Napíšte, prosím, svoje meno." }); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { res.status(400).json({ error: "Skontrolujte, prosím, e-mail." }); return; }
+  if (!plan) { res.status(400).json({ error: "Vyberte, prosím, čo vás zaujíma." }); return; }
+  if (note.length < 3) { res.status(400).json({ error: "Napíšte, prosím, svoju otázku." }); return; }
   if (b.consent !== true) { res.status(400).json({ error: "Bez súhlasu so spracovaním údajov vás nemôžeme zapísať." }); return; }
   try {
     // Otázka z dotazníka sa nepočíta do poradovníka VIP – téma ide len do poznámky.
-    const topic = plan === "vip" ? "Členstvo VIP: " : plan === "premium" ? "Členstvo Premium: " : plan === "kurz" ? "Kurz Škola stávkovania: " : "";
+    const topic = plan === "vip" ? "Členstvo VIP: " : plan === "premium" ? "Členstvo Premium: " : plan === "kurz" ? "Kurz stávkovania: " : "";
     await recordLead({ chatId: `web:${email}`, plan: "otazka", name, email, note: topic + note, source: "web" });
-    const topicLabel = plan === "vip" ? "Členstvo VIP" : plan === "premium" ? "Členstvo Premium" : plan === "kurz" ? "Kurz Škola stávkovania (99 €)" : "Všeobecná otázka";
+    const topicLabel = plan === "vip" ? "Členstvo VIP" : plan === "premium" ? "Členstvo Premium" : plan === "kurz" ? "Kurz stávkovania (99 €)" : "Všeobecná otázka";
     sendAdminEmail(`Nová správa z formulára na tipradar.eu – ${name}`, [
       ["Meno", name],
       ["E-mail", email],
@@ -227,7 +227,7 @@ app.post("/api/public/waitlist", express.json({ limit: "10kb" }), async (req, re
     ], email).catch(() => {});
     res.json({ ok: true });
   } catch {
-    res.status(502).json({ error: "Zápis sa nepodaril. Skúste to prosím o chvíľu znova." });
+    res.status(502).json({ error: "Zápis sa nepodaril. Skúste to, prosím, o chvíľu znova." });
   }
 });
 
