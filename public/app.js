@@ -324,6 +324,12 @@ const subNameInput = document.getElementById("subName");
 const subContactInput = document.getElementById("subContact");
 const subTelegramChatIdInput = document.getElementById("subTelegramChatId");
 const subTierSelect = document.getElementById("subTier");
+const subLengthSelect = document.getElementById("subLength");
+const subStartInput = document.getElementById("subStart");
+const subPriceInput = document.getElementById("subPrice");
+const subFounderInput = document.getElementById("subFounder");
+const subNoteInput = document.getElementById("subNote");
+const memberFilterEl = document.getElementById("memberFilter");
 
 
 async function fetchJson(url, options) {
@@ -1488,67 +1494,121 @@ closeTipsBtn.addEventListener("click", () => {
   tipsModal.hidden = true;
 });
 
-// ---- Predplatitelia ----
+// ---- Členovia (platba beží mimo appky, napr. bankovým prevodom) ----
+
+// Ceny musia sedieť s PRICES na tipradar.eu (landing/index.html).
+const MEMBER_PRICES = {
+  individual: { m1: 29, m3: 69, season: 149 },
+  group: { m1: 59, m3: 139, season: 299 },
+};
+const MEMBER_LENGTH_LABEL = { m1: "1 mesiac", m3: "3 mesiace", season: "sezóna" };
+const SEASON_END = "2027-05-31";
+let memberFilter = "active";
+let lastSubs = [];
 
 function daysUntil(dateStr) {
   const diffMs = new Date(dateStr).getTime() - Date.now();
   return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 }
 
+function todayIso() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/** Koniec členstva: od dátumu `from` pridá dĺžku; sezóna končí vždy 31. 5. 2027. */
+function memberEnd(from, length) {
+  if (length === "season") return new Date(`${SEASON_END}T23:59:00`);
+  const d = new Date(`${String(from).slice(0, 10)}T23:59:00`);
+  const months = length === "m3" ? 3 : 1;
+  const day = d.getDate();
+  d.setMonth(d.getMonth() + months);
+  if (d.getDate() < day) d.setDate(0); // napr. 31. 1. + 1 mesiac = 28./29. 2.
+  return d;
+}
+
+function syncMemberPrice() {
+  subPriceInput.value = MEMBER_PRICES[subTierSelect.value][subLengthSelect.value];
+}
+subTierSelect.addEventListener("change", syncMemberPrice);
+subLengthSelect.addEventListener("change", syncMemberPrice);
+
 function subscriberStatus(sub) {
   const days = daysUntil(sub.nextPaymentDue);
-  if (days < 0) return { label: "Vypršal", cls: "lost" };
-  if (days <= 3) return { label: `Vyprší o ${days} d.`, cls: "void" };
+  if (days < 0) return { label: "Skončilo", cls: "lost" };
+  if (days <= 3) return { label: days === 0 ? "Končí dnes" : `Končí o ${days} d.`, cls: "void" };
   return { label: "Aktívny", cls: "won" };
 }
 
 async function openSubscribers() {
   void renderLeads();
   subscribersModal.hidden = false;
+  if (!subStartInput.value) subStartInput.value = todayIso();
+  if (!subPriceInput.value) syncMemberPrice();
   subscribersListEl.innerHTML = skeletonHtml(2);
   try {
     const subs = await fetchJson("/api/subscribers");
     renderSubscribersList(subs);
   } catch (err) {
-    subscribersListEl.innerHTML = `<p class="muted small">Predplatiteľov sa nepodarilo načítať: ${escapeHtml(err.message)}</p>`;
+    subscribersListEl.innerHTML = `<p class="muted small">Členov sa nepodarilo načítať: ${escapeHtml(err.message)}</p>`;
   }
 }
 
 function renderSubscribersList(subs) {
-  const activeCount = subs.filter((s) => daysUntil(s.nextPaymentDue) >= 0).length;
-  const monthlyRevenue = subs
-    .filter((s) => daysUntil(s.nextPaymentDue) >= 0)
-    .reduce((sum, s) => sum + (s.priceEur || 0), 0);
+  lastSubs = subs;
+  const active = subs.filter((s) => daysUntil(s.nextPaymentDue) >= 0);
+  const vip = active.filter((s) => s.tier === "group").length;
+  const income = active.reduce((sum, s) => sum + (Number(s.priceEur) || 0), 0);
+  const ending = active.filter((s) => daysUntil(s.nextPaymentDue) <= 7).length;
 
   subscribersSummaryEl.innerHTML = `
-    <span>Spolu: <strong>${subs.length}</strong></span>
-    <span>Aktívnych: <strong>${activeCount}</strong></span>
-    <span>Mesačný príjem: <strong>${monthlyRevenue} €</strong></span>
+    <span>Aktívni: <strong>${active.length}</strong></span>
+    <span>Premium: <strong>${active.length - vip}</strong></span>
+    <span>VIP: <strong>${vip}</strong></span>
+    <span>Zaplatené (aktívni): <strong>${income} €</strong></span>
+    <span>Končí do 7 dní: <strong>${ending}</strong></span>
   `;
 
-  if (subs.length === 0) {
-    subscribersListEl.innerHTML = `<p class="empty-state">Zatiaľ nemáš pridaných žiadnych predplatiteľov.</p>`;
+  memberFilterEl.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b.dataset.f === memberFilter));
+
+  const shown = subs
+    .filter((s) => memberFilter === "all" || (memberFilter === "active" ? daysUntil(s.nextPaymentDue) >= 0 : daysUntil(s.nextPaymentDue) < 0))
+    .sort((a, b) => memberFilter === "expired"
+      ? new Date(b.nextPaymentDue) - new Date(a.nextPaymentDue)
+      : new Date(a.nextPaymentDue) - new Date(b.nextPaymentDue));
+
+  if (shown.length === 0) {
+    subscribersListEl.innerHTML = `<p class="empty-state">${
+      subs.length === 0 ? "Zatiaľ nemáš žiadnych členov. Po prvej platbe ho pridaj formulárom vyššie."
+      : memberFilter === "active" ? "Momentálne nemáš aktívnych členov." : "Žiadne skončené členstvá."
+    }</p>`;
     return;
   }
 
-  subscribersListEl.innerHTML = subs
+  subscribersListEl.innerHTML = shown
     .map((s) => {
       const status = subscriberStatus(s);
-      const tierLabel = s.tier === "group" ? "VIP" : "PREMIUM";
-      const dueDate = new Date(s.nextPaymentDue).toLocaleDateString("sk-SK");
+      const isVip = s.tier === "group";
+      const length = s.length || "m1";
+      const endDate = new Date(s.nextPaymentDue).toLocaleDateString("sk-SK");
+      const startDate = s.startDate ? new Date(s.startDate).toLocaleDateString("sk-SK") : null;
+      const needsCard = isVip && (length === "m3" || length === "season");
+      const details = [
+        escapeHtml(s.contact || ""),
+        `${MEMBER_LENGTH_LABEL[length]} · ${Number(s.priceEur) || 0} €`,
+        startDate ? `${startDate} – ${endDate}` : `do ${endDate}`,
+        s.note ? escapeHtml(s.note) : "",
+      ].filter(Boolean).join(" · ");
       return `
         <div class="tip-row">
           <div class="tip-row-info">
-            <div class="tip-row-match">${escapeHtml(s.name)} <span class="muted small">(${tierLabel} · ${s.priceEur} €)</span></div>
-            <div class="tip-row-market">${escapeHtml(s.contact || "")} · najbližšia platba: ${dueDate}</div>
+            <div class="tip-row-match">${escapeHtml(s.name)}<span class="member-tag ${isVip ? "vip" : "premium"}">${isVip ? "VIP" : "PREMIUM"}</span>${s.founder ? `<span class="member-tag founder">Prvý člen</span>` : ""}</div>
+            <div class="tip-row-market">${details}</div>
           </div>
           <span class="tip-status ${status.cls}">${status.label}</span>
-          ${
-            s.telegramChatId
-              ? `<button class="tip-delete-btn" data-test-reminder-id="${s.id}" title="Poslať testovaciu pripomienku teraz" style="background:var(--surface-alt); color:var(--gold-bright); border-radius:6px; padding:4px 8px; font-size:12px;">🔔 Test</button>`
-              : ""
-          }
-          <button class="tip-delete-btn" data-extend-id="${s.id}" title="Predĺžiť o mesiac" style="background:var(--surface-alt); color:var(--gold-bright); border-radius:6px; padding:4px 8px; font-size:12px;">+30d</button>
+          ${needsCard ? `<button class="tip-delete-btn member-btn" data-card-id="${s.id}" title="Kovová karta">${s.cardSent ? "✓ Karta poslaná" : "Poslať kartu"}</button>` : ""}
+          ${s.telegramChatId ? `<button class="tip-delete-btn member-btn" data-test-reminder-id="${s.id}" title="Poslať testovaciu pripomienku teraz">🔔 Test</button>` : ""}
+          <button class="tip-delete-btn member-btn" data-extend-id="${s.id}" title="Predĺžiť o ďalšie obdobie (${MEMBER_LENGTH_LABEL[length]})">Predĺžiť</button>
           <button class="tip-delete-btn" data-remove-id="${s.id}" title="Zmazať">✕</button>
         </div>
       `;
@@ -1560,17 +1620,45 @@ function renderSubscribersList(subs) {
       const id = e.currentTarget.dataset.extendId;
       const sub = subs.find((s) => s.id === id);
       if (!sub) return;
-      const base = daysUntil(sub.nextPaymentDue) > 0 ? new Date(sub.nextPaymentDue) : new Date();
-      base.setDate(base.getDate() + 30);
+      const length = sub.length || "m1";
+      if (length === "season" && daysUntil(sub.nextPaymentDue) >= 0) {
+        showToast("Sezónne členstvo platí do 31. 5. 2027, predĺžiť sa dá až potom.");
+        return;
+      }
+      // Predĺženie nadväzuje na koniec, ak ešte platí, inak začína dnes.
+      const from = daysUntil(sub.nextPaymentDue) >= 0 ? sub.nextPaymentDue : todayIso();
+      const end = memberEnd(from, length);
+      if (!window.confirm(`Predĺžiť ${sub.name} (${MEMBER_LENGTH_LABEL[length]}) do ${end.toLocaleDateString("sk-SK")}?`)) return;
       try {
         await fetchJson(`/api/subscribers/${id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nextPaymentDue: base.toISOString() }),
+          body: JSON.stringify({ nextPaymentDue: end.toISOString() }),
         });
+        showToast("Členstvo predĺžené.");
         openSubscribers();
       } catch (err) {
         showToast(`Predĺženie zlyhalo: ${err.message}`);
+      }
+    });
+  });
+
+  subscribersListEl.querySelectorAll("[data-card-id]").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      const id = e.currentTarget.dataset.cardId;
+      const sub = subs.find((s) => s.id === id);
+      if (!sub) return;
+      btn.disabled = true;
+      try {
+        await fetchJson(`/api/subscribers/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cardSent: !sub.cardSent }),
+        });
+        openSubscribers();
+      } catch (err) {
+        btn.disabled = false;
+        showToast(`Uloženie zlyhalo: ${err.message}`);
       }
     });
   });
@@ -1593,7 +1681,7 @@ function renderSubscribersList(subs) {
   subscribersListEl.querySelectorAll("[data-remove-id]").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
       const id = e.currentTarget.dataset.removeId;
-      if (!window.confirm("Naozaj zmazať tohto predplatiteľa?")) return;
+      if (!window.confirm("Naozaj zmazať tohto člena?")) return;
       try {
         await fetchJson(`/api/subscribers/${id}`, { method: "DELETE" });
         openSubscribers();
@@ -1604,6 +1692,13 @@ function renderSubscribersList(subs) {
   });
 }
 
+memberFilterEl.addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-f]");
+  if (!b) return;
+  memberFilter = b.dataset.f;
+  renderSubscribersList(lastSubs);
+});
+
 openSubscribersBtn.addEventListener("click", openSubscribers);
 closeSubscribersBtn.addEventListener("click", () => {
   subscribersModal.hidden = true;
@@ -1612,13 +1707,18 @@ closeSubscribersBtn.addEventListener("click", () => {
 addSubscriberBtn.addEventListener("click", async () => {
   const name = subNameInput.value.trim();
   if (!name) {
-    showToast("Zadaj meno alebo názov skupiny.");
+    showToast("Zadaj meno člena.");
     return;
   }
   const tier = subTierSelect.value;
-  const priceEur = tier === "group" ? 59 : 29;
-  const nextPaymentDue = new Date();
-  nextPaymentDue.setDate(nextPaymentDue.getDate() + 30);
+  const length = subLengthSelect.value;
+  const start = subStartInput.value || todayIso();
+  const priceRaw = subPriceInput.value.trim();
+  const priceEur = priceRaw === "" ? MEMBER_PRICES[tier][length] : Number(priceRaw);
+  const end = memberEnd(start, length);
+  if (end.getTime() < Date.now() && length !== "season") {
+    if (!window.confirm(`Toto členstvo by skončilo už ${end.toLocaleDateString("sk-SK")}. Pridať aj tak?`)) return;
+  }
 
   const subscriber = {
     id: `sub-${Date.now()}`,
@@ -1627,7 +1727,11 @@ addSubscriberBtn.addEventListener("click", async () => {
     telegramChatId: subTelegramChatIdInput.value.trim() || undefined,
     tier,
     priceEur,
-    nextPaymentDue: nextPaymentDue.toISOString(),
+    length,
+    startDate: new Date(`${start}T12:00:00`).toISOString(),
+    nextPaymentDue: end.toISOString(),
+    founder: subFounderInput.checked,
+    note: subNoteInput.value.trim() || undefined,
     createdAt: new Date().toISOString(),
   };
 
@@ -1641,6 +1745,10 @@ addSubscriberBtn.addEventListener("click", async () => {
     subNameInput.value = "";
     subContactInput.value = "";
     subTelegramChatIdInput.value = "";
+    subNoteInput.value = "";
+    subStartInput.value = todayIso();
+    memberFilter = "active";
+    showToast(`${name} pridaný medzi členov.`);
     openSubscribers();
   } catch (err) {
     showToast(`Pridanie zlyhalo: ${err.message}`);

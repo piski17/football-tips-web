@@ -1314,7 +1314,8 @@ async function checkExpiringSubscribers(): Promise<void> {
       daysLeft: Math.ceil((new Date(s.nextPaymentDue).getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
     }));
 
-    const expiring = withDaysLeft.filter((s) => s.daysLeft <= 3);
+    // Len členstvá, ktoré končia do 3 dní alebo skončili najviac pred 3 dňami (staré skončené už neotravujú).
+    const expiring = withDaysLeft.filter((s) => s.daysLeft <= 3 && s.daysLeft >= -3);
     if (expiring.length > 0) {
       await notifyAdminExpiringSubscribers(expiring.map((s) => ({ name: s.name, tier: s.tier, daysLeft: s.daysLeft })));
     }

@@ -1625,3 +1625,20 @@ h1, h2, h3, h4,
 
 /* ★ Silný tip – odporúčaný tip s dôverou 70 % a viac */
 .strong-tip { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: 0.85em; font-weight: 600; color: var(--gold); border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent); background: color-mix(in srgb, var(--gold) 12%, transparent); white-space: nowrap; }
+
+/* ---------- Členovia ---------- */
+.member-form { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); align-items: center; }
+.member-form input[type="text"] { min-width: 0; }
+.member-field { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted); }
+.member-field input { flex: 1; min-width: 0; }
+.member-check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); }
+.member-check input { width: 16px; height: 16px; accent-color: var(--gold, #C9A55C); }
+.member-filter { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 10px; }
+.member-filter button { background: var(--surface-alt); border: 1px solid var(--border); color: var(--text-muted); border-radius: 999px; padding: 5px 12px; font-size: 12.5px; cursor: pointer; }
+.member-filter button.active { border-color: var(--gold-bright, #E8D3A0); color: var(--gold-bright, #E8D3A0); }
+.member-tag { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .04em; padding: 2px 7px; border-radius: 4px; margin-left: 6px; vertical-align: 1px; }
+.member-tag.vip { background: rgba(201,165,92,.16); color: var(--gold-bright, #E8D3A0); }
+.member-tag.premium { background: var(--surface-alt); color: var(--text-muted); }
+.member-tag.founder { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+.member-btn { background: var(--surface-alt) !important; color: var(--gold-bright, #E8D3A0) !important; border-radius: 6px; padding: 4px 8px !important; font-size: 12px !important; white-space: nowrap; }
+@media (max-width: 600px) { .member-form { grid-template-columns: 1fr; } }

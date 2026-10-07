@@ -334,9 +334,13 @@ export interface Subscriber {
   name: string;
   contact?: string;
   telegramChatId?: string; // voliteľné - ak vyplnené, appka mu vie poslať osobnú pripomienku pred obnovením
-  tier: "individual" | "group";
+  tier: "individual" | "group"; // individual = Premium, group = VIP
   priceEur: number;
-  nextPaymentDue: string; // ISO dátum
+  nextPaymentDue: string; // ISO dátum – do kedy má členstvo zaplatené
+  length?: "m1" | "m3" | "season"; // dĺžka členstva (staršie záznamy ju nemajú = 1 mesiac)
+  startDate?: string; // ISO dátum začiatku členstva
+  founder?: boolean; // „Prví členovia“ – zamknutá cena
+  cardSent?: boolean; // VIP kovová karta odoslaná
   note?: string;
   createdAt: string; // ISO
 }

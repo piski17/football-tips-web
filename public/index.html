@@ -44,7 +44,7 @@
 
       <button class="btn-ghost" id="openTicketBtn">Tiket <span id="ticketCount"></span></button>
       <button class="btn-ghost" id="openTipsBtn">História tipov</button>
-      <button class="btn-ghost" id="openSubscribersBtn">Predplatitelia</button>
+      <button class="btn-ghost" id="openSubscribersBtn">Členovia</button>
       <button class="btn-ghost" id="openBacktestBtn" title="Overenie presnosti modelu na odohraných zápasoch">Spätný test</button>
       <a class="btn-ghost" href="/suhrn" style="text-decoration:none;display:inline-flex;align-items:center;">Denný súhrn</a>
     </header>
@@ -139,20 +139,35 @@
 
   <div class="modal-overlay" id="subscribersModal" hidden>
     <div class="modal modal-large">
-      <h3>Predplatitelia</h3>
+      <h3>Členovia</h3>
+      <p class="muted small" style="margin:-4px 0 12px;">Všetci, ktorí si zakúpili členstvo. Po zaplatení ich sem pridaj, appka ti 3 dni pred koncom pripomenie predĺženie.</p>
       <div class="tips-summary" id="subscribersSummary"></div>
 
-      <div class="subscriber-form">
-        <input type="text" id="subName" placeholder="Meno / názov skupiny" />
-        <input type="text" id="subContact" placeholder="Kontakt (email, Telegram…)" />
+      <div class="subscriber-form member-form">
+        <input type="text" id="subName" placeholder="Meno" />
+        <input type="text" id="subContact" placeholder="Kontakt (e-mail, Telegram…)" />
         <input type="text" id="subTelegramChatId" placeholder="Telegram chat ID (voliteľné)" />
-        <select id="subTier">
-          <option value="individual">PREMIUM (29 €)</option>
-          <option value="group">VIP (59 €)</option>
+        <select id="subTier" aria-label="Členstvo">
+          <option value="individual">Premium</option>
+          <option value="group">VIP</option>
         </select>
-        <button class="btn-primary" id="addSubscriberBtn">Pridať</button>
+        <select id="subLength" aria-label="Dĺžka">
+          <option value="m1">1 mesiac</option>
+          <option value="m3" selected>3 mesiace</option>
+          <option value="season">Sezóna (do 31. 5. 2027)</option>
+        </select>
+        <label class="member-field">Od <input type="date" id="subStart" /></label>
+        <label class="member-field">Cena <input type="number" id="subPrice" min="0" step="1" inputmode="decimal" /> €</label>
+        <label class="member-check"><input type="checkbox" id="subFounder" checked /> Prvý člen (zamknutá cena)</label>
+        <input type="text" id="subNote" placeholder="Poznámka (voliteľné)" />
+        <button class="btn-primary" id="addSubscriberBtn">Pridať člena</button>
       </div>
 
+      <div class="member-filter" id="memberFilter">
+        <button type="button" data-f="active" class="active">Aktívni</button>
+        <button type="button" data-f="expired">Skončené</button>
+        <button type="button" data-f="all">Všetci</button>
+      </div>
       <div class="tips-list" id="subscribersList"></div>
       <h4 class="leads-title">Poradovník – záujemcovia z webu</h4>
       <p class="muted small" style="margin:0 0 8px;">Ľudia, ktorí na tipradar.eu klikli na členstvo a otvorili bota. Zoradení podľa dátumu zápisu.</p>

@@ -549,14 +549,14 @@ export async function notifyAdminExpiringSubscribers(
   const lines = expiring
     .map((s) => {
       const tierLabel = s.tier === "group" ? "VIP" : "PREMIUM";
-      const when = s.daysLeft < 0 ? "už vypršal" : s.daysLeft === 0 ? "vyprší dnes" : `vyprší o ${s.daysLeft} d.`;
+      const when = s.daysLeft < 0 ? "už skončilo" : s.daysLeft === 0 ? "končí dnes" : `končí o ${s.daysLeft} d.`;
       return `• ${s.name} (${tierLabel}) — ${when}`;
     })
     .join("\n");
 
   await callTelegramApi("sendMessage", {
     chat_id: TELEGRAM_ADMIN_CHAT_ID,
-    text: `⚠️ <b>Blížiace sa/vypršané platby</b>\n\n${lines}`,
+    text: `⚠️ <b>Končiace členstvá</b>\n\n${lines}`,
     parse_mode: "HTML",
   });
 }
@@ -568,10 +568,10 @@ export async function sendRenewalReminder(
 ): Promise<boolean> {
   if (!TELEGRAM_BOT_TOKEN) return false;
   const text =
-    `🔔 <b>Tvoje predplatné čoskoro vyprší</b>\n\n` +
+    `🔔 <b>Tvoje členstvo o 3 dni končí</b>\n\n` +
     `Za posledné obdobie sme vyhodnotili <b>${stats.totalResolved}</b> ${stats.totalResolved === 1 ? "tip" : stats.totalResolved <= 4 ? "tipy" : "tipov"}` +
     (stats.winRate !== null ? ` s úspešnosťou <b>${stats.winRate} %</b>.` : ".") +
-    `\n\nAk chceš pokračovať v predplatnom, napíš nám – radi ťa predĺžime. 🙌`;
+    `\n\nAk chceš pokračovať, napíš nám a členstvo ti predĺžime. 🙌`;
   const messageId = await sendToChat(chatId, text);
   return messageId !== null;
 }
