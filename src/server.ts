@@ -1,4 +1,4 @@
-import { MIN_ODDS, findOdds } from "./oddsMatcher";
+import { MIN_ODDS, findOdds, STRONG_TIP_MIN_PROBABILITY } from "./oddsMatcher";
 import { listLeads, deleteLead, recordLead } from "./leadsStore";
 import { getMeta, setMeta } from "./metaStore";
 import * as crypto from "crypto";
@@ -454,10 +454,11 @@ app.post("/api/tips/:id/telegram", async (req, res) => {
         ? `🌟 <b>TIKET TÝŽDŇA</b>`
         : `🌟 <b>ZÁPAS TÝŽDŇA</b>`
       : undefined;
-    const sent = await sendTipToTelegram(tip, target, headerOverride);
+    const strong = isStrongTipOfDay(tip, tips);
+    const sent = await sendTipToTelegram(tip, target, headerOverride, strong);
     if (sent.length > 0) {
       const existing = tip.telegramMessages ?? [];
-      await updateTip(tip.id, { telegramMessages: [...existing, ...sent] });
+      await updateTip(tip.id, { telegramMessages: [...existing, ...sent], ...(strong ? { strongOfDay: true } : {}) });
     }
     res.json({ ok: sent.length > 0 });
   } catch (err: any) {
@@ -651,6 +652,27 @@ app.post("/api/telegram/no-tip-today", async (req, res) => {
     res.status(502).json({ error: err.message ?? String(err) });
   }
 });
+
+/**
+ * Silný tip dňa: každý deň najviac jeden – tip s najvyššou dôverou (aspoň 70 %)
+ * spomedzi uložených jednotlivých tipov s výkopom v ten istý deň (slovenský čas).
+ * Pri rovnakej dôvere rozhodne vyšší kurz, potom skorší výkop.
+ * Ak už bol v ten deň iný tip odoslaný ako silný, ďalší sa ním nestane.
+ */
+function isStrongTipOfDay(tip: SavedTip, all: SavedTip[]): boolean {
+  if (tip.legs?.length || tip.probability < STRONG_TIP_MIN_PROBABILITY) return false;
+  if (tip.strongOfDay) return true;
+  const day = dayKeySk(new Date(tip.matchDate));
+  const sameDay = all.filter((t) => !t.legs?.length && t.status !== "void" && dayKeySk(new Date(t.matchDate)) === day);
+  if (sameDay.some((t) => t.id !== tip.id && t.strongOfDay)) return false;
+  const rank = (t: SavedTip) => [t.probability, t.odds ?? 0, -new Date(t.matchDate).getTime()];
+  const better = (a: SavedTip, b: SavedTip) => {
+    const ra = rank(a), rb = rank(b);
+    for (let i = 0; i < ra.length; i++) if (ra[i] !== rb[i]) return ra[i] > rb[i];
+    return a.savedAt < b.savedAt;
+  };
+  return sameDay.every((t) => t.id === tip.id || !better(t, tip));
+}
 
 // ---- Denné vyhodnotenie: všetky tipy a tikety dňa v jednej správe ----
 /** Deň (YYYY-MM-DD) podľa slovenského času. */

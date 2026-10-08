@@ -2,7 +2,6 @@ import { recordLead } from "./leadsStore";
 import axios from "axios";
 import { sendAdminEmail } from "./mailer";
 import { SavedTip } from "./types";
-import { STRONG_TIP_MIN_PROBABILITY } from "./oddsMatcher";
 
 /** Slovenský tvar podľa počtu: plural(3, "tip", "tipy", "tipov") -> "3 tipy". */
 /** Číslo so slovenskou desatinnou čiarkou: fmtNum(1.845, 2) -> "1,85". */
@@ -190,8 +189,8 @@ function impliedOdds(probability: number): string {
   return probability > 0 ? (100 / probability).toFixed(2) : "-";
 }
 
-/** vip = správa ide do VIP kanála – len tam má silný tip (≥ 70 %) hviezdičku. */
-function buildMessageText(tip: SavedTip, headerOverride?: string, vip = false): string {
+/** vip = správa ide do VIP kanála – len tam má silný tip dňa hviezdičku. strong = tip je silný tip dňa (určuje server). */
+function buildMessageText(tip: SavedTip, headerOverride?: string, vip = false, strong = false): string {
   const odds = impliedOdds(tip.probability);
   const stakePct = stakeTierPercent(tip.probability);
   // Skutočný kurz stávkoviek (ak bol pri uložení k dispozícii), inak odhad z modelu.
@@ -223,10 +222,10 @@ function buildMessageText(tip: SavedTip, headerOverride?: string, vip = false): 
   }
 
   return (
-    `${headerOverride ?? `🎯 <b>Nový tip</b>`}\n\n` +
+    `${headerOverride ?? (vip && strong ? `⭐ <b>SILNÝ TIP DŇA</b>` : `🎯 <b>Nový tip</b>`)}\n\n` +
     `⚽ ${escapeHtml(translateTeamName(tip.homeTeam))} — ${escapeHtml(translateTeamName(tip.awayTeam))}\n` +
     `📊 ${escapeHtml(tip.market)}: <b>${escapeHtml(translateNamesInText(tip.selection, tip.homeTeam, tip.awayTeam))}</b>\n` +
-    `📈 Dôvera: <b>${tip.probability.toFixed(0)} %</b>${vip && tip.probability >= STRONG_TIP_MIN_PROBABILITY ? " · ⭐ <b>Silný tip</b>" : ""}\n` +
+    `📈 Dôvera: <b>${tip.probability.toFixed(0)} %</b>${vip && strong ? " · ⭐ <b>Najsilnejší tip dňa</b>" : ""}\n` +
     oddsLine +
     `💵 Odporúčaná sadzba: <b>${stakePct} % bankrollu</b>\n\n` +
     oddsNote
@@ -263,7 +262,8 @@ function resolveChatIds(target: TelegramTarget): string[] {
 export async function sendTipToTelegram(
   tip: SavedTip,
   target: TelegramTarget,
-  headerOverride?: string
+  headerOverride?: string,
+  strong = false
 ): Promise<{ chatId: string; messageId: number }[]> {
   const chatIds = resolveChatIds(target);
   if (chatIds.length === 0) return [];
@@ -271,7 +271,7 @@ export async function sendTipToTelegram(
   const sent: { chatId: string; messageId: number }[] = [];
 
   for (const chatId of chatIds) {
-    const text = buildMessageText(tip, headerOverride, chatId === TELEGRAM_CHAT_ID_VIP);
+    const text = buildMessageText(tip, headerOverride, chatId === TELEGRAM_CHAT_ID_VIP, strong);
     const messageId = await sendToChat(chatId, text);
     if (messageId) sent.push({ chatId, messageId });
   }
@@ -360,7 +360,7 @@ const FAQ_ANSWERS: Record<string, string> = {
     `• <b>📚 Kurz stávkovania</b> (99 €) zadarmo pri Premium na celú sezónu\n\n` +
     `👑 <b>VIP</b> – 59 € / mesiac · 139 € / 3 mesiace · 299 € / sezóna · <b>len 30 miest</b>\n` +
     `• <b>Kompletné členstvo Premium</b> – všetky denné tipy, odôvodnenia aj reporty\n` +
-  `• <b>⭐ Silné tipy</b> – tipy s dôverou 70 % a viac označené hviezdičkou, len vo VIP kanáli\n` +
+  `• <b>⭐ Silný tip dňa</b> – každý deň jeden tip s najvyššou dôverou (aspoň 70 %), označený hviezdičkou len vo VIP kanáli\n` +
     `• <b>Osobné konzultácie</b> – videohovory so zakladateľom TipRadaru podľa dohody\n` +
     `• <b>Kovová členská karta</b> – personalizovaná vaším menom, číslom členstva a dátumom vstupu\n` +
   `• <b>📚 Kurz stávkovania</b> (99 €) zadarmo pri VIP na 3 mesiace alebo celú sezónu\n` +
@@ -408,7 +408,7 @@ const PREMIUM_BENEFITS =
   `• <b>📚 Kurz stávkovania</b> (99 €) zadarmo pri Premium na celú sezónu`;
 const VIP_BENEFITS =
   `• <b>Kompletné členstvo Premium</b> – všetky denné tipy, odôvodnenia aj reporty\n` +
-  `• <b>⭐ Silné tipy</b> – tipy s dôverou 70 % a viac označené hviezdičkou, len vo VIP kanáli\n` +
+  `• <b>⭐ Silný tip dňa</b> – každý deň jeden tip s najvyššou dôverou (aspoň 70 %), označený hviezdičkou len vo VIP kanáli\n` +
   `• <b>Osobné konzultácie</b> – videohovory so zakladateľom TipRadaru podľa dohody\n` +
   `• <b>Kovová členská karta</b> – personalizovaná vaším menom, číslom členstva a dátumom vstupu\n` +
   `• <b>📚 Kurz stávkovania</b> (99 €) zadarmo pri VIP na 3 mesiace alebo celú sezónu\n` +

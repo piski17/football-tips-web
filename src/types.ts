@@ -274,6 +274,8 @@ export interface SavedTip {
   telegramMessages?: { chatId: string; messageId: number }[]; // kam presne bola správa poslaná, na prípadné zmazanie
   homeTeamLogo?: string;
   awayTeamLogo?: string;
+  /** Tip bol vo VIP kanáli odoslaný ako „⭐ Silný tip dňa“ (najviac jeden za deň). */
+  strongOfDay?: boolean;
 }
 
 export interface LeaguePreset {
