@@ -556,10 +556,21 @@
   .per-month { margin: 10px 0 0; font-size: 14px; color: var(--gold); min-height: 1.4em; }
   .skola { background: radial-gradient(900px 500px at 0% 0%, rgba(201,165,92,.07), transparent 60%), var(--bg); }
   .skola-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 72px; align-items: center; }
-  .skola-cover { display: block; border: 1px solid var(--gold); outline: 1px solid rgba(201,165,92,.22); outline-offset: 8px; box-shadow: 0 30px 60px rgba(0,0,0,.55); }
-  .skola-cover img, .skola-thumbs img { display: block; width: 100%; height: auto; }
-  .skola-thumbs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 28px; }
-  .skola-thumbs img { border: 1px solid var(--rule-gold); }
+  .skola-slider { position: relative; border: 1px solid var(--gold); outline: 1px solid rgba(201,165,92,.22); outline-offset: 8px; box-shadow: 0 30px 60px rgba(0,0,0,.55); background: #0E0E10; }
+  .skola-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: none; overscroll-behavior-x: contain; outline: none; }
+  .skola-track::-webkit-scrollbar { display: none; }
+  .skola-track img { flex: 0 0 100%; width: 100%; height: auto; display: block; scroll-snap-align: start; aspect-ratio: 16 / 9; object-fit: cover; }
+  .skola-arrow { position: absolute; top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid var(--rule-gold); border-radius: 50%; background: rgba(11,11,12,.78); color: var(--gold-hi); cursor: pointer; transition: background .2s, color .2s, opacity .2s; }
+  .skola-arrow:hover { background: var(--gold); color: #0B0B0C; }
+  .skola-arrow[disabled] { opacity: 0; pointer-events: none; }
+  .skola-arrow svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; }
+  .skola-arrow.prev { left: 14px; } .skola-arrow.next { right: 14px; }
+  .skola-nav { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 26px; }
+  .skola-cap { font-size: 14px; color: var(--muted); }
+  .skola-cap b { font: italic 500 16px/1 var(--serif); color: var(--gold); margin-right: 10px; }
+  .skola-dots { display: flex; gap: 8px; }
+  .skola-dots button { width: 26px; height: 3px; padding: 0; border: 0; background: var(--rule-gold); cursor: pointer; transition: background .2s, width .2s; }
+  .skola-dots button[aria-current="true"] { width: 44px; background: var(--gold); }
   .skola-text .muted { margin-top: 18px; max-width: 56ch; }
   .skola-chaps { list-style: none; counter-reset: ch; margin: 28px 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; column-gap: 28px; border-top: 1px solid var(--rule-gold); }
   .skola-chaps li { counter-increment: ch; display: flex; gap: 12px; align-items: baseline; padding: 10px 0; border-bottom: 1px solid var(--rule); font-size: 14.5px; color: var(--text); }
@@ -571,9 +582,20 @@
   .skola-vip { margin-top: 12px; font-size: 15px; color: var(--muted); }
   .skola-vip strong { color: var(--gold-hi); font-weight: 600; }
   .skola-actions { display: flex; gap: 12px; margin-top: 22px; flex-wrap: wrap; }
-  .skola-actions .btn { flex: 1 1 180px; }
-  @media (max-width: 960px) { .skola-grid { grid-template-columns: minmax(0, 1fr); gap: 48px; } }
-  @media (max-width: 520px) { .skola-chaps { grid-template-columns: minmax(0, 1fr); } .skola-buy { padding: 24px 20px; } .skola-thumbs { gap: 8px; } .skola-cover { outline-offset: 5px; } }
+  .skola-actions .btn { flex: 1 1 180px; white-space: nowrap; }
+  @media (max-width: 960px) {
+    /* mobil: najprv nadpis, potom galéria, text, kapitoly a cena */
+    .skola-grid { display: flex; flex-direction: column; align-items: stretch; gap: 0; }
+    .skola-text { display: contents; }
+    .skola-text .eyebrow { order: 1; } .skola-text h2 { order: 2; } .skola-media { order: 3; margin-top: 28px; }
+    .skola-text .muted { order: 4; margin-top: 28px; } .skola-chaps { order: 5; } .skola-buy { order: 6; }
+  }
+  @media (max-width: 520px) {
+    .skola-chaps { column-gap: 16px; } .skola-chaps li { gap: 8px; padding: 9px 0; font-size: 13px; line-height: 1.35; } .skola-chaps li::before { font-size: 13px; min-width: 18px; }
+    .skola-buy { padding: 24px 20px; } .skola-slider { outline-offset: 5px; }
+    .skola-arrow { width: 36px; height: 36px; } .skola-arrow.prev { left: 8px; } .skola-arrow.next { right: 8px; }
+    .skola-nav { margin-top: 20px; } .skola-cap { font-size: 13px; }
+  }
   .founder { margin-top: 28px; padding: 22px 26px; border: 1px dashed var(--rule-gold); display: flex; gap: 18px; align-items: baseline; flex-wrap: wrap; }
   .founder b { font: 400 20px/1.2 var(--serif); color: var(--gold-hi); font-weight: 400; }
   .founder p { margin: 0; color: var(--muted); flex: 1 1 320px; }
@@ -823,11 +845,24 @@
     <div class="wrap">
       <div class="skola-grid">
         <div class="skola-media">
-          <a class="skola-cover" href="#skola-ukazka"><img src="/skola/kurz-01.jpg" width="1200" height="675" alt="Titulná strana kurzu „Škola stávkovania“" loading="lazy" /></a>
-          <div class="skola-thumbs" id="skola-ukazka" aria-label="Ukážky z kurzu">
-            <img src="/skola/kurz-06.jpg" width="1200" height="675" alt="Ukážka: koľko vložiť na jeden tip" loading="lazy" />
-            <img src="/skola/kurz-18.jpg" width="1200" height="675" alt="Ukážka: výpočet hodnotnej stávky" loading="lazy" />
-            <img src="/skola/kurz-30.jpg" width="1200" height="675" alt="Ukážka: prečo nefunguje Martingale" loading="lazy" />
+          <div class="skola-slider" aria-roledescription="galéria" aria-label="Ukážky z kurzu">
+            <div class="skola-track" tabindex="0">
+              <img src="/skola/kurz-01.jpg" width="1200" height="675" alt="Titulná strana kurzu „Škola stávkovania“" loading="eager" data-cap="Titulná strana" />
+              <img src="/skola/kurz-06.jpg" width="1200" height="675" alt="Ukážka: koľko vložiť na jeden tip" loading="lazy" data-cap="Koľko vložiť na jeden tip" />
+              <img src="/skola/kurz-18.jpg" width="1200" height="675" alt="Ukážka: výpočet hodnotnej stávky" loading="lazy" data-cap="Výpočet hodnotnej stávky" />
+              <img src="/skola/kurz-30.jpg" width="1200" height="675" alt="Ukážka: prečo nefunguje Martingale" loading="lazy" data-cap="Prečo nefunguje Martingale" />
+            </div>
+            <button class="skola-arrow prev" type="button" aria-label="Predchádzajúci obrázok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+            <button class="skola-arrow next" type="button" aria-label="Ďalší obrázok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+          </div>
+          <div class="skola-nav">
+            <span class="skola-cap"><b class="num">1 / 4</b><span>Titulná strana</span></span>
+            <div class="skola-dots">
+              <button type="button" aria-label="Obrázok 1" aria-current="true"></button>
+              <button type="button" aria-label="Obrázok 2"></button>
+              <button type="button" aria-label="Obrázok 3"></button>
+              <button type="button" aria-label="Obrázok 4"></button>
+            </div>
           </div>
         </div>
         <div class="skola-text">
@@ -920,6 +955,22 @@
   tog.addEventListener("click", () => setOpen(!nav.classList.contains("open")));
   document.querySelectorAll(".nav-links a").forEach((a) => a.addEventListener("click", () => setOpen(false)));
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") setOpen(false); });
+
+  // galéria kurzu: šípky, pásiky a potiahnutie prstom
+  (function () {
+    const track = document.querySelector(".skola-track"); if (!track) return;
+    const imgs = [...track.querySelectorAll("img")], dots = [...document.querySelectorAll(".skola-dots button")];
+    const prev = document.querySelector(".skola-arrow.prev"), next = document.querySelector(".skola-arrow.next");
+    const num = document.querySelector(".skola-cap b"), cap = document.querySelector(".skola-cap span");
+    let cur = -1;
+    const go = (i) => track.scrollTo({ left: Math.max(0, Math.min(imgs.length - 1, i)) * track.clientWidth });
+    const show = (i) => { cur = i; dots.forEach((d, j) => d.setAttribute("aria-current", j === i ? "true" : "false")); prev.disabled = i === 0; next.disabled = i === imgs.length - 1; num.textContent = `${i + 1} / ${imgs.length}`; cap.textContent = imgs[i].dataset.cap; };
+    track.addEventListener("scroll", () => { const i = Math.round(track.scrollLeft / track.clientWidth); if (i !== cur) show(i); }, { passive: true });
+    prev.addEventListener("click", () => go(cur - 1)); next.addEventListener("click", () => go(cur + 1));
+    dots.forEach((d, i) => d.addEventListener("click", () => go(i)));
+    track.addEventListener("keydown", (e) => { if (e.key === "ArrowLeft") { e.preventDefault(); go(cur - 1); } if (e.key === "ArrowRight") { e.preventDefault(); go(cur + 1); } });
+    show(0);
+  })();
 
   // Klik na e-mail: otvorí poštu a zároveň adresu skopíruje (ak počítač nemá nastavenú poštovú aplikáciu)
   const toast = document.createElement("div");
