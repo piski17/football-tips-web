@@ -236,7 +236,8 @@ async function sendToChat(chatId: string, text: string): Promise<number | null> 
   try {
     const res = await axios.post(
       `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
-      { chat_id: chatId, text, parse_mode: "HTML" },
+      // protect_content: členovia nemôžu tipy preposielať, kopírovať ani ukladať.
+      { chat_id: chatId, text, parse_mode: "HTML", protect_content: true },
       { timeout: 10000 }
     );
     const messageId = res.data?.result?.message_id;
