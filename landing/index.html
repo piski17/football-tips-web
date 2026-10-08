@@ -554,6 +554,7 @@
   .term-switch button[aria-selected="true"] em { color: #141210; }
   .term-switch + .plans { margin-top: 28px; }
   .per-month { margin: 10px 0 0; font-size: 14px; color: var(--gold); min-height: 1.4em; }
+  .plan .founder { display: inline-block; align-self: flex-start; width: auto; min-height: 0; line-height: 1.4; margin: 10px 0 0; padding: 4px 10px; border: 1px solid var(--gold); border-radius: 999px; font-size: 12px; letter-spacing: .04em; color: var(--gold); }
   .skola { background: radial-gradient(900px 500px at 0% 0%, rgba(201,165,92,.07), transparent 60%), var(--bg); }
   .skola-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 72px; align-items: start; }
   @media (min-width: 961px) { .skola-media { position: sticky; top: calc(var(--nav-h, 76px) + 72px); margin-top: 40px; } }
@@ -836,7 +837,7 @@
     <div class="wrap">
       <div class="eyebrow"><b>IV.</b>Členstvo</div>
       <h2>Dva spôsoby, ako sa pridať</h2>
-      <p class="muted" style="margin-top:16px;max-width:62ch">Každý tip má kurz, šancu podľa modelu aj dôvod. Prehraté tipy nemažeme a každý týždeň zverejňujeme úspešnosť. Čím dlhšie členstvo, tým nižšia cena za mesiac. Predaj zatiaľ nebeží, zápis do poradovníka prebehne cez Telegram.</p>
+      <p class="muted" style="margin-top:16px;max-width:62ch">Každý tip má kurz, šancu podľa modelu aj dôvod. Prehraté tipy nemažeme a každý týždeň zverejňujeme úspešnosť. Čím dlhšie členstvo, tým nižšia cena za mesiac. Predaj zatiaľ nebeží, zápis do poradovníka prebehne cez Telegram. Kto sa zapíše teraz, dostane zakladajúcu cenu a ostane mu, kým členstvo nepreruší.</p>
       <div class="term-switch" role="tablist" aria-label="Dĺžka členstva">
         <button type="button" role="tab" data-term="m1" aria-selected="false">1 mesiac</button>
         <button type="button" role="tab" data-term="m3" aria-selected="true">3 mesiace <em>−20&nbsp;%</em></button>
@@ -847,6 +848,7 @@
           <div class="plan-top"><h3>Premium</h3><span>pre jednotlivcov</span></div>
           <div class="price"><b class="num" data-price-premium>69 €</b><span data-price-unit>za 3 mesiace</span></div>
           <p class="per-month" data-permonth-premium>23 € mesačne · ušetríte 18 €</p>
+          <p class="founder" data-later-premium>Zakladajúca cena · neskôr 85 €</p>
           <ul>
             <li><strong>Denné tipy</strong> v súkromnom kanáli na Telegrame, 2 – 3 hodiny pred výkopom</li>
             <li><strong>Pri každom tipe</strong> kurz, šanca podľa modelu, dôvod a odporúčaná sadzba</li>
@@ -862,6 +864,7 @@
           <div class="plan-top"><h3>VIP</h3><span class="limit-tag">len 30 miest</span></div>
           <div class="price"><b class="num" data-price-vip>139 €</b><span data-price-unit>za 3 mesiace</span></div>
           <p class="per-month" data-permonth-vip>46 € mesačne · ušetríte 38 €</p>
+          <p class="founder" data-later-vip>Zakladajúca cena · neskôr 169 €</p>
           <ul>
             <li><strong>Všetko z Premium</strong></li>
             <li><strong>★ Silný tip dňa</strong>: každý deň jeden tip s najvyššou dôverou (aspoň 70&nbsp;%), označený hviezdičkou len vo VIP kanáli. Tipy s takou dôverou vychádzali v spätných testoch najčastejšie.</li>
@@ -995,6 +998,7 @@
         <details><summary>Zaručujete výhru?</summary><p>Nie. Žiadny model nevie zaručiť výsledok zápasu. TipRadar vyberá stávky, pri ktorých je šanca podľa štatistík vyššia, než naznačuje kurz. Rozhoduje dlhodobý výsledok, preto zverejňujeme aj prehraté tipy.</p></details>
         <details><summary>Ako overujete, že model funguje?</summary><p>Spätným testom na odohraných zápasoch a mesačnou kontrolou, či tipy s dôverou 70&nbsp;% naozaj vychádzajú zhruba v 70&nbsp;% prípadov. Tipy vyradené pre veľký rozpor s kurzami si zapisujeme a porovnávame, kto mal pravdu.</p></details>
         <details><summary>Aké dlhé je členstvo?</summary><p>Na 1 mesiac, na 3 mesiace alebo na celú sezónu do 31. 5. 2027. Dlhšie členstvo vychádza lacnejšie na mesiac. Žiadne sa samo nepredlžuje. Pred koncom vám pripomenieme, že končí.</p></details>
+        <details><summary>Čo je zakladajúca cena?</summary><p>Ceny, ktoré vidíte teraz, platia pre prvých členov z poradovníka. Po spustení predaja budú vyššie, napríklad Premium 35&nbsp;€ a VIP 69&nbsp;€ mesačne. Kto sa zapíše teraz, má zakladajúcu cenu zamknutú, kým členstvo predlžuje bez prestávky.</p></details>
         <details><summary>Ako členstvo zruším?</summary><p>Stačí napísať. Členstvo platí do konca zaplateného obdobia a samo sa nepredlžuje.</p></details>
       </div>
     </div>
@@ -1225,9 +1229,10 @@
   // ---------- dĺžka členstva ----------
   (function () {
     const PRICES = {
-      m1: { premium: 29, vip: 59, unit: "mesačne", months: 1 },
-      m3: { premium: 69, vip: 139, unit: "za 3 mesiace", months: 3 },
-      season: { premium: 149, vip: 299, unit: "do 31. 5. 2027", months: 8 },
+      // Zakladajúce ceny pre poradovník; later = bežná cena po spustení predaja.
+      m1: { premium: 29, vip: 59, later: { premium: 35, vip: 69 }, unit: "mesačne", months: 1 },
+      m3: { premium: 69, vip: 139, later: { premium: 85, vip: 169 }, unit: "za 3 mesiace", months: 3 },
+      season: { premium: 149, vip: 299, later: { premium: 179, vip: 349 }, unit: "do 31. 5. 2027", months: 8 },
     };
     const eur = (n) => `${Math.round(n)} €`;
     const set = (sel, txt) => document.querySelectorAll(sel).forEach((el) => (el.textContent = txt));
@@ -1244,6 +1249,8 @@
       };
       set("[data-permonth-premium]", note("premium"));
       set("[data-permonth-vip]", note("vip"));
+      set("[data-later-premium]", `Zakladajúca cena · neskôr ${eur(t.later.premium)}`);
+      set("[data-later-vip]", `Zakladajúca cena · neskôr ${eur(t.later.vip)}`);
       document.querySelectorAll("[data-kurz-li]").forEach((el) => (el.hidden = t.months === 1));
       document.querySelectorAll("[data-kurz-premium]").forEach((el) => (el.hidden = term !== "season"));
       set("[data-card-note]", t.months === 1 ? "Kartu posielame poštou po prvom mesiaci členstva." : "Kartu posielame poštou hneď po zaplatení.");

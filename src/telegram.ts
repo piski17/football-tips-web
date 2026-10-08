@@ -349,6 +349,9 @@ export async function deleteTelegramMessages(messages: { chatId: string; message
 
 const TELEGRAM_CONTACT_USERNAME = process.env.TELEGRAM_CONTACT_USERNAME || "im_mishko";
 
+const FOUNDER_NOTE =
+  `💎 <b>Zakladajúca cena</b> – kto sa zapíše do poradovníka, má tieto ceny zamknuté, kým členstvo preruší. Neskôr bude Premium 35 € a VIP 69 € mesačne.`;
+
 const FAQ_ANSWERS: Record<string, string> = {
   faq_price:
     `💰 <b>Cenník</b>\n\n` +
@@ -365,7 +368,7 @@ const FAQ_ANSWERS: Record<string, string> = {
     `• <b>Kovová členská karta</b> – personalizovaná vaším menom, číslom členstva a dátumom vstupu\n` +
   `• <b>📚 Kurz stávkovania</b> (99 €) zadarmo pri VIP na 3 mesiace alebo celú sezónu\n` +
     `• <b>Priama linka na zakladateľa</b> – súkromný VIP chat pre vaše otázky\n\n` +
-    `Sezóna = do 31. 5. 2027. Členstvo sa samo nepredlžuje, žiadna viazanosť. Prví členovia majú cenu zamknutú, kým členstvo neprerušia.` +
+    `Sezóna = do 31. 5. 2027. Členstvo sa samo nepredlžuje, žiadna viazanosť.\n\n` + FOUNDER_NOTE +
     (process.env.SALES_OPEN === "true" ? "" : `\n\n🗓 <b>Predaj členstiev spúšťame čoskoro.</b> Napíšte sem „Mám záujem" a ozveme sa vám ako prvým.`),
   faq_how:
     `❓ <b>Ako to funguje</b>\n\n` +
@@ -445,7 +448,7 @@ function PRELAUNCH_MESSAGE(plan: string): string {
         ? `🟡 <b>Premium</b> – 29 € / mesiac · 69 € / 3 mesiace · 149 € / sezóna\n${PREMIUM_BENEFITS}\n\n👑 <b>VIP</b> – 59 € / mesiac · 139 € / 3 mesiace · 299 € / sezóna · <b>len 30 miest</b>\n${VIP_BENEFITS}`
         : `👑 <b>VIP</b> – 59 € / mesiac · 139 € / 3 mesiace · 299 € / sezóna · <b>len 30 miest</b>\n${VIP_BENEFITS}`;
   return (
-    `✨ <b>Ďakujeme za záujem o TipRadar!</b>\n\n${benefits}\n\n` +
+    `✨ <b>Ďakujeme za záujem o TipRadar!</b>\n\n${benefits}\n\n${FOUNDER_NOTE}\n\n` +
     `🗓 <b>Predaj členstiev spúšťame čoskoro.</b> Váš záujem sme si zapísali – keď začneme, ozveme sa vám <b>ako prvým</b>.\n\n` +
     `Ak máte otázku, pokojne ju napíšte sem.`
   );
