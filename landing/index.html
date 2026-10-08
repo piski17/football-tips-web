@@ -409,6 +409,8 @@
   .nav-links a, .nav .btn { white-space: nowrap; }
   .nav-links a.nav-tg { display: inline-flex; align-items: center; gap: 7px; }
   .nav-links a.nav-tg svg { width: 14px; height: 14px; color: var(--gold); }
+  .nav-links a.nav-cta { margin-left: 10px; border: 1px solid var(--gold); color: var(--gold); }
+  .nav-links a.nav-cta:hover { background: var(--gold); color: #141210; }
   .btn-tg { gap: 10px; }
   .btn-tg svg { width: 16px; height: 16px; }
   .closing .eyebrow { justify-content: center; }
@@ -476,6 +478,7 @@
     .nav-links a:last-child { border-bottom: 0; }
     .nav-links a { padding-left: 14px; padding-right: 14px; }
     .nav-links a.nav-tg svg { width: 15px; height: 15px; }
+    .nav-links a.nav-cta { margin: 16px 0 0; text-align: center; border-bottom: 1px solid var(--gold); }
   }
   @media (max-width: 640px) {
     .nav-links { left: -16px; right: -16px; padding-inline: 16px; }
@@ -659,15 +662,12 @@
     <a class="brand" href="#top"><svg aria-hidden="true"><use href="#logo"/></svg>TipRadar</a>
     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="navLinks"><i aria-hidden="true"></i>Menu</button>
     <div class="nav-links" id="navLinks">
-      <a href="#ako">Ako vzniká tip</a>
-      <a href="#hodnota">Hodnota</a>
+      <a href="#ako">Ako to funguje</a>
       <a href="#vysledky">Výsledky</a>
-      <a href="#kto">O mne</a>
       <a href="#clenstvo">Členstvo</a>
       <a href="#skola">Kurz</a>
-      <a href="#zapis" class="nav-form">Formulár</a>
       <a href="#otazky">Otázky</a>
-      <a href="/video" class="nav-tg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>Video</a>
+      <a href="#clenstvo" class="nav-cta">Poradovník</a>
     </div>
   </div>
 </nav>
@@ -686,7 +686,8 @@
         <h1>Tipujeme len tam, kde to <em>dáva zmysel.</em></h1>
         <p class="intro">Náš model denne analyzuje zápasy a porovnáva vypočítané pravdepodobnosti s kurzami stávkových kancelárií. Tip odporučíme iba vtedy, keď kurz nedoceňuje reálnu šancu výsledku, preto ich je obvykle len niekoľko denne. <strong>Všetky vyhodnotené tipy zverejňujeme transparentne, výhry aj prehry.</strong></p>
         <div class="actions">
-          <a class="btn" href="#vysledky">Pozrieť výsledky</a>
+          <a class="btn" href="#clenstvo">Zapísať sa do poradovníka</a>
+          <a class="btn btn-ghost" href="#vysledky">Pozrieť výsledky</a>
         </div>
       </div>
 
@@ -960,11 +961,27 @@
     </div>
   </section>
 
-  <section class="sec alt" id="zapis">
+  <section class="sec alt" id="otazky">
+    <div class="wrap split">
+      <div><div class="eyebrow"><b>VI.</b>Otázky</div><h2>Čo sa ľudia pýtajú</h2></div>
+      <div class="faq">
+        <details><summary>Kedy a kam tipy prídu?</summary><p>Do súkromného kanála na Telegrame, 2 – 3 hodiny pred výkopom zápasu. Večer, keď sa zápasy dohrajú, príde vyhodnotenie dňa.</p></details>
+        <details><summary>Koľko tipov denne dostanem?</summary><p>Toľko, koľko prejde pravidlami. Niekedy jeden, inokedy viac. Keď neprejde žiadny, nepošleme nič a dáme vám vedieť.</p></details>
+        <details><summary>Čo je zisk v jednotkách a ROI?</summary><p>Jednotka je rovnaká suma na každý tip, napríklad 10 €. Zisk +5 jednotiek pri 10 € na tip je +50 €. ROI hovorí, koľko percent z vložených peňazí sa vrátilo navyše.</p></details>
+        <details><summary>Zaručujete výhru?</summary><p>Nie. Žiadny model nevie zaručiť výsledok zápasu. TipRadar vyberá stávky, pri ktorých je šanca podľa štatistík vyššia, než naznačuje kurz. Rozhoduje dlhodobý výsledok, preto zverejňujeme aj prehraté tipy.</p></details>
+        <details><summary>Ako overujete, že model funguje?</summary><p>Spätným testom na odohraných zápasoch a mesačnou kontrolou, či tipy s dôverou 70&nbsp;% naozaj vychádzajú zhruba v 70&nbsp;% prípadov. Tipy vyradené pre veľký rozpor s kurzami si zapisujeme a porovnávame, kto mal pravdu.</p></details>
+        <details><summary>Aké dlhé je členstvo?</summary><p>Na 1 mesiac, na 3 mesiace alebo na celú sezónu do 31. 5. 2027. Dlhšie členstvo vychádza lacnejšie na mesiac. Žiadne sa samo nepredlžuje. Pred koncom vám pripomenieme, že končí.</p></details>
+        <details><summary>Čo je zakladajúca cena?</summary><p>Ceny, ktoré vidíte teraz, platia pre prvých členov z poradovníka. Po spustení predaja budú vyššie, napríklad Premium 35&nbsp;€ a VIP 69&nbsp;€ mesačne. Kto sa zapíše teraz, má zakladajúcu cenu zamknutú, kým členstvo predlžuje bez prestávky.</p></details>
+        <details><summary>Ako členstvo zruším?</summary><p>Stačí napísať. Členstvo platí do konca zaplateného obdobia a samo sa nepredlžuje.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="zapis">
     <div class="wrap join">
       <div>
-        <div class="eyebrow"><b>VI.</b>Formulár</div>
-        <h2>Máte otázku?</h2>
+        <div class="eyebrow"><b>VII.</b>Kontakt</div>
+        <h2>Nenašli ste odpoveď?</h2>
         <p>Napíšte mi, čo vás zaujíma o modeli, tipoch alebo členstve. Odpoviem vám osobne na e-mail.</p>
       </div>
       <form class="form" id="joinForm" novalidate>
@@ -988,29 +1005,13 @@
     </div>
   </section>
 
-  <section class="sec" id="otazky">
-    <div class="wrap split">
-      <div><div class="eyebrow"><b>VII.</b>Otázky</div><h2>Čo sa ľudia pýtajú</h2></div>
-      <div class="faq">
-        <details><summary>Kedy a kam tipy prídu?</summary><p>Do súkromného kanála na Telegrame, 2 – 3 hodiny pred výkopom zápasu. Večer, keď sa zápasy dohrajú, príde vyhodnotenie dňa.</p></details>
-        <details><summary>Koľko tipov denne dostanem?</summary><p>Toľko, koľko prejde pravidlami. Niekedy jeden, inokedy viac. Keď neprejde žiadny, nepošleme nič a dáme vám vedieť.</p></details>
-        <details><summary>Čo je zisk v jednotkách a ROI?</summary><p>Jednotka je rovnaká suma na každý tip, napríklad 10 €. Zisk +5 jednotiek pri 10 € na tip je +50 €. ROI hovorí, koľko percent z vložených peňazí sa vrátilo navyše.</p></details>
-        <details><summary>Zaručujete výhru?</summary><p>Nie. Žiadny model nevie zaručiť výsledok zápasu. TipRadar vyberá stávky, pri ktorých je šanca podľa štatistík vyššia, než naznačuje kurz. Rozhoduje dlhodobý výsledok, preto zverejňujeme aj prehraté tipy.</p></details>
-        <details><summary>Ako overujete, že model funguje?</summary><p>Spätným testom na odohraných zápasoch a mesačnou kontrolou, či tipy s dôverou 70&nbsp;% naozaj vychádzajú zhruba v 70&nbsp;% prípadov. Tipy vyradené pre veľký rozpor s kurzami si zapisujeme a porovnávame, kto mal pravdu.</p></details>
-        <details><summary>Aké dlhé je členstvo?</summary><p>Na 1 mesiac, na 3 mesiace alebo na celú sezónu do 31. 5. 2027. Dlhšie členstvo vychádza lacnejšie na mesiac. Žiadne sa samo nepredlžuje. Pred koncom vám pripomenieme, že končí.</p></details>
-        <details><summary>Čo je zakladajúca cena?</summary><p>Ceny, ktoré vidíte teraz, platia pre prvých členov z poradovníka. Po spustení predaja budú vyššie, napríklad Premium 35&nbsp;€ a VIP 69&nbsp;€ mesačne. Kto sa zapíše teraz, má zakladajúcu cenu zamknutú, kým členstvo predlžuje bez prestávky.</p></details>
-        <details><summary>Ako členstvo zruším?</summary><p>Stačí napísať. Členstvo platí do konca zaplateného obdobia a samo sa nepredlžuje.</p></details>
-      </div>
-    </div>
-  </section>
-
 </main>
 
 <footer>
   <div class="wrap">
     <p>TipRadar je analytický nástroj založený na štatistickom modeli, nie stávková kancelária ani finančné poradenstvo. Tipy sú informatívne a nezaručujú výsledok. Minulé výsledky nie sú zárukou budúcich. O tom, či a koľko staviť, rozhodujete vždy vy.</p>
     <p class="rg"><span class="age" aria-label="Len pre osoby staršie ako 18 rokov">18+</span><span>Hrajte zodpovedne a len za peniaze, ktorých stratu si môžete dovoliť. Ak vám stávkovanie prerastá cez hlavu, pomoc a register vylúčených osôb nájdete na <a href="https://www.urhh.sk" target="_blank" rel="noopener">urhh.sk</a>.</span></p>
-    <p class="links"><a href="/ochrana-udajov">Ochrana osobných údajov</a></p>
+    <p class="links"><a href="/video">Video prezentácia</a> · <a href="#kto">O mne</a> · <a href="/ochrana-udajov">Ochrana osobných údajov</a></p>
   </div>
 </footer>
 
@@ -1079,7 +1080,7 @@
   }));
 
   // zvýraznenie položky menu: po kliknutí hneď, pri rolovaní podľa sekcie na obrazovke
-  const links = Array.from(document.querySelectorAll('.nav-links a[href^="#"]'));
+  const links = Array.from(document.querySelectorAll('.nav-links a[href^="#"]:not(.nav-cta)'));
   const setActive = (id) => links.forEach((a) => a.classList.toggle("active", a.getAttribute("href") === "#" + id));
   let lockUntil = 0;
   links.forEach((a) => a.addEventListener("click", () => { setActive(a.getAttribute("href").slice(1)); lockUntil = Date.now() + 1200; }));
@@ -1153,7 +1154,7 @@
   }
 
   // ---------- zoznam tipov ----------
-  const PER_PAGE = 8;
+  const PER_PAGE = 5;
   let recentAll = [], filter = "all", page = 0;
   function drawList() {
     const list = recentAll.filter((r) => filter === "all" || r.status === filter);
