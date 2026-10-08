@@ -657,6 +657,51 @@
   @media (max-width: 640px) { .term-switch { display: grid; grid-template-columns: repeat(3, 1fr); border-radius: 18px; } .term-switch button { padding: 10px 6px; font-size: 13px; line-height: 1.3; border-radius: 14px; } .term-switch button em { display: block; margin: 2px 0 0; } }
   /* ikonky vedľa Menu: na úzkom telefóne len tri čiarky bez nápisu */
   @media (max-width: 480px) { .nav .wrap { gap: 8px; } .nav-social { gap: 0; margin-right: 4px; } .nav-social a { width: 34px; } .nav-toggle { font-size: 0; gap: 0; padding: 0 12px; } }
+  /* ---------- Výsledky: výkladná skriňa ---------- */
+  .showcase { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); margin-top: 48px; border: 1px solid var(--rule-gold); background: linear-gradient(160deg, #1A1A1E 0%, #141416 60%, #121211 100%); position: relative; overflow: hidden; }
+  .showcase::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 1px; background: linear-gradient(90deg, transparent, var(--gold-hi), transparent); opacity: .7; }
+  .sc-chart { padding: 34px 36px 30px; min-width: 0; }
+  .sc-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; }
+  .sc-head h3 { font: 400 26px/1.2 var(--serif); letter-spacing: -0.02em; }
+  .sc-total { font: 400 34px/1 var(--serif); letter-spacing: -0.02em; }
+  .growth-wrap { position: relative; margin-top: 22px; }
+  .growth { display: block; width: 100%; height: 230px; overflow: visible; }
+  .growth .line { fill: none; stroke: url(#gLine); stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+  .growth .zero { stroke: var(--rule); stroke-dasharray: 3 5; vector-effect: non-scaling-stroke; }
+  .growth .area { fill: url(#gArea); }
+  .growth-axis { display: flex; justify-content: space-between; margin-top: 10px; font-size: 12px; color: var(--faint); letter-spacing: .04em; }
+  .growth-dot { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--gold-hi); box-shadow: 0 0 0 6px rgba(232,211,160,.15), 0 0 24px rgba(232,211,160,.6); animation: pulse 2.2s ease-in-out infinite; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 11px rgba(232,211,160,0), 0 0 30px rgba(232,211,160,.4); } }
+  .growth.draw .line { stroke-dasharray: var(--len); stroke-dashoffset: var(--len); }
+  .growth.draw.go .line { animation: drawLine 1.8s cubic-bezier(.3,.7,.2,1) forwards; }
+  .growth.draw .area { opacity: 0; }
+  .growth.draw.go .area { animation: fadeIn 1s .9s forwards; }
+  @keyframes drawLine { to { stroke-dashoffset: 0; } }
+  @keyframes fadeIn { to { opacity: 1; } }
+  .form10 { display: flex; align-items: center; justify-content: space-between; gap: 14px 16px; flex-wrap: wrap; margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--rule); }
+  .form10 > span { font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--faint); }
+  #last10 { display: flex; gap: 6px; }
+  #last10 i { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; font: 600 12px/1 var(--sans); font-style: normal; }
+  #last10 i.won { background: rgba(127,191,154,.16); color: var(--win); border: 1px solid rgba(127,191,154,.5); }
+  #last10 i.lost { background: rgba(192,112,124,.12); color: var(--loss); border: 1px solid rgba(192,112,124,.45); }
+  .showcase .stake { margin: 0; padding: 34px 36px 30px; border-top: 0; border-left: 1px solid var(--rule-gold); background: rgba(201,165,92,.04); display: flex; flex-direction: column; justify-content: center; }
+  .showcase .stake[hidden] { display: none; }
+  .showcase .stake .sc-eyebrow { font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--gold); line-height: 1.7; }
+  .showcase .stake .big { font: 400 clamp(56px, 6vw, 86px)/1.05 var(--serif); letter-spacing: -0.03em; margin-top: 18px; background: linear-gradient(180deg, #E8D3A0, #A8823E); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .showcase .stake .big.neg { background: none; color: var(--loss); }
+  .ledger-wrap { margin-top: 72px; }
+  .ledger-wrap > h3 { font: 400 26px/1.2 var(--serif); letter-spacing: -0.02em; }
+  .clv-after { margin-top: 56px; }
+  .clv.collecting { grid-template-columns: minmax(0, 1fr); }
+  .clv.collecting .clv-num { display: none; }
+  @media (max-width: 900px) {
+    .showcase { grid-template-columns: minmax(0, 1fr); }
+    .showcase .stake { border-left: 0; border-top: 1px solid var(--rule-gold); }
+    .sc-chart, .showcase .stake { padding: 26px 22px 24px; }
+    .growth { height: 190px; }
+    #last10 { gap: 4px; } #last10 i { width: 22px; height: 22px; font-size: 11px; }
+  }
+  .figures b.pos { color: var(--win); } .figures b.neg { color: var(--loss); }
 </style>
 </head>
 <body>
@@ -787,30 +832,22 @@
         <div><b class="num" id="fRoi">–</b><span>ROI</span></div>
       </div>
       <p class="month-line" id="month">Načítavam…</p>
-      <div class="clv" id="clv" hidden>
-        <div class="clv-num"><b class="num" id="clvAvg">–</b><span>priemerný náskok pred uzatváracím kurzom</span></div>
-        <div class="clv-text">
-          <h3>Porážame uzatvárací kurz</h3>
-          <p>Tesne pred výkopom majú stávkové kancelárie najviac informácií a ich kurz je najpresnejší. Ak bol kurz v čase tipu vyšší, model odhalil hodnotu skôr ako trh. Je to najspoľahlivejší ukazovateľ kvality tipov, ešte skôr než sa to prejaví na zisku.</p>
-          <p class="clv-line" id="clvLine"></p>
+      <div class="showcase">
+        <div class="sc-chart">
+          <div class="sc-head"><h3 id="chTitle">Ako rástol zisk</h3><span class="sc-total num" id="chTotal"></span></div>
+          <div id="chWrap"><p class="muted">Graf sa zobrazí po prvých vyhodnotených tipoch.</p></div>
+          <div class="form10" id="form10" hidden><span>Posledných 10 tipov</span><div id="last10"></div></div>
+        </div>
+        <div class="stake" id="stake" hidden>
+          <p class="sc-eyebrow">Keby ste od začiatku stavili na každý tip rovnakú sumu</p>
+          <div class="big num" id="calcResult">–</div>
+          <label for="stakeRange"><span>Stávka na jeden tip</span><b class="num" id="stakeOut">10 €</b></label>
+          <input type="range" id="stakeRange" min="5" max="200" step="5" value="10" />
+          <p class="small" id="calcNote" style="margin-top:12px"></p>
         </div>
       </div>
 
-      <div class="results">
-        <div>
-          <h3 id="chTitle">Zisk po obdobiach</h3>
-          <p class="note">Nad čiarou zisk, pod čiarou strata. Ťuknite na stĺpec.</p>
-          <div id="chWrap"><p class="muted">Graf sa zobrazí po prvých vyhodnotených tipoch.</p></div>
-
-          <div class="stake" id="stake" hidden>
-            <p>Keby ste od začiatku stavili na každý tip rovnakú sumu:</p>
-            <div class="big num" id="calcResult">–</div>
-            <label for="stakeRange"><span>Stávka na jeden tip</span><b class="num" id="stakeOut">10 €</b></label>
-            <input type="range" id="stakeRange" min="5" max="200" step="5" value="10" />
-            <p class="small" id="calcNote" style="margin-top:12px"></p>
-          </div>
-        </div>
-        <div>
+      <div class="ledger-wrap">
           <h3>Všetky vyhodnotené tipy</h3>
           <p class="note">Tak, ako ich dostali členovia.</p>
           <div class="tabs" role="group" aria-label="Filter">
@@ -825,8 +862,16 @@
             <button class="pg" id="pgPrev" aria-label="Novšie tipy">‹</button>
             <button class="pg" id="pgNext" aria-label="Staršie tipy">›</button>
           </div>
+      </div>
+      <div class="clv clv-after" id="clv" hidden>
+        <div class="clv-num"><b class="num" id="clvAvg">–</b><span>priemerný náskok pred uzatváracím kurzom</span></div>
+        <div class="clv-text">
+          <h3>Porážame uzatvárací kurz</h3>
+          <p>Tesne pred výkopom majú stávkové kancelárie najviac informácií a ich kurz je najpresnejší. Ak bol kurz v čase tipu vyšší, model odhalil hodnotu skôr ako trh. Je to najspoľahlivejší ukazovateľ kvality tipov, ešte skôr než sa to prejaví na zisku.</p>
+          <p class="clv-line" id="clvLine"></p>
         </div>
       </div>
+
     </div>
   </section>
 
@@ -1140,30 +1185,49 @@
   $("pRange").addEventListener("input", drawValue); $("oRange").addEventListener("input", drawValue);
   drawValue();
 
-  // ---------- graf zisku ----------
+  // ---------- graf: ako rástol zisk (súčet jednotiek od začiatku) ----------
   function drawChart(tl) {
     const pts = (tl && tl.points) || [];
     if (!pts.length) return;
-    const weekly = tl.unit === "week";
-    $("chTitle").textContent = weekly ? "Zisk po týždňoch" : "Zisk po dňoch";
-    const max = Math.max(1, ...pts.map((p) => Math.abs(p.profit || 0)));
-    const step = Math.max(1, Math.ceil(pts.length / (mqPhone.matches ? 6 : 10)));
-    $("chWrap").innerHTML = `<div class="ch" role="group" aria-label="Graf zisku">${pts.map((p, i) => {
-      const h = p.withOdds > 0 && p.profit ? (Math.abs(p.profit) / max) * 48 : 0;
-      const bar = h ? `<i class="${p.profit > 0 ? "up" : "down"}" style="height:${Math.max(2, h).toFixed(1)}%"></i>` : `<i class="flat"></i>`;
-      return `<button class="ch-col" data-i="${i}" aria-pressed="false" aria-label="${weekly ? "Týždeň od " : ""}${dayLabel(p.key)}: ${p.won} z ${p.total}">${bar}</button>`;
-    }).join("")}</div><div class="ch-axis">${pts.map((p, i) => `<span class="${(pts.length - 1 - i) % step === 0 ? "" : "hide"}">${dayLabel(p.key)}</span>`).join("")}</div><p class="ch-detail" id="chDetail"></p>`;
-    const show = (i) => {
-      const p = pts[i];
-      document.querySelectorAll(".ch-col").forEach((c) => c.setAttribute("aria-pressed", String(c.dataset.i === String(i))));
-      let t = `<strong>${weekly ? "Týždeň od " : ""}${dayLabel(p.key)}</strong>: ${p.won} z ${p.total} ${ofTips(p.total)} ${verb(p.won)}`;
-      if (p.withOdds > 0) t += `, zisk <span class="${cls(p.profit)}">${signed(p.profit, 1)} j.</span>`;
-      $("chDetail").innerHTML = t;
-    };
-    document.querySelectorAll(".ch-col").forEach((c) => { const i = Number(c.dataset.i); c.addEventListener("click", () => show(i)); c.addEventListener("mouseenter", () => show(i)); c.addEventListener("focus", () => show(i)); });
-    show(pts.length - 1);
+    let run = 0;
+    const cum = [0, ...pts.map((p) => (run += p.withOdds > 0 ? p.profit || 0 : 0))];
+    const W = 600, H = 230, pad = 10;
+    const lo = Math.min(0, ...cum), hi = Math.max(0.5, ...cum), span = hi - lo || 1;
+    const x = (i) => (i / (cum.length - 1)) * W, y = (v) => pad + (1 - (v - lo) / span) * (H - 2 * pad);
+    const d = cum.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+    const last = cum[cum.length - 1];
+    $("chTotal").textContent = `${signed(last, 1)} j.`; $("chTotal").className = "sc-total num " + cls(last);
+    $("chWrap").innerHTML = `<div class="growth-wrap"><svg class="growth" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Zisk od začiatku: ${signed(last, 1)} jednotiek">
+      <defs><linearGradient id="gLine" x1="0" x2="1"><stop offset="0" stop-color="#A8823E"/><stop offset="1" stop-color="#E8D3A0"/></linearGradient>
+      <linearGradient id="gArea" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#C9A55C" stop-opacity=".32"/><stop offset="1" stop-color="#C9A55C" stop-opacity="0"/></linearGradient></defs>
+      <line class="zero" x1="0" x2="${W}" y1="${y(0)}" y2="${y(0)}"/>
+      <path class="area" d="${d} L${W},${y(lo)} L0,${y(lo)} Z"/>
+      <path class="line" d="${d}"/></svg>
+      <span class="growth-dot" style="left:100%;top:${((y(last) / H) * 100).toFixed(1)}%"></span></div>
+      <div class="growth-axis"><span>${dayLabel(pts[0].key)}</span><span>dnes</span></div>`;
+    const svg = $("chWrap").querySelector(".growth"), line = svg.querySelector(".line");
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches && "IntersectionObserver" in window) {
+      // dĺžka čiary v bodoch obrazovky (kvôli non-scaling-stroke)
+      const r = svg.getBoundingClientRect(), sx = r.width / W, sy = r.height / H;
+      let len = 0; for (let i = 1; i < cum.length; i++) len += Math.hypot((x(i) - x(i - 1)) * sx, (y(cum[i]) - y(cum[i - 1])) * sy);
+      svg.style.setProperty("--len", Math.ceil(len) + 4);
+      svg.classList.add("draw");
+    }
   }
-
+  // posledných 10 tipov ako krúžky (zľava najstarší)
+  function drawLast10() {
+    const l = recentAll.filter((r) => r.status === "won" || r.status === "lost").slice(0, 10).reverse();
+    if (!l.length) return;
+    $("last10").innerHTML = l.map((r) => `<i class="${r.status}" title="${esc(r.match)} · ${RES[r.status]}">${r.status === "won" ? "✓" : "✕"}</i>`).join("");
+    $("form10").hidden = false;
+  }
+  // čísla sa pri zobrazení napočítajú
+  function countUp(el, to, dec, fmtFn) {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { el.textContent = fmtFn(to); return; }
+    const t0 = performance.now(), dur = 1400;
+    const tick = (t) => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = fmtFn(k < 1 ? Number((to * e).toFixed(dec)) : to); if (k < 1) requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  }
   // ---------- zoznam tipov ----------
   const PER_PAGE = 5;
   let recentAll = [], filter = "all", page = 0;
@@ -1302,13 +1366,28 @@
       drawList(); drawChart(d.timeline);
       if (!d.totalResolved) { $("month").textContent = "Čísla sa zobrazia po prvých vyhodnotených tipoch."; return; }
       const n = d.totalResolved;
-      $("fCount").textContent = n; $("fCountLbl").textContent = tipsWord(n);
-      $("fRate").textContent = `${d.winRate} %`;
+      drawLast10();
+      $("fCountLbl").textContent = tipsWord(n);
       if (d.withOdds > 0) {
-        $("fProfit").textContent = signed(d.profit, 1); $("fProfit").className = "num " + cls(d.profit);
-        $("fRoi").textContent = `${signed(d.roi, 0)} %`; $("fRoi").className = "num " + cls(d.roi);
+        $("fProfit").className = "num " + cls(d.profit); $("fRoi").className = "num " + cls(d.roi);
         calcData = { profit: d.profit, count: d.withOdds }; $("stake").hidden = false; drawCalc();
       }
+      // čísla a graf sa rozbehnú, keď sa sekcia objaví na obrazovke
+      let played = false;
+      const play = () => {
+        if (played) return; played = true;
+        countUp($("fCount"), n, 0, (v) => String(v));
+        countUp($("fRate"), d.winRate, 0, (v) => `${v} %`);
+        if (d.withOdds > 0) {
+          countUp($("fProfit"), d.profit, 1, (v) => signed(v, 1));
+          countUp($("fRoi"), d.roi, 0, (v) => `${signed(v, 0)} %`);
+        }
+        const svg = document.querySelector(".growth"); if (svg) svg.classList.add("go");
+      };
+      if ("IntersectionObserver" in window) {
+        const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { play(); io.disconnect(); } }, { threshold: 0.15 });
+        io.observe($("vysledky"));
+      } else play();
       let t = `Od začiatku ${n} ${tipsWord(n)}, ${d.won} ${verb(d.won)}.`;
       const m = d.month;
       if (m && m.totalResolved > 0) {
@@ -1326,7 +1405,7 @@
           $("clvAvg").textContent = `${signed(c.avg, 1)} %`; $("clvAvg").className = "num " + cls(c.avg);
           $("clvLine").innerHTML = `<strong>${c.beat} z ${c.total}</strong> ${ofTips(c.total)} malo v čase tipu vyšší kurz než tesne pred zápasom.`;
         } else {
-          $("clvAvg").textContent = "zbierame";
+          $("clv").classList.add("collecting");
           $("clvLine").textContent = `Uzatvárací kurz sledujeme od 5. 10. 2026. Číslo zverejníme po prvých 10 tipoch${c.total ? `, zatiaľ ich je ${c.total}` : ""}.`;
         }
       }
