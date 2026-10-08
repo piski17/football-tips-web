@@ -589,6 +589,7 @@
   .skola-cap { display: flex; align-items: baseline; min-width: 0; white-space: nowrap; }
   .skola-cap span { overflow: hidden; text-overflow: ellipsis; }
   .skola-dots { flex: none; }
+  .skola-info { margin: 18px 0 0; padding-left: 16px; border-left: 1px solid var(--gold); font-size: 15px; line-height: 1.6; color: var(--text); min-height: 3.2em; }
   /* zväčšený obrázok */
   html.lb-open { overflow: hidden; } html.lb-open body { overflow: visible; }
   .lb { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; background: #070708; padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px); }
@@ -612,15 +613,15 @@
     /* mobil: najprv nadpis, potom galéria, text, kapitoly a cena */
     .skola-grid { display: flex; flex-direction: column; align-items: stretch; gap: 0; }
     .skola-text { display: contents; }
-    .skola-text .eyebrow { order: 1; } .skola-text h2 { order: 2; } .skola-media { order: 3; margin-top: 28px; }
-    .skola-text .muted { order: 4; margin-top: 28px; } .skola-chaps { order: 5; } .skola-buy { order: 6; }
+    .skola-text .eyebrow { order: 1; } .skola-text h2 { order: 2; } .skola-text .muted { order: 3; margin-top: 18px; }
+    .skola-media { order: 4; margin-top: 32px; } .skola-chaps { order: 5; margin-top: 32px; } .skola-buy { order: 6; }
   }
   @media (max-width: 520px) {
     .skola-chaps { column-gap: 16px; } .skola-chaps li { gap: 8px; padding: 9px 0; font-size: 13px; line-height: 1.35; } .skola-chaps li::before { font-size: 13px; min-width: 18px; }
     .skola-buy { padding: 24px 20px; } .skola-slider { outline-offset: 5px; }
     .skola-arrow { width: 36px; height: 36px; } .skola-arrow.prev { left: 8px; } .skola-arrow.next { right: 8px; }
     .skola-zoom { right: 8px; bottom: 8px; padding: 6px; font-size: 0; gap: 0; } .skola-zoom svg { width: 15px; height: 15px; }
-    .skola-nav { flex-direction: column; align-items: stretch; gap: 14px; margin-top: 20px; } .skola-cap { font-size: 14px; } .skola-dots { gap: 6px; } .skola-dots button { flex: 1; width: auto; } .skola-dots button[aria-current="true"] { flex: 2; width: auto; }
+    .skola-info { font-size: 14.5px; min-height: 4.8em; } .skola-nav { flex-direction: column; align-items: stretch; gap: 14px; margin-top: 20px; } .skola-cap { font-size: 14px; } .skola-dots { gap: 6px; } .skola-dots button { flex: 1; width: auto; } .skola-dots button[aria-current="true"] { flex: 2; width: auto; }
   }
   .founder { margin-top: 28px; padding: 22px 26px; border: 1px dashed var(--rule-gold); display: flex; gap: 18px; align-items: baseline; flex-wrap: wrap; }
   .founder b { font: 400 20px/1.2 var(--serif); color: var(--gold-hi); font-weight: 400; }
@@ -883,14 +884,14 @@
         <div class="skola-media">
           <div class="skola-slider" aria-roledescription="galéria" aria-label="Ukážky z kurzu">
             <div class="skola-track" tabindex="0">
-              <img src="/skola/kurz-01.jpg" data-full="/skola/kurz-01-xl.jpg" width="1200" height="675" alt="Titulná strana kurzu „Škola stávkovania“" loading="eager" data-cap="Titulná strana" />
-              <img src="/skola/kurz-06.jpg" data-full="/skola/kurz-06-xl.jpg" width="1200" height="675" alt="Ukážka: koľko vložiť na jeden tip – 1 až 3 % banku" loading="lazy" data-cap="Koľko vsadiť na tip" />
-              <img src="/skola/kurz-07.jpg" data-full="/skola/kurz-07-xl.jpg" width="1200" height="675" alt="Ukážka: čo urobí 10 prehier za sebou s bankom" loading="lazy" data-cap="10 prehier za sebou" />
-              <img src="/skola/kurz-09.jpg" data-full="/skola/kurz-09-xl.jpg" width="1200" height="675" alt="Ukážka: denné, týždenné a mesačné limity" loading="lazy" data-cap="Limity, ktoré chránia bank" />
-              <img src="/skola/kurz-13.jpg" data-full="/skola/kurz-13-xl.jpg" width="1200" height="675" alt="Ukážka: koľko jednotiek vsadiť na aký tip" loading="lazy" data-cap="Jednotky podľa dôvery" />
-              <img src="/skola/kurz-18.jpg" data-full="/skola/kurz-18-xl.jpg" width="1200" height="675" alt="Ukážka: výpočet hodnotnej stávky na príklade" loading="lazy" data-cap="Výpočet hodnotnej stávky" />
-              <img src="/skola/kurz-30.jpg" data-full="/skola/kurz-30-xl.jpg" width="1200" height="675" alt="Ukážka: prečo nefunguje Martingale" loading="lazy" data-cap="Prečo nie Martingale" />
-              <img src="/skola/kurz-36.jpg" data-full="/skola/kurz-36-xl.jpg" width="1200" height="675" alt="Ukážka: štyri pravidlá chladnej hlavy" loading="lazy" data-cap="Pravidlá chladnej hlavy" />
+              <img src="/skola/kurz-01.jpg" data-info="48 strán a 10 kapitol. Všetko o bankrolle, hodnote stávky a psychológii na jednom mieste." data-full="/skola/kurz-01-xl.jpg" width="1200" height="675" alt="Titulná strana kurzu „Škola stávkovania“" loading="eager" data-cap="Titulná strana" />
+              <img src="/skola/kurz-06.jpg" data-info="Zlaté pravidlo: na jeden tip 1 až 3 % banku, nikdy viac ako 5 %. Pri banku 1 000 € je to 10 až 30 €." data-full="/skola/kurz-06-xl.jpg" width="1200" height="675" alt="Ukážka: koľko vložiť na jeden tip – 1 až 3 % banku" loading="lazy" data-cap="Koľko vsadiť na tip" />
+              <img src="/skola/kurz-07.jpg" data-info="Séria 10 prehier príde skôr či neskôr. Pri vklade 2 % vám ostane vyše 80 % banku, pri 20 % len 107 €." data-full="/skola/kurz-07-xl.jpg" width="1200" height="675" alt="Ukážka: čo urobí 10 prehier za sebou s bankom" loading="lazy" data-cap="10 prehier za sebou" />
+              <img src="/skola/kurz-09.jpg" data-info="Denný, týždenný a mesačný limit si nastavíte vopred, keď máte chladnú hlavu. Najväčšie straty vznikajú po zlom tipe." data-full="/skola/kurz-09-xl.jpg" width="1200" height="675" alt="Ukážka: denné, týždenné a mesačné limity" loading="lazy" data-cap="Limity, ktoré chránia bank" />
+              <img src="/skola/kurz-13.jpg" data-info="Stupnica od 1 do 10 jednotiek podľa dôvery v tip. Aj pri najsilnejšom tipe platí strop 3 % banku." data-full="/skola/kurz-13-xl.jpg" width="1200" height="675" alt="Ukážka: koľko jednotiek vsadiť na aký tip" loading="lazy" data-cap="Jednotky podľa dôvery" />
+              <img src="/skola/kurz-18.jpg" data-info="Na príklade Barcelona – Valencia ukážeme, ako z kurzu a vlastného odhadu vypočítať, či má stávka hodnotu." data-full="/skola/kurz-18-xl.jpg" width="1200" height="675" alt="Ukážka: výpočet hodnotnej stávky na príklade" loading="lazy" data-cap="Výpočet hodnotnej stávky" />
+              <img src="/skola/kurz-30.jpg" data-info="Zdvojnásobiť vklad po prehre vyzerá bezpečne. Po siedmich prehrách však riskujete 1 270 €, aby ste vyhrali 10 €." data-full="/skola/kurz-30-xl.jpg" width="1200" height="675" alt="Ukážka: prečo nefunguje Martingale" loading="lazy" data-cap="Prečo nie Martingale" />
+              <img src="/skola/kurz-36.jpg" data-info="Nikdy nestávkujte preto, aby ste vrátili prehru. Po troch prehrách za sebou si dajte pauzu aspoň do ďalšieho dňa." data-full="/skola/kurz-36-xl.jpg" width="1200" height="675" alt="Ukážka: štyri pravidlá chladnej hlavy" loading="lazy" data-cap="Pravidlá chladnej hlavy" />
             </div>
             <button class="skola-arrow prev" type="button" aria-label="Predchádzajúci obrázok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
             <button class="skola-arrow next" type="button" aria-label="Ďalší obrázok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
@@ -909,6 +910,7 @@
               <button type="button" aria-label="Obrázok 8"></button>
             </div>
           </div>
+          <p class="skola-info" aria-live="polite">48 strán a 10 kapitol. Všetko o bankrolle, hodnote stávky a psychológii na jednom mieste.</p>
         </div>
         <div class="skola-text">
           <div class="eyebrow"><b>V.</b>Kurz</div>
@@ -1006,10 +1008,10 @@
     const track = document.querySelector(".skola-track"); if (!track) return;
     const imgs = [...track.querySelectorAll("img")], dots = [...document.querySelectorAll(".skola-dots button")];
     const prev = document.querySelector(".skola-arrow.prev"), next = document.querySelector(".skola-arrow.next");
-    const num = document.querySelector(".skola-cap b"), cap = document.querySelector(".skola-cap span");
+    const num = document.querySelector(".skola-cap b"), cap = document.querySelector(".skola-cap span"); const info = document.querySelector(".skola-info");
     let cur = -1;
     const go = (i) => track.scrollTo({ left: Math.max(0, Math.min(imgs.length - 1, i)) * track.clientWidth });
-    const show = (i) => { cur = i; dots.forEach((d, j) => d.setAttribute("aria-current", j === i ? "true" : "false")); prev.disabled = i === 0; next.disabled = i === imgs.length - 1; num.textContent = `${i + 1} / ${imgs.length}`; cap.textContent = imgs[i].dataset.cap; };
+    const show = (i) => { cur = i; dots.forEach((d, j) => d.setAttribute("aria-current", j === i ? "true" : "false")); prev.disabled = i === 0; next.disabled = i === imgs.length - 1; num.textContent = `${i + 1} / ${imgs.length}`; cap.textContent = imgs[i].dataset.cap; info.textContent = imgs[i].dataset.info; };
     track.addEventListener("scroll", () => { const i = Math.round(track.scrollLeft / track.clientWidth); if (i !== cur) show(i); }, { passive: true });
     prev.addEventListener("click", () => go(cur - 1)); next.addEventListener("click", () => go(cur + 1));
     dots.forEach((d, i) => d.addEventListener("click", () => go(i)));
