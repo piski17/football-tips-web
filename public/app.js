@@ -213,6 +213,10 @@ function strongTipBadge(p) {
     : "";
 }
 
+/** Silný tip dňa – vo VIP kanáli ho dostane len jeden tip za deň (vyberá server pri odoslaní). */
+const STRONG_OF_DAY_BADGE =
+  ' <span class="strong-tip" title="Tip s najvyššou dôverou dňa (aspoň 70 %). Vo VIP kanáli pôjde ako ⭐ Silný tip dňa – ak ho uložíš a pošleš.">⭐ Silný tip dňa</span>';
+
 function betOddsHtml(bet) {
   if (typeof bet.odds === "number" && bet.odds > 1) {
     const ev = Math.round(((bet.expectedValue ?? 0) - 1) * 100);
@@ -1389,7 +1393,7 @@ function renderTipsList(tips) {
         <div class="tip-row ${rowClassFull}" data-row-id="${t.id}">
           <div class="tip-row-info">
             <div class="tip-row-match">${escapeHtml(translateTeamName(t.homeTeam))} — ${escapeHtml(translateTeamName(t.awayTeam))} <span class="muted small">(${date})</span></div>
-            <div class="tip-row-market">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))} · ${t.probability.toFixed(0)} % · kurz ${tipOddsLabel(t)}${t.legs && t.legs.length ? "" : strongTipBadge(t.probability)}${overrideBadge(t)}${manualBadge(t)}${editedBadge(t)}</div>
+            <div class="tip-row-market">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))} · ${t.probability.toFixed(0)} % · kurz ${tipOddsLabel(t)}${t.strongOfDay ? STRONG_OF_DAY_BADGE : ""}${overrideBadge(t)}${manualBadge(t)}${editedBadge(t)}</div>
           </div>
           ${resultIconHtml}
           ${
@@ -1936,6 +1940,16 @@ async function showDayTips() {
 }
 
 function renderDayTips() {
+  // Kandidát na silný tip dňa: najvyššia dôvera (aspoň 70 %), pri zhode vyšší kurz, potom skorší výkop – rovnako ako na serveri.
+  let strongIdx = -1;
+  dayTipsItems.forEach(({ r, bet }, i) => {
+    if (typeof bet.probability !== "number" || bet.probability < STRONG_TIP_MIN_PROBABILITY) return;
+    if (strongIdx < 0) { strongIdx = i; return; }
+    const cur = dayTipsItems[strongIdx];
+    const a = [bet.probability, bet.odds ?? 0, -new Date(r.fixture.date).getTime()];
+    const b = [cur.bet.probability, cur.bet.odds ?? 0, -new Date(cur.r.fixture.date).getTime()];
+    for (let k = 0; k < a.length; k++) if (a[k] !== b[k]) { if (a[k] > b[k]) strongIdx = i; return; }
+  });
   const dateLabel = (() => {
     const [y, m, d] = (matchDateInput.value || "").split("-").map(Number);
     return y ? `${d}. ${m}. ${y}` : "";
@@ -1958,7 +1972,7 @@ function renderDayTips() {
           <div class="day-tip-bet">${escapeHtml(bet.market)}: <strong>${escapeHtml(
             translateNamesInText(bet.selection, f.homeTeam.name, f.awayTeam.name)
           )}</strong></div>
-          <div class="muted small">Dôvera <strong>${bet.probability.toFixed(0)} %</strong>${betOddsHtml(bet)}${strongTipBadge(bet.probability)}</div>
+          <div class="muted small">Dôvera <strong>${bet.probability.toFixed(0)} %</strong>${betOddsHtml(bet)}${i === strongIdx ? STRONG_OF_DAY_BADGE : ""}</div>
           ${warn}
         </div>
         <div class="day-tip-actions">
