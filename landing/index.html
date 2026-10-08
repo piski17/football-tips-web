@@ -589,6 +589,18 @@
   .skola-cap { display: flex; align-items: baseline; min-width: 0; white-space: nowrap; }
   .skola-cap span { overflow: hidden; text-overflow: ellipsis; }
   .skola-dots { flex: none; }
+  .skola-more { display: none; }
+  .skola-buy { position: relative; }
+  .skola-buy::before { content: ""; position: absolute; inset: 6px; border: 1px solid rgba(201,165,92,.14); pointer-events: none; }
+  .skola-label { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; font-size: 10.5px; font-weight: 600; letter-spacing: .26em; text-transform: uppercase; color: var(--gold); }
+  .skola-label::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, var(--rule-gold), transparent); }
+  .skola-incl { list-style: none; margin: 20px 0 0; padding: 18px 0 0; border-top: 1px solid var(--rule); display: grid; gap: 10px; }
+  .skola-incl li { position: relative; padding-left: 26px; font-size: 14.5px; line-height: 1.5; color: var(--text); }
+  .skola-incl li::before { content: ""; position: absolute; left: 2px; top: .38em; width: 10px; height: 5px; border-left: 1.5px solid var(--gold); border-bottom: 1.5px solid var(--gold); transform: rotate(-45deg); }
+  .skola-vip { padding-top: 16px; border-top: 1px solid var(--rule); margin-top: 18px !important; }
+  .skola-more small { display: block; margin-bottom: 4px; font-size: 10.5px; font-weight: 600; letter-spacing: .24em; text-transform: uppercase; color: var(--gold); }
+  .skola-more span { font-family: var(--serif); font-size: 19px; }
+  .skola-more b { font-style: italic; font-weight: 500; }
   .skola-info { margin: 18px 0 0; padding-left: 16px; border-left: 1px solid var(--gold); font-size: 15px; line-height: 1.6; color: var(--text); min-height: 3.2em; }
   /* zväčšený obrázok */
   html.lb-open { overflow: hidden; } html.lb-open body { overflow: visible; }
@@ -614,10 +626,16 @@
     .skola-grid { display: flex; flex-direction: column; align-items: stretch; gap: 0; }
     .skola-text { display: contents; }
     .skola-text .eyebrow { order: 1; } .skola-text h2 { order: 2; } .skola-text .muted { order: 3; margin-top: 18px; }
-    .skola-media { order: 4; margin-top: 32px; } .skola-chaps { order: 5; margin-top: 32px; } .skola-buy { order: 6; }
+    .skola-media { order: 4; margin-top: 32px; } .skola-more { order: 5; } .skola-chaps { order: 6; } .skola-buy { order: 7; }
+    .skola-more { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; margin-top: 32px; padding: 18px 20px; border: 1px solid var(--rule-gold); background: rgba(201,165,92,.05); color: var(--text); font: 400 15px/1.3 var(--sans); text-align: left; cursor: pointer; }
+    .skola-more b { color: var(--gold-hi); font-weight: 600; }
+    .skola-more i { position: relative; flex: none; width: 10px; height: 10px; margin-right: 4px; border-right: 1.5px solid var(--gold); border-bottom: 1.5px solid var(--gold); transform: translateY(-3px) rotate(45deg); transition: transform .2s; }
+    .skola-more[aria-expanded="true"] i { transform: translateY(2px) rotate(-135deg); }
+    .skola-chaps { display: none; margin-top: 0; border-top: 0; }
+    .skola-more[aria-expanded="true"] + .skola-chaps { display: grid; }
   }
   @media (max-width: 520px) {
-    .skola-chaps { column-gap: 16px; } .skola-chaps li { gap: 8px; padding: 9px 0; font-size: 13px; line-height: 1.35; } .skola-chaps li::before { font-size: 13px; min-width: 18px; }
+    .skola-chaps { grid-template-columns: minmax(0, 1fr); } .skola-chaps li { gap: 12px; padding: 11px 4px; font-size: 14.5px; }
     .skola-buy { padding: 24px 20px; } .skola-slider { outline-offset: 5px; }
     .skola-arrow { width: 36px; height: 36px; } .skola-arrow.prev { left: 8px; } .skola-arrow.next { right: 8px; }
     .skola-zoom { right: 8px; bottom: 8px; padding: 6px; font-size: 0; gap: 0; } .skola-zoom svg { width: 15px; height: 15px; }
@@ -916,11 +934,18 @@
           <div class="eyebrow"><b>V.</b>Kurz</div>
           <h2>Škola stávkovania</h2>
           <p class="muted">Kurz, ktorý vás naučí to, čo väčšina tipérov preskočí: ako chrániť bank, ako spoznať stávku s hodnotou a ako nedovoliť emóciám rozhodovať za vás. Bez sľubov istej výhry, s výpočtami a príkladmi.</p>
-          <ol class="skola-chaps">
+          <button class="skola-more" type="button" aria-expanded="false" aria-controls="skolaChaps"><span><small>Obsah kurzu</small>Čo sa naučíte v <b>10 kapitolách</b></span><i aria-hidden="true"></i></button>
+          <ol class="skola-chaps" id="skolaChaps">
             <li>Money management</li><li>Systémy vkladov</li><li>Value betting</li><li>Sure bets a Kellyho kritérium</li><li>Systémy, ktoré neodporúčame</li><li>Psychológia stávkovania</li><li>Aký šport si vybrať</li><li>15 rád pre rozumné tipovanie</li><li>Ako používať TipRadar</li><li>Zodpovedné hranie</li>
           </ol>
           <div class="skola-buy">
-            <div class="skola-price"><b class="num">99 €</b><span>jednorazovo · PDF, 48 strán, 10 kapitol</span></div>
+            <div class="skola-label">Exkluzívny kurz TipRadaru</div>
+            <div class="skola-price"><b class="num">99&nbsp;€</b><span>jednorazová platba</span></div>
+            <ul class="skola-incl">
+              <li>48 strán v prémiovom PDF, ktoré vám ostane natrvalo</li>
+              <li>Výpočty a príklady z reálnych zápasov</li>
+              <li>Rovnaké pravidlá, podľa ktorých tipuje TipRadar</li>
+            </ul>
             <p class="skola-vip"><strong>Zadarmo</strong> pri VIP na 3 mesiace alebo celú sezónu a pri Premium na celú sezónu.</p>
             <div class="skola-actions">
               <a class="btn" href="#zapis" data-kurz-cta>Chcem kurz</a>
@@ -1035,6 +1060,9 @@
     track.addEventListener("keydown", (e) => { if (e.key === "Enter") lbOpen(cur); });
     show(0);
   })();
+
+  // kurz: rozbalenie kapitol v telefóne
+  (function () { const b = document.querySelector(".skola-more"); if (b) b.addEventListener("click", () => b.setAttribute("aria-expanded", b.getAttribute("aria-expanded") === "true" ? "false" : "true")); })();
 
   // Klik na e-mail: otvorí poštu a zároveň adresu skopíruje (ak počítač nemá nastavenú poštovú aplikáciu)
   const toast = document.createElement("div");
