@@ -469,6 +469,9 @@
     .nav-toggle { display: inline-flex; }
     .nav-links { display: none; position: absolute; top: 100%; left: -24px; right: -24px; flex-direction: column; gap: 0; margin: 0; padding: 8px 24px 20px; background: var(--bg); border-bottom: 1px solid var(--rule-gold); box-shadow: 0 24px 40px rgba(0,0,0,.5); }
     .nav.open .nav-links { display: flex; }
+    /* otvorené menu: cez celú obrazovku až dole, stránka pod ním stojí */
+    .nav.open .nav-links { position: fixed; top: var(--nav-h, 64px); bottom: 0; left: 0; right: 0; height: auto; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); box-shadow: none; border-bottom: 0; }
+    html.menu-open { overflow: hidden; } html.menu-open body { overflow: visible; }
     .nav-links a { padding: 16px 0; border-bottom: 1px solid var(--rule); font-size: 12.5px; letter-spacing: .2em; }
     .nav-links a:last-child { border-bottom: 0; }
     .nav-links a { padding-left: 14px; padding-right: 14px; }
@@ -903,7 +906,17 @@
 <script>
 (function () {
   const nav = document.querySelector(".nav"), tog = document.querySelector(".nav-toggle");
-  const setOpen = (o) => { nav.classList.toggle("open", o); tog.setAttribute("aria-expanded", o ? "true" : "false"); };
+  let savedY = 0;
+  const setOpen = (o) => {
+    nav.classList.toggle("open", o); tog.setAttribute("aria-expanded", o ? "true" : "false");
+    const root = document.documentElement, wasOpen = root.classList.contains("menu-open");
+    if (o && !wasOpen) { savedY = window.scrollY; root.style.setProperty("--nav-h", nav.getBoundingClientRect().height + "px"); }
+    root.classList.toggle("menu-open", o);
+    if (!o && wasOpen && window.scrollY !== savedY) window.scrollTo({ top: savedY, behavior: "instant" });
+  };
+  // pri otvorenom menu sa stránka pod ním nehýbe ani na iPhone
+  document.addEventListener("touchmove", (e) => { if (nav.classList.contains("open") && !e.target.closest(".nav-links")) e.preventDefault(); }, { passive: false });
+  window.addEventListener("resize", () => { if (window.innerWidth > 1180) setOpen(false); });
   tog.addEventListener("click", () => setOpen(!nav.classList.contains("open")));
   document.querySelectorAll(".nav-links a").forEach((a) => a.addEventListener("click", () => setOpen(false)));
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") setOpen(false); });
