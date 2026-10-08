@@ -409,8 +409,6 @@
   .nav-links a, .nav .btn { white-space: nowrap; }
   .nav-links a.nav-tg { display: inline-flex; align-items: center; gap: 7px; }
   .nav-links a.nav-tg svg { width: 14px; height: 14px; color: var(--gold); }
-  .nav-links a.nav-cta { margin-left: 10px; border: 1px solid var(--gold); color: var(--gold); }
-  .nav-links a.nav-cta:hover { background: var(--gold); color: #141210; }
   .btn-tg { gap: 10px; }
   .btn-tg svg { width: 16px; height: 16px; }
   .closing .eyebrow { justify-content: center; }
@@ -466,19 +464,22 @@
   .nav.open .nav-toggle i { background: transparent; }
   .nav.open .nav-toggle i::before { transform: translateY(5px) rotate(45deg); }
   .nav.open .nav-toggle i::after { transform: translateY(-5px) rotate(-45deg); }
-  @media (max-width: 1180px) {
+  /* menu za tromi čiarkami na všetkých šírkach (aj na počítači) */
+  @media all {
     .nav .wrap { position: relative; }
     .nav-toggle { display: inline-flex; }
     .nav-links { display: none; position: absolute; top: 100%; left: -24px; right: -24px; flex-direction: column; gap: 0; margin: 0; padding: 8px 24px 20px; background: var(--bg); border-bottom: 1px solid var(--rule-gold); box-shadow: 0 24px 40px rgba(0,0,0,.5); }
     .nav.open .nav-links { display: flex; }
     /* otvorené menu: cez celú obrazovku až dole, stránka pod ním stojí */
     .nav.open .nav-links { position: fixed; top: var(--nav-h, 64px); bottom: 0; left: 0; right: 0; height: auto; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); box-shadow: none; border-bottom: 0; }
-    html.menu-open { overflow: hidden; } html.menu-open body { overflow: visible; }
+    @media (max-width: 1180px) { html.menu-open { overflow: hidden; } html.menu-open body { overflow: visible; } }
     .nav-links a { padding: 16px 0; border-bottom: 1px solid var(--rule); font-size: 12.5px; letter-spacing: .2em; }
     .nav-links a:last-child { border-bottom: 0; }
     .nav-links a { padding-left: 14px; padding-right: 14px; }
     .nav-links a.nav-tg svg { width: 15px; height: 15px; }
-    .nav-links a.nav-cta { margin: 16px 0 0; text-align: center; border-bottom: 1px solid var(--gold); }
+  }
+  @media (min-width: 1181px) {
+    .nav.open .nav-links { position: absolute; top: calc(100% + 1px); bottom: auto; left: auto; right: 0; width: 320px; padding: 8px 16px 12px; border: 1px solid var(--rule-gold); border-top: 0; box-shadow: 0 24px 40px rgba(0,0,0,.5); }
   }
   @media (max-width: 640px) {
     .nav-links { left: -16px; right: -16px; padding-inline: 16px; }
@@ -662,12 +663,15 @@
     <a class="brand" href="#top"><svg aria-hidden="true"><use href="#logo"/></svg>TipRadar</a>
     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="navLinks"><i aria-hidden="true"></i>Menu</button>
     <div class="nav-links" id="navLinks">
-      <a href="#ako">Ako to funguje</a>
+      <a href="#ako">Ako vzniká tip</a>
+      <a href="#hodnota">Hodnota</a>
       <a href="#vysledky">Výsledky</a>
+      <a href="#kto">O mne</a>
       <a href="#clenstvo">Členstvo</a>
       <a href="#skola">Kurz</a>
       <a href="#otazky">Otázky</a>
-      <a href="#clenstvo" class="nav-cta">Poradovník</a>
+      <a href="#zapis" class="nav-form">Formulár</a>
+      <a href="/video" class="nav-tg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>Video</a>
     </div>
   </div>
 </nav>
@@ -1028,7 +1032,8 @@
   };
   // pri otvorenom menu sa stránka pod ním nehýbe ani na iPhone
   document.addEventListener("touchmove", (e) => { if (nav.classList.contains("open") && !e.target.closest(".nav-links")) e.preventDefault(); }, { passive: false });
-  window.addEventListener("resize", () => { if (window.innerWidth > 1180) setOpen(false); });
+  // klik mimo menu ho zavrie
+  document.addEventListener("click", (e) => { if (nav.classList.contains("open") && !e.target.closest(".nav")) setOpen(false); });
   tog.addEventListener("click", () => setOpen(!nav.classList.contains("open")));
   document.querySelectorAll(".nav-links a").forEach((a) => a.addEventListener("click", () => setOpen(false)));
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") setOpen(false); });
@@ -1080,7 +1085,7 @@
   }));
 
   // zvýraznenie položky menu: po kliknutí hneď, pri rolovaní podľa sekcie na obrazovke
-  const links = Array.from(document.querySelectorAll('.nav-links a[href^="#"]:not(.nav-cta)'));
+  const links = Array.from(document.querySelectorAll('.nav-links a[href^="#"]'));
   const setActive = (id) => links.forEach((a) => a.classList.toggle("active", a.getAttribute("href") === "#" + id));
   let lockUntil = 0;
   links.forEach((a) => a.addEventListener("click", () => { setActive(a.getAttribute("href").slice(1)); lockUntil = Date.now() + 1200; }));
