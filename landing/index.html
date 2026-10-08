@@ -583,6 +583,31 @@
   .skola-vip strong { color: var(--gold-hi); font-weight: 600; }
   .skola-actions { display: flex; gap: 12px; margin-top: 22px; flex-wrap: wrap; }
   .skola-actions .btn { flex: 1 1 180px; white-space: nowrap; }
+  .skola-track img { cursor: zoom-in; }
+  .skola-zoom { position: absolute; right: 14px; bottom: 14px; display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid var(--rule-gold); background: rgba(11,11,12,.78); color: var(--gold-hi); font: 600 10.5px/1 var(--sans); letter-spacing: .16em; text-transform: uppercase; pointer-events: none; }
+  .skola-zoom svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.6; }
+  .skola-cap { display: flex; align-items: baseline; min-width: 0; white-space: nowrap; }
+  .skola-cap span { overflow: hidden; text-overflow: ellipsis; }
+  .skola-dots { flex: none; }
+  /* zväčšený obrázok */
+  html.lb-open { overflow: hidden; } html.lb-open body { overflow: visible; }
+  .lb { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; background: #070708; padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px); }
+  .lb[hidden] { display: none; }
+  .lb-track { flex: 1; min-height: 0; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior: contain; }
+  .lb-track::-webkit-scrollbar { display: none; }
+  .lb-track figure { flex: 0 0 100%; margin: 0; display: grid; place-items: center; padding: 64px 24px 8px; scroll-snap-align: start; }
+  .lb-track img { max-width: 100%; max-height: 100%; width: auto; height: auto; border: 1px solid var(--rule-gold); box-shadow: 0 30px 80px rgba(0,0,0,.7); }
+  .lb-bar { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 16px 16px 22px; }
+  .lb-cap { min-width: 0; font-size: 14px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
+  .lb-cap b { font: italic 500 16px/1 var(--serif); color: var(--gold); margin-right: 10px; }
+  .lb-arrow, .lb-close { display: grid; place-items: center; flex: none; width: 44px; height: 44px; padding: 0; border: 1px solid var(--rule-gold); border-radius: 50%; background: rgba(11,11,12,.8); color: var(--gold-hi); cursor: pointer; }
+  .lb-arrow[disabled] { opacity: .25; pointer-events: none; }
+  .lb-arrow svg, .lb-close svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; }
+  .lb-close { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: 12px; z-index: 2; }
+  .lb-hint { display: none; margin: 0; padding: 0 24px; text-align: center; font-size: 12.5px; color: var(--faint); }
+  @media (max-width: 640px) { .lb-track figure { padding: 64px 8px 8px; } }
+  @media (max-width: 640px) and (orientation: portrait) { .lb-hint { display: block; } }
+  @media (orientation: landscape) and (max-height: 520px) { .lb-track figure { padding: 8px 64px; } .lb-bar { position: absolute; left: 0; right: 0; bottom: 0; padding: 8px; pointer-events: none; } .lb-bar > * { pointer-events: auto; } .lb-cap { display: none; } }
   @media (max-width: 960px) {
     /* mobil: najprv nadpis, potom galéria, text, kapitoly a cena */
     .skola-grid { display: flex; flex-direction: column; align-items: stretch; gap: 0; }
@@ -594,7 +619,8 @@
     .skola-chaps { column-gap: 16px; } .skola-chaps li { gap: 8px; padding: 9px 0; font-size: 13px; line-height: 1.35; } .skola-chaps li::before { font-size: 13px; min-width: 18px; }
     .skola-buy { padding: 24px 20px; } .skola-slider { outline-offset: 5px; }
     .skola-arrow { width: 36px; height: 36px; } .skola-arrow.prev { left: 8px; } .skola-arrow.next { right: 8px; }
-    .skola-nav { margin-top: 20px; } .skola-cap { font-size: 13px; }
+    .skola-zoom { right: 8px; bottom: 8px; padding: 6px; font-size: 0; gap: 0; } .skola-zoom svg { width: 15px; height: 15px; }
+    .skola-nav { flex-direction: column; align-items: stretch; gap: 14px; margin-top: 20px; } .skola-cap { font-size: 14px; } .skola-dots { gap: 6px; } .skola-dots button { flex: 1; width: auto; } .skola-dots button[aria-current="true"] { flex: 2; width: auto; }
   }
   .founder { margin-top: 28px; padding: 22px 26px; border: 1px dashed var(--rule-gold); display: flex; gap: 18px; align-items: baseline; flex-wrap: wrap; }
   .founder b { font: 400 20px/1.2 var(--serif); color: var(--gold-hi); font-weight: 400; }
@@ -841,27 +867,46 @@
     </div>
   </section>
 
+  <div class="lb" id="skolaLb" role="dialog" aria-modal="true" aria-label="Ukážka z kurzu" hidden>
+    <button class="lb-close" type="button" aria-label="Zavrieť"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="lb-track"></div>
+    <p class="lb-hint">Pre väčší obrázok otočte telefón na šírku alebo ho roztiahnite prstami.</p>
+    <div class="lb-bar">
+      <button class="lb-arrow prev" type="button" aria-label="Predchádzajúci obrázok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <span class="lb-cap"></span>
+      <button class="lb-arrow next" type="button" aria-label="Ďalší obrázok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+    </div>
+  </div>
   <section class="sec skola" id="skola">
     <div class="wrap">
       <div class="skola-grid">
         <div class="skola-media">
           <div class="skola-slider" aria-roledescription="galéria" aria-label="Ukážky z kurzu">
             <div class="skola-track" tabindex="0">
-              <img src="/skola/kurz-01.jpg" width="1200" height="675" alt="Titulná strana kurzu „Škola stávkovania“" loading="eager" data-cap="Titulná strana" />
-              <img src="/skola/kurz-06.jpg" width="1200" height="675" alt="Ukážka: koľko vložiť na jeden tip" loading="lazy" data-cap="Koľko vložiť na jeden tip" />
-              <img src="/skola/kurz-18.jpg" width="1200" height="675" alt="Ukážka: výpočet hodnotnej stávky" loading="lazy" data-cap="Výpočet hodnotnej stávky" />
-              <img src="/skola/kurz-30.jpg" width="1200" height="675" alt="Ukážka: prečo nefunguje Martingale" loading="lazy" data-cap="Prečo nefunguje Martingale" />
+              <img src="/skola/kurz-01.jpg" data-full="/skola/kurz-01-xl.jpg" width="1200" height="675" alt="Titulná strana kurzu „Škola stávkovania“" loading="eager" data-cap="Titulná strana" />
+              <img src="/skola/kurz-06.jpg" data-full="/skola/kurz-06-xl.jpg" width="1200" height="675" alt="Ukážka: koľko vložiť na jeden tip – 1 až 3 % banku" loading="lazy" data-cap="Koľko vsadiť na tip" />
+              <img src="/skola/kurz-07.jpg" data-full="/skola/kurz-07-xl.jpg" width="1200" height="675" alt="Ukážka: čo urobí 10 prehier za sebou s bankom" loading="lazy" data-cap="10 prehier za sebou" />
+              <img src="/skola/kurz-09.jpg" data-full="/skola/kurz-09-xl.jpg" width="1200" height="675" alt="Ukážka: denné, týždenné a mesačné limity" loading="lazy" data-cap="Limity, ktoré chránia bank" />
+              <img src="/skola/kurz-13.jpg" data-full="/skola/kurz-13-xl.jpg" width="1200" height="675" alt="Ukážka: koľko jednotiek vsadiť na aký tip" loading="lazy" data-cap="Jednotky podľa dôvery" />
+              <img src="/skola/kurz-18.jpg" data-full="/skola/kurz-18-xl.jpg" width="1200" height="675" alt="Ukážka: výpočet hodnotnej stávky na príklade" loading="lazy" data-cap="Výpočet hodnotnej stávky" />
+              <img src="/skola/kurz-30.jpg" data-full="/skola/kurz-30-xl.jpg" width="1200" height="675" alt="Ukážka: prečo nefunguje Martingale" loading="lazy" data-cap="Prečo nie Martingale" />
+              <img src="/skola/kurz-36.jpg" data-full="/skola/kurz-36-xl.jpg" width="1200" height="675" alt="Ukážka: štyri pravidlá chladnej hlavy" loading="lazy" data-cap="Pravidlá chladnej hlavy" />
             </div>
             <button class="skola-arrow prev" type="button" aria-label="Predchádzajúci obrázok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
             <button class="skola-arrow next" type="button" aria-label="Ďalší obrázok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+            <span class="skola-zoom" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5M11 8v6M8 11h6"/></svg>Zväčšiť</span>
           </div>
           <div class="skola-nav">
-            <span class="skola-cap"><b class="num">1 / 4</b><span>Titulná strana</span></span>
+            <span class="skola-cap"><b class="num">1 / 8</b><span>Titulná strana</span></span>
             <div class="skola-dots">
               <button type="button" aria-label="Obrázok 1" aria-current="true"></button>
               <button type="button" aria-label="Obrázok 2"></button>
               <button type="button" aria-label="Obrázok 3"></button>
               <button type="button" aria-label="Obrázok 4"></button>
+              <button type="button" aria-label="Obrázok 5"></button>
+              <button type="button" aria-label="Obrázok 6"></button>
+              <button type="button" aria-label="Obrázok 7"></button>
+              <button type="button" aria-label="Obrázok 8"></button>
             </div>
           </div>
         </div>
@@ -969,6 +1014,23 @@
     prev.addEventListener("click", () => go(cur - 1)); next.addEventListener("click", () => go(cur + 1));
     dots.forEach((d, i) => d.addEventListener("click", () => go(i)));
     track.addEventListener("keydown", (e) => { if (e.key === "ArrowLeft") { e.preventDefault(); go(cur - 1); } if (e.key === "ArrowRight") { e.preventDefault(); go(cur + 1); } });
+    // klik na obrázok: zväčšenie cez celú obrazovku
+    const lb = document.getElementById("skolaLb"), lbTrack = lb.querySelector(".lb-track"), lbCap = lb.querySelector(".lb-cap");
+    const lbPrev = lb.querySelector(".lb-arrow.prev"), lbNext = lb.querySelector(".lb-arrow.next");
+    imgs.forEach((im) => { const f = document.createElement("figure"); const big = document.createElement("img"); big.alt = im.alt; big.loading = "lazy"; big.dataset.src = im.dataset.full; f.appendChild(big); lbTrack.appendChild(f); });
+    const figs = [...lbTrack.children]; let lbCur = 0, lastFocus = null;
+    const lbShow = (i) => { lbCur = i; lbPrev.disabled = i === 0; lbNext.disabled = i === figs.length - 1; lbCap.innerHTML = `<b class="num">${i + 1} / ${figs.length}</b>${imgs[i].dataset.cap}`; [i - 1, i, i + 1].forEach((j) => { const im = figs[j] && figs[j].firstChild; if (im && !im.src) im.src = im.dataset.src; }); };
+    const lbGo = (i) => lbTrack.scrollTo({ left: Math.max(0, Math.min(figs.length - 1, i)) * lbTrack.clientWidth, behavior: "smooth" });
+    lbTrack.addEventListener("scroll", () => { const i = Math.round(lbTrack.scrollLeft / lbTrack.clientWidth); if (i !== lbCur) { lbShow(i); go(i); } }, { passive: true });
+    const lbOpen = (i) => { lastFocus = document.activeElement; lb.hidden = false; document.documentElement.classList.add("lb-open"); lbShow(i); lbTrack.scrollLeft = i * lbTrack.clientWidth; lb.querySelector(".lb-close").focus(); };
+    const lbClose = () => { lb.hidden = true; document.documentElement.classList.remove("lb-open"); if (lastFocus) lastFocus.focus(); };
+    imgs.forEach((im, i) => im.addEventListener("click", () => lbOpen(i)));
+    lb.querySelector(".lb-close").addEventListener("click", lbClose);
+    lbPrev.addEventListener("click", () => lbGo(lbCur - 1)); lbNext.addEventListener("click", () => lbGo(lbCur + 1));
+    lb.addEventListener("click", (e) => { if (e.target.tagName === "FIGURE") lbClose(); });
+    document.addEventListener("keydown", (e) => { if (lb.hidden) return; if (e.key === "Escape") lbClose(); if (e.key === "ArrowLeft") lbGo(lbCur - 1); if (e.key === "ArrowRight") lbGo(lbCur + 1); });
+    window.addEventListener("resize", () => { if (!lb.hidden) lbTrack.scrollLeft = lbCur * lbTrack.clientWidth; });
+    track.addEventListener("keydown", (e) => { if (e.key === "Enter") lbOpen(cur); });
     show(0);
   })();
 
