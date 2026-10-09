@@ -907,16 +907,20 @@ export function predictMatch(
   // (minGamesPlayed = menší z počtov odohraných zápasov oboch tímov, vypočítaný vyššie)
   const marketWeight = minGamesPlayed >= MIN_GAMES_FOR_TRUST ? 0 : 0.5 * (1 - minGamesPlayed / MIN_GAMES_FOR_TRUST);
 
+  // Odhad stávkoviek (bez marže) pre každý tip - pre kontrolu rozporu a tichú evidenciu.
+  const marketPct = new Map<MarketPick, number>();
   for (const c of candidates) {
     const match = oddsAvailable ? findOdds(marketOdds!, c, fixture.homeTeam.name, fixture.awayTeam.name) : null;
     c.odds = match ? match.odd : null;
     c.oddsBookmakers = match ? match.bookmakers : 0;
-    if (match && marketWeight > 0) {
+    if (match) {
       const pMarket = marketProbability(marketOdds!, c, fixture.homeTeam.name, fixture.awayTeam.name);
       if (pMarket !== null) {
         const modelPct = c.probability;
-        // Rozpor so stávkovkami: pri málo dátach a rozdiele 15+ bodov model
-        // pravdepodobne nevidí niečo podstatné (typicky rozdiel v sile súperov).
+        marketPct.set(c, pMarket * 100);
+        // Rozpor so stávkovkami (pri KAŽDOM zápase, nielen pri málo dátach): rozdiel
+        // 15+ bodov znamená, že model pravdepodobne nevidí niečo podstatné (zranenie,
+        // zostava, sila súpera). Takýto tip sa neodporučí a ide do tichej evidencie.
         // Hranica podľa vzájomných zápasov, ktoré model naozaj použil PRE TENTO trh:
         // pri štatistikách (rohy, karty…) len tie, ku ktorým sú štatistiky k dispozícii.
         const statKey = H2H_STAT_KEY[c.category];
@@ -926,12 +930,14 @@ export function predictMatch(
           c.modelProbability = modelPct;
           c.marketProbability = pMarket * 100;
         }
-        c.probability = (1 - marketWeight) * modelPct + marketWeight * pMarket * 100;
-        c.explanation =
-          (c.explanation ? c.explanation + " " : "") +
-          `(Málo dát v sezóne – odhad upravený podľa kurzov stávkoviek: model ${modelPct.toFixed(0)} %, stávkovky ${(
-            pMarket * 100
-          ).toFixed(0)} %.)`;
+        if (marketWeight > 0) {
+          c.probability = (1 - marketWeight) * modelPct + marketWeight * pMarket * 100;
+          c.explanation =
+            (c.explanation ? c.explanation + " " : "") +
+            `(Málo dát v sezóne – odhad upravený podľa kurzov stávkoviek: model ${modelPct.toFixed(0)} %, stávkovky ${(
+              pMarket * 100
+            ).toFixed(0)} %.)`;
+        }
       }
     }
     c.expectedValue = match ? (c.probability / 100) * match.odd : null;
@@ -949,7 +955,7 @@ export function predictMatch(
   //  - kurz pod MIN_ODDS (predvolene 1,50) -> vyradiť,
   //  - nad +25 % a málo odohraných zápasov v sezóne: model stojí na slabých
   //    dátach a rozdiel oproti trhu je takmer iste jeho chyba -> vyradiť,
-  //  - nad +25 % a dát je dosť: tip ostáva, ale s upozornením,
+  //  - nad +25 % a dát je dosť: tiež vyradiť (rozpor s trhom) -> tichá evidencia,
   //  - inak normálny tip. Keď sa kurzy objavia, pri ďalšej analýze tip prejde bežne.
   // Trhy mimo Michalovho zoznamu (6. 10. 2026): odporúčajú sa len góly zápasu a tímu,
   // držanie lopty, rohy zápasu a tímu, karty, strely na bránu a fauly.
@@ -998,10 +1004,17 @@ export function predictMatch(
     } else if (ev > SUSPICIOUS_EXPECTED_VALUE && fewGames) {
       b.rejectReason = "podozrivo vysoká hodnota pri málo dátach v sezóne";
       lowValueBets.push(b);
+    } else if (ev > SUSPICIOUS_EXPECTED_VALUE) {
+      // Hodnota nad +25 % znamená, že model vidí šancu oveľa vyššie ako stávkovky.
+      // Predtým tip ostal s upozornením „over zostavy a správy"; teraz sa neodporučí
+      // a ide do tichej evidencie ako každý iný rozpor (raz mesačne sa vyhodnotí).
+      b.marketConflict = `podozrivo vysoká hodnota (+${((ev - 1) * 100).toFixed(0)} %) – model a stávkovky sa výrazne rozchádzajú`;
+      b.modelProbability = b.probability;
+      const mp = marketPct.get(b);
+      if (mp != null) b.marketProbability = mp;
+      b.rejectReason = b.marketConflict;
+      lowValueBets.push(b);
     } else {
-      if (ev > SUSPICIOUS_EXPECTED_VALUE) {
-        b.valueWarning = "Model a stávkovky sa výrazne rozchádzajú – pred stávkou over zostavy a správy.";
-      }
       pickPool.push(b);
     }
   }
