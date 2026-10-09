@@ -1818,3 +1818,7 @@ details.low-value-list[open] > summary { margin-bottom: 6px; }
 /* ---------- Väčší točiaci sa radar po načítaní (9. 10. 2026) ---------- */
 .analysis-empty .empty-radar { width: clamp(220px, 42vh, 340px); height: clamp(220px, 42vh, 340px); }
 @media (max-width: 620px) { .analysis-empty .empty-radar { width: 240px; height: 240px; } }
+
+/* Vzájomné zápasy – rozbaľovanie (9. 10. 2026) */
+.h2h-row[hidden] { display: none; }
+.h2h-toggle { margin-top: 10px; }

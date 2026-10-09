@@ -614,26 +614,8 @@ function renderAnalysis(r) {
     if (k < 0) lowValueShown.push({ b, i });
     else if (b.probability > lowValueShown[k].b.probability) lowValueShown[k] = { b, i };
   });
-  const lowValueHtml =
-    lowValueShown.length > 0
-      ? `<details class="low-value-list">
-          <summary class="muted small">Vyradené pre nízky kurz (${lowValueShown.length})</summary>
-          ${lowValueShown
-            .map(
-              ({ b, i }) => `
-            <div class="low-value-row">
-              <span class="muted small">${escapeHtml(b.market)}: ${escapeHtml(
-                translateNamesInText(b.selection, r.fixture.homeTeam.name, r.fixture.awayTeam.name)
-              )} (${b.probability.toFixed(0)} %${typeof b.odds === "number" && b.odds > 1 ? `, kurz ${fmtOdds(b.odds)}` : ""} – ${escapeHtml(b.rejectReason || "bez hodnoty")})</span>
-              <span class="low-value-actions">
-                <button class="btn-ghost btn-mini save-best-bet-btn" data-source="low" data-bet-idx="${i}">Uložiť aj tak</button>
-                <button class="btn-ghost btn-mini add-to-ticket-btn" data-source="low" data-bet-idx="${i}">+ Do tiketu</button>
-              </span>
-            </div>`
-            )
-            .join("")}
-        </details>`
-      : "";
+  // „Vyradené pre nízky kurz“ sa už nezobrazuje (vyradené tipy idú len do tichého záznamu).
+  const lowValueHtml = "";
 
   analysisColumnEl.innerHTML = `
     <div class="match-header">
@@ -673,16 +655,17 @@ function renderAnalysis(r) {
       ${
         (r.headToHead.matches || []).length
           ? `<div class="h2h-list">${(r.headToHead.matches || [])
-              .map((m) => {
+              .map((m, idx) => {
                 const d = new Date(m.date);
                 const date = isNaN(d.getTime()) ? "" : `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}`;
                 const home = translateTeamName(m.homeWasHome ? r.fixture.homeTeam.name : r.fixture.awayTeam.name);
                 const away = translateTeamName(m.homeWasHome ? r.fixture.awayTeam.name : r.fixture.homeTeam.name);
                 const hg = m.homeWasHome ? m.homeGoals : m.awayGoals;
                 const ag = m.homeWasHome ? m.awayGoals : m.homeGoals;
-                return `<div class="h2h-row${m.usedInModel ? "" : " h2h-old"}"><span class="muted">${date}</span><span>${escapeHtml(home)} <strong>${hg} : ${ag}</strong> ${escapeHtml(away)}</span></div>`;
+                return `<div class="h2h-row${m.usedInModel ? "" : " h2h-old"}${idx >= 5 ? " h2h-extra" : ""}"${idx >= 5 ? " hidden" : ""}><span class="muted">${date}</span><span>${escapeHtml(home)} <strong>${hg} : ${ag}</strong> ${escapeHtml(away)}</span></div>`;
               })
               .join("")}</div>
+             ${(r.headToHead.matches || []).length > 5 ? `<button type="button" class="btn-ghost btn-mini h2h-toggle" data-more="${(r.headToHead.matches || []).length - 5}">+ Zobraziť ďalšie (${(r.headToHead.matches || []).length - 5})</button>` : ""}
              <p class="muted small" style="margin:8px 0 0;">${
                r.headToHead.usedInModel
                  ? `Model započítal ${r.headToHead.usedInModel} ${r.headToHead.usedInModel >= 5 ? "najnovších zápasov" : "najnovšie zápasy"} za posledných 10 rokov (sivé nie).`
@@ -2899,3 +2882,15 @@ async function renderLeads() {
 }
 
 init();
+
+// Vzájomné zápasy: najprv 5, tlačidlom +/− sa rozbalia alebo zbalia ďalšie.
+document.addEventListener("click", (e) => {
+  const btn = (e.target).closest?.(".h2h-toggle");
+  if (!btn) return;
+  const list = btn.previousElementSibling;
+  if (!list) return;
+  const open = btn.dataset.open === "1";
+  list.querySelectorAll(".h2h-extra").forEach((row) => { (row).hidden = open; });
+  btn.dataset.open = open ? "0" : "1";
+  btn.textContent = open ? `+ Zobraziť ďalšie (${btn.dataset.more})` : "− Skryť";
+});
