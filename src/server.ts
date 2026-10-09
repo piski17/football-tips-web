@@ -42,6 +42,7 @@ import {
   sendTipResultToTelegram, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret } from "./telegram";
 import { sendAdminEmail } from "./mailer";
 import { listSubscribers, addSubscriber, updateSubscriber, deleteSubscriber } from "./subscribersStore";
+import { recordHit, readStats, sourceFrom } from "./statsStore";
 import { Subscriber } from "./types";
 
 /** Slovenský tvar podľa počtu: plural(3, "tip", "tipy", "tipov") -> "3 tipy". */
@@ -109,6 +110,7 @@ function basicAuth(req: Request, res: Response, next: NextFunction): void {
     req.path === "/api/public/track-record" ||
     req.path === "/api/public/vip-seats" ||
     req.path === "/api/public/waitlist" ||
+    req.path === "/api/public/hit" ||
     req.path === "/prezentacia" ||
     req.path === "/prezentacia/"
   ) {
@@ -189,6 +191,38 @@ app.get(["/ochrana-udajov", "/ochrana-udajov/"], (_req, res) => {
 // Formulár „Máte otázku?" na tipradar.eu (bez hesla): meno, e-mail, téma a otázka.
 // Uloží sa do zoznamu záujemcov ako „otázka z webu" (nepočíta sa do VIP miest) a admin dostane e-mail (odpoveď ide priamo pisateľovi).
 const waitlistHits = new Map<string, number[]>();
+// Návštevnosť verejných stránok (bez cookies) – stránka sem pošle zobrazenie alebo kliknutie.
+const hitLimiter = new Map<string, { n: number; at: number }>();
+app.post("/api/public/hit", express.text({ limit: "2kb", type: "*/*" }), async (req, res) => {
+  res.status(204).end();
+  try {
+    const ip = String(req.headers["x-forwarded-for"] ?? req.socket.remoteAddress ?? "").split(",")[0].trim();
+    const ua = String(req.headers["user-agent"] ?? "");
+    if (/bot|crawl|spider|preview|headless|lighthouse/i.test(ua)) return;
+    // Poistka proti zahlteniu: najviac 60 záznamov za minútu z jednej adresy.
+    const now = Date.now();
+    const lim = hitLimiter.get(ip);
+    if (lim && now - lim.at < 60000) { if (++lim.n > 60) return; } else hitLimiter.set(ip, { n: 1, at: now });
+    if (hitLimiter.size > 5000) hitLimiter.clear();
+    const body = typeof req.body === "string" && req.body ? JSON.parse(req.body) : {};
+    await recordHit({
+      page: String(body.p ?? ""),
+      source: sourceFrom(String(body.r ?? ""), String(body.u ?? "")),
+      click: body.c ? String(body.c) : undefined,
+      ip,
+      ua,
+    });
+  } catch { /* návštevnosť nesmie nič pokaziť */ }
+});
+
+app.get("/api/stats/visits", async (req, res) => {
+  try {
+    res.json({ days: await readStats(Number(req.query.days) || 30) });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
 app.post("/api/public/waitlist", express.json({ limit: "10kb" }), async (req, res) => {
   const ip = String(req.headers["x-forwarded-for"] ?? req.ip ?? "").split(",")[0].trim();
   const now = Date.now();
@@ -576,9 +610,39 @@ app.get("/api/public/track-record", async (_req, res) => {
     const clvAvg = withClosing.length
       ? withClosing.reduce((sum, t) => sum + (t.odds! / t.closingOdds! - 1) * 100, 0) / withClosing.length
       : null;
+    // „Včerajší tip“ na úvod stránky: posledný deň s vyhodnotenými tipmi. Vyberá sa bez ohľadu
+    // na výsledok (Silný tip dňa, inak tip s najvyššou dôverou), aby to nebolo vyberanie len výhier.
+    let latest: any = null;
+    const lastDay = resolvedAll.map((t) => tipDayKey(t) ?? "").filter(Boolean).sort().pop();
+    if (lastDay) {
+      const dayTips = resolvedAll.filter((t) => tipDayKey(t) === lastDay);
+      const pick =
+        dayTips.find((t) => t.strongOfDay) ??
+        [...dayTips].sort((a, b) => (b.legs?.length ? 0 : 1) - (a.legs?.length ? 0 : 1) || b.probability - a.probability)[0];
+      const isTicket = Array.isArray(pick.legs) && pick.legs.length > 0;
+      const hasScore = !isTicket && typeof pick.actualHomeGoals === "number" && typeof pick.actualAwayGoals === "number";
+      latest = {
+        day: lastDay,
+        league: isTicket ? null : pick.leagueName,
+        match: isTicket
+          ? `Tiket (${plural(pick.legs!.length, "zápas", "zápasy", "zápasov")})`
+          : `${translateTeamName(pick.homeTeam)} – ${translateTeamName(pick.awayTeam)}`,
+        bet: isTicket
+          ? pick.legs!.map((l) => `${translateTeamName(l.homeTeam)} – ${translateTeamName(l.awayTeam)}: ${translateNamesInText(l.selection, l.homeTeam, l.awayTeam)}`).join(" · ")
+          : `${pick.market}: ${translateNamesInText(pick.selection, pick.homeTeam, pick.awayTeam)}`,
+        probability: Math.round(pick.probability),
+        odds: typeof pick.odds === "number" && pick.odds > 1 ? Math.round(pick.odds * 100) / 100 : null,
+        score: hasScore ? `${pick.actualHomeGoals}:${pick.actualAwayGoals}` : null,
+        status: pick.status,
+        strong: !!pick.strongOfDay,
+        dayWon: dayTips.filter((t) => t.status === "won").length,
+        dayTotal: dayTips.length,
+      };
+    }
     res.json({
       ...summarize(all),
       month: { key: monthKey, ...summarize(inMonth) },
+      latest,
       clv: {
         total: withClosing.length,
         beat: withClosing.filter((t) => t.odds! > t.closingOdds!).length,
@@ -611,7 +675,9 @@ app.get("/api/public/vip-seats", async (_req, res) => {
     const waitlistVip = (await listLeads().catch(() => [])).filter(
       (l) => (l.plan === "vip" || l.plan === "vip_waitlist") && !memberChats.has(String(l.chatId))
     ).length;
-    res.json({ taken: Math.min(taken, total), total, salesOpen: process.env.SALES_OPEN === "true", waitlistVip, minOdds: MIN_ODDS });
+    // Odkaz na bezplatný Telegram kanál: premenná TELEGRAM_FREE_CHANNEL_URL na Renderi (napr. https://t.me/tipradar_free).
+    const freeChannelUrl = process.env.TELEGRAM_FREE_CHANNEL_URL || "https://t.me/TipRadarAiBot?start=free";
+    res.json({ taken: Math.min(taken, total), total, salesOpen: process.env.SALES_OPEN === "true", waitlistVip, minOdds: MIN_ODDS, freeChannelUrl });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
@@ -799,6 +865,118 @@ app.post("/api/telegram/weekly-report", async (req, res) => {
         ? req.body.target
         : "both";
     const sent = await sendCustomMessage(text, target);
+    res.json({ ok: sent.length > 0 });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
+// ---- Mesačný súhrn: všetky tipy daného mesiaca (podľa dátumu zápasu) ----
+const MONTH_NAMES = ["január", "február", "marec", "apríl", "máj", "jún", "júl", "august", "september", "október", "november", "december"];
+
+/** Mesiac vo formáte RRRR-MM; bez neho aktuálny mesiac (prvé 3 dni mesiaca ešte predošlý). */
+function reportMonth(input: unknown): string {
+  if (typeof input === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(input)) return input;
+  const today = dayKeySk(new Date());
+  if (Number(today.slice(8, 10)) > 3) return today.slice(0, 7);
+  const d = new Date(Date.UTC(Number(today.slice(0, 4)), Number(today.slice(5, 7)) - 2, 1));
+  return d.toISOString().slice(0, 7);
+}
+
+function buildMonthlyReport(tips: SavedTip[], month: string) {
+  const [y, m] = month.split("-").map(Number);
+  const label = `${MONTH_NAMES[m - 1]} ${y}`;
+  // Deň zápasu podľa slovenského času (tiket = deň posledného zápasu).
+  const inMonth = (t: SavedTip) => (tipDayKey(t) ?? "").slice(0, 7) === month;
+  const all = statsTips(tips).filter(inMonth);
+  const resolved = all.filter((t) => t.status === "won" || t.status === "lost");
+  const won = resolved.filter((t) => t.status === "won").length;
+  const lost = resolved.length - won;
+  const voided = all.filter((t) => t.status === "void").length;
+  const pending = all.filter((t) => t.status === "pending").length;
+  const rate = resolved.length > 0 ? (won / resolved.length) * 100 : null;
+  const withOdds = resolved.filter((t) => typeof t.odds === "number" && t.odds > 1);
+  const profit = withOdds.reduce((sum, t) => sum + (t.status === "won" ? t.odds! - 1 : -1), 0);
+  const roi = withOdds.length > 0 ? (profit / withOdds.length) * 100 : null;
+  const avgOdds = withOdds.length > 0 ? withOdds.reduce((s, t) => s + t.odds!, 0) / withOdds.length : null;
+
+  const byMarketMap: Record<string, { won: number; total: number }> = {};
+  for (const t of resolved) {
+    const key = t.legs && t.legs.length > 1 ? "Tikety" : t.market;
+    if (!byMarketMap[key]) byMarketMap[key] = { won: 0, total: 0 };
+    byMarketMap[key].total++;
+    if (t.status === "won") byMarketMap[key].won++;
+  }
+  const byMarket = Object.entries(byMarketMap)
+    .map(([market, v]) => ({ market, won: v.won, total: v.total, rate: (v.won / v.total) * 100 }))
+    .sort((a, b) => b.total - a.total || b.rate - a.rate);
+
+  // Najlepší a najhorší deň (podľa zisku v jednotkách).
+  const byDay: Record<string, number> = {};
+  for (const t of withOdds) {
+    const day = tipDayKey(t);
+    if (!day) continue;
+    byDay[day] = (byDay[day] ?? 0) + (t.status === "won" ? t.odds! - 1 : -1);
+  }
+  const days = Object.entries(byDay).sort((a, b) => b[1] - a[1]);
+  const fmtDay = (iso: string) => `${Number(iso.slice(8, 10))}. ${Number(iso.slice(5, 7))}.`;
+  const bestDay = days.length > 0 && days[0][1] > 0 ? { day: fmtDay(days[0][0]), profit: days[0][1] } : null;
+
+  // Najdlhšia séria výhier v mesiaci.
+  let streak = 0, bestStreak = 0;
+  for (const t of [...resolved].sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime())) {
+    streak = t.status === "won" ? streak + 1 : 0;
+    bestStreak = Math.max(bestStreak, streak);
+  }
+
+  const text =
+    `🗓 <b>Mesačný súhrn – ${label}</b>\n\n` +
+    (resolved.length > 0
+      ? `✅ Vyšlo: <b>${won}</b>   ❌ Nevyšlo: <b>${lost}</b>\n` +
+        `Úspešnosť: <b>${fmtNum(rate!, 0)} %</b> (${won} z ${resolved.length})\n` +
+        (voided > 0 ? `↩ Vrátené: ${voided}\n` : "") +
+        (roi !== null
+          ? `Zisk: <b>${signed(profit, 1)} j.</b> (ROI ${signed(roi, 0)} %${
+              withOdds.length < resolved.length ? `, z ${plural(withOdds.length, "tipu", "tipov", "tipov")} so známym kurzom` : ""
+            })\n`
+          : "") +
+        (avgOdds !== null ? `Priemerný kurz: ${fmtNum(avgOdds, 2)}\n` : "") +
+        (bestStreak >= 2 ? `Najdlhšia séria výhier: ${bestStreak}\n` : "") +
+        (bestDay ? `Najlepší deň: ${bestDay.day} (${signed(bestDay.profit, 1)} j.)\n` : "") +
+        (byMarket.length > 0
+          ? `\n<b>Podľa trhov</b>\n` + byMarket.map((b) => `• ${b.market}: ${b.won} z ${b.total} (${fmtNum(b.rate, 0)} %)`).join("\n") + "\n"
+          : "")
+      : `V tomto mesiaci zatiaľ nie sú vyhodnotené žiadne tipy.\n`) +
+    (pending > 0 ? `\n⏳ Ešte sa hrá: ${pending}\n` : "") +
+    `\n<i>Poctivá história – vrátane prehratých tipov. 1 j. = 1 jednotka vkladu.</i>`;
+
+  return {
+    month, label, total: all.length, resolved: resolved.length, won, lost, voided, pending,
+    rate, profit: withOdds.length > 0 ? profit : null, roi, avgOdds, oddsCount: withOdds.length,
+    bestStreak, bestDay, byMarket, text,
+  };
+}
+
+app.get("/api/reports/monthly", async (req, res) => {
+  try {
+    res.json(buildMonthlyReport(await listTips(), reportMonth(req.query.month)));
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
+app.post("/api/telegram/monthly-report", async (req, res) => {
+  try {
+    if (!isTelegramEnabled()) {
+      res.status(400).json({ error: "Telegram nie je na serveri nastavený." });
+      return;
+    }
+    const report = buildMonthlyReport(await listTips(), reportMonth(req.body?.month));
+    const target =
+      req.body?.target === "premium" || req.body?.target === "vip" || req.body?.target === "both"
+        ? req.body.target
+        : "both";
+    const sent = await sendCustomMessage(report.text, target);
     res.json({ ok: sent.length > 0 });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });

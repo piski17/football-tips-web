@@ -617,5 +617,34 @@
   });
 </script>
 
+<script>
+/* Návštevnosť bez cookies: zobrazenie stránky a kliknutia na dôležité odkazy. */
+(function () {
+  function send(data) {
+    try {
+      var body = JSON.stringify(data);
+      if (navigator.sendBeacon) navigator.sendBeacon("/api/public/hit", body);
+      else fetch("/api/public/hit", { method: "POST", body: body, keepalive: true });
+    } catch (e) {}
+  }
+  var utm = "";
+  try { utm = new URLSearchParams(location.search).get("utm_source") || ""; } catch (e) {}
+  send({ p: "/video", r: document.referrer || "", u: utm });
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest("a[href]");
+    if (!a) return;
+    var h = a.getAttribute("href") || "", c = "";
+    if (a.hasAttribute("data-free")) c = "free";
+    else if (a.hasAttribute("data-kurz-cta")) c = "kurz";
+    else if (/start=premium/.test(h)) c = "premium";
+    else if (/start=vip/.test(h)) c = "vip";
+    else if (/t\.me\//.test(h)) c = "telegram";
+    else if (/instagram\.com/.test(h)) c = "instagram";
+    else if (/^mailto:/.test(h)) c = "email";
+    else if (h === "#zapis") c = "formular";
+    if (c) send({ c: c });
+  }, true);
+})();
+</script>
 </body>
 </html>

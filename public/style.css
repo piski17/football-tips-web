@@ -1779,3 +1779,23 @@ details.low-value-list > summary::-webkit-details-marker { display: none; }
 details.low-value-list > summary::before { content: "+"; display: inline-block; width: 14px; color: var(--accent); }
 details.low-value-list[open] > summary::before { content: "–"; }
 details.low-value-list[open] > summary { margin-bottom: 6px; }
+
+/* ---- Mesačný súhrn ---- */
+.monthly-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.monthly-head h3 { margin: 0; text-align: center; flex: 1; }
+.monthly-head .btn-mini { font-size: 18px; min-width: 36px; }
+.monthly-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 16px 0 10px; }
+.monthly-stat { background: var(--surface-alt); border: 1px solid var(--border); border-radius: 3px; padding: 12px; display: flex; flex-direction: column; gap: 4px; }
+.monthly-stat span { font-size: 11.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+.monthly-stat b { font-size: 22px; color: var(--text); font-weight: 600; }
+.monthly-stat b span { font-size: inherit; text-transform: none; letter-spacing: 0; }
+.monthly-stat .won, .monthly-stat b .won { color: var(--success); }
+.monthly-stat .lost, .monthly-stat b .lost { color: var(--danger); }
+@media (max-width: 560px) { .monthly-grid { grid-template-columns: repeat(2, 1fr); } }
+
+/* ---- Návštevnosť ---- */
+.monthly-stat small { font-size: 11.5px; }
+.visits-days { display: grid; grid-template-columns: repeat(14, 1fr); gap: 4px; align-items: end; height: 110px; margin: 6px 0 18px; }
+.visits-day { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
+.visits-day i { display: block; width: 100%; min-height: 2px; background: var(--accent-strong, #C9A55C); border-radius: 2px 2px 0 0; }
+.visits-day span { font-size: 10.5px; color: var(--text-muted); }

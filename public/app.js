@@ -1834,6 +1834,182 @@ weeklyReportBtn.addEventListener("click", async () => {
   }
 });
 
+// ---- Mesačný súhrn (tipy daného mesiaca, s odoslaním do Telegramu) ----
+function fmtMonthNum(n, digits) {
+  return Number(n).toFixed(digits).replace(".", ",");
+}
+function signedMonthNum(n, digits) {
+  return (n > 0 ? "+" : n < 0 ? "−" : "") + fmtMonthNum(Math.abs(n), digits);
+}
+function shiftMonth(month, delta) {
+  const [y, m] = month.split("-").map(Number);
+  const d = new Date(Date.UTC(y, m - 1 + delta, 1));
+  return d.toISOString().slice(0, 7);
+}
+
+async function openMonthlyReport(startMonth) {
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal modal-large monthly-modal">
+      <div class="monthly-head">
+        <button class="btn-ghost btn-mini" data-m="-1" aria-label="Predošlý mesiac">‹</button>
+        <h3 class="monthly-title">Mesačný súhrn</h3>
+        <button class="btn-ghost btn-mini" data-m="1" aria-label="Ďalší mesiac">›</button>
+      </div>
+      <div class="monthly-body"><p class="empty-state">Načítavam…</p></div>
+      <div class="modal-actions">
+        <button class="btn-ghost" data-close>Zavrieť</button>
+        <button class="btn-primary" data-send>Odoslať do Telegramu</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const body = overlay.querySelector(".monthly-body");
+  const title = overlay.querySelector(".monthly-title");
+  let current = startMonth || null;
+  let loaded = null;
+
+  async function load() {
+    body.innerHTML = `<p class="empty-state">Načítavam…</p>`;
+    try {
+      const r = await getMonthlyReport(current);
+      loaded = r;
+      current = r.month;
+      title.textContent = `Mesačný súhrn – ${r.label}`;
+      if (!r.resolved) {
+        body.innerHTML = `<p class="empty-state">V tomto mesiaci zatiaľ nie sú vyhodnotené žiadne tipy.${r.pending ? ` Ešte sa hrá: ${r.pending}.` : ""}</p>`;
+        return;
+      }
+      const card = (label, value, cls) => `<div class="monthly-stat"><span>${label}</span><b class="${cls || ""}">${value}</b></div>`;
+      body.innerHTML = `
+        <div class="monthly-grid">
+          ${card("Úspešnosť", `${fmtMonthNum(r.rate, 0)} %`)}
+          ${card("Vyšlo / nevyšlo", `<span class="won">${r.won}</span> / <span class="lost">${r.lost}</span>`)}
+          ${r.profit != null ? card("Zisk", `${signedMonthNum(r.profit, 1)} j.`, r.profit >= 0 ? "won" : "lost") : ""}
+          ${r.roi != null ? card("ROI", `${signedMonthNum(r.roi, 0)} %`, r.roi >= 0 ? "won" : "lost") : ""}
+          ${r.avgOdds != null ? card("Priemerný kurz", fmtMonthNum(r.avgOdds, 2)) : ""}
+          ${r.bestStreak >= 2 ? card("Séria výhier", r.bestStreak) : ""}
+        </div>
+        <p class="muted small">${r.voided ? `Vrátené: ${r.voided}. ` : ""}${r.pending ? `Ešte sa hrá: ${r.pending}. ` : ""}${r.bestDay ? `Najlepší deň: ${r.bestDay.day} (${signedMonthNum(r.bestDay.profit, 1)} j.). ` : ""}${r.oddsCount < r.resolved ? `Zisk je z ${r.oddsCount} tipov so známym kurzom.` : ""}</p>
+        <div class="market-breakdown-title">Podľa trhov</div>
+        ${r.byMarket.map((b) => `
+          <div class="market-breakdown-row">
+            <div class="market-breakdown-label"><span>${escapeHtml(b.market)}</span><span>${b.won} z ${b.total} · ${fmtMonthNum(b.rate, 0)} %</span></div>
+            <div class="market-breakdown-bar"><div class="market-breakdown-bar-fill" style="width:${Math.round(b.rate)}%"></div></div>
+          </div>`).join("")}`;
+    } catch (err) {
+      body.innerHTML = `<p class="empty-state">Súhrn sa nepodarilo načítať: ${escapeHtml(err.message || String(err))}</p>`;
+    }
+  }
+
+  overlay.querySelectorAll("[data-m]").forEach((b) =>
+    b.addEventListener("click", () => {
+      if (!current) return;
+      current = shiftMonth(current, Number(b.dataset.m));
+      load();
+    })
+  );
+  overlay.querySelector("[data-close]").addEventListener("click", () => overlay.remove());
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
+  overlay.querySelector("[data-send]").addEventListener("click", async () => {
+    if (!loaded) return;
+    const target = await askTelegramTarget();
+    if (!target) return;
+    try {
+      await sendMonthlyReport(loaded.month, target);
+      showToast("Mesačný súhrn odoslaný.");
+    } catch (err) {
+      showToast(`Odoslanie zlyhalo: ${err.message}`);
+    }
+  });
+  load();
+}
+
+function getMonthlyReport(month) {
+  return fetchJson(`/api/reports/monthly${month ? `?month=${encodeURIComponent(month)}` : ""}`);
+}
+function sendMonthlyReport(month, target) {
+  return fetchJson("/api/telegram/monthly-report", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ month, target }),
+  });
+}
+document.getElementById("monthlyReportBtn").addEventListener("click", () => openMonthlyReport());
+
+// ---- Návštevnosť tipradar.eu (bez cookies) ----
+const VISIT_CLICK_LABELS = {
+  free: "Tipy zadarmo (Telegram kanál)",
+  premium: "Premium – poradovník",
+  vip: "VIP – poradovník",
+  kurz: "Chcem kurz",
+  formular: "Formulár",
+  telegram: "Telegram (iné odkazy)",
+  instagram: "Instagram",
+  email: "E-mail",
+};
+const VISIT_SOURCE_LABELS = { priamo: "Priamo / neznámy zdroj", instagram: "Instagram", facebook: "Facebook", telegram: "Telegram", google: "Google", tiktok: "TikTok", youtube: "YouTube" };
+
+async function openVisits() {
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal modal-large">
+      <h3>Návštevnosť tipradar.eu</h3>
+      <p class="muted small">Bez cookies. Návštevník = jeden človek za deň (podľa skráteného odtlačku, ktorý sa každý deň mení).</p>
+      <div class="visits-body"><p class="empty-state">Načítavam…</p></div>
+      <div class="modal-actions"><button class="btn-ghost" data-close>Zavrieť</button></div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector("[data-close]").addEventListener("click", () => overlay.remove());
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
+  const body = overlay.querySelector(".visits-body");
+  try {
+    const { days } = await fetchJson("/api/stats/visits?days=30");
+    const sum = (list, key) => list.reduce((s, d) => s + (d[key] || 0), 0);
+    const merge = (list, key) => {
+      const out = {};
+      for (const d of list) for (const [k, v] of Object.entries(d[key] || {})) out[k] = (out[k] || 0) + v;
+      return Object.entries(out).sort((a, b) => b[1] - a[1]);
+    };
+    const today = days.slice(0, 1), week = days.slice(0, 7);
+    const card = (label, visitors, views) =>
+      `<div class="monthly-stat"><span>${label}</span><b>${visitors}</b><small class="muted">${views} ${views === 1 ? "zobrazenie" : views >= 2 && views <= 4 ? "zobrazenia" : "zobrazení"}</small></div>`;
+    const rows = (entries, labels, total) =>
+      entries.length
+        ? entries.map(([k, v]) => `
+          <div class="market-breakdown-row">
+            <div class="market-breakdown-label"><span>${escapeHtml(labels[k] || k)}</span><span>${v}</span></div>
+            <div class="market-breakdown-bar"><div class="market-breakdown-bar-fill" style="width:${total ? Math.round((v / total) * 100) : 0}%"></div></div>
+          </div>`).join("")
+        : `<p class="muted small">Zatiaľ nič.</p>`;
+    const sources = merge(days, "sources"), clicks = merge(days, "clicks");
+    const maxDay = Math.max(1, ...days.slice(0, 14).map((d) => d.visitors));
+    body.innerHTML = `
+      <div class="monthly-grid">
+        ${card("Dnes", sum(today, "visitors"), sum(today, "views"))}
+        ${card("7 dní", sum(week, "visitors"), sum(week, "views"))}
+        ${card("30 dní", sum(days, "visitors"), sum(days, "views"))}
+      </div>
+      <div class="market-breakdown-title">Posledných 14 dní (návštevníci)</div>
+      <div class="visits-days">
+        ${days.slice(0, 14).reverse().map((d) => `
+          <div class="visits-day" title="${d.day}: ${d.visitors} návštevníkov, ${d.views} zobrazení">
+            <i style="height:${Math.round((d.visitors / maxDay) * 100)}%"></i>
+            <span>${Number(d.day.slice(8, 10))}.</span>
+          </div>`).join("")}
+      </div>
+      <div class="market-breakdown-title">Odkiaľ prišli (30 dní)</div>
+      ${rows(sources, VISIT_SOURCE_LABELS, sources.reduce((s, e) => s + e[1], 0))}
+      <div class="market-breakdown-title" style="margin-top:14px">Kliknutia (30 dní)</div>
+      ${rows(clicks, VISIT_CLICK_LABELS, Math.max(1, ...clicks.map((e) => e[1])))}
+      <p class="muted small" style="margin-top:12px">Tip: do odkazu v bio na Instagrame dajte <b>tipradar.eu/?utm_source=instagram</b>, potom sa zdroj započíta presne aj z aplikácie Instagramu.</p>`;
+  } catch (err) {
+    body.innerHTML = `<p class="empty-state">Návštevnosť sa nepodarilo načítať: ${escapeHtml(err.message || String(err))}</p>`;
+  }
+}
+document.getElementById("openVisitsBtn").addEventListener("click", () => openVisits());
+
 // ---- Denné vyhodnotenie (všetky tipy a tikety dňa naraz do Telegramu) ----
 /** Deň, za ktorý sa posiela vyhodnotenie: dnes, po polnoci (do 6:00) ešte včerajšok. */
 function dailyResultsDay() {
