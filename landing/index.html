@@ -481,6 +481,8 @@
   .nav-links a.nav-free-link { display: inline-flex; align-items: center; gap: 9px; color: var(--gold-hi); }
   .nav-links a.nav-free-link svg { width: 15px; height: 15px; }
   @media (max-width: 760px) { .nav-free { display: none; } }
+  /* v menu len v telefóne – na počítači je tlačidlo vedľa Menu */
+  @media (min-width: 761px) { .nav-links a.nav-free-link { display: none; } }
   /* ---------- mobil: menu a menšie písmo ---------- */
   .nav { background: var(--bg); }
   .nav-toggle { display: none; margin-left: auto; align-items: center; gap: 10px; min-height: 40px; padding: 0 14px; border: 1px solid var(--rule-gold); border-radius: 2px; background: none; color: var(--gold-hi); font: 600 11px/1 var(--sans); letter-spacing: .2em; text-transform: uppercase; cursor: pointer; }
