@@ -246,8 +246,15 @@ async function sendToChat(chatId: string, text: string): Promise<number | null> 
   try {
     const res = await axios.post(
       `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
-      // protect_content: členovia nemôžu tipy preposielať, kopírovať ani ukladať.
-      { chat_id: chatId, text, parse_mode: "HTML", protect_content: true },
+      // protect_content: členovia nemôžu tipy preposielať, kopírovať ani ukladať (vo free kanáli môžu – nech sa šíri).
+      // link_preview_options: bez veľkého náhľadu stránky pod správou.
+      {
+        chat_id: chatId,
+        text,
+        parse_mode: "HTML",
+        protect_content: chatId !== TELEGRAM_CHAT_ID_FREE,
+        link_preview_options: { is_disabled: true },
+      },
       { timeout: 10000 }
     );
     const messageId = res.data?.result?.message_id;

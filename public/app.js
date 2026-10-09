@@ -864,8 +864,8 @@ function askTelegramTarget() {
         <div style="display:flex; flex-direction:column; gap:10px; margin-top:18px;">
           <button class="btn-primary" id="tgChoicePremium">◆ PREMIUM kanál</button>
           <button class="btn-primary" id="tgChoiceVip">♛ VIP kanál</button>
-          <button class="btn-ghost" id="tgChoiceBoth">Oba naraz</button>
-          <button class="btn-ghost" id="tgChoiceFree">○ FREE kanál (zadarmo)</button>
+          <button class="btn-primary" id="tgChoiceFree">★ FREE kanál</button>
+          <button class="btn-ghost" id="tgChoiceBoth">Oba naraz (Premium + VIP)</button>
           <button class="btn-ghost" id="tgChoiceNone">Neposielať</button>
         </div>
       </div>
