@@ -1957,6 +1957,7 @@ async function openVisits() {
     <div class="modal modal-large">
       <h3>Návštevnosť tipradar.eu</h3>
       <p class="muted small">Bez cookies. Návštevník = jeden človek za deň (podľa skráteného odtlačku, ktorý sa každý deň mení).</p>
+      <p class="muted small">Aby sa nepočítali tvoje vlastné návštevy, otvor raz v každom svojom zariadení a prehliadači <a href="https://tipradar.eu/?ja=1" target="_blank" rel="noopener">tipradar.eu/?ja=1</a>. Znova zapneš cez tipradar.eu/?ja=0.</p>
       <div class="visits-body"><p class="empty-state">Načítavam…</p></div>
       <div class="modal-actions"><button class="btn-ghost" data-close>Zavrieť</button></div>
     </div>`;

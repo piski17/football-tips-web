@@ -1563,6 +1563,21 @@
 <script>
 /* Návštevnosť bez cookies: zobrazenie stránky a kliknutia na dôležité odkazy. */
 (function () {
+  // Majiteľ: tipradar.eu/?ja=1 vypne počítanie tohto zariadenia, ?ja=0 ho znova zapne.
+  try {
+    var qs = new URLSearchParams(location.search);
+    if (qs.has("ja")) {
+      var off = qs.get("ja") !== "0";
+      if (off) localStorage.setItem("tr_owner", "1"); else localStorage.removeItem("tr_owner");
+      qs.delete("ja");
+      history.replaceState(null, "", location.pathname + (qs.toString() ? "?" + qs : "") + location.hash);
+      var n = document.createElement("div");
+      n.textContent = off ? "Toto zariadenie sa už nepočíta do návštevnosti." : "Toto zariadenie sa znova počíta do návštevnosti.";
+      n.style.cssText = "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:9999;background:#141416;color:#EDE6D6;border:1px solid #C9A55C;padding:12px 18px;border-radius:3px;font:14px/1.4 system-ui,sans-serif;max-width:90vw;text-align:center";
+      document.body.appendChild(n); setTimeout(function () { n.remove(); }, 5000);
+    }
+    if (localStorage.getItem("tr_owner") === "1") return;
+  } catch (e) {}
   function send(data) {
     try {
       var body = JSON.stringify(data);
