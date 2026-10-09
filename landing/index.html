@@ -463,6 +463,7 @@
   /* ---------- Včerajší tip (posledný vyhodnotený deň) ---------- */
   .last-tip { display: block; margin-top: 36px; max-width: 46ch; padding: 18px 22px; border: 1px solid var(--rule-gold); border-left: 2px solid var(--gold); background: var(--bg-2); text-decoration: none; color: var(--text); transition: background .2s; }
   .last-tip:hover { background: #18181b; }
+  .last-tip[hidden] { display: none; }
   .last-tip .lt-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--gold-hi); }
   .last-tip .lt-res { font: 600 11px/1 var(--sans); letter-spacing: .14em; padding: 6px 9px; border-radius: 2px; white-space: nowrap; }
   .last-tip .lt-res.won { color: var(--win); border: 1px solid rgba(127,191,154,.5); background: rgba(127,191,154,.1); }
