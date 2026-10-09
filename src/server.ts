@@ -600,12 +600,17 @@ app.get("/api/public/vip-seats", async (_req, res) => {
   try {
     const total = Math.max(1, Number(process.env.VIP_SEATS) || 30);
     const graceMs = 7 * 24 * 60 * 60 * 1000;
-    const taken = (await listSubscribers()).filter(
+    const activeVip = (await listSubscribers()).filter(
       (s) => s.tier === "group" && new Date(s.nextPaymentDue).getTime() + graceMs >= Date.now()
-    ).length;
+    );
+    const taken = activeVip.length;
     // Predaj členstiev: SALES_OPEN=true na Renderi (kým nie je živnosť, len poradovník).
     // Pred spustením predaja: koľko ľudí sa zapísalo do poradovníka o VIP (len počet).
-    const waitlistVip = (await listLeads().catch(() => [])).filter((l) => l.plan === "vip" || l.plan === "vip_waitlist").length;
+    // Záujemca, ktorý už je VIP členom (rovnaké Telegram ID), sa nepočíta dvakrát.
+    const memberChats = new Set(activeVip.map((s) => String(s.telegramChatId || "")).filter(Boolean));
+    const waitlistVip = (await listLeads().catch(() => [])).filter(
+      (l) => (l.plan === "vip" || l.plan === "vip_waitlist") && !memberChats.has(String(l.chatId))
+    ).length;
     res.json({ taken: Math.min(taken, total), total, salesOpen: process.env.SALES_OPEN === "true", waitlistVip, minOdds: MIN_ODDS });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });

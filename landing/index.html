@@ -1366,7 +1366,13 @@
         $("vipSeats").hidden = false;
         requestAnimationFrame(() => requestAnimationFrame(() => { $("seatBar").style.width = Math.min(100, (n / total) * 100) + "%"; }));
       };
-      if (!d.salesOpen) { show(Math.min(Number(d.waitlistVip) || 0, total), "V poradovníku na VIP"); return; }
+      if (!d.salesOpen) {
+        // Pred spustením predaja: VIP členovia + záujemcovia v poradovníku.
+        const members = Number(d.taken) || 0;
+        const n = Math.min(members + (Number(d.waitlistVip) || 0), total);
+        show(n, members > 0 ? "Obsadené a rezervované VIP miesta" : "V poradovníku na VIP");
+        return;
+      }
       // Predaj beží (SALES_OPEN=true na Renderi)
       $("premiumCta").textContent = "Stať sa členom Premium";
       const taken = Math.min(Number(d.taken) || 0, total);
