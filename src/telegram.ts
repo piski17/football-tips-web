@@ -21,6 +21,15 @@ function plural(n: number, one: string, few: string, many: string): string {
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID_PREMIUM = process.env.TELEGRAM_CHAT_ID_PREMIUM;
 const TELEGRAM_CHAT_ID_VIP = process.env.TELEGRAM_CHAT_ID_VIP;
+// Bezplatný kanál: TELEGRAM_CHAT_ID_FREE (napr. -100… alebo @nazovkanala). Ak chýba a kanál je verejný,
+// použije sa názov z TELEGRAM_FREE_CHANNEL_URL (https://t.me/nazovkanala → @nazovkanala).
+const TELEGRAM_CHAT_ID_FREE = process.env.TELEGRAM_CHAT_ID_FREE || freeChatFromUrl(process.env.TELEGRAM_FREE_CHANNEL_URL);
+
+function freeChatFromUrl(url?: string): string | undefined {
+  const m = /^https?:\/\/(?:www\.)?t\.me\/([A-Za-z][A-Za-z0-9_]{3,})\/?$/.exec((url || "").trim());
+  if (!m || /bot$/i.test(m[1])) return undefined;
+  return "@" + m[1];
+}
 
 // ---- Preklad názvov reprezentácií do slovenčiny (kluby zostávajú v pôvodnom tvare) ----
 const COUNTRY_NAME_SK: Record<string, string> = {
@@ -160,17 +169,18 @@ export function translateNamesInText(text: string | undefined, homeOriginal: str
   return result;
 }
 
-export type TelegramTarget = "premium" | "vip" | "both";
+export type TelegramTarget = "premium" | "vip" | "both" | "free";
 
 export function isTelegramEnabled(): boolean {
-  return Boolean(TELEGRAM_BOT_TOKEN && (TELEGRAM_CHAT_ID_PREMIUM || TELEGRAM_CHAT_ID_VIP));
+  return Boolean(TELEGRAM_BOT_TOKEN && (TELEGRAM_CHAT_ID_PREMIUM || TELEGRAM_CHAT_ID_VIP || TELEGRAM_CHAT_ID_FREE));
 }
 
 /** Ktoré kanály sú reálne nastavené (na zobrazenie voľby vo formulári). */
-export function availableTelegramTargets(): ("premium" | "vip")[] {
-  const targets: ("premium" | "vip")[] = [];
+export function availableTelegramTargets(): ("premium" | "vip" | "free")[] {
+  const targets: ("premium" | "vip" | "free")[] = [];
   if (TELEGRAM_CHAT_ID_PREMIUM) targets.push("premium");
   if (TELEGRAM_CHAT_ID_VIP) targets.push("vip");
+  if (TELEGRAM_CHAT_ID_FREE) targets.push("free");
   return targets;
 }
 
@@ -257,6 +267,7 @@ function resolveChatIds(target: TelegramTarget): string[] {
   const chatIds: string[] = [];
   if ((target === "premium" || target === "both") && TELEGRAM_CHAT_ID_PREMIUM) chatIds.push(TELEGRAM_CHAT_ID_PREMIUM);
   if ((target === "vip" || target === "both") && TELEGRAM_CHAT_ID_VIP) chatIds.push(TELEGRAM_CHAT_ID_VIP);
+  if (target === "free" && TELEGRAM_CHAT_ID_FREE) chatIds.push(TELEGRAM_CHAT_ID_FREE);
   return chatIds;
 }
 
@@ -272,7 +283,8 @@ export async function sendTipToTelegram(
   const sent: { chatId: string; messageId: number }[] = [];
 
   for (const chatId of chatIds) {
-    const text = buildMessageText(tip, headerOverride, chatId === TELEGRAM_CHAT_ID_VIP, strong);
+    let text = buildMessageText(tip, headerOverride, chatId === TELEGRAM_CHAT_ID_VIP, strong);
+    if (chatId === TELEGRAM_CHAT_ID_FREE) text += `\n\n👉 Viac tipov a členstvo: <a href="https://tipradar.eu/?utm_source=telegram">tipradar.eu</a>`;
     const messageId = await sendToChat(chatId, text);
     if (messageId) sent.push({ chatId, messageId });
   }

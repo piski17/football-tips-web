@@ -480,7 +480,7 @@ app.post("/api/tips/:id/telegram", async (req, res) => {
       return;
     }
     const target =
-      req.body?.target === "premium" || req.body?.target === "vip" || req.body?.target === "both"
+      req.body?.target === "premium" || req.body?.target === "vip" || req.body?.target === "both" || req.body?.target === "free"
         ? req.body.target
         : "premium";
     const headerOverride = req.body?.asMatchOfWeek
@@ -517,7 +517,7 @@ app.post("/api/tips/:id/telegram-result", async (req, res) => {
       return;
     }
     const target =
-      req.body?.target === "premium" || req.body?.target === "vip" || req.body?.target === "both"
+      req.body?.target === "premium" || req.body?.target === "vip" || req.body?.target === "both" || req.body?.target === "free"
         ? req.body.target
         : "both";
     const sent = await sendTipResultToTelegram(tip, target);
@@ -710,7 +710,7 @@ app.post("/api/telegram/no-tip-today", async (req, res) => {
       return;
     }
     const target =
-      req.body?.target === "premium" || req.body?.target === "vip" || req.body?.target === "both"
+      req.body?.target === "premium" || req.body?.target === "vip" || req.body?.target === "both" || req.body?.target === "free"
         ? req.body.target
         : "both";
     const text =
@@ -769,7 +769,7 @@ app.post("/api/telegram/daily-results", async (req, res) => {
       typeof req.body?.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(req.body.day) ? req.body.day : dayKeySk(new Date());
     const force = req.body?.force === true;
     const target =
-      req.body?.target === "premium" || req.body?.target === "vip" || req.body?.target === "both"
+      req.body?.target === "premium" || req.body?.target === "vip" || req.body?.target === "both" || req.body?.target === "free"
         ? req.body.target
         : "both";
 
@@ -861,7 +861,7 @@ app.post("/api/telegram/weekly-report", async (req, res) => {
       `\n<i>Poctivá história – vrátane prehratých tipov.</i>`;
 
     const target =
-      req.body?.target === "premium" || req.body?.target === "vip" || req.body?.target === "both"
+      req.body?.target === "premium" || req.body?.target === "vip" || req.body?.target === "both" || req.body?.target === "free"
         ? req.body.target
         : "both";
     const sent = await sendCustomMessage(text, target);
@@ -973,7 +973,7 @@ app.post("/api/telegram/monthly-report", async (req, res) => {
     }
     const report = buildMonthlyReport(await listTips(), reportMonth(req.body?.month));
     const target =
-      req.body?.target === "premium" || req.body?.target === "vip" || req.body?.target === "both"
+      req.body?.target === "premium" || req.body?.target === "vip" || req.body?.target === "both" || req.body?.target === "free"
         ? req.body.target
         : "both";
     const sent = await sendCustomMessage(report.text, target);

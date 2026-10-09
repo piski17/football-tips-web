@@ -865,6 +865,7 @@ function askTelegramTarget() {
           <button class="btn-primary" id="tgChoicePremium">◆ PREMIUM kanál</button>
           <button class="btn-primary" id="tgChoiceVip">♛ VIP kanál</button>
           <button class="btn-ghost" id="tgChoiceBoth">Oba naraz</button>
+          <button class="btn-ghost" id="tgChoiceFree">○ FREE kanál (zadarmo)</button>
           <button class="btn-ghost" id="tgChoiceNone">Neposielať</button>
         </div>
       </div>
@@ -877,6 +878,7 @@ function askTelegramTarget() {
     overlay.querySelector("#tgChoicePremium").addEventListener("click", () => cleanup("premium"));
     overlay.querySelector("#tgChoiceVip").addEventListener("click", () => cleanup("vip"));
     overlay.querySelector("#tgChoiceBoth").addEventListener("click", () => cleanup("both"));
+    overlay.querySelector("#tgChoiceFree").addEventListener("click", () => cleanup("free"));
     overlay.querySelector("#tgChoiceNone").addEventListener("click", () => cleanup(null));
   });
 }
