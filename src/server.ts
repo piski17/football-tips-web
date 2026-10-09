@@ -483,13 +483,18 @@ app.post("/api/tips/:id/telegram", async (req, res) => {
       req.body?.target === "premium" || req.body?.target === "vip" || req.body?.target === "both" || req.body?.target === "free"
         ? req.body.target
         : "premium";
-    const headerOverride = req.body?.asMatchOfWeek
-      ? tip.legs && tip.legs.length > 0
-        ? `🌟 <b>TIKET TÝŽDŇA</b>`
-        : `🌟 <b>ZÁPAS TÝŽDŇA</b>`
-      : undefined;
-    const strong = isStrongTipOfDay(tip, tips);
-    const sent = await sendTipToTelegram(tip, target, headerOverride, strong);
+    // Ručne zvolený „Silný tip dňa“ z histórie tipov: ide do VIP a nahradí automatický výber v ten deň.
+    const forceStrong = req.body?.asStrongOfDay === true;
+    const isTicket = !!tip.legs && tip.legs.length > 0;
+    const headerOverride = forceStrong && isTicket ? `⭐ <b>SILNÝ TIKET DŇA</b>` : undefined;
+    const strong = forceStrong || isStrongTipOfDay(tip, tips);
+    if (forceStrong) {
+      const day = dayKeySk(new Date(tip.matchDate));
+      for (const t of tips) {
+        if (t.id !== tip.id && t.strongOfDay && dayKeySk(new Date(t.matchDate)) === day) await updateTip(t.id, { strongOfDay: false });
+      }
+    }
+    const sent = await sendTipToTelegram(tip, forceStrong ? "vip" : target, headerOverride, strong);
     if (sent.length > 0) {
       const existing = tip.telegramMessages ?? [];
       await updateTip(tip.id, { telegramMessages: [...existing, ...sent], ...(strong ? { strongOfDay: true } : {}) });
