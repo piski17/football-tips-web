@@ -1799,3 +1799,18 @@ details.low-value-list[open] > summary { margin-bottom: 6px; }
 .visits-day { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
 .visits-day i { display: block; width: 100%; min-height: 2px; background: var(--accent-strong, #C9A55C); border-radius: 2px 2px 0 0; }
 .visits-day span { font-size: 10.5px; color: var(--text-muted); }
+
+/* ---------- Úvodná obrazovka – väčšie logo a texty (9. 10. 2026) ---------- */
+.splash-radar { width: clamp(220px, 42vh, 340px); height: clamp(220px, 42vh, 340px); }
+.splash-word { margin-top: 36px; font-size: 80px; }
+.splash-tag { margin-top: 18px; font-size: 13px; gap: 14px; }
+.splash-tag i { width: 6px; height: 6px; }
+.splash-progress { width: min(380px, 80vw); margin-top: 48px; gap: 12px; }
+.splash-progress-track { height: 2px; }
+.splash-progress-row, .splash-progress-pct { font-size: 14px; }
+@media (max-width: 420px) {
+  .splash-radar { width: 240px; height: 240px; }
+  .splash-word { font-size: 54px; }
+  .splash-tag { font-size: 10.5px; letter-spacing: .18em; gap: 10px; }
+  .splash-progress-row, .splash-progress-pct { font-size: 13px; }
+}
