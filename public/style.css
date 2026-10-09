@@ -1814,3 +1814,7 @@ details.low-value-list[open] > summary { margin-bottom: 6px; }
   .splash-tag { font-size: 10.5px; letter-spacing: .18em; gap: 10px; }
   .splash-progress-row, .splash-progress-pct { font-size: 13px; }
 }
+
+/* ---------- Väčší točiaci sa radar po načítaní (9. 10. 2026) ---------- */
+.analysis-empty .empty-radar { width: clamp(220px, 42vh, 340px); height: clamp(220px, 42vh, 340px); }
+@media (max-width: 620px) { .analysis-empty .empty-radar { width: 240px; height: 240px; } }
