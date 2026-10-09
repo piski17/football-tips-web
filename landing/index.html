@@ -1604,5 +1604,37 @@
   }, true);
 })();
 </script>
+<script>
+/* Odkaz s #sekciou (napr. z Instagramu): stránka sa po načítaní dorovná presne pod menu,
+   aj keď sa medzitým načítajú obrázky, písma a čísla. Keď človek sám začne posúvať, prestane. */
+(function () {
+  var id = decodeURIComponent((location.hash || "").slice(1));
+  if (!id || !document.getElementById(id)) return;
+  if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+  var stop = false, until = Date.now() + 4000;
+  function align() {
+    if (stop || Date.now() > until) return;
+    var el = document.getElementById(id), nav = document.querySelector(".nav");
+    if (!el) return;
+    var navH = nav ? nav.getBoundingClientRect().height : 0;
+    var y = window.scrollY + el.getBoundingClientRect().top - navH;
+    if (Math.abs(window.scrollY - y) > 2) {
+      var root = document.documentElement, prev = root.style.scrollBehavior;
+      root.style.scrollBehavior = "auto"; window.scrollTo(0, y); root.style.scrollBehavior = prev;
+    }
+  }
+  ["touchstart", "wheel", "keydown", "mousedown"].forEach(function (ev) {
+    window.addEventListener(ev, function () { stop = true; }, { passive: true, once: true });
+  });
+  align();
+  window.addEventListener("load", align);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(align);
+  if (window.ResizeObserver) {
+    var ro = new ResizeObserver(align); ro.observe(document.body);
+    setTimeout(function () { ro.disconnect(); }, 4100);
+  }
+  [150, 500, 1000, 2000, 3000].forEach(function (t) { setTimeout(align, t); });
+})();
+</script>
 </body>
 </html>
