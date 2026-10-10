@@ -869,7 +869,8 @@ h2 { font-size: 22px; }
     const rowH = Math.min(100, Math.floor((bottom - top) / Math.max(1, list.length)));
     const yEnd = tipList(list, L, R, top, list.length, rowH, rowH >= 90);
     if (i < total - 1) moreLine(R, yEnd + 44, 26, 'right', i === total - 2);
-    storyCta(W, 1330);
+    // Výzva so šípkou (miesto na nálepku s odkazom) len na poslednom obrázku.
+    if (i === total - 1) storyCta(W, 1330);
     footer(1690, L, R, false);
   }
   function drawPost(i, pages) {
