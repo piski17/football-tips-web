@@ -749,7 +749,7 @@
   html.menu-open .jump { display: none; }
   @media (max-width: 640px) { .jump { right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); width: 44px; height: 44px; } }
 </style>
-<style>.kurz-back{padding-top:28px}.kurz-back a{color:var(--gold-hi);text-decoration:none;font-size:14px;letter-spacing:.04em}.kurz-back a:hover{text-decoration:underline}.kurz-page .skola{padding-top:36px}</style>
+<style>.kurz-bar .wrap{justify-content:space-between}.kurz-home{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 16px;border:1px solid var(--gold);border-radius:2px;color:var(--gold-hi);font:600 11px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;text-decoration:none;white-space:nowrap;transition:background .2s}.kurz-home:hover{background:rgba(201,165,92,.12)}.kurz-home svg{width:16px;height:16px}.kurz-page .skola{padding-top:56px}@media (max-width:640px){.kurz-page .skola{padding-top:32px}}</style>
 </head>
 <body>
 
@@ -757,33 +757,14 @@
   <symbol id="logo" viewBox="0 0 200 200"><circle cx="100" cy="100" r="92" fill="#141416"/><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#C9A55C" fill-opacity=".32"/><line x1="100" y1="100" x2="162.2" y2="37.8" stroke="#C9A55C" stroke-width="7" stroke-linecap="round"/><circle cx="100" cy="100" r="92" fill="none" stroke="#C9A55C" stroke-width="8"/><circle cx="100" cy="100" r="58" fill="none" stroke="#C9A55C" stroke-opacity=".5" stroke-width="4"/><circle cx="100" cy="100" r="9" fill="#E8D3A0"/></symbol>
 </svg>
 
-<nav class="nav" aria-label="Hlavná navigácia">
+<nav class="nav kurz-bar" aria-label="Kurz">
   <div class="wrap">
     <a class="brand" href="/"><svg aria-hidden="true"><use href="#logo"/></svg>TipRadar</a>
-    <div class="nav-social">
-      <a href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener" aria-label="Telegram – TipRadar bot" title="Telegram"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 4.2 2.9 11.4c-1.3.5-1.3 1.2-.2 1.6l4.8 1.5 1.8 5.6c.2.6.4.8.8.8.4 0 .6-.2.9-.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.8-1.3-1.5Zm-4 3.4-8.6 7.8-.3 3.4-1.6-5 10.2-6.4c.5-.3.9 0 .3.2Z" fill="currentColor"/></svg></a>
-      <a href="https://www.instagram.com/tipradar.eu/" target="_blank" rel="noopener" aria-label="Instagram – tipradar.eu" title="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.4" cy="6.6" r="1.3" fill="currentColor"/></svg></a>
-      <a href="mailto:info@tipradar.eu" aria-label="E-mail info@tipradar.eu" title="info@tipradar.eu"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="m4 7 8 6 8-6" fill="none" stroke="currentColor" stroke-width="2"/></svg></a>
-    </div>
-    <a class="nav-kurz" href="/kurz" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5c-.8 0-1.5.5-1.5 1.2V5.5ZM20 5.5c0-.8-.7-1.5-1.5-1.5H13v15h5.5c.8 0 1.5.5 1.5 1.2V5.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>Kurz</a>
-    <a class="nav-free" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 4.2 2.9 11.4c-1.3.5-1.3 1.2-.2 1.6l4.8 1.5 1.8 5.6c.2.6.4.8.8.8.4 0 .6-.2.9-.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.8-1.3-1.5Zm-4 3.4-8.6 7.8-.3 3.4-1.6-5 10.2-6.4c.5-.3.9 0 .3.2Z" fill="currentColor"/></svg>Tipy zadarmo</a>
-    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="navLinks"><i aria-hidden="true"></i>Menu</button>
-    <div class="nav-links" id="navLinks">
-      <a class="nav-free-link" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 4.2 2.9 11.4c-1.3.5-1.3 1.2-.2 1.6l4.8 1.5 1.8 5.6c.2.6.4.8.8.8.4 0 .6-.2.9-.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.8-1.3-1.5Zm-4 3.4-8.6 7.8-.3 3.4-1.6-5 10.2-6.4c.5-.3.9 0 .3.2Z" fill="currentColor"/></svg>Tipy zadarmo na Telegrame</a>
-      <a href="/#ako">Ako vzniká tip</a>
-      <a href="/#vysledky">Výsledky</a>
-      <a href="/#kto">O mne</a>
-      <a href="/#clenstvo">Členstvo</a>
-      <a href="/kurz" class="active" aria-current="page">Kurz</a>
-      <a href="/#otazky">Otázky</a>
-      <a href="/#zapis" class="nav-form">Formulár</a>
-      <a href="/video" class="nav-tg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>Video</a>
-    </div>
+    <a class="kurz-home" href="/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Späť na stránku</a>
   </div>
 </nav>
 
 <main id="top" class="kurz-page">
-  <div class="wrap kurz-back"><a href="/">← Späť na TipRadar</a></div>
   <div class="lb" id="skolaLb" role="dialog" aria-modal="true" aria-label="Ukážka z kurzu" hidden>
     <button class="lb-close" type="button" aria-label="Zavrieť"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     <div class="lb-track"></div>
@@ -884,7 +865,7 @@
   document.addEventListener("touchmove", (e) => { if (nav.classList.contains("open") && !e.target.closest(".nav-links")) e.preventDefault(); }, { passive: false });
   // klik mimo menu ho zavrie
   document.addEventListener("click", (e) => { if (nav.classList.contains("open") && !e.target.closest(".nav")) setOpen(false); });
-  tog.addEventListener("click", () => setOpen(!nav.classList.contains("open")));
+  if (tog) tog.addEventListener("click", () => setOpen(!nav.classList.contains("open")));
   document.querySelectorAll(".nav-links a").forEach((a) => a.addEventListener("click", () => setOpen(false)));
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") setOpen(false); });
 
