@@ -204,7 +204,7 @@ h2 { font-size: 22px; }
     </div>
   </header>
   <h1>Denný súhrn výsledkov</h1>
-  <p class="lead">Každý deň zapíš tipy a tikety, ktoré si poslal, a po zápasoch označ, ako dopadli. Úspešnosť, zisk a ROI sa vypočítajú samé (1 jednotka na každý tip). Obrázky stiahneš ako príbeh na Instagram (1080×1920). Šípkami pod tipmi sa presunieš na iný deň, každý deň má vlastné tipy.</p>
+  <p class="lead">Každý deň zapíš tipy a tikety, ktoré si poslal, a po zápasoch označ, ako dopadli. Úspešnosť, zisk a ROI sa vypočítajú samé (1 jednotka na každý tip). Obrázok stiahneš ako príbeh (1080×1920) alebo príspevok (1080×1350). Šípkami pod tipmi sa presunieš na iný deň, každý deň má vlastné tipy.</p>
 
   <div class="layout">
     <div>
@@ -278,18 +278,13 @@ h2 { font-size: 22px; }
         <div class="actions"><label class="btn" for="importFile" style="cursor:pointer">Nahrať zálohu (.json)</label><input type="file" id="importFile" accept="application/json,.json" hidden></div>
         <div class="status" id="importStatus" role="status"></div>
       </div>
-      <div class="panel">
-        <h2>Popisok na Instagram</h2>
-        <textarea id="caption" aria-label="Popisok na Instagram"></textarea>
-        <div class="actions"><button class="btn" id="copy">Kopírovať popisok</button></div>
-        <div class="status" id="copyStatus" role="status"></div>
-      </div>
     </div>
 
     <div class="preview story" id="previewBox">
       <div class="panel">
         <div class="seg" role="group" aria-label="Formát obrázka">
           <button type="button" data-f="story" aria-pressed="true">Príbeh 1080×1920</button>
+          <button type="button" data-f="post" aria-pressed="false">Príspevok 1080×1350</button>
         </div>
         <canvas id="cv" width="1080" height="1920" aria-label="Náhľad obrázka na Instagram"></canvas>
         <div class="pages" id="pages" role="group" aria-label="Obrázky súhrnu" hidden></div>
@@ -924,7 +919,6 @@ h2 { font-size: 22px; }
 
   // ---------- popisok ----------
   let captionTouched = false;
-  $('caption').oninput = () => { captionTouched = true; };
   function caption() {
     const s = stats();
     if (!s.settled) return 'Výsledky dňa ' + fmtDay(day) + '\n\nOznač výsledky tipov a popisok sa vygeneruje sám.';
@@ -953,16 +947,10 @@ h2 { font-size: 22px; }
     setSigned($('sProfit'), s.roi == null ? null : s.profit, (v) => sign(v, nf(Math.abs(v), 1)));
     setSigned($('sRoi'), s.roi, (v) => sign(v, Math.round(Math.abs(v) * 100) + ' %'));
     renderTotals();
-    if (!captionTouched) $('caption').value = caption();
     draw();
   }
   function update() { save(); refresh(); }
 
-  $('copy').onclick = async () => {
-    const ta = $('caption');
-    try { await navigator.clipboard.writeText(ta.value); $('copyStatus').textContent = 'Popisok skopírovaný.'; }
-    catch (e) { ta.focus(); ta.select(); $('copyStatus').textContent = 'Text je označený, skopíruj ho cez Kopírovať (Ctrl/Cmd + C).'; }
-  };
 
   // ---------- stiahnutie ----------
   $('dl').onclick = async () => {
