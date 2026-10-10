@@ -494,7 +494,7 @@
   .nav-links a.nav-free-link svg { width: 15px; height: 15px; }
   @media (max-width: 760px) { .nav-free { display: none; } }
   /* v menu len v telefóne – na počítači je tlačidlo vedľa Menu */
-  @media (min-width: 761px) { .nav-links a.nav-free-link { display: none; } }
+  @media (min-width: 761px) { .nav-links a.nav-free-link, .nav-links a.nav-kurz-link { display: none; } }
   /* ---------- mobil: menu a menšie písmo ---------- */
   .nav { background: var(--bg); }
   .nav-toggle { display: none; margin-left: auto; align-items: center; gap: 10px; min-height: 40px; padding: 0 14px; border: 1px solid var(--rule-gold); border-radius: 2px; background: none; color: var(--gold-hi); font: 600 11px/1 var(--sans); letter-spacing: .2em; text-transform: uppercase; cursor: pointer; }
@@ -776,7 +776,7 @@
       <a href="#vysledky">Výsledky</a>
       <a href="#kto">O mne</a>
       <a href="#clenstvo">Členstvo</a>
-      <a href="/kurz">Kurz</a>
+      <a class="nav-kurz-link" href="/kurz">Kurz</a>
       <a href="#otazky">Otázky</a>
       <a href="#zapis" class="nav-form">Formulár</a>
       <a href="/video" class="nav-tg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>Video</a>
