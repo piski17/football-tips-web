@@ -777,17 +777,13 @@ h2 { font-size: 22px; }
 
   // Veľa tipov v jeden deň: súhrn sa rozdelí na viac obrázkov (na Instagrame viac snímok
   // príbehu alebo karusel). Prvý obrázok má výsledok dňa a prvé tipy, ďalšie len zvyšné tipy.
-  const PER_PAGE = { story: [6, 8], post: [8, 10] };
+  const PER_PAGE = { story: [5, 5], post: [5, 5] };
   let page = 0;
   function pagesOf(list) {
-    const [first, rest] = PER_PAGE[format], n = list.length;
-    if (n <= first) return [list];
-    const count = 1 + Math.ceil((n - first) / rest);
-    const per = Math.ceil(n / count), f = Math.min(first, per);
-    const out = [list.slice(0, f)], left = list.slice(f), k = count - 1;
-    const each = Math.ceil(left.length / k);
-    for (let i = 0; i < k; i++) out.push(left.slice(i * each, (i + 1) * each));
-    return out.filter((p) => p.length);
+    // Po 5 tipov na každý obrázok, posledný môže mať menej.
+    const [first, rest] = PER_PAGE[format], out = [list.slice(0, first)];
+    for (let i = first; i < list.length; i += rest) out.push(list.slice(i, i + rest));
+    return out;
   }
   function pageTag(x, y, i, total, align) {
     if (total < 2) return;

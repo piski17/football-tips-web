@@ -765,6 +765,7 @@
     <div class="nav-links" id="navLinks">
       <a class="nav-free-link" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 4.2 2.9 11.4c-1.3.5-1.3 1.2-.2 1.6l4.8 1.5 1.8 5.6c.2.6.4.8.8.8.4 0 .6-.2.9-.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.8-1.3-1.5Zm-4 3.4-8.6 7.8-.3 3.4-1.6-5 10.2-6.4c.5-.3.9 0 .3.2Z" fill="currentColor"/></svg>Tipy zadarmo na Telegrame</a>
       <a href="#ako">Ako vzniká tip</a>
+      <a href="#hodnota">Hodnota</a>
       <a href="#vysledky">Výsledky</a>
       <a href="#kto">O mne</a>
       <a href="#clenstvo">Členstvo</a>
@@ -835,9 +836,36 @@
     </div>
   </section>
 
+  <section class="sec alt" id="hodnota">
+    <div class="wrap split">
+      <div>
+        <div class="eyebrow"><b>II.</b>Hodnota</div>
+        <h2>Kedy má tip hodnotu</h2>
+        <p>Keď model dáva výsledku 68&nbsp;% a kurz je 1,75, z každého eura sa v priemere vráti 0,68 × 1,75 = 1,19 €. To je hodnota +19&nbsp;%. Pri kurze 1,45 by to bolo 0,68 × 1,45 = 0,99 €, teda −1&nbsp;%, a tip by sme neposlali.</p>
+        <p>Skúste si to sami posunutím oboch čísel.</p>
+      </div>
+      <div class="calc">
+        <div>
+          <label for="pRange"><span>Šanca podľa modelu</span><b class="num" id="pOut">68&nbsp;%</b></label>
+          <input type="range" id="pRange" min="50" max="90" step="1" value="68" />
+        </div>
+        <div>
+          <label for="oRange"><span>Kurz stávkovej kancelárie</span><b class="num" id="oOut">1,75</b></label>
+          <input type="range" id="oRange" min="1.2" max="2.6" step="0.01" value="1.75" />
+        </div>
+        <div class="verdict" aria-live="polite">
+          <div class="v num" id="vVal">+19&nbsp;%</div>
+          <div class="math" id="vMath"></div>
+          <ul class="checks" id="vChecks"></ul>
+          <div class="v-out" id="vOut"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="sec" id="vysledky">
     <div class="wrap">
-      <div class="eyebrow"><b>II.</b>Overené výsledky</div>
+      <div class="eyebrow"><b>III.</b>Overené výsledky</div>
       <h2>Výsledky</h2>
       <p class="muted" style="margin-top:16px;max-width:62ch">Čísla sa načítavajú priamo z TipRadaru. Každý tip sa vyhodnotí podľa skutočného výsledku zápasu. Tipy na zápasy, ktoré sa ešte nehrali, vidia len členovia.</p>
 
@@ -899,7 +927,7 @@
 
   <section class="sec" id="clenstvo">
     <div class="wrap">
-      <div class="eyebrow"><b>III.</b>Členstvo</div>
+      <div class="eyebrow"><b>IV.</b>Členstvo</div>
       <h2>Dva spôsoby, ako sa pridať</h2>
       <p class="muted" style="margin-top:16px;max-width:62ch">Každý tip má kurz, šancu podľa modelu aj dôvod. Prehraté tipy nemažeme a každý týždeň zverejňujeme úspešnosť. Čím dlhšie členstvo, tým nižšia cena za mesiac. Predaj zatiaľ nebeží, zápis do poradovníka prebehne cez Telegram. Kto sa zapíše teraz, dostane zakladajúcu cenu a ostane mu, kým členstvo nepreruší.</p>
       <div class="term-switch" role="tablist" aria-label="Dĺžka členstva">
@@ -956,7 +984,7 @@
 
   <section class="sec alt" id="otazky">
     <div class="wrap split">
-      <div><div class="eyebrow"><b>IV.</b>Otázky</div><h2>Čo sa ľudia pýtajú</h2></div>
+      <div><div class="eyebrow"><b>V.</b>Otázky</div><h2>Čo sa ľudia pýtajú</h2></div>
       <div class="faq">
         <details><summary>Kedy a kam tipy prídu?</summary><p>Do súkromného kanála na Telegrame, 2 – 3 hodiny pred výkopom zápasu. Večer, keď sa zápasy dohrajú, príde vyhodnotenie dňa.</p></details>
         <details><summary>Koľko tipov denne dostanem?</summary><p>Toľko, koľko prejde pravidlami. Niekedy jeden, inokedy viac. Keď neprejde žiadny, nepošleme nič a dáme vám vedieť.</p></details>
@@ -973,7 +1001,7 @@
   <section class="sec" id="zapis">
     <div class="wrap join">
       <div>
-        <div class="eyebrow"><b>V.</b>Formulár</div>
+        <div class="eyebrow"><b>VI.</b>Formulár</div>
         <h2>Nenašli ste odpoveď?</h2>
         <p>Napíšte mi, čo vás zaujíma o modeli, tipoch alebo členstve. Odpoviem vám osobne na e-mail.</p>
       </div>
@@ -1111,6 +1139,23 @@
   const row = (r) => `<li><span class="d num">${dayLabel(r.day)}</span><span class="m">${esc(r.match)}<span class="b">${esc(r.bet)}</span></span><span class="o num">${r.odds ? fmt(r.odds, 2) : ""}</span><span class="r ${esc(r.status)}">${RES[r.status] || ""}</span></li>`;
   const paintRange = (el) => el.style.setProperty("--fill", ((el.value - el.min) / (el.max - el.min)) * 100 + "%");
 
+
+  // ---------- hodnota ----------
+  let MIN_ODDS = 1.5;
+  function drawValue() {
+    const p = Number($("pRange").value), o = Number($("oRange").value);
+    paintRange($("pRange")); paintRange($("oRange"));
+    const ret = (p / 100) * o, value = Math.round((ret - 1) * 100);
+    $("pOut").textContent = `${p} %`; $("oOut").textContent = fmt(o, 2);
+    $("vVal").textContent = `${value > 0 ? "+" : value < 0 ? "−" : ""}${Math.abs(value)} %`;
+    $("vVal").className = "v num " + cls(value);
+    $("vMath").textContent = `${fmt(p / 100, 2)} × ${fmt(o, 2)} = ${fmt(ret, 2)}`;
+    const band = p >= 68 && p <= 80, val = value >= 5, odd = o >= MIN_ODDS - 1e-9;
+    $("vChecks").innerHTML = `<li class="${band ? "ok" : "no"}">šanca v pásme 68 – 80 %</li><li class="${val ? "ok" : "no"}">hodnota aspoň +5 %</li><li class="${odd ? "ok" : "no"}">kurz aspoň ${fmt(MIN_ODDS, 2)}</li>`;
+    $("vOut").innerHTML = band && val && odd ? `<span class="pos">Taký tip by sme poslali.</span>` : `<span class="neg">Taký tip by sme neposlali.</span>`;
+  }
+  $("pRange").addEventListener("input", drawValue); $("oRange").addEventListener("input", drawValue);
+  drawValue();
 
   // ---------- graf: ako rástol zisk (súčet jednotiek od začiatku) ----------
   function drawChart(tl) {
@@ -1455,9 +1500,8 @@
 /* Odkaz s #sekciou (napr. z Instagramu): stránka sa po načítaní dorovná presne pod menu,
    aj keď sa medzitým načítajú obrázky, písma a čísla. Keď človek sám začne posúvať, prestane. */
 (function () {
-  // Staré odkazy: kurz má vlastnú stránku, sekcia Hodnota už nie je.
+  // Starý odkaz: kurz má vlastnú stránku.
   if (location.hash === "#skola") { location.replace("/kurz"); return; }
-  if (location.hash === "#hodnota") history.replaceState(null, "", location.pathname + location.search + "#ako");
   var id = decodeURIComponent((location.hash || "").slice(1));
   if (!id || !document.getElementById(id)) return;
   if ("scrollRestoration" in history) history.scrollRestoration = "manual";
