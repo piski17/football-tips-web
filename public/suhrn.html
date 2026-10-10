@@ -829,9 +829,9 @@ h2 { font-size: 22px; }
     if (total < 2) return;
     ctx.font = F(600, 26); ctx.fillStyle = C.gold; ctx.textAlign = align; ctx.fillText((i + 1) + ' / ' + total, x, y); ctx.textAlign = 'left';
   }
-  function moreLine(x, y, size, align) {
+  function moreLine(x, y, size, align, last) {
     ctx.font = F(500, size); ctx.fillStyle = C.gold; ctx.textAlign = align;
-    ctx.fillText('Ďalšie tipy na ďalšej snímke  →', x, y); ctx.textAlign = 'left';
+    ctx.fillText(last ? 'Ďalšie tipy a vyhodnotenie na ďalšej snímke  →' : 'Ďalšie tipy na ďalšej snímke  →', x, y); ctx.textAlign = 'left';
   }
   function storyCta(W, ctaY) {
     const a = 'Tipy dostávajú členovia ', b = 'ešte pred zápasom';
@@ -852,8 +852,9 @@ h2 { font-size: 22px; }
     ctx.fillText('Výsledky dňa · ' + fmtDay(day), L, 392);
     // Tipy sa vždy zmestia do pevného priestoru (končí na 1270 px), aby výzva, šípka
     // a „18+" boli na každom obrázku na rovnakom mieste a pod šípkou ostalo miesto na nálepku.
+    // Vyhodnotenie dňa (koľko vyšlo, úspešnosť, zisk) je na poslednom obrázku – v príbehu ho ľudia uvidia na konci.
     let top;
-    if (i === 0) {
+    if (i === total - 1) {
       ctx.fillStyle = C.text; ctx.font = S(600, 112);
       ctx.fillText(fit(headline(s), R - L, S(600, 112)), L, 500);
       if (s.pending) { ctx.fillStyle = C.muted; ctx.font = F(400, 28); ctx.fillText('⏳ Ešte sa hrá: ' + s.pending, L, 552); }
@@ -861,13 +862,13 @@ h2 { font-size: 22px; }
       top = 790;
     } else {
       ctx.fillStyle = C.text; ctx.font = S(600, 84);
-      ctx.fillText('Ďalšie tipy', L, 488);
+      ctx.fillText(i === 0 ? 'Tipy dňa' : 'Ďalšie tipy', L, 488);
       top = 540;
     }
     const bottom = 1270 - (i < total - 1 ? 50 : 0);
     const rowH = Math.min(100, Math.floor((bottom - top) / Math.max(1, list.length)));
     const yEnd = tipList(list, L, R, top, list.length, rowH, rowH >= 90);
-    if (i < total - 1) moreLine(R, yEnd + 44, 26, 'right');
+    if (i < total - 1) moreLine(R, yEnd + 44, 26, 'right', i === total - 2);
     storyCta(W, 1330);
     footer(1690, L, R, false);
   }
@@ -877,20 +878,20 @@ h2 { font-size: 22px; }
     ctx.textAlign = 'left'; ctx.fillStyle = C.gold; ctx.font = F(500, 28);
     ctx.fillText('Výsledky dňa · ' + fmtDay(day), L, 150);
     let top;
-    if (i === 0) {
+    if (i === total - 1) {
       ctx.fillStyle = C.text; ctx.font = S(600, 88);
       ctx.fillText(fit(headline(s), R - L, S(600, 88)), L, 240);
       statBoxes(s, L, R, 300, 150, 23, 54);
       top = 510;
     } else {
       ctx.fillStyle = C.text; ctx.font = S(600, 72);
-      ctx.fillText('Ďalšie tipy', L, 232);
+      ctx.fillText(i === 0 ? 'Tipy dňa' : 'Ďalšie tipy', L, 232);
       top = 290;
     }
     const bottom = 1210 - (i < total - 1 ? 40 : 0);
     const rowH = Math.min(92, Math.floor((bottom - top) / Math.max(1, list.length)));
     const yEnd = tipList(list, L, R, top, list.length, rowH, false);
-    if (i < total - 1) moreLine(R, yEnd + 40, 24, 'right');
+    if (i < total - 1) moreLine(R, yEnd + 40, 24, 'right', i === total - 2);
     footer(1290, L, R, true);
     mark(R - 22, 140, 22);
     pageTag(R - 60, 150, i, total, 'right');
