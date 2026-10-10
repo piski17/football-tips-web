@@ -216,10 +216,12 @@ h2 { font-size: 22px; }
 
         <div class="rows" id="rows"></div>
         <div class="actions">
+          <button class="btn" id="fromHistory" title="Doplní tipy tohto dňa z Histórie tipov aj s kurzom a výsledkom">⤓ Načítať z Histórie tipov</button>
           <button class="btn" id="add">+ Pridať tip</button>
           <button class="btn" id="sortTime" title="Zoradiť tipy podľa času výkopu">⇅ Zoradiť podľa času</button>
           <button class="btn" id="clear">Vymazať tento deň</button>
         </div>
+        <div class="status" id="histStatus" role="status"></div>
 
         <div class="daynav" aria-label="Posun medzi dňami">
           <button class="btn arrow" id="prevDay" aria-label="Predchádzajúci deň" title="Predchádzajúci deň">‹</button>
@@ -546,7 +548,7 @@ h2 { font-size: 22px; }
     if (!d || d === day) return;
     clearTimeout(cloudTimer);
     if (pendingLocal) push(day); // rozpísanú zmenu uložíme hneď
-    day = d;
+    day = d; $('histStatus').textContent = '';
     state = loadLocal(day);
     captionTouched = false;
     renderRows(); refresh();
@@ -648,6 +650,44 @@ h2 { font-size: 22px; }
       document.addEventListener('pointercancel', onUp);
     });
   }
+  // ---- Tipy dňa z Histórie tipov: čas, zápas, tip, kurz aj výsledok sa doplnia samé ----
+  const skDay = (iso) => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Bratislava' }).format(new Date(iso));
+  const skTime = (iso) => new Intl.DateTimeFormat('sk-SK', { timeZone: 'Europe/Bratislava', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(iso));
+  const skText = (x) => String(x || '').replace(/\bOver (\d+(?:\.\d+)?)/g, (_m, n) => 'Nad ' + n).replace(/\bUnder (\d+(?:\.\d+)?)/g, (_m, n) => 'Pod ' + n).replace(/(\d)\.(\d)/g, '$1,$2');
+  function fromSaved(t) {
+    const legs = Array.isArray(t.legs) ? t.legs : [];
+    const dates = legs.length ? legs.map((l) => l.matchDate) : [t.matchDate];
+    const first = dates.slice().sort()[0], last = dates.slice().sort().pop();
+    const odds = typeof t.odds === 'number' && t.odds > 1 ? t.odds.toFixed(2).replace('.', ',') : '';
+    const match = legs.length ? 'Tiket · ' + legs.length + (legs.length < 5 ? ' zápasy' : ' zápasov') : t.homeTeam + ' – ' + t.awayTeam;
+    const tip = legs.length ? legs.map((l) => l.homeTeam + ' – ' + l.awayTeam).join(', ') : skText(t.market + ': ' + t.selection);
+    return { day: skDay(last), row: { time: skTime(first), match, tip, odds, result: ['won', 'lost', 'void'].includes(t.status) ? t.status : '' } };
+  }
+  $('fromHistory').onclick = async () => {
+    const btn = $('fromHistory'); btn.disabled = true;
+    try {
+      const r = await api('GET', '/api/tips');
+      if (r.status !== 200 || !Array.isArray(r.data)) throw new Error();
+      const found = r.data.map(fromSaved).filter((x) => x.day === day).map((x) => x.row);
+      if (!found.length) { $('histStatus').textContent = 'V Histórii tipov nie je na ' + fmtDay(day) + ' žiadny tip.'; return; }
+      const key = (t) => (t.match + '|' + t.tip).toLowerCase();
+      let added = 0, updated = 0;
+      for (const n of found) {
+        const old = state.tips.find((t) => key(t) === key(n));
+        if (old) { if (n.result && old.result !== n.result) { old.result = n.result; updated++; } if (!old.odds && n.odds) old.odds = n.odds; if (!old.time) old.time = n.time; continue; }
+        const empty = state.tips.findIndex((t) => !filled(t) && !t.time);
+        if (empty >= 0) state.tips[empty] = n; else state.tips.push(n);
+        added++;
+      }
+      state.tips = state.tips.filter(filled);
+      if (!state.tips.length) state.tips.push(blank());
+      state.tips.sort((a, b) => (a.time || '99').localeCompare(b.time || '99'));
+      renderRows(); update();
+      $('histStatus').textContent = 'Z Histórie tipov: pridané ' + added + (updated ? ', doplnené výsledky ' + updated : '') + '.';
+    } catch (e) {
+      $('histStatus').textContent = 'Históriu tipov sa nepodarilo načítať. Skús obnoviť stránku.';
+    } finally { btn.disabled = false; }
+  };
   $('add').onclick = () => { state.tips.push(blank()); renderRows(); update(); rowsEl.lastChild.querySelector('input.m').focus(); };
   $('sortTime').onclick = () => {
     // Najskôr tipy s časom (od najskoršieho), potom tipy bez času, prázdne riadky na koniec.
