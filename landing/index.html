@@ -485,6 +485,8 @@
   .nav-kurz:hover, .nav-kurz[aria-current="page"] { background: rgba(201,165,92,.12); }
   .nav-kurz svg { width: 15px; height: 15px; }
   @media (max-width: 760px) { .nav-kurz { display: none; } }
+  /* Kurz, Tipy zadarmo a Menu tesne vedľa seba (lišta má medzi prvkami 32 px) */
+  @media (min-width: 761px) { .nav-kurz { margin-right: 0; } .nav-free { margin-right: 0; } .nav .nav-kurz + .nav-free, .nav .nav-free + .nav-toggle { margin-left: -22px; } }
   .nav-free:hover { filter: brightness(1.08); }
   .nav-free svg { width: 15px; height: 15px; }
   .nav-free + .nav-toggle { margin-left: 0; }
