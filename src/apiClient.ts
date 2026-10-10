@@ -167,6 +167,9 @@ function mapFixture(item: any): Fixture {
 // Stavy zápasu, ktoré považujeme za "skončené" - takéto zápasy sa v zozname
 // dnešných zápasov už nezobrazujú (FT = koniec, AET = po predĺžení, PEN = po penaltách).
 const FINISHED_STATUSES = ["FT", "AET", "PEN"];
+// Nedohrané zápasy tiež zmiznú: ABD = prerušený a nedohraný (napr. pre výtržnosti),
+// CANC = zrušený, PST = odložený, AWD = kontumácia, WO = súper nenastúpil.
+const NOT_PLAYED_STATUSES = ["ABD", "CANC", "PST", "AWD", "WO"];
 
 export async function getFixturesByLeague(
   leagueId: number,
@@ -182,7 +185,7 @@ export async function getFixturesByLeague(
 
   const all = (res.data?.response ?? [])
     .map((item: any) => mapFixture(item))
-    .filter((f: Fixture) => !FINISHED_STATUSES.includes(f.status));
+    .filter((f: Fixture) => !FINISHED_STATUSES.includes(f.status) && !NOT_PLAYED_STATUSES.includes(f.status));
 
   return all.sort((a: Fixture, b: Fixture) => a.timestamp - b.timestamp).slice(0, limitCount);
 }

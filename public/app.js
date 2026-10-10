@@ -2203,6 +2203,8 @@ function renderDayTips() {
         odds: bet.odds ?? null,
         savedAt: new Date().toISOString(),
         status: "pending",
+        // V Tipoch dňa označený ⭐ Silný tip dňa si značku nesie aj do Histórie tipov.
+        ...(Number(btn.dataset.save) === strongIdx ? { strongOfDay: true } : {}),
       };
       btn.disabled = true;
       try {

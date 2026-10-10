@@ -276,6 +276,7 @@ export interface SavedTip {
   awayTeamLogo?: string;
   /** Tip bol vo VIP kanáli odoslaný ako „⭐ Silný tip dňa“ (najviac jeden za deň). */
   strongOfDay?: boolean;
+  sentFree?: boolean; // tip bol poslaný do bezplatného kanála – ukáže sa na tipradar.eu ako „Tip zadarmo“
 }
 
 export interface LeaguePreset {

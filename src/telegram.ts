@@ -171,6 +171,11 @@ export function translateNamesInText(text: string | undefined, homeOriginal: str
 
 export type TelegramTarget = "premium" | "vip" | "both" | "free";
 
+/** Je to správa v bezplatnom kanáli? (aj pre tipy poslané skôr, než sa začal ukladať príznak sentFree) */
+export function isFreeChat(chatId: string | number): boolean {
+  return !!TELEGRAM_CHAT_ID_FREE && String(chatId) === String(TELEGRAM_CHAT_ID_FREE);
+}
+
 export function isTelegramEnabled(): boolean {
   return Boolean(TELEGRAM_BOT_TOKEN && (TELEGRAM_CHAT_ID_PREMIUM || TELEGRAM_CHAT_ID_VIP || TELEGRAM_CHAT_ID_FREE));
 }

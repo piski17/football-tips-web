@@ -464,6 +464,12 @@
   .last-tip { display: block; margin-top: 36px; max-width: 46ch; padding: 18px 22px; border: 1px solid var(--rule-gold); border-left: 2px solid var(--gold); background: var(--bg-2); text-decoration: none; color: var(--text); transition: background .2s; }
   .last-tip:hover { background: #18181b; }
   .last-tip[hidden] { display: none; }
+  .free-tip { cursor: default; }
+  .free-tip:hover { background: var(--bg-2); }
+  .free-tip + .last-tip { margin-top: 14px; }
+  .free-tip .lt-res.pending { color: var(--gold-hi); border: 1px solid var(--rule-gold); }
+  .free-tip .ft-cta { display: inline-block; margin-top: 12px; color: var(--gold-hi); font-size: 14px; font-weight: 600; text-decoration: none; }
+  .free-tip .ft-cta:hover { text-decoration: underline; }
   .last-tip .lt-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--gold-hi); }
   .last-tip .lt-res { font: 600 11px/1 var(--sans); letter-spacing: .14em; padding: 6px 9px; border-radius: 2px; white-space: nowrap; }
   .last-tip .lt-res.won { color: var(--win); border: 1px solid rgba(127,191,154,.5); background: rgba(127,191,154,.1); }
@@ -759,11 +765,10 @@
     <div class="nav-links" id="navLinks">
       <a class="nav-free-link" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 4.2 2.9 11.4c-1.3.5-1.3 1.2-.2 1.6l4.8 1.5 1.8 5.6c.2.6.4.8.8.8.4 0 .6-.2.9-.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.8-1.3-1.5Zm-4 3.4-8.6 7.8-.3 3.4-1.6-5 10.2-6.4c.5-.3.9 0 .3.2Z" fill="currentColor"/></svg>Tipy zadarmo na Telegrame</a>
       <a href="#ako">Ako vzniká tip</a>
-      <a href="#hodnota">Hodnota</a>
       <a href="#vysledky">Výsledky</a>
       <a href="#kto">O mne</a>
       <a href="#clenstvo">Členstvo</a>
-      <a href="#skola">Kurz</a>
+      <a href="/kurz">Kurz</a>
       <a href="#otazky">Otázky</a>
       <a href="#zapis" class="nav-form">Formulár</a>
       <a href="/video" class="nav-tg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>Video</a>
@@ -782,12 +787,6 @@
           <a class="btn" href="#clenstvo">Zapísať sa do poradovníka</a>
           <a class="btn btn-ghost" href="#vysledky">Pozrieť výsledky</a>
         </div>
-        <a class="last-tip" id="lastTip" href="#vysledky" hidden>
-          <div class="lt-head"><span id="ltLabel">Včerajší tip</span><b class="lt-res" id="ltRes"></b></div>
-          <div class="lt-match" id="ltMatch"></div>
-          <div class="lt-bet" id="ltBet"></div>
-          <div class="lt-meta" id="ltMeta"></div>
-        </a>
       </div>
 
       <figure class="duel" id="duel" aria-label="Ilustrácia: model porovnáva svoju pravdepodobnosť s kurzom stávkovej kancelárie">
@@ -836,36 +835,9 @@
     </div>
   </section>
 
-  <section class="sec alt" id="hodnota">
-    <div class="wrap split">
-      <div>
-        <div class="eyebrow"><b>II.</b>Hodnota</div>
-        <h2>Kedy má tip hodnotu</h2>
-        <p>Keď model dáva výsledku 68&nbsp;% a kurz je 1,75, z každého eura sa v priemere vráti 0,68 × 1,75 = 1,19 €. To je hodnota +19&nbsp;%. Pri kurze 1,45 by to bolo 0,68 × 1,45 = 0,99 €, teda −1&nbsp;%, a tip by sme neposlali.</p>
-        <p>Skúste si to sami posunutím oboch čísel.</p>
-      </div>
-      <div class="calc">
-        <div>
-          <label for="pRange"><span>Šanca podľa modelu</span><b class="num" id="pOut">68&nbsp;%</b></label>
-          <input type="range" id="pRange" min="50" max="90" step="1" value="68" />
-        </div>
-        <div>
-          <label for="oRange"><span>Kurz stávkovej kancelárie</span><b class="num" id="oOut">1,75</b></label>
-          <input type="range" id="oRange" min="1.2" max="2.6" step="0.01" value="1.75" />
-        </div>
-        <div class="verdict" aria-live="polite">
-          <div class="v num" id="vVal">+19&nbsp;%</div>
-          <div class="math" id="vMath"></div>
-          <ul class="checks" id="vChecks"></ul>
-          <div class="v-out" id="vOut"></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <section class="sec" id="vysledky">
     <div class="wrap">
-      <div class="eyebrow"><b>III.</b>Overené výsledky</div>
+      <div class="eyebrow"><b>II.</b>Overené výsledky</div>
       <h2>Výsledky</h2>
       <p class="muted" style="margin-top:16px;max-width:62ch">Čísla sa načítavajú priamo z TipRadaru. Každý tip sa vyhodnotí podľa skutočného výsledku zápasu. Tipy na zápasy, ktoré sa ešte nehrali, vidia len členovia.</p>
 
@@ -907,14 +879,6 @@
             <button class="pg" id="pgNext" aria-label="Staršie tipy">›</button>
           </div>
       </div>
-      <div class="clv clv-after" id="clv" hidden>
-        <div class="clv-num"><b class="num" id="clvAvg">–</b><span>priemerný náskok pred uzatváracím kurzom</span></div>
-        <div class="clv-text">
-          <h3>Porážame uzatvárací kurz</h3>
-          <p>Tesne pred výkopom majú stávkové kancelárie najviac informácií a ich kurz je najpresnejší. Ak bol kurz v čase tipu vyšší, model odhalil hodnotu skôr ako trh. Je to najspoľahlivejší ukazovateľ kvality tipov, ešte skôr než sa to prejaví na zisku.</p>
-          <p class="clv-line" id="clvLine"></p>
-        </div>
-      </div>
 
     </div>
   </section>
@@ -922,7 +886,7 @@
   <section class="sec alt" id="kto">
     <div class="wrap">
       <div class="letter">
-        <div class="eyebrow">Osobne</div>
+        <div class="eyebrow">O mne</div>
         <h2>Kto za tým je</h2>
         <p>Volám sa Michael a TipRadar som založil s jednoduchým cieľom: hľadať zápasy, v ktorých stávkové kancelárie podceňujú skutočnú šancu, a robiť to na základe dát, nie pocitov.</p>
         <p>Za každým tipom stojí vlastný štatistický model, ktorý som vyvinul a priebežne overujem spätnými testmi na stovkách odohraných zápasov. Tip odporučí len vtedy, keď je šanca v overenom pásme a kurz ponúka skutočnú hodnotu.</p>
@@ -935,7 +899,7 @@
 
   <section class="sec" id="clenstvo">
     <div class="wrap">
-      <div class="eyebrow"><b>IV.</b>Členstvo</div>
+      <div class="eyebrow"><b>III.</b>Členstvo</div>
       <h2>Dva spôsoby, ako sa pridať</h2>
       <p class="muted" style="margin-top:16px;max-width:62ch">Každý tip má kurz, šancu podľa modelu aj dôvod. Prehraté tipy nemažeme a každý týždeň zverejňujeme úspešnosť. Čím dlhšie členstvo, tým nižšia cena za mesiac. Predaj zatiaľ nebeží, zápis do poradovníka prebehne cez Telegram. Kto sa zapíše teraz, dostane zakladajúcu cenu a ostane mu, kým členstvo nepreruší.</p>
       <div class="term-switch" role="tablist" aria-label="Dĺžka členstva">
@@ -989,80 +953,10 @@
     </div>
   </section>
 
-  <div class="lb" id="skolaLb" role="dialog" aria-modal="true" aria-label="Ukážka z kurzu" hidden>
-    <button class="lb-close" type="button" aria-label="Zavrieť"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-    <div class="lb-track"></div>
-    <p class="lb-hint">Pre väčší obrázok otočte telefón na šírku alebo ho roztiahnite prstami.</p>
-    <div class="lb-bar">
-      <button class="lb-arrow prev" type="button" aria-label="Predchádzajúci obrázok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
-      <span class="lb-cap"></span>
-      <button class="lb-arrow next" type="button" aria-label="Ďalší obrázok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
-    </div>
-  </div>
-  <section class="sec skola" id="skola">
-    <div class="wrap">
-      <div class="skola-grid">
-        <div class="skola-media">
-          <div class="skola-slider" aria-roledescription="galéria" aria-label="Ukážky z kurzu">
-            <div class="skola-track" tabindex="0">
-              <img src="/skola/kurz-01.jpg" data-info="48 strán a 10 kapitol. Všetko o bankrolle, hodnote stávky a psychológii na jednom mieste." data-full="/skola/kurz-01-xl.jpg" width="1200" height="675" alt="Titulná strana kurzu „Škola stávkovania“" loading="eager" data-cap="Titulná strana" />
-              <img src="/skola/kurz-06.jpg" data-info="Zlaté pravidlo: na jeden tip 1 až 3 % banku, nikdy viac ako 5 %. Pri banku 1 000 € je to 10 až 30 €." data-full="/skola/kurz-06-xl.jpg" width="1200" height="675" alt="Ukážka: koľko vložiť na jeden tip – 1 až 3 % banku" loading="lazy" data-cap="Koľko vsadiť na tip" />
-              <img src="/skola/kurz-07.jpg" data-info="Séria 10 prehier príde skôr či neskôr. Pri vklade 2 % vám ostane vyše 80 % banku, pri 20 % len 107 €." data-full="/skola/kurz-07-xl.jpg" width="1200" height="675" alt="Ukážka: čo urobí 10 prehier za sebou s bankom" loading="lazy" data-cap="10 prehier za sebou" />
-              <img src="/skola/kurz-09.jpg" data-info="Denný, týždenný a mesačný limit si nastavíte vopred, keď máte chladnú hlavu. Najväčšie straty vznikajú po zlom tipe." data-full="/skola/kurz-09-xl.jpg" width="1200" height="675" alt="Ukážka: denné, týždenné a mesačné limity" loading="lazy" data-cap="Limity, ktoré chránia bank" />
-              <img src="/skola/kurz-13.jpg" data-info="Stupnica od 1 do 10 jednotiek podľa dôvery v tip. Aj pri najsilnejšom tipe platí strop 3 % banku." data-full="/skola/kurz-13-xl.jpg" width="1200" height="675" alt="Ukážka: koľko jednotiek vsadiť na aký tip" loading="lazy" data-cap="Jednotky podľa dôvery" />
-              <img src="/skola/kurz-18.jpg" data-info="Na príklade Barcelona – Valencia ukážeme, ako z kurzu a vlastného odhadu vypočítať, či má stávka hodnotu." data-full="/skola/kurz-18-xl.jpg" width="1200" height="675" alt="Ukážka: výpočet hodnotnej stávky na príklade" loading="lazy" data-cap="Výpočet hodnotnej stávky" />
-              <img src="/skola/kurz-30.jpg" data-info="Zdvojnásobiť vklad po prehre vyzerá bezpečne. Po siedmich prehrách však riskujete 1 270 €, aby ste vyhrali 10 €." data-full="/skola/kurz-30-xl.jpg" width="1200" height="675" alt="Ukážka: prečo nefunguje Martingale" loading="lazy" data-cap="Prečo nie Martingale" />
-              <img src="/skola/kurz-36.jpg" data-info="Nikdy nestávkujte preto, aby ste vrátili prehru. Po troch prehrách za sebou si dajte pauzu aspoň do ďalšieho dňa." data-full="/skola/kurz-36-xl.jpg" width="1200" height="675" alt="Ukážka: štyri pravidlá chladnej hlavy" loading="lazy" data-cap="Pravidlá chladnej hlavy" />
-            </div>
-            <button class="skola-arrow prev" type="button" aria-label="Predchádzajúci obrázok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
-            <button class="skola-arrow next" type="button" aria-label="Ďalší obrázok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
-            <span class="skola-zoom" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5M11 8v6M8 11h6"/></svg>Zväčšiť</span>
-          </div>
-          <div class="skola-nav">
-            <span class="skola-cap"><b class="num">1 / 8</b><span>Titulná strana</span></span>
-            <div class="skola-dots">
-              <button type="button" aria-label="Obrázok 1" aria-current="true"></button>
-              <button type="button" aria-label="Obrázok 2"></button>
-              <button type="button" aria-label="Obrázok 3"></button>
-              <button type="button" aria-label="Obrázok 4"></button>
-              <button type="button" aria-label="Obrázok 5"></button>
-              <button type="button" aria-label="Obrázok 6"></button>
-              <button type="button" aria-label="Obrázok 7"></button>
-              <button type="button" aria-label="Obrázok 8"></button>
-            </div>
-          </div>
-          <p class="skola-info" aria-live="polite">48 strán a 10 kapitol. Všetko o bankrolle, hodnote stávky a psychológii na jednom mieste.</p>
-        </div>
-        <div class="skola-text">
-          <div class="eyebrow"><b>V.</b>Kurz</div>
-          <h2>Škola stávkovania</h2>
-          <p class="muted">Kurz, ktorý vás naučí to, čo väčšina tipérov preskočí: ako chrániť bank, ako spoznať stávku s hodnotou a ako nedovoliť emóciám rozhodovať za vás. Bez sľubov istej výhry, s výpočtami a príkladmi.</p>
-          <button class="skola-more" type="button" aria-expanded="false" aria-controls="skolaChaps"><span><small>Obsah kurzu</small>Čo sa naučíte v <b>10 kapitolách</b></span><i aria-hidden="true"></i></button>
-          <ol class="skola-chaps" id="skolaChaps">
-            <li>Money management</li><li>Systémy vkladov</li><li>Value betting</li><li>Sure bets a Kellyho kritérium</li><li>Systémy, ktoré neodporúčame</li><li>Psychológia stávkovania</li><li>Aký šport si vybrať</li><li>15 rád pre rozumné tipovanie</li><li>Ako používať TipRadar</li><li>Zodpovedné hranie</li>
-          </ol>
-          <div class="skola-buy">
-            <div class="skola-label">Exkluzívny kurz TipRadaru</div>
-            <div class="skola-price"><b class="num">99&nbsp;€</b><span>jednorazová platba</span></div>
-            <ul class="skola-incl">
-              <li>48 strán v prémiovom PDF, ktoré vám ostane natrvalo</li>
-              <li>Výpočty a príklady z reálnych zápasov</li>
-              <li>Rovnaké pravidlá, podľa ktorých tipuje TipRadar</li>
-            </ul>
-            <p class="skola-vip"><strong>Zadarmo</strong> pri VIP na 3 mesiace alebo celú sezónu a pri Premium na celú sezónu.</p>
-            <div class="skola-actions">
-              <a class="btn" href="#zapis" data-kurz-cta>Chcem kurz</a>
-              <a class="btn btn-ghost" href="#clenstvo">Pozrieť členstvá</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
 
   <section class="sec alt" id="otazky">
     <div class="wrap split">
-      <div><div class="eyebrow"><b>VI.</b>Otázky</div><h2>Čo sa ľudia pýtajú</h2></div>
+      <div><div class="eyebrow"><b>IV.</b>Otázky</div><h2>Čo sa ľudia pýtajú</h2></div>
       <div class="faq">
         <details><summary>Kedy a kam tipy prídu?</summary><p>Do súkromného kanála na Telegrame, 2 – 3 hodiny pred výkopom zápasu. Večer, keď sa zápasy dohrajú, príde vyhodnotenie dňa.</p></details>
         <details><summary>Koľko tipov denne dostanem?</summary><p>Toľko, koľko prejde pravidlami. Niekedy jeden, inokedy viac. Keď neprejde žiadny, nepošleme nič a dáme vám vedieť.</p></details>
@@ -1079,7 +973,7 @@
   <section class="sec" id="zapis">
     <div class="wrap join">
       <div>
-        <div class="eyebrow"><b>VII.</b>Formulár</div>
+        <div class="eyebrow"><b>V.</b>Formulár</div>
         <h2>Nenašli ste odpoveď?</h2>
         <p>Napíšte mi, čo vás zaujíma o modeli, tipoch alebo členstve. Odpoviem vám osobne na e-mail.</p>
       </div>
@@ -1217,22 +1111,6 @@
   const row = (r) => `<li><span class="d num">${dayLabel(r.day)}</span><span class="m">${esc(r.match)}<span class="b">${esc(r.bet)}</span></span><span class="o num">${r.odds ? fmt(r.odds, 2) : ""}</span><span class="r ${esc(r.status)}">${RES[r.status] || ""}</span></li>`;
   const paintRange = (el) => el.style.setProperty("--fill", ((el.value - el.min) / (el.max - el.min)) * 100 + "%");
 
-  // ---------- hodnota ----------
-  let MIN_ODDS = 1.5;
-  function drawValue() {
-    const p = Number($("pRange").value), o = Number($("oRange").value);
-    paintRange($("pRange")); paintRange($("oRange"));
-    const ret = (p / 100) * o, value = Math.round((ret - 1) * 100);
-    $("pOut").textContent = `${p} %`; $("oOut").textContent = fmt(o, 2);
-    $("vVal").textContent = `${value > 0 ? "+" : value < 0 ? "−" : ""}${Math.abs(value)} %`;
-    $("vVal").className = "v num " + cls(value);
-    $("vMath").textContent = `${fmt(p / 100, 2)} × ${fmt(o, 2)} = ${fmt(ret, 2)}`;
-    const band = p >= 68 && p <= 80, val = value >= 5, odd = o >= MIN_ODDS - 1e-9;
-    $("vChecks").innerHTML = `<li class="${band ? "ok" : "no"}">šanca v pásme 68 – 80 %</li><li class="${val ? "ok" : "no"}">hodnota aspoň +5 %</li><li class="${odd ? "ok" : "no"}">kurz aspoň ${fmt(MIN_ODDS, 2)}</li>`;
-    $("vOut").innerHTML = band && val && odd ? `<span class="pos">Taký tip by sme poslali.</span>` : `<span class="neg">Taký tip by sme neposlali.</span>`;
-  }
-  $("pRange").addEventListener("input", drawValue); $("oRange").addEventListener("input", drawValue);
-  drawValue();
 
   // ---------- graf: ako rástol zisk (súčet jednotiek od začiatku) ----------
   function drawChart(tl) {
@@ -1315,6 +1193,12 @@
     f.plan.value = "kurz";
     if (!f.note.value.trim()) f.note.value = "Mám záujem o kurz stávkovania. Pošlite mi, prosím, platobné údaje.";
   }));
+  try {
+    if (new URLSearchParams(location.search).get("kurz") === "1") {
+      const f = document.getElementById("joinForm");
+      if (f) { f.plan.value = "kurz"; if (!f.note.value.trim()) f.note.value = "Mám záujem o kurz stávkovania. Pošlite mi, prosím, platobné údaje."; }
+    }
+  } catch (_) {}
   // Lišta s Telegramom, Instagramom a e-mailom je pripnutá pod hornou lištou.
   (() => {
     const nav = document.querySelector(".nav"), strip = document.querySelector(".contact-strip");
@@ -1416,37 +1300,11 @@
     })
     .catch(() => {});
 
-  // ---------- čísla z TipRadaru ----------
-  // Včerajší tip: posledný deň s vyhodnotenými tipmi (Silný tip dňa, inak tip s najvyššou dôverou).
-  function drawLastTip(t) {
-    if (!t || !t.day) return;
-    const today = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Bratislava" }).format(new Date());
-    const y = new Date(Date.UTC(+today.slice(0, 4), +today.slice(5, 7) - 1, +today.slice(8, 10) - 1)).toISOString().slice(0, 10);
-    const dayTxt = `${Number(t.day.slice(8, 10))}. ${Number(t.day.slice(5, 7))}.`;
-    $("ltLabel").textContent = t.day === y ? `Včerajší tip · ${dayTxt}` : t.day === today ? `Dnešný tip · ${dayTxt}` : `Posledný tip · ${dayTxt}`;
-    const res = { won: "✓ Vyšiel", lost: "✕ Nevyšiel", void: "Vrátené" }[t.status] || "";
-    $("ltRes").textContent = res + (t.score ? ` · ${t.score}` : "");
-    $("ltRes").className = `lt-res ${t.status}`;
-    $("ltMatch").textContent = t.match;
-    $("ltBet").textContent = t.bet;
-    const meta = [];
-    if (t.probability) meta.push(`dôvera modelu ${t.probability} %`);
-    if (t.odds) meta.push(`kurz ${fmt(t.odds, 2)}`);
-    if (t.odds && t.probability) {
-      const ev = (t.probability / 100) * t.odds - 1;
-      if (ev > 0) meta.push(`hodnota +${fmt(ev * 100, 0)} %`);
-    }
-    if (t.dayTotal > 1) meta.push(`v ten deň vyšlo ${t.dayWon} z ${t.dayTotal}`);
-    $("ltMeta").textContent = meta.join(" · ");
-    $("lastTip").hidden = false;
-  }
-
   fetch("/api/public/track-record", { cache: "no-store" })
     .then((r) => (r.ok ? r.json() : Promise.reject()))
     .then((d) => {
       recentAll = d.recent || [];
       drawList(); drawChart(d.timeline);
-      drawLastTip(d.latest);
       if (!d.totalResolved) { $("month").textContent = "Čísla sa zobrazia po prvých vyhodnotených tipoch."; return; }
       const n = d.totalResolved;
       drawLast10();
@@ -1481,17 +1339,6 @@
         t += ".";
       }
       $("month").innerHTML = t;
-      const c = d.clv;
-      if (c) {
-        $("clv").hidden = false;
-        if (c.total >= 10 && c.avg !== null) {
-          $("clvAvg").textContent = `${signed(c.avg, 1)} %`; $("clvAvg").className = "num " + cls(c.avg);
-          $("clvLine").innerHTML = `<strong>${c.beat} z ${c.total}</strong> ${ofTips(c.total)} malo v čase tipu vyšší kurz než tesne pred zápasom.`;
-        } else {
-          $("clv").classList.add("collecting");
-          $("clvLine").textContent = `Uzatvárací kurz sledujeme od 5. 10. 2026. Číslo zverejníme po prvých 10 tipoch${c.total ? `, zatiaľ ich je ${c.total}` : ""}.`;
-        }
-      }
     })
     .catch(() => {
       $("list").innerHTML = `<li class="empty">Tipy sa nepodarilo načítať. Skúste obnoviť stránku.</li>`;
@@ -1608,6 +1455,9 @@
 /* Odkaz s #sekciou (napr. z Instagramu): stránka sa po načítaní dorovná presne pod menu,
    aj keď sa medzitým načítajú obrázky, písma a čísla. Keď človek sám začne posúvať, prestane. */
 (function () {
+  // Staré odkazy: kurz má vlastnú stránku, sekcia Hodnota už nie je.
+  if (location.hash === "#skola") { location.replace("/kurz"); return; }
+  if (location.hash === "#hodnota") history.replaceState(null, "", location.pathname + location.search + "#ako");
   var id = decodeURIComponent((location.hash || "").slice(1));
   if (!id || !document.getElementById(id)) return;
   if ("scrollRestoration" in history) history.scrollRestoration = "manual";

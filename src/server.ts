@@ -34,6 +34,7 @@ import {
   deleteTelegramMessages,
   isTelegramEnabled,
   availableTelegramTargets,
+  isFreeChat,
   handleTelegramUpdate,
   setTelegramWebhook,
   notifyAdminExpiringSubscribers,
@@ -160,7 +161,7 @@ app.use((req, res, next) => {
     next();
     return;
   }
-  const toLanding = req.path === "/" || req.path === "/video" || req.path === "/video/";
+  const toLanding = ["/", "/video", "/video/", "/kurz", "/kurz/"].includes(req.path);
   res.redirect(301, (toLanding ? "https://tipradar.eu" : "https://app.tipradar.eu") + req.originalUrl);
 });
 
@@ -174,6 +175,10 @@ app.get("/", (req, res, next) => {
 // Verejná video prezentácia (tipradar.eu/video) – bez hesla, na každej adrese.
 app.get(["/video", "/video/"], (_req, res) => {
   res.sendFile(path.join(__dirname, "..", "landing", "video.html"));
+});
+// Kurz Škola stávkovania (tipradar.eu/kurz) – samostatná stránka, bez hesla.
+app.get(["/kurz", "/kurz/"], (_req, res) => {
+  res.sendFile(path.join(__dirname, "..", "landing", "kurz.html"));
 });
 // Ikonka stránky a obrázok náhľadu pri zdieľaní musia byť dostupné aj bez hesla.
 app.get(["/favicon.svg", "/favicon-32.png", "/favicon-256.png", "/og-image.png"], (req, res) => {
@@ -450,6 +455,12 @@ app.post("/api/tips", async (req, res) => {
       res.status(400).json({ error: MATCH_STARTED_MESSAGE });
       return;
     }
+    // ⭐ Silný tip dňa z Tipov dňa: najviac jeden za deň – ak už v ten deň iný tip značku má, nový ju nedostane.
+    if (tip.strongOfDay) {
+      const day = dayKeySk(new Date(tip.matchDate));
+      const taken = !!tip.legs?.length || (await listTips()).some((t) => t.id !== tip.id && t.strongOfDay && t.status !== "void" && dayKeySk(new Date(t.matchDate)) === day);
+      tip.strongOfDay = taken ? undefined : true;
+    }
     await saveTip(tip);
     res.json({ ok: true, telegramAvailable: isTelegramEnabled() });
   } catch (err: any) {
@@ -497,7 +508,11 @@ app.post("/api/tips/:id/telegram", async (req, res) => {
     const sent = await sendTipToTelegram(tip, forceStrong ? "vip" : target, headerOverride, strong);
     if (sent.length > 0) {
       const existing = tip.telegramMessages ?? [];
-      await updateTip(tip.id, { telegramMessages: [...existing, ...sent], ...(strong ? { strongOfDay: true } : {}) });
+      await updateTip(tip.id, {
+        telegramMessages: [...existing, ...sent],
+        ...(strong ? { strongOfDay: true } : {}),
+        ...(target === "free" ? { sentFree: true } : {}),
+      });
     }
     res.json({ ok: sent.length > 0 });
   } catch (err: any) {
@@ -644,10 +659,37 @@ app.get("/api/public/track-record", async (_req, res) => {
         dayTotal: dayTips.length,
       };
     }
+    // „Tip zadarmo“ na úvod stránky: posledný tip poslaný do free kanála, ak je zápas dnes alebo včera.
+    let freeTip: any = null;
+    const freeRecent = tips
+      .filter((t) => (t.sentFree || (t.telegramMessages ?? []).some((m) => isFreeChat(m.chatId))) && t.status !== "void" && Date.now() - new Date(t.matchDate).getTime() < 36 * 3600 * 1000)
+      .sort((a, b) => new Date(b.matchDate).getTime() - new Date(a.matchDate).getTime())[0];
+    if (freeRecent) {
+      const isTicket = Array.isArray(freeRecent.legs) && freeRecent.legs.length > 0;
+      freeTip = {
+        day: dayKeySk(new Date(freeRecent.matchDate)),
+        kickoff: freeRecent.matchDate,
+        league: isTicket ? null : freeRecent.leagueName,
+        match: isTicket
+          ? `Tiket (${plural(freeRecent.legs!.length, "zápas", "zápasy", "zápasov")})`
+          : `${translateTeamName(freeRecent.homeTeam)} – ${translateTeamName(freeRecent.awayTeam)}`,
+        bet: isTicket
+          ? freeRecent.legs!.map((l) => `${translateTeamName(l.homeTeam)} – ${translateTeamName(l.awayTeam)}: ${translateNamesInText(l.selection, l.homeTeam, l.awayTeam)}`).join(" · ")
+          : `${freeRecent.market}: ${translateNamesInText(freeRecent.selection, freeRecent.homeTeam, freeRecent.awayTeam)}`,
+        probability: Math.round(freeRecent.probability),
+        odds: typeof freeRecent.odds === "number" && freeRecent.odds > 1 ? Math.round(freeRecent.odds * 100) / 100 : null,
+        status: freeRecent.status,
+        score:
+          !isTicket && typeof freeRecent.actualHomeGoals === "number" && typeof freeRecent.actualAwayGoals === "number"
+            ? `${freeRecent.actualHomeGoals}:${freeRecent.actualAwayGoals}`
+            : null,
+      };
+    }
     res.json({
       ...summarize(all),
       month: { key: monthKey, ...summarize(inMonth) },
       latest,
+      freeTip,
       clv: {
         total: withClosing.length,
         beat: withClosing.filter((t) => t.odds! > t.closingOdds!).length,
