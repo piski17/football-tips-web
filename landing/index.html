@@ -896,22 +896,38 @@
   .plans { margin-top: 40px; }
   @media (max-width: 640px) { .sec { padding: 52px 0; } .hero { padding: 48px 0 56px; } .next { padding: 44px 0; } .page-head { padding: 36px 0 36px; } }
 
-  /* TipRadar Insider: jedno členstvo, prepínač dĺžky */
+  /* TipRadar Platinum: jedno členstvo, prepínač dĺžky */
   #clenstvo h2 em { font-style: italic; }
-  .insider { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 0 56px; margin-top: 28px; padding: 48px; }
-  .insider .plan-top h3 span { font: 400 15px/1 var(--sans); letter-spacing: .04em; color: var(--muted); }
-  .insider .price b { font-size: 72px; }
-  .insider .plan-foot { padding-top: 32px; }
-  .insider .seats { margin: 0 0 16px; }
-  .ins-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule-gold); align-self: start; }
-  .ins-list li { padding: 14px 0; border-bottom: 1px solid var(--rule); font-size: 16px; color: var(--muted); transition: opacity .3s; }
-  .ins-list li strong { color: var(--text); font-weight: 600; }
-  .ins-list li.plus strong { color: var(--gold-hi); }
-  .ins-list li.plus::before { content: "+ "; color: var(--gold); font-weight: 700; }
-  .ins-list li.off { opacity: .32; }
-  .ins-list li.off strong { color: var(--muted); }
-  .ins-list li.off::after { content: " · " attr(data-hint); white-space: nowrap; font-size: 13px; color: var(--faint); }
-  @media (max-width: 860px) { .insider { grid-template-columns: minmax(0, 1fr); padding: 32px 22px; } .insider .ins-list { margin-top: 28px; } .insider .price b { font-size: 60px; } }
+  .plat-text, .lux h3.plat-text { background: linear-gradient(180deg, #FFFFFF 0%, #E6E8EC 28%, #A9AEB6 58%, #D9DCE1 78%, #8E939B 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  #clenstvo .term-switch { display: flex; width: max-content; max-width: 100%; margin-left: auto; margin-right: auto; }
+  .lux { position: relative; max-width: 640px; margin: 28px auto 0; padding: 56px 56px 44px; background:
+      radial-gradient(120% 60% at 50% 0%, rgba(201,165,92,.14), transparent 60%), linear-gradient(180deg, #1C1B1F, #141417); overflow: hidden; }
+  .lux-head { text-align: center; }
+  .lux-crest { width: 46px; height: 46px; display: block; margin: 0 auto 18px; }
+  .lux-brand { font: 600 12px/1 var(--sans); letter-spacing: .42em; text-transform: uppercase; color: var(--gold); padding-left: .42em; }
+  .lux h3.lux-name { margin: 10px 0 0; font: italic 500 76px/1.05 var(--serif); letter-spacing: -.01em; }
+  .lux-term { margin-top: 14px; font: 500 13px/1 var(--sans); letter-spacing: .24em; text-transform: uppercase; color: var(--muted); }
+  .lux-price { margin-top: 30px; }
+  .lux-price b { font: 500 68px/1 var(--serif); letter-spacing: -0.02em; color: var(--text); }
+  .lux .per-month { margin: 12px 0 0; min-height: 1.4em; color: var(--gold-hi); font-size: 15px; }
+  .lux .limit-tag { display: inline-block; margin-top: 16px; padding: 7px 14px; border: 1px solid var(--rule-gold); font: 600 11.5px/1 var(--sans); letter-spacing: .2em; text-transform: uppercase; color: var(--gold-hi); }
+  .lux-rule { display: flex; align-items: center; gap: 16px; margin: 36px 0 6px; font: 600 11.5px/1 var(--sans); letter-spacing: .3em; text-transform: uppercase; color: var(--gold); }
+  .lux-rule::before, .lux-rule::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--rule-gold)); }
+  .lux-rule::after { background: linear-gradient(90deg, var(--rule-gold), transparent); }
+  .lux .lux-list { list-style: none; margin: 0; padding: 0; border-top: 0; }
+  .lux .lux-list li { position: relative; padding: 14px 0 14px 30px; border-bottom: 1px solid var(--rule); font-size: 16px; color: var(--muted); }
+  .lux-list li:last-child { border-bottom: 0; }
+  .lux-list li::before { content: ""; position: absolute; left: 4px; top: 21px; width: 8px; height: 8px; transform: rotate(45deg); border: 1px solid var(--gold); }
+  .lux-list li strong { color: var(--text); font-weight: 600; }
+  .lux-list li.plus::before { background: var(--gold); }
+  .lux-list li.plus strong { color: var(--gold-hi); }
+  .lux-list li[hidden] { display: none; }
+  .lux .limit-tag[hidden] { display: none; }
+  .lux .plan-foot { padding-top: 26px; }
+  .lux .seats { margin: 0 0 16px; }
+  .lux .small { text-align: center; }
+  @media (max-width: 640px) { #clenstvo .term-switch { display: grid; width: 100%; } }
+  @media (max-width: 560px) { .lux { padding: 44px 22px 32px; } .lux h3.lux-name { font-size: 60px; } .lux-price b { font-size: 56px; } }
 </style>
 </head>
 <body>
@@ -1146,35 +1162,39 @@
   <section class="sec" id="clenstvo" data-pages="home">
     <div class="wrap">
       <div class="eyebrow"><b>III.</b>Členstvo</div>
-      <h2>TipRadar <em class="gold-text">Insider</em></h2>
+      <h2>Členstvo <em class="plat-text">TipRadar Platinum</em></h2>
       <p class="muted" style="margin-top:16px;max-width:62ch">Jedno členstvo, všetci členovia dostávajú rovnaké tipy. Vyberte si dĺžku. Čím dlhšie, tým nižšia cena za mesiac a tým viac navyše.</p>
       <div class="term-switch" role="tablist" aria-label="Dĺžka členstva">
         <button type="button" role="tab" data-term="m1" aria-selected="false">1 mesiac</button>
         <button type="button" role="tab" data-term="m3" aria-selected="true">3 mesiace <em>−12&nbsp;%</em></button>
         <button type="button" role="tab" data-term="season" aria-selected="false">Celá sezóna <em>−24&nbsp;%</em></button>
       </div>
-      <article class="plan vip insider">
-        <div class="ins-left">
-          <div class="plan-top"><h3>Insider <span data-term-name>· 3 mesiace</span></h3><span class="limit-tag" data-only-season hidden>len 30 miest</span></div>
-          <div class="price"><b class="num" data-price>129 €</b><span data-price-unit>za 3 mesiace</span></div>
+      <article class="plan vip lux">
+        <div class="lux-head">
+          <svg class="lux-crest" aria-hidden="true"><use href="#logo"/></svg>
+          <div class="lux-brand">TipRadar</div>
+          <h3 class="lux-name plat-text">Platinum</h3>
+          <div class="lux-term" data-term-name>členstvo na 3 mesiace</div>
+          <div class="lux-price"><b class="num" data-price>129 €</b></div>
           <p class="per-month" data-permonth>43 € mesačne · ušetríte 18 €</p>
-          <div class="plan-foot">
-            <div class="seats" id="vipSeats" hidden>
-              <div id="vipSeatsText"></div>
-              <div class="bar"><i id="seatBar"></i></div>
-            </div>
-            <a class="btn" id="insiderCta" href="https://t.me/TipRadarAiBot?start=seria" target="_blank" rel="noopener">Zapísať sa do poradovníka</a>
-            <p class="small" data-foot-note>Bez automatického predlžovania. Členstvo zrušíte jednou správou.</p>
-          </div>
+          <span class="limit-tag" data-only-season hidden>len 30 miest</span>
         </div>
-        <ul class="ins-list">
-          <li><strong>Denné tipy</strong> v súkromnom kanáli TipRadar Insider na Telegrame, 1 – 2 hodiny pred výkopom</li>
+        <div class="lux-rule"><span>V členstve</span></div>
+        <ul class="lux-list">
+          <li><strong>Denné tipy</strong> v súkromnom kanáli TipRadar Platinum na Telegrame, 1 – 2 hodiny pred výkopom</li>
           <li><strong>Pri každom tipe</strong> kurz, šanca podľa modelu, dôvod a odporúčaná sadzba</li>
           <li><strong>Vyhodnotenie</strong> každý večer a týždenný prehľad úspešnosti, zisku a ROI</li>
-          <li class="plus" data-min-term="m3" data-hint="od 3 mesiacov"><strong>Súkromný VIP chat</strong>, kde na vaše otázky odpisujem priamo ja</li>
-          <li class="plus" data-min-term="season" data-hint="celá sezóna"><strong>Kurz stávkovania</strong> v hodnote 99&nbsp;€ zadarmo</li>
-          <li class="plus" data-min-term="season" data-hint="celá sezóna"><strong>Len 30 miest</strong>, aby som stihol odpisovať každému osobne</li>
+          <li class="plus" data-min-term="m3"><strong>Súkromný VIP chat</strong>, kde na vaše otázky odpisujem priamo ja</li>
+          <li class="plus" data-min-term="season"><strong>Kurz stávkovania</strong> v hodnote 99&nbsp;€ zadarmo</li>
         </ul>
+        <div class="plan-foot">
+          <div class="seats" id="vipSeats" hidden>
+            <div id="vipSeatsText"></div>
+            <div class="bar"><i id="seatBar"></i></div>
+          </div>
+          <a class="btn" id="memberCta" href="https://t.me/TipRadarAiBot?start=seria" target="_blank" rel="noopener">Zapísať sa do poradovníka</a>
+          <p class="small">Bez automatického predlžovania. Členstvo zrušíte jednou správou.</p>
+        </div>
       </article>
     </div>
   </section>
@@ -1505,12 +1525,12 @@
     }
   });
 
-  // ---------- TipRadar Insider: dĺžka členstva ----------
+  // ---------- TipRadar Platinum: dĺžka členstva ----------
   (function () {
     const TERMS = {
-      m1: { price: 49, unit: "mesačne", name: "· 1 mesiac", note: "", start: "start", order: 1 },
-      m3: { price: 129, unit: "za 3 mesiace", name: "· 3 mesiace", note: "43 € mesačne · ušetríte 18 €", start: "seria", order: 2 },
-      season: { price: 299, unit: "celá sezóna", name: "· celá sezóna", note: "do 31. 5. 2027 · 37 € mesačne · ušetríte 93 €", start: "sampion", order: 3 },
+      m1: { price: 49, unit: "mesačne", name: "členstvo na 1 mesiac", note: "mesačne · bez viazanosti", start: "start", order: 1 },
+      m3: { price: 129, unit: "za 3 mesiace", name: "členstvo na 3 mesiace", note: "43 € mesačne · ušetríte 18 €", start: "seria", order: 2 },
+      season: { price: 299, unit: "celá sezóna", name: "členstvo na celú sezónu", note: "do 31. 5. 2027 · 37 € mesačne · ušetríte 93 €", start: "sampion", order: 3 },
     };
     const $$ = (s) => document.querySelectorAll(s);
     function apply(term) {
@@ -1521,8 +1541,8 @@
       $$("[data-term-name]").forEach((el) => (el.textContent = t.name));
       $$("[data-permonth]").forEach((el) => (el.innerHTML = t.note || "&nbsp;"));
       $$("[data-only-season]").forEach((el) => (el.hidden = term !== "season"));
-      $$("[data-min-term]").forEach((li) => li.classList.toggle("off", TERMS[li.dataset.minTerm].order > t.order));
-      const cta = document.getElementById("insiderCta");
+      $$("[data-min-term]").forEach((li) => (li.hidden = TERMS[li.dataset.minTerm].order > t.order));
+      const cta = document.getElementById("memberCta");
       const S = window.__sales || { open: false, full: false };
       if (cta) {
         const full = term === "season" && S.full;
