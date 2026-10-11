@@ -896,17 +896,22 @@
   .plans { margin-top: 40px; }
   @media (max-width: 640px) { .sec { padding: 52px 0; } .hero { padding: 48px 0 56px; } .next { padding: 44px 0; } .page-head { padding: 36px 0 36px; } }
 
-  /* jedno členstvo, tri dĺžky */
-  .plans3 { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
-  .plans3 .plan { padding: 36px 30px; }
-  .plans3 .price b { font-size: 56px; }
-  .plans3 .plan-top span { white-space: nowrap; }
-  .plans3 .plan-foot .btn { white-space: nowrap; padding: 0 12px; letter-spacing: .1em; font-size: 12.5px; }
-  .plans3 .plan-foot .small { min-height: 3.2em; }
-  .plans3 .seats { margin: 0 0 16px; }
-  .plan li.plus strong { color: var(--gold-hi); }
-  .plan li.plus::before { content: "+ "; color: var(--gold); font-weight: 700; }
-  @media (max-width: 1000px) { .plans3 { grid-template-columns: minmax(0, 1fr); max-width: 560px; } }
+  /* TipRadar Insider: jedno členstvo, prepínač dĺžky */
+  #clenstvo h2 em { font-style: italic; }
+  .insider { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 0 56px; margin-top: 28px; padding: 48px; }
+  .insider .plan-top h3 span { font: 400 15px/1 var(--sans); letter-spacing: .04em; color: var(--muted); }
+  .insider .price b { font-size: 72px; }
+  .insider .plan-foot { padding-top: 32px; }
+  .insider .seats { margin: 0 0 16px; }
+  .ins-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule-gold); align-self: start; }
+  .ins-list li { padding: 14px 0; border-bottom: 1px solid var(--rule); font-size: 16px; color: var(--muted); transition: opacity .3s; }
+  .ins-list li strong { color: var(--text); font-weight: 600; }
+  .ins-list li.plus strong { color: var(--gold-hi); }
+  .ins-list li.plus::before { content: "+ "; color: var(--gold); font-weight: 700; }
+  .ins-list li.off { opacity: .32; }
+  .ins-list li.off strong { color: var(--muted); }
+  .ins-list li.off::after { content: " · " attr(data-hint); white-space: nowrap; font-size: 13px; color: var(--faint); }
+  @media (max-width: 860px) { .insider { grid-template-columns: minmax(0, 1fr); padding: 32px 22px; } .insider .ins-list { margin-top: 28px; } .insider .price b { font-size: 60px; } }
 </style>
 </head>
 <body>
@@ -1141,59 +1146,36 @@
   <section class="sec" id="clenstvo" data-pages="home">
     <div class="wrap">
       <div class="eyebrow"><b>III.</b>Členstvo</div>
-      <h2>Jedno členstvo, tri dĺžky</h2>
-      <p class="muted" style="margin-top:16px;max-width:62ch">Všetci členovia dostávajú rovnaké tipy. Čím dlhšie členstvo, tým nižšia cena za mesiac a tým viac navyše.</p>
-      <div class="plans plans3">
-        <article class="plan">
-          <div class="plan-top"><h3>Štart</h3><span>1 mesiac</span></div>
-          <div class="price"><b class="num">49 €</b><span>mesačne</span></div>
-          <p class="per-month">&nbsp;</p>
-          <ul>
-            <li><strong>Denné tipy</strong> v súkromnom kanáli na Telegrame, 1 – 2 hodiny pred výkopom</li>
-            <li><strong>Pri každom tipe</strong> kurz, šanca podľa modelu, dôvod a odporúčaná sadzba</li>
-            <li><strong>Vyhodnotenie</strong> každý večer a týždenný prehľad úspešnosti, zisku a ROI</li>
-          </ul>
-          <div class="plan-foot">
-            <a class="btn btn-ghost" id="startCta" href="https://t.me/TipRadarAiBot?start=start" target="_blank" rel="noopener">Zapísať sa do poradovníka</a>
-            <p class="small">Bez automatického predlžovania. Členstvo zrušíte jednou správou.</p>
-          </div>
-        </article>
-        <article class="plan">
-          <div class="plan-top"><h3>Séria</h3><span>3 mesiace</span></div>
-          <div class="price"><b class="num">119 €</b><span>za 3 mesiace</span></div>
-          <p class="per-month">40 € mesačne · ušetríte 28 €</p>
-          <ul>
-            <li><strong>Denné tipy</strong> v súkromnom kanáli na Telegrame, 1 – 2 hodiny pred výkopom</li>
-            <li><strong>Pri každom tipe</strong> kurz, šanca podľa modelu, dôvod a odporúčaná sadzba</li>
-            <li><strong>Vyhodnotenie</strong> každý večer a týždenný prehľad úspešnosti, zisku a ROI</li>
-            <li class="plus"><strong>Súkromný VIP chat</strong>, kde na vaše otázky odpisujem priamo ja</li>
-          </ul>
-          <div class="plan-foot">
-            <a class="btn btn-ghost" id="seriaCta" href="https://t.me/TipRadarAiBot?start=seria" target="_blank" rel="noopener">Zapísať sa do poradovníka</a>
-            <p class="small">Bez automatického predlžovania.</p>
-          </div>
-        </article>
-        <article class="plan vip">
-          <div class="plan-top"><h3>Šampión</h3><span class="limit-tag">len 30 miest</span></div>
-          <div class="price"><b class="num">249 €</b><span>celá sezóna</span></div>
-          <p class="per-month">do 31. 5. 2027 · 31 € mesačne · ušetríte 143 €</p>
-          <ul>
-            <li><strong>Denné tipy</strong> v súkromnom kanáli na Telegrame, 1 – 2 hodiny pred výkopom</li>
-            <li><strong>Pri každom tipe</strong> kurz, šanca podľa modelu, dôvod a odporúčaná sadzba</li>
-            <li><strong>Vyhodnotenie</strong> každý večer a týždenný prehľad úspešnosti, zisku a ROI</li>
-            <li class="plus"><strong>Súkromný VIP chat</strong>, kde na vaše otázky odpisujem priamo ja</li>
-            <li class="plus"><strong>Kurz stávkovania</strong> v hodnote 99&nbsp;€ zadarmo</li>
-          </ul>
+      <h2>TipRadar <em class="gold-text">Insider</em></h2>
+      <p class="muted" style="margin-top:16px;max-width:62ch">Jedno členstvo, všetci členovia dostávajú rovnaké tipy. Vyberte si dĺžku. Čím dlhšie, tým nižšia cena za mesiac a tým viac navyše.</p>
+      <div class="term-switch" role="tablist" aria-label="Dĺžka členstva">
+        <button type="button" role="tab" data-term="m1" aria-selected="false">1 mesiac</button>
+        <button type="button" role="tab" data-term="m3" aria-selected="true">3 mesiace <em>−12&nbsp;%</em></button>
+        <button type="button" role="tab" data-term="season" aria-selected="false">Celá sezóna <em>−24&nbsp;%</em></button>
+      </div>
+      <article class="plan vip insider">
+        <div class="ins-left">
+          <div class="plan-top"><h3>Insider <span data-term-name>· 3 mesiace</span></h3><span class="limit-tag" data-only-season hidden>len 30 miest</span></div>
+          <div class="price"><b class="num" data-price>129 €</b><span data-price-unit>za 3 mesiace</span></div>
+          <p class="per-month" data-permonth>43 € mesačne · ušetríte 18 €</p>
           <div class="plan-foot">
             <div class="seats" id="vipSeats" hidden>
               <div id="vipSeatsText"></div>
               <div class="bar"><i id="seatBar"></i></div>
             </div>
-            <a class="btn" id="vipCta" href="https://t.me/TipRadarAiBot?start=sampion" target="_blank" rel="noopener">Zapísať sa do poradovníka</a>
-            <p class="small">Miest je len 30, aby som stihol odpisovať každému osobne.</p>
+            <a class="btn" id="insiderCta" href="https://t.me/TipRadarAiBot?start=seria" target="_blank" rel="noopener">Zapísať sa do poradovníka</a>
+            <p class="small" data-foot-note>Bez automatického predlžovania. Členstvo zrušíte jednou správou.</p>
           </div>
-        </article>
-      </div>
+        </div>
+        <ul class="ins-list">
+          <li><strong>Denné tipy</strong> v súkromnom kanáli TipRadar Insider na Telegrame, 1 – 2 hodiny pred výkopom</li>
+          <li><strong>Pri každom tipe</strong> kurz, šanca podľa modelu, dôvod a odporúčaná sadzba</li>
+          <li><strong>Vyhodnotenie</strong> každý večer a týždenný prehľad úspešnosti, zisku a ROI</li>
+          <li class="plus" data-min-term="m3" data-hint="od 3 mesiacov"><strong>Súkromný VIP chat</strong>, kde na vaše otázky odpisujem priamo ja</li>
+          <li class="plus" data-min-term="season" data-hint="celá sezóna"><strong>Kurz stávkovania</strong> v hodnote 99&nbsp;€ zadarmo</li>
+          <li class="plus" data-min-term="season" data-hint="celá sezóna"><strong>Len 30 miest</strong>, aby som stihol odpisovať každému osobne</li>
+        </ul>
+      </article>
     </div>
   </section>
 
@@ -1523,6 +1505,39 @@
     }
   });
 
+  // ---------- TipRadar Insider: dĺžka členstva ----------
+  (function () {
+    const TERMS = {
+      m1: { price: 49, unit: "mesačne", name: "· 1 mesiac", note: "", start: "start", order: 1 },
+      m3: { price: 129, unit: "za 3 mesiace", name: "· 3 mesiace", note: "43 € mesačne · ušetríte 18 €", start: "seria", order: 2 },
+      season: { price: 299, unit: "celá sezóna", name: "· celá sezóna", note: "do 31. 5. 2027 · 37 € mesačne · ušetríte 93 €", start: "sampion", order: 3 },
+    };
+    const $$ = (s) => document.querySelectorAll(s);
+    function apply(term) {
+      const t = TERMS[term];
+      $$(".term-switch [data-term]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.term === term)));
+      $$("[data-price]").forEach((el) => (el.textContent = t.price + " €"));
+      $$("[data-price-unit]").forEach((el) => (el.textContent = t.unit));
+      $$("[data-term-name]").forEach((el) => (el.textContent = t.name));
+      $$("[data-permonth]").forEach((el) => (el.innerHTML = t.note || "&nbsp;"));
+      $$("[data-only-season]").forEach((el) => (el.hidden = term !== "season"));
+      $$("[data-min-term]").forEach((li) => li.classList.toggle("off", TERMS[li.dataset.minTerm].order > t.order));
+      const cta = document.getElementById("insiderCta");
+      const S = window.__sales || { open: false, full: false };
+      if (cta) {
+        const full = term === "season" && S.full;
+        cta.href = "https://t.me/TipRadarAiBot?start=" + (full ? "sampion_waitlist" : t.start);
+        cta.textContent = !S.open ? "Zapísať sa do poradovníka" : full ? "Zapísať sa ako náhradník" : term === "season" ? "Rezervovať miesto na sezónu" : term === "m3" ? "Pridať sa na 3 mesiace" : "Pridať sa na mesiac";
+      }
+      const seats = document.getElementById("vipSeats");
+      if (seats && seats.dataset.ready) seats.hidden = term !== "season";
+      document.documentElement.dataset.term = term;
+    }
+    $$(".term-switch [data-term]").forEach((b) => b.addEventListener("click", () => apply(b.dataset.term)));
+    window.__applyTerm = apply;
+    apply("m3");
+  })();
+
   // ---------- VIP miesta a predaj ----------
   fetch("/api/public/vip-seats", { cache: "no-store" })
     .then((r) => (r.ok ? r.json() : Promise.reject()))
@@ -1536,22 +1551,21 @@
       document.querySelectorAll(".limit-tag").forEach((t) => { t.textContent = `len ${total} miest`; });
       const show = (n, label) => {
         $("vipSeatsText").innerHTML = `${label}: <b class="num">${n} z ${total}</b>`;
-        $("vipSeats").hidden = false;
+        $("vipSeats").dataset.ready = "1";
         requestAnimationFrame(() => requestAnimationFrame(() => { $("seatBar").style.width = Math.min(100, (n / total) * 100) + "%"; }));
       };
       if (!d.salesOpen) {
-        // Pred spustením predaja: VIP členovia + záujemcovia v poradovníku.
+        // Pred spustením predaja: členovia na sezónu + záujemcovia v poradovníku.
         const members = Number(d.taken) || 0;
         const n = Math.min(members + (Number(d.waitlistVip) || 0), total);
-        show(n, members > 0 ? "Obsadené a rezervované miesta Šampión" : "V poradovníku na Šampión");
-        return;
+        show(n, members > 0 ? "Obsadené a rezervované miesta na sezónu" : "V poradovníku na celú sezónu");
+      } else {
+        // Predaj beží (SALES_OPEN=true na Renderi)
+        const taken = Math.min(Number(d.taken) || 0, total);
+        window.__sales = { open: true, full: taken >= total };
+        show(taken, "Obsadené miesta na sezónu");
       }
-      // Predaj beží (SALES_OPEN=true na Renderi)
-      $("startCta").textContent = "Pridať sa na mesiac"; $("seriaCta").textContent = "Pridať sa na 3 mesiace";
-      const taken = Math.min(Number(d.taken) || 0, total);
-      show(taken, "Obsadené miesta Šampión");
-      if (taken >= total) { $("vipCta").textContent = "Zapísať sa ako náhradník"; $("vipCta").href = "https://t.me/TipRadarAiBot?start=sampion_waitlist"; }
-      else $("vipCta").textContent = "Rezervovať miesto Šampión";
+      window.__applyTerm && window.__applyTerm(document.documentElement.dataset.term || "m3");
     })
     .catch(() => {});
 

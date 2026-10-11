@@ -1492,10 +1492,10 @@ closeTipsBtn.addEventListener("click", () => {
 // ---- Členovia (platba beží mimo appky, napr. bankovým prevodom) ----
 
 // Ceny musia sedieť s PRICES na tipradar.eu (landing/index.html).
-// Jedno členstvo, tri dĺžky: Štart (1 mesiac), Séria (3 mesiace), Šampión (sezóna, len 30 miest).
-// Šampión sa ukladá ako tier "group" – počíta sa do 30 miest na webe.
-const MEMBER_PRICES = { m1: 49, m3: 119, season: 249 };
-const MEMBER_NAME = { m1: "Štart", m3: "Séria", season: "Šampión" };
+// TipRadar Insider: jedno členstvo, tri dĺžky (1 mesiac, 3 mesiace, sezóna – len 30 miest).
+// Sezóna sa ukladá ako tier "group" – počíta sa do 30 miest na webe.
+const MEMBER_PRICES = { m1: 49, m3: 129, season: 299 };
+const MEMBER_NAME = { m1: "Insider 1 mesiac", m3: "Insider 3 mesiace", season: "Insider sezóna" };
 const MEMBER_LENGTH_LABEL = { m1: "1 mesiac", m3: "3 mesiace", season: "sezóna" };
 const SEASON_END = "2027-05-31";
 let memberFilter = "active";
@@ -1559,8 +1559,8 @@ function renderSubscribersList(subs) {
 
   subscribersSummaryEl.innerHTML = `
     <span>Aktívni: <strong>${active.length}</strong></span>
-    <span>Štart a Séria: <strong>${active.length - vip}</strong></span>
-    <span>Šampión: <strong>${vip}</strong></span>
+    <span>Insider 1 a 3 mesiace: <strong>${active.length - vip}</strong></span>
+    <span>Insider sezóna: <strong>${vip}</strong></span>
     <span>Zaplatené (aktívni): <strong>${income} €</strong></span>
     <span>Končí do 7 dní: <strong>${ending}</strong></span>
   `;
@@ -1597,7 +1597,7 @@ function renderSubscribersList(subs) {
       return `
         <div class="tip-row">
           <div class="tip-row-info">
-            <div class="tip-row-match">${escapeHtml(s.name)}<span class="member-tag ${isVip ? "vip" : "premium"}">${isVip ? "ŠAMPIÓN" : (MEMBER_NAME[length] || "ČLEN").toUpperCase()}</span>${s.founder ? `<span class="member-tag founder">Prvý člen</span>` : ""}</div>
+            <div class="tip-row-match">${escapeHtml(s.name)}<span class="member-tag ${isVip ? "vip" : "premium"}">${isVip ? "INSIDER SEZÓNA" : (MEMBER_NAME[length] || "ČLEN").toUpperCase()}</span>${s.founder ? `<span class="member-tag founder">Prvý člen</span>` : ""}</div>
             <div class="tip-row-market">${details}</div>
           </div>
           <span class="tip-status ${status.cls}">${status.label}</span>
@@ -1705,7 +1705,7 @@ addSubscriberBtn.addEventListener("click", async () => {
     return;
   }
   const length = subLengthSelect.value;
-  const tier = length === "season" ? "group" : "individual"; // Šampión = sezóna
+  const tier = length === "season" ? "group" : "individual"; // celá sezóna = 30 miest
   const start = subStartInput.value || todayIso();
   const priceRaw = subPriceInput.value.trim();
   const priceEur = priceRaw === "" ? MEMBER_PRICES[length] : Number(priceRaw);
@@ -2832,7 +2832,7 @@ async function renderTicketWatch() {
 
 
 // ---- Poradovník záujemcov z webu ----
-const LEAD_PLAN_LABEL = { start: "Štart", seria: "Séria", sampion: "Šampión", sampion_waitlist: "Šampión (náhradník)", premium: "starý odkaz Premium", vip: "Šampión (starý odkaz VIP)", vip_waitlist: "Šampión (náhradník)", clenstvo: "nevybral", otazka: "otázka z webu" };
+const LEAD_PLAN_LABEL = { start: "Insider 1 mesiac", seria: "Insider 3 mesiace", sampion: "Insider sezóna", sampion_waitlist: "Insider sezóna (náhradník)", premium: "starý odkaz Premium", vip: "Insider sezóna (starý odkaz VIP)", vip_waitlist: "Insider sezóna (náhradník)", clenstvo: "nevybral", otazka: "otázka z webu" };
 async function renderLeads() {
   const el = document.getElementById("leadsList");
   if (!el) return;

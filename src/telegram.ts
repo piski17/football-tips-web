@@ -374,20 +374,20 @@ export async function deleteTelegramMessages(messages: { chatId: string; message
 
 const TELEGRAM_CONTACT_USERNAME = process.env.TELEGRAM_CONTACT_USERNAME || "im_mishko";
 
-// ---- Členstvo: jedno členstvo, tri dĺžky (rovnaké texty ako na tipradar.eu) ----
+// ---- Členstvo TipRadar Insider: jedno členstvo, tri dĺžky (rovnaké texty ako na tipradar.eu) ----
 const BENEFITS_BASE =
-  `• <b>Denné tipy v súkromnom kanáli</b> na Telegrame, 1 – 2 hodiny pred výkopom\n` +
+  `• <b>Denné tipy v súkromnom kanáli TipRadar Insider</b> na Telegrame, 1 – 2 hodiny pred výkopom\n` +
   `• <b>Pri každom tipe</b> kurz, šanca podľa modelu, dôvod a odporúčaná sadzba\n` +
   `• <b>Vyhodnotenie</b> každý večer a týždenný prehľad úspešnosti, zisku a ROI`;
 const BENEFIT_CHAT = `• <b>💬 Súkromný VIP chat</b> – na vaše otázky odpisujem priamo ja`;
 const BENEFIT_KURZ = `• <b>📚 Kurz stávkovania</b> v hodnote 99 € zadarmo`;
-const PLAN_START = `🟡 <b>Štart</b> – 49 € / 1 mesiac\n${BENEFITS_BASE}`;
-const PLAN_SERIA = `🔶 <b>Séria</b> – 119 € / 3 mesiace (40 € mesačne)\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
-const PLAN_SAMPION = `🏆 <b>Šampión</b> – 249 € / celá sezóna (31 € mesačne) · <b>len 30 miest</b>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_KURZ}`;
+const PLAN_START = `🟡 <b>Insider · 1 mesiac</b> – 49 €\n${BENEFITS_BASE}`;
+const PLAN_SERIA = `🔶 <b>Insider · 3 mesiace</b> – 129 € (43 € mesačne)\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
+const PLAN_SAMPION = `🏆 <b>Insider · celá sezóna</b> – 299 € (37 € mesačne) · <b>len 30 miest</b>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_KURZ}`;
 
 const FAQ_ANSWERS: Record<string, string> = {
   faq_price:
-    `💰 <b>Členstvo TipRadar</b>\n\nJedno členstvo v troch dĺžkach. Všetci členovia dostávajú rovnaké tipy.\n\n` +
+    `💰 <b>TipRadar Insider</b>\n\nJedno členstvo v troch dĺžkach. Všetci členovia dostávajú rovnaké tipy.\n\n` +
     `${PLAN_START}\n\n${PLAN_SERIA}\n\n${PLAN_SAMPION}\n\n` +
     `Sezóna = do 31. 5. 2027. Členstvo sa samo nepredlžuje, žiadna viazanosť.` +
     (process.env.SALES_OPEN === "true" ? "" : `\n\n🗓 <b>Predaj členstiev spúšťame čoskoro.</b> Napíšte sem „Mám záujem" a ozveme sa vám ako prvým.`),
@@ -425,7 +425,7 @@ async function callTelegramApi(method: string, body: Record<string, unknown>): P
 /** Spracuje jednu prichádzajúcu udalosť z Telegram webhooku (nová správa alebo stlačenie tlačidla). */
 // ---- Záujemcovia o členstvo z tipradar.eu ----
 const NEXT_STEP =
-  `<b>Ako pokračovať:</b> napíšte sem krátku správu (napríklad „Mám záujem o Šampión"). Pošleme vám platobné údaje a po platbe vás pridáme do súkromného kanála.\n\n` +
+  `<b>Ako pokračovať:</b> napíšte sem krátku správu (napríklad „Mám záujem o Insider na 3 mesiace"). Pošleme vám platobné údaje a po platbe vás pridáme do súkromného kanála TipRadar Insider.\n\n` +
   `Ozveme sa vám zvyčajne do 24 hodín. Bez viazanosti, členstvo sa samo nepredlžuje.`;
 const JOIN_MESSAGES: Record<string, string> = {
   start: `✨ <b>Členstvo TipRadar</b>\n\n${PLAN_START}\n\n${NEXT_STEP}`,
@@ -433,8 +433,8 @@ const JOIN_MESSAGES: Record<string, string> = {
   sampion: `✨ <b>Členstvo TipRadar</b>\n\n${PLAN_SAMPION}\n\n${NEXT_STEP}`,
   clenstvo: `✨ <b>Členstvo TipRadar</b>\n\n${PLAN_START}\n\n${PLAN_SERIA}\n\n${PLAN_SAMPION}\n\n${NEXT_STEP}`,
   sampion_waitlist:
-    `🏆 <b>Šampión – poradovník</b>\n\nVšetkých 30 miest je momentálne obsadených. Váš záujem sme si zapísali – keď sa miesto uvoľní, ozveme sa vám ako prvým.\n\n` +
-    `Dovtedy môžete začať s členstvom <b>Štart</b> (49 € mesačne) alebo <b>Séria</b> (119 € na 3 mesiace) – stačí sem napísať, ktoré chcete.`,
+    `🏆 <b>Insider na celú sezónu – poradovník</b>\n\nVšetkých 30 miest je momentálne obsadených. Váš záujem sme si zapísali – keď sa miesto uvoľní, ozveme sa vám ako prvým.\n\n` +
+    `Dovtedy môžete začať s členstvom Insider na <b>1 mesiac</b> (49 €) alebo na <b>3 mesiace</b> (129 €) – stačí sem napísať, ktoré chcete.`,
 };
 // Staré odkazy (t.me/TipRadarAiBot?start=premium / vip) ešte môžu kolovať – ukážu celé členstvo.
 JOIN_MESSAGES.premium = JOIN_MESSAGES.clenstvo;
@@ -459,13 +459,13 @@ function PRELAUNCH_MESSAGE(plan: string): string {
 }
 
 const LEAD_LABEL: Record<string, string> = {
-  start: "Štart (1 mesiac)",
-  seria: "Séria (3 mesiace)",
-  sampion: "Šampión (celá sezóna)",
-  sampion_waitlist: "Šampión – náhradník",
+  start: "Insider 1 mesiac",
+  seria: "Insider 3 mesiace",
+  sampion: "Insider celá sezóna",
+  sampion_waitlist: "Insider sezóna – náhradník",
   premium: "členstvo (starý odkaz Premium)",
-  vip: "Šampión (starý odkaz VIP)",
-  vip_waitlist: "Šampión – náhradník",
+  vip: "Insider sezóna (starý odkaz VIP)",
+  vip_waitlist: "Insider sezóna – náhradník",
   clenstvo: "členstvo (zatiaľ nevybral)",
   otazka: "všeobecná otázka",
 };
@@ -503,6 +503,21 @@ async function notifyAdminLead(plan: string, from: any, chatId: number): Promise
 
 export async function handleTelegramUpdate(update: any): Promise<void> {
   if (!TELEGRAM_BOT_TOKEN) return;
+
+  // Bota pridali do nového kanála alebo skupiny: pošli adminovi jej názov a ID (na nastavenie na Renderi).
+  if (update.my_chat_member) {
+    const chat = update.my_chat_member.chat ?? {};
+    const status = update.my_chat_member.new_chat_member?.status;
+    if (TELEGRAM_ADMIN_CHAT_ID && chat.type !== "private" && (status === "administrator" || status === "member")) {
+      const kind = chat.type === "channel" ? "kanála" : "skupiny";
+      await callTelegramApi("sendMessage", {
+        chat_id: TELEGRAM_ADMIN_CHAT_ID,
+        text: `🤖 Bot bol pridaný do ${kind} <b>${escapeTg(chat.title ?? "")}</b>\n\nID: <code>${chat.id}</code>\n\n<i>Toto číslo skopíruj na Render, ak ho tam treba.</i>`,
+        parse_mode: "HTML",
+      });
+    }
+    return;
+  }
 
   if (update.callback_query) {
     const chatId = update.callback_query.message?.chat?.id;
@@ -569,7 +584,7 @@ export async function notifyAdminExpiringSubscribers(
 
   const lines = expiring
     .map((s) => {
-      const tierLabel = s.tier === "group" ? "ŠAMPIÓN" : "ŠTART / SÉRIA";
+      const tierLabel = s.tier === "group" ? "INSIDER SEZÓNA" : "INSIDER 1 / 3 MESIACE";
       const when = s.daysLeft < 0 ? "už skončilo" : s.daysLeft === 0 ? "končí dnes" : `končí o ${s.daysLeft} d.`;
       return `• ${s.name} (${tierLabel}) — ${when}`;
     })
