@@ -495,6 +495,9 @@
   @media (max-width: 760px) { .nav-free { display: none; } }
   /* v menu len v telefóne – na počítači je tlačidlo vedľa Menu */
   @media (min-width: 761px) { .nav-links a.nav-free-link, .nav-links a.nav-kurz-link { display: none; } }
+  .nav .nav-links a.nav-kurz-link { display: flex; align-items: center; gap: 9px; margin: 10px 0 6px; padding: 15px 16px; border: 0; border-radius: 2px; background: linear-gradient(135deg, #E8D3A0, #C9A55C 45%, #A8823E); color: #141210; font-weight: 600; }
+  .nav .nav-links a.nav-kurz-link svg { width: 16px; height: 16px; }
+  @media (min-width: 761px) { .nav .nav-links a.nav-kurz-link { display: none; } }
   /* ---------- mobil: menu a menšie písmo ---------- */
   .nav { background: var(--bg); }
   .nav-toggle { display: none; margin-left: auto; align-items: center; gap: 10px; min-height: 40px; padding: 0 14px; border: 1px solid var(--rule-gold); border-radius: 2px; background: none; color: var(--gold-hi); font: 600 11px/1 var(--sans); letter-spacing: .2em; text-transform: uppercase; cursor: pointer; }
@@ -771,12 +774,12 @@
     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="navLinks"><i aria-hidden="true"></i>Menu</button>
     <div class="nav-links" id="navLinks">
       <a class="nav-free-link" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 4.2 2.9 11.4c-1.3.5-1.3 1.2-.2 1.6l4.8 1.5 1.8 5.6c.2.6.4.8.8.8.4 0 .6-.2.9-.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.8-1.3-1.5Zm-4 3.4-8.6 7.8-.3 3.4-1.6-5 10.2-6.4c.5-.3.9 0 .3.2Z" fill="currentColor"/></svg>Tipy zadarmo na Telegrame</a>
+      <a class="nav-kurz-link" href="/kurz"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5c-.8 0-1.5.5-1.5 1.2V5.5ZM20 5.5c0-.8-.7-1.5-1.5-1.5H13v15h5.5c.8 0 1.5.5 1.5 1.2V5.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>Kurz Škola stávkovania</a>
       <a href="#ako">Ako vzniká tip</a>
       <a href="#hodnota">Hodnota</a>
       <a href="#vysledky">Výsledky</a>
       <a href="#kto">O mne</a>
       <a href="#clenstvo">Členstvo</a>
-      <a class="nav-kurz-link" href="/kurz">Kurz</a>
       <a href="#otazky">Otázky</a>
       <a href="#zapis" class="nav-form">Formulár</a>
       <a href="/video" class="nav-tg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>Video</a>
