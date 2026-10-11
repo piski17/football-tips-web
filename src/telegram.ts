@@ -383,7 +383,7 @@ const FAQ_ANSWERS: Record<string, string> = {
     `🟡 <b>PREMIUM</b> – 29 € / mesiac · 69 € / 3 mesiace · 149 € / sezóna\n` +
     `• <b>Denné tipy v súkromnom kanáli</b> – všetky odporúčania modelu na daný deň priamo v Telegrame\n` +
     `• <b>Transparentné odôvodnenie</b> – pri každom tipe kurz, miera dôvery a dôvod, prečo vznikol\n` +
-    `• <b>Včasné doručenie</b> – tipy 2 – 3 hodiny pred výkopom, večer prehľad výsledkov dňa\n` +
+    `• <b>Včasné doručenie</b> – tipy 1 – 2 hodiny pred výkopom, večer prehľad výsledkov dňa\n` +
     `• <b>Týždenný prehľad výkonnosti</b> – úspešnosť, zisk a ROI za uplynulý týždeň\n` +
     `• <b>📚 Kurz stávkovania</b> (99 €) zadarmo pri Premium na celú sezónu\n\n` +
     `👑 <b>VIP</b> – 59 € / mesiac · 139 € / 3 mesiace · 299 € / sezóna · <b>len 30 miest</b>\n` +
@@ -400,7 +400,7 @@ const FAQ_ANSWERS: Record<string, string> = {
     `TipRadar denne prepočíta desiatky zápasov cez vlastný štatistický model (Poissonovo rozdelenie gólov, vážená forma, vzájomné zápasy, historické dáta) a vyberie tipy s reálnou hodnotou naprieč 8 trhmi (góly v zápase, góly tímu, rohy v zápase, rohy tímu, karty, strely na bránu, fauly, držanie lopty) — s vysvetlením, prečo. Pri každom trhu vyskúša všetky hranice, ktoré stávkové kancelárie ponúkajú, a vyberie tú s najväčšou hodnotou.`,
   faq_time:
     `🕒 <b>Kedy prídu tipy</b>\n\n` +
-    `Tipy posielame v deň zápasu, <b>2 – 3 hodiny pred výkopom</b> – vtedy sú kurzy aj dáta najpresnejšie a zostane dosť času na stávku.\n\n` +
+    `Tipy posielame v deň zápasu, <b>1 – 2 hodiny pred výkopom</b> – vtedy sú kurzy aj dáta najpresnejšie a zostane dosť času na stávku.\n\n` +
     `📋 Večer, keď sa zápasy dohrajú, pošleme <b>vyhodnotenie dňa</b> – vrátane tipov, ktoré nevyšli.`,
   faq_sample:
     `📊 <b>Ukážka tipu</b>\n\n` +
@@ -431,7 +431,7 @@ async function callTelegramApi(method: string, body: Record<string, unknown>): P
 const PREMIUM_BENEFITS =
   `• <b>Denné tipy v súkromnom kanáli</b> – všetky odporúčania modelu na daný deň priamo v Telegrame\n` +
   `• <b>Transparentné odôvodnenie</b> – pri každom tipe kurz, miera dôvery a dôvod, prečo vznikol\n` +
-  `• <b>Včasné doručenie</b> – tipy 2 – 3 hodiny pred výkopom, večer prehľad výsledkov dňa\n` +
+  `• <b>Včasné doručenie</b> – tipy 1 – 2 hodiny pred výkopom, večer prehľad výsledkov dňa\n` +
   `• <b>Týždenný prehľad výkonnosti</b> – úspešnosť, zisk a ROI za uplynulý týždeň\n` +
   `• <b>📚 Kurz stávkovania</b> (99 €) zadarmo pri Premium na celú sezónu`;
 const VIP_BENEFITS =
