@@ -161,7 +161,7 @@ app.use((req, res, next) => {
     next();
     return;
   }
-  const toLanding = ["/", "/video", "/video/", "/kurz", "/kurz/"].includes(req.path);
+  const toLanding = ["/", "/video", "/video/", "/kurz", "/kurz/", "/metoda", "/metoda/", "/vysledky", "/vysledky/", "/otazky", "/otazky/"].includes(req.path);
   res.redirect(301, (toLanding ? "https://tipradar.eu" : "https://app.tipradar.eu") + req.originalUrl);
 });
 
@@ -175,6 +175,11 @@ app.get("/", (req, res, next) => {
 // Verejná video prezentácia (tipradar.eu/video) – bez hesla, na každej adrese.
 app.get(["/video", "/video/"], (_req, res) => {
   res.sendFile(path.join(__dirname, "..", "landing", "video.html"));
+});
+// Podstránky prezentácie (tipradar.eu/metoda, /vysledky, /otazky) – bez hesla.
+// Je to ten istý súbor ako úvod, podľa adresy sa v ňom zobrazí iná časť.
+app.get(["/metoda", "/metoda/", "/vysledky", "/vysledky/", "/otazky", "/otazky/"], (_req, res) => {
+  res.sendFile(path.join(__dirname, "..", "landing", "index.html"));
 });
 // Kurz Škola stávkovania (tipradar.eu/kurz) – samostatná stránka, bez hesla.
 app.get(["/kurz", "/kurz/"], (_req, res) => {

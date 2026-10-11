@@ -2,6 +2,17 @@
 <html lang="sk">
 <head>
 <meta charset="utf-8" />
+<script>
+  /* Ktorá stránka sa zobrazí: tipradar.eu/, /metoda, /vysledky, /otazky (jeden súbor, rôzne časti). */
+  (function () {
+    var m = location.pathname.replace(/\/+$/, "").split("/").pop();
+    var q = new URLSearchParams(location.search).get("stranka");
+    var page = ["metoda", "vysledky", "otazky"].indexOf(q || m) >= 0 ? (q || m) : "home";
+    document.documentElement.setAttribute("data-page", page);
+    var t = { metoda: "Metóda – ako vzniká tip | TipRadar", vysledky: "Výsledky – všetky vyhodnotené tipy | TipRadar", otazky: "Otázky a kontakt | TipRadar" }[page];
+    if (t) document.title = t;
+  })();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="dark" />
 <meta name="theme-color" content="#0B0B0C" />
@@ -837,6 +848,45 @@
   @media (hover: none) { .hint-mouse { display: none; } }
   @media (max-width: 960px) { .metal { grid-template-columns: minmax(0, 1fr); gap: 40px; padding: 40px 28px; } }
   @media (max-width: 520px) { .metal { padding: 32px 18px; margin-inline: 0; } .mcard { border-radius: 13px; } }
+
+  /* ===== Rozdelenie na stránky: úvod, /metoda, /vysledky, /otazky ===== */
+  html[data-page="home"] [data-pages]:not([data-pages~="home"]),
+  html[data-page="metoda"] [data-pages]:not([data-pages~="metoda"]),
+  html[data-page="vysledky"] [data-pages]:not([data-pages~="vysledky"]),
+  html[data-page="otazky"] [data-pages]:not([data-pages~="otazky"]) { display: none !important; }
+  .page-head { position: relative; overflow: hidden; padding: 72px 0 64px; border-bottom: 1px solid var(--rule); background: radial-gradient(ellipse 60% 120% at 85% 0%, rgba(201,165,92,.12), transparent 70%); }
+  .page-head h1 { font-size: clamp(40px, 5.4vw, 68px); max-width: 16ch; }
+  .page-head p { margin-top: 20px; max-width: 58ch; font-size: 18.5px; color: var(--muted); }
+  .page-head .back { display: inline-block; margin-bottom: 34px; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); text-decoration: none; }
+  .page-head .back:hover { color: var(--gold-hi); }
+  @media (max-width: 640px) { .page-head { padding: 44px 0 44px; } .page-head .back { margin-bottom: 24px; } .page-head p { font-size: 17px; } }
+  .how { align-items: center; }
+  .how-phone { display: flex; flex-direction: column; align-items: center; }
+  .how-phone .phone { margin-top: 0; }
+  .how-phone .phone-note { text-align: center; }
+  .steps { list-style: none; margin: 36px 0 0; padding: 0; counter-reset: st; }
+  .steps li { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 20px; padding: 22px 0; border-top: 1px solid var(--rule); }
+  .steps li:last-child { border-bottom: 1px solid var(--rule); }
+  .steps .ico { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--rule-gold); color: var(--gold-hi); background: radial-gradient(circle at 30% 25%, rgba(201,165,92,.16), transparent 70%); }
+  .steps .ico svg { width: 22px; height: 22px; }
+  .steps h3 { font: 600 17px/1.4 var(--sans); letter-spacing: 0; }
+  .steps p { margin-top: 4px !important; font-size: 15.5px; color: var(--muted); max-width: none !important; }
+  .more { display: inline-flex; gap: 8px; margin-top: 28px; color: var(--gold-hi); font-weight: 600; font-size: 15px; text-decoration: none; border-bottom: 1px solid var(--rule-gold); padding-bottom: 3px; }
+  .more:hover { border-color: var(--gold); }
+  .home10[hidden] { display: none; }
+  #last10h { display: flex; gap: 6px; flex-wrap: wrap; }
+  #last10h i { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; font: 600 12px/1 var(--sans); font-style: normal; }
+  #last10h i.won { background: rgba(127,191,154,.16); color: var(--win); border: 1px solid rgba(127,191,154,.5); }
+  #last10h i.lost { background: rgba(192,112,124,.12); color: var(--loss); border: 1px solid rgba(192,112,124,.45); }
+  .home10 { margin-top: 8px; border-top: 0; padding-top: 4px; justify-content: flex-start; }
+  .more-row { margin-top: 32px; }
+  .btn > span[aria-hidden] { margin-left: 8px; }
+  .next { padding: 88px 0; border-bottom: 1px solid var(--rule); background: radial-gradient(ellipse 50% 140% at 15% 100%, rgba(201,165,92,.10), transparent 70%), var(--bg); }
+  .next .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 28px 48px; }
+  .next h2 { font-size: clamp(30px, 3.6vw, 42px); }
+  .next p { margin-top: 12px; color: var(--muted); max-width: 52ch; }
+  .next-btns { display: flex; flex-wrap: wrap; gap: 12px; }
+  @media (max-width: 640px) { .next { padding: 60px 0; } .next-btns { width: 100%; } .next-btns .btn { flex: 1 1 100%; } }
 </style>
 </head>
 <body>
@@ -847,7 +897,7 @@
 
 <nav class="nav" aria-label="Hlavná navigácia">
   <div class="wrap">
-    <a class="brand" href="#top"><svg aria-hidden="true"><use href="#logo"/></svg>TipRadar</a>
+    <a class="brand" href="/"><svg aria-hidden="true"><use href="#logo"/></svg>TipRadar</a>
     <div class="nav-social">
       <a href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener" aria-label="Telegram – TipRadar bot" title="Telegram"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 4.2 2.9 11.4c-1.3.5-1.3 1.2-.2 1.6l4.8 1.5 1.8 5.6c.2.6.4.8.8.8.4 0 .6-.2.9-.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.8-1.3-1.5Zm-4 3.4-8.6 7.8-.3 3.4-1.6-5 10.2-6.4c.5-.3.9 0 .3.2Z" fill="currentColor"/></svg></a>
       <a href="https://www.instagram.com/tipradar.eu/" target="_blank" rel="noopener" aria-label="Instagram – tipradar.eu" title="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.4" cy="6.6" r="1.3" fill="currentColor"/></svg></a>
@@ -859,20 +909,55 @@
     <div class="nav-links" id="navLinks">
       <a class="nav-free-link" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 4.2 2.9 11.4c-1.3.5-1.3 1.2-.2 1.6l4.8 1.5 1.8 5.6c.2.6.4.8.8.8.4 0 .6-.2.9-.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.8-1.3-1.5Zm-4 3.4-8.6 7.8-.3 3.4-1.6-5 10.2-6.4c.5-.3.9 0 .3.2Z" fill="currentColor"/></svg>Tipy zadarmo na Telegrame</a>
       <a class="nav-kurz-link" href="/kurz"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5c-.8 0-1.5.5-1.5 1.2V5.5ZM20 5.5c0-.8-.7-1.5-1.5-1.5H13v15h5.5c.8 0 1.5.5 1.5 1.2V5.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>Kurz Škola stávkovania</a>
-      <a href="#ako">Ako vzniká tip</a>
-      <a href="#hodnota">Hodnota</a>
-      <a href="#vysledky">Výsledky</a>
-      <a href="#kto">O mne</a>
-      <a href="#clenstvo">Členstvo</a>
-      <a href="#otazky">Otázky</a>
-      <a href="#zapis" class="nav-form">Formulár</a>
+      <a href="/">Úvod</a>
+      <a href="/metoda">Metóda</a>
+      <a href="/vysledky">Výsledky</a>
+      <a href="/#clenstvo">Členstvo</a>
+      <a href="/#kto">O mne</a>
+      <a href="/otazky">Otázky a kontakt</a>
       <a href="/video" class="nav-tg"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>Video</a>
     </div>
   </div>
 </nav>
+<script>
+  /* menu: na úvode sa odkazy /#časť len posunú, na ostatných stránkach sa zvýrazní aktuálna stránka */
+  (function () {
+    var page = document.documentElement.getAttribute("data-page");
+    document.querySelectorAll('a[href^="/#"]').forEach(function (a) { if (page === "home") a.setAttribute("href", a.getAttribute("href").slice(1)); });
+    document.querySelectorAll(".nav-links a").forEach(function (a) {
+      var href = a.getAttribute("href");
+      if (page !== "home" && href === "/" + page) a.classList.add("active");
+      if (page === "home" && href === "/") a.setAttribute("href", "#top");
+    });
+  })();
+</script>
 
 <main id="top">
-  <section class="hero">
+  <header class="page-head" data-pages="metoda">
+    <div class="wrap">
+      <a class="back" href="/">← Úvod</a>
+      <div class="eyebrow">Metóda</div>
+      <h1>Ako model vyberá tipy</h1>
+      <p>Celý postup od stoviek zápasov po pár tipov denne a vysvetlenie, kedy má tip hodnotu.</p>
+    </div>
+  </header>
+  <header class="page-head" data-pages="vysledky">
+    <div class="wrap">
+      <a class="back" href="/">← Úvod</a>
+      <div class="eyebrow">Overené výsledky</div>
+      <h1>Všetky výsledky</h1>
+      <p>Čísla sa načítavajú priamo z TipRadaru. Každý tip sa vyhodnotí podľa skutočného výsledku zápasu. Tipy na zápasy, ktoré sa ešte nehrali, vidia len členovia.</p>
+    </div>
+  </header>
+  <header class="page-head" data-pages="otazky">
+    <div class="wrap">
+      <a class="back" href="/">← Úvod</a>
+      <div class="eyebrow">Otázky a kontakt</div>
+      <h1>Ako vám poradím</h1>
+      <p>Odpovede na najčastejšie otázky. Ak tu tú svoju nenájdete, napíšte mi cez formulár nižšie.</p>
+    </div>
+  </header>
+  <section class="hero" data-pages="home">
     <div class="radar" aria-hidden="true"><svg viewBox="0 0 860 860" aria-hidden="true"><circle cx="430" cy="430" r="110" fill="none" stroke="#C9A55C" stroke-opacity="0.22" stroke-width="1"/><circle cx="430" cy="430" r="210" fill="none" stroke="#C9A55C" stroke-opacity="0.2" stroke-width="1"/><circle cx="430" cy="430" r="310" fill="none" stroke="#C9A55C" stroke-opacity="0.17" stroke-width="1"/><circle cx="430" cy="430" r="410" fill="none" stroke="#C9A55C" stroke-opacity="0.22" stroke-width="1"/><path d="M430 20V840M20 430H840" stroke="#C9A55C" stroke-opacity=".10" stroke-width="1"/><path d="M140 140L720 720M720 140L140 720" stroke="#C9A55C" stroke-opacity=".05" stroke-width="1"/><path d="M430.0 20.0L430.0 34.0M465.7 21.6L465.2 27.5M501.2 26.2L500.2 32.1M536.1 34.0L534.6 39.8M570.2 44.7L568.2 50.4M603.3 58.4L600.7 63.9M635.0 74.9L628.0 87.1M665.2 94.1L661.7 99.1M693.5 115.9L689.7 120.5M719.9 140.1L715.7 144.3M744.1 166.5L739.5 170.3M765.9 194.8L760.9 198.3M785.1 225.0L772.9 232.0M801.6 256.7L796.1 259.3M815.3 289.8L809.6 291.8M826.0 323.9L820.2 325.4M833.8 358.8L827.9 359.8M838.4 394.3L832.5 394.8M840.0 430.0L826.0 430.0M838.4 465.7L832.5 465.2M833.8 501.2L827.9 500.2M826.0 536.1L820.2 534.6M815.3 570.2L809.6 568.2M801.6 603.3L796.1 600.7M785.1 635.0L772.9 628.0M765.9 665.2L760.9 661.7M744.1 693.5L739.5 689.7M719.9 719.9L715.7 715.7M693.5 744.1L689.7 739.5M665.2 765.9L661.7 760.9M635.0 785.1L628.0 772.9M603.3 801.6L600.7 796.1M570.2 815.3L568.2 809.6M536.1 826.0L534.6 820.2M501.2 833.8L500.2 827.9M465.7 838.4L465.2 832.5M430.0 840.0L430.0 826.0M394.3 838.4L394.8 832.5M358.8 833.8L359.8 827.9M323.9 826.0L325.4 820.2M289.8 815.3L291.8 809.6M256.7 801.6L259.3 796.1M225.0 785.1L232.0 772.9M194.8 765.9L198.3 760.9M166.5 744.1L170.3 739.5M140.1 719.9L144.3 715.7M115.9 693.5L120.5 689.7M94.1 665.2L99.1 661.7M74.9 635.0L87.1 628.0M58.4 603.3L63.9 600.7M44.7 570.2L50.4 568.2M34.0 536.1L39.8 534.6M26.2 501.2L32.1 500.2M21.6 465.7L27.5 465.2M20.0 430.0L34.0 430.0M21.6 394.3L27.5 394.8M26.2 358.8L32.1 359.8M34.0 323.9L39.8 325.4M44.7 289.8L50.4 291.8M58.4 256.7L63.9 259.3M74.9 225.0L87.1 232.0M94.1 194.8L99.1 198.3M115.9 166.5L120.5 170.3M140.1 140.1L144.3 144.3M166.5 115.9L170.3 120.5M194.8 94.1L198.3 99.1M225.0 74.9L232.0 87.1M256.7 58.4L259.3 63.9M289.8 44.7L291.8 50.4M323.9 34.0L325.4 39.8M358.8 26.2L359.8 32.1M394.3 21.6L394.8 27.5" stroke="#C9A55C" stroke-opacity=".28" stroke-width="1"/></svg><div class="sweep"></div><i class="blip" style="left:78.52%;top:24.32%;animation-delay:1.20s"></i><i class="blip" style="left:69.41%;top:57.84%;animation-delay:2.80s"></i><i class="blip" style="left:61.14%;top:91.56%;animation-delay:4.12s"></i><i class="blip" style="left:26.18%;top:68.61%;animation-delay:5.80s"></i><i class="blip" style="left:10.73%;top:27.33%;animation-delay:7.50s"></i><i class="blip" style="left:55.97%;top:33.61%;animation-delay:0.50s"></i></div>
     <div class="wrap">
       <div>
@@ -904,12 +989,19 @@
     </div>
   </section>
 
-  <section class="sec" id="ako">
-    <div class="wrap split">
+  <section class="sec" id="ako" data-pages="home">
+    <div class="wrap split how">
       <div>
-        <div class="eyebrow"><b>I.</b>Metóda</div>
-        <h2>Ako vzniká tip</h2>
-        <p>Každý zápas prejde rovnakými pravidlami. Väčšina neprejde a vtedy radšej nepošleme nič.</p>
+        <div class="eyebrow"><b>I.</b>Ako to funguje</div>
+        <h2>Tri kroky k tipu</h2>
+        <ol class="steps">
+          <li><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span><div><h3>Model prepočíta každý zápas</h3><p>Góly, rohy, karty, strely aj fauly z posledných zápasov oboch tímov. V bežný deň okolo 120 zápasov a 1 200 trhov.</p></div></li>
+          <li><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M5 7h14M5 7l-3 7a3.5 3.5 0 0 0 6 0L5 7Zm14 0-3 7a3.5 3.5 0 0 0 6 0l-3-7ZM8 21h8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><h3>Porovná šancu s kurzom</h3><p>Tip prejde, len keď model vidí vyššiu šancu, než naznačuje kurz stávkovej kancelárie. Väčšina zápasov neprejde.</p></div></li>
+          <li><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 4.2 2.9 11.4c-1.3.5-1.3 1.2-.2 1.6l4.8 1.5 1.8 5.6c.2.6.4.8.8.8.4 0 .6-.2.9-.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.8-1.3-1.5Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></span><div><h3>Tip príde do Telegramu</h3><p>1 – 2 hodiny pred výkopom, večer vyhodnotenie. Výhry aj prehry zverejníme.</p></div></li>
+        </ol>
+        <a class="more" href="/metoda">Celý postup a kalkulačka hodnoty <span aria-hidden="true">→</span></a>
+      </div>
+      <div class="how-phone">
         <figure class="phone" aria-label="Ukážka: takto príde tip do Telegramu">
           <div class="phone-screen">
             <div class="tg-top">
@@ -926,6 +1018,16 @@
         </figure>
         <p class="phone-note">Ilustrácia. Tip príde 1 – 2 hodiny pred výkopom, výsledok večer po zápase.</p>
       </div>
+    </div>
+  </section>
+
+  <section class="sec" id="postup" data-pages="metoda">
+    <div class="wrap split">
+      <div>
+        <div class="eyebrow"><b>I.</b>Postup</div>
+        <h2>Ako vzniká tip</h2>
+        <p>Každý zápas prejde rovnakými pravidlami. Väčšina neprejde a vtedy radšej nepošleme nič.</p>
+      </div>
       <div>
         <ol class="funnel">
           <li><div class="c num">120</div><div><h3>zápasov v bežný deň</h3><p>Pri každom zápase model zoberie góly, rohy, karty, strely, fauly a držanie lopty z posledných stretnutí oboch tímov, vlastné aj tie, ktoré tím dovolí súperovi. Keď je dát málo, pomôžu tri minulé sezóny.</p></div></li>
@@ -940,7 +1042,7 @@
     </div>
   </section>
 
-  <section class="sec alt" id="hodnota">
+  <section class="sec alt" id="hodnota" data-pages="metoda">
     <div class="wrap split">
       <div>
         <div class="eyebrow"><b>II.</b>Hodnota</div>
@@ -967,11 +1069,11 @@
     </div>
   </section>
 
-  <section class="sec" id="vysledky">
+  <section class="sec alt" id="vysledky" data-pages="home vysledky">
     <div class="wrap">
-      <div class="eyebrow"><b>III.</b>Overené výsledky</div>
-      <h2>Výsledky</h2>
-      <p class="muted" style="margin-top:16px;max-width:62ch">Čísla sa načítavajú priamo z TipRadaru. Každý tip sa vyhodnotí podľa skutočného výsledku zápasu. Tipy na zápasy, ktoré sa ešte nehrali, vidia len členovia.</p>
+      <div class="eyebrow" data-pages="home"><b>II.</b>Overené výsledky</div>
+      <h2 data-pages="home">Výsledky</h2>
+      <p class="muted" data-pages="home" style="margin-top:16px;max-width:62ch">Čísla sa načítavajú priamo z TipRadaru. Každý tip sa vyhodnotí podľa skutočného výsledku zápasu. Tipy na zápasy, ktoré sa ešte nehrali, vidia len členovia.</p>
 
       <div class="figures">
         <div><b class="num" id="fCount">–</b><span id="fCountLbl">vyhodnotených tipov</span></div>
@@ -980,7 +1082,9 @@
         <div><b class="num" id="fRoi">–</b><span>ROI</span></div>
       </div>
       <p class="month-line" id="month">Načítavam…</p>
-      <div class="showcase">
+      <div class="form10 home10" id="form10h" data-pages="home" hidden><span>Posledných 10 tipov</span><div id="last10h"></div></div>
+      <div class="more-row" data-pages="home"><a class="btn btn-ghost" href="/vysledky">Graf a celá história tipov <span aria-hidden="true">→</span></a></div>
+      <div class="showcase" data-pages="vysledky">
         <div class="sc-chart">
           <div class="sc-head"><h3 id="chTitle">Ako rástol zisk</h3><span class="sc-total num" id="chTotal"></span></div>
           <div id="chWrap"><p class="muted">Graf sa zobrazí po prvých vyhodnotených tipoch.</p></div>
@@ -995,7 +1099,7 @@
         </div>
       </div>
 
-      <div class="ledger-wrap">
+      <div class="ledger-wrap" data-pages="vysledky">
           <h3>Všetky vyhodnotené tipy</h3>
           <p class="note">Tak, ako ich dostali členovia.</p>
           <div class="tabs" role="group" aria-label="Filter">
@@ -1015,13 +1119,13 @@
     </div>
   </section>
 
-  <section class="sec alt" id="kto">
+  <section class="sec" id="kto" data-pages="home">
     <div class="wrap">
       <div class="letter">
         <div class="eyebrow">O mne</div>
         <h2>Kto za tým je</h2>
         <p>Volám sa Michael a TipRadar som založil s jednoduchým cieľom: hľadať zápasy, v ktorých stávkové kancelárie podceňujú skutočnú šancu, a robiť to na základe dát, nie pocitov.</p>
-        <p>Za každým tipom stojí vlastný štatistický model, ktorý som vyvinul a priebežne overujem spätnými testmi na stovkách odohraných zápasov. Tip odporučí len vtedy, keď je šanca v overenom pásme a kurz ponúka skutočnú hodnotu.</p>
+        <p data-pages="none">Za každým tipom stojí vlastný štatistický model, ktorý som vyvinul a priebežne overujem spätnými testmi na stovkách odohraných zápasov. Tip odporučí len vtedy, keď je šanca v overenom pásme a kurz ponúka skutočnú hodnotu.</p>
         <p>Transparentnosť je pre mňa základ. Každý tip sa zaznamená v momente odoslania a po zápase sa sám vyhodnotí. Nič sa dodatočne nemaže ani neupravuje, preto tu nájdete aj prehry. Istú výhru nesľubujem. Nesľubuje ju nikto, kto to myslí vážne.</p>
         <p>Ak máte otázku, napíšte mi na <a href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener">Telegram</a> alebo na <a href="mailto:info@tipradar.eu">info@tipradar.eu</a>. Odpovedám osobne.</p>
         <div class="sign">Michael<span>zakladateľ TipRadaru</span></div>
@@ -1029,9 +1133,9 @@
     </div>
   </section>
 
-  <section class="sec" id="clenstvo">
+  <section class="sec alt" id="clenstvo" data-pages="home">
     <div class="wrap">
-      <div class="eyebrow"><b>IV.</b>Členstvo</div>
+      <div class="eyebrow"><b>III.</b>Členstvo</div>
       <h2>Dva spôsoby, ako sa pridať</h2>
       <p class="muted" style="margin-top:16px;max-width:62ch">Každý tip má kurz, šancu podľa modelu aj dôvod. Prehraté tipy nemažeme a každý týždeň zverejňujeme úspešnosť. Čím dlhšie členstvo, tým nižšia cena za mesiac. Predaj zatiaľ nebeží, zápis do poradovníka prebehne cez Telegram. Kto sa zapíše teraz, dostane zakladajúcu cenu a ostane mu, kým členstvo nepreruší.</p>
       <div class="term-switch" role="tablist" aria-label="Dĺžka členstva">
@@ -1115,9 +1219,9 @@
   </section>
 
 
-  <section class="sec alt" id="otazky">
+  <section class="sec alt" id="otazky" data-pages="otazky">
     <div class="wrap split">
-      <div><div class="eyebrow"><b>V.</b>Otázky</div><h2>Čo sa ľudia pýtajú</h2></div>
+      <div><div class="eyebrow"><b>I.</b>Otázky</div><h2>Čo sa ľudia pýtajú</h2></div>
       <div class="faq">
         <details><summary>Kedy a kam tipy prídu?</summary><p>Do súkromného kanála na Telegrame, 1 – 2 hodiny pred výkopom zápasu. Večer, keď sa zápasy dohrajú, príde vyhodnotenie dňa.</p></details>
         <details><summary>Koľko tipov denne dostanem?</summary><p>Toľko, koľko prejde pravidlami. Niekedy jeden, inokedy viac. Keď neprejde žiadny, nepošleme nič a dáme vám vedieť.</p></details>
@@ -1131,10 +1235,10 @@
     </div>
   </section>
 
-  <section class="sec" id="zapis">
+  <section class="sec" id="zapis" data-pages="otazky">
     <div class="wrap join">
       <div>
-        <div class="eyebrow"><b>VI.</b>Formulár</div>
+        <div class="eyebrow"><b>II.</b>Formulár</div>
         <h2>Nenašli ste odpoveď?</h2>
         <p>Napíšte mi, čo vás zaujíma o modeli, tipoch alebo členstve. Odpoviem vám osobne na e-mail.</p>
       </div>
@@ -1159,6 +1263,18 @@
     </div>
   </section>
 
+  <section class="next" data-pages="home">
+    <div class="wrap">
+      <div><h2>Máte otázku?</h2><p>Pozrite si najčastejšie otázky alebo mi napíšte. Odpovedám osobne.</p></div>
+      <div class="next-btns"><a class="btn" href="/otazky">Otázky a kontakt</a><a class="btn btn-ghost" href="/metoda">Ako model funguje</a></div>
+    </div>
+  </section>
+  <section class="next" data-pages="metoda vysledky otazky">
+    <div class="wrap">
+      <div><h2>Chcete tipy dostávať aj vy?</h2><p>Zapíšte sa do poradovníka a získajte zakladajúcu cenu, alebo začnite tipmi zadarmo na Telegrame.</p></div>
+      <div class="next-btns"><a class="btn" href="/#clenstvo">Pozrieť členstvo</a><a class="btn btn-ghost" href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener">Tipy zadarmo</a></div>
+    </div>
+  </section>
 </main>
 
 <footer>
@@ -1325,6 +1441,8 @@
     if (!l.length) return;
     $("last10").innerHTML = l.map((r) => `<i class="${r.status}" title="${esc(r.match)} · ${RES[r.status]}">${r.status === "won" ? "✓" : "✕"}</i>`).join("");
     $("form10").hidden = false;
+    const h10 = $("last10h");
+    if (h10) { h10.innerHTML = $("last10").innerHTML; $("form10h").hidden = false; }
   }
   // čísla sa pri zobrazení napočítajú
   function countUp(el, to, dec, fmtFn) {
