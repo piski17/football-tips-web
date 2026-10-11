@@ -917,10 +917,11 @@
   .lux .lux-list { list-style: none; margin: 0; padding: 0; border-top: 0; }
   .lux .lux-list li { position: relative; padding: 14px 0 14px 30px; border-bottom: 1px solid var(--rule); font-size: 16px; color: var(--muted); }
   .lux-list li:last-child { border-bottom: 0; }
-  .lux-list li::before { content: ""; position: absolute; left: 4px; top: 21px; width: 8px; height: 8px; transform: rotate(45deg); border: 1px solid var(--gold); }
-  .lux-list li strong { color: var(--text); font-weight: 600; }
+  .lux-list li::before { content: ""; position: absolute; left: 4px; top: 20px; width: 8px; height: 8px; transform: rotate(45deg); border: 1px solid var(--gold); }
+  .lux .lux-list li strong { display: block; color: var(--text); font-weight: 600; font-size: 16.5px; line-height: 1.35; }
+  .lux .lux-list li span { display: block; margin-top: 4px; font-size: 14.5px; line-height: 1.45; color: var(--muted); }
   .lux-list li.plus::before { background: var(--gold); }
-  .lux-list li.plus strong { color: var(--gold-hi); }
+  .lux .lux-list li.plus strong { color: var(--gold-hi); }
   .lux-list li[hidden] { display: none; }
   .lux .limit-tag[hidden] { display: none; }
   .lux .plan-foot { padding-top: 26px; }
@@ -1181,11 +1182,11 @@
         </div>
         <div class="lux-rule"><span>V členstve</span></div>
         <ul class="lux-list">
-          <li><strong>Denné tipy</strong> v súkromnom kanáli TipRadar Platinum na Telegrame, 1 – 2 hodiny pred výkopom</li>
-          <li><strong>Pri každom tipe</strong> kurz, šanca podľa modelu, dôvod a odporúčaná sadzba</li>
-          <li><strong>Vyhodnotenie</strong> každý večer a týždenný prehľad úspešnosti, zisku a ROI</li>
-          <li class="plus" data-min-term="m3"><strong>Súkromný VIP chat</strong>, kde na vaše otázky odpisujem priamo ja</li>
-          <li class="plus" data-min-term="season"><strong>Kurz stávkovania</strong> v hodnote 99&nbsp;€ zadarmo</li>
+          <li><strong>Denné tipy na Telegrame</strong><span>v súkromnom kanáli, 1&nbsp;–&nbsp;2&nbsp;hodiny pred výkopom</span></li>
+          <li><strong>Všetko podstatné pri každom tipe</strong><span>kurz, šanca podľa modelu, dôvod a&nbsp;odporúčaná sadzba</span></li>
+          <li><strong>Večerné vyhodnotenie</strong><span>a týždenný prehľad úspešnosti, zisku a&nbsp;ROI</span></li>
+          <li class="plus" data-min-term="m3"><strong>Súkromný VIP chat</strong><span>na vaše otázky odpisujem priamo ja</span></li>
+          <li class="plus" data-min-term="season"><strong>Kurz stávkovania zadarmo</strong><span>v hodnote 99&nbsp;€</span></li>
         </ul>
         <div class="plan-foot">
           <div class="seats" id="vipSeats" hidden>

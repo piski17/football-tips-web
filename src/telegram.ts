@@ -376,11 +376,11 @@ const TELEGRAM_CONTACT_USERNAME = process.env.TELEGRAM_CONTACT_USERNAME || "im_m
 
 // ---- Členstvo TipRadar Platinum: jedno členstvo, tri dĺžky (rovnaké texty ako na tipradar.eu) ----
 const BENEFITS_BASE =
-  `• <b>Denné tipy v súkromnom kanáli TipRadar Platinum</b> na Telegrame, 1 – 2 hodiny pred výkopom\n` +
+  `• <b>Denné tipy na Telegrame</b> v súkromnom kanáli, 1 – 2 hodiny pred výkopom\n` +
   `• <b>Pri každom tipe</b> kurz, šanca podľa modelu, dôvod a odporúčaná sadzba\n` +
-  `• <b>Vyhodnotenie</b> každý večer a týždenný prehľad úspešnosti, zisku a ROI`;
+  `• <b>Večerné vyhodnotenie</b> a týždenný prehľad úspešnosti, zisku a ROI`;
 const BENEFIT_CHAT = `• <b>💬 Súkromný VIP chat</b> – na vaše otázky odpisujem priamo ja`;
-const BENEFIT_KURZ = `• <b>📚 Kurz stávkovania</b> v hodnote 99 € zadarmo`;
+const BENEFIT_KURZ = `• <b>📚 Kurz stávkovania zadarmo</b> v hodnote 99 €`;
 const PLAN_START = `🟡 <b>Platinum · 1 mesiac</b> – 49 €\n${BENEFITS_BASE}`;
 const PLAN_SERIA = `🔶 <b>Platinum · 3 mesiace</b> – 129 € (43 € mesačne)\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
 const PLAN_SAMPION = `🏆 <b>Platinum · celá sezóna</b> – 299 € (37 € mesačne) · <b>len 30 miest</b>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_KURZ}`;
