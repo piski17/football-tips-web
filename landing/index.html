@@ -753,6 +753,90 @@
   .jump.up svg { transform: rotate(180deg); }
   html.menu-open .jump { display: none; }
   @media (max-width: 640px) { .jump { right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); width: 44px; height: 44px; } }
+  /* ===== Nová grafika (október 2026) ===== */
+  /* úvod: zlatý radar za nadpisom */
+  .hero { position: relative; overflow: hidden; isolation: isolate; }
+  .hero::before { content: ""; position: absolute; z-index: -2; left: 50%; margin-left: -230px; top: -140px; width: 1100px; height: 1100px; background: radial-gradient(closest-side, rgba(201,165,92,.10), rgba(201,165,92,.03) 55%, transparent 75%); pointer-events: none; }
+  .radar { position: absolute; z-index: -1; left: 50%; margin-left: -100px; top: -10px; width: 860px; height: 860px; pointer-events: none; opacity: .95; -webkit-mask-image: radial-gradient(closest-side, #000 62%, transparent 100%); mask-image: radial-gradient(closest-side, #000 62%, transparent 100%); }
+  .radar svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .radar .sweep { position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(from 0deg, transparent 0deg 292deg, rgba(201,165,92,.02) 300deg, rgba(201,165,92,.13) 352deg, rgba(232,211,160,.34) 359.4deg, transparent 360deg); animation: radar-spin 9s linear infinite; }
+  .radar .blip { position: absolute; width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 50%; background: var(--gold-hi); box-shadow: 0 0 0 4px rgba(232,211,160,.12), 0 0 18px 3px rgba(232,211,160,.55); opacity: 0; animation: radar-blip 9s linear infinite; }
+  @keyframes radar-spin { to { transform: rotate(360deg); } }
+  @keyframes radar-blip { 0% { opacity: 1; transform: scale(1.25); } 35% { opacity: .15; transform: scale(1); } 100% { opacity: 0; transform: scale(1); } }
+  @media (max-width: 960px) { .radar { left: 50%; margin-left: -330px; top: -170px; width: 660px; height: 660px; opacity: .45; } .hero::before { left: 50%; margin-left: -500px; top: -380px; width: 1000px; height: 1000px; } }
+  @media (prefers-reduced-motion: reduce) { .radar .sweep { animation: none; transform: rotate(40deg); } .radar .blip { animation: none; opacity: .5; } }
+
+  /* ako vzniká tip: mobil s ukážkou z Telegramu */
+  .phone { position: relative; margin: 48px 0 0; width: 300px; max-width: 100%; padding: 9px; border-radius: 44px; background: linear-gradient(145deg, #2A2925, #0E0E10 40%, #1A1A1E); border: 1px solid rgba(201,165,92,.45); box-shadow: 0 50px 90px -40px rgba(0,0,0,.95), 0 0 0 1px rgba(0,0,0,.6) inset, 0 0 60px -20px rgba(201,165,92,.25); }
+  .phone::after { content: ""; position: absolute; left: 50%; top: 18px; width: 86px; height: 24px; margin-left: -43px; border-radius: 14px; background: #050506; }
+  .phone-screen { border-radius: 36px; overflow: hidden; background: #0F0F11; }
+  .tg-top { display: flex; align-items: center; gap: 10px; padding: 52px 16px 12px; background: #17171A; border-bottom: 1px solid #222226; }
+  .tg-top svg.back { width: 18px; height: 18px; color: var(--gold); flex: none; }
+  .tg-ava { width: 36px; height: 36px; flex: none; border-radius: 50%; }
+  .tg-top b { display: block; font: 600 14.5px/1.2 var(--sans); color: var(--text); }
+  .tg-top small { display: block; font-size: 12px; color: var(--faint); }
+  .tg-body { display: flex; flex-direction: column; gap: 10px; min-height: 384px; padding: 16px 12px 18px; background: radial-gradient(circle at 20% 10%, rgba(201,165,92,.06), transparent 50%), repeating-linear-gradient(45deg, rgba(255,255,255,.012) 0 2px, transparent 2px 14px), #0F0F11; }
+  .tg-day { align-self: center; font-size: 11.5px; color: var(--muted); background: rgba(26,26,30,.9); padding: 3px 10px; border-radius: 10px; }
+  .tg-msg { max-width: 92%; padding: 10px 12px 6px; border-radius: 14px 14px 14px 4px; background: #1D1D21; border: 1px solid #2A2925; font-size: 13.5px; line-height: 1.5; color: var(--text); }
+  .tg-msg b { font-weight: 700; }
+  .tg-msg .h { display: block; margin-bottom: 6px; }
+  .tg-msg i { display: block; margin-top: 6px; font-size: 11.5px; line-height: 1.4; color: var(--faint); }
+  .tg-msg .t { display: block; text-align: right; font-size: 11px; color: var(--faint); margin-top: 2px; }
+  .tg-msg.win { border-color: rgba(127,191,154,.4); background: linear-gradient(180deg, rgba(127,191,154,.10), #1D1D21 70%); }
+  .tg-msg.win .h { color: var(--win); }
+  .phone-note { margin-top: 14px; font-size: 13px; color: var(--faint); max-width: 300px; }
+  .tg-msg.anim { opacity: 0; transform: translateY(14px) scale(.98); transition: opacity .6s ease, transform .6s cubic-bezier(.2,.8,.2,1); }
+  .tg-msg.anim.in { opacity: 1; transform: none; }
+  @media (max-width: 960px) { .phone, .phone-note { margin-inline: auto; } .phone-note { text-align: center; } }
+
+  /* kto za tým je: ozdobné písmo len na nadpis a citát */
+  .letter p { font: 400 17.5px/1.75 var(--sans); letter-spacing: 0; color: var(--muted); margin-top: 18px; }
+  .letter p:first-of-type { font: italic 400 25px/1.5 var(--serif); letter-spacing: -0.01em; color: var(--text); margin: 32px auto 30px; max-width: 30ch; }
+  .letter p:first-of-type::before, .letter p:first-of-type::after { color: var(--gold); }
+  .letter p:first-of-type::before { content: "„"; }
+  .letter p:first-of-type::after { content: "“"; }
+  .letter p a { color: var(--gold-hi); text-decoration: underline; text-decoration-color: var(--rule-gold); text-underline-offset: 4px; }
+  @media (max-width: 640px) { .letter p { font-size: 16.5px; } .letter p:first-of-type { font-size: 21px; } }
+
+  /* VIP: kovová členská karta */
+  .metal { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 64px; align-items: center; margin-top: 28px; padding: 56px; background: radial-gradient(circle at 30% 50%, rgba(201,165,92,.10), transparent 60%), var(--bg-2); border: 1px solid var(--rule-gold); outline: 1px solid rgba(201,165,92,.14); outline-offset: -9px; }
+  .metal-stage { perspective: 1100px; display: flex; justify-content: center; }
+  .mcard { position: relative; width: 100%; max-width: 460px; aspect-ratio: 1.586; border-radius: 18px; overflow: hidden; transform-style: preserve-3d; transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform .5s cubic-bezier(.2,.8,.2,1); will-change: transform;
+    background:
+      repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 1px, transparent 1px 3px),
+      repeating-linear-gradient(90deg, rgba(0,0,0,.25) 0 2px, transparent 2px 5px),
+      linear-gradient(135deg, #2B2A28 0%, #121214 38%, #1C1B1A 62%, #0A0A0B 100%);
+    border: 1px solid rgba(232,211,160,.35);
+    box-shadow: 0 1px 0 rgba(255,255,255,.15) inset, 0 -1px 0 rgba(0,0,0,.6) inset, 0 40px 70px -30px rgba(0,0,0,.95), 0 18px 30px -18px rgba(0,0,0,.8); }
+  .mcard.live { transition: transform .12s linear; }
+  .mcard::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at var(--gx, 30%) var(--gy, 20%), rgba(255,240,205,.28), rgba(232,211,160,.08) 25%, transparent 55%); mix-blend-mode: screen; pointer-events: none; }
+  .mcard::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, rgba(255,245,220,.16) 48%, transparent 60%); transform: translateX(var(--sx, -40%)); pointer-events: none; }
+  .mcard-in { position: absolute; inset: 0; padding: 7% 7.5%; display: flex; flex-direction: column; }
+  .mcard-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .mcard-brand { display: flex; align-items: center; gap: 10px; font: 600 clamp(17px, 2.3vw, 22px)/1 var(--serif); letter-spacing: .01em; }
+  .mcard-brand svg { width: 30px; height: 30px; }
+  .gold-text { background: linear-gradient(180deg, #F3E3B8 0%, #E8D3A0 30%, #C9A55C 62%, #A8823E 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .mcard-tier { font: 600 11px/1 var(--sans); letter-spacing: .32em; padding: 7px 10px 7px 13px; border: 1px solid rgba(232,211,160,.55); border-radius: 3px; }
+  .mcard-radar { position: absolute; right: -14%; bottom: -30%; width: 66%; opacity: .16; }
+  .mcard-num { margin-top: auto; font: 500 clamp(22px, 3.4vw, 32px)/1 var(--serif); letter-spacing: .14em; }
+  .mcard-bot { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 16px; font-size: clamp(9.5px, 1.2vw, 11px); letter-spacing: .24em; text-transform: uppercase; color: rgba(237,230,214,.55); }
+  .mcard-bot b { display: block; margin-top: 6px; font: 500 clamp(13px, 1.7vw, 15.5px)/1 var(--sans); letter-spacing: .16em; color: #EDE6D6; text-shadow: 0 1px 0 rgba(0,0,0,.8), 0 -1px 0 rgba(255,255,255,.12); }
+  .mcard-bot div:last-child { text-align: right; }
+  .metal-copy h3 { font-size: clamp(28px, 3vw, 36px); font-weight: 400; }
+  .metal-copy h3 em { color: var(--gold-hi); }
+  .metal-copy p { margin-top: 16px; color: var(--muted); }
+  .metal-copy ul { list-style: none; margin: 24px 0 0; padding: 0; border-top: 1px solid var(--rule-gold); }
+  .metal-copy li { display: flex; gap: 12px; align-items: baseline; padding: 11px 0; border-bottom: 1px solid var(--rule); font-size: 15.5px; color: var(--muted); }
+  .metal-copy li::before { content: ""; flex: none; width: 6px; height: 6px; transform: rotate(45deg) translateY(-2px); background: var(--gold); }
+  .metal-copy li strong { color: var(--text); font-weight: 600; }
+  .metal-hint { margin-top: 16px; font-size: 13px; color: var(--faint); }
+  @keyframes mcard-sway { 0%, 100% { transform: rotateX(4deg) rotateY(-10deg); } 50% { transform: rotateX(-3deg) rotateY(10deg); } }
+  @media (hover: none) { .mcard { animation: mcard-sway 7s ease-in-out infinite; } .mcard::after { animation: mcard-shine 7s ease-in-out infinite; } }
+  @keyframes mcard-shine { 0%, 100% { transform: translateX(-45%); } 50% { transform: translateX(45%); } }
+  @media (prefers-reduced-motion: reduce) { .mcard, .mcard::after { animation: none !important; } }
+  @media (hover: none) { .hint-mouse { display: none; } }
+  @media (max-width: 960px) { .metal { grid-template-columns: minmax(0, 1fr); gap: 40px; padding: 40px 28px; } }
+  @media (max-width: 520px) { .metal { padding: 32px 18px; margin-inline: 0; } .mcard { border-radius: 13px; } }
 </style>
 </head>
 <body>
@@ -789,6 +873,7 @@
 
 <main id="top">
   <section class="hero">
+    <div class="radar" aria-hidden="true"><svg viewBox="0 0 860 860" aria-hidden="true"><circle cx="430" cy="430" r="110" fill="none" stroke="#C9A55C" stroke-opacity="0.22" stroke-width="1"/><circle cx="430" cy="430" r="210" fill="none" stroke="#C9A55C" stroke-opacity="0.2" stroke-width="1"/><circle cx="430" cy="430" r="310" fill="none" stroke="#C9A55C" stroke-opacity="0.17" stroke-width="1"/><circle cx="430" cy="430" r="410" fill="none" stroke="#C9A55C" stroke-opacity="0.22" stroke-width="1"/><path d="M430 20V840M20 430H840" stroke="#C9A55C" stroke-opacity=".10" stroke-width="1"/><path d="M140 140L720 720M720 140L140 720" stroke="#C9A55C" stroke-opacity=".05" stroke-width="1"/><path d="M430.0 20.0L430.0 34.0M465.7 21.6L465.2 27.5M501.2 26.2L500.2 32.1M536.1 34.0L534.6 39.8M570.2 44.7L568.2 50.4M603.3 58.4L600.7 63.9M635.0 74.9L628.0 87.1M665.2 94.1L661.7 99.1M693.5 115.9L689.7 120.5M719.9 140.1L715.7 144.3M744.1 166.5L739.5 170.3M765.9 194.8L760.9 198.3M785.1 225.0L772.9 232.0M801.6 256.7L796.1 259.3M815.3 289.8L809.6 291.8M826.0 323.9L820.2 325.4M833.8 358.8L827.9 359.8M838.4 394.3L832.5 394.8M840.0 430.0L826.0 430.0M838.4 465.7L832.5 465.2M833.8 501.2L827.9 500.2M826.0 536.1L820.2 534.6M815.3 570.2L809.6 568.2M801.6 603.3L796.1 600.7M785.1 635.0L772.9 628.0M765.9 665.2L760.9 661.7M744.1 693.5L739.5 689.7M719.9 719.9L715.7 715.7M693.5 744.1L689.7 739.5M665.2 765.9L661.7 760.9M635.0 785.1L628.0 772.9M603.3 801.6L600.7 796.1M570.2 815.3L568.2 809.6M536.1 826.0L534.6 820.2M501.2 833.8L500.2 827.9M465.7 838.4L465.2 832.5M430.0 840.0L430.0 826.0M394.3 838.4L394.8 832.5M358.8 833.8L359.8 827.9M323.9 826.0L325.4 820.2M289.8 815.3L291.8 809.6M256.7 801.6L259.3 796.1M225.0 785.1L232.0 772.9M194.8 765.9L198.3 760.9M166.5 744.1L170.3 739.5M140.1 719.9L144.3 715.7M115.9 693.5L120.5 689.7M94.1 665.2L99.1 661.7M74.9 635.0L87.1 628.0M58.4 603.3L63.9 600.7M44.7 570.2L50.4 568.2M34.0 536.1L39.8 534.6M26.2 501.2L32.1 500.2M21.6 465.7L27.5 465.2M20.0 430.0L34.0 430.0M21.6 394.3L27.5 394.8M26.2 358.8L32.1 359.8M34.0 323.9L39.8 325.4M44.7 289.8L50.4 291.8M58.4 256.7L63.9 259.3M74.9 225.0L87.1 232.0M94.1 194.8L99.1 198.3M115.9 166.5L120.5 170.3M140.1 140.1L144.3 144.3M166.5 115.9L170.3 120.5M194.8 94.1L198.3 99.1M225.0 74.9L232.0 87.1M256.7 58.4L259.3 63.9M289.8 44.7L291.8 50.4M323.9 34.0L325.4 39.8M358.8 26.2L359.8 32.1M394.3 21.6L394.8 27.5" stroke="#C9A55C" stroke-opacity=".28" stroke-width="1"/></svg><div class="sweep"></div><i class="blip" style="left:78.52%;top:24.32%;animation-delay:1.20s"></i><i class="blip" style="left:69.41%;top:57.84%;animation-delay:2.80s"></i><i class="blip" style="left:61.14%;top:91.56%;animation-delay:4.12s"></i><i class="blip" style="left:26.18%;top:68.61%;animation-delay:5.80s"></i><i class="blip" style="left:10.73%;top:27.33%;animation-delay:7.50s"></i><i class="blip" style="left:55.97%;top:33.61%;animation-delay:0.50s"></i></div>
     <div class="wrap">
       <div>
         <div class="eyebrow">Futbalové tipy podložené štatistickým modelom</div>
@@ -825,12 +910,21 @@
         <div class="eyebrow"><b>I.</b>Metóda</div>
         <h2>Ako vzniká tip</h2>
         <p>Každý zápas prejde rovnakými pravidlami. Väčšina neprejde a vtedy radšej nepošleme nič.</p>
-        <div class="sample">
-          <div class="lbl">Takto tip príde do Telegramu</div>
-          <b>Nórsko – Portugalsko</b>, 20:45<br />
-          Góly: <b>pod 3,5</b> · dôvera 66&nbsp;% · kurz 1,72
-          <p class="why">V posledných piatich vzájomných zápasoch padli v priemere dva góly.</p>
-        </div>
+        <figure class="phone" aria-label="Ukážka: takto príde tip do Telegramu">
+          <div class="phone-screen">
+            <div class="tg-top">
+              <svg class="back" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <svg class="tg-ava" aria-hidden="true"><use href="#logo"/></svg>
+              <div><b>TipRadar Premium</b><small>súkromný kanál</small></div>
+            </div>
+            <div class="tg-body">
+              <span class="tg-day">Dnes</span>
+              <div class="tg-msg anim"><b class="h">🎯 Nový tip</b>⚽ Nórsko — Portugalsko<br />📊 Góly: <b>pod 3,5</b><br />📈 Dôvera: <b>66&nbsp;%</b><br />💰 Kurz: <b>1,72</b><br />💵 Odporúčaná sadzba: <b>2&nbsp;% bankrollu</b><i>ℹ️ Priemerný kurz stávkových kancelárií v čase odoslania.</i><span class="t">18:02</span></div>
+              <div class="tg-msg win anim"><b class="h">✅ VÝHRA</b>⚽ Nórsko — Portugalsko<br />📊 Góly: <b>pod 3,5</b><span class="t">22:41</span></div>
+            </div>
+          </div>
+        </figure>
+        <p class="phone-note">Ilustrácia. Tip príde 2 – 3 hodiny pred výkopom, výsledok večer po zápase.</p>
       </div>
       <div>
         <ol class="funnel">
@@ -983,6 +1077,35 @@
             </div>
           </div>
         </article>
+      </div>
+      <div class="metal" id="karta">
+        <div class="metal-stage">
+          <div class="mcard" id="mcard" aria-label="Ilustrácia kovovej členskej karty VIP">
+            <svg class="mcard-radar" viewBox="0 0 200 200" aria-hidden="true"><use href="#logo"/></svg>
+            <div class="mcard-in">
+              <div class="mcard-top">
+                <div class="mcard-brand"><svg aria-hidden="true"><use href="#logo"/></svg><span class="gold-text">TipRadar</span></div>
+                <span class="mcard-tier gold-text">VIP</span>
+              </div>
+              <div class="mcard-num gold-text num">Nº 07 / 30</div>
+              <div class="mcard-bot">
+                <div>Člen<b>Vaše meno</b></div>
+                <div>Od<b>2026</b></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="metal-copy">
+          <div class="eyebrow">Len pre VIP</div>
+          <h3>Kovová členská karta <em>s vaším menom</em></h3>
+          <p>Každý VIP člen dostane poštou kovovú kartu s menom a poradovým číslom. Miest je len 30, takže aj kariet bude len 30.</p>
+          <ul>
+            <li><span><strong>Vaše meno</strong> a číslo členstva</span></li>
+            <li><span><strong>Poradové číslo</strong> 1 až 30, podľa poradia zápisu</span></li>
+            <li><span><strong>Poštou</strong> priamo k vám domov</span></li>
+          </ul>
+          <p class="metal-hint">Ilustrácia.<span class="hint-mouse"> Prejdite po karte myšou.</span></p>
+        </div>
       </div>
       <div class="founder">
         <b>Prví členovia</b>
@@ -1538,6 +1661,44 @@
     setTimeout(function () { ro.disconnect(); }, 4100);
   }
   [150, 500, 1000, 2000, 3000].forEach(function (t) { setTimeout(align, t); });
+})();
+</script>
+<script>
+/* nová grafika: bubliny v mobile a kovová karta */
+(function () {
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var msgs = document.querySelectorAll(".tg-msg.anim");
+  if (reduce || !("IntersectionObserver" in window)) { msgs.forEach(function (m) { m.classList.add("in"); }); }
+  else {
+    var io = new IntersectionObserver(function (es) {
+      if (!es.some(function (e) { return e.isIntersecting; })) return;
+      io.disconnect();
+      msgs.forEach(function (m, k) { setTimeout(function () { m.classList.add("in"); }, 250 + k * 1100); });
+    }, { threshold: 0.35 });
+    var ph = document.querySelector(".phone"); if (ph) io.observe(ph);
+  }
+  var card = document.getElementById("mcard");
+  if (!card || reduce) return;
+  var stage = card.parentNode, raf = 0;
+  stage.addEventListener("pointermove", function (e) {
+    if (e.pointerType === "touch") return;
+    var r = card.getBoundingClientRect();
+    var x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+    var y = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(function () {
+      card.classList.add("live");
+      card.style.setProperty("--ry", ((x - 0.5) * 22).toFixed(2) + "deg");
+      card.style.setProperty("--rx", ((0.5 - y) * 16).toFixed(2) + "deg");
+      card.style.setProperty("--gx", (x * 100).toFixed(1) + "%");
+      card.style.setProperty("--gy", (y * 100).toFixed(1) + "%");
+      card.style.setProperty("--sx", ((x - 0.5) * 120).toFixed(1) + "%");
+    });
+  });
+  stage.addEventListener("pointerleave", function () {
+    card.classList.remove("live");
+    ["--ry", "--rx", "--gx", "--gy", "--sx"].forEach(function (v) { card.style.removeProperty(v); });
+  });
 })();
 </script>
 </body>
