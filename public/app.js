@@ -209,7 +209,7 @@ function tipOddsLabel(t) {
 const STRONG_TIP_MIN_PROBABILITY = 70;
 function strongTipBadge(p) {
   return typeof p === "number" && p >= STRONG_TIP_MIN_PROBABILITY
-    ? ' <span class="strong-tip" title="Dôvera 70 % a viac. Vo VIP kanáli dostane hviezdičku len jeden tip dňa – ten s najvyššou dôverou.">★ 70 %+</span>'
+    ? ' <span class="strong-tip" title="Dôvera 70 % a viac.">★ 70 %+</span>'
     : "";
 }
 
@@ -845,10 +845,8 @@ function askTelegramTarget() {
       <div class="modal" style="max-width:320px;">
         <h3>Odoslať do Telegramu?</h3>
         <div style="display:flex; flex-direction:column; gap:10px; margin-top:18px;">
-          <button class="btn-primary" id="tgChoicePremium">◆ PREMIUM kanál</button>
-          <button class="btn-primary" id="tgChoiceVip">♛ VIP kanál</button>
+          <button class="btn-primary" id="tgChoicePremium">◆ PLATINUM kanál</button>
           <button class="btn-primary" id="tgChoiceFree">★ FREE kanál</button>
-          <button class="btn-ghost" id="tgChoiceBoth">Oba naraz (Premium + VIP)</button>
           <button class="btn-ghost" id="tgChoiceNone">Neposielať</button>
         </div>
       </div>
@@ -859,8 +857,6 @@ function askTelegramTarget() {
       resolve(result);
     };
     overlay.querySelector("#tgChoicePremium").addEventListener("click", () => cleanup("premium"));
-    overlay.querySelector("#tgChoiceVip").addEventListener("click", () => cleanup("vip"));
-    overlay.querySelector("#tgChoiceBoth").addEventListener("click", () => cleanup("both"));
     overlay.querySelector("#tgChoiceFree").addEventListener("click", () => cleanup("free"));
     overlay.querySelector("#tgChoiceNone").addEventListener("click", () => cleanup(null));
   });
@@ -1367,7 +1363,7 @@ function renderTipsList(tips) {
           ${resultIconHtml}
           ${
             t.status === "pending"
-              ? `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button><button class="tip-delete-btn" data-send-id="${t.id}" title="Poslať do Telegram kanála" aria-label="Poslať do Telegram kanála"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="display:block"><path fill="currentColor" d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L6.2 13.1 1.3 11.6c-1-.3-1.1-1 .2-1.5L20.6 2.8c.9-.3 1.6.2 1.3 1.5z"/></svg></button><button class="tip-delete-btn" data-motw-id="${t.id}" title="Poslať do VIP ako ⭐ Silný tip dňa">⭐</button>`
+              ? `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button><button class="tip-delete-btn" data-send-id="${t.id}" title="Poslať do Telegram kanála" aria-label="Poslať do Telegram kanála"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="display:block"><path fill="currentColor" d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L6.2 13.1 1.3 11.6c-1-.3-1.1-1 .2-1.5L20.6 2.8c.9-.3 1.6.2 1.3 1.5z"/></svg></button>`
               : `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button><button class="tip-delete-btn" data-result-id="${t.id}" title="Poslať výsledok do Telegramu">➤</button>`
           }
         </div>
@@ -1378,12 +1374,12 @@ function renderTipsList(tips) {
         <div class="tip-row ${rowClassFull}" data-row-id="${t.id}">
           <div class="tip-row-info">
             <div class="tip-row-match">${escapeHtml(translateTeamName(t.homeTeam))} — ${escapeHtml(translateTeamName(t.awayTeam))} <span class="muted small">(${date})</span></div>
-            <div class="tip-row-market">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))} · ${t.probability.toFixed(0)} % · kurz ${tipOddsLabel(t)}${t.strongOfDay ? STRONG_OF_DAY_BADGE : ""}${overrideBadge(t)}${manualBadge(t)}${editedBadge(t)}</div>
+            <div class="tip-row-market">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))} · ${t.probability.toFixed(0)} % · kurz ${tipOddsLabel(t)}${overrideBadge(t)}${manualBadge(t)}${editedBadge(t)}</div>
           </div>
           ${resultIconHtml}
           ${
             t.status === "pending"
-              ? `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button><button class="tip-delete-btn" data-send-id="${t.id}" title="Poslať do Telegram kanála" aria-label="Poslať do Telegram kanála"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="display:block"><path fill="currentColor" d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L6.2 13.1 1.3 11.6c-1-.3-1.1-1 .2-1.5L20.6 2.8c.9-.3 1.6.2 1.3 1.5z"/></svg></button><button class="tip-delete-btn" data-motw-id="${t.id}" title="Poslať do VIP ako ⭐ Silný tip dňa">⭐</button>`
+              ? `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button><button class="tip-delete-btn" data-send-id="${t.id}" title="Poslať do Telegram kanála" aria-label="Poslať do Telegram kanála"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="display:block"><path fill="currentColor" d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L6.2 13.1 1.3 11.6c-1-.3-1.1-1 .2-1.5L20.6 2.8c.9-.3 1.6.2 1.3 1.5z"/></svg></button>`
               : `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button><button class="tip-delete-btn" data-result-id="${t.id}" title="Poslať výsledok do Telegramu">➤</button>`
           }
         </div>
@@ -2133,7 +2129,7 @@ function renderDayTips() {
           <div class="day-tip-bet">${escapeHtml(bet.market)}: <strong>${escapeHtml(
             translateNamesInText(bet.selection, f.homeTeam.name, f.awayTeam.name)
           )}</strong></div>
-          <div class="muted small">Dôvera <strong>${bet.probability.toFixed(0)} %</strong>${betOddsHtml(bet)}${i === strongIdx ? STRONG_OF_DAY_BADGE : ""}</div>
+          <div class="muted small">Dôvera <strong>${bet.probability.toFixed(0)} %</strong>${betOddsHtml(bet)}</div>
           ${warn}
         </div>
         <div class="day-tip-actions">
