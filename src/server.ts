@@ -583,6 +583,9 @@ app.get("/api/public/track-record", async (_req, res) => {
     // Aktuálny mesiac (podľa slovenského času a dňa zápasu).
     const monthKey = dayKeySk(new Date()).slice(0, 7);
     const inMonth = all.filter((t) => (tipDayKey(t) ?? "").startsWith(monthKey));
+    // Posledných 7 dní (dnes a 6 dní dozadu) – riadok pri členstve na webe.
+    const weekAgoKey = dayKeySk(new Date(Date.now() - 6 * 24 * 3600 * 1000));
+    const inLast7 = all.filter((t) => (tipDayKey(t) ?? "") >= weekAgoKey);
     // Posledné VYHODNOTENÉ tipy (po skončení zápasu) - na ukážku, z čoho čísla vznikli.
     // Čakajúce tipy sa nikdy nezverejňujú, tie patria len platiacim klientom.
     const recent = all
@@ -695,6 +698,7 @@ app.get("/api/public/track-record", async (_req, res) => {
     res.json({
       ...summarize(all),
       month: { key: monthKey, ...summarize(inMonth) },
+      last7: summarize(inLast7),
       latest,
       freeTip,
       clv: {

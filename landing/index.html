@@ -231,8 +231,6 @@
   .sign span { display: block; font: 400 14px/1.5 var(--sans); color: var(--faint); margin-top: 4px; font-style: normal; }
 
   /* členstvo */
-  .plans { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-top: 48px; }
-  @media (max-width: 860px) { .plans { grid-template-columns: minmax(0, 1fr); } }
   .plan { background: var(--card); border: 1px solid var(--rule); padding: 32px; display: flex; flex-direction: column; }
   .plan.vip { border-color: var(--rule-gold); }
   .plan-top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
@@ -348,7 +346,6 @@
   .sign span { font-size: 11px; letter-spacing: .22em; text-transform: uppercase; }
 
   /* členstvo */
-  .plans { gap: 28px; margin-top: 56px; }
   .plan { padding: 44px 40px; }
   .plan h3 { font-size: 30px; font-weight: 400; }
   .plan-top span { font-size: 11px; letter-spacing: .22em; text-transform: uppercase; }
@@ -610,9 +607,7 @@
   .term-switch button em { font-style: normal; color: var(--gold); margin-left: 4px; }
   .term-switch button[aria-selected="true"] { background: var(--gold); color: #141210; }
   .term-switch button[aria-selected="true"] em { color: #141210; }
-  .term-switch + .plans { margin-top: 28px; }
   .per-month { margin: 10px 0 0; font-size: 14px; color: var(--gold); min-height: 1.4em; }
-  .plan .founder { display: inline-block; align-self: flex-start; width: auto; min-height: 0; line-height: 1.4; margin: 10px 0 0; padding: 4px 10px; border: 1px solid var(--gold); border-radius: 999px; font-size: 12px; letter-spacing: .04em; color: var(--gold); }
   .skola { background: radial-gradient(900px 500px at 0% 0%, rgba(201,165,92,.07), transparent 60%), var(--bg); }
   .skola-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 72px; align-items: start; }
   @media (min-width: 961px) { .skola-media { position: sticky; top: calc(var(--nav-h, 76px) + 72px); margin-top: 40px; } }
@@ -700,9 +695,6 @@
     .skola-zoom { right: 8px; bottom: 8px; padding: 6px; font-size: 0; gap: 0; } .skola-zoom svg { width: 15px; height: 15px; }
     .skola-info { font-size: 14.5px; min-height: 4.8em; } .skola-nav { flex-direction: column; align-items: stretch; gap: 14px; margin-top: 20px; } .skola-cap { font-size: 14px; } .skola-dots { gap: 6px; } .skola-dots button { flex: 1; width: auto; } .skola-dots button[aria-current="true"] { flex: 2; width: auto; }
   }
-  .founder { margin-top: 28px; padding: 22px 26px; border: 1px dashed var(--rule-gold); display: flex; gap: 18px; align-items: baseline; flex-wrap: wrap; }
-  .founder b { font: 400 20px/1.2 var(--serif); color: var(--gold-hi); font-weight: 400; }
-  .founder p { margin: 0; color: var(--muted); flex: 1 1 320px; }
   @media (max-width: 640px) { .term-switch { display: grid; grid-template-columns: repeat(3, 1fr); border-radius: 18px; } .term-switch button { padding: 10px 6px; font-size: 13px; line-height: 1.3; border-radius: 14px; } .term-switch button em { display: block; margin: 2px 0 0; } }
   /* ikonky vedľa Menu: na úzkom telefóne len tri čiarky bez nápisu */
   @media (max-width: 480px) { .nav .wrap { gap: 8px; } .nav-social { gap: 0; margin-right: 4px; } .nav-social a { width: 34px; } .nav-toggle { font-size: 0; gap: 0; padding: 0 12px; } }
@@ -809,45 +801,6 @@
   .letter p a { color: var(--gold-hi); text-decoration: underline; text-decoration-color: var(--rule-gold); text-underline-offset: 4px; }
   @media (max-width: 640px) { .letter p { font-size: 16.5px; } .letter p:first-of-type { font-size: 21px; } }
 
-  /* VIP: kovová členská karta */
-  .metal { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 64px; align-items: center; margin-top: 28px; padding: 56px; background: radial-gradient(circle at 30% 50%, rgba(201,165,92,.10), transparent 60%), var(--bg-2); border: 1px solid var(--rule-gold); outline: 1px solid rgba(201,165,92,.14); outline-offset: -9px; }
-  .metal-stage { perspective: 1100px; display: flex; justify-content: center; }
-  .mcard { position: relative; width: 100%; max-width: 460px; aspect-ratio: 1.586; border-radius: 18px; overflow: hidden; transform-style: preserve-3d; transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform .5s cubic-bezier(.2,.8,.2,1); will-change: transform;
-    background:
-      repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 1px, transparent 1px 3px),
-      repeating-linear-gradient(90deg, rgba(0,0,0,.25) 0 2px, transparent 2px 5px),
-      linear-gradient(135deg, #2B2A28 0%, #121214 38%, #1C1B1A 62%, #0A0A0B 100%);
-    border: 1px solid rgba(232,211,160,.35);
-    box-shadow: 0 1px 0 rgba(255,255,255,.15) inset, 0 -1px 0 rgba(0,0,0,.6) inset, 0 40px 70px -30px rgba(0,0,0,.95), 0 18px 30px -18px rgba(0,0,0,.8); }
-  .mcard.live { transition: transform .12s linear; }
-  .mcard::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at var(--gx, 30%) var(--gy, 20%), rgba(255,240,205,.28), rgba(232,211,160,.08) 25%, transparent 55%); mix-blend-mode: screen; pointer-events: none; }
-  .mcard::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, rgba(255,245,220,.16) 48%, transparent 60%); transform: translateX(var(--sx, -40%)); pointer-events: none; }
-  .mcard-in { position: absolute; inset: 0; padding: 7% 7.5%; display: flex; flex-direction: column; }
-  .mcard-top { display: flex; justify-content: space-between; align-items: flex-start; }
-  .mcard-brand { display: flex; align-items: center; gap: 10px; font: 600 clamp(17px, 2.3vw, 22px)/1 var(--serif); letter-spacing: .01em; }
-  .mcard-brand svg { width: 30px; height: 30px; }
-  .gold-text { background: linear-gradient(180deg, #F3E3B8 0%, #E8D3A0 30%, #C9A55C 62%, #A8823E 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .mcard-tier { font: 600 11px/1 var(--sans); letter-spacing: .32em; padding: 7px 10px 7px 13px; border: 1px solid rgba(232,211,160,.55); border-radius: 3px; }
-  .mcard-radar { position: absolute; right: -14%; bottom: -30%; width: 66%; opacity: .16; }
-  .mcard-num { margin-top: auto; font: 500 clamp(22px, 3.4vw, 32px)/1 var(--serif); letter-spacing: .14em; }
-  .mcard-bot { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 16px; font-size: clamp(9.5px, 1.2vw, 11px); letter-spacing: .24em; text-transform: uppercase; color: rgba(237,230,214,.55); }
-  .mcard-bot b { display: block; margin-top: 6px; font: 500 clamp(13px, 1.7vw, 15.5px)/1 var(--sans); letter-spacing: .16em; color: #EDE6D6; text-shadow: 0 1px 0 rgba(0,0,0,.8), 0 -1px 0 rgba(255,255,255,.12); }
-  .mcard-bot div:last-child { text-align: right; }
-  .metal-copy h3 { font-size: clamp(28px, 3vw, 36px); font-weight: 400; }
-  .metal-copy h3 em { color: var(--gold-hi); }
-  .metal-copy p { margin-top: 16px; color: var(--muted); }
-  .metal-copy ul { list-style: none; margin: 24px 0 0; padding: 0; border-top: 1px solid var(--rule-gold); }
-  .metal-copy li { display: flex; gap: 12px; align-items: baseline; padding: 11px 0; border-bottom: 1px solid var(--rule); font-size: 15.5px; color: var(--muted); }
-  .metal-copy li::before { content: ""; flex: none; width: 6px; height: 6px; transform: rotate(45deg) translateY(-2px); background: var(--gold); }
-  .metal-copy li strong { color: var(--text); font-weight: 600; }
-  .metal-hint { margin-top: 16px; font-size: 13px; color: var(--faint); }
-  @keyframes mcard-sway { 0%, 100% { transform: rotateX(4deg) rotateY(-10deg); } 50% { transform: rotateX(-3deg) rotateY(10deg); } }
-  @media (hover: none) { .mcard { animation: mcard-sway 7s ease-in-out infinite; } .mcard::after { animation: mcard-shine 7s ease-in-out infinite; } }
-  @keyframes mcard-shine { 0%, 100% { transform: translateX(-45%); } 50% { transform: translateX(45%); } }
-  @media (prefers-reduced-motion: reduce) { .mcard, .mcard::after { animation: none !important; } }
-  @media (hover: none) { .hint-mouse { display: none; } }
-  @media (max-width: 960px) { .metal { grid-template-columns: minmax(0, 1fr); gap: 40px; padding: 40px 28px; } }
-  @media (max-width: 520px) { .metal { padding: 32px 18px; margin-inline: 0; } .mcard { border-radius: 13px; } }
 
   /* ===== Rozdelenie na stránky: úvod, /metoda, /vysledky, /otazky ===== */
   html[data-page="home"] [data-pages]:not([data-pages~="home"]),
@@ -893,7 +846,6 @@
   .hero { padding: 88px 0 88px; }
   .next { padding: 64px 0; }
   .page-head { padding: 56px 0 48px; }
-  .plans { margin-top: 40px; }
   @media (max-width: 640px) { .sec { padding: 52px 0; } .hero { padding: 48px 0 56px; } .next { padding: 44px 0; } .page-head { padding: 36px 0 36px; } }
 
   /* TipRadar Platinum: jedno členstvo, prepínač dĺžky */
@@ -927,6 +879,10 @@
   .lux .lux-list li.plus strong { color: var(--gold-hi); }
   .lux-list li[hidden] { display: none; }
   .lux .limit-tag[hidden] { display: none; }
+  .last7 { margin: 26px 0 0; padding: 14px 16px; border: 1px solid var(--rule-gold); background: rgba(201,165,92,.06); text-align: center; font-size: 15px; color: var(--muted); }
+  .last7[hidden] { display: none; }
+  .last7 b { color: var(--text); font-weight: 600; }
+  .last7 b.up { color: #7FBF9A; }
   .lux .plan-foot { padding-top: 26px; }
   .lux .seats { margin: 0 0 16px; }
   .lux .small { text-align: center; }
@@ -1191,6 +1147,7 @@
           <li class="plus" data-min-term="m3"><strong>Súkromný VIP chat</strong><span>na vaše otázky odpisujem priamo ja</span></li>
           <li class="plus" data-min-term="season"><strong>Kurz stávkovania zadarmo</strong><span>v hodnote 99&nbsp;€</span></li>
         </ul>
+        <p class="last7" id="last7" hidden></p>
         <div class="plan-foot">
           <div class="seats" id="vipSeats" hidden>
             <div id="vipSeatsText"></div>
@@ -1596,6 +1553,16 @@
   fetch("/api/public/track-record", { cache: "no-store" })
     .then((r) => (r.ok ? r.json() : Promise.reject()))
     .then((d) => {
+      // Posledných 7 dní priamo pri členstve
+      const l7 = d.last7, el7 = document.getElementById("last7");
+      if (el7 && l7 && l7.totalResolved > 0) {
+        const pr = Number(l7.profit) || 0;
+        const tipW = (n) => (n === 1 ? "tipu" : "tipov");
+        const vys = l7.won === 1 ? "vyšiel" : l7.won >= 2 && l7.won <= 4 ? "vyšli" : "vyšlo";
+        el7.innerHTML = `Posledných 7 dní: <b>${l7.won} z ${l7.totalResolved}</b> ${tipW(l7.totalResolved)} ${vys}` +
+          (l7.withOdds > 0 ? ` · zisk <b class="${pr >= 0 ? "up" : ""}">${pr >= 0 ? "+" : "−"}${Math.abs(pr).toFixed(1).replace(".", ",")}&nbsp;j.</b>` : "");
+        el7.hidden = false;
+      }
       recentAll = d.recent || [];
       drawList(); drawChart(d.timeline);
       if (!d.totalResolved) { $("month").textContent = "Čísla sa zobrazia po prvých vyhodnotených tipoch."; return; }
@@ -1781,7 +1748,7 @@
 })();
 </script>
 <script>
-/* nová grafika: bubliny v mobile a kovová karta */
+/* nová grafika: bubliny v mobile */
 (function () {
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var msgs = document.querySelectorAll(".tg-msg.anim");
@@ -1794,28 +1761,6 @@
     }, { threshold: 0.35 });
     var ph = document.querySelector(".phone"); if (ph) io.observe(ph);
   }
-  var card = document.getElementById("mcard");
-  if (!card || reduce) return;
-  var stage = card.parentNode, raf = 0;
-  stage.addEventListener("pointermove", function (e) {
-    if (e.pointerType === "touch") return;
-    var r = card.getBoundingClientRect();
-    var x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
-    var y = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
-    cancelAnimationFrame(raf);
-    raf = requestAnimationFrame(function () {
-      card.classList.add("live");
-      card.style.setProperty("--ry", ((x - 0.5) * 22).toFixed(2) + "deg");
-      card.style.setProperty("--rx", ((0.5 - y) * 16).toFixed(2) + "deg");
-      card.style.setProperty("--gx", (x * 100).toFixed(1) + "%");
-      card.style.setProperty("--gy", (y * 100).toFixed(1) + "%");
-      card.style.setProperty("--sx", ((x - 0.5) * 120).toFixed(1) + "%");
-    });
-  });
-  stage.addEventListener("pointerleave", function () {
-    card.classList.remove("live");
-    ["--ry", "--rx", "--gx", "--gy", "--sx"].forEach(function (v) { card.style.removeProperty(v); });
-  });
 })();
 </script>
 </body>
