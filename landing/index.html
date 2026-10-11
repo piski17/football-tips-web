@@ -1751,6 +1751,8 @@
   // Starý odkaz: kurz má vlastnú stránku.
   if (location.hash === "#skola") { location.replace("/kurz"); return; }
   var id = decodeURIComponent((location.hash || "").slice(1));
+  // tipradar.eu/clenstvo (bez #) – Instagram časť za # niekedy zahodí.
+  if (!id && /^\/clenstvo\/?$/.test(location.pathname)) id = "clenstvo";
   if (!id || !document.getElementById(id)) return;
   if ("scrollRestoration" in history) history.scrollRestoration = "manual";
   var stop = false, until = Date.now() + 4000;
