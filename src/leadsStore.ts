@@ -12,7 +12,7 @@ const FILE = path.join(__dirname, "..", "data", "leads.json");
 
 export interface Lead {
   chatId: string;
-  plan: string; // premium | vip | vip_waitlist | clenstvo
+  plan: string; // start | seria | sampion | sampion_waitlist | clenstvo (staršie: premium | vip | vip_waitlist)
   name: string;
   username?: string;
   email?: string; // zápis cez formulár na tipradar.eu
@@ -51,7 +51,7 @@ export async function listLeads(): Promise<Lead[]> {
 export async function recordLead(input: { chatId: string; plan: string; name: string; username?: string; email?: string; note?: string; source?: "telegram" | "web" }): Promise<void> {
   const now = new Date().toISOString();
   const existing = (await listLeads()).find((l) => l.chatId === input.chatId);
-  const isVip = (p: string) => p === "vip" || p === "vip_waitlist";
+  const isVip = (p: string) => p === "vip" || p === "vip_waitlist" || p === "sampion" || p === "sampion_waitlist";
   const plan = existing && isVip(existing.plan) && !isVip(input.plan) ? existing.plan : input.plan;
   const lead: Lead = { ...input, plan, firstAt: existing?.firstAt ?? now, lastAt: now };
   if (!useUpstash) {

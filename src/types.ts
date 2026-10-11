@@ -337,7 +337,7 @@ export interface Subscriber {
   name: string;
   contact?: string;
   telegramChatId?: string; // voliteľné - ak vyplnené, appka mu vie poslať osobnú pripomienku pred obnovením
-  tier: "individual" | "group"; // individual = Premium, group = VIP
+  tier: "individual" | "group"; // individual = Štart / Séria, group = Šampión (len 30 miest)
   priceEur: number;
   nextPaymentDue: string; // ISO dátum – do kedy má členstvo zaplatené
   length?: "m1" | "m3" | "season"; // dĺžka členstva (staršie záznamy ju nemajú = 1 mesiac)

@@ -172,14 +172,14 @@
         <input type="text" id="subName" placeholder="Meno" />
         <input type="text" id="subContact" placeholder="Kontakt (e-mail, Telegram…)" />
         <input type="text" id="subTelegramChatId" placeholder="Telegram chat ID (voliteľné)" />
-        <select id="subTier" aria-label="Členstvo">
-          <option value="individual">Premium</option>
-          <option value="group">VIP</option>
+        <select id="subTier" aria-label="Členstvo" hidden>
+          <option value="individual">Štart / Séria</option>
+          <option value="group">Šampión</option>
         </select>
         <select id="subLength" aria-label="Dĺžka">
-          <option value="m1">1 mesiac</option>
-          <option value="m3" selected>3 mesiace</option>
-          <option value="season">Sezóna (do 31. 5. 2027)</option>
+          <option value="m1">Štart · 1 mesiac</option>
+          <option value="m3" selected>Séria · 3 mesiace</option>
+          <option value="season">Šampión · sezóna (do 31. 5. 2027)</option>
         </select>
         <label class="member-field">Od <input type="date" id="subStart" /></label>
         <label class="member-field">Cena <input type="number" id="subPrice" min="0" step="1" inputmode="decimal" /> €</label>

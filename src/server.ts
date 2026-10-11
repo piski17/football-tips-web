@@ -252,7 +252,7 @@ app.post("/api/public/waitlist", express.json({ limit: "10kb" }), async (req, re
   const name = clean(b.name, 80);
   const email = clean(b.email, 120).toLowerCase();
   const note = clean(b.note, 500);
-  const plan = b.plan === "vip" ? "vip" : b.plan === "premium" ? "premium" : b.plan === "kurz" ? "kurz" : b.plan === "otazka" ? "otazka" : "";
+  const plan = ["clenstvo", "vip", "premium", "kurz", "otazka"].includes(b.plan) ? String(b.plan) : "";
   if (name.length < 2) { res.status(400).json({ error: "Napíšte, prosím, svoje meno." }); return; }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { res.status(400).json({ error: "Skontrolujte, prosím, e-mail." }); return; }
   if (!plan) { res.status(400).json({ error: "Vyberte, prosím, čo vás zaujíma." }); return; }
@@ -260,9 +260,9 @@ app.post("/api/public/waitlist", express.json({ limit: "10kb" }), async (req, re
   if (b.consent !== true) { res.status(400).json({ error: "Bez súhlasu so spracovaním údajov vás nemôžeme zapísať." }); return; }
   try {
     // Otázka z dotazníka sa nepočíta do poradovníka VIP – téma ide len do poznámky.
-    const topic = plan === "vip" ? "Členstvo VIP: " : plan === "premium" ? "Členstvo Premium: " : plan === "kurz" ? "Kurz stávkovania: " : "";
+    const topic = plan === "clenstvo" || plan === "vip" || plan === "premium" ? "Členstvo: " : plan === "kurz" ? "Kurz stávkovania: " : "";
     await recordLead({ chatId: `web:${email}`, plan: "otazka", name, email, note: topic + note, source: "web" });
-    const topicLabel = plan === "vip" ? "Členstvo VIP" : plan === "premium" ? "Členstvo Premium" : plan === "kurz" ? "Kurz stávkovania (99 €)" : "Všeobecná otázka";
+    const topicLabel = plan === "clenstvo" || plan === "vip" || plan === "premium" ? "Členstvo" : plan === "kurz" ? "Kurz stávkovania (99 €)" : "Všeobecná otázka";
     sendAdminEmail(`Nová správa z formulára na tipradar.eu – ${name}`, [
       ["Meno", name],
       ["E-mail", email],
@@ -725,7 +725,7 @@ app.get("/api/public/vip-seats", async (_req, res) => {
     // Záujemca, ktorý už je VIP členom (rovnaké Telegram ID), sa nepočíta dvakrát.
     const memberChats = new Set(activeVip.map((s) => String(s.telegramChatId || "")).filter(Boolean));
     const waitlistVip = (await listLeads().catch(() => [])).filter(
-      (l) => (l.plan === "vip" || l.plan === "vip_waitlist") && !memberChats.has(String(l.chatId))
+      (l) => ["vip", "vip_waitlist", "sampion", "sampion_waitlist"].includes(l.plan) && !memberChats.has(String(l.chatId))
     ).length;
     // Odkaz na bezplatný Telegram kanál: premenná TELEGRAM_FREE_CHANNEL_URL na Renderi (napr. https://t.me/tipradar_free).
     const freeChannelUrl = process.env.TELEGRAM_FREE_CHANNEL_URL || "https://t.me/TipRadarAiBot?start=free";

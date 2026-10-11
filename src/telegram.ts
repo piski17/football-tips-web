@@ -374,26 +374,22 @@ export async function deleteTelegramMessages(messages: { chatId: string; message
 
 const TELEGRAM_CONTACT_USERNAME = process.env.TELEGRAM_CONTACT_USERNAME || "im_mishko";
 
-const FOUNDER_NOTE =
-  `💎 <b>Zakladajúca cena</b> – kto sa zapíše do poradovníka, má tieto ceny zamknuté, kým členstvo preruší. Neskôr bude Premium 35 € a VIP 69 € mesačne.`;
+// ---- Členstvo: jedno členstvo, tri dĺžky (rovnaké texty ako na tipradar.eu) ----
+const BENEFITS_BASE =
+  `• <b>Denné tipy v súkromnom kanáli</b> na Telegrame, 1 – 2 hodiny pred výkopom\n` +
+  `• <b>Pri každom tipe</b> kurz, šanca podľa modelu, dôvod a odporúčaná sadzba\n` +
+  `• <b>Vyhodnotenie</b> každý večer a týždenný prehľad úspešnosti, zisku a ROI`;
+const BENEFIT_CHAT = `• <b>💬 Súkromný VIP chat</b> – na vaše otázky odpisujem priamo ja`;
+const BENEFIT_KURZ = `• <b>📚 Kurz stávkovania</b> v hodnote 99 € zadarmo`;
+const PLAN_START = `🟡 <b>Štart</b> – 49 € / 1 mesiac\n${BENEFITS_BASE}`;
+const PLAN_SERIA = `🔶 <b>Séria</b> – 119 € / 3 mesiace (40 € mesačne)\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
+const PLAN_SAMPION = `🏆 <b>Šampión</b> – 249 € / celá sezóna (31 € mesačne) · <b>len 30 miest</b>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_KURZ}`;
 
 const FAQ_ANSWERS: Record<string, string> = {
   faq_price:
-    `💰 <b>Cenník</b>\n\n` +
-    `🟡 <b>PREMIUM</b> – 29 € / mesiac · 69 € / 3 mesiace · 149 € / sezóna\n` +
-    `• <b>Denné tipy v súkromnom kanáli</b> – všetky odporúčania modelu na daný deň priamo v Telegrame\n` +
-    `• <b>Transparentné odôvodnenie</b> – pri každom tipe kurz, miera dôvery a dôvod, prečo vznikol\n` +
-    `• <b>Včasné doručenie</b> – tipy 1 – 2 hodiny pred výkopom, večer prehľad výsledkov dňa\n` +
-    `• <b>Týždenný prehľad výkonnosti</b> – úspešnosť, zisk a ROI za uplynulý týždeň\n` +
-    `• <b>📚 Kurz stávkovania</b> (99 €) zadarmo pri Premium na celú sezónu\n\n` +
-    `👑 <b>VIP</b> – 59 € / mesiac · 139 € / 3 mesiace · 299 € / sezóna · <b>len 30 miest</b>\n` +
-    `• <b>Kompletné členstvo Premium</b> – všetky denné tipy, odôvodnenia aj reporty\n` +
-  `• <b>⭐ Silný tip dňa</b> – každý deň jeden tip s najvyššou dôverou (aspoň 70 %), označený hviezdičkou len vo VIP kanáli\n` +
-    `• <b>Osobné konzultácie</b> – videohovory so zakladateľom TipRadaru podľa dohody\n` +
-    `• <b>Kovová členská karta</b> – personalizovaná vaším menom, číslom členstva a dátumom vstupu\n` +
-  `• <b>📚 Kurz stávkovania</b> (99 €) zadarmo pri VIP na 3 mesiace alebo celú sezónu\n` +
-    `• <b>Priama linka na zakladateľa</b> – súkromný VIP chat pre vaše otázky\n\n` +
-    `Sezóna = do 31. 5. 2027. Členstvo sa samo nepredlžuje, žiadna viazanosť.\n\n` + FOUNDER_NOTE +
+    `💰 <b>Členstvo TipRadar</b>\n\nJedno členstvo v troch dĺžkach. Všetci členovia dostávajú rovnaké tipy.\n\n` +
+    `${PLAN_START}\n\n${PLAN_SERIA}\n\n${PLAN_SAMPION}\n\n` +
+    `Sezóna = do 31. 5. 2027. Členstvo sa samo nepredlžuje, žiadna viazanosť.` +
     (process.env.SALES_OPEN === "true" ? "" : `\n\n🗓 <b>Predaj členstiev spúšťame čoskoro.</b> Napíšte sem „Mám záujem" a ozveme sa vám ako prvým.`),
   faq_how:
     `❓ <b>Ako to funguje</b>\n\n` +
@@ -428,58 +424,51 @@ async function callTelegramApi(method: string, body: Record<string, unknown>): P
 
 /** Spracuje jednu prichádzajúcu udalosť z Telegram webhooku (nová správa alebo stlačenie tlačidla). */
 // ---- Záujemcovia o členstvo z tipradar.eu ----
-const PREMIUM_BENEFITS =
-  `• <b>Denné tipy v súkromnom kanáli</b> – všetky odporúčania modelu na daný deň priamo v Telegrame\n` +
-  `• <b>Transparentné odôvodnenie</b> – pri každom tipe kurz, miera dôvery a dôvod, prečo vznikol\n` +
-  `• <b>Včasné doručenie</b> – tipy 1 – 2 hodiny pred výkopom, večer prehľad výsledkov dňa\n` +
-  `• <b>Týždenný prehľad výkonnosti</b> – úspešnosť, zisk a ROI za uplynulý týždeň\n` +
-  `• <b>📚 Kurz stávkovania</b> (99 €) zadarmo pri Premium na celú sezónu`;
-const VIP_BENEFITS =
-  `• <b>Kompletné členstvo Premium</b> – všetky denné tipy, odôvodnenia aj reporty\n` +
-  `• <b>⭐ Silný tip dňa</b> – každý deň jeden tip s najvyššou dôverou (aspoň 70 %), označený hviezdičkou len vo VIP kanáli\n` +
-  `• <b>Osobné konzultácie</b> – videohovory so zakladateľom TipRadaru podľa dohody\n` +
-  `• <b>Kovová členská karta</b> – personalizovaná vaším menom, číslom členstva a dátumom vstupu\n` +
-  `• <b>📚 Kurz stávkovania</b> (99 €) zadarmo pri VIP na 3 mesiace alebo celú sezónu\n` +
-  `• <b>Priama linka na zakladateľa</b> – súkromný VIP chat pre vaše otázky`;
+const NEXT_STEP =
+  `<b>Ako pokračovať:</b> napíšte sem krátku správu (napríklad „Mám záujem o Šampión"). Pošleme vám platobné údaje a po platbe vás pridáme do súkromného kanála.\n\n` +
+  `Ozveme sa vám zvyčajne do 24 hodín. Bez viazanosti, členstvo sa samo nepredlžuje.`;
 const JOIN_MESSAGES: Record<string, string> = {
-  premium:
-    `🟡 <b>Členstvo Premium</b> – 29 € / mesiac · 69 € / 3 mesiace · 149 € / sezóna\n\n${PREMIUM_BENEFITS}\n\n` +
-    `<b>Ako pokračovať:</b> napíšte sem krátku správu (napríklad „Mám záujem o Premium"). Pošleme vám platobné údaje a po platbe vás pridáme do súkromného kanála.\n\n` +
-    `Ozveme sa vám zvyčajne do 24 hodín. Bez viazanosti, členstvo sa samo nepredlžuje.`,
-  vip:
-    `👑 <b>Členstvo VIP</b> – 59 € / mesiac · 139 € / 3 mesiace · 299 € / sezóna · <b>len 30 miest</b>\n\n${VIP_BENEFITS}\n\n` +
-    `<b>Ako pokračovať:</b> napíšte sem krátku správu (napríklad „Mám záujem o VIP"). Pošleme vám platobné údaje a miesto vám rezervujeme po potvrdení platby.\n\n` +
-    `Ozveme sa vám zvyčajne do 24 hodín. Bez viazanosti, členstvo sa samo nepredlžuje.`,
-  clenstvo:
-    `✨ <b>Členstvo TipRadar</b>\n\n` +
-    `🟡 <b>Premium</b> – 29 € / mesiac · 69 € / 3 mesiace · 149 € / sezóna\n${PREMIUM_BENEFITS}\n\n` +
-    `👑 <b>VIP</b> – 59 € / mesiac · 139 € / 3 mesiace · 299 € / sezóna · <b>len 30 miest</b>\n${VIP_BENEFITS}\n\n` +
-    `<b>Ako pokračovať:</b> napíšte sem, ktoré členstvo vás zaujíma (napríklad „Mám záujem o VIP"). Pošleme vám platobné údaje a ďalší postup.\n\n` +
-    `Ozveme sa vám zvyčajne do 24 hodín. Bez viazanosti, členstvo sa samo nepredlžuje.`,
-  vip_waitlist:
-    `👑 <b>VIP – poradovník</b>\n\nVšetkých 30 miest je momentálne obsadených. Váš záujem sme si zapísali – keď sa miesto uvoľní, ozveme sa vám ako prvým.\n\n` +
-    `Dovtedy môžete začať s členstvom <b>Premium</b> (29 € mesačne) – stačí sem napísať „Mám záujem o Premium".`,
+  start: `✨ <b>Členstvo TipRadar</b>\n\n${PLAN_START}\n\n${NEXT_STEP}`,
+  seria: `✨ <b>Členstvo TipRadar</b>\n\n${PLAN_SERIA}\n\n${NEXT_STEP}`,
+  sampion: `✨ <b>Členstvo TipRadar</b>\n\n${PLAN_SAMPION}\n\n${NEXT_STEP}`,
+  clenstvo: `✨ <b>Členstvo TipRadar</b>\n\n${PLAN_START}\n\n${PLAN_SERIA}\n\n${PLAN_SAMPION}\n\n${NEXT_STEP}`,
+  sampion_waitlist:
+    `🏆 <b>Šampión – poradovník</b>\n\nVšetkých 30 miest je momentálne obsadených. Váš záujem sme si zapísali – keď sa miesto uvoľní, ozveme sa vám ako prvým.\n\n` +
+    `Dovtedy môžete začať s členstvom <b>Štart</b> (49 € mesačne) alebo <b>Séria</b> (119 € na 3 mesiace) – stačí sem napísať, ktoré chcete.`,
 };
+// Staré odkazy (t.me/TipRadarAiBot?start=premium / vip) ešte môžu kolovať – ukážu celé členstvo.
+JOIN_MESSAGES.premium = JOIN_MESSAGES.clenstvo;
+JOIN_MESSAGES.vip = JOIN_MESSAGES.sampion;
+JOIN_MESSAGES.vip_waitlist = JOIN_MESSAGES.sampion_waitlist;
 /** Predaj členstiev je spustený (premenná SALES_OPEN=true na Renderi). Dovtedy len poradovník. */
 function salesOpen(): boolean {
   return process.env.SALES_OPEN === "true";
 }
-/** Odpoveď pred spustením predaja: výhody zvoleného členstva + zápis do poradovníka. */
+/** Odpoveď pred spustením predaja: výhody zvolenej dĺžky členstva + zápis do poradovníka. */
 function PRELAUNCH_MESSAGE(plan: string): string {
   const benefits =
-    plan === "premium"
-      ? `🟡 <b>Premium</b> – 29 € / mesiac · 69 € / 3 mesiace · 149 € / sezóna\n${PREMIUM_BENEFITS}`
-      : plan === "clenstvo"
-        ? `🟡 <b>Premium</b> – 29 € / mesiac · 69 € / 3 mesiace · 149 € / sezóna\n${PREMIUM_BENEFITS}\n\n👑 <b>VIP</b> – 59 € / mesiac · 139 € / 3 mesiace · 299 € / sezóna · <b>len 30 miest</b>\n${VIP_BENEFITS}`
-        : `👑 <b>VIP</b> – 59 € / mesiac · 139 € / 3 mesiace · 299 € / sezóna · <b>len 30 miest</b>\n${VIP_BENEFITS}`;
+    plan === "start" ? PLAN_START
+      : plan === "seria" ? PLAN_SERIA
+        : plan === "sampion" || plan === "vip" ? PLAN_SAMPION
+          : `${PLAN_START}\n\n${PLAN_SERIA}\n\n${PLAN_SAMPION}`;
   return (
-    `✨ <b>Ďakujeme za záujem o TipRadar!</b>\n\n${benefits}\n\n${FOUNDER_NOTE}\n\n` +
+    `✨ <b>Ďakujeme za záujem o TipRadar!</b>\n\n${benefits}\n\n` +
     `🗓 <b>Predaj členstiev spúšťame čoskoro.</b> Váš záujem sme si zapísali – keď začneme, ozveme sa vám <b>ako prvým</b>.\n\n` +
     `Ak máte otázku, pokojne ju napíšte sem.`
   );
 }
 
-const LEAD_LABEL: Record<string, string> = { premium: "Premium", vip: "VIP", vip_waitlist: "VIP – poradovník", clenstvo: "členstvo (zatiaľ nevybral)", otazka: "všeobecná otázka" };
+const LEAD_LABEL: Record<string, string> = {
+  start: "Štart (1 mesiac)",
+  seria: "Séria (3 mesiace)",
+  sampion: "Šampión (celá sezóna)",
+  sampion_waitlist: "Šampión – náhradník",
+  premium: "členstvo (starý odkaz Premium)",
+  vip: "Šampión (starý odkaz VIP)",
+  vip_waitlist: "Šampión – náhradník",
+  clenstvo: "členstvo (zatiaľ nevybral)",
+  otazka: "všeobecná otázka",
+};
 
 function escapeTg(v: string): string {
   return String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -580,7 +569,7 @@ export async function notifyAdminExpiringSubscribers(
 
   const lines = expiring
     .map((s) => {
-      const tierLabel = s.tier === "group" ? "VIP" : "PREMIUM";
+      const tierLabel = s.tier === "group" ? "ŠAMPIÓN" : "ŠTART / SÉRIA";
       const when = s.daysLeft < 0 ? "už skončilo" : s.daysLeft === 0 ? "končí dnes" : `končí o ${s.daysLeft} d.`;
       return `• ${s.name} (${tierLabel}) — ${when}`;
     })

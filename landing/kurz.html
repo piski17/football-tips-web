@@ -825,10 +825,10 @@
               <li>Výpočty a príklady z reálnych zápasov</li>
               <li>Rovnaké pravidlá, podľa ktorých tipuje TipRadar</li>
             </ul>
-            <p class="skola-vip"><strong>Zadarmo</strong> pri VIP na 3 mesiace alebo celú sezónu a pri Premium na celú sezónu.</p>
+            <p class="skola-vip"><strong>Zadarmo</strong> pri členstve Šampión na celú sezónu.</p>
             <div class="skola-actions">
-              <a class="btn" href="/?kurz=1#zapis" data-kurz-cta>Chcem kurz</a>
-              <a class="btn btn-ghost" href="/#clenstvo">Pozrieť členstvá</a>
+              <a class="btn" href="/otazky?kurz=1#zapis" data-kurz-cta>Chcem kurz</a>
+              <a class="btn btn-ghost" href="/#clenstvo">Pozrieť členstvo</a>
             </div>
           </div>
         </div>
@@ -982,8 +982,8 @@
     var h = a.getAttribute("href") || "", c = "";
     if (a.hasAttribute("data-free")) c = "free";
     else if (a.hasAttribute("data-kurz-cta")) c = "kurz";
-    else if (/start=premium/.test(h)) c = "premium";
-    else if (/start=vip/.test(h)) c = "vip";
+    else if (/start=(start|seria|premium)\b/.test(h)) c = "premium";
+    else if (/start=(sampion|vip)/.test(h)) c = "vip";
     else if (/t\.me\//.test(h)) c = "telegram";
     else if (/instagram\.com/.test(h)) c = "instagram";
     else if (/^mailto:/.test(h)) c = "email";

@@ -1492,10 +1492,10 @@ closeTipsBtn.addEventListener("click", () => {
 // ---- Členovia (platba beží mimo appky, napr. bankovým prevodom) ----
 
 // Ceny musia sedieť s PRICES na tipradar.eu (landing/index.html).
-const MEMBER_PRICES = {
-  individual: { m1: 29, m3: 69, season: 149 },
-  group: { m1: 59, m3: 139, season: 299 },
-};
+// Jedno členstvo, tri dĺžky: Štart (1 mesiac), Séria (3 mesiace), Šampión (sezóna, len 30 miest).
+// Šampión sa ukladá ako tier "group" – počíta sa do 30 miest na webe.
+const MEMBER_PRICES = { m1: 49, m3: 119, season: 249 };
+const MEMBER_NAME = { m1: "Štart", m3: "Séria", season: "Šampión" };
 const MEMBER_LENGTH_LABEL = { m1: "1 mesiac", m3: "3 mesiace", season: "sezóna" };
 const SEASON_END = "2027-05-31";
 let memberFilter = "active";
@@ -1523,7 +1523,8 @@ function memberEnd(from, length) {
 }
 
 function syncMemberPrice() {
-  subPriceInput.value = MEMBER_PRICES[subTierSelect.value][subLengthSelect.value];
+  subTierSelect.value = subLengthSelect.value === "season" ? "group" : "individual";
+  subPriceInput.value = MEMBER_PRICES[subLengthSelect.value];
 }
 subTierSelect.addEventListener("change", syncMemberPrice);
 subLengthSelect.addEventListener("change", syncMemberPrice);
@@ -1558,8 +1559,8 @@ function renderSubscribersList(subs) {
 
   subscribersSummaryEl.innerHTML = `
     <span>Aktívni: <strong>${active.length}</strong></span>
-    <span>Premium: <strong>${active.length - vip}</strong></span>
-    <span>VIP: <strong>${vip}</strong></span>
+    <span>Štart a Séria: <strong>${active.length - vip}</strong></span>
+    <span>Šampión: <strong>${vip}</strong></span>
     <span>Zaplatené (aktívni): <strong>${income} €</strong></span>
     <span>Končí do 7 dní: <strong>${ending}</strong></span>
   `;
@@ -1587,7 +1588,6 @@ function renderSubscribersList(subs) {
       const length = s.length || "m1";
       const endDate = new Date(s.nextPaymentDue).toLocaleDateString("sk-SK");
       const startDate = s.startDate ? new Date(s.startDate).toLocaleDateString("sk-SK") : null;
-      const needsCard = isVip && (length === "m3" || length === "season");
       const details = [
         escapeHtml(s.contact || ""),
         `${MEMBER_LENGTH_LABEL[length]} · ${Number(s.priceEur) || 0} €`,
@@ -1597,11 +1597,10 @@ function renderSubscribersList(subs) {
       return `
         <div class="tip-row">
           <div class="tip-row-info">
-            <div class="tip-row-match">${escapeHtml(s.name)}<span class="member-tag ${isVip ? "vip" : "premium"}">${isVip ? "VIP" : "PREMIUM"}</span>${s.founder ? `<span class="member-tag founder">Prvý člen</span>` : ""}</div>
+            <div class="tip-row-match">${escapeHtml(s.name)}<span class="member-tag ${isVip ? "vip" : "premium"}">${isVip ? "ŠAMPIÓN" : (MEMBER_NAME[length] || "ČLEN").toUpperCase()}</span>${s.founder ? `<span class="member-tag founder">Prvý člen</span>` : ""}</div>
             <div class="tip-row-market">${details}</div>
           </div>
           <span class="tip-status ${status.cls}">${status.label}</span>
-          ${needsCard ? `<button class="tip-delete-btn member-btn" data-card-id="${s.id}" title="Kovová karta">${s.cardSent ? "✓ Karta poslaná" : "Poslať kartu"}</button>` : ""}
           ${s.telegramChatId ? `<button class="tip-delete-btn member-btn" data-test-reminder-id="${s.id}" title="Poslať testovaciu pripomienku teraz">🔔 Test</button>` : ""}
           <button class="tip-delete-btn member-btn" data-extend-id="${s.id}" title="Predĺžiť o ďalšie obdobie (${MEMBER_LENGTH_LABEL[length]})">Predĺžiť</button>
           <button class="tip-delete-btn" data-remove-id="${s.id}" title="Zmazať">✕</button>
@@ -1705,11 +1704,11 @@ addSubscriberBtn.addEventListener("click", async () => {
     showToast("Zadaj meno člena.");
     return;
   }
-  const tier = subTierSelect.value;
   const length = subLengthSelect.value;
+  const tier = length === "season" ? "group" : "individual"; // Šampión = sezóna
   const start = subStartInput.value || todayIso();
   const priceRaw = subPriceInput.value.trim();
-  const priceEur = priceRaw === "" ? MEMBER_PRICES[tier][length] : Number(priceRaw);
+  const priceEur = priceRaw === "" ? MEMBER_PRICES[length] : Number(priceRaw);
   const end = memberEnd(start, length);
   if (end.getTime() < Date.now() && length !== "season") {
     if (!window.confirm(`Toto členstvo by skončilo už ${end.toLocaleDateString("sk-SK")}. Pridať aj tak?`)) return;
@@ -2833,7 +2832,7 @@ async function renderTicketWatch() {
 
 
 // ---- Poradovník záujemcov z webu ----
-const LEAD_PLAN_LABEL = { premium: "Premium", vip: "VIP", vip_waitlist: "VIP (náhradník)", clenstvo: "nevybral", otazka: "otázka z webu" };
+const LEAD_PLAN_LABEL = { start: "Štart", seria: "Séria", sampion: "Šampión", sampion_waitlist: "Šampión (náhradník)", premium: "starý odkaz Premium", vip: "Šampión (starý odkaz VIP)", vip_waitlist: "Šampión (náhradník)", clenstvo: "nevybral", otazka: "otázka z webu" };
 async function renderLeads() {
   const el = document.getElementById("leadsList");
   if (!el) return;
@@ -2864,7 +2863,8 @@ async function renderLeads() {
         document.getElementById("subName").value = l.name || "";
         document.getElementById("subContact").value = l.email || (l.username ? "@" + l.username : "");
         document.getElementById("subTelegramChatId").value = l.email ? "" : l.chatId;
-        document.getElementById("subTier").value = l.plan === "vip" || l.plan === "vip_waitlist" ? "group" : "individual";
+        document.getElementById("subLength").value = ["sampion", "sampion_waitlist", "vip", "vip_waitlist"].includes(l.plan) ? "season" : l.plan === "seria" ? "m3" : "m1";
+        syncMemberPrice();
         document.getElementById("subName")?.scrollIntoView({ behavior: "smooth", block: "center" });
         showToast("Údaje sú vyplnené – skontroluj ich a klikni na Pridať.");
       };

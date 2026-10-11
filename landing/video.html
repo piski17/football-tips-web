@@ -447,11 +447,10 @@
   </div>
 
   <div class="slide" data-duration="4000">
-    <div class="kicker">Len pre VIP</div>
-    <h1>★ Silný tip dňa</h1>
-    <div class="mock-ticket">
-      <div class="mock-ticket-row"><span>Arsenal – Leeds · Fauly pod 24,5</span><strong>74 % ★</strong></div>
-    </div>
+    <div class="kicker">Séria a Šampión</div>
+    <h1>Súkromný VIP chat</h1>
+    <p class="lede" style="margin-top:18px">Máte otázku k tipu alebo k stávkovaniu? Odpisujem vám priamo ja.</p>
+  </div>
     <p class="lede" style="margin-top:18px">Každý deň jeden tip s najvyššou dôverou, aspoň 70 %. Takéto tipy vychádzali v spätných testoch najčastejšie.</p>
   </div>
 
@@ -465,24 +464,29 @@
     <div class="kicker">Doručenie priamo k vám</div>
     <h1>Tipy tam, kde ich sledujete</h1>
     <div class="channel-row">
-      <div class="channel-card"><div class="emoji">📣</div><div class="name">PREMIUM kanál</div></div>
-      <div class="channel-card"><div class="emoji">👑</div><div class="name">VIP kanál</div></div>
+      <div class="channel-card"><div class="emoji">📣</div><div class="name">Súkromný kanál s tipmi</div></div>
+      <div class="channel-card"><div class="emoji">💬</div><div class="name">VIP chat</div></div>
     </div>
   </div>
 
   <div class="slide" data-duration="4500">
     <div class="kicker">Predplatné</div>
-    <h1>Menej než 1 € na deň</h1>
+    <h1>Jedno členstvo, tri dĺžky</h1>
     <div class="price-row">
       <div class="price-card">
-        <div class="tag">PREMIUM</div>
-        <div class="amount">29 €</div>
-        <div class="per">/ mesiac · sezóna 149&nbsp;€</div>
+        <div class="tag">ŠTART · 1 mesiac</div>
+        <div class="amount">49 €</div>
+        <div class="per">tipy, odôvodnenia, vyhodnotenia</div>
+      </div>
+      <div class="price-card">
+        <div class="tag">SÉRIA · 3 mesiace</div>
+        <div class="amount">119 €</div>
+        <div class="per">+ súkromný VIP chat</div>
       </div>
       <div class="price-card vip">
-        <div class="tag">VIP · ★ silný tip dňa + osobný chat</div>
-        <div class="amount">59 €</div>
-        <div class="per">/ mesiac · sezóna 299&nbsp;€</div>
+        <div class="tag">ŠAMPIÓN · celá sezóna · 30 miest</div>
+        <div class="amount">249 €</div>
+        <div class="per">+ VIP chat + kurz za 99&nbsp;€ zadarmo</div>
       </div>
     </div>
   </div>
@@ -651,8 +655,8 @@
     var h = a.getAttribute("href") || "", c = "";
     if (a.hasAttribute("data-free")) c = "free";
     else if (a.hasAttribute("data-kurz-cta")) c = "kurz";
-    else if (/start=premium/.test(h)) c = "premium";
-    else if (/start=vip/.test(h)) c = "vip";
+    else if (/start=(start|seria|premium)\b/.test(h)) c = "premium";
+    else if (/start=(sampion|vip)/.test(h)) c = "vip";
     else if (/t\.me\//.test(h)) c = "telegram";
     else if (/instagram\.com/.test(h)) c = "instagram";
     else if (/^mailto:/.test(h)) c = "email";
