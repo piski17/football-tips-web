@@ -1,6 +1,6 @@
 import { recordLead, listLeads, updateLead, Lead } from "./leadsStore";
-import { addSubscriber, listSubscribers } from "./subscribersStore";
-import { paymentsEnabled, refreshPayment, savePayment, paidUntil, PAY_TERMS, PUBLIC_URL, Payment, Term } from "./payments";
+import { addSubscriber, listSubscribers, updateSubscriber } from "./subscribersStore";
+import { paymentsEnabled, payMethod, refreshPayment, savePayment, getPayment, confirmBankPayment, cancelPayment, paidUntil, PAY_TERMS, PUBLIC_URL, Payment, Term } from "./payments";
 import axios from "axios";
 import { sendAdminEmail } from "./mailer";
 import { SavedTip } from "./types";
@@ -432,9 +432,12 @@ async function callTelegramApi(method: string, body: Record<string, unknown>): P
 const NEXT_STEP =
   `<b>Ako pokračovať:</b> napíšte sem krátku správu (napríklad „Mám záujem o Platinum na 3 mesiace"). Pošleme vám platobné údaje a po platbe vás pridáme do súkromného kanála TipRadar Platinum.\n\n` +
   `Ozveme sa vám zvyčajne do 24 hodín. Bez viazanosti, členstvo sa samo nepredlžuje.`;
-const PAY_STEP =
-  `Zaplatíte kartou, Apple Pay alebo Google Pay na zabezpečenej stránke Stripe. Hneď po platbe vám sem pošlem pozvánku do kanála TipRadar Platinum.\n\n` +
-  `Bez viazanosti, členstvo sa samo nepredlžuje.`;
+function PAY_STEP(): string {
+  return (payMethod() === "bank"
+    ? `Zaplatíte bankovým prevodom cez QR kód v appke vašej banky, bez poplatkov. Hneď ako platba príde na účet, pošlem vám sem pozvánku do kanála TipRadar Platinum.\n\n`
+    : `Zaplatíte kartou, Apple Pay alebo Google Pay na zabezpečenej stránke Stripe. Hneď po platbe vám sem pošlem pozvánku do kanála TipRadar Platinum.\n\n`) +
+    `Bez viazanosti, členstvo sa samo nepredlžuje.`;
+}
 const JOIN_MESSAGES: Record<string, string> = {
   start: `✨ <b>Členstvo TipRadar</b>\n\n${PLAN_START}\n\n${NEXT_STEP}`,
   seria: `✨ <b>Členstvo TipRadar</b>\n\n${PLAN_SERIA}\n\n${NEXT_STEP}`,
@@ -541,6 +544,11 @@ export async function handleTelegramUpdate(update: any): Promise<void> {
   if (update.callback_query) {
     const chatId = update.callback_query.message?.chat?.id;
     const data = update.callback_query.data;
+    const payAction = /^pay(ok|no):([A-Za-z0-9]{8,32})$/.exec(String(data ?? ""));
+    if (payAction) {
+      await handleAdminPayAction(update.callback_query, payAction[1] as "ok" | "no", payAction[2]);
+      return;
+    }
     await callTelegramApi("answerCallbackQuery", { callback_query_id: update.callback_query.id });
     const answer = FAQ_ANSWERS[data];
     if (chatId && answer) {
@@ -565,7 +573,7 @@ export async function handleTelegramUpdate(update: any): Promise<void> {
   if (startParam && JOIN_MESSAGES[startParam]) {
     const canPay = paymentsEnabled() && !startParam.endsWith("_waitlist");
     const reply = canPay
-      ? JOIN_MESSAGES[startParam].replace(NEXT_STEP, PAY_STEP)
+      ? JOIN_MESSAGES[startParam].replace(NEXT_STEP, PAY_STEP())
       : salesOpen() ? JOIN_MESSAGES[startParam] : PRELAUNCH_MESSAGE(startParam);
     await callTelegramApi("sendMessage", {
       chat_id: chatId,
@@ -638,7 +646,22 @@ export async function sendRenewalReminder(
     `🔔 <b>Tvoje členstvo o 3 dni končí</b>\n\n` +
     `Za posledné obdobie sme vyhodnotili <b>${stats.totalResolved}</b> ${stats.totalResolved === 1 ? "tip" : stats.totalResolved <= 4 ? "tipy" : "tipov"}` +
     (stats.winRate !== null ? ` s úspešnosťou <b>${stats.winRate} %</b>.` : ".") +
-    `\n\nAk chceš pokračovať, napíš nám a členstvo ti predĺžime. 🙌`;
+    (paymentsEnabled()
+      ? `\n\nAk chceš pokračovať, vyber si dĺžku a zaplať 👇 Nové obdobie začne až po skončení toho súčasného. 🙌`
+      : `\n\nAk chceš pokračovať, napíš nám a členstvo ti predĺžime. 🙌`);
+  if (paymentsEnabled()) {
+    try {
+      await axios.post(
+        `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
+        { chat_id: chatId, text, parse_mode: "HTML", reply_markup: payKeyboard(chatId) },
+        { timeout: 10000 }
+      );
+      return true;
+    } catch (err: any) {
+      console.error("Pripomienka neodišla:", err?.response?.data ?? err?.message ?? err);
+      return false;
+    }
+  }
   const messageId = await sendToChat(chatId, text);
   return messageId !== null;
 }
@@ -761,6 +784,14 @@ export async function redeemPayment(token: string, chatId: number | string, from
     await say("Túto platbu sa nepodarilo nájsť. Napíšte mi sem prosím, čo sa stalo, a hneď to vyriešim.");
     return "unknown";
   }
+  if (p.status === "cancelled") {
+    await say("Táto platba bola zrušená. Ak ste zaplatili, napíšte mi sem prosím a hneď to vyriešim.");
+    return "unknown";
+  }
+  if (p.status === "pending" && p.method === "bank") {
+    await claimBankPayment(p, chatId, from);
+    return "pending";
+  }
   if (p.status === "pending") {
     await say("Platba ešte nie je potvrdená. Skúste to prosím o minútu znova cez tlačidlo na stránke po platbe.");
     return "pending";
@@ -780,7 +811,14 @@ export async function redeemPayment(token: string, chatId: number | string, from
   }
 
   const term = p.term;
-  const until = paidUntil(term, new Date(p.paidAt ?? Date.now()));
+  if (!from?.first_name && p.name) from = { first_name: p.name, username: p.username };
+  const tg = String(chatId);
+  // Predĺženie: ak je ešte členom, nové obdobie začne až po konci toho súčasného.
+  const current = (await listSubscribers())
+    .filter((s) => String(s.telegramChatId) === tg && s.id !== "pay_" + p!.token && new Date(s.nextPaymentDue).getTime() > Date.now())
+    .sort((a, b) => b.nextPaymentDue.localeCompare(a.nextPaymentDue))[0];
+  const start = current && term !== "season" ? new Date(current.nextPaymentDue) : new Date(p.paidAt ?? Date.now());
+  const until = paidUntil(term, start);
   const name = personName(from);
   const channel = await createInviteLink(TELEGRAM_CHAT_ID_PREMIUM, name);
   const chat = term !== "m1" ? await createInviteLink(TELEGRAM_CHAT_ID_VIPCHAT, name) : null;
@@ -798,8 +836,16 @@ export async function redeemPayment(token: string, chatId: number | string, from
   );
   if (!first) return "ok";
 
-  const tg = String(chatId);
-  if (!(await listSubscribers()).some((s) => String(s.telegramChatId) === tg && s.nextPaymentDue === until)) {
+  const how = p.method === "bank" ? `Prevodom, VS ${p.vs}` : "Zaplatené cez Stripe";
+  if (current) {
+    await updateSubscriber(current.id, {
+      nextPaymentDue: until,
+      length: term,
+      priceEur: PAY_TERMS[term].price,
+      ...(term === "season" ? { tier: "group" as const } : {}),
+      note: `${current.note ? current.note + " · " : ""}Predĺžené ${fmtDateSk(new Date().toISOString())} (${how})`,
+    });
+  } else if (!(await listSubscribers()).some((s) => String(s.telegramChatId) === tg && s.nextPaymentDue === until)) {
     await addSubscriber({
       id: "pay_" + p.token,
       name,
@@ -810,7 +856,7 @@ export async function redeemPayment(token: string, chatId: number | string, from
       nextPaymentDue: until,
       length: term,
       startDate: new Date().toISOString(),
-      note: `Zaplatené cez Stripe${p.email ? " · " + p.email : ""}`,
+      note: `${how}${p.email ? " · " + p.email : ""}`,
       createdAt: new Date().toISOString(),
     });
   }
@@ -822,10 +868,11 @@ export async function redeemPayment(token: string, chatId: number | string, from
     await callTelegramApi("sendMessage", {
       chat_id: TELEGRAM_ADMIN_CHAT_ID,
       text:
-        `💶 <b>Nová platba: Platinum · ${PAY_TERMS[term].name} (${PAY_TERMS[term].price} €)</b>\n\n` +
+        `💶 <b>${current ? "Predĺženie" : "Nová platba"}: Platinum · ${PAY_TERMS[term].name} (${PAY_TERMS[term].price} €)</b>\n\n` +
         `Meno: <b>${escapeTg(name)}</b>\n` +
         (from?.username ? `Telegram: @${escapeTg(from.username)}\n` : "") +
         (p.email ? `E-mail: ${escapeTg(p.email)}\n` : "") +
+        (p.vs ? `Variabilný symbol: ${p.vs}\n` : "") +
         `Platí do: ${fmtDateSk(until)}\n\nČlen je zapísaný v appke.${missing}`,
       parse_mode: "HTML",
     });
@@ -837,6 +884,97 @@ export async function redeemPayment(token: string, chatId: number | string, from
     ["Platí do", fmtDateSk(until)],
   ]).catch(() => {});
   return "ok";
+}
+
+// ---- Platba prevodom: „Zaplatil som" od člena a potvrdenie od teba ----
+
+/** Člen klikol „Zaplatil som": zapamätáme si jeho Telegram a tebe pošleme správu s tlačidlom Potvrdiť. */
+async function claimBankPayment(p: Payment, chatId: number | string, from: any): Promise<void> {
+  const first = !p.claimedAt;
+  if (p.chatId && String(p.chatId) !== String(chatId) && p.claimedAt) {
+    await callTelegramApi("sendMessage", { chat_id: chatId, text: "Táto platba patrí inému účtu. Ak je to chyba, napíšte mi sem prosím." });
+    return;
+  }
+  p.chatId = String(chatId);
+  if (from?.first_name) p.name = personName(from);
+  if (from?.username) p.username = from.username;
+  p.claimedAt = p.claimedAt ?? new Date().toISOString();
+  await savePayment(p);
+  await callTelegramApi("sendMessage", {
+    chat_id: chatId,
+    parse_mode: "HTML",
+    text:
+      `🙏 <b>Ďakujem!</b>\n\nHneď ako platba <b>${PAY_TERMS[p.term].price} €</b> (variabilný symbol ${p.vs}) príde na účet, pošlem vám sem osobnú pozvánku do kanála TipRadar Platinum.\n\n` +
+      `Okamžitá platba zvyčajne príde do pár minút, bežný prevod do jedného pracovného dňa.`,
+  });
+  if (first && TELEGRAM_ADMIN_CHAT_ID) {
+    const name = p.name || personName(from);
+    await callTelegramApi("sendMessage", {
+      chat_id: TELEGRAM_ADMIN_CHAT_ID,
+      parse_mode: "HTML",
+      text:
+        `🏦 <b>Čaká na potvrdenie: Platinum · ${PAY_TERMS[p.term].name} (${PAY_TERMS[p.term].price} €)</b>\n\n` +
+        `Meno: <b>${escapeTg(name)}</b>\n` +
+        (p.username ? `Telegram: @${escapeTg(p.username)}\n` : "") +
+        `Variabilný symbol: <b>${p.vs}</b>\n\n` +
+        `Keď platbu uvidíš na účte, klikni <b>Potvrdiť</b> a bot mu pošle pozvánku.`,
+      reply_markup: { inline_keyboard: [[{ text: "✅ Potvrdiť platbu", callback_data: `payok:${p.token}` }, { text: "✖ Zrušiť", callback_data: `payno:${p.token}` }]] },
+    });
+  }
+}
+
+/**
+ * Potvrdenie platby prevodom (z appky alebo z Telegramu). Ak poznáme Telegram člena, hneď mu pošle pozvánku
+ * a zapíše ho medzi predplatiteľov. Inak sa to stane, keď na stránke platby klikne „Zaplatil som".
+ */
+export async function confirmBankPaymentAndInvite(token: string): Promise<{ status: Payment["status"]; invited: boolean } | null> {
+  const p = await confirmBankPayment(token);
+  if (!p) return null;
+  if (p.status === "paid" && p.chatId) {
+    const r = await redeemPayment(token, p.chatId, p.name ? { first_name: p.name, username: p.username } : {});
+    return { status: r === "ok" ? "redeemed" : p.status, invited: r === "ok" };
+  }
+  return { status: p.status, invited: false };
+}
+
+/** Tlačidlá Potvrdiť / Zrušiť v tvojej správe od bota. Funguje len v tvojom (admin) chate. */
+async function handleAdminPayAction(cq: any, action: "ok" | "no", token: string): Promise<void> {
+  const chatId = cq.message?.chat?.id;
+  const answer = (text: string) => callTelegramApi("answerCallbackQuery", { callback_query_id: cq.id, text });
+  if (!TELEGRAM_ADMIN_CHAT_ID || String(chatId) !== String(TELEGRAM_ADMIN_CHAT_ID)) {
+    await answer("Toto tlačidlo môže použiť len administrátor.");
+    return;
+  }
+  const before = await getPayment(token);
+  if (!before) {
+    await answer("Platba sa nenašla.");
+    return;
+  }
+  let note: string;
+  if (action === "no") {
+    if (before.status !== "pending") {
+      await answer("Platba už bola potvrdená, zrušiť sa nedá.");
+      return;
+    }
+    await cancelPayment(token);
+    note = "✖ Zrušené";
+  } else {
+    if (before.status === "redeemed") {
+      await answer("Táto platba už bola potvrdená.");
+      return;
+    }
+    const r = await confirmBankPaymentAndInvite(token);
+    note = r?.invited ? "✅ Potvrdené, pozvánka odoslaná" : "✅ Potvrdené – pozvánku dostane, keď klikne „Zaplatil som“";
+  }
+  await answer(note);
+  if (cq.message?.message_id) {
+    await callTelegramApi("editMessageText", {
+      chat_id: chatId,
+      message_id: cq.message.message_id,
+      parse_mode: "HTML",
+      text: `${escapeTg(String(cq.message.text ?? ""))}\n\n<b>${note}</b>`,
+    });
+  }
 }
 
 /**

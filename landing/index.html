@@ -1536,7 +1536,10 @@
         cta.href = pay ? "/zaplatit?term=" + term : "https://t.me/TipRadarAiBot?start=" + (full ? "sampion_waitlist" : t.start);
         if (pay) cta.removeAttribute("target"); else cta.target = "_blank";
         const note = document.getElementById("payNote");
-        if (note) note.hidden = !pay;
+        if (note) {
+          note.hidden = !pay;
+          note.textContent = S.method === "bank" ? "Bankovým prevodom cez QR kód · bez poplatkov" : "Kartou, Apple Pay alebo Google Pay · bezpečne cez Stripe";
+        }
         cta.textContent = pay ? "Zaplatiť " + t.price + " €" : !S.open ? "Zapísať sa do poradovníka" : full ? "Zapísať sa ako náhradník" : term === "season" ? "Rezervovať miesto na sezónu" : term === "m3" ? "Pridať sa na 3 mesiace" : "Pridať sa na mesiac";
       }
       const seats = document.getElementById("vipSeats");
@@ -1585,7 +1588,7 @@
       } else {
         // Predaj beží (SALES_OPEN=true na Renderi)
         const taken = Math.min(Number(d.taken) || 0, total);
-        window.__sales = { open: true, full: taken >= total, pay: d.payOpen === true };
+        window.__sales = { open: true, full: taken >= total, pay: d.payOpen === true, method: d.payMethod };
         show(taken, "Obsadené miesta na sezónu");
       }
       window.__applyTerm && window.__applyTerm(document.documentElement.dataset.term || "m3");

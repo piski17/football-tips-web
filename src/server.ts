@@ -40,8 +40,10 @@ import {
   notifyAdminExpiringSubscribers,
   sendCustomMessage,
   sendRenewalReminder,
-  sendTipResultToTelegram, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist } from "./telegram";
-import { paymentsEnabled, createCheckout, refreshPayment, isTerm, PAY_TERMS } from "./payments";
+  sendTipResultToTelegram, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite } from "./telegram";
+import { paymentsEnabled, payMethod, createCheckout, refreshPayment, isTerm, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, Payment } from "./payments";
+import { payBySquareString } from "./payBySquare";
+import QRCode from "qrcode";
 import { sendAdminEmail } from "./mailer";
 import { listSubscribers, addSubscriber, updateSubscriber, deleteSubscriber } from "./subscribersStore";
 import { recordHit, readStats, sourceFrom } from "./statsStore";
@@ -162,7 +164,7 @@ app.use((req, res, next) => {
     next();
     return;
   }
-  const toLanding = ["/", "/video", "/video/", "/kurz", "/kurz/", "/metoda", "/metoda/", "/vysledky", "/vysledky/", "/otazky", "/otazky/", "/clenstvo", "/clenstvo/", "/zaplatit", "/platba-ok"].includes(req.path);
+  const toLanding = ["/", "/video", "/video/", "/kurz", "/kurz/", "/metoda", "/metoda/", "/vysledky", "/vysledky/", "/otazky", "/otazky/", "/clenstvo", "/clenstvo/", "/zaplatit", "/platba", "/platba-ok"].includes(req.path);
   res.redirect(301, (toLanding ? "https://tipradar.eu" : "https://app.tipradar.eu") + req.originalUrl);
 });
 
@@ -212,12 +214,106 @@ app.get("/zaplatit", async (req, res) => {
         return;
       }
     }
-    res.redirect(303, await createCheckout(term, /^\d{3,20}$/.test(c) ? c : undefined));
+    const chatId = /^\d{3,20}$/.test(c) ? c : undefined;
+    if (payMethod() === "bank") {
+      const p = await createBankPayment(term, chatId);
+      res.redirect(303, `/platba?t=${p.token}`);
+      return;
+    }
+    res.redirect(303, await createCheckout(term, chatId));
   } catch (err: any) {
-    console.error("Stripe – platobnú stránku sa nepodarilo vytvoriť:", err?.response?.data ?? err?.message ?? err);
+    console.error("Platbu sa nepodarilo pripraviť:", err?.response?.data ?? err?.message ?? err);
     res.status(502).send(paymentPage("Platba sa teraz nedá spustiť", "Skúste to prosím o chvíľu znova. Ak to nepôjde, napíšte mi na Telegram a vyriešime to.", `https://t.me/${BOT_USERNAME}`, "Napísať na Telegram"));
   }
 });
+
+// Platba prevodom: QR kód PAY by square + údaje na skopírovanie + tlačidlo „Zaplatil som" (do Telegramu).
+app.get("/platba", async (req, res) => {
+  const token = String(req.query.t ?? "");
+  try {
+    const p = await getPayment(token);
+    if (!p || p.method !== "bank") {
+      res.status(404).send(paymentPage("Platbu sme nenašli", "Vyberte si prosím členstvo znova.", "/clenstvo", "Späť na členstvo"));
+      return;
+    }
+    if (p.status === "cancelled") {
+      res.send(paymentPage("Platba bola zrušená", "Ak chcete členstvo, vyberte si ho prosím znova.", "/clenstvo", "Späť na členstvo"));
+      return;
+    }
+    const tg = `https://t.me/${BOT_USERNAME}?start=paid_${p.token}`;
+    if (p.status !== "pending") {
+      res.send(paymentPage("Platba prijatá, ďakujem!", `Členstvo TipRadar Platinum · ${PAY_TERMS[p.term].name} je zaplatené. Pozvánku do kanála nájdete v Telegrame.`, tg, "Otvoriť Telegram"));
+      return;
+    }
+    if (!BANK.iban || !BANK.name) {
+      res.status(503).send(paymentPage("Platba sa teraz nedá spustiť", "Napíšte mi prosím na Telegram a vyriešime to.", `https://t.me/${BOT_USERNAME}`, "Napísať na Telegram"));
+      return;
+    }
+    const price = PAY_TERMS[p.term].price;
+    const qrText = payBySquareString({ iban: BANK.iban, bic: BANK.bic, amount: price, variableSymbol: p.vs || "", note: bankNote(p.term), beneficiaryName: BANK.name });
+    const svg = await QRCode.toString(qrText, { type: "svg", errorCorrectionLevel: "M", margin: 0, color: { dark: "#0B0B0C", light: "#FFFFFF" } });
+    const png = await QRCode.toDataURL(qrText, { errorCorrectionLevel: "M", margin: 3, width: 720, color: { dark: "#0B0B0C", light: "#FFFFFF" } });
+    res.set("Cache-Control", "no-store");
+    res.send(bankPage(p, price, svg, png, tg));
+  } catch (err: any) {
+    console.error("Stránka platby zlyhala:", err?.message ?? err);
+    res.status(502).send(paymentPage("Platba sa teraz nedá zobraziť", "Skúste stránku obnoviť. Ak to nepôjde, napíšte mi na Telegram.", `https://t.me/${BOT_USERNAME}`, "Napísať na Telegram"));
+  }
+});
+
+function bankPage(p: Payment, price: number, svg: string, png: string, tg: string): string {
+  const esc = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const ibanNice = BANK.iban.replace(/(.{4})/g, "$1 ").trim();
+  const term = PAY_TERMS[p.term].name;
+  const row = (label: string, value: string, copy: string) =>
+    `<div class="row"><span class="k">${esc(label)}</span><span class="v">${esc(value)}</span><button type="button" class="cp" data-copy="${esc(copy)}">Kopírovať</button></div>`;
+  return `<!doctype html><html lang="sk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><title>Platba prevodom · TipRadar</title>
+<link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,500&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap">
+<style>*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#0B0B0C;color:#EDE6D6;font-family:'Plus Jakarta Sans',Arial,sans-serif;padding:32px 16px}
+.box{max-width:560px;margin:0 auto;border:1px solid rgba(201,165,92,.32);background:#141416;padding:40px 32px}
+.lab{font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:#C9A55C;font-weight:600;text-align:center}
+h1{font-family:'Playfair Display',Georgia,serif;font-weight:600;font-size:32px;letter-spacing:-.02em;margin:12px 0 6px;line-height:1.15;text-align:center}
+.price{font-family:'Playfair Display',Georgia,serif;font-size:44px;text-align:center;margin:4px 0 22px;background:linear-gradient(180deg,#E8D3A0,#A8823E);-webkit-background-clip:text;background-clip:text;color:transparent}
+.step{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#C9A55C;font-weight:700;margin:26px 0 12px}
+p{color:#B8B0A2;font-size:15px;line-height:1.6;margin:0 0 14px}
+.qr{background:#fff;padding:18px;width:260px;max-width:100%;margin:0 auto 12px;border:1px solid #C9A55C}.qr svg{display:block;width:100%;height:auto}
+.center{text-align:center}
+.save{display:inline-block;color:#C9A55C;font-size:14px;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.rows{border-top:1px solid rgba(201,165,92,.2)}
+.row{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid rgba(201,165,92,.2)}
+.k{flex:0 0 118px;color:#847D71;font-size:13px}.v{flex:1;font-weight:600;font-size:15px;word-break:break-word}
+.cp{flex:0 0 auto;background:transparent;border:1px solid rgba(201,165,92,.5);color:#C9A55C;font:600 12px 'Plus Jakarta Sans',Arial,sans-serif;padding:7px 10px;cursor:pointer}
+.cp.ok{border-color:#7FBF9A;color:#7FBF9A}
+a.btn{display:block;text-align:center;background:linear-gradient(180deg,#E8D3A0,#C9A55C 55%,#A8823E);color:#17130A;text-decoration:none;font-weight:700;font-size:14px;letter-spacing:.12em;text-transform:uppercase;padding:17px 20px;margin-top:6px}
+.small{font-size:13px;color:#847D71}
+a.back{display:block;text-align:center;margin-top:22px;color:#847D71;font-size:14px}
+@media(max-width:480px){.box{padding:30px 18px}.k{flex-basis:96px}h1{font-size:28px}}</style></head>
+<body><div class="box">
+<div class="lab">TipRadar Platinum · ${esc(term)}</div>
+<h1>Platba prevodom</h1>
+<div class="price">${price} €</div>
+<div class="step">1. Zaplaťte cez QR kód</div>
+<p>Otvorte appku svojej banky, zvoľte platbu cez QR kód a naskenujte ho. Všetky údaje sa vyplnia samy.</p>
+<div class="qr">${svg}</div>
+<p class="center small">Platíte z tohto mobilu? <a class="save" href="${png}" download="tipradar-platba-${esc(p.vs || "")}.png">Uložte si QR kód</a> a v appke banky ho načítajte z galérie, alebo údaje skopírujte:</p>
+<div class="rows">
+${row("Suma", `${price},00 €`, `${price},00`)}
+${row("IBAN", ibanNice, BANK.iban)}
+${row("Variabilný symbol", p.vs || "", p.vs || "")}
+${row("Príjemca", BANK.name, BANK.name)}
+${row("Správa", bankNote(p.term), bankNote(p.term))}
+</div>
+<p class="small" style="margin-top:12px">Variabilný symbol je len váš, podľa neho platbu spoznám.</p>
+<div class="step">2. Dajte mi vedieť</div>
+<p>Po zaplatení kliknite nižšie. Otvorí sa Telegram a hneď ako platba príde na účet, pošlem vám tam osobnú pozvánku do kanála.</p>
+<a class="btn" href="${esc(tg)}">Zaplatil som · pokračovať v Telegrame</a>
+<p class="small" style="margin-top:14px">Okamžitá platba príde do pár minút, bežný prevod zvyčajne do jedného pracovného dňa. Členstvo sa samo nepredlžuje.</p>
+<a class="back" href="/clenstvo">Späť na členstvo</a>
+</div>
+<script>document.querySelectorAll(".cp").forEach(function(b){b.addEventListener("click",function(){var t=b.getAttribute("data-copy");var done=function(){b.textContent="Skopírované";b.classList.add("ok");setTimeout(function(){b.textContent="Kopírovať";b.classList.remove("ok")},1800)};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,function(){prompt("Skopírujte:",t)})}else{prompt("Skopírujte:",t)}})});</script>
+</body></html>`;
+}
 
 // Stránka po zaplatení: overí platbu v Stripe a pošle človeka po pozvánku do Telegramu.
 app.get("/platba-ok", async (req, res) => {
@@ -814,7 +910,7 @@ app.get("/api/public/vip-seats", async (_req, res) => {
     ).length;
     // Odkaz na bezplatný Telegram kanál: premenná TELEGRAM_FREE_CHANNEL_URL na Renderi (napr. https://t.me/tipradar_free).
     const freeChannelUrl = process.env.TELEGRAM_FREE_CHANNEL_URL || "https://t.me/TipRadarAiBot?start=free";
-    res.json({ taken: Math.min(taken, total), total, salesOpen: process.env.SALES_OPEN === "true", payOpen: paymentsEnabled(), waitlistVip, minOdds: MIN_ODDS, freeChannelUrl });
+    res.json({ taken: Math.min(taken, total), total, salesOpen: process.env.SALES_OPEN === "true", payOpen: paymentsEnabled(), payMethod: paymentsEnabled() ? payMethod() : null, waitlistVip, minOdds: MIN_ODDS, freeChannelUrl });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
@@ -1467,11 +1563,47 @@ app.get("/api/leads", async (_req, res) => {
 // „Otvoriť predaj": každý z poradovníka dostane od bota správu s tlačidlami na zaplatenie (každý len raz).
 app.post("/api/leads/sales-open", async (_req, res) => {
   if (!paymentsEnabled()) {
-    res.status(400).json({ error: "Platby ešte nie sú zapnuté. Na Renderi nastav SALES_OPEN=true a STRIPE_SECRET_KEY." });
+    res.status(400).json({ error: "Platby ešte nie sú zapnuté. Na Renderi nastav SALES_OPEN=true a PAY_IBAN s PAY_NAME (alebo STRIPE_SECRET_KEY)." });
     return;
   }
   try {
     res.json(await sendSalesOpenToWaitlist());
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+// Platby prevodom: zoznam na potvrdenie v appke. Čakajúce (kto neoznámil „Zaplatil som", len 7 dní) + vybavené za 30 dní.
+app.get("/api/payments", async (_req, res) => {
+  try {
+    const monthAgo = Date.now() - 30 * 24 * 3600 * 1000;
+    const list = (await listPayments()).filter(
+      (p) => p.method === "bank" && (p.status === "pending" ? Boolean(p.claimedAt) || new Date(p.createdAt).getTime() >= Date.now() - 7 * 24 * 3600 * 1000 : new Date(p.paidAt ?? p.createdAt).getTime() >= monthAgo)
+    );
+    res.json(list.map((p) => ({ ...p, priceEur: PAY_TERMS[p.term].price, termName: PAY_TERMS[p.term].name })));
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+app.post("/api/payments/:token/confirm", async (req, res) => {
+  try {
+    const r = await confirmBankPaymentAndInvite(String(req.params.token));
+    if (!r) {
+      res.status(404).json({ error: "Platba sa nenašla." });
+      return;
+    }
+    res.json(r);
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+app.post("/api/payments/:token/cancel", async (req, res) => {
+  try {
+    const p = await cancelPayment(String(req.params.token));
+    if (!p) {
+      res.status(404).json({ error: "Platba sa nenašla." });
+      return;
+    }
+    res.json({ ok: true });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
