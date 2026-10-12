@@ -3,6 +3,7 @@ import { listLeads, deleteLead, recordLead } from "./leadsStore";
 import { getMeta, setMeta } from "./metaStore";
 import * as crypto from "crypto";
 import { recordShadow, listShadow, updateShadow, shadowEntriesFrom, ShadowEntry } from "./shadowStore";
+import { recordBlend, listBlend, updateBlend, blendEntryFrom, blendSummary } from "./blendStore";
 import { recordLegs, listLegs, updateLeg, legCandidatesFrom, legQualifies, buildTickets, TicketLegCandidate, TICKET_RULES } from "./ticketWatchStore";
 import { startBacktest, getBacktest } from "./backtest";
 import { getDay, getAllDays, setDay } from "./dailyStore";
@@ -28,7 +29,7 @@ import {
 import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS } from "./predictor";
 import { LeaguePreset, SavedTip } from "./types";
 import { saveTip, listTips, updateTip, deleteTip, clearAllTips } from "./tipsStore";
-import { computeTicketStatus, settleBet, tipHasStartedMatch, MATCH_STARTED_MESSAGE, buildTipEdit } from "./tipEvaluator";
+import { computeTicketStatus, settleBet, settleFixtureBets, tipHasStartedMatch, MATCH_STARTED_MESSAGE, buildTipEdit } from "./tipEvaluator";
 import {
   sendTipToTelegram,
   deleteTelegramMessages,
@@ -537,6 +538,8 @@ app.post("/api/analyze", async (req, res) => {
 
     // Tichá evidencia tipov vyradených pre rozpor so stávkovkami (na pozadí, nič neblokuje).
     void recordShadow(shadowEntriesFrom(fixture, (result as any).lowValueBets ?? [])).catch(() => {});
+    // Tiché sledovanie miešania modelu so stávkovkami (na tipy nemá vplyv).
+    void recordBlend(blendEntryFrom(fixture, (result as any).allCandidates ?? [])).catch(() => {});
     // Tiché sledovanie tiketu dňa: kandidáti z odporúčaných aj vyradených tipov (na pozadí).
     void recordLegs(
       legCandidatesFrom(fixture, [...((result as any).bestBets ?? []), ...((result as any).lowValueBets ?? [])])
@@ -1390,6 +1393,14 @@ app.post("/api/shadow/record", async (req, res) => {
   }
 });
 
+app.get("/api/blend/summary", async (_req, res) => {
+  try {
+    res.json(blendSummary(await listBlend()));
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
 app.get("/api/shadow/summary", async (_req, res) => {
   try {
     const all = await listShadow();
@@ -1671,6 +1682,15 @@ async function checkPendingResults(): Promise<void> {
     }
   } catch {
     // evidencia nesmie zastaviť vyhodnotenie skutočných tipov
+  }
+  try {
+    for (const f of (await listBlend()).filter((x) => x.status === "pending")) {
+      if (new Date(f.matchDate).getTime() > Date.now()) continue;
+      const outcomes = await settleFixtureBets(f, f.picks);
+      if (outcomes) await updateBlend({ ...f, status: "settled", picks: f.picks.map((p, i) => ({ ...p, outcome: outcomes[i] })) });
+    }
+  } catch {
+    // sledovanie miešania nesmie zastaviť vyhodnotenie skutočných tipov
   }
   const tips = await listTips();
   const pending = tips.filter((t) => t.status === "pending");

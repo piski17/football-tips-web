@@ -918,6 +918,8 @@ export function predictMatch(
       if (pMarket !== null) {
         const modelPct = c.probability;
         marketPct.set(c, pMarket * 100);
+        c.blendModel = modelPct;
+        c.blendMarket = pMarket * 100;
         // Rozpor so stávkovkami (pri KAŽDOM zápase, nielen pri málo dátach): rozdiel
         // 15+ bodov znamená, že model pravdepodobne nevidí niečo podstatné (zranenie,
         // zostava, sila súpera). Takýto tip sa neodporučí a ide do tichej evidencie.

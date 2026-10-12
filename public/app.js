@@ -1118,6 +1118,7 @@ saveTicketBtn.addEventListener("click", async () => {
 
 async function openTipsHistory() {
   void renderShadowSummary();
+  void renderBlendSummary();
   void renderClvSummary();
   void renderTicketWatch();
   tipsModal.hidden = false;
@@ -2886,6 +2887,40 @@ async function renderShadowSummary() {
     if (d.withOdds) t += ` Keby sa stavili: <strong class="${d.profit >= 0 ? "text-success" : "text-danger"}">${d.profit >= 0 ? "+" : "−"}${Math.abs(d.profit).toFixed(1).replace(".", ",")} j.</strong>`;
     if (d.pending) t += ` Čaká: ${d.pending}.`;
     el.innerHTML = t;
+  } catch {
+    el.textContent = "";
+  }
+}
+
+
+// ---- Tiché sledovanie: model + stávkovky ako „druhý názor" ----
+async function renderBlendSummary() {
+  const el = document.getElementById("blendSummary");
+  if (!el) return;
+  try {
+    const d = await fetchJson("/api/blend/summary");
+    if (!d || !d.fixtures) { el.textContent = ""; return; }
+    const head = `Sledovanie „model + stávkovky“ – zapísané zápasy: ${d.fixtures}`;
+    if (!d.settledPicks) {
+      el.innerHTML = `${head}, zatiaľ žiadny vyhodnotený. Čísla pribudnú po odohraní zápasov.`;
+      return;
+    }
+    const num = (v, k = 1) => Number(v).toFixed(k).replace(".", ",");
+    const sign = (v) => (v >= 0 ? "+" : "−") + num(Math.abs(v));
+    const best = d.rows.reduce((a, r) => (r.brier != null && (a == null || r.brier < a.brier) ? r : a), null);
+    const enough = d.settledPicks >= 300;
+    const rows = d.rows.map((r) => {
+      const label = r.weight === 0 ? "len model (dnes)" : `${100 - r.weight} % model / ${r.weight} % stávkovky`;
+      const tipsTxt = r.tips ? `${r.won} z ${r.tips} (${Math.round(r.hitRate)} %), ${sign(r.profit)} j.` : "žiadny tip";
+      const mark = best && r.weight === best.weight ? " ★" : "";
+      return `<tr><td>${label}${mark}</td><td style="text-align:right">${r.brier == null ? "–" : num(r.brier * 100)}</td><td style="text-align:right">${tipsTxt}</td></tr>`;
+    }).join("");
+    el.innerHTML = `${head}, vyhodnotené odhady: ${d.settledPicks}${d.pendingFixtures ? `, čakajúce zápasy: ${d.pendingFixtures}` : ""}.
+      ${enough ? "" : `<br><em>Na spoľahlivý záver treba aspoň 300 vyhodnotených odhadov.</em>`}
+      <details style="margin-top:4px"><summary style="cursor:pointer">Porovnať pomery</summary>
+      <table style="width:100%;margin-top:4px;border-collapse:collapse"><tr><th style="text-align:left">Pomer</th><th style="text-align:right" title="Ako ďaleko boli percentá od reality. Nižšie = presnejšie.">Chyba</th><th style="text-align:right">Tipy, ktoré by prešli</th></tr>${rows}</table>
+      <div style="margin-top:4px">Chyba samotných stávkoviek: ${d.bookmakersBrier == null ? "–" : num(d.bookmakersBrier * 100)}. ★ = najpresnejší pomer.</div></details>`;
+    el.title = "Tipy, ktoré dostávaš, sa nemenia. Appka si len potichu zapisuje odhad modelu aj stávkoviek a po zápase porovná, ktorý pomer by trafil najlepšie.";
   } catch {
     el.textContent = "";
   }

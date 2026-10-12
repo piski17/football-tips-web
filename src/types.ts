@@ -75,6 +75,9 @@ export interface MarketPick {
   /** Pri rozpore: čistý odhad modelu a odhad stávkoviek (v %), pre tichú evidenciu. */
   modelProbability?: number;
   marketProbability?: number;
+  /** Vždy, keď sú kurzy: čistý odhad modelu a odhad stávkoviek (v %) – pre sledovanie miešania. */
+  blendModel?: number;
+  blendMarket?: number;
 }
 
 /** Odhad pre trh typu Over/Under (rohy, karty) založený na kombinovanom Poissonovom modeli. */

@@ -300,3 +300,41 @@ export function buildTipEdit(tip: SavedTip, edit: TipEdit): Partial<SavedTip> {
   else if (typeof edit.odds === "number" && isFinite(edit.odds) && edit.odds > 1) patch.odds = Math.round(edit.odds * 100) / 100;
   return patch;
 }
+
+/**
+ * Vyhodnotí naraz viac tipov z jedného zápasu – výsledok a štatistiky sa z API
+ * načítajú len raz (šetrí API pri sledovaní miešania modelu so stávkovkami).
+ * Vráti null, ak sa zápas ešte neskončil.
+ */
+export async function settleFixtureBets(
+  fixture: { fixtureId: number; matchDate?: string; homeTeam: string; awayTeam: string },
+  bets: { market: string; selection: string }[]
+): Promise<("won" | "lost" | "void")[] | null> {
+  const result = await getFixtureResult(fixture.fixtureId);
+  if (!result) return null;
+  if (VOID_STATUSES.includes(result.status)) return bets.map(() => "void");
+  if (DELAYED_STATUSES.includes(result.status)) {
+    const kickoff = fixture.matchDate ? new Date(fixture.matchDate).getTime() : NaN;
+    return !isNaN(kickoff) && Date.now() - kickoff > DELAYED_VOID_AFTER_MS ? bets.map(() => "void") : null;
+  }
+  if (!FINISHED_STATUSES.includes(result.status) || result.homeGoals == null || result.awayGoals == null) return null;
+  const wentToExtraTime = result.status !== "FT";
+  const needStats = !wentToExtraTime && bets.some((b) => STATS_MARKETS.includes(b.market));
+  const stats = needStats ? await getFixtureCornersAndCards(fixture.fixtureId) : null;
+  return bets.map((b) => {
+    const s = STATS_MARKETS.includes(b.market) ? stats : null;
+    return evaluateTip(
+      { homeTeam: fixture.homeTeam, awayTeam: fixture.awayTeam, market: b.market, selection: b.selection },
+      result.homeGoals!,
+      result.awayGoals!,
+      s?.corners ?? null,
+      s?.cards ?? null,
+      null,
+      s?.shotsOnGoal ?? null,
+      s?.fouls ?? null,
+      s?.offsides ?? null,
+      s?.possession ?? null,
+      s?.cornersByTeam ?? null
+    );
+  });
+}
