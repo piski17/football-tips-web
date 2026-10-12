@@ -34,6 +34,7 @@ import {
   deleteTelegramMessages,
   isTelegramEnabled,
   availableTelegramTargets,
+  TelegramTarget,
   isFreeChat,
   handleTelegramUpdate,
   setTelegramWebhook,
@@ -641,31 +642,64 @@ app.post("/api/tips/:id/telegram", async (req, res) => {
       res.status(400).json({ error: "Telegram nie je na serveri nastavený." });
       return;
     }
-    const target =
-      req.body?.target === "premium" || req.body?.target === "vip" || req.body?.target === "both" || req.body?.target === "free"
-        ? req.body.target
-        : "premium";
-    // Ručne zvolený „Silný tip dňa“ z histórie tipov: ide do VIP a nahradí automatický výber v ten deň.
-    const forceStrong = req.body?.asStrongOfDay === true;
-    const isTicket = !!tip.legs && tip.legs.length > 0;
-    const headerOverride = forceStrong && isTicket ? `⭐ <b>SILNÝ TIKET DŇA</b>` : undefined;
-    const strong = forceStrong || isStrongTipOfDay(tip, tips);
-    if (forceStrong) {
-      const day = dayKeySk(new Date(tip.matchDate));
-      for (const t of tips) {
-        if (t.id !== tip.id && t.strongOfDay && dayKeySk(new Date(t.matchDate)) === day) await updateTip(t.id, { strongOfDay: false });
-      }
+    const target = parseTarget(req.body?.target);
+    const sent = await sendSavedTip(tip, tips, target, req.body?.asStrongOfDay === true);
+    res.json({ ok: sent > 0 });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
+function parseTarget(v: unknown): TelegramTarget {
+  return v === "premium" || v === "vip" || v === "both" || v === "free" ? v : "premium";
+}
+
+/** Pošle jeden uložený tip do Telegramu a zapamätá si odoslané správy. Vráti počet odoslaných správ. */
+async function sendSavedTip(tip: SavedTip, tips: SavedTip[], target: TelegramTarget, forceStrong = false): Promise<number> {
+  // Ručne zvolený „Silný tip dňa“ z histórie tipov: ide do VIP a nahradí automatický výber v ten deň.
+  const isTicket = !!tip.legs && tip.legs.length > 0;
+  const headerOverride = forceStrong && isTicket ? `⭐ <b>SILNÝ TIKET DŇA</b>` : undefined;
+  const strong = forceStrong || isStrongTipOfDay(tip, tips);
+  if (forceStrong) {
+    const day = dayKeySk(new Date(tip.matchDate));
+    for (const t of tips) {
+      if (t.id !== tip.id && t.strongOfDay && dayKeySk(new Date(t.matchDate)) === day) await updateTip(t.id, { strongOfDay: false });
     }
-    const sent = await sendTipToTelegram(tip, forceStrong ? "vip" : target, headerOverride, strong);
-    if (sent.length > 0) {
-      const existing = tip.telegramMessages ?? [];
-      await updateTip(tip.id, {
-        telegramMessages: [...existing, ...sent],
-        ...(strong ? { strongOfDay: true } : {}),
-        ...(target === "free" ? { sentFree: true } : {}),
-      });
+  }
+  const sent = await sendTipToTelegram(tip, forceStrong ? "vip" : target, headerOverride, strong);
+  if (sent.length > 0) {
+    const existing = tip.telegramMessages ?? [];
+    await updateTip(tip.id, {
+      telegramMessages: [...existing, ...sent],
+      ...(strong ? { strongOfDay: true } : {}),
+      ...(target === "free" ? { sentFree: true } : {}),
+    });
+  }
+  return sent.length;
+}
+
+// Viac tipov naraz (napr. všetky tipy dňa z histórie): pošle ich jeden po druhom v poradí podľa času výkopu.
+app.post("/api/telegram/send-tips", async (req, res) => {
+  try {
+    if (!isTelegramEnabled()) {
+      res.status(400).json({ error: "Telegram nie je na serveri nastavený." });
+      return;
     }
-    res.json({ ok: sent.length > 0 });
+    const ids: string[] = Array.isArray(req.body?.ids) ? req.body.ids.map(String).slice(0, 30) : [];
+    const target = parseTarget(req.body?.target);
+    const tips = await listTips();
+    const chosen = ids
+      .map((id) => tips.find((t) => t.id === id))
+      .filter((t): t is SavedTip => !!t)
+      .sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime());
+    let sent = 0;
+    let failed = 0;
+    for (const tip of chosen) {
+      if ((await sendSavedTip(tip, tips, target)) > 0) sent++;
+      else failed++;
+      await new Promise((r) => setTimeout(r, 400)); // nech správy v kanáli prídu v správnom poradí a bez limitu Telegramu
+    }
+    res.json({ sent, failed, missing: ids.length - chosen.length });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
