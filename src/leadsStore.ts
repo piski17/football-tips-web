@@ -19,7 +19,7 @@ export interface Lead {
   note?: string;
   source?: "telegram" | "web";
   salesMsgAt?: string; // kedy dostal správu „predaj je otvorený"
-  paidAt?: string; // kedy zaplatil cez Stripe
+  paidAt?: string; // kedy zaplatil (potvrdená platba prevodom)
   firstAt: string; // kedy sa zapísal prvýkrát (poradie v poradovníku)
   lastAt: string;
 }

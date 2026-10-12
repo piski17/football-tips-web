@@ -41,7 +41,7 @@ import {
   sendCustomMessage,
   sendRenewalReminder,
   sendTipResultToTelegram, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite } from "./telegram";
-import { paymentsEnabled, payMethod, createCheckout, refreshPayment, isTerm, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, Payment } from "./payments";
+import { paymentsEnabled, isTerm, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, Payment } from "./payments";
 import { payBySquareString } from "./payBySquare";
 import QRCode from "qrcode";
 import { sendAdminEmail } from "./mailer";
@@ -164,7 +164,7 @@ app.use((req, res, next) => {
     next();
     return;
   }
-  const toLanding = ["/", "/video", "/video/", "/kurz", "/kurz/", "/metoda", "/metoda/", "/vysledky", "/vysledky/", "/otazky", "/otazky/", "/clenstvo", "/clenstvo/", "/zaplatit", "/platba", "/platba-ok"].includes(req.path);
+  const toLanding = ["/", "/video", "/video/", "/kurz", "/kurz/", "/metoda", "/metoda/", "/vysledky", "/vysledky/", "/otazky", "/otazky/", "/clenstvo", "/clenstvo/", "/zaplatit", "/platba"].includes(req.path);
   res.redirect(301, (toLanding ? "https://tipradar.eu" : "https://app.tipradar.eu") + req.originalUrl);
 });
 
@@ -186,7 +186,7 @@ app.get(["/video", "/video/"], (_req, res) => {
 app.get(["/metoda", "/metoda/", "/vysledky", "/vysledky/", "/otazky", "/otazky/", "/clenstvo", "/clenstvo/"], (_req, res) => {
   res.sendFile(path.join(__dirname, "..", "landing", "index.html"));
 });
-// ---- Platba za členstvo (Stripe) – bez hesla ----
+// ---- Platba za členstvo (prevod cez QR kód) – bez hesla ----
 /** Koľko miest na sezónu je obsadených (aktívne členstvo „group", 7 dní tolerancia po splatnosti). */
 async function seasonSeats(): Promise<{ taken: number; total: number; activeVip: Subscriber[] }> {
   const total = Math.max(1, Number(process.env.VIP_SEATS) || 30);
@@ -198,7 +198,7 @@ async function seasonSeats(): Promise<{ taken: number; total: number; activeVip:
 }
 const BOT_USERNAME = process.env.TELEGRAM_BOT_USERNAME || "TipRadarAiBot";
 
-// tipradar.eu/zaplatit?term=m1|m3|season (&c=Telegram ID z bota) → presmeruje na platobnú stránku Stripe.
+// tipradar.eu/zaplatit?term=m1|m3|season (&c=Telegram ID z bota) → založí platbu a presmeruje na stránku s QR kódom.
 app.get("/zaplatit", async (req, res) => {
   const term = String(req.query.term ?? "");
   const c = String(req.query.c ?? "");
@@ -215,12 +215,8 @@ app.get("/zaplatit", async (req, res) => {
       }
     }
     const chatId = /^\d{3,20}$/.test(c) ? c : undefined;
-    if (payMethod() === "bank") {
-      const p = await createBankPayment(term, chatId);
-      res.redirect(303, `/platba?t=${p.token}`);
-      return;
-    }
-    res.redirect(303, await createCheckout(term, chatId));
+    const p = await createBankPayment(term, chatId);
+    res.redirect(303, `/platba?t=${p.token}`);
   } catch (err: any) {
     console.error("Platbu sa nepodarilo pripraviť:", err?.response?.data ?? err?.message ?? err);
     res.status(502).send(paymentPage("Platba sa teraz nedá spustiť", "Skúste to prosím o chvíľu znova. Ak to nepôjde, napíšte mi na Telegram a vyriešime to.", `https://t.me/${BOT_USERNAME}`, "Napísať na Telegram"));
@@ -314,38 +310,6 @@ ${row("Správa", bankNote(p.term), bankNote(p.term))}
 <script>document.querySelectorAll(".cp").forEach(function(b){b.addEventListener("click",function(){var t=b.getAttribute("data-copy");var done=function(){b.textContent="Skopírované";b.classList.add("ok");setTimeout(function(){b.textContent="Kopírovať";b.classList.remove("ok")},1800)};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,function(){prompt("Skopírujte:",t)})}else{prompt("Skopírujte:",t)}})});</script>
 </body></html>`;
 }
-
-// Stránka po zaplatení: overí platbu v Stripe a pošle človeka po pozvánku do Telegramu.
-app.get("/platba-ok", async (req, res) => {
-  const token = String(req.query.t ?? "");
-  try {
-    const p = await refreshPayment(token);
-    if (!p) {
-      res.status(404).send(paymentPage("Platbu sme nenašli", "Ak ste zaplatili, napíšte mi na Telegram a hneď to vyriešim.", `https://t.me/${BOT_USERNAME}`, "Napísať na Telegram"));
-      return;
-    }
-    if (p.status === "pending") {
-      res.send(paymentPage("Platba sa spracúva…", "Stránka sa o pár sekúnd sama obnoví.", "", "", true));
-      return;
-    }
-    // Prišiel z bota (poznáme Telegram ID): pozvánku pošleme rovno do Telegramu.
-    if (p.status === "paid" && p.chatId) await redeemPayment(token, p.chatId);
-    const sent = Boolean(p.chatId);
-    res.send(
-      paymentPage(
-        "Platba prebehla, ďakujem!",
-        sent
-          ? `Členstvo TipRadar Platinum · ${PAY_TERMS[p.term].name} je aktívne. Pozvánku do kanála som vám poslal do Telegramu.`
-          : `Členstvo TipRadar Platinum · ${PAY_TERMS[p.term].name} je zaplatené. Posledný krok: kliknite nižšie a bot vám v Telegrame pošle pozvánku do kanála.`,
-        `https://t.me/${BOT_USERNAME}?start=paid_${p.token}`,
-        sent ? "Otvoriť Telegram" : "Získať pozvánku v Telegrame"
-      )
-    );
-  } catch (err: any) {
-    console.error("Overenie platby zlyhalo:", err?.response?.data ?? err?.message ?? err);
-    res.status(502).send(paymentPage("Platbu sa nepodarilo overiť", "Skúste stránku obnoviť. Ak ste zaplatili a nejde to, napíšte mi na Telegram.", `https://t.me/${BOT_USERNAME}`, "Napísať na Telegram"));
-  }
-});
 
 function paymentPage(title: string, text: string, href: string, button: string, refresh = false): string {
   const esc = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -910,7 +874,7 @@ app.get("/api/public/vip-seats", async (_req, res) => {
     ).length;
     // Odkaz na bezplatný Telegram kanál: premenná TELEGRAM_FREE_CHANNEL_URL na Renderi (napr. https://t.me/tipradar_free).
     const freeChannelUrl = process.env.TELEGRAM_FREE_CHANNEL_URL || "https://t.me/TipRadarAiBot?start=free";
-    res.json({ taken: Math.min(taken, total), total, salesOpen: process.env.SALES_OPEN === "true", payOpen: paymentsEnabled(), payMethod: paymentsEnabled() ? payMethod() : null, waitlistVip, minOdds: MIN_ODDS, freeChannelUrl });
+    res.json({ taken: Math.min(taken, total), total, salesOpen: process.env.SALES_OPEN === "true", payOpen: paymentsEnabled(), waitlistVip, minOdds: MIN_ODDS, freeChannelUrl });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
@@ -1563,7 +1527,7 @@ app.get("/api/leads", async (_req, res) => {
 // „Otvoriť predaj": každý z poradovníka dostane od bota správu s tlačidlami na zaplatenie (každý len raz).
 app.post("/api/leads/sales-open", async (_req, res) => {
   if (!paymentsEnabled()) {
-    res.status(400).json({ error: "Platby ešte nie sú zapnuté. Na Renderi nastav SALES_OPEN=true a PAY_IBAN s PAY_NAME (alebo STRIPE_SECRET_KEY)." });
+    res.status(400).json({ error: "Platby ešte nie sú zapnuté. Na Renderi nastav SALES_OPEN=true, PAY_IBAN a PAY_NAME." });
     return;
   }
   try {
@@ -1577,7 +1541,7 @@ app.get("/api/payments", async (_req, res) => {
   try {
     const monthAgo = Date.now() - 30 * 24 * 3600 * 1000;
     const list = (await listPayments()).filter(
-      (p) => p.method === "bank" && (p.status === "pending" ? Boolean(p.claimedAt) || new Date(p.createdAt).getTime() >= Date.now() - 7 * 24 * 3600 * 1000 : new Date(p.paidAt ?? p.createdAt).getTime() >= monthAgo)
+      (p) => (p.status === "pending" ? Boolean(p.claimedAt) || new Date(p.createdAt).getTime() >= Date.now() - 7 * 24 * 3600 * 1000 : new Date(p.paidAt ?? p.createdAt).getTime() >= monthAgo)
     );
     res.json(list.map((p) => ({ ...p, priceEur: PAY_TERMS[p.term].price, termName: PAY_TERMS[p.term].name })));
   } catch (err: any) {

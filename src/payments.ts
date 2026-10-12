@@ -3,20 +3,17 @@ import * as path from "path";
 import * as crypto from "crypto";
 import axios from "axios";
 
-// Platby za členstvo TipRadar Platinum. Dva spôsoby:
-// 1) Bankový prevod cez QR kód (PAY by square) – zapne sa premennými PAY_IBAN a PAY_NAME na Renderi.
-//    Bez poplatkov; platbu potvrdíš jedným klikom v appke alebo v Telegrame. Má prednosť pred Stripe.
-// 2) Stripe (karta, Apple Pay, Google Pay) – zapne sa premennou STRIPE_SECRET_KEY.
-// Oboje funguje len pri SALES_OPEN=true. Údaje o karte nikdy neprechádzajú cez TipRadar.
+// Platby za členstvo TipRadar Platinum: bankový prevod cez QR kód (PAY by square), bez poplatkov.
+// Zapne sa, keď sú na Renderi nastavené SALES_OPEN=true, PAY_IBAN a PAY_NAME.
+// Platbu potvrdíš jedným klikom v appke alebo v Telegrame, bot potom pošle pozvánku.
 
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 /** Účet na bankový prevod (IBAN a meno majiteľa zadáš na Renderi, v kóde nie sú). */
 export const BANK = {
   iban: (process.env.PAY_IBAN || "").replace(/\s+/g, "").toUpperCase(),
   name: (process.env.PAY_NAME || "").trim(),
   bic: (process.env.PAY_BIC || "").replace(/\s+/g, "").toUpperCase(),
 };
-/** Adresa webu, kam sa človek vráti po platbe (predvolene https://tipradar.eu). */
+/** Adresa webu (predvolene https://tipradar.eu). */
 export const PUBLIC_URL = (process.env.PUBLIC_URL || "https://tipradar.eu").replace(/\/+$/, "");
 /** Koniec sezóny pre členstvo „Celá sezóna". */
 export const SEASON_END = process.env.SEASON_END || "2027-05-31";
@@ -34,14 +31,8 @@ export function isTerm(v: unknown): v is Term {
 export function bankEnabled(): boolean {
   return /^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/.test(BANK.iban) && BANK.name.length > 0;
 }
-/** Aký spôsob platby sa ponúka: QR prevod má prednosť, inak Stripe. */
-export function payMethod(): "bank" | "stripe" | null {
-  if (bankEnabled()) return "bank";
-  if (STRIPE_SECRET_KEY) return "stripe";
-  return null;
-}
 export function paymentsEnabled(): boolean {
-  return process.env.SALES_OPEN === "true" && payMethod() !== null;
+  return process.env.SALES_OPEN === "true" && bankEnabled();
 }
 
 /** Do kedy platí členstvo zaplatené dnes. */
@@ -61,16 +52,14 @@ const FILE = path.join(__dirname, "..", "data", "payments.json");
 
 export interface Payment {
   token: string; // krátky kód v odkaze na Telegram bota (t.me/…?start=paid_KÓD)
-  method?: "stripe" | "bank"; // staré záznamy bez tejto položky sú zo Stripe
-  sessionId?: string; // Stripe Checkout Session
-  vs?: string; // variabilný symbol pri bankovom prevode
+  method: "bank";
+  vs: string; // variabilný symbol
   term: Term;
   chatId?: string; // Telegram ID (prišiel z bota, alebo klikol „Zaplatil som")
   status: "pending" | "paid" | "redeemed" | "cancelled";
   claimedAt?: string; // kedy človek v Telegrame oznámil, že zaplatil prevodom
   name?: string; // meno z Telegramu
   username?: string; // @meno v Telegrame
-  email?: string;
   createdAt: string;
   paidAt?: string;
   redeemedAt?: string;
@@ -153,57 +142,6 @@ export async function cancelPayment(token: string): Promise<Payment | null> {
   if (!p) return null;
   if (p.status === "pending") {
     p.status = "cancelled";
-    await savePayment(p);
-  }
-  return p;
-}
-
-// ---- Stripe ----
-function stripe() {
-  return axios.create({
-    baseURL: "https://api.stripe.com/v1",
-    auth: { username: STRIPE_SECRET_KEY || "", password: "" },
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    timeout: 20000,
-  });
-}
-
-/** Vytvorí platobnú stránku Stripe a vráti jej adresu. */
-export async function createCheckout(term: Term, chatId?: string): Promise<string> {
-  const token = newToken();
-  const t = PAY_TERMS[term];
-  const form = new URLSearchParams({
-    mode: "payment",
-    locale: "sk",
-    "line_items[0][quantity]": "1",
-    "line_items[0][price_data][currency]": "eur",
-    "line_items[0][price_data][unit_amount]": String(t.price * 100),
-    "line_items[0][price_data][product_data][name]": `TipRadar Platinum · ${t.name}`,
-    "line_items[0][price_data][product_data][description]":
-      term === "season" ? `Členstvo do ${SEASON_END.split("-").reverse().map(Number).join(". ")}` : "Členstvo sa samo nepredlžuje",
-    success_url: `${PUBLIC_URL}/platba-ok?t=${token}`,
-    cancel_url: `${PUBLIC_URL}/clenstvo`,
-    "metadata[token]": token,
-    "metadata[term]": term,
-  });
-  if (chatId) {
-    form.set("client_reference_id", chatId);
-    form.set("metadata[telegram]", chatId);
-  }
-  const res = await stripe().post("/checkout/sessions", form.toString());
-  await savePayment({ token, method: "stripe", sessionId: res.data.id, term, chatId, status: "pending", createdAt: new Date().toISOString() });
-  return res.data.url;
-}
-
-/** Overí v Stripe, či je platba zaplatená. Vráti aktuálny záznam (alebo null, ak kód neexistuje). */
-export async function refreshPayment(token: string): Promise<Payment | null> {
-  const p = await getPayment(token);
-  if (!p || p.status !== "pending" || p.method === "bank" || !p.sessionId) return p;
-  const res = await stripe().get(`/checkout/sessions/${encodeURIComponent(p.sessionId)}`);
-  if (res.data?.payment_status === "paid") {
-    p.status = "paid";
-    p.paidAt = new Date().toISOString();
-    p.email = res.data?.customer_details?.email ?? undefined;
     await savePayment(p);
   }
   return p;
