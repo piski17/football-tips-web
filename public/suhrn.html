@@ -192,6 +192,12 @@ h2 { font-size: 22px; }
 .back-link:hover { border-color: var(--accent); color: var(--accent); }
 .top-right .tag { margin-left: 0; }
 @media (max-width: 620px) { .top-right .tag { display: none; } }
+.week-panel { margin-top: 24px; }
+.week-nav { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; }
+.week-nav .arrow { font-size: 22px; line-height: 1; width: 46px; height: 46px; padding: 0; display: grid; place-items: center; }
+.week-nav b { font-size: 17px; min-width: 200px; text-align: center; }
+.week-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 900px) { .week-grid { grid-template-columns: minmax(0, 1fr); } }
 </style>
 </head>
 <body>
@@ -292,6 +298,30 @@ h2 { font-size: 22px; }
           <button class="btn primary" id="dl">Stiahnuť denný súhrn</button>
         </div>
         <div class="status" id="dlStatus" role="status"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel week-panel" id="weekPanel">
+    <h2>Týždenný súhrn na Instagram</h2>
+    <p class="hint" style="margin-top:0">Príspevok 1080×1350 so všetkými tipmi týždňa (pondelok – nedeľa) priamo z Histórie tipov. Zisk a ROI pri stávke 1 jednotky na každý tip.</p>
+    <div class="week-nav">
+      <button class="btn arrow" id="wPrev" aria-label="Predchádzajúci týždeň" title="Predchádzajúci týždeň">‹</button>
+      <b id="wLabel">–</b>
+      <button class="btn arrow" id="wNext" aria-label="Nasledujúci týždeň" title="Nasledujúci týždeň">›</button>
+      <button class="btn" id="wReload" title="Znova načítať Históriu tipov">⟳ Obnoviť</button>
+    </div>
+    <div class="week-grid">
+      <div>
+        <canvas id="wcv" width="1080" height="1350" aria-label="Náhľad týždenného súhrnu"></canvas>
+        <div class="pages" id="wPages" role="group" aria-label="Obrázky týždenného súhrnu" hidden></div>
+      </div>
+      <div>
+        <div class="actions" style="margin-top:0"><button class="btn primary" id="wDl">Stiahnuť týždenný súhrn</button></div>
+        <div class="status" id="wStatus" role="status"></div>
+        <h2 style="margin-top:14px">Popis príspevku</h2>
+        <textarea id="wCaption" aria-label="Popis príspevku"></textarea>
+        <div class="actions"><button class="btn" id="wCopy">Kopírovať popis</button></div>
       </div>
     </div>
   </div>
@@ -989,6 +1019,225 @@ h2 { font-size: 22px; }
       $('importStatus').textContent = 'Súbor sa nepodarilo nahrať. Skontroluj, či je to záloha zo starej verzie.';
     } finally { e.target.value = ''; }
   });
+
+  // ---------- Týždenný súhrn na Instagram (príspevok 1080×1350, tipy z Histórie tipov) ----------
+  const wcv = $('wcv'), w = wcv.getContext('2d');
+  const W_DAYS = ['NE', 'PO', 'UT', 'ST', 'ŠT', 'PI', 'SO'];
+  let weekStart = null, weekTips = [], weekPage = 0, historyTips = null;
+  function mondayOf(dayKey) { const [y, m, d] = dayKey.split('-').map(Number); const x = new Date(y, m - 1, d); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return isoLocal(x); }
+  /** Číslo týždňa podľa ISO (pondelok – nedeľa). */
+  function isoWeek(dayKey) {
+    const [y, m, d] = dayKey.split('-').map(Number);
+    const t = new Date(Date.UTC(y, m - 1, d)); const wd = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - wd);
+    return Math.ceil(((t - Date.UTC(t.getUTCFullYear(), 0, 1)) / 86400000 + 1) / 7);
+  }
+  function weekLabel(start) {
+    const end = shiftDay(start, 6);
+    const [, m1, d1] = start.split('-').map(Number), [, m2, d2] = end.split('-').map(Number);
+    return m1 === m2 ? d1 + '. – ' + d2 + '. ' + m2 + '.' : d1 + '. ' + m1 + '. – ' + d2 + '. ' + m2 + '.';
+  }
+  function weekRow(t) {
+    const legs = Array.isArray(t.legs) ? t.legs : [];
+    const dates = legs.length ? legs.map((l) => l.matchDate).sort() : [t.matchDate];
+    const odds = typeof t.odds === 'number' && t.odds > 1 ? t.odds : null;
+    const result = ['won', 'lost', 'void'].includes(t.status) ? t.status : '';
+    return {
+      day: skDay(dates[dates.length - 1]), when: dates[0],
+      match: legs.length ? 'Tiket · ' + legs.length + (legs.length < 5 ? ' zápasy' : ' zápasov') : t.homeTeam + ' – ' + t.awayTeam,
+      tip: legs.length ? legs.map((l) => l.homeTeam + ' – ' + l.awayTeam).join(', ') : skText(t.market + ': ' + t.selection),
+      odds, result,
+      profit: result === 'won' ? (odds ? odds - 1 : null) : result === 'lost' ? -1 : result === 'void' ? 0 : null,
+    };
+  }
+  function weekStats(rows) {
+    let won = 0, lost = 0, voided = 0, profit = 0, withOdds = 0;
+    for (const r of rows) {
+      if (r.result === 'won') { won++; if (r.odds) { profit += r.odds - 1; withOdds++; } }
+      else if (r.result === 'lost') { lost++; profit -= 1; withOdds++; }
+      else if (r.result === 'void') voided++;
+    }
+    const settled = won + lost;
+    return { won, lost, voided, settled, pending: rows.filter((r) => !r.result).length, profit, roi: withOdds ? profit / withOdds : null };
+  }
+  async function loadWeek() {
+    $('wStatus').textContent = 'Načítavam Históriu tipov…';
+    try {
+      if (!historyTips) {
+        const r = await api('GET', '/api/tips');
+        if (r.status !== 200 || !Array.isArray(r.data)) throw new Error();
+        historyTips = r.data;
+      }
+      const end = shiftDay(weekStart, 6);
+      weekTips = historyTips.map(weekRow).filter((x) => x.day >= weekStart && x.day <= end).sort((a, b) => a.when.localeCompare(b.when));
+      const s = weekStats(weekTips);
+      $('wStatus').textContent = weekTips.length
+        ? 'Tipov v týždni: ' + weekTips.length + (s.pending ? ' · ešte čaká na výsledok: ' + s.pending : '') + (s.voided ? ' · vrátené: ' + s.voided : '')
+        : 'V tomto týždni nie sú v Histórii tipov žiadne tipy.';
+    } catch (e) {
+      weekTips = [];
+      $('wStatus').textContent = 'Históriu tipov sa nepodarilo načítať. Skús obnoviť stránku.';
+    }
+    weekPage = 0;
+    renderWeek();
+  }
+  function wFit(text, max, font) {
+    w.font = font;
+    if (w.measureText(text).width <= max) return text;
+    let t = text; while (t.length > 1 && w.measureText(t + '…').width > max) t = t.slice(0, -1);
+    return t + '…';
+  }
+  /** Text s rozostupom písmen (ako nadpisy na tipradar.eu). */
+  function spaced(text, x, y, spacing, align) {
+    const chars = Array.from(text);
+    const width = chars.reduce((a, c) => a + w.measureText(c).width, 0) + spacing * (chars.length - 1);
+    let cx = align === 'right' ? x - width : align === 'center' ? x - width / 2 : x;
+    const prev = w.textAlign; w.textAlign = 'left';
+    for (const c of chars) { w.fillText(c, cx, y); cx += w.measureText(c).width + spacing; }
+    w.textAlign = prev;
+    return width;
+  }
+  function wMark(x, y, r) {
+    w.save(); w.translate(x, y);
+    w.beginPath(); w.arc(0, 0, r, 0, Math.PI * 2); w.fillStyle = C.surface; w.fill();
+    w.beginPath(); w.moveTo(0, 0); w.arc(0, 0, r * 0.95, -Math.PI / 2, -Math.PI / 4); w.closePath(); w.fillStyle = 'rgba(201,165,92,0.32)'; w.fill();
+    w.beginPath(); w.moveTo(0, 0); w.lineTo(Math.cos(-Math.PI / 4) * r * 0.95, Math.sin(-Math.PI / 4) * r * 0.95); w.strokeStyle = C.gold; w.lineWidth = r * 0.075; w.lineCap = 'round'; w.stroke();
+    w.beginPath(); w.arc(0, 0, r, 0, Math.PI * 2); w.strokeStyle = C.gold; w.lineWidth = r * 0.085; w.stroke();
+    w.beginPath(); w.arc(0, 0, r * 0.63, 0, Math.PI * 2); w.strokeStyle = 'rgba(201,165,92,0.5)'; w.lineWidth = r * 0.045; w.stroke();
+    w.beginPath(); w.arc(0, 0, r * 0.1, 0, Math.PI * 2); w.fillStyle = '#e8d3a0'; w.fill();
+    w.restore();
+  }
+  const goldGrad = (x0, x1) => { const g = w.createLinearGradient(x0, 0, x1, 0); g.addColorStop(0, '#E8D3A0'); g.addColorStop(1, '#C9A55C'); return g; };
+  const hline = (x0, x1, y) => { w.strokeStyle = C.line; w.lineWidth = 1.5; w.beginPath(); w.moveTo(x0, y); w.lineTo(x1, y); w.stroke(); };
+  // Prvý obrázok: 9 tipov so štatistikou; ďalšie (karusel): po 12 tipov.
+  function weekPages(rows) { const out = [rows.slice(0, 9)]; for (let i = 9; i < rows.length; i += 12) out.push(rows.slice(i, i + 12)); return out; }
+  function drawWeek(i, pages) {
+    const W = 1080, H = 1350, L = 100, R = 980, s = weekStats(weekTips), list = pages[i] || [], total = pages.length;
+    w.clearRect(0, 0, W, H); w.fillStyle = C.bg; w.fillRect(0, 0, W, H);
+    w.strokeStyle = 'rgba(201,165,92,0.35)'; w.lineWidth = 1.5; w.strokeRect(36.5, 36.5, W - 73, H - 73);
+    w.textBaseline = 'alphabetic';
+    // Hlavička: zlatá linka + TÝŽDEŇ 41 · 6. – 12. 10.
+    w.strokeStyle = C.gold; w.lineWidth = 2; w.beginPath(); w.moveTo(L, 126); w.lineTo(L + 56, 126); w.stroke();
+    w.fillStyle = C.gold; w.font = F(600, 27);
+    spaced('TÝŽDEŇ ' + isoWeek(weekStart) + ' · ' + weekLabel(weekStart).toUpperCase(), L + 74, 136, 6, 'left');
+    if (total > 1) { w.font = F(600, 24); spaced((i + 1) + ' / ' + total, R, 136, 3, 'right'); }
+    let top;
+    if (i === 0) {
+      w.textAlign = 'left'; w.fillStyle = C.text; w.font = S(600, 92);
+      const a = 'Týždeň v '; w.fillText(a, L, 254);
+      const aw = w.measureText(a).width;
+      w.font = 'italic 500 98px "Playfair Display", Georgia, serif'; w.fillStyle = goldGrad(L + aw, L + aw + 260); w.fillText('číslach', L + aw, 254);
+      // Štatistika: TIPY · ZISK · ROI
+      hline(L, R, 298); hline(L, R, 449);
+      const colW = (R - L) / 3;
+      [[colW + L, 298, 449], [colW * 2 + L, 298, 449]].forEach(([x]) => { w.strokeStyle = C.line; w.beginPath(); w.moveTo(x, 298); w.lineTo(x, 449); w.stroke(); });
+      const cols = [
+        ['TIPY', s.settled ? s.won + ' / ' + s.settled : '–', C.text],
+        ['ZISK', s.roi == null ? '–' : sign(s.profit, nf(Math.abs(s.profit), 2) + ' j.'), s.profit > 0 ? C.green : s.profit < 0 ? C.red : C.text],
+        ['ROI', s.roi == null ? '–' : sign(s.roi, nf(Math.abs(s.roi) * 100, 1) + ' %'), s.roi > 0 ? C.green : s.roi < 0 ? C.red : C.text],
+      ];
+      cols.forEach(([label, value, col], k) => {
+        const x = L + k * colW + (k ? 30 : 0);
+        w.fillStyle = C.muted; w.font = F(600, 21); spaced(label, x, 348, 5, 'left');
+        w.fillStyle = col; w.font = S(600, 58); w.textAlign = 'left'; w.fillText(wFit(value, colW - 50, S(600, 58)), x, 420);
+      });
+      top = 474;
+    } else {
+      w.textAlign = 'left'; w.fillStyle = C.text; w.font = S(600, 64); w.fillText('Ďalšie tipy týždňa', L, 230);
+      top = 280;
+    }
+    // Tipy: deň · zápas a tip · kurz · zisk
+    const bottom = 1130, rows = Math.max(list.length, 1);
+    const rowH = Math.min(91, Math.floor((bottom - top) / rows));
+    const big = rowH >= 80;
+    let lastDay = null; // na každom obrázku sa pri prvom tipe ukáže deň
+    list.forEach((r, k) => {
+      const y = top + k * rowH, cy = y + rowH / 2;
+      if (r.day !== lastDay) {
+        const [yy, mm, dd] = r.day.split('-').map(Number);
+        w.fillStyle = C.muted; w.font = F(600, 21); spaced(W_DAYS[new Date(yy, mm - 1, dd).getDay()], L, cy + 8, 5, 'left');
+        lastDay = r.day;
+      }
+      const tx = L + 80, tw = 560;
+      w.textAlign = 'left';
+      const f1 = F(600, big ? 26 : 23), f2 = F(400, big ? 21 : 19);
+      w.fillStyle = C.text; w.fillText(wFit(r.match, tw, f1), tx, cy - (big ? 4 : 3));
+      w.fillStyle = C.muted; w.font = f2; w.fillText(wFit(r.tip, tw, f2), tx, cy + (big ? 26 : 22));
+      w.textAlign = 'right';
+      w.fillStyle = C.muted; w.font = F(400, big ? 26 : 23); w.fillText(r.odds ? nf(r.odds, 2) : '', 852, cy + 9);
+      const pTxt = r.result === 'void' ? 'vrátené' : r.profit == null ? (r.result === 'won' ? 'vyšiel' : 'čaká') : sign(r.profit, nf(Math.abs(r.profit), 2));
+      const pCol = r.result === 'won' ? C.green : r.result === 'lost' ? C.red : C.muted;
+      w.fillStyle = pCol; w.font = F(600, big ? 26 : 23); w.fillText(pTxt, R, cy + 9);
+      hline(L, R, y + rowH);
+    });
+    if (!list.length) { w.textAlign = 'left'; w.fillStyle = C.muted; w.font = F(400, 28); w.fillText('V tomto týždni nie sú žiadne tipy.', L, top + 60); }
+    if (i < total - 1) { w.textAlign = 'right'; w.fillStyle = C.gold; w.font = F(500, 22); w.fillText('Ďalšie tipy na ďalšej snímke  →', R, top + list.length * rowH + 40); }
+    // Päta: logo, TipRadar, tipradar.eu · 1 j. = 1 % bankrollu · 18+
+    wMark(L + 28, 1226, 28);
+    w.textAlign = 'left'; w.fillStyle = C.text; w.font = S(600, 36); w.fillText('TipRadar', L + 74, 1226);
+    w.fillStyle = C.gold; w.font = F(500, 19); spaced('TIPRADAR.EU', L + 75, 1257, 5, 'left');
+    w.fillStyle = C.muted; w.font = F(500, 19); spaced('1 J. = 1 % BANKROLLU · 18+', R, 1233, 5, 'right');
+  }
+  function renderWeek() {
+    $('wLabel').textContent = 'Týždeň ' + isoWeek(weekStart) + ' · ' + weekLabel(weekStart);
+    const pages = weekPages(weekTips);
+    if (weekPage > pages.length - 1) weekPage = pages.length - 1;
+    drawWeek(weekPage, pages);
+    const el = $('wPages');
+    el.hidden = pages.length < 2;
+    el.innerHTML = pages.length < 2 ? '' : '<span>Obrázky:</span>' + pages.map((_, k) => '<button type="button" data-p="' + k + '" aria-pressed="' + (k === weekPage) + '">' + (k + 1) + '</button>').join('');
+    el.querySelectorAll('button').forEach((b) => { b.onclick = () => { weekPage = Number(b.dataset.p); renderWeek(); }; });
+    $('wDl').textContent = pages.length > 1 ? 'Stiahnuť týždenný súhrn · ' + pages.length + (pages.length > 4 ? ' obrázkov' : ' obrázky') : 'Stiahnuť týždenný súhrn';
+    $('wCaption').value = weekCaption();
+  }
+  function weekCaption() {
+    const s = weekStats(weekTips);
+    const lines = ['Týždeň ' + isoWeek(weekStart) + ' v číslach (' + weekLabel(weekStart) + ') 📊', ''];
+    if (s.settled) {
+      lines.push('✅ Vyšlo: ' + s.won + ' z ' + s.settled + ' (' + Math.round((s.won / s.settled) * 100) + ' %)');
+      if (s.roi != null) {
+        lines.push((s.profit >= 0 ? '📈' : '📉') + ' Zisk: ' + sign(s.profit, nf(Math.abs(s.profit), 2)) + ' jednotiek');
+        lines.push('💰 ROI: ' + sign(s.roi, nf(Math.abs(s.roi) * 100, 1) + ' %'));
+      }
+      if (s.voided) lines.push('↩ Vrátené: ' + s.voided);
+      lines.push('');
+    }
+    lines.push('Všetky tipy, ktoré sme poslali, aj tie, ktoré nevyšli. Takto to bude každý pondelok.', '');
+    lines.push('Chceš tipy vidieť pred výkopom? Odkaz v bio.');
+    lines.push('🔞 18+ · Hraj zodpovedne');
+    lines.push('#futbal #fotbal #premierleague #tipradar');
+    return lines.join('\n');
+  }
+  $('wPrev').onclick = () => { weekStart = shiftDay(weekStart, -7); loadWeek(); };
+  $('wNext').onclick = () => { weekStart = shiftDay(weekStart, 7); loadWeek(); };
+  $('wReload').onclick = () => { historyTips = null; loadWeek(); };
+  $('wCopy').onclick = async () => {
+    try { await navigator.clipboard.writeText($('wCaption').value); $('wCopy').textContent = 'Skopírované'; }
+    catch (e) { $('wCaption').select(); document.execCommand('copy'); $('wCopy').textContent = 'Skopírované'; }
+    setTimeout(() => { $('wCopy').textContent = 'Kopírovať popis'; }, 1800);
+  };
+  $('wDl').onclick = async () => {
+    const pages = weekPages(weekTips), shown = weekPage, files = [];
+    for (let k = 0; k < pages.length; k++) {
+      drawWeek(k, pages);
+      const blob = await new Promise((r) => wcv.toBlob(r, 'image/png'));
+      files.push(new File([blob], 'tipradar-tyzden-' + isoWeek(weekStart) + (pages.length > 1 ? '-' + (k + 1) : '') + '.png', { type: 'image/png' }));
+    }
+    weekPage = shown; renderWeek();
+    if (navigator.canShare && navigator.canShare({ files }) && /Mobi|iPhone|iPad|Android/i.test(navigator.userAgent)) {
+      try { await navigator.share({ files }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    for (const f of files) {
+      const url = URL.createObjectURL(f);
+      const a = document.createElement('a'); a.href = url; a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      await new Promise((r) => setTimeout(r, 400));
+    }
+    $('wStatus').textContent = files.length > 1 ? 'Stiahnuté obrázky: ' + files.length + '. Na Instagram ich pridaj ako karusel v tomto poradí.' : 'Obrázok stiahnutý.';
+  };
+  // Predvolene týždeň, do ktorého patrí včerajšok (v pondelok teda práve skončený týždeň).
+  weekStart = mondayOf(shiftDay(isoLocal(new Date()), -1));
+  loadWeek();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(renderWeek);
 
   renderRows();
   refresh();
