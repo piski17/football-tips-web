@@ -40,7 +40,8 @@ import {
   notifyAdminExpiringSubscribers,
   sendCustomMessage,
   sendRenewalReminder,
-  sendTipResultToTelegram, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret } from "./telegram";
+  sendTipResultToTelegram, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist } from "./telegram";
+import { paymentsEnabled, createCheckout, refreshPayment, isTerm, PAY_TERMS } from "./payments";
 import { sendAdminEmail } from "./mailer";
 import { listSubscribers, addSubscriber, updateSubscriber, deleteSubscriber } from "./subscribersStore";
 import { recordHit, readStats, sourceFrom } from "./statsStore";
@@ -161,7 +162,7 @@ app.use((req, res, next) => {
     next();
     return;
   }
-  const toLanding = ["/", "/video", "/video/", "/kurz", "/kurz/", "/metoda", "/metoda/", "/vysledky", "/vysledky/", "/otazky", "/otazky/", "/clenstvo", "/clenstvo/"].includes(req.path);
+  const toLanding = ["/", "/video", "/video/", "/kurz", "/kurz/", "/metoda", "/metoda/", "/vysledky", "/vysledky/", "/otazky", "/otazky/", "/clenstvo", "/clenstvo/", "/zaplatit", "/platba-ok"].includes(req.path);
   res.redirect(301, (toLanding ? "https://tipradar.eu" : "https://app.tipradar.eu") + req.originalUrl);
 });
 
@@ -183,6 +184,89 @@ app.get(["/video", "/video/"], (_req, res) => {
 app.get(["/metoda", "/metoda/", "/vysledky", "/vysledky/", "/otazky", "/otazky/", "/clenstvo", "/clenstvo/"], (_req, res) => {
   res.sendFile(path.join(__dirname, "..", "landing", "index.html"));
 });
+// ---- Platba za členstvo (Stripe) – bez hesla ----
+/** Koľko miest na sezónu je obsadených (aktívne členstvo „group", 7 dní tolerancia po splatnosti). */
+async function seasonSeats(): Promise<{ taken: number; total: number; activeVip: Subscriber[] }> {
+  const total = Math.max(1, Number(process.env.VIP_SEATS) || 30);
+  const graceMs = 7 * 24 * 60 * 60 * 1000;
+  const activeVip = (await listSubscribers()).filter(
+    (s) => s.tier === "group" && new Date(s.nextPaymentDue).getTime() + graceMs >= Date.now()
+  );
+  return { taken: activeVip.length, total, activeVip };
+}
+const BOT_USERNAME = process.env.TELEGRAM_BOT_USERNAME || "TipRadarAiBot";
+
+// tipradar.eu/zaplatit?term=m1|m3|season (&c=Telegram ID z bota) → presmeruje na platobnú stránku Stripe.
+app.get("/zaplatit", async (req, res) => {
+  const term = String(req.query.term ?? "");
+  const c = String(req.query.c ?? "");
+  if (!paymentsEnabled() || !isTerm(term)) {
+    res.redirect(302, "/clenstvo");
+    return;
+  }
+  try {
+    if (term === "season") {
+      const { taken, total } = await seasonSeats();
+      if (taken >= total) {
+        res.redirect(302, `https://t.me/${BOT_USERNAME}?start=sampion_waitlist`);
+        return;
+      }
+    }
+    res.redirect(303, await createCheckout(term, /^\d{3,20}$/.test(c) ? c : undefined));
+  } catch (err: any) {
+    console.error("Stripe – platobnú stránku sa nepodarilo vytvoriť:", err?.response?.data ?? err?.message ?? err);
+    res.status(502).send(paymentPage("Platba sa teraz nedá spustiť", "Skúste to prosím o chvíľu znova. Ak to nepôjde, napíšte mi na Telegram a vyriešime to.", `https://t.me/${BOT_USERNAME}`, "Napísať na Telegram"));
+  }
+});
+
+// Stránka po zaplatení: overí platbu v Stripe a pošle človeka po pozvánku do Telegramu.
+app.get("/platba-ok", async (req, res) => {
+  const token = String(req.query.t ?? "");
+  try {
+    const p = await refreshPayment(token);
+    if (!p) {
+      res.status(404).send(paymentPage("Platbu sme nenašli", "Ak ste zaplatili, napíšte mi na Telegram a hneď to vyriešim.", `https://t.me/${BOT_USERNAME}`, "Napísať na Telegram"));
+      return;
+    }
+    if (p.status === "pending") {
+      res.send(paymentPage("Platba sa spracúva…", "Stránka sa o pár sekúnd sama obnoví.", "", "", true));
+      return;
+    }
+    // Prišiel z bota (poznáme Telegram ID): pozvánku pošleme rovno do Telegramu.
+    if (p.status === "paid" && p.chatId) await redeemPayment(token, p.chatId);
+    const sent = Boolean(p.chatId);
+    res.send(
+      paymentPage(
+        "Platba prebehla, ďakujem!",
+        sent
+          ? `Členstvo TipRadar Platinum · ${PAY_TERMS[p.term].name} je aktívne. Pozvánku do kanála som vám poslal do Telegramu.`
+          : `Členstvo TipRadar Platinum · ${PAY_TERMS[p.term].name} je zaplatené. Posledný krok: kliknite nižšie a bot vám v Telegrame pošle pozvánku do kanála.`,
+        `https://t.me/${BOT_USERNAME}?start=paid_${p.token}`,
+        sent ? "Otvoriť Telegram" : "Získať pozvánku v Telegrame"
+      )
+    );
+  } catch (err: any) {
+    console.error("Overenie platby zlyhalo:", err?.response?.data ?? err?.message ?? err);
+    res.status(502).send(paymentPage("Platbu sa nepodarilo overiť", "Skúste stránku obnoviť. Ak ste zaplatili a nejde to, napíšte mi na Telegram.", `https://t.me/${BOT_USERNAME}`, "Napísať na Telegram"));
+  }
+});
+
+function paymentPage(title: string, text: string, href: string, button: string, refresh = false): string {
+  const esc = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  return `<!doctype html><html lang="sk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">${refresh ? '<meta http-equiv="refresh" content="4">' : ""}<title>${esc(title)} · TipRadar</title>
+<link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,500&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap">
+<style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0B0B0C;color:#EDE6D6;font-family:'Plus Jakarta Sans',Arial,sans-serif;padding:24px;box-sizing:border-box}
+.box{max-width:520px;width:100%;border:1px solid rgba(201,165,92,.32);padding:48px 36px;text-align:center;background:#111113}
+.lab{font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:#C9A55C;font-weight:600}
+h1{font-family:'Playfair Display',Georgia,serif;font-weight:600;font-size:34px;margin:14px 0 14px;line-height:1.15}
+p{color:#B8B0A2;font-size:16px;line-height:1.6;margin:0 0 28px}
+a.btn{display:inline-block;background:#C9A55C;color:#17130A;text-decoration:none;font-weight:700;font-size:14px;letter-spacing:.14em;text-transform:uppercase;padding:16px 28px}
+a.back{display:block;margin-top:22px;color:#847D71;font-size:14px}</style></head>
+<body><div class="box"><div class="lab">TipRadar Platinum</div><h1>${esc(title)}</h1><p>${esc(text)}</p>
+${href ? `<a class="btn" href="${esc(href)}">${esc(button)}</a>` : ""}<a class="back" href="/">Späť na tipradar.eu</a></div></body></html>`;
+}
+
 // Kurz Škola stávkovania (tipradar.eu/kurz) – samostatná stránka, bez hesla.
 app.get(["/kurz", "/kurz/"], (_req, res) => {
   res.sendFile(path.join(__dirname, "..", "landing", "kurz.html"));
@@ -720,12 +804,7 @@ app.get("/api/public/track-record", async (_req, res) => {
 app.get("/api/public/vip-seats", async (_req, res) => {
   res.set("Access-Control-Allow-Origin", "*");
   try {
-    const total = Math.max(1, Number(process.env.VIP_SEATS) || 30);
-    const graceMs = 7 * 24 * 60 * 60 * 1000;
-    const activeVip = (await listSubscribers()).filter(
-      (s) => s.tier === "group" && new Date(s.nextPaymentDue).getTime() + graceMs >= Date.now()
-    );
-    const taken = activeVip.length;
+    const { taken, total, activeVip } = await seasonSeats();
     // Predaj členstiev: SALES_OPEN=true na Renderi (kým nie je živnosť, len poradovník).
     // Pred spustením predaja: koľko ľudí sa zapísalo do poradovníka o VIP (len počet).
     // Záujemca, ktorý už je VIP členom (rovnaké Telegram ID), sa nepočíta dvakrát.
@@ -735,7 +814,7 @@ app.get("/api/public/vip-seats", async (_req, res) => {
     ).length;
     // Odkaz na bezplatný Telegram kanál: premenná TELEGRAM_FREE_CHANNEL_URL na Renderi (napr. https://t.me/tipradar_free).
     const freeChannelUrl = process.env.TELEGRAM_FREE_CHANNEL_URL || "https://t.me/TipRadarAiBot?start=free";
-    res.json({ taken: Math.min(taken, total), total, salesOpen: process.env.SALES_OPEN === "true", waitlistVip, minOdds: MIN_ODDS, freeChannelUrl });
+    res.json({ taken: Math.min(taken, total), total, salesOpen: process.env.SALES_OPEN === "true", payOpen: paymentsEnabled(), waitlistVip, minOdds: MIN_ODDS, freeChannelUrl });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
@@ -1381,6 +1460,18 @@ app.get("/api/ticket-watch/summary", async (_req, res) => {
 app.get("/api/leads", async (_req, res) => {
   try {
     res.json(await listLeads());
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+// „Otvoriť predaj": každý z poradovníka dostane od bota správu s tlačidlami na zaplatenie (každý len raz).
+app.post("/api/leads/sales-open", async (_req, res) => {
+  if (!paymentsEnabled()) {
+    res.status(400).json({ error: "Platby ešte nie sú zapnuté. Na Renderi nastav SALES_OPEN=true a STRIPE_SECRET_KEY." });
+    return;
+  }
+  try {
+    res.json(await sendSalesOpenToWaitlist());
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }

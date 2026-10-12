@@ -18,6 +18,8 @@ export interface Lead {
   email?: string; // zápis cez formulár na tipradar.eu
   note?: string;
   source?: "telegram" | "web";
+  salesMsgAt?: string; // kedy dostal správu „predaj je otvorený"
+  paidAt?: string; // kedy zaplatil cez Stripe
   firstAt: string; // kedy sa zapísal prvýkrát (poradie v poradovníku)
   lastAt: string;
 }
@@ -53,7 +55,7 @@ export async function recordLead(input: { chatId: string; plan: string; name: st
   const existing = (await listLeads()).find((l) => l.chatId === input.chatId);
   const isVip = (p: string) => p === "vip" || p === "vip_waitlist" || p === "sampion" || p === "sampion_waitlist";
   const plan = existing && isVip(existing.plan) && !isVip(input.plan) ? existing.plan : input.plan;
-  const lead: Lead = { ...input, plan, firstAt: existing?.firstAt ?? now, lastAt: now };
+  const lead: Lead = { ...existing, ...input, plan, firstAt: existing?.firstAt ?? now, lastAt: now };
   if (!useUpstash) {
     const all = readFile();
     all[lead.chatId] = lead;
@@ -61,6 +63,20 @@ export async function recordLead(input: { chatId: string; plan: string; name: st
     return;
   }
   await redis(["HSET", KEY, lead.chatId, JSON.stringify(lead)]);
+}
+
+/** Doplní údaje k existujúcemu záujemcovi (napr. že dostal správu o predaji). */
+export async function updateLead(chatId: string, updates: Partial<Lead>): Promise<void> {
+  const existing = (await listLeads()).find((l) => l.chatId === chatId);
+  if (!existing) return;
+  const lead: Lead = { ...existing, ...updates, chatId };
+  if (!useUpstash) {
+    const all = readFile();
+    all[chatId] = lead;
+    writeFile(all);
+    return;
+  }
+  await redis(["HSET", KEY, chatId, JSON.stringify(lead)]);
 }
 
 export async function deleteLead(chatId: string): Promise<void> {

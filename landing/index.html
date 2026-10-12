@@ -850,7 +850,10 @@
 
   /* TipRadar Platinum: jedno členstvo, prepínač dĺžky */
   #clenstvo h2 em { font-style: italic; }
-  #clenstvo .club-h { text-align: center; }
+  .gold-text { background: linear-gradient(180deg, #F3E3B8 0%, #E8D3A0 30%, #C9A55C 62%, #A8823E 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  #clenstvo .club-h, #recenzie .club-h { text-align: center; }
+  #recenzie h2 em { font-style: italic; }
+  #recenzie .eyebrow::before, #recenzie .eyebrow::after { content: ""; width: 48px; height: 1px; background: var(--gold); opacity: .6; }
   #clenstvo .eyebrow { justify-content: center; }
   #clenstvo .eyebrow::before { content: ""; width: 48px; height: 1px; background: var(--gold); opacity: .6; }
   .plat-text, .lux h3.plat-text { background: linear-gradient(180deg, #FFFFFF 0%, #E6E8EC 28%, #A9AEB6 58%, #D9DCE1 78%, #8E939B 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -881,6 +884,18 @@
   .lux .limit-tag[hidden] { display: none; }
   .last7 { margin: 26px 0 0; padding: 14px 16px; border: 1px solid var(--rule-gold); background: rgba(201,165,92,.06); text-align: center; font-size: 15px; color: var(--muted); }
   .last7[hidden] { display: none; }
+    .pay-note { margin: 14px 0 0; text-align: center; font-size: 13px; color: var(--faint, #847D71); }
+    .pay-note[hidden] { display: none; }
+    /* Recenzie členov (sekcia sa ukáže, až keď je v zozname REVIEWS aspoň jedna) */
+    #recenzie[hidden] { display: none; }
+    #recenzie .eyebrow { justify-content: center; }
+    .reviews { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 22px; margin-top: 40px; }
+    .review { margin: 0; border: 1px solid var(--rule-gold); background: var(--card); padding: 30px 28px 26px; display: flex; flex-direction: column; }
+    .review::before { content: "\201C"; font-family: var(--serif); font-size: 64px; line-height: .6; color: var(--gold); height: 26px; }
+    .review q { quotes: none; font-family: var(--serif); font-style: italic; font-size: 20px; line-height: 1.45; color: var(--text); margin-top: 10px; flex: 1; }
+    .review .who { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--rule); }
+    .review .who b { display: block; font-weight: 600; color: var(--text); }
+    .review .who span { font-size: 13px; color: var(--faint); }
   .last7 b { color: var(--text); font-weight: 600; }
   .last7 b.up { color: #7FBF9A; }
   .lux .plan-foot { padding-top: 26px; }
@@ -1154,9 +1169,19 @@
             <div class="bar"><i id="seatBar"></i></div>
           </div>
           <a class="btn" id="memberCta" href="https://t.me/TipRadarAiBot?start=seria" target="_blank" rel="noopener">Zapísať sa do poradovníka</a>
+          <p class="pay-note" id="payNote" hidden>Kartou, Apple Pay alebo Google Pay · bezpečne cez Stripe</p>
           <p class="small">Bez automatického predlžovania. Členstvo zrušíte jednou správou.</p>
         </div>
       </article>
+    </div>
+  </section>
+
+  <section class="sec" id="recenzie" data-pages="home" hidden>
+    <div class="wrap">
+      <div class="eyebrow">Členovia</div>
+      <h2 class="club-h">Čo hovoria <em class="gold-text">členovia</em></h2>
+      <p class="muted" style="margin:16px auto 0;max-width:56ch;text-align:center">Skutočné odkazy od členov TipRadar Platinum, uverejnené s ich súhlasom.</p>
+      <div class="reviews" id="reviewsList"></div>
     </div>
   </section>
 
@@ -1507,8 +1532,12 @@
       const S = window.__sales || { open: false, full: false };
       if (cta) {
         const full = term === "season" && S.full;
-        cta.href = "https://t.me/TipRadarAiBot?start=" + (full ? "sampion_waitlist" : t.start);
-        cta.textContent = !S.open ? "Zapísať sa do poradovníka" : full ? "Zapísať sa ako náhradník" : term === "season" ? "Rezervovať miesto na sezónu" : term === "m3" ? "Pridať sa na 3 mesiace" : "Pridať sa na mesiac";
+        const pay = S.pay && !full;
+        cta.href = pay ? "/zaplatit?term=" + term : "https://t.me/TipRadarAiBot?start=" + (full ? "sampion_waitlist" : t.start);
+        if (pay) cta.removeAttribute("target"); else cta.target = "_blank";
+        const note = document.getElementById("payNote");
+        if (note) note.hidden = !pay;
+        cta.textContent = pay ? "Zaplatiť " + t.price + " €" : !S.open ? "Zapísať sa do poradovníka" : full ? "Zapísať sa ako náhradník" : term === "season" ? "Rezervovať miesto na sezónu" : term === "m3" ? "Pridať sa na 3 mesiace" : "Pridať sa na mesiac";
       }
       const seats = document.getElementById("vipSeats");
       if (seats && seats.dataset.ready) seats.hidden = term !== "season";
@@ -1517,6 +1546,19 @@
     $$(".term-switch [data-term]").forEach((b) => b.addEventListener("click", () => apply(b.dataset.term)));
     window.__applyTerm = apply;
     apply("m3");
+  })();
+
+  // ---------- Recenzie členov ----------
+  // Sem dopĺňaj skutočné odkazy od členov (s ich súhlasom). Kým je zoznam prázdny, sekcia sa nezobrazí.
+  // Príklad: { text: "Konečne niekto, kto ukáže aj prehry.", name: "Tomáš", term: "3 mesiace" },
+  const REVIEWS = [
+  ];
+  (() => {
+    const box = document.getElementById("reviewsList");
+    if (!box || !REVIEWS.length) return;
+    const esc = (v) => String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    box.innerHTML = REVIEWS.map((r) => `<figure class="review"><q>${esc(r.text)}</q><figcaption class="who"><b>${esc(r.name)}</b><span>člen${r.term ? " · " + esc(r.term) : ""}</span></figcaption></figure>`).join("");
+    document.getElementById("recenzie").hidden = false;
   })();
 
   // ---------- VIP miesta a predaj ----------
@@ -1543,7 +1585,7 @@
       } else {
         // Predaj beží (SALES_OPEN=true na Renderi)
         const taken = Math.min(Number(d.taken) || 0, total);
-        window.__sales = { open: true, full: taken >= total };
+        window.__sales = { open: true, full: taken >= total, pay: d.payOpen === true };
         show(taken, "Obsadené miesta na sezónu");
       }
       window.__applyTerm && window.__applyTerm(document.documentElement.dataset.term || "m3");

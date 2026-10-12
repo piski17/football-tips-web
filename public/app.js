@@ -2828,6 +2828,20 @@ async function renderTicketWatch() {
 
 
 // ---- Poradovník záujemcov z webu ----
+document.addEventListener("click", async (e) => {
+  const btn = e.target.closest?.("#salesOpenBtn");
+  if (!btn) return;
+  if (!window.confirm("Poslať všetkým z poradovníka správu, že predaj je otvorený? Každý ju dostane len raz.")) return;
+  btn.disabled = true;
+  try {
+    const r = await fetchJson("/api/leads/sales-open", { method: "POST" });
+    showToast(`Správa odišla ${r.sent} ľuďom.` + (r.failed ? ` Neodišla: ${r.failed}.` : "") + (r.skipped ? ` Preskočení (už dostali, sú členmi alebo sú z formulára): ${r.skipped}.` : ""));
+  } catch (err) {
+    showToast(err?.message || "Správu sa nepodarilo poslať.");
+  }
+  btn.disabled = false;
+  renderLeads();
+});
 const LEAD_PLAN_LABEL = { start: "Platinum 1 mesiac", seria: "Platinum 3 mesiace", sampion: "Platinum sezóna", sampion_waitlist: "Platinum sezóna (náhradník)", premium: "starý odkaz Premium", vip: "Platinum sezóna (starý odkaz VIP)", vip_waitlist: "Platinum sezóna (náhradník)", clenstvo: "nevybral", otazka: "otázka z webu" };
 async function renderLeads() {
   const el = document.getElementById("leadsList");
@@ -2844,7 +2858,7 @@ async function renderLeads() {
         const date = isNaN(d.getTime()) ? "" : `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}`;
         return `<div class="tip-row lead-row">
           <div class="lead-main"><strong>${i + 1}. ${escapeHtml(l.name || "Neznámy")}</strong>${l.username ? ` <span class="muted">@${escapeHtml(l.username)}</span>` : ""}
-            <div class="muted small">${escapeHtml(LEAD_PLAN_LABEL[l.plan] || l.plan)} · zapísaný ${date} · ${l.email ? `formulár na webe · ${escapeHtml(l.email)}` : `ID ${escapeHtml(l.chatId)}`}</div>${l.note ? `<div class="muted small">„${escapeHtml(l.note)}“</div>` : ""}</div>
+            <div class="muted small">${l.paidAt ? "✅ zaplatil · " : l.salesMsgAt ? "✉️ dostal správu o predaji · " : ""}${escapeHtml(LEAD_PLAN_LABEL[l.plan] || l.plan)} · zapísaný ${date} · ${l.email ? `formulár na webe · ${escapeHtml(l.email)}` : `ID ${escapeHtml(l.chatId)}`}</div>${l.note ? `<div class="muted small">„${escapeHtml(l.note)}“</div>` : ""}</div>
           <div class="lead-actions">
             ${l.email ? `<a class="btn-ghost btn-mini" href="mailto:${encodeURIComponent(l.email)}">Napísať e-mail</a>` : `<a class="btn-ghost btn-mini" href="tg://user?id=${encodeURIComponent(l.chatId)}">Otvoriť chat</a>`}
             <button class="btn-ghost btn-mini" data-lead-add="${escapeHtml(l.chatId)}">Pridať ako predplatiteľa</button>
