@@ -2858,10 +2858,11 @@ async function renderPayments() {
     return `<div class="tip-row lead-row">
       <div class="lead-main"><strong>VS ${escapeHtml(p.vs || "")} · ${p.priceEur} €</strong> · ${escapeHtml(p.termName)} · ${who}
         <div class="muted small">${state}</div></div>
-      ${p.status === "pending" ? `<div class="lead-actions">
+      <div class="lead-actions">${p.status === "pending" ? `
         <button class="btn-primary btn-mini" data-pay-ok="${escapeHtml(p.token)}">Potvrdiť</button>
-        <button class="btn-ghost btn-mini" data-pay-no="${escapeHtml(p.token)}">Zrušiť</button>
-      </div>` : ""}</div>`;
+        <button class="btn-ghost btn-mini" data-pay-no="${escapeHtml(p.token)}">Zrušiť</button>` : `
+        <button class="btn-ghost btn-mini" data-pay-del="${escapeHtml(p.token)}">Odstrániť</button>`}
+      </div></div>`;
   };
   el.innerHTML = pending.map(rowHtml).join("") + (done.length ? `<p class="muted small" style="margin:10px 0 4px;">Vybavené</p>` + done.map(rowHtml).join("") : "");
   el.querySelectorAll("[data-pay-ok]").forEach((b) => {
@@ -2876,6 +2877,18 @@ async function renderPayments() {
         showToast(err?.message || "Potvrdenie zlyhalo.");
       }
       void openSubscribers();
+    };
+  });
+  el.querySelectorAll("[data-pay-del]").forEach((b) => {
+    b.onclick = async () => {
+      if (!window.confirm("Odstrániť tento záznam o platbe? Člen v predplatiteľoch ostane.")) return;
+      b.disabled = true;
+      try {
+        await fetchJson(`/api/payments/${encodeURIComponent(b.dataset.payDel)}`, { method: "DELETE" });
+      } catch (err) {
+        showToast(err?.message || "Odstránenie zlyhalo.");
+      }
+      void renderPayments();
     };
   });
   el.querySelectorAll("[data-pay-no]").forEach((b) => {

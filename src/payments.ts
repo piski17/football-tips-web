@@ -139,6 +139,18 @@ export async function confirmBankPayment(token: string): Promise<Payment | null>
   return p;
 }
 
+/** Úplné odstránenie záznamu o platbe (napr. skúšobnej). */
+export async function deletePayment(token: string): Promise<void> {
+  if (!useUpstash) {
+    const all = readFile();
+    delete all[token];
+    fs.mkdirSync(path.dirname(FILE), { recursive: true });
+    fs.writeFileSync(FILE, JSON.stringify(all));
+    return;
+  }
+  await redis(["HDEL", KEY, token]);
+}
+
 export async function cancelPayment(token: string): Promise<Payment | null> {
   const p = await getPayment(token);
   if (!p) return null;

@@ -41,7 +41,7 @@ import {
   sendCustomMessage,
   sendRenewalReminder,
   sendTipResultToTelegram, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite } from "./telegram";
-import { paymentsEnabled, isTerm, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, Payment } from "./payments";
+import { paymentsEnabled, isTerm, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, deletePayment, Payment } from "./payments";
 import { payBySquareString } from "./payBySquare";
 import QRCode from "qrcode";
 import { sendAdminEmail } from "./mailer";
@@ -1567,6 +1567,14 @@ app.post("/api/payments/:token/cancel", async (req, res) => {
       res.status(404).json({ error: "Platba sa nenašla." });
       return;
     }
+    res.json({ ok: true });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+app.delete("/api/payments/:token", async (req, res) => {
+  try {
+    await deletePayment(String(req.params.token));
     res.json({ ok: true });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
