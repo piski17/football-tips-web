@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as crypto from "crypto";
 import axios from "axios";
+import { ibanValid } from "./payBySquare";
 
 // Platby za členstvo TipRadar Platinum: bankový prevod cez QR kód (PAY by square), bez poplatkov.
 // Zapne sa, keď sú na Renderi nastavené SALES_OPEN=true, PAY_IBAN a PAY_NAME.
@@ -29,8 +30,9 @@ export function isTerm(v: unknown): v is Term {
 }
 
 export function bankEnabled(): boolean {
-  return /^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/.test(BANK.iban) && BANK.name.length > 0;
+  return ibanValid(BANK.iban) && BANK.name.length > 0;
 }
+if (BANK.iban && !ibanValid(BANK.iban)) console.error("PAY_IBAN na Renderi nie je platný IBAN (preklep?) – platby sú vypnuté.");
 export function paymentsEnabled(): boolean {
   return process.env.SALES_OPEN === "true" && bankEnabled();
 }

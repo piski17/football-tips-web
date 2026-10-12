@@ -50,7 +50,19 @@ function base32hex(bytes: Uint8Array): string {
   return out;
 }
 
-/** Vráti text, ktorý sa zakóduje do QR kódu (PAY by square, verzia 1.2). */
+/** Kontrolný súčet IBAN (mod 97) – odhalí preklep v čísle účtu. */
+export function ibanValid(iban: string): boolean {
+  const v = iban.replace(/\s+/g, "").toUpperCase();
+  if (!/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/.test(v)) return false;
+  let rest = 0;
+  for (const ch of v.slice(4) + v.slice(0, 4)) {
+    const n = parseInt(ch, 36);
+    rest = (n > 9 ? rest * 100 + n : rest * 10 + n) % 97;
+  }
+  return rest === 1;
+}
+
+/** Vráti text, ktorý sa zakóduje do QR kódu (PAY by square). */
 export function payBySquareString(p: BySquarePayment): string {
   const fields = [
     "", // číslo faktúry
@@ -79,7 +91,9 @@ export function payBySquareString(p: BySquarePayment): string {
   payload.copy(checked, 4);
   // LZMA bez 13-bajtovej hlavičky (čítačka si ju doplní sama).
   const compressed = Uint8Array.from((LZMA.compress(checked, 1) as number[]).slice(13).map((b) => b & 0xff));
-  const header = [0x02, 0x00]; // typ 0 (platba), verzia 1.2, dokument 0
+  // Hlavička: typ 0 (platba), verzia 1.0.0, dokument 0. Verziu 1.0.0 prečítajú všetky bankové appky
+  // (novšiu 1.2.0 niektoré odmietnu ako „nesprávne údaje"); meno príjemcu na konci staršie appky ignorujú.
+  const header = [0x00, 0x00];
   const len = [checked.length & 0xff, (checked.length >> 8) & 0xff];
   return base32hex(Uint8Array.from([...header, ...len, ...compressed]));
 }
