@@ -1302,6 +1302,11 @@ app.get(["/suhrn", "/suhrn/"], (_req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "suhrn.html"));
 });
 
+// ---- Instagram (/instagram) – Reel „Model vs. kancelária“ a piatkový bezplatný tip ----
+app.get(["/instagram", "/instagram/"], (_req, res) => {
+  res.sendFile(path.join(__dirname, "..", "public", "instagram.html"));
+});
+
 app.get("/api/daily", async (_req, res) => {
   try {
     res.json({ days: await getAllDays() });

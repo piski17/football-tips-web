@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TipRadar — Instagram</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #eee6d4; --panel: #faf6ec; --line: #d9cdb3; --text: #0B0B0C; --muted: #5a5244;
+  --accent: #A8823E; --input: #fffaf0; --good: #2f6f4a; --bad: #8e3a47;
+  --display: "Playfair Display", Georgia, serif;
+  --body: "Plus Jakarta Sans", "Helvetica Neue", Arial, system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0B0B0C; --panel: #141416; --line: #2A2925; --text: #EDE6D6; --muted: #B8B0A2;
+    --accent: #c9a55c; --input: #0E0E10; --good: #7FBF9A; --bad: #C0707C;
+  }
+}
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15.5px/1.55 var(--body); -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 28px 20px 48px; }
+@media (max-width: 620px) { .wrap { padding: 20px 12px 40px; } }
+.top { display: flex; align-items: center; gap: 12px; margin-bottom: 26px; }
+.brand { display: flex; align-items: center; gap: 12px; font-family: var(--display); font-weight: 600; font-size: 22px; }
+.brand svg { width: 32px; height: 32px; }
+.back-link { margin-left: auto; color: var(--text); text-decoration: none; font-size: 13.5px; font-weight: 600; border: 1px solid var(--line); border-radius: 3px; padding: 7px 12px; }
+.back-link:hover { border-color: var(--accent); color: var(--accent); }
+h1, h2 { font-family: var(--display); font-weight: 500; letter-spacing: -0.02em; }
+h1 { font-size: clamp(32px, 4.4vw, 46px); line-height: 1.05; margin: 0 0 10px; }
+h2 { font-size: 22px; margin: 0 0 14px; }
+.lead { color: var(--muted); margin: 0 0 22px; max-width: 72ch; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+.layout > div { min-width: 0; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 3px; padding: 22px; }
+.panel + .panel { margin-top: 20px; }
+@media (max-width: 620px) { .panel { padding: 14px; } }
+label { display: block; font-size: 13px; color: var(--muted); margin: 0 0 5px; }
+.field { margin-bottom: 12px; min-width: 0; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+@media (max-width: 520px) { .grid3 { grid-template-columns: 1fr 1fr; } }
+input[type=text], input[type=date], input[type=time], select, textarea {
+  width: 100%; min-width: 0; font: inherit; color: var(--text); background: var(--input);
+  border: 1px solid var(--line); border-radius: 3px; padding: 9px 11px; min-height: 42px;
+}
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+textarea { min-height: 200px; resize: vertical; font-size: 14px; }
+.check { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text); margin: 4px 0 0; cursor: pointer; }
+.check input { width: 18px; height: 18px; accent-color: #c9a55c; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 3px; overflow: hidden; margin-bottom: 16px; flex-wrap: wrap; }
+.seg button { border: 0; background: var(--input); color: var(--text); font: inherit; font-size: 14px; padding: 9px 14px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: #c9a55c; color: #17130A; font-weight: 600; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.btn { font: inherit; font-weight: 600; border-radius: 3px; padding: 10px 18px; cursor: pointer; border: 1px solid var(--line); background: transparent; color: var(--text); }
+.btn:hover:not(:disabled) { border-color: var(--muted); }
+.btn.primary { background: #C9A55C; border-color: #C9A55C; color: #17130A; }
+.btn.primary:hover:not(:disabled) { background: #E8D3A0; border-color: #E8D3A0; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.hint { color: var(--muted); font-size: 13px; margin-top: 8px; }
+.status { font-size: 13px; color: var(--muted); min-height: 1.5em; margin-top: 8px; }
+.status.bad { color: var(--bad); }
+.status.ok { color: var(--good); }
+.calc { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 4px; }
+.calc div { border: 1px solid var(--line); border-radius: 3px; padding: 9px 12px; }
+.calc b { display: block; font-family: var(--display); font-size: 22px; font-weight: 500; font-variant-numeric: lining-nums tabular-nums; }
+.calc span { color: var(--muted); font-size: 12px; }
+.calc b.pos { color: var(--good); } .calc b.neg { color: var(--bad); }
+.preview { position: sticky; top: 16px; }
+canvas { display: block; width: auto; max-width: 100%; max-height: 74vh; margin: 0 auto; border-radius: 3px; border: 1px solid var(--line); background: #0B0B0C; }
+.progress { height: 4px; background: var(--line); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+.progress i { display: block; height: 100%; width: 0; background: #c9a55c; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><svg viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="92" fill="#141416"/><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#c9a55c" fill-opacity=".32"/><line x1="100" y1="100" x2="162.2" y2="37.8" stroke="#C9A55C" stroke-width="7" stroke-linecap="round"/><circle cx="100" cy="100" r="92" fill="none" stroke="#C9A55C" stroke-width="8"/><circle cx="100" cy="100" r="58" fill="none" stroke="#c9a55c" stroke-opacity=".5" stroke-width="4"/><circle cx="100" cy="100" r="9" fill="#e8d3a0"/></svg>TipRadar</div>
+    <a class="back-link" href="/">← Späť na tipy</a>
+  </header>
+  <h1>Instagram</h1>
+  <p class="lead">Utorok: video (Reel) „Model vs. kancelária“. Piatok: obrázok do príbehu „Bezplatný tip týždňa“. Vyber tip z Histórie tipov alebo vyplň údaje ručne, vpravo uvidíš náhľad.</p>
+
+  <div class="seg" role="group" aria-label="Čo chceš vytvoriť">
+    <button id="modeReel" aria-pressed="true">Utorok · Reel Model vs. kancelária</button>
+    <button id="modeFree" aria-pressed="false">Piatok · Bezplatný tip</button>
+  </div>
+
+  <div class="layout">
+    <div>
+      <div class="panel">
+        <h2>Zápas a tip</h2>
+        <div class="field">
+          <label for="pick">Tip z Histórie tipov</label>
+          <select id="pick"><option value="">Načítavam…</option></select>
+        </div>
+        <div class="grid2">
+          <div class="field"><label for="home">Domáci</label><input type="text" id="home"></div>
+          <div class="field"><label for="away">Hostia</label><input type="text" id="away"></div>
+        </div>
+        <div class="grid3">
+          <div class="field"><label for="league">Súťaž</label><input type="text" id="league"></div>
+          <div class="field"><label for="date">Deň</label><input type="date" id="date"></div>
+          <div class="field"><label for="time">Výkop</label><input type="time" id="time"></div>
+        </div>
+        <div class="field"><label for="tip">Tip</label><input type="text" id="tip" placeholder="napr. Góly: Nad 2,5"></div>
+        <div class="grid2">
+          <div class="field"><label for="odds">Kurz kancelárie</label><input type="text" id="odds" inputmode="decimal" placeholder="1,75"></div>
+          <div class="field"><label for="prob">Pravdepodobnosť podľa modelu (%)</label><input type="text" id="prob" inputmode="decimal" placeholder="64"></div>
+        </div>
+        <div class="calc">
+          <div><span>Kancelária (z kurzu)</span><b id="cImplied">–</b></div>
+          <div><span>Model</span><b id="cModel">–</b></div>
+          <div><span>Hodnota (EV)</span><b id="cEv">–</b></div>
+        </div>
+        <p class="hint">Kancelária: šanca, ktorú „ukrýva“ kurz (1 ÷ kurz). Hodnota: pravdepodobnosť × kurz. Nad 1,00 znamená, že kurz je vyšší, ako by mal byť.</p>
+        <label class="check" id="hideWrap"><input type="checkbox" id="hideTip"> Skryť tip vo videu (tip len pre členov, vo videu bude len zápas a čísla)</label>
+      </div>
+
+      <div class="panel">
+        <h2>Popis na Instagram</h2>
+        <textarea id="caption" aria-label="Popis príspevku"></textarea>
+        <div class="actions"><button class="btn" id="copy">Kopírovať popis</button></div>
+        <div class="status" id="copyStatus" role="status"></div>
+      </div>
+    </div>
+
+    <div class="preview">
+      <div class="panel">
+        <h2 id="previewTitle">Náhľad videa</h2>
+        <canvas id="cv" width="1080" height="1920"></canvas>
+        <div class="progress" id="progWrap"><i id="prog"></i></div>
+        <div class="actions" id="reelActions">
+          <button class="btn" id="play">▶ Prehrať náhľad</button>
+          <button class="btn primary" id="record">⤓ Stiahnuť video</button>
+        </div>
+        <div class="actions" id="freeActions" hidden>
+          <button class="btn primary" id="png">⤓ Stiahnuť obrázok</button>
+        </div>
+        <div class="status" id="outStatus" role="status"></div>
+        <p class="hint" id="reelHint">Video má 15 sekúnd a nahráva sa v reálnom čase, nechaj túto kartu otvorenú, kým sa nestiahne. Najlepšie v Safari na Macu (stiahne sa ako .mp4, ktoré Instagram berie).</p>
+        <p class="hint" id="freeHint" hidden>Obrázok daj v piatok do príbehu a pridaj nálepku s odkazom na bezplatný Telegram. Ten istý tip pošli v aplikácii cez „Poslať“ do kanála FREE.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const cv = $('cv'), ctx = cv.getContext('2d');
+  const W = 1080, H = 1920, L = 90, R = W - 90;
+  const C = { bg: '#0B0B0C', bgDeep: '#070708', surface: '#141416', line: '#2A2925', gold: '#c9a55c', hi: '#E8D3A0', green: '#7FBF9A', red: '#C0707C', text: '#EDE6D6', muted: '#B8B0A2' };
+  const F = (w, s) => w + ' ' + s + 'px "Plus Jakarta Sans", "Segoe UI", Arial, sans-serif';
+  const S = (w, s) => w + ' ' + s + 'px "Playfair Display", Georgia, serif';
+  const HASHTAGS = '#futbal #fotbal #futbalovastatistika #europskyfutbal #tipradar';
+  const DUR = 15;
+  let mode = 'reel', tips = [], playing = false, recording = false, freeUrl = '';
+
+  // ---------- pomocné ----------
+  const nf = (n, d) => n.toLocaleString('sk-SK', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const num = (v) => { const n = parseFloat(String(v).replace(',', '.')); return isFinite(n) ? n : null; };
+  const skDay = (iso) => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Bratislava' }).format(new Date(iso));
+  const skTime = (iso) => new Intl.DateTimeFormat('sk-SK', { timeZone: 'Europe/Bratislava', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(iso));
+  const skText = (x) => String(x || '').replace(/\bOver (\d+(?:\.\d+)?)/g, (_m, n) => 'Nad ' + n).replace(/\bUnder (\d+(?:\.\d+)?)/g, (_m, n) => 'Pod ' + n).replace(/(\d)\.(\d)/g, '$1,$2');
+  const DAYS = ['nedeľa', 'pondelok', 'utorok', 'streda', 'štvrtok', 'piatok', 'sobota'];
+  function dayLabel(d) { if (!d) return ''; const [y, m, dd] = d.split('-').map(Number); return DAYS[new Date(y, m - 1, dd).getDay()] + ' ' + dd + '. ' + m + '.'; }
+
+  function data() {
+    const odds = num($('odds').value), prob = num($('prob').value);
+    const implied = odds && odds > 1 ? 100 / odds : null;
+    const ev = odds && prob ? prob / 100 * odds : null;
+    return {
+      home: $('home').value.trim(), away: $('away').value.trim(), league: $('league').value.trim(),
+      date: $('date').value, time: $('time').value, tip: $('tip').value.trim(),
+      odds, prob, implied, ev, hide: $('hideTip').checked,
+    };
+  }
+
+  function fit(text, max, font) {
+    ctx.font = font;
+    if (ctx.measureText(text).width <= max) return text;
+    let t = text; while (t.length > 1 && ctx.measureText(t + '…').width > max) t = t.slice(0, -1);
+    return t + '…';
+  }
+  // Text do max. N riadkov podľa šírky.
+  function wrap(text, max, font, lines) {
+    ctx.font = font;
+    const words = text.split(/\s+/).filter(Boolean), out = [];
+    let cur = '';
+    for (const w of words) {
+      const next = cur ? cur + ' ' + w : w;
+      if (ctx.measureText(next).width <= max || !cur) cur = next; else { out.push(cur); cur = w; }
+    }
+    if (cur) out.push(cur);
+    if (out.length > lines) { const rest = out.slice(lines - 1).join(' '); out.length = lines - 1; out.push(fit(rest, max, font)); }
+    return out;
+  }
+  function mark(x, y, r) {
+    ctx.save(); ctx.translate(x, y);
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fillStyle = C.surface; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, r * 0.95, -Math.PI / 2, -Math.PI / 4); ctx.closePath();
+    ctx.fillStyle = 'rgba(201,165,92,0.32)'; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(-Math.PI / 4) * r * 0.95, Math.sin(-Math.PI / 4) * r * 0.95);
+    ctx.strokeStyle = C.gold; ctx.lineWidth = r * 0.075; ctx.lineCap = 'round'; ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.strokeStyle = C.gold; ctx.lineWidth = r * 0.085; ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.63, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(201,165,92,0.5)'; ctx.lineWidth = r * 0.045; ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.1, 0, Math.PI * 2); ctx.fillStyle = C.hi; ctx.fill();
+    ctx.restore();
+  }
+  function background() {
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, H);
+    const g = ctx.createRadialGradient(W * 0.8, H * 0.05, 0, W * 0.8, H * 0.05, H * 0.75);
+    g.addColorStop(0, 'rgba(64,50,22,0.9)'); g.addColorStop(1, 'rgba(64,50,22,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    const lg = ctx.createLinearGradient(0, 0, W, 0);
+    lg.addColorStop(0, 'rgba(201,165,92,0)'); lg.addColorStop(0.5, 'rgba(201,165,92,0.55)'); lg.addColorStop(1, 'rgba(201,165,92,0)');
+    ctx.fillStyle = lg; ctx.fillRect(0, H - 3, W, 1.5);
+    ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+  }
+  function brand(y) {
+    mark(L + 30, y - 11, 30);
+    ctx.textAlign = 'left'; ctx.fillStyle = C.text; ctx.font = S(600, 40); ctx.fillText('TipRadar', L + 78, y);
+  }
+  function eyebrow(text, y, color) {
+    ctx.textAlign = 'left'; ctx.font = F(700, 26); ctx.fillStyle = color || C.gold;
+    let x = L; for (const ch of text.toUpperCase()) { ctx.fillText(ch, x, y); x += ctx.measureText(ch).width + 4; }
+  }
+  function card(x, y, w, h) {
+    ctx.fillStyle = C.surface; ctx.strokeStyle = C.line; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.roundRect(x, y, w, h, 28); ctx.fill(); ctx.stroke();
+  }
+  function bar(x, y, w, h, pct, color) {
+    ctx.fillStyle = C.bgDeep; ctx.beginPath(); ctx.roundRect(x, y, w, h, h / 2); ctx.fill();
+    const fw = Math.max(0, Math.min(1, pct / 100)) * w;
+    if (fw > 0) { ctx.fillStyle = color; ctx.beginPath(); ctx.roundRect(x, y, Math.max(fw, h), h, h / 2); ctx.fill(); }
+  }
+  const clamp01 = (x) => Math.max(0, Math.min(1, x));
+  const ease = (x) => { x = clamp01(x); return 1 - Math.pow(1 - x, 3); };
+  // Viditeľnosť bloku: nábeh od a, zostáva do konca.
+  const fade = (t, a, d = 0.45) => ease((t - a) / d);
+  function matchLine(d) { return (d.home || 'Domáci') + ' – ' + (d.away || 'Hostia'); }
+  function whenLine(d) { return [d.league, [dayLabel(d.date), d.time].filter(Boolean).join(' · ')].filter(Boolean).join('  ·  '); }
+  function footer() {
+    ctx.textAlign = 'center'; ctx.font = F(400, 26); ctx.fillStyle = C.muted;
+    ctx.fillText('18+ · hraj zodpovedne', W / 2, H - 300);
+    ctx.textAlign = 'left';
+  }
+
+  // ---------- Reel: Model vs. kancelária (15 s) ----------
+  function drawReel(t) {
+    const d = data();
+    background();
+    // Bezpečná zóna Reelu: hore ~220 px, dole ~380 px (popis, tlačidlá).
+    ctx.globalAlpha = fade(t, 0, 0.3); brand(240);
+    ctx.textAlign = 'right'; ctx.font = F(400, 26); ctx.fillStyle = C.muted; ctx.fillText('18+ · hraj zodpovedne', R, 240); ctx.textAlign = 'left';
+
+    // 1) háčik + zápas
+    ctx.globalAlpha = fade(t, 0.15);
+    eyebrow('Model vs. kancelária', 350);
+    ctx.fillStyle = C.text; ctx.textAlign = 'left';
+    const hook = wrap('Kto odhadol zápas lepšie?', R - L, S(500, 84), 2);
+    hook.forEach((ln, i) => { ctx.font = S(500, 84); ctx.fillText(ln, L, 450 + i * 96); });
+    let y = 450 + (hook.length - 1) * 96 + 92;
+    ctx.globalAlpha = fade(t, 0.6);
+    ctx.fillStyle = C.text; ctx.font = F(700, 46); ctx.fillText(fit(matchLine(d), R - L, F(700, 46)), L, y);
+    ctx.fillStyle = C.muted; ctx.font = F(400, 30); ctx.fillText(fit(whenLine(d), R - L, F(400, 30)), L, y + 50);
+    if (!d.hide && d.tip) { ctx.fillStyle = C.gold; ctx.font = F(600, 32); ctx.fillText(fit('Tip: ' + d.tip, R - L, F(600, 32)), L, y + 104); }
+    y += d.hide || !d.tip ? 110 : 160;
+
+    // 2) kancelária
+    const cw = R - L, ch = 260;
+    const y1 = y + 10;
+    ctx.globalAlpha = fade(t, 2.5);
+    if (ctx.globalAlpha > 0) {
+      card(L, y1, cw, ch);
+      ctx.fillStyle = C.muted; ctx.font = F(600, 28); ctx.fillText('KANCELÁRIA', L + 40, y1 + 62);
+      ctx.textAlign = 'right'; ctx.fillStyle = C.text; ctx.font = F(400, 28);
+      ctx.fillText(d.odds ? 'kurz ' + nf(d.odds, 2) : 'kurz –', R - 40, y1 + 62);
+      const p = d.implied || 0, k = ease((t - 3.0) / 1.6);
+      ctx.textAlign = 'left'; ctx.fillStyle = C.text; ctx.font = S(500, 92);
+      ctx.fillText(d.implied ? Math.round(p * k) + ' %' : '–', L + 40, y1 + 170);
+      ctx.fillStyle = C.muted; ctx.font = F(400, 26); ctx.fillText('šanca podľa kurzu', L + 40, y1 + 214);
+      bar(L + 420, y1 + 132, cw - 460, 26, p * k, C.muted);
+    }
+    // 3) model
+    const y2 = y1 + ch + 30;
+    ctx.globalAlpha = fade(t, 5.5);
+    if (ctx.globalAlpha > 0) {
+      card(L, y2, cw, ch);
+      ctx.strokeStyle = 'rgba(201,165,92,0.7)'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.roundRect(L, y2, cw, ch, 28); ctx.stroke();
+      ctx.fillStyle = C.gold; ctx.font = F(600, 28); ctx.fillText('MODEL TIPRADAR', L + 40, y2 + 62);
+      ctx.textAlign = 'right'; ctx.fillStyle = C.text; ctx.font = F(400, 28); ctx.fillText('štatistika zápasov', R - 40, y2 + 62);
+      const p = d.prob || 0, k = ease((t - 6.0) / 1.6);
+      ctx.textAlign = 'left'; ctx.fillStyle = C.gold; ctx.font = S(500, 92);
+      ctx.fillText(d.prob ? Math.round(p * k) + ' %' : '–', L + 40, y2 + 170);
+      ctx.fillStyle = C.muted; ctx.font = F(400, 26); ctx.fillText('naša pravdepodobnosť', L + 40, y2 + 214);
+      bar(L + 420, y2 + 132, cw - 460, 26, p * k, C.gold);
+    }
+    // 4) verdikt
+    const y3 = y2 + ch + 80;
+    ctx.globalAlpha = fade(t, 8.8);
+    if (ctx.globalAlpha > 0 && d.ev) {
+      const diff = d.prob - d.implied, good = d.ev >= 1;
+      ctx.textAlign = 'left'; ctx.fillStyle = good ? C.green : C.red; ctx.font = S(500, 64);
+      ctx.fillText((diff >= 0 ? '+' : '−') + nf(Math.abs(diff), 0) + ' bodov pre model', L, y3);
+      ctx.globalAlpha = fade(t, 9.6);
+      ctx.fillStyle = C.text; ctx.font = F(400, 32);
+      ctx.fillText(good ? 'Kurz je vyšší, ako by mal byť.' : 'Kurz je nižší, ako by mal byť.', L, y3 + 60);
+      ctx.fillStyle = C.muted; ctx.font = F(400, 30);
+      ctx.fillText('Hodnota: ' + nf(d.prob / 100, 2) + ' × ' + nf(d.odds, 2) + ' = ', L, y3 + 112);
+      const w0 = ctx.measureText('Hodnota: ' + nf(d.prob / 100, 2) + ' × ' + nf(d.odds, 2) + ' = ').width;
+      ctx.fillStyle = good ? C.green : C.red; ctx.font = F(700, 30); ctx.fillText(nf(d.ev, 2), L + w0, y3 + 112);
+    }
+    // 5) výzva
+    const k5 = fade(t, 12.0, 0.5);
+    if (k5 > 0) {
+      ctx.globalAlpha = k5; background();
+      ctx.globalAlpha = k5;
+      const cy = 760;
+      mark(W / 2, cy - 130, 70);
+      ctx.textAlign = 'center'; ctx.fillStyle = C.text;
+      const l1 = wrap(d.hide ? 'Celý tip dostávajú členovia pred zápasom' : 'Tipy ako tento dostávajú členovia pred zápasom', R - L, S(500, 64), 3);
+      l1.forEach((ln, i) => { ctx.font = S(500, 64); ctx.fillText(ln, W / 2, cy + 40 + i * 78); });
+      const yy = cy + 40 + l1.length * 78 + 30;
+      ctx.fillStyle = C.muted; ctx.font = F(400, 32); ctx.fillText('Vyhodnotenie zverejníme po zápase.', W / 2, yy);
+      ctx.fillStyle = C.gold; ctx.font = F(700, 38); ctx.fillText('Odkaz v bio · tipradar.eu', W / 2, yy + 90);
+      ctx.fillStyle = C.muted; ctx.font = F(400, 26); ctx.fillText('18+ · hraj zodpovedne', W / 2, yy + 160);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // ---------- Piatok: Bezplatný tip týždňa (príbeh) ----------
+  function drawFree() {
+    const d = data();
+    background();
+    brand(300);
+    eyebrow('Bezplatný tip týždňa', 420);
+    ctx.fillStyle = C.text; ctx.font = S(500, 96); ctx.fillText('Piatkový tip', L, 530);
+    ctx.fillStyle = C.muted; ctx.font = F(400, 32); ctx.fillText('zadarmo pre všetkých', L, 590);
+
+    const cy = 680, chh = 600;
+    card(L, cy, R - L, chh);
+    ctx.fillStyle = C.muted; ctx.font = F(500, 28);
+    ctx.fillText(fit(whenLine(d), R - L - 80, F(500, 28)), L + 44, cy + 74);
+    const ml = wrap(matchLine(d), R - L - 88, S(500, 64), 2);
+    ml.forEach((ln, i) => { ctx.fillStyle = C.text; ctx.font = S(500, 64); ctx.fillText(ln, L + 44, cy + 170 + i * 76); });
+    let y = cy + 170 + (ml.length - 1) * 76 + 60;
+    ctx.strokeStyle = C.line; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(L + 44, y); ctx.lineTo(R - 44, y); ctx.stroke();
+    ctx.fillStyle = C.muted; ctx.font = F(600, 24); ctx.fillText('TIP', L + 44, y + 58);
+    const tl = wrap(d.tip || '—', R - L - 88, F(700, 46), 2);
+    tl.forEach((ln, i) => { ctx.fillStyle = C.gold; ctx.font = F(700, 46); ctx.fillText(ln, L + 44, y + 118 + i * 56); });
+    y += 118 + (tl.length - 1) * 56 + 50;
+    const half = (R - L - 88) / 2;
+    ctx.fillStyle = C.muted; ctx.font = F(400, 26);
+    ctx.fillText('Kurz', L + 44, y + 30); ctx.fillText('Model', L + 44 + half, y + 30);
+    ctx.fillStyle = C.text; ctx.font = S(500, 64);
+    ctx.fillText(d.odds ? nf(d.odds, 2) : '–', L + 44, y + 104);
+    ctx.fillText(d.prob ? Math.round(d.prob) + ' %' : '–', L + 44 + half, y + 104);
+
+    const ty = cy + chh + 120;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = C.text; ctx.font = F(400, 34); ctx.fillText('Každý piatok jeden tip zadarmo', W / 2, ty);
+    ctx.fillStyle = C.gold; ctx.font = F(700, 38); ctx.fillText('v našom bezplatnom Telegrame', W / 2, ty + 54);
+    ctx.font = F(400, 46); ctx.fillText('👇', W / 2, ty + 130);
+    footer();
+  }
+
+  // ---------- kreslenie a prehrávanie ----------
+  function draw() { if (playing || recording) return; if (mode === 'reel') drawReel(DUR); else drawFree(); $('prog').style.width = '0'; }
+  function run(onFrame) {
+    return new Promise((resolve) => {
+      const start = performance.now();
+      function step(now) {
+        const t = (now - start) / 1000;
+        drawReel(Math.min(t, DUR)); $('prog').style.width = Math.min(100, t / DUR * 100) + '%';
+        if (onFrame) onFrame(t);
+        if (t < DUR) requestAnimationFrame(step); else resolve();
+      }
+      requestAnimationFrame(step);
+    });
+  }
+  $('play').onclick = async () => {
+    if (playing || recording) return;
+    playing = true; $('play').disabled = true;
+    await run(); playing = false; $('play').disabled = false; draw();
+  };
+  function pickMime() {
+    const list = ['video/mp4;codecs=avc1.42E01E', 'video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm'];
+    return list.find((m) => window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) || '';
+  }
+  function fileBase() {
+    const d = data(), s = (x) => (x || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase();
+    return [s(d.home), s(d.away)].filter(Boolean).join('-') || 'tipradar';
+  }
+  function download(blob, name) {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  }
+  function setOut(text, cls) { const el = $('outStatus'); el.textContent = text; el.className = 'status' + (cls ? ' ' + cls : ''); }
+  $('record').onclick = async () => {
+    if (playing || recording) return;
+    if (!cv.captureStream || !window.MediaRecorder) { setOut('Tento prehliadač nevie nahrávať video. Skús Safari alebo Chrome.', 'bad'); return; }
+    const mime = pickMime();
+    recording = true; $('record').disabled = true; $('play').disabled = true;
+    setOut('Nahráva sa video… nechaj kartu otvorenú.');
+    const stream = cv.captureStream(30), chunks = [];
+    const rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 8000000 } : undefined);
+    rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+    const stopped = new Promise((r) => { rec.onstop = r; });
+    drawReel(0); rec.start(250);
+    await run((t) => setOut('Nahráva sa video… ' + Math.min(DUR, Math.floor(t)) + ' / ' + DUR + ' s'));
+    await new Promise((r) => setTimeout(r, 300));
+    rec.stop(); await stopped;
+    stream.getTracks().forEach((tr) => tr.stop());
+    const type = rec.mimeType || mime || 'video/webm', mp4 = type.includes('mp4');
+    download(new Blob(chunks, { type }), 'tipradar-reel-' + fileBase() + (mp4 ? '.mp4' : '.webm'));
+    setOut(mp4 ? 'Video stiahnuté (.mp4). Nahraj ho na Instagram ako Reel.' : 'Video stiahnuté ako .webm. Instagram chce .mp4, skús to radšej v Safari.', mp4 ? 'ok' : 'bad');
+    recording = false; $('record').disabled = false; $('play').disabled = false; draw();
+  };
+  $('png').onclick = () => {
+    drawFree();
+    cv.toBlob((b) => { download(b, 'tipradar-piatok-' + fileBase() + '.png'); setOut('Obrázok stiahnutý.', 'ok'); }, 'image/png');
+  };
+
+  // ---------- popis ----------
+  function caption() {
+    const d = data(), m = matchLine(d), w = whenLine(d);
+    if (mode === 'reel') {
+      const lines = ['Model vs. kancelária: ' + m + (w ? ' (' + w + ')' : ''), ''];
+      if (d.odds && d.prob) {
+        lines.push('Kurz ' + nf(d.odds, 2) + ' hovorí, že šanca je asi ' + Math.round(d.implied) + ' %.');
+        lines.push('Náš model počíta ' + Math.round(d.prob) + ' %.');
+        lines.push('Hodnota: ' + nf(d.prob / 100, 2) + ' × ' + nf(d.odds, 2) + ' = ' + nf(d.ev, 2) + (d.ev >= 1 ? ', kurz je vyšší, ako by mal byť.' : '.'));
+        lines.push('');
+      }
+      lines.push(d.hide ? 'Celý tip dostávajú členovia ešte pred zápasom.' : 'Takéto tipy dostávajú členovia ešte pred zápasom.');
+      lines.push('Vyhodnotenie zverejníme po zápase. Odkaz v bio.');
+      lines.push('', '18+ · Hraj zodpovedne.', '', HASHTAGS);
+      return lines.join('\n');
+    }
+    const lines = ['Piatkový tip zadarmo ⚽', '', m + (w ? '\n' + w : '')];
+    if (d.tip) lines.push('Tip: ' + d.tip);
+    if (d.odds || d.prob) lines.push([d.odds ? 'Kurz ' + nf(d.odds, 2) : '', d.prob ? 'model ' + Math.round(d.prob) + ' %' : ''].filter(Boolean).join(' · '));
+    lines.push('', 'Každý piatok jeden tip zadarmo v našom bezplatnom Telegrame' + (freeUrl ? ': ' + freeUrl : '. Odkaz v bio.'));
+    lines.push('', '18+ · Hraj zodpovedne.', '', HASHTAGS);
+    return lines.join('\n');
+  }
+  function calc() {
+    const d = data();
+    $('cImplied').textContent = d.implied ? Math.round(d.implied) + ' %' : '–';
+    $('cModel').textContent = d.prob ? Math.round(d.prob) + ' %' : '–';
+    const ev = $('cEv'); ev.textContent = d.ev ? nf(d.ev, 2) : '–';
+    ev.className = d.ev ? (d.ev >= 1 ? 'pos' : 'neg') : '';
+  }
+  function refresh() { calc(); draw(); $('caption').value = caption(); }
+  ['home', 'away', 'league', 'date', 'time', 'tip', 'odds', 'prob'].forEach((id) => $(id).addEventListener('input', refresh));
+  $('hideTip').addEventListener('change', refresh);
+  $('copy').onclick = async () => {
+    try { await navigator.clipboard.writeText($('caption').value); $('copyStatus').textContent = 'Popis skopírovaný.'; }
+    catch (e) { $('caption').select(); document.execCommand('copy'); $('copyStatus').textContent = 'Popis skopírovaný.'; }
+  };
+
+  function setMode(m) {
+    if (playing || recording) return;
+    mode = m;
+    $('modeReel').setAttribute('aria-pressed', String(m === 'reel'));
+    $('modeFree').setAttribute('aria-pressed', String(m === 'free'));
+    $('previewTitle').textContent = m === 'reel' ? 'Náhľad videa' : 'Náhľad príbehu';
+    $('reelActions').hidden = m !== 'reel'; $('reelHint').hidden = m !== 'reel'; $('progWrap').hidden = m !== 'reel';
+    $('freeActions').hidden = m !== 'free'; $('freeHint').hidden = m !== 'free'; $('hideWrap').hidden = m !== 'reel';
+    setOut('');
+    refresh();
+  }
+  $('modeReel').onclick = () => setMode('reel');
+  $('modeFree').onclick = () => setMode('free');
+
+  // ---------- tipy z Histórie ----------
+  function fill(t) {
+    $('home').value = t.homeTeam || ''; $('away').value = t.awayTeam || ''; $('league').value = t.leagueName || '';
+    $('date').value = t.matchDate ? skDay(t.matchDate) : ''; $('time').value = t.matchDate ? skTime(t.matchDate) : '';
+    $('tip').value = skText((t.market ? t.market + ': ' : '') + (t.selection || ''));
+    $('odds').value = typeof t.odds === 'number' && t.odds > 1 ? nf(t.odds, 2) : '';
+    $('prob').value = typeof t.probability === 'number' ? String(Math.round(t.probability)) : '';
+    refresh();
+  }
+  $('pick').onchange = () => { const t = tips.find((x) => x.id === $('pick').value); if (t) fill(t); };
+  async function loadTips() {
+    try {
+      const r = await fetch('/api/tips', { cache: 'no-store' });
+      const all = await r.json();
+      tips = (Array.isArray(all) ? all : []).filter((t) => !(Array.isArray(t.legs) && t.legs.length) && t.homeTeam)
+        .sort((a, b) => String(b.matchDate).localeCompare(String(a.matchDate))).slice(0, 80);
+      const sel = $('pick'); sel.innerHTML = '';
+      const o0 = document.createElement('option'); o0.value = ''; o0.textContent = tips.length ? 'Vyber tip…' : 'V Histórii tipov nie sú žiadne tipy'; sel.appendChild(o0);
+      for (const t of tips) {
+        const o = document.createElement('option'); o.value = t.id;
+        o.textContent = skDay(t.matchDate).slice(5).split('-').reverse().join('.') + '. · ' + t.homeTeam + ' – ' + t.awayTeam + ' · ' + skText(t.selection) + (t.status === 'pending' ? '' : t.status === 'won' ? ' ✓' : t.status === 'lost' ? ' ✗' : '');
+        sel.appendChild(o);
+      }
+      const next = tips.filter((t) => t.status === 'pending').pop() || tips[0];
+      if (next && !$('home').value) { sel.value = next.id; fill(next); }
+    } catch (e) {
+      $('pick').innerHTML = '<option value="">Históriu tipov sa nepodarilo načítať</option>';
+    }
+  }
+  async function loadFreeUrl() {
+    try { const r = await fetch('/api/public/vip-seats', { cache: 'no-store' }); const j = await r.json(); if (j && j.freeChannelUrl) { freeUrl = j.freeChannelUrl; refresh(); } } catch (e) {}
+  }
+
+  // Príklad, kým sa nenačíta História tipov (hodnota v pásme aplikácie 1,05–1,25).
+  $('home').value = 'Arsenal'; $('away').value = 'Chelsea'; $('league').value = 'Premier League';
+  $('tip').value = 'Góly: Nad 2,5'; $('odds').value = '1,75'; $('prob').value = '64';
+  if (location.hash === '#piatok') mode = 'free';
+  const fontsReady = Promise.all([document.fonts.load(S(500, 64)), document.fonts.load(S(600, 40)), document.fonts.load(F(400, 30)), document.fonts.load(F(600, 30)), document.fonts.load(F(700, 30))]).catch(() => {});
+  fontsReady.then(() => { setMode(mode); loadTips(); loadFreeUrl(); });
+  setMode(mode);
+})();
+</script>
+</body>
+</html>
