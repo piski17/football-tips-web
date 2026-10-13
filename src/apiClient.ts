@@ -533,6 +533,22 @@ export async function getPreviousSeasons(leagueId: number, season: number, count
  * "WDLWW" - najstarší zápas vľavo, najnovší vpravo (rovnako ako API).
  * Použije sa, keď tím v aktuálnej sezóne súťaže ešte nehral.
  */
+/** Koľko zápasov tím v sezóne odohral vo všetkých súťažiach (pre pohárové súťaže, napr. Ligu majstrov). */
+export async function getSeasonGamesAnyCompetition(teamId: number, season: number): Promise<number | null> {
+  const cacheKey = `seasonGamesAny:${teamId}:${season}`;
+  const cached = getCached<number | null>(cacheKey);
+  if (cached !== undefined) return cached;
+  try {
+    const res = await client().get("/fixtures", { params: { team: teamId, season, status: "FT-AET-PEN" } });
+    checkApiErrors(res.data);
+    const count = (res.data?.response ?? []).length;
+    setCached(cacheKey, count, TTL_CORNERS_AVERAGE);
+    return count;
+  } catch {
+    return null;
+  }
+}
+
 export async function getRecentFormAnyCompetition(teamId: number, count: number = 5, asOf?: string): Promise<string> {
   const cacheKey = `recentForm:${teamId}:${count}:${asOf ?? ""}`;
   const cached = getCached<string>(cacheKey);

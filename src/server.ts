@@ -24,6 +24,7 @@ import {
   getFixtureMissingPlayers,
   getFixtureOdds,
   getRecentFormAnyCompetition,
+  getSeasonGamesAnyCompetition,
   getHeadToHeadStats,
 } from "./apiClient";
 import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS } from "./predictor";
@@ -86,6 +87,9 @@ const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté kont
 function statsTips(tips: SavedTip[]): SavedTip[] {
   return tips.filter((t) => !EXCLUDED_STATS_MARKETS.includes(t.market));
 }
+
+/** Pohárové súťaže: tímy v nich hrajú málo zápasov, ale v domácej lige majú dosť dát. */
+const CUP_LEAGUE_IDS = [2];
 
 const LEAGUE_PRESETS: LeaguePreset[] = [
   { id: 39, name: "Premier League", country: "Anglicko" },
@@ -502,6 +506,15 @@ app.post("/api/analyze", async (req, res) => {
 
     // Štatistiky posledných vzájomných zápasov (rohy, karty…) – pri chybe sa jednoducho nepoužijú.
     const h2hStats = await getHeadToHeadStats(h2h, fixture.homeTeam.name).catch(() => []);
+    // Liga majstrov: pravidlo „aspoň 3 zápasy v sezóne" podľa všetkých súťaží tímu.
+    let seasonGamesAny: number | null = null;
+    if (CUP_LEAGUE_IDS.includes(Number(leagueId))) {
+      const [h, a] = await Promise.all([
+        getSeasonGamesAnyCompetition(fixture.homeTeam.id, season),
+        getSeasonGamesAnyCompetition(fixture.awayTeam.id, season),
+      ]);
+      if (h != null && a != null) seasonGamesAny = Math.min(h, a);
+    }
     const result = predictMatch(
       fixture,
       homeStats,
@@ -533,7 +546,8 @@ app.post("/api/analyze", async (req, res) => {
       h2hStats,
       { home: { goalsFor: homeExtStats.goalsFor ?? null, goalsAgainst: homeExtStats.goalsAgainst ?? null, games: homeExtStats.goalsGames ?? 0 }, away: { goalsFor: awayExtStats.goalsFor ?? null, goalsAgainst: awayExtStats.goalsAgainst ?? null, games: awayExtStats.goalsGames ?? 0 } },
       false,
-      missingPlayers
+      missingPlayers,
+      seasonGamesAny
     );
 
     // Tichá evidencia tipov vyradených pre rozpor so stávkovkami (na pozadí, nič neblokuje).

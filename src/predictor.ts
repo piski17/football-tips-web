@@ -563,7 +563,13 @@ export function predictMatch(
   /** true = pôvodný model (bez formy z gólov a bez kalibrácie trhov) – len pre spätný test. */
   legacy: boolean = false,
   /** Hráči, ktorí v zápase chýbajú (zranenia, tresty). */
-  missingPlayers?: MissingPlayer[]
+  missingPlayers?: MissingPlayer[],
+  /**
+   * Pri pohárových súťažiach (Liga majstrov): menší z počtov zápasov oboch tímov
+   * v tejto sezóne vo VŠETKÝCH súťažiach. Pravidlo „aspoň 3 zápasy" sa potom
+   * posudzuje podľa neho, nie podľa 1 – 2 zápasov v skupine/ligovej fáze.
+   */
+  seasonGamesAnyCompetition?: number | null
 ): PredictionResult {
   const xg = expectedGoals(homeStats, awayStats, leagueAvg, homePriorsResult, awayPriorsResult);
   // Aktuálna forma podľa gólov: útok tímu v posledných zápasoch oproti sezóne
@@ -964,6 +970,9 @@ export function predictMatch(
   const NOT_RECOMMENDED_MARKETS = ["Ofsajdy", "Výsledok zápasu", "Oba tímy skórujú", "Obaja tímy skórujú"];
   const fewGames =
     Math.min(homeStats.fixtures.played.total ?? 0, awayStats.fixtures.played.total ?? 0) < MIN_GAMES_FOR_TRUST;
+  // Liga majstrov: tímy majú v ligovej fáze 1 – 2 zápasy, ale v domácej lige ich
+  // odohrali dosť a forma aj štatistiky sa doplnia zo všetkých súťaží (apiClient).
+  const gamesForRecommend = Math.max(minGamesPlayed, seasonGamesAnyCompetition ?? 0);
   const pickPool: MarketPick[] = [];
   const lowValueBets: MarketPick[] = [];
   for (const b of inBand) {
@@ -974,10 +983,10 @@ export function predictMatch(
       // ručne sa dajú uložiť.
       b.rejectReason = "tento trh neodporúčame";
       lowValueBets.push(b);
-    } else if (minGamesPlayed < MIN_GAMES_TO_RECOMMEND) {
+    } else if (gamesForRecommend < MIN_GAMES_TO_RECOMMEND) {
       // Príliš málo zápasov v sezóne (napr. začiatok Ligy národov) - odhad stojí
       // hlavne na minulých sezónach a kurzoch, nie na aktuálnej forme.
-      b.rejectReason = `málo odohraných zápasov v sezóne (${minGamesPlayed}, treba aspoň ${MIN_GAMES_TO_RECOMMEND})`;
+      b.rejectReason = `málo odohraných zápasov v sezóne (${gamesForRecommend}, treba aspoň ${MIN_GAMES_TO_RECOMMEND})`;
       lowValueBets.push(b);
     } else if (b.marketConflict) {
       b.rejectReason = b.marketConflict;
