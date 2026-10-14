@@ -1822,3 +1822,8 @@ details.low-value-list[open] > summary { margin-bottom: 6px; }
 /* Vzájomné zápasy – rozbaľovanie (9. 10. 2026) */
 .h2h-row[hidden] { display: none; }
 .h2h-toggle { margin-top: 10px; }
+
+/* Snímka podaného tiketu: zlaté tlačidlo, keď je snímka nahraná */
+.tip-delete-btn.slip-btn { color: var(--text-muted, #8a8478); }
+.tip-delete-btn.slip-btn.has-slip { color: #C9A55C; }
+.tip-delete-btn.slip-btn:hover { color: #E8D3A0; }

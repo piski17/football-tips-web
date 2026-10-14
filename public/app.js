@@ -1362,6 +1362,7 @@ function renderTipsList(tips) {
             ${legsHtml}
           </div>
           ${resultIconHtml}
+          <button class="tip-delete-btn slip-btn" data-slip-id="${t.id}" title="Snímka podaného tiketu" aria-label="Snímka podaného tiketu"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
           ${
             t.status === "pending"
               ? `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button><button class="tip-delete-btn" data-send-id="${t.id}" title="Poslať do Telegram kanála" aria-label="Poslať do Telegram kanála"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="display:block"><path fill="currentColor" d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L6.2 13.1 1.3 11.6c-1-.3-1.1-1 .2-1.5L20.6 2.8c.9-.3 1.6.2 1.3 1.5z"/></svg></button>`
@@ -1378,6 +1379,7 @@ function renderTipsList(tips) {
             <div class="tip-row-market">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))} · ${t.probability.toFixed(0)} % · kurz ${tipOddsLabel(t)}${overrideBadge(t)}${manualBadge(t)}${editedBadge(t)}</div>
           </div>
           ${resultIconHtml}
+          <button class="tip-delete-btn slip-btn" data-slip-id="${t.id}" title="Snímka podaného tiketu" aria-label="Snímka podaného tiketu"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
           ${
             t.status === "pending"
               ? `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button><button class="tip-delete-btn" data-send-id="${t.id}" title="Poslať do Telegram kanála" aria-label="Poslať do Telegram kanála"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="display:block"><path fill="currentColor" d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L6.2 13.1 1.3 11.6c-1-.3-1.1-1 .2-1.5L20.6 2.8c.9-.3 1.6.2 1.3 1.5z"/></svg></button>`
@@ -1389,6 +1391,15 @@ function renderTipsList(tips) {
     .join("");
 
   wireArchivedToggle();
+
+  tipsListEl.querySelectorAll("[data-slip-id]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const tip = currentHistoryTips.find((x) => x.id === btn.dataset.slipId);
+      if (tip) openSlipModal(tip);
+    });
+  });
+  markSlipButtons();
 
   tipsListEl.querySelectorAll("[data-edit-id]").forEach((btn) => {
     btn.addEventListener("click", (e) => {
@@ -2588,6 +2599,142 @@ function openEditTip(tip) {
     } catch (err) {
       $e("editMsg").textContent = `Uloženie zlyhalo: ${err?.message ?? String(err)}`;
       $e("editSaveBtn").disabled = false;
+    }
+  };
+}
+
+
+// ---- Podané tikety: snímka tiketu pri tipe (na webe sa ukáže po vyhodnotení tipu) ----
+let slipStakes = {};
+async function markSlipButtons() {
+  try {
+    slipStakes = await fetchJson("/api/slips");
+  } catch (err) {
+    return;
+  }
+  tipsListEl.querySelectorAll("[data-slip-id]").forEach((btn) => {
+    const has = Object.prototype.hasOwnProperty.call(slipStakes, btn.dataset.slipId);
+    btn.classList.toggle("has-slip", has);
+    btn.title = has ? "Snímka tiketu je nahraná – zobraziť alebo zmeniť" : "Pridať snímku podaného tiketu";
+  });
+}
+
+/** Zmenší obrázok na max. 1000 px a uloží ako JPEG (data URL). */
+function shrinkImage(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, 1000 / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * scale);
+      c.height = Math.round(img.height * scale);
+      const ctx = c.getContext("2d");
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, c.width, c.height);
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL("image/jpeg", 0.82));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Obrázok sa nepodarilo načítať."));
+    };
+    img.src = url;
+  });
+}
+
+function openSlipModal(tip) {
+  let overlay = document.getElementById("slipModal");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.id = "slipModal";
+    document.body.appendChild(overlay);
+  }
+  const has = Object.prototype.hasOwnProperty.call(slipStakes, tip.id);
+  const isTicket = Array.isArray(tip.legs) && tip.legs.length > 0;
+  const title = isTicket
+    ? `🎫 Tiket (${plural(tip.legs.length, "zápas", "zápasy", "zápasov")})`
+    : `${escapeHtml(translateTeamName(tip.homeTeam))} — ${escapeHtml(translateTeamName(tip.awayTeam))}`;
+  const stake = has && slipStakes[tip.id] != null ? String(slipStakes[tip.id]).replace(".", ",") : "";
+  overlay.innerHTML = `
+    <div class="modal">
+      <h3>Podaný tiket</h3>
+      <p class="muted small" style="margin:-4px 0 12px;">${title}</p>
+      <div id="slipPreview" style="margin-bottom:12px;${has ? "" : "display:none;"}"><img id="slipImg" alt="Snímka tiketu" style="display:block;max-width:100%;max-height:46vh;margin:0 auto;border-radius:6px;border:1px solid var(--border);" ${
+        has ? `src="/api/tips/${encodeURIComponent(tip.id)}/slip?ts=${Date.now()}"` : ""
+      }></div>
+      <label class="edit-row">Snímka <input type="file" id="slipFile" accept="image/*" /></label>
+      <label class="edit-row">Vklad (€) <input type="text" id="slipStake" inputmode="decimal" placeholder="napr. 20" value="${stake}" /></label>
+      <p class="muted small" style="margin:6px 0 0;">Pred nahraním zakry číslo tiketu, číslo účtu, meno a zostatok. Na webe tipradar.eu/vysledky sa snímka ukáže až po vyhodnotení tipu.</p>
+      <p class="muted small" id="slipMsg" style="min-height:1.4em;"></p>
+      <div class="modal-actions">
+        ${has ? `<button class="btn-ghost" id="slipDeleteBtn">Odstrániť</button>` : ""}
+        <button class="btn-ghost" id="slipCancelBtn">Zavrieť</button>
+        <button class="btn-primary" id="slipSaveBtn">Uložiť</button>
+      </div>
+    </div>`;
+  overlay.hidden = false;
+  const $s = (id) => document.getElementById(id);
+  let image = null;
+  $s("slipFile").onchange = async () => {
+    const f = $s("slipFile").files[0];
+    if (!f) return;
+    $s("slipMsg").textContent = "Pripravujem obrázok…";
+    try {
+      image = await shrinkImage(f);
+      $s("slipImg").src = image;
+      $s("slipPreview").style.display = "";
+      $s("slipMsg").textContent = "";
+    } catch (err) {
+      image = null;
+      $s("slipMsg").textContent = err.message;
+    }
+  };
+  $s("slipCancelBtn").onclick = () => {
+    overlay.hidden = true;
+  };
+  if (has)
+    $s("slipDeleteBtn").onclick = async () => {
+      if (!window.confirm("Odstrániť snímku tiketu? Zmizne aj z webu.")) return;
+      try {
+        await fetchJson(`/api/tips/${encodeURIComponent(tip.id)}/slip`, { method: "DELETE" });
+        overlay.hidden = true;
+        showToast("Snímka tiketu odstránená.");
+        markSlipButtons();
+      } catch (err) {
+        $s("slipMsg").textContent = `Odstránenie zlyhalo: ${err?.message ?? String(err)}`;
+      }
+    };
+  $s("slipSaveBtn").onclick = async () => {
+    if (!image && !has) {
+      $s("slipMsg").textContent = "Najprv vyber snímku tiketu.";
+      return;
+    }
+    $s("slipSaveBtn").disabled = true;
+    try {
+      // Pri zmene len vkladu sa pošle pôvodný obrázok znova.
+      let img = image;
+      if (!img) {
+        const blob = await (await fetch(`/api/tips/${encodeURIComponent(tip.id)}/slip`)).blob();
+        img = await new Promise((r) => {
+          const fr = new FileReader();
+          fr.onload = () => r(fr.result);
+          fr.readAsDataURL(blob);
+        });
+      }
+      await fetchJson(`/api/tips/${encodeURIComponent(tip.id)}/slip`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: img, stake: $s("slipStake").value }),
+      });
+      overlay.hidden = true;
+      showToast(tip.status === "pending" ? "Snímka uložená. Na webe sa ukáže po vyhodnotení tipu." : "Snímka uložená, už je na webe.");
+      markSlipButtons();
+    } catch (err) {
+      $s("slipMsg").textContent = `Uloženie zlyhalo: ${err?.message ?? String(err)}`;
+      $s("slipSaveBtn").disabled = false;
     }
   };
 }

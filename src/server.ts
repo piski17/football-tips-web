@@ -7,6 +7,7 @@ import { recordBlend, listBlend, updateBlend, blendEntryFrom, blendSummary } fro
 import { recordLegs, listLegs, updateLeg, legCandidatesFrom, legQualifies, buildTickets, TicketLegCandidate, TICKET_RULES } from "./ticketWatchStore";
 import { startBacktest, getBacktest } from "./backtest";
 import { getDay, getAllDays, setDay } from "./dailyStore";
+import { saveSlip, deleteSlip, listSlipIds, getSlipImage, MAX_SLIP_CHARS } from "./slipStore";
 import "dotenv/config";
 import express, { NextFunction, Request, Response } from "express";
 import path from "path";
@@ -121,6 +122,7 @@ function basicAuth(req: Request, res: Response, next: NextFunction): void {
     req.path === "/api/public/vip-seats" ||
     req.path === "/api/public/waitlist" ||
     req.path === "/api/public/hit" ||
+    req.path.startsWith("/api/public/slip/") ||
     req.path === "/prezentacia" ||
     req.path === "/prezentacia/"
   ) {
@@ -775,6 +777,9 @@ app.get("/api/public/track-record", async (_req, res) => {
       };
     };
     const all = statsTips(tips);
+    // Podané tikety (snímky) – len pri vyhodnotených tipoch, čakajúci tip sa nesmie prezradiť.
+    const slipIds = await listSlipIds().catch(() => new Map<string, number | null>());
+    const settled = (t: SavedTip) => t.status === "won" || t.status === "lost" || t.status === "void";
     // Aktuálny mesiac (podľa slovenského času a dňa zápasu).
     const monthKey = dayKeySk(new Date()).slice(0, 7);
     const inMonth = all.filter((t) => (tipDayKey(t) ?? "").startsWith(monthKey));
@@ -799,6 +804,28 @@ app.get("/api/public/track-record", async (_req, res) => {
             ? t.legs!.map((l) => `${translateTeamName(l.homeTeam)} – ${translateTeamName(l.awayTeam)}: ${translateNamesInText(l.selection, l.homeTeam, l.awayTeam)}`).join(" · ")
             : `${t.market}: ${translateNamesInText(t.selection, t.homeTeam, t.awayTeam)}`,
           odds: typeof t.odds === "number" && t.odds > 1 ? Math.round(t.odds * 100) / 100 : null,
+          status: t.status,
+          slip: slipIds.has(t.id) ? t.id : null,
+        };
+      });
+    const slips = tips
+      .filter((t) => slipIds.has(t.id) && settled(t))
+      .map((t) => ({ t, day: tipDayKey(t) ?? "" }))
+      .sort((a, b) => (a.day < b.day ? 1 : a.day > b.day ? -1 : 0))
+      .slice(0, 12)
+      .map(({ t, day }) => {
+        const isTicket = Array.isArray(t.legs) && t.legs.length > 0;
+        return {
+          id: t.id,
+          day,
+          match: isTicket
+            ? `Tiket (${plural(t.legs!.length, "zápas", "zápasy", "zápasov")})`
+            : `${translateTeamName(t.homeTeam)} – ${translateTeamName(t.awayTeam)}`,
+          bet: isTicket
+            ? t.legs!.map((l) => `${translateTeamName(l.homeTeam)} – ${translateTeamName(l.awayTeam)}`).join(" · ")
+            : `${t.market}: ${translateNamesInText(t.selection, t.homeTeam, t.awayTeam)}`,
+          odds: typeof t.odds === "number" && t.odds > 1 ? Math.round(t.odds * 100) / 100 : null,
+          stake: slipIds.get(t.id) ?? null,
           status: t.status,
         };
       });
@@ -902,6 +929,7 @@ app.get("/api/public/track-record", async (_req, res) => {
         avg: clvAvg === null ? null : Math.round(clvAvg * 10) / 10,
       },
       recent,
+      slips,
       timeline: { unit: byWeek ? "week" : "day", points: timeline },
     });
   } catch (err: any) {
@@ -909,6 +937,81 @@ app.get("/api/public/track-record", async (_req, res) => {
   }
 });
 
+
+// ---- Podané tikety: snímky tiketov pri tipoch z Histórie tipov ----
+// Verejne sa obrázok ukáže len pri vyhodnotenom tipe (čakajúci tip patrí len členom).
+app.get("/api/public/slip/:id", async (req, res) => {
+  try {
+    const tip = (await listTips()).find((t) => t.id === req.params.id);
+    if (!tip || !(tip.status === "won" || tip.status === "lost" || tip.status === "void")) {
+      res.status(404).send("Nenájdené.");
+      return;
+    }
+    const img = await getSlipImage(tip.id);
+    const m = img && /^data:(image\/(?:jpeg|png|webp));base64,(.+)$/.exec(img);
+    if (!m) {
+      res.status(404).send("Nenájdené.");
+      return;
+    }
+    res.set("Content-Type", m[1]);
+    res.set("Cache-Control", "public, max-age=86400");
+    res.set("Access-Control-Allow-Origin", "*");
+    res.send(Buffer.from(m[2], "base64"));
+  } catch (err: any) {
+    res.status(502).send("Chyba.");
+  }
+});
+
+app.get("/api/slips", async (_req, res) => {
+  try {
+    const ids = await listSlipIds();
+    res.json(Object.fromEntries(ids));
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
+app.get("/api/tips/:id/slip", async (req, res) => {
+  const img = await getSlipImage(req.params.id).catch(() => null);
+  const m = img && /^data:(image\/(?:jpeg|png|webp));base64,(.+)$/.exec(img);
+  if (!m) {
+    res.status(404).send("Nenájdené.");
+    return;
+  }
+  res.set("Content-Type", m[1]);
+  res.set("Cache-Control", "no-store");
+  res.send(Buffer.from(m[2], "base64"));
+});
+
+app.post("/api/tips/:id/slip", async (req, res) => {
+  try {
+    const image = String(req.body?.image ?? "");
+    if (!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(image) || image.length > MAX_SLIP_CHARS) {
+      res.status(400).json({ error: "Obrázok sa nepodarilo načítať alebo je príliš veľký." });
+      return;
+    }
+    const tip = (await listTips()).find((t) => t.id === req.params.id);
+    if (!tip) {
+      res.status(404).json({ error: "Tip sa nenašiel." });
+      return;
+    }
+    const stakeNum = Number(String(req.body?.stake ?? "").replace(",", "."));
+    const stake = isFinite(stakeNum) && stakeNum > 0 && stakeNum < 100000 ? Math.round(stakeNum * 100) / 100 : null;
+    await saveSlip(tip.id, image, stake);
+    res.json({ ok: true, stake });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
+app.delete("/api/tips/:id/slip", async (req, res) => {
+  try {
+    await deleteSlip(req.params.id);
+    res.json({ ok: true });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
 
 // Verejné počítadlo VIP miest (len čísla, žiadne mená). Aktívny VIP = typ „group"
 // s platbou nie viac ako 7 dní po splatnosti. Počet miest: premenná VIP_SEATS (predvolene 30).

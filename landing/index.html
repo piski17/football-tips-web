@@ -120,6 +120,30 @@
   .ledger .o { text-align: right; font-family: var(--serif); font-size: 17px; }
   .ledger .r { text-align: right; font-size: 13.5px; font-weight: 600; }
   .ledger .r.won { color: var(--win); } .ledger .r.lost { color: var(--loss); } .ledger .r.void { color: var(--faint); }
+  /* Podané tikety */
+  .slips-wrap { margin-top: 56px; }
+  .slips-wrap h3 { font-family: var(--serif); font-weight: 500; font-size: 30px; letter-spacing: -.01em; margin: 0 0 6px; }
+  .slips-wrap .note { color: var(--muted); margin: 0 0 22px; max-width: 64ch; }
+  .slips { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+  .slip-card { background: var(--bg-2); border: 1px solid var(--rule); border-top: 2px solid var(--gold); display: flex; flex-direction: column; }
+  .slip-card button.th { all: unset; cursor: zoom-in; position: relative; display: block; height: 260px; overflow: hidden; background: #202024; }
+  .slip-card button.th img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+  .slip-card button.th span { position: absolute; right: 10px; bottom: 10px; font-size: 12.5px; background: rgba(11,11,12,.85); color: var(--gold-hi); padding: 4px 9px; border: 1px solid var(--rule-gold); }
+  .slip-card button.th:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: -2px; }
+  .slip-card .meta { padding: 14px 16px 16px; font-size: 15px; }
+  .slip-card .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .slip-card .d { color: var(--faint); font-size: 13.5px; }
+  .slip-card .badge { font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 2px; color: #0B0B0C; background: var(--faint); }
+  .slip-card .badge.won { background: var(--win); } .slip-card .badge.lost { background: var(--loss); }
+  .slip-card .m { font-weight: 600; }
+  .slip-card .b { color: var(--muted); font-size: 14px; }
+  .slip-link { all: unset; cursor: pointer; display: inline-block; margin-top: 6px; font-size: 12.5px; font-weight: 500; color: var(--gold-hi); border: 1px solid var(--rule-gold); padding: 2px 8px; }
+  .slip-link:hover { border-color: var(--gold); }
+  .slip-link:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
+  .slip-box { border: 0; padding: 0; background: transparent; max-width: min(92vw, 560px); max-height: 92vh; }
+  .slip-box::backdrop { background: rgba(0,0,0,.82); }
+  .slip-box img { display: block; max-width: 100%; max-height: 84vh; margin: 0 auto; border-radius: 6px; }
+  .slip-box button { display: block; margin: 12px auto 0; background: var(--gold); color: #17130A; border: 0; font: 600 15px/1 var(--sans); padding: 12px 22px; cursor: pointer; border-radius: 3px; }
   .ledger .empty { display: block; color: var(--muted); padding: 22px 20px; border: 0; }
   .sheet-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 20px; padding: 14px 20px; border-top: 1px solid var(--rule); font-size: 14px; color: var(--muted); }
   .sheet-foot b { color: var(--text); font-weight: 600; }
@@ -1113,6 +1137,12 @@
       </div>
 
       <div class="more-row" data-pages="home"><a class="btn btn-ghost" href="/vysledky">Celá história tipov <span aria-hidden="true">→</span></a></div>
+      <div class="slips-wrap" id="slipsWrap" data-pages="vysledky" hidden>
+          <h3>Podané tikety</h3>
+          <p class="note">Na tipy, ktoré posielam členom, staviam aj sám. Tu sú snímky mojich skutočných tiketov, výherných aj nevýherných.</p>
+          <div class="slips" id="slips"></div>
+      </div>
+      <dialog class="slip-box" id="slipBox" aria-label="Snímka tiketu"><img id="slipBoxImg" alt="Snímka podaného tiketu" /><button type="button" id="slipBoxClose">Zavrieť</button></dialog>
       <div class="ledger-wrap" data-pages="vysledky">
           <h3>Všetky vyhodnotené tipy</h3>
           <p class="note">Tak, ako ich dostali členovia.</p>
@@ -1365,7 +1395,7 @@
   const MONTHS = ["január", "február", "marec", "apríl", "máj", "jún", "júl", "august", "september", "október", "november", "december"];
   const cls = (v) => (v > 0 ? "pos" : v < 0 ? "neg" : "");
   const mqPhone = window.matchMedia("(max-width: 700px)");
-  const row = (r) => `<li><span class="d num">${dayLabel(r.day)}</span><span class="m">${esc(r.match)}<span class="b">${esc(r.bet)}</span></span><span class="o num">${r.odds ? fmt(r.odds, 2) : ""}</span><span class="r ${esc(r.status)}">${RES[r.status] || ""}</span></li>`;
+  const row = (r) => `<li><span class="d num">${dayLabel(r.day)}</span><span class="m">${esc(r.match)}<span class="b">${esc(r.bet)}</span>${r.slip ? `<button type="button" class="slip-link" data-slip="${esc(r.slip)}">📷 Môj tiket</button>` : ""}</span><span class="o num">${r.odds ? fmt(r.odds, 2) : ""}</span><span class="r ${esc(r.status)}">${RES[r.status] || ""}</span></li>`;
   const paintRange = (el) => el.style.setProperty("--fill", ((el.value - el.min) / (el.max - el.min)) * 100 + "%");
 
 
@@ -1431,6 +1461,26 @@
     const tick = (t) => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = fmtFn(k < 1 ? Number((to * e).toFixed(dec)) : to); if (k < 1) requestAnimationFrame(tick); };
     requestAnimationFrame(tick);
   }
+  // ---------- podané tikety ----------
+  const slipUrl = (id) => "/api/public/slip/" + encodeURIComponent(id);
+  function openSlip(id) {
+    const box = $("slipBox");
+    $("slipBoxImg").src = slipUrl(id);
+    if (box.showModal) box.showModal(); else window.open(slipUrl(id), "_blank");
+  }
+  function drawSlips(list) {
+    if (!list.length) return;
+    $("slips").innerHTML = list.map((r) => `<article class="slip-card">
+      <button type="button" class="th" data-slip="${esc(r.id)}" aria-label="Zväčšiť snímku tiketu ${esc(r.match)}"><img src="${slipUrl(r.id)}" alt="" loading="lazy" /><span>⤢ Zväčšiť</span></button>
+      <div class="meta"><div class="top"><span class="d num">${dayLabel(r.day)}</span><span class="badge ${esc(r.status)}">${r.status === "won" ? "Vyšiel" : r.status === "lost" ? "Nevyšiel" : "Vrátené"}</span></div>
+      <div class="m">${esc(r.match)}</div><div class="b">${esc(r.bet)}${r.odds ? " · kurz " + fmt(r.odds, 2) : ""}${r.stake ? " · vklad " + fmt(r.stake, r.stake % 1 ? 2 : 0) + " €" : ""}</div></div></article>`).join("");
+    $("slipsWrap").hidden = false;
+  }
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-slip]");
+    if (b) { e.preventDefault(); openSlip(b.dataset.slip); return; }
+    if (e.target.id === "slipBoxClose" || e.target.id === "slipBox") $("slipBox").close();
+  });
   // ---------- zoznam tipov ----------
   const PER_PAGE = 5;
   let recentAll = [], filter = "all", page = 0;
@@ -1606,7 +1656,7 @@
         el7.hidden = false;
       }
       recentAll = d.recent || [];
-      drawList(); drawChart(d.timeline);
+      drawList(); drawChart(d.timeline); drawSlips(d.slips || []);
       if (!d.totalResolved) { $("month").textContent = "Čísla sa zobrazia po prvých vyhodnotených tipoch."; return; }
       const n = d.totalResolved;
       drawLast10();
