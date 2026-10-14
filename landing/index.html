@@ -33,10 +33,15 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
 <link rel="apple-touch-icon" href="/favicon-256.png" />
+<link rel="preload" as="image" href="/obrazky/zlate-svetlo.jpg" fetchpriority="high" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-<link href="https://fonts.googleapis.com/css2?family=Mrs+Saint+Delafield&amp;text=Michael&amp;display=swap" rel="stylesheet" />
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Jost:wght@400;500;600;700&display=swap" />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet" /></noscript>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Mrs+Saint+Delafield&amp;text=Michael&amp;display=swap" />
+<link href="https://fonts.googleapis.com/css2?family=Mrs+Saint+Delafield&amp;text=Michael&amp;display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=Mrs+Saint+Delafield&amp;text=Michael&amp;display=swap" rel="stylesheet" /></noscript>
 <style>
   html { font-size-adjust: .5; } /* Cormorant + Jost v rovnakej veľkosti ako predtým */
 
@@ -1025,6 +1030,20 @@
   /* bez radaru v úvode, štadión výraznejší */
   .hero::before { content: none; }
   .hero .radar { display: none; }
+
+  /* ================================================================
+     Tlačidlo „Tipy zadarmo“ prilepené dole na mobile (14. 10. 2026)
+     ================================================================ */
+  .mcta { display: none; }
+  @media (max-width: 760px) {
+    .mcta { position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 29; display: flex; align-items: center; justify-content: center; gap: 10px; height: 52px; border-radius: 2px; background: linear-gradient(135deg, #F3E6C4, #D9C08A 45%, #B8995E); color: #141210; font: 600 12px/1 var(--sans); letter-spacing: .18em; text-transform: uppercase; text-decoration: none; box-shadow: 0 12px 30px rgba(0,0,0,.55), 0 0 0 1px rgba(243,230,196,.35) inset; transform: translateY(calc(100% + 30px)); transition: transform .35s cubic-bezier(.2,.8,.2,1); }
+    .mcta svg { width: 18px; height: 18px; flex: none; }
+    html.mcta-on .mcta { transform: none; }
+    html.menu-open .mcta { display: none; }
+    html.mcta-on .jump { bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+    body { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+  }
+  @media (max-width: 760px) and (prefers-reduced-motion: reduce) { .mcta { transition: none; } }
 </style>
 </head>
 <body>
@@ -1880,6 +1899,7 @@
   io.observe(fig);
 })();
 </script>
+<a class="mcta" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 4.2 2.9 11.4c-1.3.5-1.3 1.2-.2 1.6l4.8 1.5 1.8 5.6c.2.6.4.8.8.8.4 0 .6-.2.9-.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.8-1.3-1.5Zm-4 3.4-8.6 7.8-.3 3.4-1.6-5 10.2-6.4c.5-.3.9 0 .3.2Z" fill="currentColor"/></svg>Tipy zadarmo na Telegrame</a>
 <button class="jump" id="jump" type="button" aria-label="Na koniec stránky"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 <script>
 (function () {
@@ -2020,6 +2040,14 @@
   }, { threshold: 0.6 });
   document.querySelectorAll(".sign").forEach(function (s) { sio.observe(s); });
 })();
+</script>
+<script>
+  // Tlačidlo „Tipy zadarmo“ na mobile sa ukáže po posunutí za úvod.
+  (function () {
+    var root = document.documentElement, on = false;
+    function check() { var v = window.scrollY > 320; if (v !== on) { on = v; root.classList.toggle("mcta-on", v); } }
+    window.addEventListener("scroll", check, { passive: true }); check();
+  })();
 </script>
 </body>
 </html>
