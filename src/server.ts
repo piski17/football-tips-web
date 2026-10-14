@@ -1877,6 +1877,9 @@ async function checkPendingResults(): Promise<void> {
       if (Date.now() < new Date(leg.matchDate).getTime() + 100 * 60 * 1000) continue; // zápas ešte beží
       const settled = await settleBet(leg);
       if (settled) await updateLeg({ ...leg, status: settled.status });
+      // Zápas, ktorý sa ani po 3 dňoch nedá vyhodnotiť (odložený, chýbajú štatistiky),
+      // sa v tichom sledovaní ráta ako vrátený, aby tiket neostal visieť navždy.
+      else if (Date.now() > new Date(leg.matchDate).getTime() + 3 * 24 * 3600 * 1000) await updateLeg({ ...leg, status: "void" });
     }
   } catch {
     // sledovanie nesmie zastaviť vyhodnotenie skutočných tipov
