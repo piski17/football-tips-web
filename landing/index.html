@@ -964,16 +964,15 @@
   .sec::before, .next::before { content: ""; position: absolute; left: 50%; bottom: -4px; width: 7px; height: 7px; transform: translateX(-50%) rotate(45deg); background: var(--bg); border: 1px solid var(--gold); pointer-events: none; z-index: 2; }
 
   /* ================================================================
-     Fotka štadióna v úvode a svetlá sekcia „Kto za tým je“ (14. 10. 2026)
+     Zlaté svetlo v úvode a svetlá sekcia „Kto za tým je“ (14. 10. 2026)
      ================================================================ */
   .hero { background:
-      linear-gradient(90deg, rgba(12,11,10,.82) 0%, rgba(12,11,10,.5) 30%, rgba(12,11,10,0) 60%),
-      linear-gradient(180deg, rgba(12,11,10,0) 0%, rgba(12,11,10,0) 70%, #0C0B0A 100%),
-      url("/obrazky/stadion-noc.jpg") center 55% / cover no-repeat #0C0B0A; }
+      linear-gradient(180deg, rgba(12,11,10,0) 0%, rgba(12,11,10,0) 75%, #0C0B0A 100%),
+      url("/obrazky/zlate-svetlo.jpg") center / cover no-repeat #0C0B0A; }
   @media (max-width: 960px) {
     .hero { background:
-      linear-gradient(180deg, rgba(12,11,10,.1) 0%, rgba(12,11,10,.38) 30%, rgba(12,11,10,.72) 58%, #0C0B0A 85%),
-      url("/obrazky/stadion-noc-mobil.jpg") center top / auto 70% no-repeat #0C0B0A; }
+      linear-gradient(180deg, rgba(12,11,10,0) 0%, rgba(12,11,10,.35) 55%, #0C0B0A 90%),
+      url("/obrazky/zlate-svetlo.jpg") 72% top / auto 80% no-repeat #0C0B0A; }
   }
 
   #kto { background: linear-gradient(180deg, #F6F1E6, #EFE7D7); color: #1D1A17; }
