@@ -187,7 +187,6 @@
   .sample .why { color: var(--muted); margin-top: 8px; }
 
   /* hodnota */
-  .calc-sec { margin-top: 40px; }
   .calc { display: grid; gap: 22px; background: var(--card); border: 1px solid var(--rule); padding: 28px; }
   .calc label { display: flex; justify-content: space-between; align-items: baseline; font-size: 15px; color: var(--muted); }
   .calc label b { font: 500 26px/1 var(--serif); color: var(--text); }
@@ -1046,36 +1045,6 @@
   }
   @media (max-width: 760px) and (prefers-reduced-motion: reduce) { .mcta { transition: none; } }
 
-  /* ================================================================
-     Kalkulačka „Koľko by ste mali dnes?“ zo skutočných tipov (14. 10. 2026)
-     ================================================================ */
-  .calc-sec[hidden] { display: none; }
-  .calc { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--rule-gold); background: linear-gradient(135deg, #1D1A17, #141210); box-shadow: 0 40px 80px -50px rgba(0,0,0,.9); }
-  .calc > div { padding: 26px 30px; min-width: 0; }
-  .calc > div + div { border-left: 1px solid var(--rule); }
-  .calc h3 { font: 400 28px/1.15 var(--serif); }
-  .calc h3 em { color: var(--gold); }
-  .calc label { display: block; margin-top: 18px; font-size: 11px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--gold); }
-  .calc .val { font: 400 32px/1 var(--serif); color: var(--gold-hi); margin-top: 6px; }
-  .calc input[type=range] { width: 100%; margin-top: 10px; accent-color: #D9C08A; cursor: pointer; }
-  .calc .seg { display: flex; gap: 8px; margin-top: 8px; }
-  .calc .seg button { padding: 7px 14px; border: 1px solid var(--rule); background: transparent; color: var(--muted); font: 500 13px var(--sans); cursor: pointer; transition: border-color .2s, color .2s; }
-  .calc .seg button[aria-pressed="true"] { border-color: var(--gold); color: var(--gold-hi); }
-  .calc .hint { margin-top: 10px; font-size: 13px; color: var(--faint); }
-  .calc .res small { font-size: 11px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--faint); }
-  .calc .big { font: 400 44px/1 var(--serif); color: var(--gold-hi); margin: 8px 0 2px; }
-  .calc .big em { font: 500 18px var(--sans); font-style: normal; margin-left: 12px; color: var(--win); }
-  .calc .big em.neg { color: var(--loss); }
-  .calc svg { display: block; width: 100%; height: 70px; margin: 12px 0 8px; }
-  .calc .rows { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; border-top: 1px solid var(--rule); padding-top: 12px; }
-  .calc .rows b { display: block; font: 400 22px/1.1 var(--serif); color: var(--text); }
-  .calc .rows span { font-size: 12px; color: var(--faint); letter-spacing: .08em; }
-  .calc .note { margin-top: 12px; font-size: 12px; color: var(--faint); }
-  @media (max-width: 760px) {
-    .calc { grid-template-columns: 1fr; }
-    .calc > div { padding: 22px 18px; }
-    .calc > div + div { border-left: 0; border-top: 1px solid var(--rule); }
-  }
 </style>
 </head>
 <body>
@@ -1288,35 +1257,6 @@
           <div class="sc-head"><h3 id="chTitle">Ako rástol zisk</h3><span class="sc-total num" id="chTotal"></span></div>
           <div id="chWrap"><p class="muted">Graf sa zobrazí po prvých vyhodnotených tipoch.</p></div>
           <div class="form10" id="form10" hidden><span>Posledných 10 tipov</span><div id="last10"></div></div>
-        </div>
-        <div class="stake" id="stake" data-pages="none" hidden>
-          <p class="sc-eyebrow">Keby ste od začiatku stavili na každý tip rovnakú sumu</p>
-          <div class="big num" id="calcResult">–</div>
-          <label for="stakeRange"><span>Stávka na jeden tip</span><b class="num" id="stakeOut">10 €</b></label>
-          <input type="range" id="stakeRange" min="5" max="200" step="5" value="10" />
-          <p class="small" id="calcNote" style="margin-top:12px"></p>
-        </div>
-      </div>
-
-      <div class="calc-sec" id="kalkulacka" data-pages="vysledky" hidden>
-        <div class="calc">
-          <div>
-            <div class="eyebrow">Kalkulačka</div>
-            <h3>Koľko by ste mali <em>dnes?</em></h3>
-            <label for="calcBank">Váš bank na začiatku</label>
-            <div class="val num" id="calcBankVal">100 €</div>
-            <input type="range" id="calcBank" min="50" max="2000" step="50" value="100" />
-            <label>Vklad na jeden tip</label>
-            <div class="seg" id="calcPct"><button type="button" data-p="1" aria-pressed="false">1 %</button><button type="button" data-p="2" aria-pressed="true">2 %</button><button type="button" data-p="3" aria-pressed="false">3 %</button></div>
-            <p class="hint">Na každý tip vsadíte zvolené percento z aktuálneho banku.</p>
-          </div>
-          <div class="res">
-            <small id="calcFrom">Keby ste s nami tipovali od začiatku</small>
-            <div class="big num" id="calcEnd">–</div>
-            <svg viewBox="0 0 400 120" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="calcGrad" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#D9C08A" stop-opacity=".35"/><stop offset="1" stop-color="#D9C08A" stop-opacity="0"/></linearGradient></defs><path id="calcArea" fill="url(#calcGrad)"/><path id="calcLine" fill="none" stroke="#F3E6C4" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>
-            <div class="rows"><div><b class="num" id="calcN">–</b><span>tipov</span></div><div><b class="num" id="calcW">–</b><span>vyšlo</span></div><div><b class="num" id="calcP">–</b><span>zisk</span></div></div>
-            <p class="note">Počíta sa zo všetkých skutočných vyhodnotených tipov vrátane prehier. Minulé výsledky nie sú zárukou budúcich.</p>
-          </div>
         </div>
       </div>
 
@@ -1684,19 +1624,6 @@
   $("pgPrev").addEventListener("click", () => { if (page > 0) { page--; drawList(); } });
   $("pgNext").addEventListener("click", () => { page++; drawList(); });
 
-  // ---------- kalkulačka stávky ----------
-  let calcData = null;
-  function drawCalc() {
-    if (!calcData) return;
-    paintRange($("stakeRange"));
-    const stake = Number($("stakeRange").value), money = calcData.profit * stake;
-    $("stakeOut").textContent = `${stake} €`;
-    $("calcResult").textContent = `${money > 0 ? "+" : money < 0 ? "−" : ""}${Math.round(Math.abs(money)).toLocaleString("sk-SK")} €`;
-    $("calcResult").className = "big num " + cls(money);
-    $("calcNote").textContent = `${calcData.count} tipov so známym kurzom, spolu vložené ${(calcData.count * stake).toLocaleString("sk-SK")} €. Minulé výsledky nezaručujú budúce.`;
-  }
-  $("stakeRange").addEventListener("input", drawCalc);
-
   // ---------- formulár „Máte otázku?" (príde na e-mail) ----------
   document.querySelectorAll("[data-kurz-cta]").forEach((a) => a.addEventListener("click", () => {
     const f = document.getElementById("joinForm"); if (!f) return;
@@ -1839,7 +1766,6 @@
           (l7.withOdds > 0 ? ` · zisk <b class="${pr >= 0 ? "up" : ""}">${pr >= 0 ? "+" : "−"}${Math.abs(pr).toFixed(1).replace(".", ",")}&nbsp;j.</b>` : "");
         el7.hidden = false;
       }
-      window.__bankData = d.bank || []; window.__calc && window.__calc();
       recentAll = d.recent || [];
       drawList(); drawChart(d.timeline); drawSlips(d.slips || []);
       // Včerajší (posledný vyhodnotený) tip pod úvodom – výhra aj prehra
@@ -1873,7 +1799,6 @@
       $("fCountLbl").textContent = tipsWord(n);
       if (d.withOdds > 0) {
         $("fProfit").className = "num " + cls(d.profit); $("fRoi").className = "num " + cls(d.roi);
-        calcData = { profit: d.profit, count: d.withOdds }; $("stake").hidden = false; drawCalc();
       }
       // čísla a graf sa rozbehnú, keď sa sekcia objaví na obrazovke
       let played = false;
@@ -2102,41 +2027,6 @@
     var root = document.documentElement, on = false;
     function check() { var v = window.scrollY > 320; if (v !== on) { on = v; root.classList.toggle("mcta-on", v); } }
     window.addEventListener("scroll", check, { passive: true }); check();
-  })();
-</script>
-<script>
-  // Kalkulačka „Koľko by ste mali dnes?“ – prepočet zo skutočných vyhodnotených tipov.
-  (function () {
-    var sec = document.getElementById("kalkulacka"); if (!sec) return;
-    var range = document.getElementById("calcBank"), pct = 2;
-    var eur = function (x) { return Math.round(x).toLocaleString("sk-SK") + " €"; };
-    var MES = ["januára","februára","marca","apríla","mája","júna","júla","augusta","septembra","októbra","novembra","decembra"];
-    function draw() {
-      var data = window.__bankData || []; if (data.length < 5) return;
-      sec.hidden = false;
-      var start = Number(range.value), bank = start, pts = [start], won = 0;
-      data.forEach(function (t) { var st = bank * pct / 100; if (t.won) { bank += st * (t.odds - 1); won++; } else bank -= st; pts.push(bank); });
-      document.getElementById("calcBankVal").textContent = eur(start);
-      var diff = bank - start, rel = diff / start * 100;
-      document.getElementById("calcEnd").innerHTML = eur(bank) + '<em class="' + (diff < 0 ? "neg" : "") + '">' + (diff >= 0 ? "+" : "−") + Math.abs(rel).toFixed(1).replace(".", ",") + " %</em>";
-      document.getElementById("calcN").textContent = data.length;
-      document.getElementById("calcW").textContent = won;
-      document.getElementById("calcP").textContent = (diff >= 0 ? "+" : "−") + eur(Math.abs(diff));
-      var f = (data[0].day || "").split("-");
-      if (f.length === 3) document.getElementById("calcFrom").textContent = "Keby ste s nami tipovali od " + Number(f[2]) + ". " + MES[Number(f[1]) - 1];
-      var lo = Math.min.apply(null, pts), hi = Math.max.apply(null, pts), span = (hi - lo) || 1;
-      var line = pts.map(function (v, i) { return (i ? "L" : "M") + (i / (pts.length - 1) * 400).toFixed(1) + " " + (110 - (v - lo) / span * 100).toFixed(1); }).join(" ");
-      document.getElementById("calcLine").setAttribute("d", line);
-      document.getElementById("calcArea").setAttribute("d", line + " L400 120 L0 120Z");
-    }
-    range.addEventListener("input", draw);
-    document.getElementById("calcPct").addEventListener("click", function (e) {
-      var b = e.target.closest("button"); if (!b) return;
-      pct = Number(b.dataset.p);
-      this.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
-      draw();
-    });
-    window.__calc = draw; draw();
   })();
 </script>
 </body>

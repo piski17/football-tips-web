@@ -930,14 +930,6 @@ app.get("/api/public/track-record", async (_req, res) => {
             : null,
       };
     }
-    // Kalkulačka na webe („Koľko by ste mali dnes?“): všetky vyhodnotené tipy s kurzom
-    // v poradí podľa výkopu – len kurz a výsledok, nič, čo by prezradilo čakajúci tip.
-    const kickTime = (t: SavedTip) =>
-      Math.max(...(t.legs && t.legs.length > 0 ? t.legs.map((l) => l.matchDate) : [t.matchDate]).map((d) => new Date(d).getTime() || 0));
-    const bank = resolvedAll
-      .filter((t) => typeof t.odds === "number" && t.odds > 1)
-      .sort((a, b) => kickTime(a) - kickTime(b))
-      .map((t) => ({ day: tipDayKey(t) ?? "", odds: Math.round(t.odds! * 100) / 100, won: t.status === "won" }));
     res.json({
       ...summarize(all),
       month: { key: monthKey, ...summarize(inMonth) },
@@ -952,7 +944,6 @@ app.get("/api/public/track-record", async (_req, res) => {
       recent,
       slips,
       timeline: { unit: byWeek ? "week" : "day", points: timeline },
-      bank,
     });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
