@@ -348,6 +348,8 @@ app.get(["/favicon.svg", "/favicon-32.png", "/favicon-256.png", "/og-image.png"]
 
 // Ukážky z kurzu Škola stávkovania na tipradar.eu – bez hesla.
 app.use("/skola", express.static(path.join(__dirname, "..", "landing", "skola")));
+// Obrázky prezentácie (fotka štadióna v úvode) – bez hesla.
+app.use("/obrazky", express.static(path.join(__dirname, "..", "landing", "obrazky"), { maxAge: "30d" }));
 
 // Zásady ochrany osobných údajov (tipradar.eu/ochrana-udajov) – bez hesla.
 app.get(["/ochrana-udajov", "/ochrana-udajov/"], (_req, res) => {

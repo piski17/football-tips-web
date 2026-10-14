@@ -986,6 +986,32 @@
   .sec, .next { position: relative; border-bottom-color: transparent; }
   .sec::after, .next::after { content: ""; position: absolute; left: 50%; bottom: -1px; width: min(1120px, 100% - 32px); height: 1px; transform: translateX(-50%); background: linear-gradient(90deg, transparent, rgba(217,192,138,.5) 30%, rgba(243,230,196,.75) 50%, rgba(217,192,138,.5) 70%, transparent); pointer-events: none; z-index: 1; }
   .sec::before, .next::before { content: ""; position: absolute; left: 50%; bottom: -4px; width: 7px; height: 7px; transform: translateX(-50%) rotate(45deg); background: var(--bg); border: 1px solid var(--gold); pointer-events: none; z-index: 2; }
+
+  /* ================================================================
+     Fotka štadióna v úvode a svetlá sekcia „Kto za tým je“ (14. 10. 2026)
+     ================================================================ */
+  .hero { background:
+      linear-gradient(90deg, rgba(12,11,10,.94) 0%, rgba(12,11,10,.78) 34%, rgba(12,11,10,.28) 68%, rgba(12,11,10,.18) 100%),
+      linear-gradient(180deg, rgba(12,11,10,.35) 0%, rgba(12,11,10,0) 25%, rgba(12,11,10,.15) 72%, #0C0B0A 100%),
+      url("/obrazky/stadion.jpg") center 35% / cover no-repeat #0C0B0A; }
+  @media (max-width: 960px) {
+    .hero { background:
+      linear-gradient(180deg, rgba(12,11,10,.42) 0%, rgba(12,11,10,.72) 30%, rgba(12,11,10,.9) 55%, #0C0B0A 80%),
+      url("/obrazky/stadion-mobil.jpg") center top / auto 62% no-repeat #0C0B0A; }
+  }
+
+  #kto { background: linear-gradient(180deg, #F6F1E6, #EFE7D7); color: #1D1A17; }
+  #kto::before { background: #F1EADC; border-color: #9C8250; }
+  #kto .letter h2 { color: #1D1A17; }
+  #kto .letter p { color: #5A5244; }
+  #kto .letter p:first-of-type { color: #1D1A17; }
+  #kto .letter a { color: #7E6328; border-bottom-color: rgba(126,99,40,.4); text-decoration-color: rgba(126,99,40,.5); }
+  #kto .eyebrow { color: #8A6E35; }
+  #kto .eyebrow::before, #kto .eyebrow::after { background: #8A6E35; }
+  #kto .sign span { color: #7A705F; }
+  #kto .sign .sig { background: linear-gradient(100deg, #7A5A22 0%, #B8995E 45%, #8E6B2E 75%, #6E5020 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  #kto .sign .sig-line { background: linear-gradient(90deg, transparent, #9C8250, transparent); }
+  #kto :focus-visible { outline-color: #7E6328; }
 </style>
 </head>
 <body>
