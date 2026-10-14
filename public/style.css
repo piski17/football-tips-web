@@ -1,19 +1,19 @@
 :root {
   /* Vizuálna identita TipRadar „Onyx a zlato“ – rovnaká ako tipradar.eu. */
-  --bg: #0B0B0C;
-  --surface: #141416;
-  --surface-alt: #1A1A1E;
-  --border: #2A2925;
-  --line: rgba(201, 165, 92, 0.32);
-  --accent: #C9A55C;
-  --accent-strong: #E8D3A0;
-  --rose-hi: #E8D3A0;
-  --rose-deep: #A8823E;
-  --gold: #C9A55C;
+  --bg: #0C0B0A;
+  --surface: #161412;
+  --surface-alt: #1D1A17;
+  --border: #2E2A24;
+  --line: rgba(217, 192, 138, 0.32);
+  --accent: #D9C08A;
+  --accent-strong: #F3E6C4;
+  --rose-hi: #F3E6C4;
+  --rose-deep: #B8995E;
+  --gold: #D9C08A;
   --danger: #C0707C;
   --success: #7FBF9A;
-  --text: #EDE6D6;
-  --text-muted: #B8B0A2;
+  --text: #F4EEE2;
+  --text-muted: #BFB6A6;
 
   --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
   --font-body: "Plus Jakarta Sans", "Helvetica Neue", Arial, system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -1314,8 +1314,8 @@ button:disabled:hover {
 .edit-leg-name { min-width: 0; }
 .edit-select,
 .edit-row input {
-  background: var(--bg, #0B0B0C);
-  color: var(--text, #EDE6D6);
+  background: var(--bg, #0C0B0A);
+  color: var(--text, #F4EEE2);
   border: 1px solid var(--border, rgba(255,255,255,0.12));
   border-radius: 3px;
   padding: 7px 10px;
@@ -1331,7 +1331,7 @@ body { -webkit-font-smoothing: antialiased; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .topbar {
-  background: rgba(11, 11, 12, 0.86);
+  background: rgba(12, 11, 10, 0.86);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -1394,8 +1394,8 @@ input, select, textarea { accent-color: var(--accent); }
 .bt-bar { height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; margin-top: 8px; }
 .bt-bar i { display: block; height: 100%; background: var(--gold); }
 .bt-fields input {
-  background: var(--bg, #0B0B0C);
-  color: var(--text, #EDE6D6);
+  background: var(--bg, #0C0B0A);
+  color: var(--text, #F4EEE2);
   border: 1px solid var(--border, rgba(255,255,255,0.12));
   border-radius: 3px;
   padding: 8px 10px;
@@ -1428,7 +1428,7 @@ body {
   background-attachment: fixed;
   line-height: 1.5;
 }
-::selection { background: rgba(201, 165, 92, 0.35); color: var(--text); }
+::selection { background: rgba(217, 192, 138, 0.35); color: var(--text); }
 :focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 2px; }
 input, select, textarea { accent-color: var(--accent); }
 strong, b { font-weight: 600; }
@@ -1465,37 +1465,37 @@ h1, h2, h3, h4,
 .live-score { font-size: 17px; font-weight: 400; }
 .fixture-row .time strong { font-size: 18px; font-weight: 400; color: var(--accent-strong); }
 .day-tip-rank { font-size: 24px; font-weight: 400; }
-.tip-explanation { font-style: normal; color: #B8B0A2; }
+.tip-explanation { font-style: normal; color: #BFB6A6; }
 
 /* ---------- Horná lišta ---------- */
 .topbar {
-  background: rgba(11, 11, 12, 0.86);
+  background: rgba(12, 11, 10, 0.86);
   border-bottom: 1px solid var(--line);
 }
 
 /* ---------- Tlačidlá ako na tipradar.eu ---------- */
 .btn-primary {
-  background: linear-gradient(180deg, var(--rose-hi), var(--accent) 60%, #b08d45);
+  background: linear-gradient(180deg, var(--rose-hi), var(--accent) 60%, #c0a268);
   color: #17130A;
   border: 0;
   border-radius: 3px;
   font-weight: 600;
   letter-spacing: 0.01em;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 10px 24px -14px rgba(201, 165, 92, 0.7);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 10px 24px -14px rgba(217, 192, 138, 0.7);
   transition: background 0.2s ease, transform 0.2s ease;
 }
-.btn-primary:hover { background: linear-gradient(180deg, #f3e3bc, var(--rose-hi) 60%, var(--accent)); }
+.btn-primary:hover { background: linear-gradient(180deg, #f8eed6, var(--rose-hi) 60%, var(--accent)); }
 .btn-primary:active { transform: translateY(1px); }
 .btn-ghost {
-  border: 1px solid rgba(201, 165, 92, 0.3);
+  border: 1px solid rgba(217, 192, 138, 0.3);
   border-radius: 3px;
   background: transparent;
   font-weight: 500;
   transition: border-color 0.2s ease, background 0.2s ease;
 }
-.btn-ghost:hover { border-color: var(--accent-strong); background: rgba(201, 165, 92, 0.08); }
-.tip-save-btn { border-radius: 3px; border-color: rgba(201, 165, 92, 0.3); }
-.tip-save-btn:hover { background: rgba(201, 165, 92, 0.08); }
+.btn-ghost:hover { border-color: var(--accent-strong); background: rgba(217, 192, 138, 0.08); }
+.tip-save-btn { border-radius: 3px; border-color: rgba(217, 192, 138, 0.3); }
+.tip-save-btn:hover { background: rgba(217, 192, 138, 0.08); }
 .link-btn { color: var(--accent-strong); }
 
 /* ---------- Polia formulárov ---------- */
@@ -1514,8 +1514,8 @@ h1, h2, h3, h4,
 .fixture-row { border-radius: 3px; transition: background 0.15s ease, border-color 0.15s ease; }
 .fixture-row:hover { background: var(--surface-alt); }
 .fixture-row.selected {
-  border-color: rgba(201, 165, 92, 0.55);
-  background: linear-gradient(90deg, rgba(201, 165, 92, 0.1), rgba(201, 165, 92, 0.02) 70%), var(--surface);
+  border-color: rgba(217, 192, 138, 0.55);
+  background: linear-gradient(90deg, rgba(217, 192, 138, 0.1), rgba(217, 192, 138, 0.02) 70%), var(--surface);
 }
 .league-item { border-radius: 3px; }
 
@@ -1524,20 +1524,20 @@ h1, h2, h3, h4,
   border: 1px solid var(--line);
   border-left: 2px solid var(--accent);
   border-radius: 3px;
-  background: linear-gradient(90deg, rgba(201, 165, 92, 0.1), transparent 65%), var(--surface);
+  background: linear-gradient(90deg, rgba(217, 192, 138, 0.1), transparent 65%), var(--surface);
 }
 .stat-card, .market-card { border-radius: 3px; border-color: var(--border); }
-.best-bet-row { border-radius: 3px; border-left: 2px solid rgba(201, 165, 92, 0.35); }
+.best-bet-row { border-radius: 3px; border-left: 2px solid rgba(217, 192, 138, 0.35); }
 .best-bet-row:first-child {
   border-left-color: var(--accent-strong);
-  background: linear-gradient(90deg, rgba(201, 165, 92, 0.09), transparent 60%), var(--surface);
+  background: linear-gradient(90deg, rgba(217, 192, 138, 0.09), transparent 60%), var(--surface);
 }
 .best-bet-row:first-child .best-bet-rank { color: var(--accent-strong); }
 .prob-bar-track, .market-breakdown-bar, .bt-bar { background: var(--surface-alt); }
 .prob-bar-fill, .market-breakdown-bar-fill, .bankroll-bar, .bt-bar i, .splash-progress-fill {
   background: linear-gradient(90deg, var(--rose-deep), var(--accent) 55%, var(--accent-strong));
 }
-.form-pill { color: #0B0B0C; }
+.form-pill { color: #0C0B0A; }
 .form-pill.W { background: var(--success); }
 .form-pill.D { background: #8f887c; }
 .form-pill.L { background: var(--danger); }
@@ -1546,12 +1546,12 @@ h1, h2, h3, h4,
 .disclaimer { border-top-color: var(--line); }
 
 /* ---------- Výsledky tipov ---------- */
-.tip-status.pending { background: rgba(201, 165, 92, 0.14); color: var(--accent-strong); }
+.tip-status.pending { background: rgba(217, 192, 138, 0.14); color: var(--accent-strong); }
 .tip-status.won { background: rgba(143, 196, 162, 0.16); color: var(--success); }
 .tip-status.lost { background: rgba(208, 122, 132, 0.16); color: var(--danger); }
 .tip-status.void { background: rgba(168, 159, 142, 0.12); color: var(--text-muted); }
 .tip-row { border-radius: 3px; }
-.tip-row:hover { border-color: rgba(201, 165, 92, 0.45); }
+.tip-row:hover { border-color: rgba(217, 192, 138, 0.45); }
 .tip-row.tip-row-won { background: rgba(143, 196, 162, 0.09); border-color: rgba(143, 196, 162, 0.36); }
 .tip-row.tip-row-lost { background: rgba(208, 122, 132, 0.09); border-color: rgba(208, 122, 132, 0.36); }
 .tip-delete-btn[data-motw-id] { color: var(--accent-strong); }
@@ -1564,7 +1564,7 @@ h1, h2, h3, h4,
   -webkit-backdrop-filter: blur(6px);
 }
 .modal {
-  background: linear-gradient(180deg, #1A1A1E, var(--surface) 140px);
+  background: linear-gradient(180deg, #1D1A17, var(--surface) 140px);
   border: 1px solid var(--line);
   border-radius: 3px;
   box-shadow: 0 40px 90px -40px rgba(0, 0, 0, 0.85);
@@ -1576,14 +1576,14 @@ h1, h2, h3, h4,
 
 /* ---------- Upozornenia ---------- */
 .toast {
-  background: #1A1A1E;
+  background: #1D1A17;
   border-color: var(--line);
   border-radius: 3px;
   box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.8);
 }
 
 /* ---------- Načítavanie ---------- */
-.skeleton { background: linear-gradient(90deg, var(--surface) 25%, #1A1A1E 50%, var(--surface) 75%); background-size: 200% 100%; }
+.skeleton { background: linear-gradient(90deg, var(--surface) 25%, #1D1A17 50%, var(--surface) 75%); background-size: 200% 100%; }
 .splash-screen {
   background: radial-gradient(900px 520px at 50% 20%, rgba(92, 72, 34, 0.4), transparent 70%), var(--bg);
 }
@@ -1591,8 +1591,8 @@ h1, h2, h3, h4,
 .splash-progress-pct { letter-spacing: 0.04em; }
 
 /* ---------- Posuvníky ---------- */
-* { scrollbar-color: #2A2925 transparent; }
-::-webkit-scrollbar-thumb { background: #2A2925; border-color: var(--bg); }
+* { scrollbar-color: #2E2A24 transparent; }
+::-webkit-scrollbar-thumb { background: #2E2A24; border-color: var(--bg); }
 
 /* ================================================================
    ONYX – luxusná vrstva (Cormorant Garamond je jemnejšie písmo,
@@ -1632,15 +1632,15 @@ h1, h2, h3, h4,
 .member-field { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted); }
 .member-field input { flex: 1; min-width: 0; }
 .member-check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); }
-.member-check input { width: 16px; height: 16px; accent-color: var(--gold, #C9A55C); }
+.member-check input { width: 16px; height: 16px; accent-color: var(--gold, #D9C08A); }
 .member-filter { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 10px; }
 .member-filter button { background: var(--surface-alt); border: 1px solid var(--border); color: var(--text-muted); border-radius: 3px; padding: 5px 12px; font-size: 12.5px; cursor: pointer; }
-.member-filter button.active { border-color: var(--gold-bright, #E8D3A0); color: var(--gold-bright, #E8D3A0); }
+.member-filter button.active { border-color: var(--gold-bright, #F3E6C4); color: var(--gold-bright, #F3E6C4); }
 .member-tag { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .04em; padding: 2px 7px; border-radius: 4px; margin-left: 6px; vertical-align: 1px; }
-.member-tag.vip { background: rgba(201,165,92,.16); color: var(--gold-bright, #E8D3A0); }
+.member-tag.vip { background: rgba(217,192,138,.16); color: var(--gold-bright, #F3E6C4); }
 .member-tag.premium { background: var(--surface-alt); color: var(--text-muted); }
 .member-tag.founder { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
-.member-btn { background: var(--surface-alt) !important; color: var(--gold-bright, #E8D3A0) !important; border-radius: 3px; padding: 4px 8px !important; font-size: 12px !important; white-space: nowrap; }
+.member-btn { background: var(--surface-alt) !important; color: var(--gold-bright, #F3E6C4) !important; border-radius: 3px; padding: 4px 8px !important; font-size: 12px !important; white-space: nowrap; }
 @media (max-width: 600px) { .member-form { grid-template-columns: 1fr; } }
 
 /* ================================================================
@@ -1648,9 +1648,9 @@ h1, h2, h3, h4,
    Onyx a zlato, Playfair Display + Plus Jakarta Sans, rovné tenké
    čiary, malé zaoblenie, bez žiary a prechodov. Musí byť na konci.
    ================================================================ */
-:root { --faint: #847D71; --bg-2: #141416; }
+:root { --faint: #8C8476; --bg-2: #161412; }
 body { background: var(--bg); background-attachment: initial; line-height: 1.55; -webkit-font-smoothing: antialiased; }
-::selection { background: rgba(201, 165, 92, 0.3); }
+::selection { background: rgba(217, 192, 138, 0.3); }
 :focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 3px; }
 
 /* písmo: Playfair je výraznejšie než Cormorant – späť na 500 a menšie stupne */
@@ -1675,7 +1675,7 @@ h1, h2, h3, h4,
 
 
 /* horná lišta */
-.topbar { background: rgba(11, 11, 12, 0.94); border-bottom: 1px solid var(--border); backdrop-filter: none; }
+.topbar { background: rgba(12, 11, 10, 0.94); border-bottom: 1px solid var(--border); backdrop-filter: none; }
 
 /* tlačidlá ako na tipradar.eu: plné zlato / priehľadné so zlatým rámom */
 .btn-primary {
@@ -1710,7 +1710,7 @@ h1, h2, h3, h4,
 .best-bet-row:first-child { background: var(--surface-alt); border-left-color: var(--accent); }
 .prob-bar-fill, .market-breakdown-bar-fill, .bankroll-bar, .bt-bar i, .splash-progress-fill { background: var(--accent); }
 .prob-bar-track, .market-breakdown-bar, .bt-bar { background: var(--border); border-radius: 0; }
-.form-pill { border-radius: 2px; color: #0B0B0C; }
+.form-pill { border-radius: 2px; color: #0C0B0A; }
 .match-locked { border-radius: 3px; }
 
 /* stavy tipov */
@@ -1736,8 +1736,8 @@ h1, h2, h3, h4,
 .member-filter button, .member-tag, .member-btn { border-radius: 2px; }
 .member-filter button.active { border-color: var(--accent); color: var(--accent-strong); }
 
-* { scrollbar-color: #2A2925 transparent; }
-::-webkit-scrollbar-thumb { background: #2A2925; }
+* { scrollbar-color: #2E2A24 transparent; }
+::-webkit-scrollbar-thumb { background: #2E2A24; }
 
 /* ---------- Úvodná obrazovka – redakčná verzia (7. 10. 2026) ---------- */
 .splash-screen { background: var(--bg); }
@@ -1797,7 +1797,7 @@ details.low-value-list[open] > summary { margin-bottom: 6px; }
 .monthly-stat small { font-size: 11.5px; }
 .visits-days { display: grid; grid-template-columns: repeat(14, 1fr); gap: 4px; align-items: end; height: 110px; margin: 6px 0 18px; }
 .visits-day { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
-.visits-day i { display: block; width: 100%; min-height: 2px; background: var(--accent-strong, #C9A55C); border-radius: 2px 2px 0 0; }
+.visits-day i { display: block; width: 100%; min-height: 2px; background: var(--accent-strong, #D9C08A); border-radius: 2px 2px 0 0; }
 .visits-day span { font-size: 10.5px; color: var(--text-muted); }
 
 /* ---------- Úvodná obrazovka – väčšie logo a texty (9. 10. 2026) ---------- */
@@ -1825,9 +1825,9 @@ details.low-value-list[open] > summary { margin-bottom: 6px; }
 
 /* Snímka podaného tiketu: zlaté tlačidlo, keď je snímka nahraná */
 .tip-delete-btn.slip-btn { color: var(--text-muted, #8a8478); }
-.tip-delete-btn.slip-btn.has-slip { color: #C9A55C; }
-.tip-delete-btn.slip-btn:hover { color: #E8D3A0; }
+.tip-delete-btn.slip-btn.has-slip { color: #D9C08A; }
+.tip-delete-btn.slip-btn:hover { color: #F3E6C4; }
 
 /* Sledované tipy (Len sledovať) v Histórii tipov */
-.watch-section { margin-top: 22px; padding-top: 14px; border-top: 1px dashed var(--border, #2A2925); }
+.watch-section { margin-top: 22px; padding-top: 14px; border-top: 1px dashed var(--border, #2E2A24); }
 .watch-section .watch-title { margin: 0 0 4px; font-size: 18px !important; }

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-  <meta name="theme-color" content="#0B0B0C" />
+  <meta name="theme-color" content="#0C0B0A" />
   <meta name="color-scheme" content="dark" />
   <title>TipRadar</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
@@ -20,26 +20,26 @@
       <svg class="splash-radar" viewBox="0 0 200 200" aria-hidden="true">
         <defs>
           <linearGradient id="spSweep" gradientUnits="userSpaceOnUse" x1="29.5" y1="40.9" x2="100" y2="8">
-            <stop offset="0" stop-color="#C9A55C" stop-opacity="0"/>
-            <stop offset="1" stop-color="#C9A55C" stop-opacity=".38"/>
+            <stop offset="0" stop-color="#D9C08A" stop-opacity="0"/>
+            <stop offset="1" stop-color="#D9C08A" stop-opacity=".38"/>
           </linearGradient>
         </defs>
-        <circle cx="100" cy="100" r="94" fill="#111113"/>
-        <circle cx="100" cy="100" r="86" fill="none" stroke="#C9A55C" stroke-opacity=".45" stroke-width="5" stroke-dasharray="1.1 13.91"/>
-        <circle cx="100" cy="100" r="64" fill="none" stroke="#C9A55C" stroke-opacity=".22" stroke-width="1"/>
-        <circle cx="100" cy="100" r="34" fill="none" stroke="#C9A55C" stroke-opacity=".22" stroke-width="1"/>
-        <path d="M100 8V192M8 100H192" stroke="#C9A55C" stroke-opacity=".12" stroke-width="1"/>
-        <g class="splash-blips" fill="#E8D3A0">
+        <circle cx="100" cy="100" r="94" fill="#12110f"/>
+        <circle cx="100" cy="100" r="86" fill="none" stroke="#D9C08A" stroke-opacity=".45" stroke-width="5" stroke-dasharray="1.1 13.91"/>
+        <circle cx="100" cy="100" r="64" fill="none" stroke="#D9C08A" stroke-opacity=".22" stroke-width="1"/>
+        <circle cx="100" cy="100" r="34" fill="none" stroke="#D9C08A" stroke-opacity=".22" stroke-width="1"/>
+        <path d="M100 8V192M8 100H192" stroke="#D9C08A" stroke-opacity=".12" stroke-width="1"/>
+        <g class="splash-blips" fill="#F3E6C4">
           <circle cx="134" cy="58" r="3.2"/>
           <circle cx="62" cy="128" r="2.6"/>
           <circle cx="146" cy="132" r="2.2"/>
         </g>
         <g class="splash-sweep">
           <path d="M100 100 L29.5 40.9 A92 92 0 0 1 100 8 Z" fill="url(#spSweep)"/>
-          <path d="M100 100 L100 8" stroke="#E8D3A0" stroke-width="2" stroke-linecap="round"/>
+          <path d="M100 100 L100 8" stroke="#F3E6C4" stroke-width="2" stroke-linecap="round"/>
         </g>
-        <circle cx="100" cy="100" r="94" fill="none" stroke="#C9A55C" stroke-width="2"/>
-        <circle cx="100" cy="100" r="4.5" fill="#E8D3A0"/>
+        <circle cx="100" cy="100" r="94" fill="none" stroke="#D9C08A" stroke-width="2"/>
+        <circle cx="100" cy="100" r="4.5" fill="#F3E6C4"/>
       </svg>
       <div class="splash-word">TipRadar</div>
       <div class="splash-tag">Štatistický model <i></i> Tipy s hodnotou</div>
@@ -55,7 +55,7 @@
   <div class="app">
     <header class="topbar">
       <div class="brand">
-        <span class="brand-mark"><svg viewBox="0 0 200 200" aria-hidden="true"><defs><linearGradient id="rmBrand" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E8D3A0"/><stop offset=".45" stop-color="#c9a55c"/><stop offset="1" stop-color="#A8823E"/></linearGradient></defs><circle cx="100" cy="100" r="92" fill="#141416"/><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#c9a55c" fill-opacity=".32"/><line x1="100" y1="100" x2="162.2" y2="37.8" stroke="#C9A55C" stroke-width="7" stroke-linecap="round"/><circle cx="100" cy="100" r="92" fill="none" stroke="#C9A55C" stroke-width="8"/><circle cx="100" cy="100" r="58" fill="none" stroke="#c9a55c" stroke-opacity=".5" stroke-width="4"/><circle cx="100" cy="100" r="9" fill="#e8d3a0"/></svg></span>
+        <span class="brand-mark"><svg viewBox="0 0 200 200" aria-hidden="true"><defs><linearGradient id="rmBrand" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F3E6C4"/><stop offset=".45" stop-color="#d9c08a"/><stop offset="1" stop-color="#B8995E"/></linearGradient></defs><circle cx="100" cy="100" r="92" fill="#161412"/><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#d9c08a" fill-opacity=".32"/><line x1="100" y1="100" x2="162.2" y2="37.8" stroke="#D9C08A" stroke-width="7" stroke-linecap="round"/><circle cx="100" cy="100" r="92" fill="none" stroke="#D9C08A" stroke-width="8"/><circle cx="100" cy="100" r="58" fill="none" stroke="#d9c08a" stroke-opacity=".5" stroke-width="4"/><circle cx="100" cy="100" r="9" fill="#f3e6c4"/></svg></span>
         <h1>TipRadar</h1>
       </div>
 
@@ -88,7 +88,7 @@
 
       <section class="analysis-column" id="analysisColumn">
         <div class="empty-state analysis-empty">
-          <svg class="empty-radar" viewBox="0 0 200 200" aria-hidden="true"> <defs> <linearGradient id="emSweep" gradientUnits="userSpaceOnUse" x1="29.5" y1="40.9" x2="100" y2="8"> <stop offset="0" stop-color="#C9A55C" stop-opacity="0"/> <stop offset="1" stop-color="#C9A55C" stop-opacity=".38"/> </linearGradient> </defs> <circle cx="100" cy="100" r="94" fill="#111113"/> <circle cx="100" cy="100" r="86" fill="none" stroke="#C9A55C" stroke-opacity=".45" stroke-width="5" stroke-dasharray="1.1 13.91"/> <circle cx="100" cy="100" r="64" fill="none" stroke="#C9A55C" stroke-opacity=".22" stroke-width="1"/> <circle cx="100" cy="100" r="34" fill="none" stroke="#C9A55C" stroke-opacity=".22" stroke-width="1"/> <path d="M100 8V192M8 100H192" stroke="#C9A55C" stroke-opacity=".12" stroke-width="1"/> <g class="splash-blips" fill="#E8D3A0"> <circle cx="134" cy="58" r="3.2"/> <circle cx="62" cy="128" r="2.6"/> <circle cx="146" cy="132" r="2.2"/> </g> <g class="splash-sweep"> <path d="M100 100 L29.5 40.9 A92 92 0 0 1 100 8 Z" fill="url(#emSweep)"/> <path d="M100 100 L100 8" stroke="#E8D3A0" stroke-width="2" stroke-linecap="round"/> </g> <circle cx="100" cy="100" r="94" fill="none" stroke="#C9A55C" stroke-width="2"/> <circle cx="100" cy="100" r="4.5" fill="#E8D3A0"/> </svg>
+          <svg class="empty-radar" viewBox="0 0 200 200" aria-hidden="true"> <defs> <linearGradient id="emSweep" gradientUnits="userSpaceOnUse" x1="29.5" y1="40.9" x2="100" y2="8"> <stop offset="0" stop-color="#D9C08A" stop-opacity="0"/> <stop offset="1" stop-color="#D9C08A" stop-opacity=".38"/> </linearGradient> </defs> <circle cx="100" cy="100" r="94" fill="#12110f"/> <circle cx="100" cy="100" r="86" fill="none" stroke="#D9C08A" stroke-opacity=".45" stroke-width="5" stroke-dasharray="1.1 13.91"/> <circle cx="100" cy="100" r="64" fill="none" stroke="#D9C08A" stroke-opacity=".22" stroke-width="1"/> <circle cx="100" cy="100" r="34" fill="none" stroke="#D9C08A" stroke-opacity=".22" stroke-width="1"/> <path d="M100 8V192M8 100H192" stroke="#D9C08A" stroke-opacity=".12" stroke-width="1"/> <g class="splash-blips" fill="#F3E6C4"> <circle cx="134" cy="58" r="3.2"/> <circle cx="62" cy="128" r="2.6"/> <circle cx="146" cy="132" r="2.2"/> </g> <g class="splash-sweep"> <path d="M100 100 L29.5 40.9 A92 92 0 0 1 100 8 Z" fill="url(#emSweep)"/> <path d="M100 100 L100 8" stroke="#F3E6C4" stroke-width="2" stroke-linecap="round"/> </g> <circle cx="100" cy="100" r="94" fill="none" stroke="#D9C08A" stroke-width="2"/> <circle cx="100" cy="100" r="4.5" fill="#F3E6C4"/> </svg>
           <p>Vyber zápas zo zoznamu.</p>
           <p class="muted small">Zobrazí sa štatistická analýza a odporúčaný tip.</p>
         </div>

@@ -14,21 +14,21 @@
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
   /* Svetlá verzia: porcelán (ako svetlá sekcia na tipradar.eu) */
-  --bg: #eee6d4; --panel: #faf6ec; --line: #d9cdb3; --text: #0B0B0C; --muted: #5a5244;
-  --accent: #A8823E; --accent-ink: #fff6df; --good: #2f6f4a; --bad: #8e3a47; --input: #fffaf0;
+  --bg: #eee6d4; --panel: #faf6ec; --line: #d9cdb3; --text: #0C0B0A; --muted: #5a5244;
+  --accent: #B8995E; --accent-ink: #fff6df; --good: #2f6f4a; --bad: #8e3a47; --input: #fffaf0;
   --display: "Playfair Display", Georgia, "Times New Roman", serif;
   --body: "Plus Jakarta Sans", "Helvetica Neue", Arial, system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 /* Tmavá verzia: ebenová čerň a zlato ako na tipradar.eu */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0B0B0C; --panel: #141416; --line: #2A2925; --text: #EDE6D6; --muted: #B8B0A2;
-    --accent: #c9a55c; --accent-ink: #17130A; --good: #7FBF9A; --bad: #C0707C; --input: #0E0E10;
+    --bg: #0C0B0A; --panel: #161412; --line: #2E2A24; --text: #F4EEE2; --muted: #BFB6A6;
+    --accent: #d9c08a; --accent-ink: #17130A; --good: #7FBF9A; --bad: #C0707C; --input: #0F0E0C;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0B0B0C; --panel: #141416; --line: #2A2925; --text: #EDE6D6; --muted: #B8B0A2;
-  --accent: #c9a55c; --accent-ink: #17130A; --good: #7FBF9A; --bad: #C0707C; --input: #0E0E10;
+  --bg: #0C0B0A; --panel: #161412; --line: #2E2A24; --text: #F4EEE2; --muted: #BFB6A6;
+  --accent: #d9c08a; --accent-ink: #17130A; --good: #7FBF9A; --bad: #C0707C; --input: #0F0E0C;
 }
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-padding-top: env(safe-area-inset-top, 0px); }
@@ -118,11 +118,11 @@ body.no-select { -webkit-user-select: none; user-select: none; }
 .seg button + button { border-left: 1px solid var(--line); }
 .seg button[aria-pressed="true"] { background: var(--accent); color: #141414; font-weight: 600; }
 .pages { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin: 12px 0 0; }
-.pages span { font-size: 13px; color: var(--muted, #B8B0A2); margin-right: 4px; }
+.pages span { font-size: 13px; color: var(--muted, #BFB6A6); margin-right: 4px; }
 .pages button { min-width: 40px; height: 36px; border: 1px solid var(--line); border-radius: 3px; background: var(--input); color: var(--text); font: inherit; font-size: 14px; cursor: pointer; }
-.pages button[aria-pressed="true"] { background: #c9a55c; border-color: #c9a55c; color: #17130A; font-weight: 600; }
+.pages button[aria-pressed="true"] { background: #d9c08a; border-color: #d9c08a; color: #17130A; font-weight: 600; }
 .preview { position: sticky; top: calc(16px + env(safe-area-inset-top, 0px)); }
-canvas { display: block; width: 100%; height: auto; border-radius: 3px; border: 1px solid var(--line); background: #0B0B0C; }
+canvas { display: block; width: 100%; height: auto; border-radius: 3px; border: 1px solid var(--line); background: #0C0B0A; }
 .preview.story canvas { width: auto; max-width: 100%; max-height: 78vh; margin: 0 auto; }
 textarea { min-height: 220px; resize: vertical; font-size: 14px; }
 .status { font-size: 13px; color: var(--muted); min-height: 1.5em; margin-top: 8px; }
@@ -177,9 +177,9 @@ h2 { font-size: 22px; }
 .top .brand { font-size: 24px; gap: 12px; }
 .radar-logo { width: 32px; height: 32px; display: block; flex: 0 0 auto; }
 .mono-badge { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--accent); display: grid; place-items: center; color: var(--accent); font-size: 17px; font-weight: 700; }
-.btn.primary { background: #C9A55C; border-color: #C9A55C; color: #17130A; box-shadow: none; }
-.btn.primary:hover { background: #E8D3A0; border-color: #E8D3A0; }
-.seg button[aria-pressed="true"] { background: #c9a55c; color: #17130A; }
+.btn.primary { background: #D9C08A; border-color: #D9C08A; color: #17130A; box-shadow: none; }
+.btn.primary:hover { background: #F3E6C4; border-color: #F3E6C4; }
+.seg button[aria-pressed="true"] { background: #d9c08a; color: #17130A; }
 /* Playfair Display – nadpisy ako na tipradar.eu */
 h1, h2, .day-title, .stat b { font-weight: 500; letter-spacing: -0.02em; }
 .top .brand { font-weight: 600; letter-spacing: -0.01em; font-size: 22px; }
@@ -203,7 +203,7 @@ h2 { font-size: 22px; }
 <body>
 <div class="wrap">
   <header class="top">
-    <div class="brand"><svg class="radar-logo" viewBox="0 0 200 200" aria-hidden="true"><defs><linearGradient id="rmSuhrn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E8D3A0"/><stop offset=".45" stop-color="#c9a55c"/><stop offset="1" stop-color="#A8823E"/></linearGradient></defs><circle cx="100" cy="100" r="92" fill="#141416"/><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#c9a55c" fill-opacity=".32"/><line x1="100" y1="100" x2="162.2" y2="37.8" stroke="#C9A55C" stroke-width="7" stroke-linecap="round"/><circle cx="100" cy="100" r="92" fill="none" stroke="#C9A55C" stroke-width="8"/><circle cx="100" cy="100" r="58" fill="none" stroke="#c9a55c" stroke-opacity=".5" stroke-width="4"/><circle cx="100" cy="100" r="9" fill="#e8d3a0"/></svg>TipRadar</div>
+    <div class="brand"><svg class="radar-logo" viewBox="0 0 200 200" aria-hidden="true"><defs><linearGradient id="rmSuhrn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F3E6C4"/><stop offset=".45" stop-color="#d9c08a"/><stop offset="1" stop-color="#B8995E"/></linearGradient></defs><circle cx="100" cy="100" r="92" fill="#161412"/><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#d9c08a" fill-opacity=".32"/><line x1="100" y1="100" x2="162.2" y2="37.8" stroke="#D9C08A" stroke-width="7" stroke-linecap="round"/><circle cx="100" cy="100" r="92" fill="none" stroke="#D9C08A" stroke-width="8"/><circle cx="100" cy="100" r="58" fill="none" stroke="#d9c08a" stroke-opacity=".5" stroke-width="4"/><circle cx="100" cy="100" r="9" fill="#f3e6c4"/></svg>TipRadar</div>
     <div class="top-right">
       <a class="back-link" href="/">← Späť na tipy</a>
       <span class="tag">Denný súhrn</span>
@@ -730,7 +730,7 @@ h2 { font-size: 22px; }
   // ---------- kreslenie ----------
   const cv = $('cv'), ctx = cv.getContext('2d');
   // Farby a písma ako na tipradar.eu: závodná zelená, šampanské zlato, slonovinová.
-  const C = { bg: '#0B0B0C', bgDeep: '#070708', surface: '#141416', line: '#2A2925', gold: '#c9a55c', goldDim: '#A8823E', green: '#7FBF9A', red: '#C0707C', text: '#EDE6D6', muted: '#B8B0A2' };
+  const C = { bg: '#0C0B0A', bgDeep: '#080706', surface: '#161412', line: '#2E2A24', gold: '#d9c08a', goldDim: '#B8995E', green: '#7FBF9A', red: '#C0707C', text: '#F4EEE2', muted: '#BFB6A6' };
   const F = (w, s) => w + ' ' + s + 'px "Plus Jakarta Sans", "Segoe UI", Arial, sans-serif';
   const S = (w, s) => (w >= 600 ? 600 : 500) + ' ' + Math.round(s * 1.0) + 'px "Playfair Display", Georgia, serif';
   function fit(text, max, font) {
@@ -744,12 +744,12 @@ h2 { font-size: 22px; }
     ctx.save(); ctx.translate(x, y);
     ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fillStyle = C.surface; ctx.fill();
     ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, r * 0.95, -Math.PI / 2, -Math.PI / 4); ctx.closePath();
-    ctx.fillStyle = 'rgba(201,165,92,0.32)'; ctx.fill();
+    ctx.fillStyle = 'rgba(217,192,138,0.32)'; ctx.fill();
     ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(-Math.PI / 4) * r * 0.95, Math.sin(-Math.PI / 4) * r * 0.95);
     ctx.strokeStyle = C.gold; ctx.lineWidth = r * 0.075; ctx.lineCap = 'round'; ctx.stroke();
     ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.strokeStyle = C.gold; ctx.lineWidth = r * 0.085; ctx.stroke();
-    ctx.beginPath(); ctx.arc(0, 0, r * 0.63, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(201,165,92,0.5)'; ctx.lineWidth = r * 0.045; ctx.stroke();
-    ctx.beginPath(); ctx.arc(0, 0, r * 0.1, 0, Math.PI * 2); ctx.fillStyle = '#e8d3a0'; ctx.fill();
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.63, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(217,192,138,0.5)'; ctx.lineWidth = r * 0.045; ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.1, 0, Math.PI * 2); ctx.fillStyle = '#f3e6c4'; ctx.fill();
     ctx.restore();
   }
   function badge(x, y, kind, r = 21) {
@@ -774,7 +774,7 @@ h2 { font-size: 22px; }
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
     // zlatá linka pri spodnom okraji
     const lg = ctx.createLinearGradient(0, 0, W, 0);
-    lg.addColorStop(0, 'rgba(201,165,92,0)'); lg.addColorStop(0.5, 'rgba(201,165,92,0.55)'); lg.addColorStop(1, 'rgba(201,165,92,0)');
+    lg.addColorStop(0, 'rgba(217,192,138,0)'); lg.addColorStop(0.5, 'rgba(217,192,138,0.55)'); lg.addColorStop(1, 'rgba(217,192,138,0)');
     ctx.fillStyle = lg; ctx.fillRect(0, H - 3, W, 1.5);
     ctx.textBaseline = 'alphabetic';
   }
@@ -1099,21 +1099,21 @@ h2 { font-size: 22px; }
   function wMark(x, y, r) {
     w.save(); w.translate(x, y);
     w.beginPath(); w.arc(0, 0, r, 0, Math.PI * 2); w.fillStyle = C.surface; w.fill();
-    w.beginPath(); w.moveTo(0, 0); w.arc(0, 0, r * 0.95, -Math.PI / 2, -Math.PI / 4); w.closePath(); w.fillStyle = 'rgba(201,165,92,0.32)'; w.fill();
+    w.beginPath(); w.moveTo(0, 0); w.arc(0, 0, r * 0.95, -Math.PI / 2, -Math.PI / 4); w.closePath(); w.fillStyle = 'rgba(217,192,138,0.32)'; w.fill();
     w.beginPath(); w.moveTo(0, 0); w.lineTo(Math.cos(-Math.PI / 4) * r * 0.95, Math.sin(-Math.PI / 4) * r * 0.95); w.strokeStyle = C.gold; w.lineWidth = r * 0.075; w.lineCap = 'round'; w.stroke();
     w.beginPath(); w.arc(0, 0, r, 0, Math.PI * 2); w.strokeStyle = C.gold; w.lineWidth = r * 0.085; w.stroke();
-    w.beginPath(); w.arc(0, 0, r * 0.63, 0, Math.PI * 2); w.strokeStyle = 'rgba(201,165,92,0.5)'; w.lineWidth = r * 0.045; w.stroke();
-    w.beginPath(); w.arc(0, 0, r * 0.1, 0, Math.PI * 2); w.fillStyle = '#e8d3a0'; w.fill();
+    w.beginPath(); w.arc(0, 0, r * 0.63, 0, Math.PI * 2); w.strokeStyle = 'rgba(217,192,138,0.5)'; w.lineWidth = r * 0.045; w.stroke();
+    w.beginPath(); w.arc(0, 0, r * 0.1, 0, Math.PI * 2); w.fillStyle = '#f3e6c4'; w.fill();
     w.restore();
   }
-  const goldGrad = (x0, x1) => { const g = w.createLinearGradient(x0, 0, x1, 0); g.addColorStop(0, '#E8D3A0'); g.addColorStop(1, '#C9A55C'); return g; };
+  const goldGrad = (x0, x1) => { const g = w.createLinearGradient(x0, 0, x1, 0); g.addColorStop(0, '#F3E6C4'); g.addColorStop(1, '#D9C08A'); return g; };
   const hline = (x0, x1, y) => { w.strokeStyle = C.line; w.lineWidth = 1.5; w.beginPath(); w.moveTo(x0, y); w.lineTo(x1, y); w.stroke(); };
   // Prvý obrázok: 9 tipov so štatistikou; ďalšie (karusel): po 12 tipov.
   function weekPages(rows) { const out = [rows.slice(0, 9)]; for (let i = 9; i < rows.length; i += 12) out.push(rows.slice(i, i + 12)); return out; }
   function drawWeek(i, pages) {
     const W = 1080, H = 1350, L = 100, R = 980, s = weekStats(weekTips), list = pages[i] || [], total = pages.length;
     w.clearRect(0, 0, W, H); w.fillStyle = C.bg; w.fillRect(0, 0, W, H);
-    w.strokeStyle = 'rgba(201,165,92,0.35)'; w.lineWidth = 1.5; w.strokeRect(36.5, 36.5, W - 73, H - 73);
+    w.strokeStyle = 'rgba(217,192,138,0.35)'; w.lineWidth = 1.5; w.strokeRect(36.5, 36.5, W - 73, H - 73);
     w.textBaseline = 'alphabetic';
     // Hlavička: zlatá linka + TÝŽDEŇ 41 · 6. – 12. 10.
     w.strokeStyle = C.gold; w.lineWidth = 2; w.beginPath(); w.moveTo(L, 126); w.lineTo(L + 56, 126); w.stroke();

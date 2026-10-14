@@ -28,10 +28,10 @@
     --surface: #15120e;
     --surface-2: #1b1712;
     --border: #2e271d;
-    --line: rgba(201,165,92,.2);
-    --gold: #c9a55c;
-    --gold-bright: #e8d3a0;
-    --gold-deep: #8e6b2e;
+    --line: rgba(217,192,138,.2);
+    --gold: #d9c08a;
+    --gold-bright: #f3e6c4;
+    --gold-deep: #9c8250;
     --danger: #d07a84;
     --success: #8fc4a2;
     --text: #efe8d8;
@@ -178,7 +178,7 @@
     background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
     padding: 26px 30px; min-width: 160px;
   }
-  .price-card.vip { border-color: var(--gold); background: linear-gradient(180deg, rgba(201,165,92,0.12), rgba(201,165,92,0) 60%), var(--surface); }
+  .price-card.vip { border-color: var(--gold); background: linear-gradient(180deg, rgba(217,192,138,0.12), rgba(217,192,138,0) 60%), var(--surface); }
   .price-card .tag { font-size: 11.5px; color: var(--gold-bright); margin-bottom: 6px; }
   .price-card .amount { font-family: var(--font-display); font-size: 34px; font-weight: 800; letter-spacing: -0.02em; }
   .price-card .per { font-size: 12px; color: var(--text-muted); }
@@ -307,7 +307,7 @@
 
   .mock-tip {
     border: 1px solid var(--line); border-left: 2px solid var(--gold); border-radius: 14px;
-    background: linear-gradient(90deg, rgba(201,165,92,.12), transparent 70%), var(--surface);
+    background: linear-gradient(90deg, rgba(217,192,138,.12), transparent 70%), var(--surface);
   }
   .mock-tip-title { font-family: var(--font-display); font-weight: 500; font-size: 22px; letter-spacing: 0; }
   .mock-tip-explain { font-style: normal; color: #c4baa6; }
@@ -325,14 +325,14 @@
   .price-card { border-radius: 16px; }
   .price-card .tag { font-weight: 500; color: var(--gold-bright); }
   .price-card .amount { font-weight: 600; letter-spacing: 0; font-size: 46px; font-variant-numeric: lining-nums; }
-  .price-card.vip { box-shadow: 0 24px 50px -30px rgba(201,165,92,.6); }
+  .price-card.vip { box-shadow: 0 24px 50px -30px rgba(217,192,138,.6); }
 
   .contact-line { font-weight: 400; color: var(--gold-bright); }
 
   .progress-seg { background: var(--border); }
   .progress-seg-fill { background: linear-gradient(90deg, var(--gold), var(--gold-bright)); }
-  .play-btn { background: var(--surface); border-color: rgba(201,165,92,.35); color: var(--gold-bright); }
-  .play-btn:hover { background: rgba(201,165,92,.1); }
+  .play-btn { background: var(--surface); border-color: rgba(217,192,138,.35); color: var(--gold-bright); }
+  .play-btn:hover { background: rgba(217,192,138,.1); }
   :focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 2px; }
 
   @media (max-aspect-ratio: 3/4) {
@@ -346,8 +346,8 @@
 
   /* odkaz späť na tipradar.eu */
   a.brand-mark-fixed { text-decoration: none; z-index: 5; }
-  .back-home { position: absolute; z-index: 5; top: max(12px, env(safe-area-inset-top, 0px)); right: 20px; display: inline-flex; align-items: center; min-height: 38px; padding: 0 16px; border: 1px solid rgba(201,165,92,.45); border-radius: 2px; color: var(--gold-bright, #E8D3A0); font: 600 11.5px/1 var(--font-body); letter-spacing: .16em; text-transform: uppercase; text-decoration: none; background: rgba(11,11,12,.7); }
-  .back-home:hover { border-color: #C9A55C; }
+  .back-home { position: absolute; z-index: 5; top: max(12px, env(safe-area-inset-top, 0px)); right: 20px; display: inline-flex; align-items: center; min-height: 38px; padding: 0 16px; border: 1px solid rgba(217,192,138,.45); border-radius: 2px; color: var(--gold-bright, #F3E6C4); font: 600 11.5px/1 var(--font-body); letter-spacing: .16em; text-transform: uppercase; text-decoration: none; background: rgba(12,11,10,.7); }
+  .back-home:hover { border-color: #D9C08A; }
   @media (max-width: 480px) { .back-home { right: 12px; padding: 0 12px; font-size: 10.5px; letter-spacing: .12em; } }
 
   /* ---------- Väčšie snímky: obsah sa zväčší podľa okna (--s nastavuje skript) ---------- */
@@ -362,8 +362,8 @@
 
 <a class="brand-mark-fixed" href="https://tipradar.eu/" aria-label="TipRadar – späť na úvodnú stránku">
   <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <defs><linearGradient id="rmBrand" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2e2b4"/><stop offset=".45" stop-color="#c9a55c"/><stop offset="1" stop-color="#8e6b2e"/></linearGradient></defs>
-    <circle cx="100" cy="100" r="92" fill="#15120e"/><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#c9a55c" fill-opacity=".32"/><line x1="100" y1="100" x2="162.2" y2="37.8" stroke="url(#rmBrand)" stroke-width="7" stroke-linecap="round"/><circle cx="100" cy="100" r="92" fill="none" stroke="url(#rmBrand)" stroke-width="8"/><circle cx="100" cy="100" r="58" fill="none" stroke="#c9a55c" stroke-opacity=".5" stroke-width="4"/><circle cx="100" cy="100" r="9" fill="#e8d3a0"/>
+    <defs><linearGradient id="rmBrand" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7ecd0"/><stop offset=".45" stop-color="#d9c08a"/><stop offset="1" stop-color="#9c8250"/></linearGradient></defs>
+    <circle cx="100" cy="100" r="92" fill="#15120e"/><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#d9c08a" fill-opacity=".32"/><line x1="100" y1="100" x2="162.2" y2="37.8" stroke="url(#rmBrand)" stroke-width="7" stroke-linecap="round"/><circle cx="100" cy="100" r="92" fill="none" stroke="url(#rmBrand)" stroke-width="8"/><circle cx="100" cy="100" r="58" fill="none" stroke="#d9c08a" stroke-opacity=".5" stroke-width="4"/><circle cx="100" cy="100" r="9" fill="#f3e6c4"/>
   </svg>
   TipRadar
 </a>
@@ -373,19 +373,19 @@
 
   <div class="slide" data-duration="4000">
     <svg class="radar-illustration" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <defs><linearGradient id="rmBig" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2e2b4"/><stop offset=".45" stop-color="#c9a55c"/><stop offset="1" stop-color="#8e6b2e"/></linearGradient>
+      <defs><linearGradient id="rmBig" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7ecd0"/><stop offset=".45" stop-color="#d9c08a"/><stop offset="1" stop-color="#9c8250"/></linearGradient>
       <radialGradient id="rmGlow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#2a241b"/><stop offset="1" stop-color="#15120e"/></radialGradient></defs>
       <circle cx="120" cy="120" r="112" fill="url(#rmGlow)"/>
-      <circle cx="120" cy="120" r="82" fill="none" stroke="#c9a55c" stroke-opacity=".28" stroke-width="1.5"/>
-      <circle cx="120" cy="120" r="47" fill="none" stroke="#c9a55c" stroke-opacity=".28" stroke-width="1.5"/>
-      <line x1="8" y1="120" x2="232" y2="120" stroke="#c9a55c" stroke-opacity=".14"/>
-      <line x1="120" y1="8" x2="120" y2="232" stroke="#c9a55c" stroke-opacity=".14"/>
+      <circle cx="120" cy="120" r="82" fill="none" stroke="#d9c08a" stroke-opacity=".28" stroke-width="1.5"/>
+      <circle cx="120" cy="120" r="47" fill="none" stroke="#d9c08a" stroke-opacity=".28" stroke-width="1.5"/>
+      <line x1="8" y1="120" x2="232" y2="120" stroke="#d9c08a" stroke-opacity=".14"/>
+      <line x1="120" y1="8" x2="120" y2="232" stroke="#d9c08a" stroke-opacity=".14"/>
       <g class="radar-sweep">
-      <path d="M 120 120 L 120 14 A 106 106 0 0 1 197 61 Z" fill="#c9a55c" fill-opacity="0.3"/>
+      <path d="M 120 120 L 120 14 A 106 106 0 0 1 197 61 Z" fill="#d9c08a" fill-opacity="0.3"/>
       <line x1="120" y1="120" x2="197" y2="61" stroke="url(#rmBig)" stroke-width="4" stroke-linecap="round"/>
       </g>
       <circle cx="120" cy="120" r="112" fill="none" stroke="url(#rmBig)" stroke-width="5"/>
-      <circle cx="120" cy="120" r="6" fill="#e8d3a0"/>
+      <circle cx="120" cy="120" r="6" fill="#f3e6c4"/>
     </svg>
     <div class="kicker">Štatistický model, nie odhad od oka</div>
     <h1>Futbalové tipy podložené číslami</h1>
@@ -633,7 +633,7 @@
       history.replaceState(null, "", location.pathname + (qs.toString() ? "?" + qs : "") + location.hash);
       var n = document.createElement("div");
       n.textContent = off ? "Toto zariadenie sa už nepočíta do návštevnosti." : "Toto zariadenie sa znova počíta do návštevnosti.";
-      n.style.cssText = "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:9999;background:#141416;color:#EDE6D6;border:1px solid #C9A55C;padding:12px 18px;border-radius:3px;font:14px/1.4 system-ui,sans-serif;max-width:90vw;text-align:center";
+      n.style.cssText = "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:9999;background:#161412;color:#F4EEE2;border:1px solid #D9C08A;padding:12px 18px;border-radius:3px;font:14px/1.4 system-ui,sans-serif;max-width:90vw;text-align:center";
       document.body.appendChild(n); setTimeout(function () { n.remove(); }, 5000);
     }
     if (localStorage.getItem("tr_owner") === "1") return;

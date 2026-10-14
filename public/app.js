@@ -2986,12 +2986,12 @@ document.getElementById("btImgBtn").addEventListener("click", async (e) => {
   btn.textContent = "Ukladám…";
   // celý výsledok (bez rolovania) do jedného širokého obrázka
   const box = document.createElement("div");
-  box.style.cssText = "position:absolute;left:-10000px;top:0;width:1200px;padding:28px;background:#141416;color:#EDE6D6;";
+  box.style.cssText = "position:absolute;left:-10000px;top:0;width:1200px;padding:28px;background:#161412;color:#F4EEE2;";
   box.innerHTML = `<h3 style="margin:0 0 12px;font-size:20px;">${escapeHtml(btExportTitle())}</h3>${document.getElementById("btReport").innerHTML}`;
   document.body.appendChild(box);
   try {
     const h2c = await loadHtml2canvas();
-    const canvas = await h2c(box, { backgroundColor: "#141416", scale: 1.5 });
+    const canvas = await h2c(box, { backgroundColor: "#161412", scale: 1.5 });
     const p = (btLastJob && btLastJob.params) || {};
     const a = document.createElement("a");
     a.href = canvas.toDataURL("image/png");
