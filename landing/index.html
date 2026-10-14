@@ -938,30 +938,6 @@
   .rv.in { opacity: 1; transform: none; transition: opacity .9s cubic-bezier(.2,.7,.2,1), transform .9s cubic-bezier(.2,.7,.2,1); transition-delay: var(--rv-d, 0s); }
   @media (prefers-reduced-motion: reduce) { .rv { opacity: 1; transform: none; } }
 
-  /* 2) výsledky priamo v úvode */
-  .proof { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: 0; margin-top: 44px; padding-top: 26px; border-top: 1px solid var(--rule-gold); text-decoration: none; }
-  .proof[hidden] { display: none; }
-  .proof > div { padding-right: 36px; margin-right: 36px; border-right: 1px solid var(--rule); }
-  .proof > div:last-of-type { padding-right: 0; margin-right: 0; border-right: 0; }
-  .proof b { display: block; font: 400 clamp(34px, 3.4vw, 44px)/1 var(--serif); letter-spacing: -0.02em; color: var(--gold-hi); }
-  .proof b.pos { color: var(--win); } .proof b.neg { color: var(--loss); }
-  .proof span { display: block; margin-top: 10px; font-size: 10.5px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--faint); }
-  .proof-note { display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; font-size: 13px; color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--rule-gold); padding-bottom: 2px; }
-  .proof-note:hover { color: var(--gold-hi); border-color: var(--gold); }
-  .proof-note[hidden] { display: none; }
-  /* na počítači menej vzduchu nad nadpisom, aby boli čísla vidieť hneď po otvorení */
-  @media (min-width: 961px) {
-    .hero { padding-top: 76px; }
-    .hero h1 { font-size: clamp(50px, 6.2vw, 84px); }
-    .proof { margin-top: 34px; padding-top: 22px; }
-  }
-  @media (max-width: 640px) {
-    .proof { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 36px; padding-top: 22px; }
-    .proof > div { padding-right: 12px; margin-right: 12px; }
-    .proof b { font-size: 30px; }
-    .proof span { font-size: 9.5px; letter-spacing: .16em; }
-  }
-
   /* 4) podpis zakladateľa namiesto iniciál */
   .sign::before { content: none; }
   .sign span.sig { text-transform: none; margin-top: 0; }
@@ -991,13 +967,13 @@
      Fotka štadióna v úvode a svetlá sekcia „Kto za tým je“ (14. 10. 2026)
      ================================================================ */
   .hero { background:
-      linear-gradient(90deg, rgba(12,11,10,.94) 0%, rgba(12,11,10,.78) 34%, rgba(12,11,10,.28) 68%, rgba(12,11,10,.18) 100%),
-      linear-gradient(180deg, rgba(12,11,10,.35) 0%, rgba(12,11,10,0) 25%, rgba(12,11,10,.15) 72%, #0C0B0A 100%),
+      linear-gradient(90deg, rgba(12,11,10,.82) 0%, rgba(12,11,10,.5) 30%, rgba(12,11,10,0) 60%),
+      linear-gradient(180deg, rgba(12,11,10,0) 0%, rgba(12,11,10,0) 70%, #0C0B0A 100%),
       url("/obrazky/stadion.jpg") center 35% / cover no-repeat #0C0B0A; }
   @media (max-width: 960px) {
     .hero { background:
-      linear-gradient(180deg, rgba(12,11,10,.42) 0%, rgba(12,11,10,.72) 30%, rgba(12,11,10,.9) 55%, #0C0B0A 80%),
-      url("/obrazky/stadion-mobil.jpg") center top / auto 62% no-repeat #0C0B0A; }
+      linear-gradient(180deg, rgba(12,11,10,.1) 0%, rgba(12,11,10,.38) 30%, rgba(12,11,10,.72) 58%, #0C0B0A 85%),
+      url("/obrazky/stadion-mobil.jpg") center top / auto 70% no-repeat #0C0B0A; }
   }
 
   #kto { background: linear-gradient(180deg, #F6F1E6, #EFE7D7); color: #1D1A17; }
@@ -1012,6 +988,42 @@
   #kto .sign .sig { background: linear-gradient(100deg, #7A5A22 0%, #B8995E 45%, #8E6B2E 75%, #6E5020 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
   #kto .sign .sig-line { background: linear-gradient(90deg, transparent, #9C8250, transparent); }
   #kto :focus-visible { outline-color: #7E6328; }
+
+  /* Včerajší (posledný vyhodnotený) tip pod úvodom */
+  .yday { padding: 0 0 8px; margin-top: -40px; position: relative; z-index: 2; }
+  .yday[hidden] { display: none; }
+  .yday-card { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 36px; padding: 26px 32px; background: linear-gradient(135deg, #1D1A17, #141210); border: 1px solid rgba(217,192,138,.35); outline: 1px solid rgba(217,192,138,.12); outline-offset: -7px; box-shadow: 0 40px 80px -50px rgba(0,0,0,.9); }
+  .yday-date { text-align: center; padding-right: 34px; border-right: 1px solid var(--rule); }
+  .yday-date small { display: block; font-size: 10.5px; font-weight: 600; letter-spacing: .24em; text-transform: uppercase; color: var(--gold); }
+  .yday-date b { display: block; margin-top: 6px; font: 400 40px/1 var(--serif); color: var(--gold-hi); }
+  .yday-date span { display: block; margin-top: 4px; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--faint); }
+  .yday-main { min-width: 0; }
+  .yday-main .lg { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--faint); }
+  .yday-main .lg:empty { display: none; }
+  .yday-main h3 { margin-top: 6px; font: 400 28px/1.2 var(--serif); color: var(--text); }
+  .yday-main h3 em { font-style: italic; color: var(--gold-hi); margin-left: 10px; font-size: 22px; }
+  .yday-main h3 em:empty { display: none; }
+  .yday-main p { margin-top: 6px; color: var(--muted); font-size: 15.5px; overflow-wrap: anywhere; }
+  .yday-main p b { color: var(--text); font-weight: 600; }
+  .yday-main .meta { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-top: 12px; font-size: 13px; color: var(--faint); }
+  .yday-main .meta b { color: var(--gold-hi); font-weight: 600; margin-left: 4px; }
+  .yday-res { text-align: center; }
+  .yday-badge { display: inline-flex; align-items: center; gap: 10px; padding: 12px 20px; border: 1px solid rgba(127,191,154,.5); background: rgba(127,191,154,.08); color: var(--win); font-size: 12px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; white-space: nowrap; }
+  .yday-badge.lost { border-color: rgba(192,112,124,.5); background: rgba(192,112,124,.08); color: var(--loss); }
+  .yday-badge.void { border-color: var(--rule-gold); background: transparent; color: var(--muted); }
+  .yday-res a { display: block; margin-top: 12px; font-size: 13px; color: var(--muted); text-decoration: none; }
+  .yday-res a:hover { color: var(--gold-hi); }
+  @media (max-width: 760px) {
+    .yday { margin-top: -24px; }
+    .yday-card { grid-template-columns: minmax(0,1fr); gap: 18px; padding: 22px 20px; text-align: center; }
+    .yday-date { padding: 0 0 16px; border-right: 0; border-bottom: 1px solid var(--rule); }
+    .yday-main .meta { justify-content: center; }
+    .yday-main h3 em { display: block; margin: 4px 0 0; }
+  }
+
+  /* bez radaru v úvode, štadión výraznejší */
+  .hero::before { content: none; }
+  .hero .radar { display: none; }
 </style>
 </head>
 <body>
@@ -1082,7 +1094,6 @@
     </div>
   </header>
   <section class="hero" data-pages="home">
-    <div class="radar" aria-hidden="true"><svg viewBox="0 0 860 860" aria-hidden="true"><circle cx="430" cy="430" r="110" fill="none" stroke="#D9C08A" stroke-opacity="0.22" stroke-width="1"/><circle cx="430" cy="430" r="210" fill="none" stroke="#D9C08A" stroke-opacity="0.2" stroke-width="1"/><circle cx="430" cy="430" r="310" fill="none" stroke="#D9C08A" stroke-opacity="0.17" stroke-width="1"/><circle cx="430" cy="430" r="410" fill="none" stroke="#D9C08A" stroke-opacity="0.22" stroke-width="1"/><path d="M430 20V840M20 430H840" stroke="#D9C08A" stroke-opacity=".10" stroke-width="1"/><path d="M140 140L720 720M720 140L140 720" stroke="#D9C08A" stroke-opacity=".05" stroke-width="1"/><path d="M430.0 20.0L430.0 34.0M465.7 21.6L465.2 27.5M501.2 26.2L500.2 32.1M536.1 34.0L534.6 39.8M570.2 44.7L568.2 50.4M603.3 58.4L600.7 63.9M635.0 74.9L628.0 87.1M665.2 94.1L661.7 99.1M693.5 115.9L689.7 120.5M719.9 140.1L715.7 144.3M744.1 166.5L739.5 170.3M765.9 194.8L760.9 198.3M785.1 225.0L772.9 232.0M801.6 256.7L796.1 259.3M815.3 289.8L809.6 291.8M826.0 323.9L820.2 325.4M833.8 358.8L827.9 359.8M838.4 394.3L832.5 394.8M840.0 430.0L826.0 430.0M838.4 465.7L832.5 465.2M833.8 501.2L827.9 500.2M826.0 536.1L820.2 534.6M815.3 570.2L809.6 568.2M801.6 603.3L796.1 600.7M785.1 635.0L772.9 628.0M765.9 665.2L760.9 661.7M744.1 693.5L739.5 689.7M719.9 719.9L715.7 715.7M693.5 744.1L689.7 739.5M665.2 765.9L661.7 760.9M635.0 785.1L628.0 772.9M603.3 801.6L600.7 796.1M570.2 815.3L568.2 809.6M536.1 826.0L534.6 820.2M501.2 833.8L500.2 827.9M465.7 838.4L465.2 832.5M430.0 840.0L430.0 826.0M394.3 838.4L394.8 832.5M358.8 833.8L359.8 827.9M323.9 826.0L325.4 820.2M289.8 815.3L291.8 809.6M256.7 801.6L259.3 796.1M225.0 785.1L232.0 772.9M194.8 765.9L198.3 760.9M166.5 744.1L170.3 739.5M140.1 719.9L144.3 715.7M115.9 693.5L120.5 689.7M94.1 665.2L99.1 661.7M74.9 635.0L87.1 628.0M58.4 603.3L63.9 600.7M44.7 570.2L50.4 568.2M34.0 536.1L39.8 534.6M26.2 501.2L32.1 500.2M21.6 465.7L27.5 465.2M20.0 430.0L34.0 430.0M21.6 394.3L27.5 394.8M26.2 358.8L32.1 359.8M34.0 323.9L39.8 325.4M44.7 289.8L50.4 291.8M58.4 256.7L63.9 259.3M74.9 225.0L87.1 232.0M94.1 194.8L99.1 198.3M115.9 166.5L120.5 170.3M140.1 140.1L144.3 144.3M166.5 115.9L170.3 120.5M194.8 94.1L198.3 99.1M225.0 74.9L232.0 87.1M256.7 58.4L259.3 63.9M289.8 44.7L291.8 50.4M323.9 34.0L325.4 39.8M358.8 26.2L359.8 32.1M394.3 21.6L394.8 27.5" stroke="#D9C08A" stroke-opacity=".28" stroke-width="1"/></svg><div class="sweep"></div><i class="blip" style="left:78.52%;top:24.32%;animation-delay:1.20s"></i><i class="blip" style="left:69.41%;top:57.84%;animation-delay:2.80s"></i><i class="blip" style="left:61.14%;top:91.56%;animation-delay:4.12s"></i><i class="blip" style="left:26.18%;top:68.61%;animation-delay:5.80s"></i><i class="blip" style="left:10.73%;top:27.33%;animation-delay:7.50s"></i><i class="blip" style="left:55.97%;top:33.61%;animation-delay:0.50s"></i></div>
     <div class="wrap">
       <div>
         <div class="eyebrow">Futbalové tipy podložené štatistickým modelom</div>
@@ -1092,12 +1103,6 @@
           <a class="btn" href="#clenstvo">Zapísať sa do poradovníka</a>
           <a class="btn btn-ghost" href="#vysledky">Pozrieť výsledky</a>
         </div>
-        <div class="proof" id="heroProof" hidden>
-          <div><b class="num" id="hpCount">–</b><span id="hpCountLbl">vyhodnotených tipov</span></div>
-          <div><b class="num" id="hpRate">–</b><span>vyšlo</span></div>
-          <div id="hpRoiBox"><b class="num" id="hpRoi">–</b><span>ROI</span></div>
-        </div>
-        <a class="proof-note" id="heroProofNote" href="#vysledky" hidden>Výhry aj prehry, každý tip od začiatku <span aria-hidden="true">→</span></a>
       </div>
 
       <figure class="duel" id="duel" aria-label="Ilustrácia: model porovnáva svoju pravdepodobnosť s kurzom stávkovej kancelárie">
@@ -1119,6 +1124,20 @@
     </div>
   </section>
 
+  <section class="yday" id="yday" data-pages="home" aria-label="Posledný vyhodnotený tip" hidden>
+    <div class="wrap">
+      <div class="yday-card">
+        <div class="yday-date"><small id="ydLbl">Včerajší tip</small><b class="num" id="ydDay"></b><span id="ydMonth"></span></div>
+        <div class="yday-main">
+          <div class="lg" id="ydLeague"></div>
+          <h3><span id="ydMatch"></span><em class="num" id="ydScore"></em></h3>
+          <p id="ydBet"></p>
+          <div class="meta" id="ydMeta"></div>
+        </div>
+        <div class="yday-res"><span class="yday-badge" id="ydBadge"></span><a href="#vysledky">Všetky výsledky →</a></div>
+      </div>
+    </div>
+  </section>
   <section class="sec" id="ako" data-pages="home">
     <div class="wrap split how">
       <div>
@@ -1748,18 +1767,34 @@
       }
       recentAll = d.recent || [];
       drawList(); drawChart(d.timeline); drawSlips(d.slips || []);
+      // Včerajší (posledný vyhodnotený) tip pod úvodom – výhra aj prehra
+      const L = d.latest, yd = document.getElementById("yday");
+      if (yd && L && L.day && (L.status === "won" || L.status === "lost" || L.status === "void")) {
+        const [ly, lm, ldd] = String(L.day).split("-").map(Number);
+        const pad = (x) => String(x).padStart(2, "0");
+        const now = new Date(), yest = new Date(now.getTime() - 864e5);
+        const key = (t) => `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`;
+        $("ydLbl").textContent = L.day === key(yest) ? "Včerajší tip" : L.day === key(now) ? "Dnešný tip" : "Posledný tip";
+        $("ydDay").textContent = ldd + ".";
+        $("ydMonth").textContent = MONTHS[lm - 1] || "";
+        $("ydLeague").textContent = [L.league, L.strong ? "★ Silný tip dňa" : ""].filter(Boolean).join(" · ");
+        $("ydMatch").textContent = L.match || "";
+        $("ydScore").textContent = L.score || "";
+        const bi = String(L.bet || "").indexOf(": ");
+        $("ydBet").innerHTML = bi > 0 ? `${esc(L.bet.slice(0, bi))}: <b>${esc(L.bet.slice(bi + 2))}</b>` : `<b>${esc(L.bet || "")}</b>`;
+        const meta = [];
+        if (L.odds) meta.push(`<span>Kurz<b class="num">${String(Number(L.odds).toFixed(2)).replace(".", ",")}</b></span>`);
+        if (L.probability) meta.push(`<span>Dôvera<b class="num">${L.probability}&nbsp;%</b></span>`);
+        if (L.dayTotal > 1) meta.push(`<span>V ten deň<b class="num">${L.dayWon} z ${L.dayTotal}</b></span>`);
+        $("ydMeta").innerHTML = meta.join("");
+        const b = $("ydBadge");
+        b.className = "yday-badge" + (L.status === "lost" ? " lost" : L.status === "void" ? " void" : "");
+        b.textContent = L.status === "won" ? "✓ Vyšlo" : L.status === "lost" ? "✗ Nevyšlo" : "↺ Vrátené";
+        yd.hidden = false;
+      }
       if (!d.totalResolved) { $("month").textContent = "Čísla sa zobrazia po prvých vyhodnotených tipoch."; return; }
       const n = d.totalResolved;
       drawLast10();
-      // výsledky aj hore v úvode (rozbehnú sa hneď po načítaní)
-      if ($("heroProof")) {
-        $("heroProof").hidden = false; $("heroProofNote").hidden = false;
-        $("hpCountLbl").textContent = tipsWord(n);
-        countUp($("hpCount"), n, 0, (v) => String(v));
-        countUp($("hpRate"), d.winRate, 0, (v) => `${v} %`);
-        if (d.withOdds > 0) { $("hpRoi").className = "num " + cls(d.roi); countUp($("hpRoi"), d.roi, 0, (v) => `${signed(v, 0)} %`); }
-        else $("hpRoiBox").remove();
-      }
       $("fCountLbl").textContent = tipsWord(n);
       if (d.withOdds > 0) {
         $("fProfit").className = "num " + cls(d.profit); $("fRoi").className = "num " + cls(d.roi);
