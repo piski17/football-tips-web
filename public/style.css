@@ -1,3 +1,4 @@
+html { font-size-adjust: .5; } /* Cormorant + Jost v rovnakej veľkosti ako predtým */
 :root {
   /* Vizuálna identita TipRadar „Onyx a zlato“ – rovnaká ako tipradar.eu. */
   --bg: #0C0B0A;
@@ -15,8 +16,8 @@
   --text: #F4EEE2;
   --text-muted: #BFB6A6;
 
-  --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
-  --font-body: "Plus Jakarta Sans", "Helvetica Neue", Arial, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --font-body: "Jost", "Helvetica Neue", Arial, system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 * {

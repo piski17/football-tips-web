@@ -10,16 +10,18 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=Plus+Jakarta+Sans:wght@400;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 <style>
+  html { font-size-adjust: .5; } /* Cormorant + Jost v rovnakej veľkosti ako predtým */
+
   :root { --bg: #0C0B0A; --rule: #2E2A24; --rule-gold: rgba(217,192,138,.32); --gold: #D9C08A; --gold-hi: #F3E6C4; --text: #F4EEE2; --muted: #BFB6A6; --faint: #8C8476; }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 400 17px/1.7 "Plus Jakarta Sans", "Helvetica Neue", Arial, sans-serif; border-top: 2px solid var(--gold); -webkit-font-smoothing: antialiased; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 400 17px/1.7 "Jost", "Helvetica Neue", Arial, sans-serif; border-top: 2px solid var(--gold); -webkit-font-smoothing: antialiased; }
   .wrap { width: min(760px, 100% - 48px); margin-inline: auto; padding: 56px 0 96px; }
   @media (max-width: 640px) { .wrap { width: calc(100% - 32px); padding-top: 40px; } }
   a { color: var(--gold-hi); text-decoration-color: var(--rule-gold); text-underline-offset: 4px; }
   .back { font-size: 12px; letter-spacing: .2em; text-transform: uppercase; text-decoration: none; color: var(--gold); }
-  h1, h2 { font-family: "Playfair Display", Georgia, serif; font-weight: 400; letter-spacing: -0.02em; }
+  h1, h2 { font-family: "Cormorant Garamond", Georgia, serif; font-weight: 400; letter-spacing: -0.02em; }
   h1 { font-size: clamp(36px, 5vw, 52px); line-height: 1.1; margin: 40px 0 8px; }
   h2 { font-size: 24px; margin: 44px 0 10px; padding-top: 28px; border-top: 1px solid var(--rule); }
   p, li { color: var(--muted); }
