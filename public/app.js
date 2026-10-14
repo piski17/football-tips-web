@@ -2596,6 +2596,8 @@ function openEditTip(tip) {
       <label class="edit-row">Kurz <input type="text" id="editOdds" inputmode="decimal" value="${
         typeof tip.odds === "number" && tip.odds > 1 ? String(tip.odds).replace(".", ",") : ""
       }" placeholder="napr. 1,75" /></label>
+      <label class="edit-row" style="justify-content:flex-start;gap:10px;cursor:pointer;"><input type="checkbox" id="editWatch" ${tip.watchOnly ? "checked" : ""} style="width:18px;height:18px;flex:0 0 auto;" /> 👁 Len sledovať</label>
+      <p class="muted small" style="margin:-4px 0 6px;">Sledovaný tip sa neráta do štatistík, nie je na webe a neposiela sa členom.</p>
       <p class="muted small" id="editMsg" style="min-height:1.4em;"></p>
       <div class="modal-actions">
         <button class="btn-ghost" id="editCancelBtn">Zrušiť</button>
@@ -2620,7 +2622,7 @@ function openEditTip(tip) {
       $e("editMsg").textContent = "Kurz musí byť číslo väčšie ako 1 (napr. 1,75), alebo nechaj políčko prázdne.";
       return;
     }
-    const edit = { odds };
+    const edit = { odds, watchOnly: $e("editWatch").checked };
     if (isTicket) edit.legs = legStatuses().map((status) => ({ status }));
     else edit.status = $e("editStatus").value;
     $e("editSaveBtn").disabled = true;

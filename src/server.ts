@@ -1390,7 +1390,18 @@ app.post("/api/tips/:id/edit", async (req, res) => {
       res.status(404).json({ error: "Tip sa nenašiel." });
       return;
     }
-    await updateTip(tip.id, buildTipEdit(tip, req.body ?? {}));
+    const patch = buildTipEdit(tip, req.body ?? {});
+    // „Len sledovať“ sa dá zapnúť aj dodatočne (napr. tip z Ligy majstrov uložený ako bežný).
+    if (typeof req.body?.watchOnly === "boolean") {
+      if (req.body.watchOnly) patch.watchOnly = true;
+      else patch.watchOnly = undefined;
+      // Samotné presunutie medzi sledované nie je oprava výsledku – bez značky „upravené“.
+      const sameStatus = patch.status === undefined || patch.status === tip.status;
+      const sameOdds = patch.odds === undefined || patch.odds === (tip.odds ?? null);
+      const sameLegs = patch.legs === undefined || JSON.stringify(patch.legs) === JSON.stringify(tip.legs);
+      if (sameStatus && sameOdds && sameLegs && !tip.edited) delete patch.edited;
+    }
+    await updateTip(tip.id, patch);
     res.json({ ok: true });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
