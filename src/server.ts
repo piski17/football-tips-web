@@ -875,14 +875,15 @@ app.get("/api/public/track-record", async (_req, res) => {
       ? withClosing.reduce((sum, t) => sum + (t.odds! / t.closingOdds! - 1) * 100, 0) / withClosing.length
       : null;
     // „Včerajší tip“ na úvod stránky: posledný deň s vyhodnotenými tipmi. Vyberá sa bez ohľadu
-    // na výsledok (Silný tip dňa, inak tip s najvyššou dôverou), aby to nebolo vyberanie len výhier.
+    // na výsledok (zápas s najneskorším výkopom), aby to nebolo vyberanie len výhier.
     let latest: any = null;
     const lastDay = resolvedAll.map((t) => tipDayKey(t) ?? "").filter(Boolean).sort().pop();
     if (lastDay) {
       const dayTips = resolvedAll.filter((t) => tipDayKey(t) === lastDay);
-      const pick =
-        dayTips.find((t) => t.strongOfDay) ??
-        [...dayTips].sort((a, b) => (b.legs?.length ? 0 : 1) - (a.legs?.length ? 0 : 1) || b.probability - a.probability)[0];
+      // Posledný vyhodnotený tip = zápas s najneskorším výkopom (bez ohľadu na výsledok).
+      const kick = (t: SavedTip) =>
+        Math.max(...(t.legs && t.legs.length > 0 ? t.legs.map((l) => l.matchDate) : [t.matchDate]).map((d) => new Date(d).getTime() || 0));
+      const pick = [...dayTips].sort((a, b) => kick(b) - kick(a))[0];
       const isTicket = Array.isArray(pick.legs) && pick.legs.length > 0;
       const hasScore = !isTicket && typeof pick.actualHomeGoals === "number" && typeof pick.actualAwayGoals === "number";
       latest = {
