@@ -1123,7 +1123,7 @@ async function openTipsHistory() {
   void renderShadowSummary();
   void renderBlendSummary();
   void renderClvSummary();
-  void renderTicketWatch();
+  // Tiché sledovanie tiketu dňa beží ďalej na pozadí, v Histórii tipov sa už nezobrazuje (14. 10. 2026).
   tipsModal.hidden = false;
   tipsListEl.innerHTML = skeletonHtml(2);
   try {
