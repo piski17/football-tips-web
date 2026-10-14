@@ -275,12 +275,12 @@ function bankPage(p: Payment, price: number, svg: string, png: string, tg: strin
     `<div class="row"><span class="k">${esc(label)}</span><span class="v">${esc(value)}</span><button type="button" class="cp" data-copy="${esc(copy)}">Kopírovať</button></div>`;
   return `<!doctype html><html lang="sk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex"><title>Platba prevodom · TipRadar</title>
-<link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Jost:wght@300;400;500;600;700&display=swap">
+<link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Jost:wght@300;400;500;600;700&display=swap">
 <style>html{font-size-adjust:.5}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#0C0B0A;color:#F4EEE2;font-family:'Jost',Arial,sans-serif;padding:32px 16px}
 .box{max-width:560px;margin:0 auto;border:1px solid rgba(217,192,138,.32);background:#161412;padding:40px 32px}
 .lab{font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:#D9C08A;font-weight:600;text-align:center}
-h1{font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;font-size:32px;letter-spacing:-.02em;margin:12px 0 6px;line-height:1.15;text-align:center}
-.price{font-family:'Cormorant Garamond',Georgia,serif;font-size:44px;text-align:center;margin:4px 0 22px;background:linear-gradient(180deg,#F3E6C4,#B8995E);-webkit-background-clip:text;background-clip:text;color:transparent}
+h1{font-family:'Noto Serif Display',Georgia,serif;font-weight:600;font-size:32px;letter-spacing:-.02em;margin:12px 0 6px;line-height:1.15;text-align:center}
+.price{font-family:'Noto Serif Display',Georgia,serif;font-size:44px;text-align:center;margin:4px 0 22px;background:linear-gradient(180deg,#F3E6C4,#B8995E);-webkit-background-clip:text;background-clip:text;color:transparent}
 .step{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#D9C08A;font-weight:700;margin:26px 0 12px}
 p{color:#BFB6A6;font-size:15px;line-height:1.6;margin:0 0 14px}
 .qr{background:#fff;padding:18px;width:260px;max-width:100%;margin:0 auto 12px;border:1px solid #D9C08A}.qr svg{display:block;width:100%;height:auto}
@@ -325,11 +325,11 @@ function paymentPage(title: string, text: string, href: string, button: string, 
   const esc = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   return `<!doctype html><html lang="sk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex">${refresh ? '<meta http-equiv="refresh" content="4">' : ""}<title>${esc(title)} · TipRadar</title>
-<link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Jost:wght@300;400;500;600;700&display=swap">
+<link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Jost:wght@300;400;500;600;700&display=swap">
 <style>html{font-size-adjust:.5}body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0C0B0A;color:#F4EEE2;font-family:'Jost',Arial,sans-serif;padding:24px;box-sizing:border-box}
 .box{max-width:520px;width:100%;border:1px solid rgba(217,192,138,.32);padding:48px 36px;text-align:center;background:#12110f}
 .lab{font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:#D9C08A;font-weight:600}
-h1{font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;font-size:34px;margin:14px 0 14px;line-height:1.15}
+h1{font-family:'Noto Serif Display',Georgia,serif;font-weight:600;font-size:34px;margin:14px 0 14px;line-height:1.15}
 p{color:#BFB6A6;font-size:16px;line-height:1.6;margin:0 0 28px}
 a.btn{display:inline-block;background:#D9C08A;color:#17130A;text-decoration:none;font-weight:700;font-size:14px;letter-spacing:.14em;text-transform:uppercase;padding:16px 28px}
 a.back{display:block;margin-top:22px;color:#8C8476;font-size:14px}</style></head>
@@ -930,6 +930,14 @@ app.get("/api/public/track-record", async (_req, res) => {
             : null,
       };
     }
+    // Kalkulačka na webe („Koľko by ste mali dnes?“): všetky vyhodnotené tipy s kurzom
+    // v poradí podľa výkopu – len kurz a výsledok, nič, čo by prezradilo čakajúci tip.
+    const kickTime = (t: SavedTip) =>
+      Math.max(...(t.legs && t.legs.length > 0 ? t.legs.map((l) => l.matchDate) : [t.matchDate]).map((d) => new Date(d).getTime() || 0));
+    const bank = resolvedAll
+      .filter((t) => typeof t.odds === "number" && t.odds > 1)
+      .sort((a, b) => kickTime(a) - kickTime(b))
+      .map((t) => ({ day: tipDayKey(t) ?? "", odds: Math.round(t.odds! * 100) / 100, won: t.status === "won" }));
     res.json({
       ...summarize(all),
       month: { key: monthKey, ...summarize(inMonth) },
@@ -944,6 +952,7 @@ app.get("/api/public/track-record", async (_req, res) => {
       recent,
       slips,
       timeline: { unit: byWeek ? "week" : "day", points: timeline },
+      bank,
     });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
