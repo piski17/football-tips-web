@@ -497,7 +497,7 @@ canvas { display: block; width: auto; max-width: 100%; max-height: 74vh; margin:
     try {
       const r = await fetch('/api/tips', { cache: 'no-store' });
       const all = await r.json();
-      tips = (Array.isArray(all) ? all : []).filter((t) => !(Array.isArray(t.legs) && t.legs.length) && t.homeTeam)
+      tips = (Array.isArray(all) ? all : []).filter((t) => !t.watchOnly && !(Array.isArray(t.legs) && t.legs.length) && t.homeTeam)
         .sort((a, b) => String(b.matchDate).localeCompare(String(a.matchDate))).slice(0, 80);
       const sel = $('pick'); sel.innerHTML = '';
       const o0 = document.createElement('option'); o0.value = ''; o0.textContent = tips.length ? 'Vyber tip…' : 'V Histórii tipov nie sú žiadne tipy'; sel.appendChild(o0);

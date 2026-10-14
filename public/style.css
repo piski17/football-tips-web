@@ -1827,3 +1827,7 @@ details.low-value-list[open] > summary { margin-bottom: 6px; }
 .tip-delete-btn.slip-btn { color: var(--text-muted, #8a8478); }
 .tip-delete-btn.slip-btn.has-slip { color: #C9A55C; }
 .tip-delete-btn.slip-btn:hover { color: #E8D3A0; }
+
+/* Sledované tipy (Len sledovať) v Histórii tipov */
+.watch-section { margin-top: 22px; padding-top: 14px; border-top: 1px dashed var(--border, #2A2925); }
+.watch-section .watch-title { margin: 0 0 4px; font-size: 18px !important; }

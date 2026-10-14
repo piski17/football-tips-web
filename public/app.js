@@ -594,6 +594,7 @@ function renderAnalysis(r) {
     </div>
     <div style="display:flex; gap:8px; margin: 4px 0 8px;">
       <button class="btn-primary save-best-bet-btn" data-bet-idx="${idx}" style="flex:1;">Uložiť tento tip</button>
+      <button class="btn-ghost save-best-bet-btn" data-bet-idx="${idx}" data-watch="1" style="flex:1;" title="Tip sa vyhodnotí, ale nebude v štatistikách, na webe ani v Telegrame">👁 Len sledovať</button>
       <button class="btn-ghost add-to-ticket-btn" data-bet-idx="${idx}" style="flex:1;">+ Do tiketu</button>
     </div>
   `
@@ -889,6 +890,7 @@ function initSaveTipButton(r) {
         return;
       }
       const fromLow = btn.dataset.source === "low"; // vyradený tip pridaný ručne
+      const watch = btn.dataset.watch === "1"; // len sledovať
       const chosenBet = (fromLow ? r.lowValueBets : r.bestBets)?.[idx];
       if (!chosenBet) return;
 
@@ -908,6 +910,7 @@ function initSaveTipButton(r) {
         probability: chosenBet.probability,
         odds: chosenBet.odds ?? null,
         ...(fromLow ? { overrideFilter: true } : {}),
+        ...(watch ? { watchOnly: true } : {}),
         savedAt: new Date().toISOString(),
         status: "pending",
       };
@@ -919,8 +922,8 @@ function initSaveTipButton(r) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(tip),
         });
-        msgEl.innerHTML = `<p class="muted small" style="margin-top:6px;">✓ Tip uložený (${escapeHtml(chosenBet.market)}: ${escapeHtml(translateNamesInText(chosenBet.selection, r.fixture.homeTeam.name, r.fixture.awayTeam.name))})</p>`;
-        await maybeOfferTelegram(tip.id);
+        msgEl.innerHTML = `<p class="muted small" style="margin-top:6px;">✓ ${watch ? "Tip uložený medzi sledované" : "Tip uložený"} (${escapeHtml(chosenBet.market)}: ${escapeHtml(translateNamesInText(chosenBet.selection, r.fixture.homeTeam.name, r.fixture.awayTeam.name))})</p>`;
+        if (!watch) await maybeOfferTelegram(tip.id);
       } catch (err) {
         msgEl.innerHTML = `<p class="muted small" style="margin-top:6px;">Uloženie zlyhalo: ${escapeHtml(err.message)}</p>`;
       } finally {
@@ -1290,8 +1293,95 @@ function overrideSummaryHtml(tips) {
 
 const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté konto"];
 
-function renderTipsList(tips) {
-  currentHistoryTips = tips;
+/** Časť „Sledované tipy“ v Histórii tipov: vlastná úspešnosť, mimo štatistík, webu aj Telegramu. */
+function watchSectionHtml(watchTips) {
+  if (!watchTips.length) return "";
+  const won = watchTips.filter((t) => t.status === "won").length;
+  const lost = watchTips.filter((t) => t.status === "lost").length;
+  const waiting = watchTips.filter((t) => t.status === "pending").length;
+  const withOdds = watchTips.filter((t) => (t.status === "won" || t.status === "lost") && typeof t.odds === "number" && t.odds > 1);
+  const profit = withOdds.reduce((sum, t) => sum + (t.status === "won" ? t.odds - 1 : -1), 0);
+  const sorted = [...watchTips].sort((a, b) => new Date(b.matchDate).getTime() - new Date(a.matchDate).getTime());
+  return `<div class="watch-section">
+    <h3 class="watch-title">👁 Sledované tipy</h3>
+    <p class="muted small" style="margin:0 0 8px;">Vyhodnocujú sa, ale nerátajú sa do štatistík, nie sú na webe a neposielajú sa členom.</p>
+    <div class="tips-summary" style="margin-bottom:8px;">
+      <span>Vyšlo: <strong>${won} z ${won + lost}</strong></span>
+      <span>Úspešnosť: <strong>${won + lost ? Math.round((won / (won + lost)) * 100) + " %" : "—"}</strong></span>
+      ${withOdds.length ? `<span>Zisk: <strong>${signed(profit, 1)} j.</strong></span>` : ""}
+      <span>Čaká: <strong>${waiting}</strong></span>
+    </div>
+    ${sorted.map(historyRowHtml).join("")}
+  </div>`;
+}
+
+function historyRowHtml(t) {
+      const date = new Date(t.matchDate).toLocaleDateString("sk-SK");
+      const rowClass = t.status === "won" ? "tip-row-won" : t.status === "lost" ? "tip-row-lost" : ""
+      const rowClassFull = rowClass + (t.archived ? " is-archived" : "");
+      const resultIconHtml =
+        t.status === "won"
+          ? `<span class="tip-result-icon won">✓</span>`
+          : t.status === "lost"
+          ? `<span class="tip-result-icon lost">✕</span>`
+          : `<span class="tip-status ${t.status}">${t.status === "void" ? "Vrátené" : "Čaká"}</span>`;
+
+      if (t.legs && t.legs.length > 0) {
+        const legsHtml = t.legs
+          .map(
+            (leg) => `
+            <div class="tip-row-market" style="padding-left: 10px; border-left: 2px solid var(--border); margin-top: 4px;">
+              ${escapeHtml(translateTeamName(leg.homeTeam))} — ${escapeHtml(translateTeamName(leg.awayTeam))}: ${escapeHtml(leg.market)}: ${escapeHtml(translateNamesInText(leg.selection, leg.homeTeam, leg.awayTeam))} · ${leg.probability.toFixed(0)} %
+            </div>`
+          )
+          .join("");
+
+        return `
+        <div class="tip-row ${rowClassFull}" data-row-id="${t.id}" style="align-items: flex-start;">
+          <div class="tip-row-info">
+            <div class="tip-row-match">🎫 Tiket (${plural(t.legs.length, "tip", "tipy", "tipov")}) <span class="muted small">(${date})</span></div>
+            <div class="tip-row-market">Kombinovaná pravdepodobnosť: ${fmtNum(t.probability, 1)} % · kurz ${tipOddsLabel(t)}${overrideBadge(t)}${manualBadge(t)}${editedBadge(t)}</div>
+            ${legsHtml}
+          </div>
+          ${resultIconHtml}
+          ${t.watchOnly ? "" : `<button class="tip-delete-btn slip-btn" data-slip-id="${t.id}" title="Snímka podaného tiketu" aria-label="Snímka podaného tiketu"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>`}
+          ${
+            t.watchOnly
+              ? `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button>`
+              : t.status === "pending"
+              ? `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button><button class="tip-delete-btn" data-send-id="${t.id}" title="Poslať do Telegram kanála" aria-label="Poslať do Telegram kanála"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="display:block"><path fill="currentColor" d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L6.2 13.1 1.3 11.6c-1-.3-1.1-1 .2-1.5L20.6 2.8c.9-.3 1.6.2 1.3 1.5z"/></svg></button>`
+              : `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button><button class="tip-delete-btn" data-result-id="${t.id}" title="Poslať výsledok do Telegramu">➤</button>`
+          }
+        </div>
+      `;
+      }
+
+      return `
+        <div class="tip-row ${rowClassFull}" data-row-id="${t.id}">
+          <div class="tip-row-info">
+            <div class="tip-row-match">${escapeHtml(translateTeamName(t.homeTeam))} — ${escapeHtml(translateTeamName(t.awayTeam))} <span class="muted small">(${date})</span></div>
+            <div class="tip-row-market">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))} · ${t.probability.toFixed(0)} % · kurz ${tipOddsLabel(t)}${overrideBadge(t)}${manualBadge(t)}${editedBadge(t)}</div>
+          </div>
+          ${resultIconHtml}
+          ${t.watchOnly ? "" : `<button class="tip-delete-btn slip-btn" data-slip-id="${t.id}" title="Snímka podaného tiketu" aria-label="Snímka podaného tiketu"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>`}
+          ${
+            t.watchOnly
+              ? `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button>`
+              : t.status === "pending"
+              ? `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button><button class="tip-delete-btn" data-send-id="${t.id}" title="Poslať do Telegram kanála" aria-label="Poslať do Telegram kanála"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="display:block"><path fill="currentColor" d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L6.2 13.1 1.3 11.6c-1-.3-1.1-1 .2-1.5L20.6 2.8c.9-.3 1.6.2 1.3 1.5z"/></svg></button>`
+              : `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button><button class="tip-delete-btn" data-result-id="${t.id}" title="Poslať výsledok do Telegramu">➤</button>`
+          }
+        </div>
+      `;
+}
+
+
+
+function renderTipsList(allTips) {
+  currentHistoryTips = allTips;
+  // Tipy „Len sledovať“ majú vlastnú časť a nerátajú sa do štatistík.
+  const watchTips = allTips.filter((t) => t.watchOnly);
+  const tips = allTips.filter((t) => !t.watchOnly);
   // Tipy na trhy, ktoré appka už neponúka (dvojšanca, presný výsledok, čisté
   // konto), ostávajú v zozname, ale nerátajú sa do štatistík.
   const statTips = tips.filter((t) => !EXCLUDED_STATS_MARKETS.includes(t.market));
@@ -1327,68 +1417,14 @@ function renderTipsList(tips) {
 
   if (visible.length === 0) {
     tipsListEl.innerHTML =
-      archivedBar + `<p class="empty-state">${tips.length === 0 ? "Zatiaľ nemáš uložené žiadne tipy." : "Všetky tipy sú skryté."}</p>`;
-    wireArchivedToggle();
-    return;
+      archivedBar + `<p class="empty-state">${tips.length === 0 ? "Zatiaľ nemáš uložené žiadne tipy." : "Všetky tipy sú skryté."}</p>` + watchSectionHtml(watchTips);
+    if (!watchTips.length) {
+      wireArchivedToggle();
+      return;
+    }
   }
 
-  tipsListEl.innerHTML = archivedBar + visible
-    .map((t) => {
-      const date = new Date(t.matchDate).toLocaleDateString("sk-SK");
-      const rowClass = t.status === "won" ? "tip-row-won" : t.status === "lost" ? "tip-row-lost" : ""
-      const rowClassFull = rowClass + (t.archived ? " is-archived" : "");
-      const resultIconHtml =
-        t.status === "won"
-          ? `<span class="tip-result-icon won">✓</span>`
-          : t.status === "lost"
-          ? `<span class="tip-result-icon lost">✕</span>`
-          : `<span class="tip-status ${t.status}">${t.status === "void" ? "Vrátené" : "Čaká"}</span>`;
-
-      if (t.legs && t.legs.length > 0) {
-        const legsHtml = t.legs
-          .map(
-            (leg) => `
-            <div class="tip-row-market" style="padding-left: 10px; border-left: 2px solid var(--border); margin-top: 4px;">
-              ${escapeHtml(translateTeamName(leg.homeTeam))} — ${escapeHtml(translateTeamName(leg.awayTeam))}: ${escapeHtml(leg.market)}: ${escapeHtml(translateNamesInText(leg.selection, leg.homeTeam, leg.awayTeam))} · ${leg.probability.toFixed(0)} %
-            </div>`
-          )
-          .join("");
-
-        return `
-        <div class="tip-row ${rowClassFull}" data-row-id="${t.id}" style="align-items: flex-start;">
-          <div class="tip-row-info">
-            <div class="tip-row-match">🎫 Tiket (${plural(t.legs.length, "tip", "tipy", "tipov")}) <span class="muted small">(${date})</span></div>
-            <div class="tip-row-market">Kombinovaná pravdepodobnosť: ${fmtNum(t.probability, 1)} % · kurz ${tipOddsLabel(t)}${overrideBadge(t)}${manualBadge(t)}${editedBadge(t)}</div>
-            ${legsHtml}
-          </div>
-          ${resultIconHtml}
-          <button class="tip-delete-btn slip-btn" data-slip-id="${t.id}" title="Snímka podaného tiketu" aria-label="Snímka podaného tiketu"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
-          ${
-            t.status === "pending"
-              ? `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button><button class="tip-delete-btn" data-send-id="${t.id}" title="Poslať do Telegram kanála" aria-label="Poslať do Telegram kanála"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="display:block"><path fill="currentColor" d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L6.2 13.1 1.3 11.6c-1-.3-1.1-1 .2-1.5L20.6 2.8c.9-.3 1.6.2 1.3 1.5z"/></svg></button>`
-              : `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button><button class="tip-delete-btn" data-result-id="${t.id}" title="Poslať výsledok do Telegramu">➤</button>`
-          }
-        </div>
-      `;
-      }
-
-      return `
-        <div class="tip-row ${rowClassFull}" data-row-id="${t.id}">
-          <div class="tip-row-info">
-            <div class="tip-row-match">${escapeHtml(translateTeamName(t.homeTeam))} — ${escapeHtml(translateTeamName(t.awayTeam))} <span class="muted small">(${date})</span></div>
-            <div class="tip-row-market">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))} · ${t.probability.toFixed(0)} % · kurz ${tipOddsLabel(t)}${overrideBadge(t)}${manualBadge(t)}${editedBadge(t)}</div>
-          </div>
-          ${resultIconHtml}
-          <button class="tip-delete-btn slip-btn" data-slip-id="${t.id}" title="Snímka podaného tiketu" aria-label="Snímka podaného tiketu"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
-          ${
-            t.status === "pending"
-              ? `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button><button class="tip-delete-btn" data-send-id="${t.id}" title="Poslať do Telegram kanála" aria-label="Poslať do Telegram kanála"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="display:block"><path fill="currentColor" d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L6.2 13.1 1.3 11.6c-1-.3-1.1-1 .2-1.5L20.6 2.8c.9-.3 1.6.2 1.3 1.5z"/></svg></button>`
-              : `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button><button class="tip-delete-btn" data-result-id="${t.id}" title="Poslať výsledok do Telegramu">➤</button>`
-          }
-        </div>
-      `;
-    })
-    .join("");
+  tipsListEl.innerHTML = archivedBar + visible.map(historyRowHtml).join("") + watchSectionHtml(watchTips);
 
   wireArchivedToggle();
 
@@ -1858,7 +1894,7 @@ function openSendDayTips() {
   // Predvolene dnešok; ak dnes nič nečaká, najbližší deň s čakajúcimi tipmi.
   const today = tipDayKey(new Date().toISOString());
   const nextDays = currentHistoryTips
-    .filter((t) => t.status === "pending" && !t.archived)
+    .filter((t) => t.status === "pending" && !t.archived && !t.watchOnly)
     .map((t) => tipDayKey(t.matchDate))
     .filter((d) => d >= today)
     .sort();
@@ -1873,7 +1909,7 @@ function openSendDayTips() {
   };
   const render = () => {
     dayTips = currentHistoryTips
-      .filter((t) => t.status === "pending" && !t.archived && tipDayKey(t.matchDate) === dayInput.value)
+      .filter((t) => t.status === "pending" && !t.archived && !t.watchOnly && tipDayKey(t.matchDate) === dayInput.value)
       .sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime());
     if (!dayTips.length) {
       listEl.innerHTML = `<p class="empty-state">V tento deň nie sú v histórii žiadne čakajúce tipy.</p>`;
@@ -2247,6 +2283,7 @@ function renderDayTips() {
         </div>
         <div class="day-tip-actions">
           <button class="btn-primary btn-mini" data-save="${i}">Uložiť</button>
+          <button class="btn-ghost btn-mini" data-save="${i}" data-watch="1" title="Tip sa vyhodnotí, ale nebude v štatistikách, na webe ani v Telegrame">👁 Sledovať</button>
           <button class="btn-ghost btn-mini" data-ticket="${i}">+ Do tiketu</button>
         </div>
       </div>`;
@@ -2312,7 +2349,7 @@ function renderDayTips() {
         savedAt: new Date().toISOString(),
         status: "pending",
         // V Tipoch dňa označený ⭐ Silný tip dňa si značku nesie aj do Histórie tipov.
-        ...(Number(btn.dataset.save) === strongIdx ? { strongOfDay: true } : {}),
+        ...(btn.dataset.watch === "1" ? { watchOnly: true } : Number(btn.dataset.save) === strongIdx ? { strongOfDay: true } : {}),
       };
       btn.disabled = true;
       try {
@@ -2321,8 +2358,8 @@ function renderDayTips() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(tip),
         });
-        btn.textContent = "✓ Uložené";
-        await maybeOfferTelegram(tip.id);
+        btn.textContent = tip.watchOnly ? "✓ Sledované" : "✓ Uložené";
+        if (!tip.watchOnly) await maybeOfferTelegram(tip.id);
       } catch (err) {
         showToast(`Uloženie zlyhalo: ${err?.message ?? String(err)}`);
         btn.disabled = false;
@@ -2477,7 +2514,7 @@ async function toggleArchive(tip) {
 }
 
 async function archiveAllResolved() {
-  const toHide = currentHistoryTips.filter((t) => !t.archived && t.status !== "pending");
+  const toHide = currentHistoryTips.filter((t) => !t.archived && !t.watchOnly && t.status !== "pending");
   if (toHide.length === 0) {
     showToast("Nie sú žiadne vyhodnotené tipy na skrytie.");
     return;

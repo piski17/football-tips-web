@@ -86,7 +86,9 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 // úspešnosti, reportov ani pripomienok (v histórii ostávajú viditeľné).
 const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté konto"];
 function statsTips(tips: SavedTip[]): SavedTip[] {
-  return tips.filter((t) => !EXCLUDED_STATS_MARKETS.includes(t.market));
+  // Tipy „Len sledovať“ (napr. Liga majstrov na skúšku) sa vyhodnocujú, ale nerátajú sa
+  // do štatistík, na web ani do vyhodnotení pre členov.
+  return tips.filter((t) => !EXCLUDED_STATS_MARKETS.includes(t.market) && !t.watchOnly);
 }
 
 /** Pohárové súťaže: tímy v nich hrajú málo zápasov, ale v domácej lige majú dosť dát. */
@@ -657,6 +659,10 @@ app.post("/api/tips/:id/telegram", async (req, res) => {
       res.status(404).json({ error: "Tip sa nenašiel." });
       return;
     }
+    if (tip.watchOnly) {
+      res.status(400).json({ error: "Tento tip je len na sledovanie, do Telegramu sa neposiela." });
+      return;
+    }
     if (!isTelegramEnabled()) {
       res.status(400).json({ error: "Telegram nie je na serveri nastavený." });
       return;
@@ -709,7 +715,7 @@ app.post("/api/telegram/send-tips", async (req, res) => {
     const tips = await listTips();
     const chosen = ids
       .map((id) => tips.find((t) => t.id === id))
-      .filter((t): t is SavedTip => !!t)
+      .filter((t): t is SavedTip => !!t && !t.watchOnly)
       .sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime());
     let sent = 0;
     let failed = 0;
@@ -730,6 +736,10 @@ app.post("/api/tips/:id/telegram-result", async (req, res) => {
     const tip = tips.find((t) => t.id === req.params.id);
     if (!tip) {
       res.status(404).json({ error: "Tip sa nenašiel." });
+      return;
+    }
+    if (tip.watchOnly) {
+      res.status(400).json({ error: "Tento tip je len na sledovanie, do Telegramu sa neposiela." });
       return;
     }
     if (tip.status !== "won" && tip.status !== "lost") {
@@ -809,7 +819,7 @@ app.get("/api/public/track-record", async (_req, res) => {
         };
       });
     const slips = tips
-      .filter((t) => slipIds.has(t.id) && settled(t))
+      .filter((t) => slipIds.has(t.id) && settled(t) && !t.watchOnly)
       .map((t) => ({ t, day: tipDayKey(t) ?? "" }))
       .sort((a, b) => (a.day < b.day ? 1 : a.day > b.day ? -1 : 0))
       .slice(0, 12)
@@ -894,7 +904,7 @@ app.get("/api/public/track-record", async (_req, res) => {
     // „Tip zadarmo“ na úvod stránky: posledný tip poslaný do free kanála, ak je zápas dnes alebo včera.
     let freeTip: any = null;
     const freeRecent = tips
-      .filter((t) => (t.sentFree || (t.telegramMessages ?? []).some((m) => isFreeChat(m.chatId))) && t.status !== "void" && Date.now() - new Date(t.matchDate).getTime() < 36 * 3600 * 1000)
+      .filter((t) => !t.watchOnly && (t.sentFree || (t.telegramMessages ?? []).some((m) => isFreeChat(m.chatId))) && t.status !== "void" && Date.now() - new Date(t.matchDate).getTime() < 36 * 3600 * 1000)
       .sort((a, b) => new Date(b.matchDate).getTime() - new Date(a.matchDate).getTime())[0];
     if (freeRecent) {
       const isTicket = Array.isArray(freeRecent.legs) && freeRecent.legs.length > 0;
@@ -943,7 +953,7 @@ app.get("/api/public/track-record", async (_req, res) => {
 app.get("/api/public/slip/:id", async (req, res) => {
   try {
     const tip = (await listTips()).find((t) => t.id === req.params.id);
-    if (!tip || !(tip.status === "won" || tip.status === "lost" || tip.status === "void")) {
+    if (!tip || tip.watchOnly || !(tip.status === "won" || tip.status === "lost" || tip.status === "void")) {
       res.status(404).send("Nenájdené.");
       return;
     }

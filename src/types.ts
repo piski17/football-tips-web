@@ -259,6 +259,8 @@ export interface SavedTip {
   overrideFilter?: boolean;
   /** Tip doplnený ručne po zápase (s výsledkom) - neprechádza automatickým vyhodnotením. */
   manualEntry?: boolean;
+  /** Len sledovať: tip sa vyhodnotí, ale neráta sa do štatistík, nie je na webe a neposiela sa členom. */
+  watchOnly?: boolean;
   /** Tip skrytý z histórie tipov - naďalej sa ráta do štatistík a zobrazuje na prezentačnej stránke. */
   archived?: boolean;
   /** Výsledok alebo kurz bol ručne opravený v histórii. */

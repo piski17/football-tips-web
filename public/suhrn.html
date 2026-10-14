@@ -692,7 +692,7 @@ h2 { font-size: 22px; }
     try {
       const r = await api('GET', '/api/tips');
       if (r.status !== 200 || !Array.isArray(r.data)) throw new Error();
-      const found = r.data.map(fromSaved).filter((x) => x.day === day).map((x) => x.row);
+      const found = r.data.filter((t) => !t.watchOnly).map(fromSaved).filter((x) => x.day === day).map((x) => x.row);
       if (!found.length) { $('histStatus').textContent = 'V Histórii tipov nie je na ' + fmtDay(day) + ' žiadny tip.'; return; }
       const key = (t) => (t.match + '|' + t.tip).toLowerCase();
       let added = 0, updated = 0;
@@ -1065,7 +1065,7 @@ h2 { font-size: 22px; }
       if (!historyTips) {
         const r = await api('GET', '/api/tips');
         if (r.status !== 200 || !Array.isArray(r.data)) throw new Error();
-        historyTips = r.data;
+        historyTips = r.data.filter((t) => !t.watchOnly);
       }
       const end = shiftDay(weekStart, 6);
       weekTips = historyTips.map(weekRow).filter((x) => x.day >= weekStart && x.day <= end).sort((a, b) => a.when.localeCompare(b.when));
