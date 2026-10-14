@@ -36,6 +36,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Mrs+Saint+Delafield&amp;text=Michael&amp;display=swap" rel="stylesheet" />
 <style>
   /* TipRadar – tipradar.eu
      Onyx a zlato, pokojný redakčný štýl: rovné čiary namiesto žiary, skutočné čísla namiesto efektov.
@@ -927,6 +928,64 @@
   .lux .small { text-align: center; }
   @media (max-width: 640px) { #clenstvo .term-switch { display: grid; width: 100%; } }
   @media (max-width: 560px) { .lux { padding: 44px 22px 32px; } .lux h3.lux-name { font-size: 60px; } .lux-price b { font-size: 56px; } }
+
+  /* ================================================================
+     Vylepšenia 14. 10. 2026: animácie pri posúvaní, výsledky v úvode,
+     podpis zakladateľa, lesk tlačidiel a zlaté oddeľovače sekcií.
+     ================================================================ */
+  /* 1) jemné objavenie blokov pri posúvaní (len keď beží JavaScript) */
+  .rv { opacity: 0; transform: translateY(26px); }
+  .rv.in { opacity: 1; transform: none; transition: opacity .9s cubic-bezier(.2,.7,.2,1), transform .9s cubic-bezier(.2,.7,.2,1); transition-delay: var(--rv-d, 0s); }
+  @media (prefers-reduced-motion: reduce) { .rv { opacity: 1; transform: none; } }
+
+  /* 2) výsledky priamo v úvode */
+  .proof { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: 0; margin-top: 44px; padding-top: 26px; border-top: 1px solid var(--rule-gold); text-decoration: none; }
+  .proof[hidden] { display: none; }
+  .proof > div { padding-right: 36px; margin-right: 36px; border-right: 1px solid var(--rule); }
+  .proof > div:last-of-type { padding-right: 0; margin-right: 0; border-right: 0; }
+  .proof b { display: block; font: 400 clamp(34px, 3.4vw, 44px)/1 var(--serif); letter-spacing: -0.02em; color: var(--gold-hi); }
+  .proof b.pos { color: var(--win); } .proof b.neg { color: var(--loss); }
+  .proof span { display: block; margin-top: 10px; font-size: 10.5px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--faint); }
+  .proof-note { display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; font-size: 13px; color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--rule-gold); padding-bottom: 2px; }
+  .proof-note:hover { color: var(--gold-hi); border-color: var(--gold); }
+  .proof-note[hidden] { display: none; }
+  /* na počítači menej vzduchu nad nadpisom, aby boli čísla vidieť hneď po otvorení */
+  @media (min-width: 961px) {
+    .hero { padding-top: 76px; }
+    .hero h1 { font-size: clamp(50px, 6.2vw, 84px); }
+    .proof { margin-top: 34px; padding-top: 22px; }
+  }
+  @media (max-width: 640px) {
+    .proof { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 36px; padding-top: 22px; }
+    .proof > div { padding-right: 12px; margin-right: 12px; }
+    .proof b { font-size: 30px; }
+    .proof span { font-size: 9.5px; letter-spacing: .16em; }
+  }
+
+  /* 4) podpis zakladateľa namiesto iniciál */
+  .sign::before { content: none; }
+  .sign span.sig { text-transform: none; margin-top: 0; }
+  .sign .sig { display: block; font: 400 clamp(64px, 8vw, 84px)/1.1 "Mrs Saint Delafield", "Great Vibes", cursive; letter-spacing: 0; padding: 0 .25em; background: linear-gradient(100deg, #A8823E 0%, #E8D3A0 45%, #C9A55C 70%, #A8823E 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .sign .sig-line { display: block; width: 140px; height: 1px; margin: 2px auto 14px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+  .js-anim .sign .sig { clip-path: inset(0 100% 0 0); }
+  .js-anim .sign .sig-line { transform: scaleX(0); }
+  .js-anim .sign.in .sig { clip-path: inset(0 0 0 0); transition: clip-path 2.2s cubic-bezier(.45,.05,.3,1) .35s; }
+  .js-anim .sign.in .sig-line { transform: none; transition: transform 1.2s ease 2.1s; }
+  @media (prefers-reduced-motion: reduce) { .js-anim .sign .sig { clip-path: none; } .js-anim .sign .sig-line { transform: none; } }
+
+  /* 5) lesk zlatých tlačidiel a zlaté oddeľovače */
+  .btn { position: relative; overflow: hidden; isolation: isolate; }
+  .btn:not(.btn-ghost) { background: linear-gradient(135deg, #E8D3A0 0%, #C9A55C 42%, #B8954C 70%, #A8823E 100%); border-color: #C9A55C; box-shadow: 0 10px 30px -14px rgba(201,165,92,.55), inset 0 1px 0 rgba(255,255,255,.28); transition: box-shadow .3s, transform .3s, filter .3s; }
+  .btn:not(.btn-ghost):hover { background: linear-gradient(135deg, #F1E2B8 0%, #D4B26A 42%, #C09D55 70%, #A8823E 100%); box-shadow: 0 14px 36px -12px rgba(201,165,92,.7), inset 0 1px 0 rgba(255,255,255,.35); transform: translateY(-1px); }
+  .btn::after { content: ""; position: absolute; z-index: -1; top: 0; bottom: 0; left: -60%; width: 40%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.38), transparent); transform: skewX(-20deg); pointer-events: none; opacity: 0; }
+  .btn:hover::after { opacity: 1; left: 130%; transition: left .8s ease, opacity .2s; }
+  .btn-ghost::after { background: linear-gradient(100deg, transparent, rgba(232,211,160,.16), transparent); }
+  .btn-ghost:hover { box-shadow: 0 0 0 1px rgba(201,165,92,.25), 0 10px 30px -16px rgba(201,165,92,.45); }
+  @media (prefers-reduced-motion: reduce) { .btn:hover::after { transition: none; opacity: 0; } .btn:not(.btn-ghost):hover { transform: none; } }
+
+  .sec, .next { position: relative; border-bottom-color: transparent; }
+  .sec::after, .next::after { content: ""; position: absolute; left: 50%; bottom: -1px; width: min(1120px, 100% - 32px); height: 1px; transform: translateX(-50%); background: linear-gradient(90deg, transparent, rgba(201,165,92,.5) 30%, rgba(232,211,160,.75) 50%, rgba(201,165,92,.5) 70%, transparent); pointer-events: none; z-index: 1; }
+  .sec::before, .next::before { content: ""; position: absolute; left: 50%; bottom: -4px; width: 7px; height: 7px; transform: translateX(-50%) rotate(45deg); background: var(--bg); border: 1px solid var(--gold); pointer-events: none; z-index: 2; }
 </style>
 </head>
 <body>
@@ -1007,6 +1066,12 @@
           <a class="btn" href="#clenstvo">Zapísať sa do poradovníka</a>
           <a class="btn btn-ghost" href="#vysledky">Pozrieť výsledky</a>
         </div>
+        <div class="proof" id="heroProof" hidden>
+          <div><b class="num" id="hpCount">–</b><span id="hpCountLbl">vyhodnotených tipov</span></div>
+          <div><b class="num" id="hpRate">–</b><span>vyšlo</span></div>
+          <div id="hpRoiBox"><b class="num" id="hpRoi">–</b><span>ROI</span></div>
+        </div>
+        <a class="proof-note" id="heroProofNote" href="#vysledky" hidden>Výhry aj prehry, každý tip od začiatku <span aria-hidden="true">→</span></a>
       </div>
 
       <figure class="duel" id="duel" aria-label="Ilustrácia: model porovnáva svoju pravdepodobnosť s kurzom stávkovej kancelárie">
@@ -1224,7 +1289,7 @@
         <p data-pages="none">Za každým tipom stojí vlastný štatistický model, ktorý som vyvinul a priebežne overujem spätnými testmi na stovkách odohraných zápasov. Tip odporučí len vtedy, keď je šanca v overenom pásme a kurz ponúka skutočnú hodnotu.</p>
         <p>Transparentnosť je pre mňa základ. Každý tip sa zaznamená v momente odoslania a po zápase sa sám vyhodnotí. Nič sa dodatočne nemaže ani neupravuje, preto tu nájdete aj prehry. Istú výhru nesľubujem. Nesľubuje ju nikto, kto to myslí vážne.</p>
         <p>Ak máte otázku, napíšte mi na <a href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener">Telegram</a> alebo na <a href="mailto:info@tipradar.eu">info@tipradar.eu</a>. Odpovedám osobne.</p>
-        <div class="sign">Michael<span>zakladateľ TipRadaru</span></div>
+        <div class="sign"><span class="sig">Michael</span><i class="sig-line" aria-hidden="true"></i><span>zakladateľ TipRadaru</span></div>
       </div>
     </div>
   </section>
@@ -1660,6 +1725,15 @@
       if (!d.totalResolved) { $("month").textContent = "Čísla sa zobrazia po prvých vyhodnotených tipoch."; return; }
       const n = d.totalResolved;
       drawLast10();
+      // výsledky aj hore v úvode (rozbehnú sa hneď po načítaní)
+      if ($("heroProof")) {
+        $("heroProof").hidden = false; $("heroProofNote").hidden = false;
+        $("hpCountLbl").textContent = tipsWord(n);
+        countUp($("hpCount"), n, 0, (v) => String(v));
+        countUp($("hpRate"), d.winRate, 0, (v) => `${v} %`);
+        if (d.withOdds > 0) { $("hpRoi").className = "num " + cls(d.roi); countUp($("hpRoi"), d.roi, 0, (v) => `${signed(v, 0)} %`); }
+        else $("hpRoiBox").remove();
+      }
       $("fCountLbl").textContent = tipsWord(n);
       if (d.withOdds > 0) {
         $("fProfit").className = "num " + cls(d.profit); $("fRoi").className = "num " + cls(d.roi);
@@ -1853,6 +1927,36 @@
     }, { threshold: 0.35 });
     var ph = document.querySelector(".phone"); if (ph) io.observe(ph);
   }
+})();
+</script>
+<script>
+(function () {
+  // Jemné objavovanie blokov pri posúvaní + podpis, ktorý sa „napíše“.
+  var root = document.documentElement;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) {
+    document.querySelectorAll(".sign").forEach(function (s) { s.classList.add("in"); });
+    return;
+  }
+  root.classList.add("js-anim");
+  var sel = ".hero .wrap > div > *, .hero .duel, .page-head .wrap > *, .sec .wrap > *:not(.letter), .letter > *:not(.sign), .next .wrap > *";
+  var els = [].slice.call(document.querySelectorAll(sel));
+  els.forEach(function (el) { el.classList.add("rv"); });
+  var io = new IntersectionObserver(function (es) {
+    var batch = es.filter(function (e) { return e.isIntersecting; });
+    batch.forEach(function (e, k) {
+      var el = e.target;
+      el.style.setProperty("--rv-d", Math.min(k, 6) * 0.09 + "s");
+      el.classList.add("in");
+      io.unobserve(el);
+      // po animácii triedy zmiznú, aby nezavadzali vlastným efektom prvkov
+      setTimeout(function () { el.classList.remove("rv", "in"); el.style.removeProperty("--rv-d"); }, 1700);
+    });
+  }, { threshold: 0.12, rootMargin: "0px 0px -6% 0px" });
+  els.forEach(function (el) { io.observe(el); });
+  var sio = new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); sio.unobserve(e.target); } });
+  }, { threshold: 0.6 });
+  document.querySelectorAll(".sign").forEach(function (s) { sio.observe(s); });
 })();
 </script>
 </body>
