@@ -732,7 +732,7 @@
   /* ikonky vedľa Menu: na úzkom telefóne len tri čiarky bez nápisu */
   @media (max-width: 480px) { .nav .wrap { gap: 8px; } .nav-social { gap: 0; margin-right: 4px; } .nav-social a { width: 34px; } .nav-toggle { font-size: 0; gap: 0; padding: 0 12px; } }
   /* ---------- Výsledky: výkladná skriňa ---------- */
-  .showcase { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); margin-top: 48px; border: 1px solid var(--rule-gold); background: linear-gradient(160deg, #1D1A17 0%, #161412 60%, #121211 100%); position: relative; overflow: hidden; }
+  .showcase { display: grid; grid-template-columns: minmax(0, 1fr); margin-top: 48px; border: 1px solid var(--rule-gold); background: linear-gradient(160deg, #1D1A17 0%, #161412 60%, #121211 100%); position: relative; overflow: hidden; }
   .showcase::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 1px; background: linear-gradient(90deg, transparent, var(--gold-hi), transparent); opacity: .7; }
   .sc-chart { padding: 34px 36px 30px; min-width: 0; }
   .sc-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; }
@@ -1289,7 +1289,7 @@
           <div id="chWrap"><p class="muted">Graf sa zobrazí po prvých vyhodnotených tipoch.</p></div>
           <div class="form10" id="form10" hidden><span>Posledných 10 tipov</span><div id="last10"></div></div>
         </div>
-        <div class="stake" id="stake" hidden>
+        <div class="stake" id="stake" data-pages="none" hidden>
           <p class="sc-eyebrow">Keby ste od začiatku stavili na každý tip rovnakú sumu</p>
           <div class="big num" id="calcResult">–</div>
           <label for="stakeRange"><span>Stávka na jeden tip</span><b class="num" id="stakeOut">10 €</b></label>
