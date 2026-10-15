@@ -292,7 +292,8 @@ export async function sendTipToTelegram(
   tip: SavedTip,
   target: TelegramTarget,
   headerOverride?: string,
-  strong = false
+  strong = false,
+  freeSeatsLine?: string
 ): Promise<{ chatId: string; messageId: number }[]> {
   const chatIds = resolveChatIds(target);
   if (chatIds.length === 0) return [];
@@ -301,7 +302,9 @@ export async function sendTipToTelegram(
 
   for (const chatId of chatIds) {
     let text = buildMessageText(tip, headerOverride, chatId === TELEGRAM_CHAT_ID_VIP, strong);
-    if (chatId === TELEGRAM_CHAT_ID_FREE) text += `\n\n👉 Viac tipov a členstvo: <a href="https://tipradar.eu/?utm_source=telegram">tipradar.eu</a>`;
+    if (chatId === TELEGRAM_CHAT_ID_FREE) {
+      text += `\n\n${freeSeatsLine ? freeSeatsLine + "\n" : ""}👉 Viac tipov a členstvo: <a href="https://tipradar.eu/clenstvo?utm_source=telegram">tipradar.eu</a>`;
+    }
     const messageId = await sendToChat(chatId, text);
     if (messageId) sent.push({ chatId, messageId });
   }

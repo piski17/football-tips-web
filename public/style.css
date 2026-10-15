@@ -1832,3 +1832,13 @@ details.low-value-list[open] > summary { margin-bottom: 6px; }
 /* Sledované tipy (Len sledovať) v Histórii tipov */
 .watch-section { margin-top: 22px; padding-top: 14px; border-top: 1px dashed var(--border, #2E2A24); }
 .watch-section .watch-title { margin: 0 0 4px; font-size: 18px !important; }
+
+/* menu „Nástroje" v hornej lište */
+.tools-menu { position: relative; }
+.tools-pop { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; min-width: 210px; display: flex; flex-direction: column; padding: 6px; background: #161412; border: 1px solid rgba(217, 192, 138, 0.35); border-radius: 3px; box-shadow: 0 18px 40px -12px rgba(0, 0, 0, 0.7); }
+.tools-pop[hidden] { display: none; }
+.tools-item { all: unset; box-sizing: border-box; display: block; width: 100%; padding: 10px 12px; font-size: 14px; font-weight: 500; color: var(--text); cursor: pointer; border-radius: 2px; text-align: left; }
+.tools-item:hover, .tools-item:focus-visible { background: rgba(217, 192, 138, 0.1); color: var(--accent-strong); }
+@media (max-width: 640px) { .tools-pop { right: auto; left: 0; } }
+.seat-badge { margin-left: 6px; padding: 1px 7px; font-size: 12px; font-weight: 600; color: #17130A; background: var(--accent); border-radius: 2px; }
+.seat-badge.full { background: #C0707C; color: #fff; }

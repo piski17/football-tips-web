@@ -67,12 +67,17 @@
 
       <button class="btn-ghost" id="openTicketBtn">Tiket <span id="ticketCount"></span></button>
       <button class="btn-ghost" id="openTipsBtn">História tipov</button>
-      <button class="btn-ghost" id="openSubscribersBtn">Členovia</button>
-      <button class="btn-ghost" id="openBacktestBtn" title="Overenie presnosti modelu na odohraných zápasoch">Spätný test</button>
-      <a class="btn-ghost" href="/suhrn" style="text-decoration:none;display:inline-flex;align-items:center;">Denný súhrn</a>
-      <a class="btn-ghost" href="/instagram" style="text-decoration:none;display:inline-flex;align-items:center;">Instagram</a>
-      <a class="btn-ghost" href="/TipRadar-ako-vyberame-tipy.pdf" target="_blank" rel="noopener" title="PDF pre klientov: ako vyberáme tipy" style="text-decoration:none;display:inline-flex;align-items:center;">PDF pre klientov</a>
-      <button class="btn-ghost" id="openVisitsBtn" title="Koľko ľudí navštívilo tipradar.eu a odkiaľ prišli">Návštevnosť</button>
+      <button class="btn-ghost" id="openSubscribersBtn">Členovia <span class="seat-badge" id="seatBadge" hidden></span></button>
+      <div class="tools-menu" id="toolsMenu">
+        <button class="btn-ghost" id="toolsBtn" aria-haspopup="true" aria-expanded="false">Nástroje <span aria-hidden="true">▾</span></button>
+        <div class="tools-pop" id="toolsPop" role="menu" hidden>
+          <button class="tools-item" role="menuitem" id="openBacktestBtn" title="Overenie presnosti modelu na odohraných zápasoch">Spätný test</button>
+          <a class="tools-item" role="menuitem" href="/suhrn">Denný súhrn</a>
+          <a class="tools-item" role="menuitem" href="/instagram">Instagram</a>
+          <a class="tools-item" role="menuitem" href="/TipRadar-ako-vyberame-tipy.pdf" target="_blank" rel="noopener" title="PDF pre klientov: ako vyberáme tipy">PDF pre klientov</a>
+          <button class="tools-item" role="menuitem" id="openVisitsBtn" title="Koľko ľudí navštívilo tipradar.eu a odkiaľ prišli">Návštevnosť</button>
+        </div>
+      </div>
     </header>
 
     <main class="content">
@@ -281,6 +286,31 @@
     </div>
   </div>
 
+  <script>
+    // Menu „Nástroje" v hornej lište
+    (() => {
+      const btn = document.getElementById("toolsBtn"), pop = document.getElementById("toolsPop");
+      const close = () => { pop.hidden = true; btn.setAttribute("aria-expanded", "false"); };
+      btn.addEventListener("click", (e) => { e.stopPropagation(); pop.hidden = !pop.hidden; btn.setAttribute("aria-expanded", String(!pop.hidden)); });
+      pop.addEventListener("click", () => close());
+      document.addEventListener("click", (e) => { if (!e.target.closest("#toolsMenu")) close(); });
+      document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
+    })();
+    // Odpočet voľných miest v Platinum (rovnaké čísla ako na tipradar.eu)
+    fetch("/api/public/vip-seats", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d) => {
+        const total = Number(d.total) || 30;
+        const occupied = Math.min(total, (Number(d.taken) || 0) + (d.salesOpen ? 0 : Number(d.waitlistVip) || 0));
+        const left = total - occupied;
+        const el = document.getElementById("seatBadge");
+        el.textContent = left > 0 ? `${left} z ${total} voľných` : "plné";
+        el.title = `Voľné miesta v Platinum: ${left} z ${total}`;
+        el.classList.toggle("full", left <= 0);
+        el.hidden = false;
+      })
+      .catch(() => {});
+  </script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -707,6 +707,7 @@
   /* ikonky vedľa Menu: na úzkom telefóne len tri čiarky bez nápisu */
   @media (max-width: 480px) { .nav .wrap { gap: 8px; } .nav-social { gap: 0; margin-right: 4px; } .nav-social a { width: 34px; } .nav-toggle { font-size: 0; gap: 0; padding: 0 12px; } }
   /* ---------- Výsledky: výkladná skriňa ---------- */
+  html[data-page="vysledky"] .showcase { grid-template-columns: minmax(0, 1fr); }
   .showcase { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); margin-top: 48px; border: 1px solid var(--rule-gold); background: linear-gradient(160deg, #1D1A17 0%, #161412 60%, #121211 100%); position: relative; overflow: hidden; }
   .showcase::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 1px; background: linear-gradient(90deg, transparent, var(--gold-hi), transparent); opacity: .7; }
   .sc-chart { padding: 34px 36px 30px; min-width: 0; }
@@ -859,9 +860,7 @@
   /* TipRadar Platinum: jedno členstvo, prepínač dĺžky */
   #clenstvo h2 em { font-style: italic; }
   .gold-text { background: linear-gradient(180deg, #F8EDD3 0%, #F3E6C4 30%, #D9C08A 62%, #B8995E 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  #clenstvo .club-h, #recenzie .club-h { text-align: center; }
-  #recenzie h2 em { font-style: italic; }
-  #recenzie .eyebrow::before, #recenzie .eyebrow::after { content: ""; width: 48px; height: 1px; background: var(--gold); opacity: .6; }
+  #clenstvo .club-h { text-align: center; }
   #clenstvo .eyebrow { justify-content: center; }
   #clenstvo .eyebrow::before { content: ""; width: 48px; height: 1px; background: var(--gold); opacity: .6; }
   .plat-text, .lux h3.plat-text { background: linear-gradient(180deg, #FFFFFF 0%, #E6E8EC 28%, #A9AEB6 58%, #D9DCE1 78%, #8E939B 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -894,16 +893,6 @@
   .last7[hidden] { display: none; }
     .pay-note { margin: 14px 0 0; text-align: center; font-size: 13px; color: var(--faint, #8C8476); }
     .pay-note[hidden] { display: none; }
-    /* Recenzie členov (sekcia sa ukáže, až keď je v zozname REVIEWS aspoň jedna) */
-    #recenzie[hidden] { display: none; }
-    #recenzie .eyebrow { justify-content: center; }
-    .reviews { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 22px; margin-top: 40px; }
-    .review { margin: 0; border: 1px solid var(--rule-gold); background: var(--card); padding: 30px 28px 26px; display: flex; flex-direction: column; }
-    .review::before { content: "\201C"; font-family: var(--serif); font-size: 64px; line-height: .6; color: var(--gold); height: 26px; }
-    .review q { quotes: none; font-family: var(--serif); font-style: italic; font-size: 20px; line-height: 1.45; color: var(--text); margin-top: 10px; flex: 1; }
-    .review .who { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--rule); }
-    .review .who b { display: block; font-weight: 600; color: var(--text); }
-    .review .who span { font-size: 13px; color: var(--faint); }
   .last7 b { color: var(--text); font-weight: 600; }
   .last7 b.up { color: #7FBF9A; }
   .lux .plan-foot { padding-top: 26px; }
@@ -1265,7 +1254,7 @@
           <div id="chWrap"><p class="muted">Graf sa zobrazí po prvých vyhodnotených tipoch.</p></div>
           <div class="form10" id="form10" hidden><span>Posledných 10 tipov</span><div id="last10"></div></div>
         </div>
-        <div class="stake" id="stake" hidden>
+        <div class="stake" id="stake" data-pages="home" hidden>
           <p class="sc-eyebrow">Keby ste od začiatku stavili na každý tip rovnakú sumu</p>
           <div class="big num" id="calcResult">–</div>
           <label for="stakeRange"><span>Stávka na jeden tip</span><b class="num" id="stakeOut">10 €</b></label>
@@ -1357,15 +1346,6 @@
           <p class="small">Bez automatického predlžovania. Členstvo zrušíte jednou správou.</p>
         </div>
       </article>
-    </div>
-  </section>
-
-  <section class="sec" id="recenzie" data-pages="home" hidden>
-    <div class="wrap">
-      <div class="eyebrow">Členovia</div>
-      <h2 class="club-h">Čo hovoria <em class="gold-text">členovia</em></h2>
-      <p class="muted" style="margin:16px auto 0;max-width:56ch;text-align:center">Skutočné odkazy od členov TipRadar Platinum, uverejnené s ich súhlasom.</p>
-      <div class="reviews" id="reviewsList"></div>
     </div>
   </section>
 
@@ -1730,19 +1710,6 @@
     $$(".term-switch [data-term]").forEach((b) => b.addEventListener("click", () => apply(b.dataset.term)));
     window.__applyTerm = apply;
     apply("m3");
-  })();
-
-  // ---------- Recenzie členov ----------
-  // Sem dopĺňaj skutočné odkazy od členov (s ich súhlasom). Kým je zoznam prázdny, sekcia sa nezobrazí.
-  // Príklad: { text: "Konečne niekto, kto ukáže aj prehry.", name: "Tomáš", term: "3 mesiace" },
-  const REVIEWS = [
-  ];
-  (() => {
-    const box = document.getElementById("reviewsList");
-    if (!box || !REVIEWS.length) return;
-    const esc = (v) => String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    box.innerHTML = REVIEWS.map((r) => `<figure class="review"><q>${esc(r.text)}</q><figcaption class="who"><b>${esc(r.name)}</b><span>člen${r.term ? " · " + esc(r.term) : ""}</span></figcaption></figure>`).join("");
-    document.getElementById("recenzie").hidden = false;
   })();
 
   // ---------- VIP miesta a predaj ----------

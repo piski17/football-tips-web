@@ -206,6 +206,33 @@ async function seasonSeats(): Promise<{ taken: number; total: number; activeVip:
   );
   return { taken: activeVip.length, total, activeVip };
 }
+/**
+ * Odpočet voľných miest (rovnako ako na webe): pred spustením predaja sa rátajú členovia
+ * aj záujemcovia v poradovníku, počas predaja len aktívni členovia.
+ */
+async function seatsLeft(): Promise<{ left: number; total: number }> {
+  const { taken, total, activeVip } = await seasonSeats();
+  let occupied = taken;
+  if (process.env.SALES_OPEN !== "true") {
+    const memberChats = new Set(activeVip.map((s) => String(s.telegramChatId || "")).filter(Boolean));
+    const waitlistVip = (await listLeads().catch(() => [])).filter(
+      (l) => ["vip", "vip_waitlist", "sampion", "sampion_waitlist"].includes(l.plan) && !memberChats.has(String(l.chatId))
+    ).length;
+    occupied += waitlistVip;
+  }
+  return { left: Math.max(0, total - Math.min(occupied, total)), total };
+}
+/** Riadok s odpočtom miest pre tipy v bezplatnom kanáli. */
+async function freeSeatsLine(): Promise<string | undefined> {
+  try {
+    const { left, total } = await seatsLeft();
+    return left > 0
+      ? `🔥 Členstvo Platinum: voľné už len <b>${left} z ${total}</b> miest`
+      : `🔒 Všetky miesta v Platinum sú obsadené, zapíš sa do poradovníka`;
+  } catch {
+    return undefined;
+  }
+}
 const BOT_USERNAME = process.env.TELEGRAM_BOT_USERNAME || "TipRadarAiBot";
 
 // tipradar.eu/zaplatit?term=m1|m3|season (&c=Telegram ID z bota) → založí platbu a presmeruje na stránku s QR kódom.
@@ -693,7 +720,8 @@ async function sendSavedTip(tip: SavedTip, tips: SavedTip[], target: TelegramTar
       if (t.id !== tip.id && t.strongOfDay && dayKeySk(new Date(t.matchDate)) === day) await updateTip(t.id, { strongOfDay: false });
     }
   }
-  const sent = await sendTipToTelegram(tip, forceStrong ? "vip" : target, headerOverride, strong);
+  const seatsLine = target === "free" && !forceStrong ? await freeSeatsLine() : undefined;
+  const sent = await sendTipToTelegram(tip, forceStrong ? "vip" : target, headerOverride, strong, seatsLine);
   if (sent.length > 0) {
     const existing = tip.telegramMessages ?? [];
     await updateTip(tip.id, {
