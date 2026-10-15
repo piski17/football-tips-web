@@ -1534,8 +1534,8 @@ closeTipsBtn.addEventListener("click", () => {
 // ---- Členovia (platba beží mimo appky, napr. bankovým prevodom) ----
 
 // Ceny musia sedieť s PRICES na tipradar.eu (landing/index.html).
-// TipRadar Platinum: jedno členstvo, tri dĺžky (1 mesiac, 3 mesiace, sezóna – len 30 miest).
-// Sezóna sa ukladá ako tier "group" – počíta sa do 30 miest na webe.
+// TipRadar Platinum: jedno členstvo, tri dĺžky (1 mesiac bez limitu, 3 mesiace 100 miest, sezóna 50 miest).
+// Sezóna sa ukladá ako tier "group" – počíta sa do miest na sezónu.
 const MEMBER_PRICES = { m1: 49, m3: 129, season: 299 };
 const MEMBER_NAME = { m1: "Platinum 1 mesiac", m3: "Platinum 3 mesiace", season: "Platinum sezóna" };
 const MEMBER_LENGTH_LABEL = { m1: "1 mesiac", m3: "3 mesiace", season: "sezóna" };
@@ -1748,7 +1748,7 @@ addSubscriberBtn.addEventListener("click", async () => {
     return;
   }
   const length = subLengthSelect.value;
-  const tier = length === "season" ? "group" : "individual"; // celá sezóna = 30 miest
+  const tier = length === "season" ? "group" : "individual"; // celá sezóna = obmedzené miesta
   const start = subStartInput.value || todayIso();
   const priceRaw = subPriceInput.value.trim();
   const priceEur = priceRaw === "" ? MEMBER_PRICES[length] : Number(priceRaw);
@@ -3239,7 +3239,7 @@ document.addEventListener("click", async (e) => {
   btn.disabled = false;
   renderLeads();
 });
-const LEAD_PLAN_LABEL = { start: "Platinum 1 mesiac", seria: "Platinum 3 mesiace", sampion: "Platinum sezóna", sampion_waitlist: "Platinum sezóna (náhradník)", premium: "starý odkaz Premium", vip: "Platinum sezóna (starý odkaz VIP)", vip_waitlist: "Platinum sezóna (náhradník)", clenstvo: "nevybral", otazka: "otázka z webu" };
+const LEAD_PLAN_LABEL = { start: "Platinum 1 mesiac", seria: "Platinum 3 mesiace", sampion: "Platinum sezóna", sampion_waitlist: "Platinum sezóna (náhradník)", seria_waitlist: "Platinum 3 mesiace (náhradník)", premium: "starý odkaz Premium", vip: "Platinum sezóna (starý odkaz VIP)", vip_waitlist: "Platinum sezóna (náhradník)", clenstvo: "nevybral", otazka: "otázka z webu" };
 async function renderLeads() {
   const el = document.getElementById("leadsList");
   if (!el) return;
@@ -3270,7 +3270,7 @@ async function renderLeads() {
         document.getElementById("subName").value = l.name || "";
         document.getElementById("subContact").value = l.email || (l.username ? "@" + l.username : "");
         document.getElementById("subTelegramChatId").value = l.email ? "" : l.chatId;
-        document.getElementById("subLength").value = ["sampion", "sampion_waitlist", "vip", "vip_waitlist"].includes(l.plan) ? "season" : l.plan === "seria" ? "m3" : "m1";
+        document.getElementById("subLength").value = ["sampion", "sampion_waitlist", "vip", "vip_waitlist"].includes(l.plan) ? "season" : l.plan === "seria" || l.plan === "seria_waitlist" ? "m3" : "m1";
         syncMemberPrice();
         document.getElementById("subName")?.scrollIntoView({ behavior: "smooth", block: "center" });
         showToast("Údaje sú vyplnené – skontroluj ich a klikni na Pridať.");

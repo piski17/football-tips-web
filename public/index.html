@@ -300,13 +300,13 @@
     fetch("/api/public/vip-seats", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d) => {
-        const total = Number(d.total) || 30;
-        const occupied = Math.min(total, (Number(d.taken) || 0) + (d.salesOpen ? 0 : Number(d.waitlistVip) || 0));
-        const left = total - occupied;
+        const t = d.terms;
+        if (!t || !t.m3 || !t.season) return;
         const el = document.getElementById("seatBadge");
-        el.textContent = left > 0 ? `${left} z ${total} voľných` : "plné";
-        el.title = `Voľné miesta v Platinum: ${left} z ${total}`;
-        el.classList.toggle("full", left <= 0);
+        const part = (label, r) => `${label} ${r.left > 0 ? r.left : "plné"}`;
+        el.textContent = `${part("3M", t.m3)} · ${part("S", t.season)} voľných`;
+        el.title = `Voľné miesta v Platinum: 3 mesiace ${t.m3.left} zo ${t.m3.total}, sezóna ${t.season.left} z ${t.season.total} (1 mesiac bez limitu)`;
+        el.classList.toggle("full", t.m3.left <= 0 || t.season.left <= 0);
         el.hidden = false;
       })
       .catch(() => {});

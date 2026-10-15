@@ -1325,7 +1325,7 @@
           <div class="lux-term" data-term-name>členstvo na 3 mesiace</div>
           <div class="lux-price"><b class="num" data-price>129 €</b></div>
           <p class="per-month" data-permonth>43 € mesačne · ušetríte 18 €</p>
-          <span class="limit-tag" data-only-season hidden>len 30 miest</span>
+          <span class="limit-tag" data-limit-tag hidden>len 50 miest</span>
         </div>
         <div class="lux-rule"><span>V členstve</span></div>
         <ul class="lux-list">
@@ -1693,18 +1693,27 @@
       $$("[data-only-season]").forEach((el) => (el.hidden = term !== "season"));
       $$("[data-min-term]").forEach((li) => (li.hidden = TERMS[li.dataset.minTerm].order > t.order));
       const cta = document.getElementById("memberCta");
-      const S = window.__sales || { open: false, full: false };
+      const S = window.__sales || { open: false };
+      const seat = (window.__seats || {})[term]; // 1 mesiac nemá limit
+      $$("[data-limit-tag]").forEach((el) => { el.hidden = !seat; if (seat) el.textContent = `len ${seat.total} miest`; });
       if (cta) {
-        const full = term === "season" && S.full;
+        const full = !!(S.open && seat && seat.left <= 0);
         const pay = S.pay && !full;
-        cta.href = pay ? "/zaplatit?term=" + term : "https://t.me/TipRadarAiBot?start=" + (full ? "sampion_waitlist" : t.start);
+        cta.href = pay ? "/zaplatit?term=" + term : "https://t.me/TipRadarAiBot?start=" + (full ? (term === "season" ? "sampion_waitlist" : "seria_waitlist") : t.start);
         if (pay) cta.removeAttribute("target"); else cta.target = "_blank";
         const note = document.getElementById("payNote");
         if (note) note.hidden = !pay;
         cta.textContent = pay ? "Zaplatiť " + t.price + " €" : !S.open ? "Zapísať sa do poradovníka" : full ? "Zapísať sa ako náhradník" : term === "season" ? "Rezervovať miesto na sezónu" : term === "m3" ? "Pridať sa na 3 mesiace" : "Pridať sa na mesiac";
       }
       const seats = document.getElementById("vipSeats");
-      if (seats && seats.dataset.ready) seats.hidden = term !== "season";
+      if (seats) {
+        seats.hidden = !seat;
+        if (seat) {
+          const what = term === "season" ? "na celú sezónu" : "na 3 mesiace";
+          $("vipSeatsText").innerHTML = `${S.open ? "Obsadené miesta" : "Obsadené a rezervované miesta"} ${what}: <b class="num">${seat.occupied} z ${seat.total}</b>`;
+          requestAnimationFrame(() => requestAnimationFrame(() => { $("seatBar").style.width = Math.min(100, (seat.occupied / seat.total) * 100) + "%"; }));
+        }
+      }
       document.documentElement.dataset.term = term;
     }
     $$(".term-switch [data-term]").forEach((b) => b.addEventListener("click", () => apply(b.dataset.term)));
@@ -1721,24 +1730,9 @@
       if (typeof d.freeChannelUrl === "string" && /^https:\/\/t\.me\//.test(d.freeChannelUrl)) {
         document.querySelectorAll("[data-free]").forEach((a) => { a.href = d.freeChannelUrl; });
       }
-      const total = Number(d.total) || 30;
-      document.querySelectorAll(".limit-tag").forEach((t) => { t.textContent = `len ${total} miest`; });
-      const show = (n, label) => {
-        $("vipSeatsText").innerHTML = `${label}: <b class="num">${n} z ${total}</b>`;
-        $("vipSeats").dataset.ready = "1";
-        requestAnimationFrame(() => requestAnimationFrame(() => { $("seatBar").style.width = Math.min(100, (n / total) * 100) + "%"; }));
-      };
-      if (!d.salesOpen) {
-        // Pred spustením predaja: členovia na sezónu + záujemcovia v poradovníku.
-        const members = Number(d.taken) || 0;
-        const n = Math.min(members + (Number(d.waitlistVip) || 0), total);
-        show(n, members > 0 ? "Obsadené a rezervované miesta na sezónu" : "V poradovníku na celú sezónu");
-      } else {
-        // Predaj beží (SALES_OPEN=true na Renderi)
-        const taken = Math.min(Number(d.taken) || 0, total);
-        window.__sales = { open: true, full: taken >= total, pay: d.payOpen === true };
-        show(taken, "Obsadené miesta na sezónu");
-      }
+      // Miesta podľa dĺžky členstva (3 mesiace a sezóna; 1 mesiac je bez limitu)
+      if (d.terms && d.terms.m3 && d.terms.season) window.__seats = d.terms;
+      window.__sales = { open: !!d.salesOpen, pay: d.salesOpen && d.payOpen === true };
       window.__applyTerm && window.__applyTerm(document.documentElement.dataset.term || "m3");
     })
     .catch(() => {});

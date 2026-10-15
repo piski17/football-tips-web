@@ -1,3 +1,4 @@
+import { SEATS_M3, SEATS_SEASON } from "./seatLimits";
 import { recordLead, listLeads, updateLead, Lead } from "./leadsStore";
 import { addSubscriber, listSubscribers, updateSubscriber } from "./subscribersStore";
 import { paymentsEnabled, savePayment, getPayment, confirmBankPayment, cancelPayment, paidUntil, PAY_TERMS, PUBLIC_URL, Payment, Term } from "./payments";
@@ -390,8 +391,8 @@ const BENEFITS_BASE =
 const BENEFIT_CHAT = `• <b>💬 Súkromný VIP chat</b> – na vaše otázky odpisujem priamo ja`;
 const BENEFIT_KURZ = `• <b>📚 Kurz stávkovania zadarmo</b> v hodnote 99 €`;
 const PLAN_START = `🟡 <b>Platinum · 1 mesiac</b> – 49 €\n${BENEFITS_BASE}`;
-const PLAN_SERIA = `🔶 <b>Platinum · 3 mesiace</b> – 129 € (43 € mesačne)\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
-const PLAN_SAMPION = `🏆 <b>Platinum · celá sezóna</b> – 299 € (37 € mesačne) · <b>len 30 miest</b>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_KURZ}`;
+const PLAN_SERIA = `🔶 <b>Platinum · 3 mesiace</b> – 129 € (43 € mesačne) · <b>len ${SEATS_M3} miest</b>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
+const PLAN_SAMPION = `🏆 <b>Platinum · celá sezóna</b> – 299 € (37 € mesačne) · <b>len ${SEATS_SEASON} miest</b>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_KURZ}`;
 
 const FAQ_ANSWERS: Record<string, string> = {
   faq_price:
@@ -444,13 +445,16 @@ const JOIN_MESSAGES: Record<string, string> = {
   sampion: `✨ <b>Členstvo TipRadar</b>\n\n${PLAN_SAMPION}\n\n${NEXT_STEP}`,
   clenstvo: `✨ <b>Členstvo TipRadar</b>\n\n${PLAN_START}\n\n${PLAN_SERIA}\n\n${PLAN_SAMPION}\n\n${NEXT_STEP}`,
   sampion_waitlist:
-    `🏆 <b>Platinum na celú sezónu – poradovník</b>\n\nVšetkých 30 miest je momentálne obsadených. Váš záujem sme si zapísali – keď sa miesto uvoľní, ozveme sa vám ako prvým.\n\n` +
+    `🏆 <b>Platinum na celú sezónu – poradovník</b>\n\nVšetkých ${SEATS_SEASON} miest je momentálne obsadených. Váš záujem sme si zapísali – keď sa miesto uvoľní, ozveme sa vám ako prvým.\n\n` +
     `Dovtedy môžete začať s členstvom Platinum na <b>1 mesiac</b> (49 €) alebo na <b>3 mesiace</b> (129 €) – stačí sem napísať, ktoré chcete.`,
 };
 // Staré odkazy (t.me/TipRadarAiBot?start=premium / vip) ešte môžu kolovať – ukážu celé členstvo.
 JOIN_MESSAGES.premium = JOIN_MESSAGES.clenstvo;
 JOIN_MESSAGES.vip = JOIN_MESSAGES.sampion;
 JOIN_MESSAGES.vip_waitlist = JOIN_MESSAGES.sampion_waitlist;
+JOIN_MESSAGES.seria_waitlist =
+  `🔶 <b>Platinum na 3 mesiace – poradovník</b>\n\nVšetkých ${SEATS_M3} miest je momentálne obsadených. Váš záujem sme si zapísali – keď sa miesto uvoľní, ozveme sa vám ako prvým.\n\n` +
+  `Dovtedy môžete začať s členstvom Platinum na <b>1 mesiac</b> (49 €) – stačí sem napísať.`;
 /** Tlačidlá na zaplatenie (vedú na tipradar.eu/zaplatit → stránka s QR kódom). */
 function payKeyboard(chatId: number | string, only?: Term) {
   const row = (t: Term, label: string) => [{ text: label, url: `${PUBLIC_URL}/zaplatit?term=${t}&c=${chatId}` }];
@@ -485,6 +489,7 @@ const LEAD_LABEL: Record<string, string> = {
   seria: "Platinum 3 mesiace",
   sampion: "Platinum celá sezóna",
   sampion_waitlist: "Platinum sezóna – náhradník",
+  seria_waitlist: "Platinum 3 mesiace – náhradník",
   premium: "členstvo (starý odkaz Premium)",
   vip: "Platinum sezóna (starý odkaz VIP)",
   vip_waitlist: "Platinum sezóna – náhradník",
@@ -993,7 +998,7 @@ export async function sendSalesOpenToWaitlist(): Promise<{ sent: number; skipped
       `Ahoj${first ? " " + first : ""} 👋\n\n` +
       `Zapísal si sa do poradovníka na <b>TipRadar Platinum</b>. Predaj je práve otvorený a ty máš prednosť.\n\n` +
       `◆ denné tipy 1 – 2 hodiny pred výkopom\n◆ pri každom kurz, šanca a sadzba\n◆ večerné vyhodnotenie\n\n` +
-      `Na celú sezónu je len <b>30 miest</b>. Vyber si dĺžku 👇`;
+      `Na 3 mesiace je len <b>${SEATS_M3} miest</b> a na celú sezónu len <b>${SEATS_SEASON}</b>. Vyber si dĺžku 👇`;
     try {
       await axios.post(
         `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
