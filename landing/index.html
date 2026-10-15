@@ -36,9 +36,9 @@
 <link rel="preload" as="image" href="/obrazky/zlate-svetlo.jpg" fetchpriority="high" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Jost:wght@400;500;600;700&display=swap" />
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
-<noscript><link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet" /></noscript>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Jost:wght@400;500;600;700;800&display=swap" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Jost:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Jost:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Mrs+Saint+Delafield&amp;text=Michael&amp;display=swap" />
 <link href="https://fonts.googleapis.com/css2?family=Mrs+Saint+Delafield&amp;text=Michael&amp;display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
 <noscript><link href="https://fonts.googleapis.com/css2?family=Mrs+Saint+Delafield&amp;text=Michael&amp;display=swap" rel="stylesheet" /></noscript>
@@ -1080,6 +1080,218 @@
     #kalkulacka .calc > div { padding: 22px 18px; }
     #kalkulacka .calc > div + div { border-left: 0; border-top: 1px solid var(--rule); }
   }
+
+  /* ================================================================
+     NOVÝ DIZAJN (15. 10. 2026): rovnaké farby, moderný a čitateľný štýl.
+     Tučné bezpätkové písmo Jost všade (ako v PDF pre klientov), väčší
+     a kontrastnejší text, zaoblené karty, čisté tlačidlá bez verzálok.
+     ================================================================ */
+  html { font-size-adjust: none; }
+  :root { --serif: var(--sans); --r: 18px; --r-sm: 12px; --muted: #CFC6B6; --faint: #A39A8B; --card-bg: linear-gradient(180deg, #1F1C18, #171513); --line: rgba(217,192,138,.18); }
+  body { font: 500 17.5px/1.65 var(--sans); border-top: 0; }
+  em { font-style: normal; }
+
+  /* nadpisy */
+  h1, h2, h3 { font-family: var(--sans); letter-spacing: -0.025em; }
+  h1, .hero h1, .page-head h1 { font-weight: 800; line-height: 1.02; }
+  .hero h1 { font-size: clamp(46px, 6.4vw, 88px); max-width: 12ch; }
+  .hero h1 em, .page-head h1 em { font-style: normal; color: var(--gold); background: linear-gradient(180deg, #F8EDD3, #D9C08A 60%, #B8995E); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  h2, .next h2 { font-weight: 800; font-size: clamp(34px, 4.4vw, 56px); line-height: 1.06; }
+  h2 em, h3 em, #clenstvo h2 em, .calib h3 em, #kalkulacka .calc h3 em { color: var(--gold); font-style: normal; }
+  h3 { font-weight: 700; }
+  .letter h2 { font-style: normal; }
+
+  /* štítok nad nadpisom ako zlatá „pilulka“ */
+  .eyebrow { display: inline-flex; gap: 10px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px; background: rgba(217,192,138,.07); font-size: 12px; letter-spacing: .14em; font-weight: 700; color: var(--gold-hi); }
+  .eyebrow::before, .eyebrow::after, .letter .eyebrow::before, .closing .eyebrow::before, #clenstvo .eyebrow::before { content: none !important; }
+  .eyebrow b { font: 800 12px/1 var(--sans); letter-spacing: 0; color: var(--gold); }
+  .eyebrow b::after { content: " ·"; color: var(--faint); }
+  #clenstvo .eyebrow, .letter .eyebrow, .closing .eyebrow { display: inline-flex; }
+  #clenstvo .club-h { margin-top: 0; }
+  #clenstvo .wrap > .eyebrow, .letter > .eyebrow { margin-inline: auto; }
+
+  /* tlačidlá: zaoblené, bez verzálok, tučné */
+  .btn { min-height: 54px; padding: 0 28px; border-radius: 14px; font: 700 16px/1 var(--sans); letter-spacing: 0; text-transform: none; }
+  .btn-ghost { border: 1.5px solid var(--rule-gold); color: var(--text); background: rgba(255,255,255,.02); }
+  .btn-ghost:hover { border-color: var(--gold); color: var(--gold-hi); }
+  .nav .btn { min-height: 42px; border-radius: 12px; font-size: 14px; }
+
+  /* horná lišta: priesvitná, zaoblené tlačidlá */
+  .nav { background: rgba(12,11,10,.82); -webkit-backdrop-filter: saturate(140%) blur(14px); backdrop-filter: saturate(140%) blur(14px); border-bottom: 1px solid var(--line); }
+  .brand { font: 800 22px/1 var(--sans); letter-spacing: -0.02em; }
+  .nav-free, .nav-kurz, .nav-toggle { min-height: 42px; border-radius: 12px; font: 700 14px/1 var(--sans); letter-spacing: 0; text-transform: none; }
+  .nav-toggle { color: var(--text); }
+  .nav-social a { border-radius: 12px; }
+  .nav-links a { font: 600 16px/1.3 var(--sans); letter-spacing: 0; text-transform: none; border-radius: 10px; }
+  @media (min-width: 1181px) { .nav.open .nav-links { border-radius: 0 0 var(--r) var(--r); border: 1px solid var(--line); border-top: 0; } }
+  .mcta { border-radius: 14px !important; font: 700 15px/1 var(--sans) !important; letter-spacing: 0 !important; text-transform: none !important; }
+
+  /* úvod */
+  .hero { padding: 104px 0 120px; }
+  .hero .intro { font-size: 19.5px; line-height: 1.7; color: var(--muted); font-weight: 500; }
+  .hero .intro strong { font-weight: 700; color: var(--text); }
+  .duel { border-radius: var(--r); background: rgba(22,20,18,.86); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border: 1px solid var(--line); padding: 28px 28px 22px; box-shadow: 0 40px 90px -40px rgba(0,0,0,.95); }
+  .duel::before { content: none; }
+  .duel-head { font-size: 12px; letter-spacing: .12em; font-weight: 700; }
+  .duel-mkt span, .duel-row .top, .duel-verdict span strong { letter-spacing: .08em; font-weight: 600; }
+  .duel-mkt b { font: 800 36px/1.1 var(--sans); letter-spacing: -0.02em; }
+  .duel-mkt b em { font-style: normal; color: var(--gold-hi); }
+  .duel-row .top b { font: 800 28px/1 var(--sans); }
+  .duel-track { height: 10px; border-radius: 99px; overflow: visible; }
+  .duel-fill { border-radius: 99px; }
+  .duel-band { border-radius: 8px; }
+  .duel-verdict { border-radius: var(--r-sm); }
+  .duel-verdict b { font: 800 30px/1 var(--sans); }
+  .duel-dots i { border-radius: 2px; }
+
+  /* sekcie: bez ozdobných kosoštvorcov, čisté jemné delenie */
+  .sec::before, .next::before { content: none; }
+  .sec::after, .next::after { background: linear-gradient(90deg, transparent, var(--line) 20%, var(--line) 80%, transparent); }
+  .sec { padding: 104px 0; }
+  .sec.alt { background: #13110F; }
+  @media (max-width: 640px) { .sec { padding: 64px 0; } .hero { padding: 56px 0 72px; } }
+  .muted, .split > :first-child p { color: var(--muted); }
+
+  /* karty: jednotný zaoblený štýl */
+  .sheet, .calc, .plan, .sample, .form, .clv, .showcase, .calib, .yday-card, .skola-buy, .last-tip, .faq details, .lux, .figures, #kalkulacka .calc { border-radius: var(--r); }
+  .sample, .form, .yday-card, .skola-buy { outline: 0; }
+  .skola-buy::before { content: none; }
+  .showcase, .calib, #kalkulacka .calc, .clv, .yday-card, .form, .lux { border: 1px solid var(--line); background: var(--card-bg); box-shadow: 0 30px 70px -45px rgba(0,0,0,.9); }
+  .showcase { overflow: hidden; }
+  .showcase::before { content: none; }
+  .showcase .stake { border-left-color: var(--line); }
+  @media (max-width: 900px) { .showcase .stake { border-top-color: var(--line); } }
+
+  /* kroky „Ako to funguje“ ako karty */
+  .steps { display: grid; gap: 12px; }
+  .steps li, .steps li:last-child { border: 1px solid var(--line); border-radius: var(--r); padding: 20px 22px; background: var(--card-bg); }
+  .steps .ico { border-radius: 14px; border-color: var(--line); background: rgba(217,192,138,.1); }
+  .steps h3 { font-weight: 700; font-size: 18px; }
+  .steps p { font-size: 16px; }
+  .more { font-weight: 700; font-size: 16px; }
+
+  /* metóda: lievik */
+  .funnel { border-top: 0; display: grid; gap: 10px; }
+  .funnel li { border: 1px solid var(--line); border-radius: var(--r); padding: 18px 22px; background: var(--card-bg); align-items: center; }
+  .funnel .c { font: 800 32px/1 var(--sans); white-space: nowrap; letter-spacing: -0.03em; }
+  .funnel li { grid-template-columns: 104px minmax(0, 1fr); }
+  .verdict .v { font: 800 58px/1 var(--sans); letter-spacing: -0.03em; }
+  .calc label b { font: 800 30px/1 var(--sans); }
+  .calc label span { letter-spacing: .1em; font-weight: 700; }
+  .stake .big, .clv-num b, .skola-price b, .price b { font-family: var(--sans); font-weight: 800; letter-spacing: -0.03em; }
+  .funnel h3 { font-size: 17px; letter-spacing: 0; text-transform: none; font-weight: 700; }
+
+  /* čísla vo výsledkoch ako samostatné dlaždice */
+  .figures { border: 0; display: grid; gap: 12px; background: none; border-radius: 0; }
+  .figures > div, .figures > div + div { padding: 24px 22px; border: 1px solid var(--line) !important; border-radius: var(--r); background: var(--card-bg); }
+  .figures b { font: 800 clamp(36px, 4.4vw, 54px)/1 var(--sans); letter-spacing: -0.03em; }
+  .figures span { font-size: 12.5px; letter-spacing: .1em; font-weight: 600; color: var(--faint); }
+  @media (max-width: 760px) { .figures > div:nth-child(3) { padding-left: 22px; } }
+
+  .sc-head h3, .ledger-wrap > h3, .results h3 { font: 800 28px/1.2 var(--sans); letter-spacing: -0.02em; }
+  .sc-total { font: 800 36px/1 var(--sans); }
+  .showcase .stake .big { font: 800 clamp(54px, 6vw, 84px)/1.05 var(--sans); }
+  .showcase .stake .sc-eyebrow, .form10 > span { letter-spacing: .12em; font-weight: 700; }
+  #last10 i, #last10h i { width: 28px; height: 28px; font-weight: 800; }
+
+  /* tabuľka tipov */
+  .sheet { border: 1px solid var(--line); overflow: hidden; background: var(--card-bg); }
+  .sheet-head h3 { font: 700 13px/1 var(--sans); letter-spacing: .12em; }
+  .ledger li { font-size: 15.5px; }
+  .ledger .m { font-weight: 700; }
+  .ledger .o { font: 800 18px/1 var(--sans); }
+  .ledger .r { font-size: 12px; letter-spacing: .08em; font-weight: 800; }
+  .ledger-cols { letter-spacing: .1em; font-weight: 700; }
+  .tab { font: 700 14px/1 var(--sans); letter-spacing: .04em; text-transform: none; }
+  .pg { border-radius: 10px; }
+
+  /* posledný tip pod úvodom */
+  .yday-date small, .yday-main .lg { letter-spacing: .12em; font-weight: 700; }
+  .yday-date b { font: 800 44px/1 var(--sans); }
+  .yday-main h3 { font: 800 28px/1.2 var(--sans); }
+  .yday-badge { border-radius: 999px; letter-spacing: .1em; font-weight: 800; }
+
+  /* členstvo */
+  .term-switch { border-color: var(--line); background: rgba(255,255,255,.02); }
+  .term-switch button { font: 700 15px/1 var(--sans); }
+  .lux { padding: 52px 52px 40px; }
+  .plan.vip.lux { outline: 0; border: 1px solid rgba(217,192,138,.55); box-shadow: 0 40px 90px -40px rgba(0,0,0,.95), 0 0 0 6px rgba(217,192,138,.05); }
+  .lux-brand { font-weight: 800; }
+  .lux h3.lux-name { font: 800 72px/1.05 var(--sans); letter-spacing: -0.035em; }
+  .lux-term { font-weight: 700; letter-spacing: .14em; }
+  .lux-price b { font: 800 72px/1 var(--sans); letter-spacing: -0.04em; }
+  .lux .limit-tag { border-radius: 999px; padding: 8px 16px; font-weight: 800; letter-spacing: .12em; background: rgba(217,192,138,.08); }
+  .lux-rule { font-weight: 800; letter-spacing: .18em; }
+  .lux .lux-list li { font-size: 16.5px; }
+  .lux .lux-list li strong { font-size: 17px; font-weight: 700; }
+  .lux-list li::before { border-radius: 2px; }
+  .last7 { border-radius: var(--r-sm); }
+  .seats .bar { border-radius: 99px; overflow: hidden; height: 6px; }
+  .seats .bar i { border-radius: 99px; }
+  @media (max-width: 560px) { .lux { padding: 40px 20px 28px; } .lux h3.lux-name { font-size: 54px; } .lux-price b { font-size: 58px; } }
+
+  /* o mne (svetlá sekcia ostáva) */
+  .letter p { font: 500 18px/1.75 var(--sans); }
+  .letter p:first-of-type { font: 700 26px/1.45 var(--sans); letter-spacing: -0.015em; max-width: 32ch; }
+  #kto .letter p { color: #4A4336; }
+  #kto .eyebrow { background: rgba(138,110,53,.08); border-color: rgba(138,110,53,.3); color: #7A5E28; }
+  #kto .eyebrow b { color: #8A6E35; }
+  .sign span { letter-spacing: .14em; font-weight: 700; }
+
+  /* otázky ako zaoblené karty */
+  .faq { display: grid; gap: 10px; }
+  .faq details, .faq details:first-child { border: 1px solid var(--line); background: var(--card-bg); padding: 0 22px; }
+  .faq summary { font: 700 18.5px/1.4 var(--sans); padding: 20px 40px 20px 0; }
+  .faq summary::after { top: 18px; font-weight: 600; }
+  .faq p { font-size: 16.5px; }
+
+  /* formulár */
+  .form { padding: 36px; }
+  .form legend, .form .lbl { letter-spacing: .1em; font-weight: 700; color: var(--gold-hi); }
+  .opt { border-radius: var(--r-sm); border-color: var(--line); }
+  .opt b { font: 800 24px/1.1 var(--sans); }
+  .field input, .field textarea, .select select { border-radius: var(--r-sm); border-color: rgba(217,192,138,.22); font-weight: 500; }
+  .form .steps li { border: 0; border-bottom: 1px solid var(--rule); border-radius: 0; background: none; padding: 12px 0; }
+  .form .steps li::before { font: 800 16px/1.4 var(--sans); }
+  .form-done b { font: 800 26px/1.2 var(--sans); }
+
+  /* kalkulačka a presnosť */
+  #kalkulacka .calc h3, .calib h3 { font: 800 28px/1.15 var(--sans); letter-spacing: -0.02em; }
+  #kalkulacka .calc label { letter-spacing: .1em; font-weight: 700; }
+  #kalkulacka .calc .val, #kalkulacka .calc .big, #kalkulacka .calc .rows b { font-family: var(--sans); font-weight: 800; }
+  #kalkulacka .calc .seg button { border-radius: 10px; font-weight: 700; }
+  .calib-row .lbl b { font-weight: 700; }
+  .calib-tip { border-radius: 10px; }
+
+  /* podstránky, záver, päta */
+  .page-head h1 { font-size: clamp(42px, 5.6vw, 72px); }
+  .page-head p { font-weight: 500; color: var(--muted); }
+  .page-head .back { display: inline-flex; padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px; font: 700 13px/1 var(--sans); letter-spacing: .04em; text-transform: none; color: var(--muted); }
+  .next h2 { font-size: clamp(30px, 3.6vw, 44px); }
+  .phone { border-radius: 44px; }
+  .jump { border-radius: 16px; }
+  .foot-social a { border-radius: 12px; }
+  footer .links { letter-spacing: .08em; font-weight: 700; }
+  .closing .small { letter-spacing: .02em; }
+
+  @media (max-width: 640px) {
+    body { font-size: 16.5px; }
+    h1, .hero h1 { font-size: 42px; }
+    h2 { font-size: 34px; }
+    .hero .intro { font-size: 17px; }
+    .eyebrow { font-size: 11px; padding: 7px 12px; letter-spacing: .1em; }
+    .hero .eyebrow { flex-direction: row; line-height: 1.3; }
+    .steps li, .funnel li { padding: 16px; }
+    .funnel li { grid-template-columns: 74px minmax(0, 1fr); gap: 14px; }
+    .funnel .c { font-size: 24px; }
+    .verdict .v { font-size: 46px; }
+    .faq summary { font-size: 17px; }
+    .figures b { font-size: 34px; }
+    .letter p:first-of-type { font-size: 22px; }
+    .duel-head { font-size: 10.5px; letter-spacing: .08em; }
+    .duel-live { letter-spacing: .06em; }
+  }
+  @media (max-width: 480px) { .nav-toggle { font-size: 0; gap: 0; padding: 0 12px; } }
 </style>
 </head>
 <body>
