@@ -20,7 +20,7 @@
 <link rel="apple-touch-icon" href="/favicon-256.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
   /* TipRadar „Onyx“ – rovnaké farby a písmo ako tipradar.eu */
   :root {
@@ -36,8 +36,8 @@
     --success: #8fc4a2;
     --text: #efe8d8;
     --text-muted: #a89f8e;
-    --font-display: "Playfair Display", Georgia, serif;
-    --font-body: "Plus Jakarta Sans", "Helvetica Neue", Arial, sans-serif;
+    --font-display: "Jost", "Helvetica Neue", Arial, sans-serif;
+    --font-body: "Jost", "Helvetica Neue", Arial, sans-serif;
     color-scheme: dark;
   }
 
@@ -356,6 +356,18 @@
   .ctrl-row { display: flex; gap: 10px; }
   .fs-btn { font-size: 16px; }
   .progress-track { max-width: 900px; }
+
+  /* nový dizajn webu (október 2026): tučné písmo Jost, zaoblené prvky */
+  body { font-weight: 500; }
+  h1 { font-weight: 800 !important; letter-spacing: -0.035em !important; line-height: 1 !important; }
+  .kicker { font-weight: 700; }
+  .brand-mark-fixed { font-weight: 800 !important; letter-spacing: -0.02em; }
+  .mini-step-num, .mock-tip-title, .mock-ticket-row strong, .channel-card .name, .contact-line { font-weight: 800 !important; }
+  .mini-step-num { border-radius: 50%; }
+  .mini-step, .mock-tip, .channel-card, .price-card, .market-chip { border-radius: 18px !important; }
+  .mock-tip-explain { font-style: normal; }
+  .back-home { border-radius: 999px !important; font: 700 13px/1 var(--font-body) !important; letter-spacing: 0 !important; text-transform: none !important; }
+  .play-btn { border-radius: 50% !important; }
 </style>
 </head>
 <body>
