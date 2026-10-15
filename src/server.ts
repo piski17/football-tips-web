@@ -987,8 +987,26 @@ app.get("/api/public/track-record", async (_req, res) => {
       .filter((t) => typeof t.odds === "number" && t.odds > 1)
       .sort((a, b) => kickTime(a) - kickTime(b))
       .map((t) => ({ day: tipDayKey(t) ?? "", odds: Math.round(t.odds! * 100) / 100, won: t.status === "won" }));
+    // Presnosť modelu: v pásmach dôvery porovná priemernú šancu podľa modelu so skutočnosťou.
+    // Len jednotlivé tipy (tiket má kombinovanú šancu), vrátené tipy sa nerátajú.
+    const singles = resolvedAll.filter((t) => !(t.legs && t.legs.length > 0) && typeof t.probability === "number");
+    const bands = [
+      { label: "do 71 %", test: (p: number) => p < 72 },
+      { label: "72 – 75 %", test: (p: number) => p >= 72 && p < 76 },
+      { label: "76 % a viac", test: (p: number) => p >= 76 },
+    ];
+    const calibRow = (list: SavedTip[]) => ({
+      n: list.length,
+      predicted: list.length ? Math.round((list.reduce((s, t) => s + t.probability, 0) / list.length) * 10) / 10 : null,
+      actual: list.length ? Math.round((list.filter((t) => t.status === "won").length / list.length) * 1000) / 10 : null,
+    });
+    const calibration = {
+      overall: calibRow(singles),
+      bands: bands.map((b) => ({ label: b.label, ...calibRow(singles.filter((t) => b.test(t.probability))) })),
+    };
     res.json({
       ...summarize(all),
+      calibration,
       month: { key: monthKey, ...summarize(inMonth) },
       last7: summarize(inLast7),
       latest,

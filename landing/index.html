@@ -1013,6 +1013,45 @@
   /* ================================================================
      Kalkulačka „Koľko by ste mali dnes?“ zo skutočných tipov (14. 10. 2026)
      ================================================================ */
+  /* Presnosť modelu (sľúbená šanca vs. skutočnosť) */
+  .calib-sec { margin-top: 40px; }
+  .calib-sec[hidden] { display: none; }
+  .calib { --c-actual: #B88A22; --c-model: #3987e5; position: relative; padding: 30px 32px 26px; border: 1px solid var(--rule-gold); background: linear-gradient(135deg, #1D1A17, #141210); }
+  .calib h3 { font-family: var(--serif); font-weight: 500; font-size: 30px; letter-spacing: -.01em; margin: 6px 0 8px; }
+  .calib h3 em { color: var(--gold); font-style: italic; }
+  .calib .note { color: var(--muted); margin: 0 0 18px; max-width: 64ch; }
+  .calib-legend { display: flex; gap: 22px; flex-wrap: wrap; font-size: 13.5px; color: var(--muted); margin-bottom: 16px; }
+  .calib-legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .lg-dot, .lg-ring { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
+  .lg-dot { background: var(--c-actual); }
+  .lg-ring { border: 2px solid var(--c-model); background: #161412; }
+  .calib-axis { position: relative; height: 18px; margin: 0 190px 6px 150px; font-size: 11.5px; color: var(--faint); }
+  .calib-axis span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+  .calib-axis span:first-child { transform: none; } .calib-axis span:last-child { transform: translateX(-100%); }
+  .calib-row { display: grid; grid-template-columns: 150px 1fr 190px; align-items: center; min-height: 52px; border-top: 1px solid var(--rule); cursor: default; }
+  .calib-row:last-child { border-bottom: 1px solid var(--rule); }
+  .calib-row:hover, .calib-row:focus-visible { background: rgba(217,192,138,.04); outline: none; }
+  .calib-row .lbl b { display: block; font-weight: 600; color: var(--text); font-size: 15px; }
+  .calib-row .lbl span { font-size: 12.5px; color: var(--faint); }
+  .calib-track { position: relative; height: 52px; background: repeating-linear-gradient(90deg, rgba(255,255,255,.07) 0 1px, transparent 1px 20%); background-size: calc(100% + 1px) 100%; }
+  .calib-track .gap { position: absolute; top: 50%; height: 2px; margin-top: -1px; background: rgba(244,238,226,.35); }
+  .calib-track .ring, .calib-track .dot { position: absolute; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; }
+  .calib-track .ring { border: 2px solid var(--c-model); background: #161412; box-shadow: 0 0 0 2px #161412; }
+  .calib-track .dot { background: var(--c-actual); box-shadow: 0 0 0 2px #161412; }
+  .calib-row .vals { text-align: right; font-size: 14px; color: var(--muted); padding-left: 14px; }
+  .calib-row .vals b { color: var(--text); font-weight: 600; }
+  .calib-row .vals .up { color: var(--win); }
+  .calib-sum { margin: 16px 0 0; font-size: 14.5px; color: var(--muted); }
+  .calib-sum b { color: var(--text); }
+  .calib-tip { position: absolute; z-index: 5; pointer-events: none; background: #0C0B0A; border: 1px solid var(--rule-gold); padding: 10px 12px; font-size: 13px; line-height: 1.5; color: var(--text); white-space: nowrap; box-shadow: 0 10px 30px -10px rgba(0,0,0,.8); }
+  .calib-tip[hidden] { display: none; }
+  @media (max-width: 760px) {
+    .calib { padding: 22px 18px 20px; }
+    .calib h3 { font-size: 24px; }
+    .calib-axis { margin: 0 0 6px; }
+    .calib-row { grid-template-columns: 1fr auto; grid-template-areas: "lbl vals" "track track"; padding: 10px 0 4px; }
+    .calib-row .lbl { grid-area: lbl; } .calib-row .vals { grid-area: vals; } .calib-track { grid-area: track; height: 36px; }
+  }
   .calc-sec { margin-top: 40px; }
   .calc-sec[hidden] { display: none; }
   #kalkulacka .calc { display: grid; grid-template-columns: 1fr 1fr; gap: 0; padding: 0; border: 1px solid var(--rule-gold); background: linear-gradient(135deg, #1D1A17, #141210); box-shadow: 0 40px 80px -50px rgba(0,0,0,.9); }
@@ -1263,6 +1302,18 @@
         </div>
       </div>
 
+      <div class="calib-sec" id="presnost" data-pages="vysledky" hidden>
+        <div class="calib">
+          <div class="eyebrow">Presnosť modelu</div>
+          <h3>Sľúbená šanca <em>a skutočnosť</em></h3>
+          <p class="note">Keď model dá tipu 72&nbsp;%, z každých 100 takých tipov by malo vyjsť zhruba 72. Takto to dopadlo pri všetkých vyhodnotených tipoch.</p>
+          <div class="calib-legend" aria-hidden="true"><span><i class="lg-dot"></i>Skutočne vyšlo</span><span><i class="lg-ring"></i>Šanca podľa modelu</span></div>
+          <div class="calib-axis" aria-hidden="true"><span style="left:0">50 %</span><span style="left:20%">60 %</span><span style="left:40%">70 %</span><span style="left:60%">80 %</span><span style="left:80%">90 %</span><span style="left:100%">100 %</span></div>
+          <div id="calibRows" role="list"></div>
+          <p class="calib-sum" id="calibSum"></p>
+          <div class="calib-tip" id="calibTip" role="tooltip" hidden></div>
+        </div>
+      </div>
       <div class="calc-sec" id="kalkulacka" data-pages="vysledky" hidden>
         <div class="calc">
           <div>
@@ -1595,6 +1646,41 @@
     const tick = (t) => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = fmtFn(k < 1 ? Number((to * e).toFixed(dec)) : to); if (k < 1) requestAnimationFrame(tick); };
     requestAnimationFrame(tick);
   }
+  // ---------- presnosť modelu ----------
+  function drawCalib(c) {
+    if (!c || !c.overall || !(c.overall.n >= 5)) return; // pri pár tipoch by to bolo zavádzajúce
+    const pos = (p) => Math.max(0, Math.min(100, (p - 50) * 2)); // os 50 – 100 %
+    const pct = (v) => fmt(v, v % 1 ? 1 : 0) + " %";
+    const rows = c.bands.filter((b) => b.n > 0);
+    $("calibRows").innerHTML = rows.map((b, i) => {
+      const a = pos(b.actual), m = pos(b.predicted), lo = Math.min(a, m), hi = Math.max(a, m);
+      const diff = b.actual - b.predicted;
+      return `<div class="calib-row" role="listitem" tabindex="0" data-i="${i}" aria-label="Pásmo ${esc(b.label)}: model ${pct(b.predicted)}, skutočne vyšlo ${pct(b.actual)}, ${b.n} tipov">
+        <div class="lbl"><b>${esc(b.label)}</b><span>${b.n} ${b.n === 1 ? "tip" : b.n < 5 ? "tipy" : "tipov"}</span></div>
+        <div class="calib-track"><i class="gap" style="left:${lo}%;width:${hi - lo}%"></i><i class="ring" style="left:${m}%"></i><i class="dot" style="left:${a}%"></i></div>
+        <div class="vals">model ${pct(b.predicted)} · vyšlo <b class="${diff >= 0 ? "up" : ""}">${pct(b.actual)}</b></div>
+      </div>`;
+    }).join("");
+    const o = c.overall;
+    $("calibSum").innerHTML = `Spolu ${o.n} tipov: model v priemere sľúbil <b>${pct(o.predicted)}</b>, skutočne vyšlo <b>${pct(o.actual)}</b>.`;
+    const tip = $("calibTip"), box = tip.parentElement;
+    const show = (row, x, y) => {
+      const b = rows[Number(row.dataset.i)];
+      tip.innerHTML = `<b>Pásmo ${esc(b.label)}</b><br>Šanca podľa modelu: ${pct(b.predicted)}<br>Skutočne vyšlo: ${pct(b.actual)}<br>Tipov: ${b.n}`;
+      tip.hidden = false;
+      const r = box.getBoundingClientRect();
+      tip.style.left = Math.min(r.width - tip.offsetWidth - 8, Math.max(8, x - r.left + 14)) + "px";
+      tip.style.top = (y - r.top + 14) + "px";
+    };
+    box.querySelectorAll(".calib-row").forEach((row) => {
+      row.addEventListener("mousemove", (e) => show(row, e.clientX, e.clientY));
+      row.addEventListener("mouseleave", () => { tip.hidden = true; });
+      row.addEventListener("focus", () => { const r = row.getBoundingClientRect(); show(row, r.left + r.width / 2, r.top + r.height / 2); });
+      row.addEventListener("blur", () => { tip.hidden = true; });
+    });
+    $("presnost").hidden = false;
+  }
+
   // ---------- zoznam tipov ----------
   const PER_PAGE = 5;
   let recentAll = [], filter = "all", page = 0;
@@ -1751,6 +1837,7 @@
         el7.hidden = false;
       }
       window.__bankData = d.bank || []; window.__calc && window.__calc();
+      drawCalib(d.calibration);
       recentAll = d.recent || [];
       drawList(); drawChart(d.timeline);
       // Včerajší (posledný vyhodnotený) tip pod úvodom – výhra aj prehra
