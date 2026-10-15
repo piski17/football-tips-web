@@ -24,11 +24,11 @@
 <link rel="apple-touch-icon" href="/favicon-256.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
 <style>
   /* ================================================================
      TipRadar – tipradar.eu · dizajn „Onyx & zlato“ (október 2026)
-     Rovnaké farby ako doteraz. Tučné písmo Jost, veľké nadpisy,
+     Rovnaké farby ako doteraz. Písmo Sora (nadpisy) a Outfit (text), veľké nadpisy,
      zlaté žiariace okraje, celoplošné menu, jemné animácie.
      ================================================================ */
   :root {
@@ -47,7 +47,8 @@
     --faint: #A39A8B;
     --win: #7FBF9A;
     --loss: #C0707C;
-    --sans: "Jost", "Helvetica Neue", Arial, system-ui, sans-serif;
+    --sans: "Outfit", "Helvetica Neue", Arial, system-ui, sans-serif;
+    --display: "Sora", "Outfit", "Helvetica Neue", Arial, sans-serif;
     --serif: var(--sans);
     --r: 22px;
     --r-sm: 14px;
@@ -799,6 +800,13 @@
   .lb-arrow, .lb-close { border-radius: 50%; }
   @media (max-width: 520px) { .skola-buy { padding: 24px 18px; } .skola-price b { font-size: 58px; } }
 
+
+  /* písmo: Sora na nadpisy a čísla, Outfit na text */
+  h1, h2, h3, .brand, .idx, .wordmark, .marquee span, .ov-links a, .steps .n, .funnel .c, .figures b, .sc-total, .stake .big, .verdict .v, .calc label b, .duel-mkt b, .duel-row .top b, .duel-verdict b, .yday-date b, .lux h3.lux-name, .lux-price b, .ledger .o, #kalkulacka .calc .val, #kalkulacka .calc .big, #kalkulacka .calc .rows b, .skola-price b, .form-done b { font-family: var(--display); }
+  h1 { letter-spacing: -0.04em; line-height: 1; }
+  h2 { letter-spacing: -0.035em; line-height: 1.04; }
+  h3 { letter-spacing: -0.02em; }
+  .figures b, .lux-price b, .stake .big, .steps .n, .funnel .c, .verdict .v { letter-spacing: -0.045em; }
 </style>
 </head>
 <body>
