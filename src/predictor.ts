@@ -743,7 +743,7 @@ export function predictMatch(
   // kategórie, aby dostal rôznorodý, nie opakujúci sa výber.
   const candidates: MarketPick[] = [];
 
-  candidates.push({ market: "Výsledok zápasu", selection: outcomeLabel, probability: sorted[0], category: "vysledok", explanation: resultExplanation });
+  // Výsledok zápasu, „oba tímy skórujú“ a ofsajdy model od 15. 10. 2026 vôbec neponúka (Michalovo rozhodnutie).
 
   // Nad/pod: pri každom trhu všetky hranice, ktoré stávkovky ponúkajú (bez kurzov
   // predvolené hranice). Pri každej hranici ide do úvahy strana, ktorú model vidí ako
@@ -782,17 +782,6 @@ export function predictMatch(
     `Očakávané góly ${fixture.awayTeam.name}: ${xg.away.toFixed(1)} (súper ${fixture.homeTeam.name} ${xg.home.toFixed(1)}).${absences?.text ? ` ${absences.text}` : ""}`
   );
 
-  // Kalibrácia podľa spätného testu (~106 zápasov): Poisson pri „oba tímy skórujú"
-  // preceňoval istotu (model 62 %, realita 50 %) – nevidí, že zápasy s nulou na
-  // jednej strane (0:0, 1:0, 2:0…) sú častejšie. Odchýlku od 50 % preto zmenšíme.
-  const BTTS_SHRINK = 0.6;
-  const bttsYesCal = 50 + BTTS_SHRINK * (poisson.bttsYes - 50);
-  if (bttsYesCal >= 50) {
-    candidates.push({ market: "Oba tímy skórujú", selection: "Áno", probability: bttsYesCal, category: "btts", explanation: bttsExplanation });
-  } else {
-    candidates.push({ market: "Oba tímy skórujú", selection: "Nie", probability: 100 - bttsYesCal, category: "btts", explanation: bttsExplanation });
-  }
-
   if (corners) {
     const exp = corners.expected;
     addOverUnder("Rohy", "rohy", (line) => poissonOverUnder(exp, line), (line) => statExplanation(exp, line));
@@ -821,26 +810,6 @@ export function predictMatch(
   if (fouls) {
     const exp = fouls.expected;
     addOverUnder("Fauly", "fauly", (line) => poissonOverUnder(exp, line), (line) => statExplanation(exp, line));
-  }
-
-  if (offsides) {
-    if (offsides.over >= offsides.under) {
-      candidates.push({
-        market: "Ofsajdy",
-        selection: `Over ${OFFSIDES_LINE}`,
-        probability: offsides.over,
-        category: "ofsajdy",
-        explanation: statExplanation(offsides.expected, OFFSIDES_LINE),
-      });
-    } else {
-      candidates.push({
-        market: "Ofsajdy",
-        selection: `Under ${OFFSIDES_LINE}`,
-        probability: offsides.under,
-        category: "ofsajdy",
-        explanation: statExplanation(offsides.expected, OFFSIDES_LINE),
-      });
-    }
   }
 
   // Vyššie držanie lopty - odhad z priemerného držania lopty oboch tímov.
