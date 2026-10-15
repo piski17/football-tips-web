@@ -722,7 +722,8 @@
   .figures b, .lux-price b, .stake .big, .steps .n, .funnel .c, .verdict .v { letter-spacing: -0.045em; }
 
   html { overflow-x: clip; }
-  html { overflow-x: clip; }
+  /* menu sa drží hore pri posúvaní aj na podstránkach (overflow: hidden na body to rušilo) */
+  body { overflow-x: clip; }
   .nav-social { display: flex; align-items: center; gap: 4px; }
   .nav-social a { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; color: var(--gold-hi); transition: background .25s, color .25s; }
   .nav-social a:hover { background: rgba(217,192,138,.12); color: var(--gold); }
