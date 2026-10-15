@@ -810,13 +810,10 @@
 
   html { overflow-x: clip; }
   html { overflow-x: clip; }
-  /* ikonky Telegram, Instagram, e-mail vpravo pod tlačidlami Kurz a Tipy zadarmo */
-  .nav .wrap.nav-sub { height: auto !important; display: flex; justify-content: flex-end; padding-bottom: 8px; margin-top: -6px; transition: margin .4s var(--ease), padding .4s var(--ease); }
   .nav-social { display: flex; align-items: center; gap: 4px; }
-  .nav-social a { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; color: var(--gold-hi); transition: background .25s, color .25s; }
+  .nav-social a { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; color: var(--gold-hi); transition: background .25s, color .25s; }
   .nav-social a:hover { background: rgba(217,192,138,.12); color: var(--gold); }
-  .nav-social svg { width: 17px; height: 17px; }
-  html.menu-open .nav-sub { visibility: hidden; }
+  .nav-social svg { width: 18px; height: 18px; }
 </style>
 </head>
 <body>
@@ -840,18 +837,17 @@
       <a href="/vysledky">Výsledky</a>
       <a href="/#clenstvo">Členstvo</a>
       <a href="/#kto">O mne</a>
+      <a href="/kurz">Kurz</a>
       <a href="/otazky">Otázky</a>
+      <a data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener">Komunita</a>
     </div>
     <div class="nav-right">
-      <a class="nav-kurz" href="/kurz"><svg aria-hidden="true"><use href="#i-book"/></svg>Kurz</a>
-      <a class="btn nav-free" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-tg"/></svg><span>Tipy zadarmo</span></a>
+      <div class="nav-social">
+        <a href="https://www.instagram.com/tipradar.eu/" target="_blank" rel="noopener" aria-label="Instagram – tipradar.eu" title="Instagram"><svg aria-hidden="true"><use href="#i-ig"/></svg></a>
+        <a href="mailto:info@tipradar.eu" aria-label="E-mail info@tipradar.eu" title="info@tipradar.eu"><svg aria-hidden="true"><use href="#i-mail"/></svg></a>
+        <a href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener" aria-label="Telegram – TipRadar bot" title="Telegram"><svg aria-hidden="true"><use href="#i-tg"/></svg></a>
+      </div>
       <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="overlay" aria-label="Menu"><i aria-hidden="true"></i></button>
-    </div>
-  </div>
-  <div class="wrap nav-sub">
-    <div class="nav-social">
-      <a href="https://www.instagram.com/tipradar.eu/" target="_blank" rel="noopener" aria-label="Instagram – tipradar.eu" title="Instagram"><svg aria-hidden="true"><use href="#i-ig"/></svg></a>
-      <a href="mailto:info@tipradar.eu" aria-label="E-mail info@tipradar.eu" title="info@tipradar.eu"><svg aria-hidden="true"><use href="#i-mail"/></svg></a>
     </div>
   </div>
 </nav>
@@ -867,7 +863,7 @@
       <li><a href="/video">Video</a></li>
     </ul>
     <div class="ov-foot">
-      <a class="btn" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener"><svg width="18" height="18" aria-hidden="true"><use href="#i-tg"/></svg>Tipy zadarmo na Telegrame</a>
+      <a class="btn" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener"><svg width="18" height="18" aria-hidden="true"><use href="#i-tg"/></svg>Telegram komunita</a>
       <a class="btn btn-ghost" href="/kurz"><svg width="18" height="18" aria-hidden="true"><use href="#i-book"/></svg>Kurz Škola stávkovania</a>
       <div class="ov-contacts"><a href="mailto:info@tipradar.eu">info@tipradar.eu</a><a href="https://www.instagram.com/tipradar.eu/" target="_blank" rel="noopener">Instagram @tipradar.eu</a></div>
     </div>
@@ -961,7 +957,7 @@
         </div>
       </div>
       <div class="foot-col"><h4>Web</h4><a href="/metoda">Metóda</a><a href="/vysledky">Výsledky</a><a href="/#clenstvo">Členstvo</a><a href="/#kto">O mne</a></div>
-      <div class="foot-col"><h4>Viac</h4><a href="/kurz">Kurz stávkovania</a><a href="/video">Video</a><a href="/otazky">Otázky a kontakt</a><a data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener">Tipy zadarmo</a></div>
+      <div class="foot-col"><h4>Viac</h4><a href="/kurz">Kurz stávkovania</a><a href="/video">Video</a><a href="/otazky">Otázky a kontakt</a><a data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener">Telegram komunita</a></div>
     </div>
     <div class="foot-legal">
       <p>TipRadar je analytický nástroj založený na štatistickom modeli, nie stávková kancelária ani finančné poradenstvo. Tipy sú informatívne a nezaručujú výsledok. Minulé výsledky nie sú zárukou budúcich. O tom, či a koľko staviť, rozhodujete vždy vy.</p>
