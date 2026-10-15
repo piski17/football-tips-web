@@ -166,6 +166,7 @@
   .nav.open + .overlay .ov-links li:nth-child(5) a { transition-delay: .42s; }
   .nav.open + .overlay .ov-links li:nth-child(6) a { transition-delay: .48s; }
   .nav.open + .overlay .ov-links li:nth-child(7) a { transition-delay: .54s; }
+  .nav.open + .overlay .ov-links li:nth-child(8) a { transition-delay: .60s; }
   .ov-foot { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: auto; padding-top: 32px; opacity: 0; transform: translateY(16px); transition: opacity .5s .5s, transform .6s .5s var(--ease); }
   .nav.open + .overlay .ov-foot { opacity: 1; transform: none; }
   .ov-foot .btn { width: 100%; }
@@ -838,6 +839,7 @@
       <a href="/#clenstvo">Členstvo</a>
       <a href="/#kto">O mne</a>
       <a href="/otazky">Otázky</a>
+      <a href="/formular">Formulár</a>
       <a href="/kurz">Kurz</a>
     </div>
     <div class="nav-right">
@@ -858,7 +860,8 @@
       <li><a href="/vysledky">Výsledky<small>všetky tipy</small></a></li>
       <li><a href="/#clenstvo">Členstvo<small>Platinum</small></a></li>
       <li><a href="/#kto">O mne</a></li>
-      <li><a href="/otazky">Otázky<small>a kontakt</small></a></li>
+      <li><a href="/otazky">Otázky</a></li>
+      <li><a href="/formular">Formulár<small>napíšte mi</small></a></li>
       <li><a href="/video">Video</a></li>
     </ul>
     <div class="ov-foot">
@@ -933,7 +936,7 @@
             </ul>
             <p class="skola-vip"><strong>Zadarmo</strong> pri členstve TipRadar Platinum na celú sezónu.</p>
             <div class="skola-actions">
-              <a class="btn" href="/otazky?kurz=1#zapis" data-kurz-cta>Chcem kurz</a>
+              <a class="btn" href="/formular?kurz=1#zapis" data-kurz-cta>Chcem kurz</a>
               <a class="btn btn-ghost" href="/#clenstvo">Pozrieť členstvo</a>
             </div>
           </div>
@@ -956,7 +959,7 @@
         </div>
       </div>
       <div class="foot-col"><h4>Web</h4><a href="/metoda">Metóda</a><a href="/vysledky">Výsledky</a><a href="/#clenstvo">Členstvo</a><a href="/#kto">O mne</a></div>
-      <div class="foot-col"><h4>Viac</h4><a href="/kurz">Kurz stávkovania</a><a href="/video">Video</a><a href="/otazky">Otázky a kontakt</a><a data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener">Telegram komunita</a></div>
+      <div class="foot-col"><h4>Viac</h4><a href="/kurz">Kurz stávkovania</a><a href="/video">Video</a><a href="/otazky">Otázky</a><a href="/formular">Formulár</a><a data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener">Telegram komunita</a></div>
     </div>
     <div class="foot-legal">
       <p>TipRadar je analytický nástroj založený na štatistickom modeli, nie stávková kancelária ani finančné poradenstvo. Tipy sú informatívne a nezaručujú výsledok. Minulé výsledky nie sú zárukou budúcich. O tom, či a koľko staviť, rozhodujete vždy vy.</p>

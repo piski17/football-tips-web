@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8" />
 <script>
-  /* Ktorá stránka sa zobrazí: tipradar.eu/, /metoda, /vysledky, /otazky (jeden súbor, rôzne časti). */
+  /* Ktorá stránka sa zobrazí: tipradar.eu/, /metoda, /vysledky, /otazky, /formular (jeden súbor, rôzne časti). */
   (function () {
     var m = location.pathname.replace(/\/+$/, "").split("/").pop();
     var q = new URLSearchParams(location.search).get("stranka");
-    var page = ["metoda", "vysledky", "otazky"].indexOf(q || m) >= 0 ? (q || m) : "home";
+    var page = ["metoda", "vysledky", "otazky", "formular"].indexOf(q || m) >= 0 ? (q || m) : "home";
     document.documentElement.setAttribute("data-page", page);
-    var t = { metoda: "Metóda – ako vzniká tip | TipRadar", vysledky: "Výsledky – všetky vyhodnotené tipy | TipRadar", otazky: "Otázky a kontakt | TipRadar" }[page];
+    var t = { metoda: "Metóda – ako vzniká tip | TipRadar", vysledky: "Výsledky – všetky vyhodnotené tipy | TipRadar", otazky: "Otázky | TipRadar", formular: "Formulár – napíšte mi | TipRadar" }[page];
     if (t) document.title = t;
   })();
 </script>
@@ -183,6 +183,7 @@
   .nav.open + .overlay .ov-links li:nth-child(5) a { transition-delay: .42s; }
   .nav.open + .overlay .ov-links li:nth-child(6) a { transition-delay: .48s; }
   .nav.open + .overlay .ov-links li:nth-child(7) a { transition-delay: .54s; }
+  .nav.open + .overlay .ov-links li:nth-child(8) a { transition-delay: .60s; }
   .ov-foot { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: auto; padding-top: 32px; opacity: 0; transform: translateY(16px); transition: opacity .5s .5s, transform .6s .5s var(--ease); }
   .nav.open + .overlay .ov-foot { opacity: 1; transform: none; }
   .ov-foot .btn { width: 100%; }
@@ -694,11 +695,12 @@
   .rv { opacity: 0; transform: translateY(34px); }
   .rv.in { opacity: 1; transform: none; transition: opacity 1s var(--ease), transform 1s var(--ease); transition-delay: var(--rv-d, 0s); }
 
-  /* rozdelenie na stránky: úvod, /metoda, /vysledky, /otazky */
+  /* rozdelenie na stránky: úvod, /metoda, /vysledky, /otazky, /formular */
   html[data-page="home"] [data-pages]:not([data-pages~="home"]),
   html[data-page="metoda"] [data-pages]:not([data-pages~="metoda"]),
   html[data-page="vysledky"] [data-pages]:not([data-pages~="vysledky"]),
-  html[data-page="otazky"] [data-pages]:not([data-pages~="otazky"]) { display: none !important; }
+  html[data-page="otazky"] [data-pages]:not([data-pages~="otazky"]),
+  html[data-page="formular"] [data-pages]:not([data-pages~="formular"]) { display: none !important; }
   html[data-page="vysledky"] #vysledky { padding-top: 70px; }
 
   @media (prefers-reduced-motion: reduce) {
@@ -750,6 +752,7 @@
       <a href="/#clenstvo">Členstvo</a>
       <a href="/#kto">O mne</a>
       <a href="/otazky">Otázky</a>
+      <a href="/formular">Formulár</a>
       <a href="/kurz">Kurz</a>
     </div>
     <div class="nav-right">
@@ -770,7 +773,8 @@
       <li><a href="/vysledky">Výsledky<small>všetky tipy</small></a></li>
       <li><a href="/#clenstvo">Členstvo<small>Platinum</small></a></li>
       <li><a href="/#kto">O mne</a></li>
-      <li><a href="/otazky">Otázky<small>a kontakt</small></a></li>
+      <li><a href="/otazky">Otázky</a></li>
+      <li><a href="/formular">Formulár<small>napíšte mi</small></a></li>
       <li><a href="/video">Video</a></li>
     </ul>
     <div class="ov-foot">
@@ -798,9 +802,16 @@
   </header>
   <header class="page-head" data-pages="otazky">
     <div class="wrap">
-      <a class="back" href="/">← Úvod</a><div class="eyebrow">Otázky a kontakt</div>
+      <a class="back" href="/">← Úvod</a><div class="eyebrow">Otázky</div>
       <h1>Ako vám <em>poradím</em></h1>
-      <p>Odpovede na najčastejšie otázky. Ak tu tú svoju nenájdete, napíšte mi cez formulár nižšie.</p>
+      <p>Odpovede na najčastejšie otázky. Ak tu tú svoju nenájdete, napíšte mi cez <a class="link" href="/formular">formulár</a>.</p>
+    </div>
+  </header>
+  <header class="page-head" data-pages="formular">
+    <div class="wrap">
+      <a class="back" href="/">← Úvod</a><div class="eyebrow">Formulár</div>
+      <h1>Napíšte <em>mi</em></h1>
+      <p>Otázka k modelu, tipom, členstvu alebo kurzu? Vyplňte formulár a odpoviem vám osobne na e-mail.</p>
     </div>
   </header>
 
@@ -1103,12 +1114,12 @@
     </div>
   </section>
 
-  <section class="sec" id="zapis" data-pages="otazky">
+  <section class="sec" id="zapis" data-pages="formular">
     <div class="wrap join">
       <div>
-        <div class="eyebrow">Formulár</div>
-        <h2>Nenašli ste <em>odpoveď?</em></h2>
-        <p>Napíšte mi, čo vás zaujíma o modeli, tipoch alebo členstve. Odpoviem vám osobne na e-mail.</p>
+        <div class="eyebrow">Kontakt</div>
+        <h2>Ozvem sa vám <em>osobne</em></h2>
+        <p>Napíšte mi, čo vás zaujíma o modeli, tipoch, členstve alebo kurze. Odpoveď príde na váš e-mail.</p>
       </div>
       <form class="form glow" id="joinForm" novalidate>
         <div class="fields">
@@ -1140,7 +1151,7 @@
       <div class="actions"><a class="btn" href="#clenstvo">Pozrieť členstvo <span class="arr" aria-hidden="true">→</span></a><a class="btn btn-ghost" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener">Telegram komunita</a></div>
     </div>
   </section>
-  <section class="finale" data-pages="metoda vysledky otazky">
+  <section class="finale" data-pages="metoda vysledky otazky formular">
     <div class="rings" aria-hidden="true"></div>
     <div class="wrap">
       <div class="eyebrow">TipRadar Platinum</div>
@@ -1164,7 +1175,7 @@
         </div>
       </div>
       <div class="foot-col"><h4>Web</h4><a href="/metoda">Metóda</a><a href="/vysledky">Výsledky</a><a href="/#clenstvo">Členstvo</a><a href="/#kto">O mne</a></div>
-      <div class="foot-col"><h4>Viac</h4><a href="/kurz">Kurz stávkovania</a><a href="/video">Video</a><a href="/otazky">Otázky a kontakt</a><a data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener">Telegram komunita</a></div>
+      <div class="foot-col"><h4>Viac</h4><a href="/kurz">Kurz stávkovania</a><a href="/video">Video</a><a href="/otazky">Otázky</a><a href="/formular">Formulár</a><a data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener">Telegram komunita</a></div>
     </div>
     <div class="foot-legal">
       <p>TipRadar je analytický nástroj založený na štatistickom modeli, nie stávková kancelária ani finančné poradenstvo. Tipy sú informatívne a nezaručujú výsledok. Minulé výsledky nie sú zárukou budúcich. O tom, či a koľko staviť, rozhodujete vždy vy.</p>

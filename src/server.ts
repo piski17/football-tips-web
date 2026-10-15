@@ -175,7 +175,7 @@ app.use((req, res, next) => {
     next();
     return;
   }
-  const toLanding = ["/", "/video", "/video/", "/kurz", "/kurz/", "/metoda", "/metoda/", "/vysledky", "/vysledky/", "/otazky", "/otazky/", "/clenstvo", "/clenstvo/", "/zaplatit", "/platba"].includes(req.path);
+  const toLanding = ["/", "/video", "/video/", "/kurz", "/kurz/", "/metoda", "/metoda/", "/vysledky", "/vysledky/", "/otazky", "/otazky/", "/formular", "/formular/", "/clenstvo", "/clenstvo/", "/zaplatit", "/platba"].includes(req.path);
   res.redirect(301, (toLanding ? "https://tipradar.eu" : "https://app.tipradar.eu") + req.originalUrl);
 });
 
@@ -190,11 +190,11 @@ app.get("/", (req, res, next) => {
 app.get(["/video", "/video/"], (_req, res) => {
   res.sendFile(path.join(__dirname, "..", "landing", "video.html"));
 });
-// Podstránky prezentácie (tipradar.eu/metoda, /vysledky, /otazky) – bez hesla.
+// Podstránky prezentácie (tipradar.eu/metoda, /vysledky, /otazky, /formular) – bez hesla.
 // Je to ten istý súbor ako úvod, podľa adresy sa v ňom zobrazí iná časť.
 // tipradar.eu/clenstvo = úvod, ktorý sa sám posunie na Členstvo (odkaz z Instagramu,
 // ktorý časť adresy za # niekedy zahodí).
-app.get(["/metoda", "/metoda/", "/vysledky", "/vysledky/", "/otazky", "/otazky/", "/clenstvo", "/clenstvo/"], (_req, res) => {
+app.get(["/metoda", "/metoda/", "/vysledky", "/vysledky/", "/otazky", "/otazky/", "/formular", "/formular/", "/clenstvo", "/clenstvo/"], (_req, res) => {
   res.sendFile(path.join(__dirname, "..", "landing", "index.html"));
 });
 // ---- Platba za členstvo (prevod cez QR kód) – bez hesla ----
