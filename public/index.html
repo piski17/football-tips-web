@@ -67,7 +67,13 @@
 
       <button class="btn-ghost" id="openTicketBtn">Tiket <span id="ticketCount"></span></button>
       <button class="btn-ghost" id="openTipsBtn">História tipov</button>
-      <button class="btn-ghost" id="openSubscribersBtn">Členovia <span class="seat-badge" id="seatBadge" hidden></span></button>
+      <button class="btn-ghost" id="openSubscribersBtn">Členovia</button>
+      <div class="seat-strip" id="seatStrip" hidden title="Voľné miesta v TipRadar Platinum podľa dĺžky členstva">
+        <span class="ss-h">Voľné miesta</span>
+        <span class="ss-i" data-seat="m1"><small>1 mes.</small><b>–</b></span>
+        <span class="ss-i" data-seat="m3"><small>3 mes.</small><b>–</b></span>
+        <span class="ss-i" data-seat="season"><small>Sezóna</small><b>–</b></span>
+      </div>
       <div class="tools-menu" id="toolsMenu">
         <button class="btn-ghost" id="toolsBtn" aria-haspopup="true" aria-expanded="false">Nástroje <span aria-hidden="true">▾</span></button>
         <div class="tools-pop" id="toolsPop" role="menu" hidden>
@@ -301,13 +307,13 @@
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d) => {
         const t = d.terms;
-        if (!t || !t.m3 || !t.season) return;
-        const el = document.getElementById("seatBadge");
-        const part = (label, r) => `${label} ${r.left > 0 ? r.left : "plné"}`;
-        el.textContent = `${part("3M", t.m3)} · ${part("S", t.season)} voľných`;
-        el.title = `Voľné miesta v Platinum: 3 mesiace ${t.m3.left} zo ${t.m3.total}, sezóna ${t.season.left} z ${t.season.total} (1 mesiac bez limitu)`;
-        el.classList.toggle("full", t.m3.left <= 0 || t.season.left <= 0);
-        el.hidden = false;
+        if (!t || !t.m1 || !t.m3 || !t.season) return;
+        document.querySelectorAll("#seatStrip [data-seat]").forEach((el) => {
+          const r = t[el.dataset.seat];
+          el.querySelector("b").innerHTML = r.left > 0 ? `${r.left}<i>/${r.total}</i>` : "plné";
+          el.classList.toggle("full", r.left <= 0);
+        });
+        document.getElementById("seatStrip").hidden = false;
       })
       .catch(() => {});
   </script>

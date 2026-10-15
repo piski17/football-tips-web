@@ -1534,7 +1534,7 @@ closeTipsBtn.addEventListener("click", () => {
 // ---- Členovia (platba beží mimo appky, napr. bankovým prevodom) ----
 
 // Ceny musia sedieť s PRICES na tipradar.eu (landing/index.html).
-// TipRadar Platinum: jedno členstvo, tri dĺžky (1 mesiac bez limitu, 3 mesiace 100 miest, sezóna 50 miest).
+// TipRadar Platinum: jedno členstvo, tri dĺžky (1 mesiac 100 miest, 3 mesiace 70, sezóna 30).
 // Sezóna sa ukladá ako tier "group" – počíta sa do miest na sezónu.
 const MEMBER_PRICES = { m1: 49, m3: 129, season: 299 };
 const MEMBER_NAME = { m1: "Platinum 1 mesiac", m3: "Platinum 3 mesiace", season: "Platinum sezóna" };
@@ -3239,7 +3239,7 @@ document.addEventListener("click", async (e) => {
   btn.disabled = false;
   renderLeads();
 });
-const LEAD_PLAN_LABEL = { start: "Platinum 1 mesiac", seria: "Platinum 3 mesiace", sampion: "Platinum sezóna", sampion_waitlist: "Platinum sezóna (náhradník)", seria_waitlist: "Platinum 3 mesiace (náhradník)", premium: "starý odkaz Premium", vip: "Platinum sezóna (starý odkaz VIP)", vip_waitlist: "Platinum sezóna (náhradník)", clenstvo: "nevybral", otazka: "otázka z webu" };
+const LEAD_PLAN_LABEL = { start: "Platinum 1 mesiac", seria: "Platinum 3 mesiace", sampion: "Platinum sezóna", sampion_waitlist: "Platinum sezóna (náhradník)", seria_waitlist: "Platinum 3 mesiace (náhradník)", start_waitlist: "Platinum 1 mesiac (náhradník)", premium: "starý odkaz Premium", vip: "Platinum sezóna (starý odkaz VIP)", vip_waitlist: "Platinum sezóna (náhradník)", clenstvo: "nevybral", otazka: "otázka z webu" };
 async function renderLeads() {
   const el = document.getElementById("leadsList");
   if (!el) return;

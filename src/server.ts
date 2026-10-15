@@ -1,4 +1,4 @@
-import { SEATS_M3, SEATS_SEASON } from "./seatLimits";
+import { SEATS_M1, SEATS_M3, SEATS_SEASON } from "./seatLimits";
 import { MIN_ODDS, findOdds, STRONG_TIP_MIN_PROBABILITY } from "./oddsMatcher";
 import { listLeads, deleteLead, recordLead } from "./leadsStore";
 import { getMeta, setMeta } from "./metaStore";
@@ -207,40 +207,42 @@ async function seasonSeats(): Promise<{ taken: number; total: number; activeVip:
   );
   return { taken: activeVip.length, total, activeVip };
 }
-/** Aktívni členovia na 3 mesiace (7 dní tolerancia po splatnosti). */
-async function m3Seats(): Promise<{ taken: number; total: number; active: Subscriber[] }> {
+/** Aktívni členovia na 1 alebo 3 mesiace (7 dní tolerancia po splatnosti). Staršie záznamy bez dĺžky = 1 mesiac. */
+async function shortSeats(length: "m1" | "m3"): Promise<{ taken: number; total: number; active: Subscriber[] }> {
   const graceMs = 7 * 24 * 60 * 60 * 1000;
   const active = (await listSubscribers()).filter(
-    (s) => s.tier !== "group" && s.length === "m3" && new Date(s.nextPaymentDue).getTime() + graceMs >= Date.now()
+    (s) => s.tier !== "group" && (s.length ?? "m1") === length && new Date(s.nextPaymentDue).getTime() + graceMs >= Date.now()
   );
-  return { taken: active.length, total: SEATS_M3, active };
+  return { taken: active.length, total: length === "m3" ? SEATS_M3 : SEATS_M1, active };
 }
+type TermSeats = Record<"m1" | "m3" | "season", { occupied: number; total: number; left: number }>;
 /**
- * Obsadené miesta pre 3 mesiace a sezónu (rovnako ako na webe): pred spustením predaja
+ * Obsadené miesta pre každú dĺžku členstva (rovnako ako na webe): pred spustením predaja
  * sa rátajú členovia aj záujemcovia v poradovníku, počas predaja len aktívni členovia.
  */
-async function termSeats(): Promise<Record<"m3" | "season", { occupied: number; total: number; left: number }>> {
-  const [season, m3] = await Promise.all([seasonSeats(), m3Seats()]);
-  let waitSeason = 0, waitM3 = 0;
+async function termSeats(): Promise<TermSeats> {
+  const [season, m3, m1] = await Promise.all([seasonSeats(), shortSeats("m3"), shortSeats("m1")]);
+  let waitSeason = 0, waitM3 = 0, waitM1 = 0;
   if (process.env.SALES_OPEN !== "true") {
-    const members = new Set([...season.activeVip, ...m3.active].map((s) => String(s.telegramChatId || "")).filter(Boolean));
+    const members = new Set([...season.activeVip, ...m3.active, ...m1.active].map((s) => String(s.telegramChatId || "")).filter(Boolean));
     const leads = (await listLeads().catch(() => [])).filter((l) => !members.has(String(l.chatId)));
     waitSeason = leads.filter((l) => ["vip", "vip_waitlist", "sampion", "sampion_waitlist"].includes(l.plan)).length;
     waitM3 = leads.filter((l) => l.plan === "seria").length;
+    waitM1 = leads.filter((l) => l.plan === "start").length;
   }
   const row = (taken: number, total: number) => {
     const occupied = Math.min(taken, total);
     return { occupied, total, left: total - occupied };
   };
-  return { m3: row(m3.taken + waitM3, m3.total), season: row(season.taken + waitSeason, season.total) };
+  return { m1: row(m1.taken + waitM1, m1.total), m3: row(m3.taken + waitM3, m3.total), season: row(season.taken + waitSeason, season.total) };
 }
 /** Riadok s odpočtom miest pre tipy v bezplatnom kanáli. */
 async function freeSeatsLine(): Promise<string | undefined> {
   try {
     const t = await termSeats();
     const part = (label: string, r: { left: number; total: number }) =>
-      r.left > 0 ? `${label} <b>${r.left} z ${r.total}</b>` : `${label} <b>obsadené</b>`;
-    return `🔥 Voľné miesta v Platinum: ${part("3 mesiace", t.m3)} · ${part("sezóna", t.season)}`;
+      r.left > 0 ? `${label} <b>${r.left}/${r.total}</b>` : `${label} <b>obsadené</b>`;
+    return `🔥 Voľné miesta v Platinum: ${part("1 mesiac", t.m1)} · ${part("3 mesiace", t.m3)} · ${part("sezóna", t.season)}`;
   } catch {
     return undefined;
   }
@@ -263,10 +265,10 @@ app.get("/zaplatit", async (req, res) => {
         return;
       }
     }
-    if (term === "m3") {
-      const { taken, total } = await m3Seats();
+    if (term === "m3" || term === "m1") {
+      const { taken, total } = await shortSeats(term);
       if (taken >= total) {
-        res.redirect(302, `https://t.me/${BOT_USERNAME}?start=seria_waitlist`);
+        res.redirect(302, `https://t.me/${BOT_USERNAME}?start=${term === "m3" ? "seria" : "start"}_waitlist`);
         return;
       }
     }
@@ -1083,7 +1085,7 @@ app.delete("/api/tips/:id/slip", async (req, res) => {
 });
 
 // Verejné počítadlo VIP miest (len čísla, žiadne mená). Aktívny VIP = typ „group"
-// s platbou nie viac ako 7 dní po splatnosti. Počet miest: SEATS_SEASON (predvolene 50), 3 mesiace SEATS_M3 (100).
+// s platbou nie viac ako 7 dní po splatnosti. Počet miest: SEATS_M1 (100), SEATS_M3 (70), SEATS_SEASON (30).
 app.get("/api/public/vip-seats", async (_req, res) => {
   res.set("Access-Control-Allow-Origin", "*");
   try {
