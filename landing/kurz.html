@@ -807,6 +807,16 @@
   h2 { letter-spacing: -0.035em; line-height: 1.04; }
   h3 { letter-spacing: -0.02em; }
   .figures b, .lux-price b, .stake .big, .steps .n, .funnel .c, .verdict .v { letter-spacing: -0.045em; }
+
+  html { overflow-x: clip; }
+  html { overflow-x: clip; }
+  /* ikonky Telegram, Instagram, e-mail vpravo pod tlačidlami Kurz a Tipy zadarmo */
+  .nav .wrap.nav-sub { height: auto !important; display: flex; justify-content: flex-end; padding-bottom: 8px; margin-top: -6px; transition: margin .4s var(--ease), padding .4s var(--ease); }
+  .nav-social { display: flex; align-items: center; gap: 4px; }
+  .nav-social a { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; color: var(--gold-hi); transition: background .25s, color .25s; }
+  .nav-social a:hover { background: rgba(217,192,138,.12); color: var(--gold); }
+  .nav-social svg { width: 17px; height: 17px; }
+  html.menu-open .nav-sub { visibility: hidden; }
 </style>
 </head>
 <body>
@@ -836,6 +846,13 @@
       <a class="nav-kurz" href="/kurz"><svg aria-hidden="true"><use href="#i-book"/></svg>Kurz</a>
       <a class="btn nav-free" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-tg"/></svg><span>Tipy zadarmo</span></a>
       <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="overlay" aria-label="Menu"><i aria-hidden="true"></i></button>
+    </div>
+  </div>
+  <div class="wrap nav-sub">
+    <div class="nav-social">
+      <a href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener" aria-label="Telegram – TipRadar bot" title="Telegram"><svg aria-hidden="true"><use href="#i-tg"/></svg></a>
+      <a href="https://www.instagram.com/tipradar.eu/" target="_blank" rel="noopener" aria-label="Instagram – tipradar.eu" title="Instagram"><svg aria-hidden="true"><use href="#i-ig"/></svg></a>
+      <a href="mailto:info@tipradar.eu" aria-label="E-mail info@tipradar.eu" title="info@tipradar.eu"><svg aria-hidden="true"><use href="#i-mail"/></svg></a>
     </div>
   </div>
 </nav>
