@@ -1344,7 +1344,6 @@ function historyRowHtml(t) {
             ${legsHtml}
           </div>
           ${resultIconHtml}
-          ${t.watchOnly ? "" : `<button class="tip-delete-btn slip-btn" data-slip-id="${t.id}" title="Snímka podaného tiketu" aria-label="Snímka podaného tiketu"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>`}
           ${
             t.watchOnly
               ? `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button>`
@@ -1363,7 +1362,6 @@ function historyRowHtml(t) {
             <div class="tip-row-market">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))} · ${t.probability.toFixed(0)} % · kurz ${tipOddsLabel(t)}${overrideBadge(t)}${manualBadge(t)}${editedBadge(t)}</div>
           </div>
           ${resultIconHtml}
-          ${t.watchOnly ? "" : `<button class="tip-delete-btn slip-btn" data-slip-id="${t.id}" title="Snímka podaného tiketu" aria-label="Snímka podaného tiketu"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>`}
           ${
             t.watchOnly
               ? `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button>`
