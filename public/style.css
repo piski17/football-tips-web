@@ -1855,3 +1855,6 @@ details.low-value-list[open] > summary { margin-bottom: 6px; }
 /* písmo nadpisov Cormorant Garamond: čísla v rovnakej výške (nie „starodávne“ skákajúce číslice) */
 body { font-variant-numeric: lining-nums; }
 h1, h2, h3, h4 { font-weight: 700; letter-spacing: 0; }
+
+/* nadpisy veľkými písmenami ako na tipradar.eu (logo a názvy tímov ostávajú) */
+h2:not(.match-header-teams), h3 { text-transform: uppercase; letter-spacing: .02em; }
