@@ -7,9 +7,9 @@
   (function () {
     var m = location.pathname.replace(/\/+$/, "").split("/").pop();
     var q = new URLSearchParams(location.search).get("stranka");
-    var page = ["metoda", "vysledky", "otazky", "formular"].indexOf(q || m) >= 0 ? (q || m) : "home";
+    var page = ["metoda", "vysledky", "otazky", "formular", "o-mne"].indexOf(q || m) >= 0 ? (q || m) : "home";
     document.documentElement.setAttribute("data-page", page);
-    var t = { metoda: "Metóda – ako vzniká tip | TipRadar", vysledky: "Výsledky – všetky vyhodnotené tipy | TipRadar", otazky: "Otázky | TipRadar", formular: "Formulár – napíšte mi | TipRadar" }[page];
+    var t = { metoda: "Metóda – ako vzniká tip | TipRadar", vysledky: "Výsledky – všetky vyhodnotené tipy | TipRadar", otazky: "Otázky | TipRadar", formular: "Formulár – napíšte mi | TipRadar", "o-mne": "O mne | TipRadar" }[page];
     if (t) document.title = t;
   })();
 </script>
@@ -700,7 +700,9 @@
   html[data-page="metoda"] [data-pages]:not([data-pages~="metoda"]),
   html[data-page="vysledky"] [data-pages]:not([data-pages~="vysledky"]),
   html[data-page="otazky"] [data-pages]:not([data-pages~="otazky"]),
-  html[data-page="formular"] [data-pages]:not([data-pages~="formular"]) { display: none !important; }
+  html[data-page="formular"] [data-pages]:not([data-pages~="formular"]),
+  html[data-page="o-mne"] [data-pages]:not([data-pages~="o-mne"]) { display: none !important; }
+  html[data-page="o-mne"] #kto .letter > .eyebrow { display: none; }
   html[data-page="vysledky"] #vysledky { padding-top: 70px; }
 
   @media (prefers-reduced-motion: reduce) {
@@ -726,6 +728,10 @@
   body { overflow-x: clip; }
   /* menu veľkými písmenami */
   .menu a { text-transform: uppercase; letter-spacing: .09em; font-size: 13px; font-weight: 600; padding: 11px 15px; }
+  /* nadpisy stránok z menu veľkými písmenami */
+  .page-head h1, .skola-text h2 { text-transform: uppercase; letter-spacing: -0.01em; line-height: 1.02; }
+  .page-head h1 { font-size: clamp(34px, 5vw, 68px); }
+  .skola-text h2 { font-size: clamp(34px, 4.6vw, 64px); }
   /* zlaté slová: priestor pre spodok písmen (y, p, j) a pravý okraj, aby sa neodrezali */
   .shine, h1 em, h2 em, h3 em { padding: 0 .08em .16em; margin: 0 -.08em; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
   /* nadpisy podstránok na jeden riadok (na mobile sa zalomia podľa šírky) */
@@ -757,7 +763,7 @@
       <a href="/metoda">Metóda</a>
       <a href="/vysledky">Výsledky</a>
       <a href="/#clenstvo">Členstvo</a>
-      <a href="/#kto">O mne</a>
+      <a href="/o-mne">O mne</a>
       <a href="/otazky">Otázky</a>
       <a href="/formular">Formulár</a>
       <a href="/kurz">Kurz</a>
@@ -779,7 +785,7 @@
       <li><a href="/metoda">Metóda<small>ako vzniká tip</small></a></li>
       <li><a href="/vysledky">Výsledky<small>všetky tipy</small></a></li>
       <li><a href="/#clenstvo">Členstvo<small>Platinum</small></a></li>
-      <li><a href="/#kto">O mne</a></li>
+      <li><a href="/o-mne">O mne</a></li>
       <li><a href="/otazky">Otázky</a></li>
       <li><a href="/formular">Formulár<small>napíšte mi</small></a></li>
       <li><a href="/video">Video</a></li>
@@ -812,6 +818,13 @@
       <a class="back" href="/">← Úvod</a><div class="eyebrow">Otázky</div>
       <h1>Ako vám <em>poradím</em></h1>
       <p>Odpovede na najčastejšie otázky. Ak tu tú svoju nenájdete, napíšte mi cez <a class="link" href="/formular">formulár</a>.</p>
+    </div>
+  </header>
+  <header class="page-head" data-pages="o-mne">
+    <div class="wrap">
+      <a class="back" href="/">← Úvod</a><div class="eyebrow">O mne</div>
+      <h1>Kto stojí za <em>TipRadarom</em></h1>
+      <p>Prečo som TipRadar založil a čo od neho môžete čakať.</p>
     </div>
   </header>
   <header class="page-head" data-pages="formular">
@@ -1093,7 +1106,7 @@
     </div>
   </section>
 
-  <section class="sec" id="kto" data-pages="home">
+  <section class="sec" id="kto" data-pages="o-mne">
     <div class="wrap">
       <div class="letter">
         <div class="eyebrow">O mne</div>
@@ -1158,7 +1171,7 @@
       <div class="actions"><a class="btn" href="#clenstvo">Pozrieť členstvo <span class="arr" aria-hidden="true">→</span></a><a class="btn btn-ghost" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener">Telegram komunita</a></div>
     </div>
   </section>
-  <section class="finale" data-pages="metoda vysledky otazky formular">
+  <section class="finale" data-pages="metoda vysledky otazky formular o-mne">
     <div class="rings" aria-hidden="true"></div>
     <div class="wrap">
       <div class="eyebrow">TipRadar Platinum</div>
@@ -1181,7 +1194,7 @@
           <a href="mailto:info@tipradar.eu" aria-label="E-mail info@tipradar.eu" title="info@tipradar.eu"><svg aria-hidden="true"><use href="#i-mail"/></svg></a>
         </div>
       </div>
-      <div class="foot-col"><h4>Web</h4><a href="/metoda">Metóda</a><a href="/vysledky">Výsledky</a><a href="/#clenstvo">Členstvo</a><a href="/#kto">O mne</a></div>
+      <div class="foot-col"><h4>Web</h4><a href="/metoda">Metóda</a><a href="/vysledky">Výsledky</a><a href="/#clenstvo">Členstvo</a><a href="/o-mne">O mne</a></div>
       <div class="foot-col"><h4>Viac</h4><a href="/kurz">Kurz stávkovania</a><a href="/video">Video</a><a href="/otazky">Otázky</a><a href="/formular">Formulár</a><a data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener">Telegram komunita</a></div>
     </div>
     <div class="foot-legal">

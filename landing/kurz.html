@@ -814,6 +814,10 @@
   body { overflow-x: clip; }
   /* menu veľkými písmenami */
   .menu a { text-transform: uppercase; letter-spacing: .09em; font-size: 13px; font-weight: 600; padding: 11px 15px; }
+  /* nadpisy stránok z menu veľkými písmenami */
+  .page-head h1, .skola-text h2 { text-transform: uppercase; letter-spacing: -0.01em; line-height: 1.02; }
+  .page-head h1 { font-size: clamp(34px, 5vw, 68px); }
+  .skola-text h2 { font-size: clamp(34px, 4.6vw, 64px); }
   /* zlaté slová: priestor pre spodok písmen (y, p, j) a pravý okraj, aby sa neodrezali */
   .shine, h1 em, h2 em, h3 em { padding: 0 .08em .16em; margin: 0 -.08em; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
   /* nadpisy podstránok na jeden riadok (na mobile sa zalomia podľa šírky) */
@@ -844,7 +848,7 @@
       <a href="/metoda">Metóda</a>
       <a href="/vysledky">Výsledky</a>
       <a href="/#clenstvo">Členstvo</a>
-      <a href="/#kto">O mne</a>
+      <a href="/o-mne">O mne</a>
       <a href="/otazky">Otázky</a>
       <a href="/formular">Formulár</a>
       <a href="/kurz">Kurz</a>
@@ -866,7 +870,7 @@
       <li><a href="/metoda">Metóda<small>ako vzniká tip</small></a></li>
       <li><a href="/vysledky">Výsledky<small>všetky tipy</small></a></li>
       <li><a href="/#clenstvo">Členstvo<small>Platinum</small></a></li>
-      <li><a href="/#kto">O mne</a></li>
+      <li><a href="/o-mne">O mne</a></li>
       <li><a href="/otazky">Otázky</a></li>
       <li><a href="/formular">Formulár<small>napíšte mi</small></a></li>
       <li><a href="/video">Video</a></li>
@@ -965,7 +969,7 @@
           <a href="mailto:info@tipradar.eu" aria-label="E-mail info@tipradar.eu" title="info@tipradar.eu"><svg aria-hidden="true"><use href="#i-mail"/></svg></a>
         </div>
       </div>
-      <div class="foot-col"><h4>Web</h4><a href="/metoda">Metóda</a><a href="/vysledky">Výsledky</a><a href="/#clenstvo">Členstvo</a><a href="/#kto">O mne</a></div>
+      <div class="foot-col"><h4>Web</h4><a href="/metoda">Metóda</a><a href="/vysledky">Výsledky</a><a href="/#clenstvo">Členstvo</a><a href="/o-mne">O mne</a></div>
       <div class="foot-col"><h4>Viac</h4><a href="/kurz">Kurz stávkovania</a><a href="/video">Video</a><a href="/otazky">Otázky</a><a href="/formular">Formulár</a><a data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener">Telegram komunita</a></div>
     </div>
     <div class="foot-legal">
