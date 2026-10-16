@@ -821,7 +821,9 @@
   .page-head h1 { font-size: clamp(34px, 5vw, 68px); }
   .skola-text h2 { font-size: clamp(34px, 4.6vw, 64px); }
   /* zlaté slová: priestor pre spodok písmen (y, p, j) a pravý okraj, aby sa neodrezali */
-  .shine, h1 em, h2 em, h3 em { padding: 0 .08em .16em; margin: 0 -.08em; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+  /* zlaté slová ako samostatný blok: zlatá farba pokryje celé písmená aj v Safari (spodok y, p, j a mäkčene/dĺžne hore) */
+  .shine, h1 em, h2 em, h3 em { display: inline-block; padding: .06em .08em .18em; margin: -.06em -.08em -.18em; vertical-align: baseline; }
+  .hero h1 em { display: inline; padding: 0 .08em .16em; margin: 0 -.08em; }
   /* nadpisy podstránok na jeden riadok (na mobile sa zalomia podľa šírky) */
   .page-head h1 { max-width: none; }
   .nav-social { display: flex; align-items: center; gap: 4px; }
