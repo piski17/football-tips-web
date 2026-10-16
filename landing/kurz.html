@@ -812,6 +812,10 @@
   html { overflow-x: clip; }
   /* menu sa drží hore pri posúvaní aj na podstránkach (overflow: hidden na body to rušilo) */
   body { overflow-x: clip; }
+  /* zlaté slová: priestor pre spodok písmen (y, p, j) a pravý okraj, aby sa neodrezali */
+  .shine, h1 em, h2 em, h3 em { padding: 0 .08em .16em; margin: 0 -.08em; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+  /* nadpisy podstránok na jeden riadok (na mobile sa zalomia podľa šírky) */
+  .page-head h1 { max-width: none; }
   .nav-social { display: flex; align-items: center; gap: 4px; }
   .nav-social a { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; color: var(--gold-hi); transition: background .25s, color .25s; }
   .nav-social a:hover { background: rgba(217,192,138,.12); color: var(--gold); }
