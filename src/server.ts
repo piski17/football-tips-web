@@ -192,8 +192,7 @@ app.get(["/video", "/video/"], (_req, res) => {
 });
 // Podstránky prezentácie (tipradar.eu/metoda, /vysledky, /otazky, /formular) – bez hesla.
 // Je to ten istý súbor ako úvod, podľa adresy sa v ňom zobrazí iná časť.
-// tipradar.eu/clenstvo = úvod, ktorý sa sám posunie na Členstvo (odkaz z Instagramu,
-// ktorý časť adresy za # niekedy zahodí).
+// tipradar.eu/clenstvo = samostatná stránka Členstvo (aj odkazy z Instagramu a Telegramu).
 app.get(["/metoda", "/metoda/", "/vysledky", "/vysledky/", "/otazky", "/otazky/", "/formular", "/formular/", "/o-mne", "/o-mne/", "/clenstvo", "/clenstvo/"], (_req, res) => {
   res.sendFile(path.join(__dirname, "..", "landing", "index.html"));
 });

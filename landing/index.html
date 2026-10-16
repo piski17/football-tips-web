@@ -7,9 +7,9 @@
   (function () {
     var m = location.pathname.replace(/\/+$/, "").split("/").pop();
     var q = new URLSearchParams(location.search).get("stranka");
-    var page = ["metoda", "vysledky", "otazky", "formular", "o-mne"].indexOf(q || m) >= 0 ? (q || m) : "home";
+    var page = ["metoda", "vysledky", "clenstvo", "otazky", "formular", "o-mne"].indexOf(q || m) >= 0 ? (q || m) : "home";
     document.documentElement.setAttribute("data-page", page);
-    var t = { metoda: "Metóda – ako vzniká tip | TipRadar", vysledky: "Výsledky – všetky vyhodnotené tipy | TipRadar", otazky: "Otázky | TipRadar", formular: "Formulár – napíšte mi | TipRadar", "o-mne": "O mne | TipRadar" }[page];
+    var t = { metoda: "Metóda – ako vzniká tip | TipRadar", vysledky: "Výsledky – všetky vyhodnotené tipy | TipRadar", otazky: "Otázky | TipRadar", formular: "Formulár – napíšte mi | TipRadar", "o-mne": "O mne | TipRadar", clenstvo: "Členstvo | TipRadar" }[page];
     if (t) document.title = t;
   })();
 </script>
@@ -703,7 +703,10 @@
   html[data-page="vysledky"] [data-pages]:not([data-pages~="vysledky"]),
   html[data-page="otazky"] [data-pages]:not([data-pages~="otazky"]),
   html[data-page="formular"] [data-pages]:not([data-pages~="formular"]),
-  html[data-page="o-mne"] [data-pages]:not([data-pages~="o-mne"]) { display: none !important; }
+  html[data-page="o-mne"] [data-pages]:not([data-pages~="o-mne"]),
+  html[data-page="clenstvo"] [data-pages]:not([data-pages~="clenstvo"]) { display: none !important; }
+  html[data-page="clenstvo"] #clenstvo .sec-head { display: none; }
+  html[data-page="clenstvo"] #clenstvo { padding-top: 24px; }
   html[data-page="o-mne"] #kto .letter > .eyebrow { display: none; }
   html[data-page="vysledky"] #vysledky { padding-top: 70px; }
 
@@ -821,7 +824,7 @@ footer .copy { margin-top: 28px !important; }
     <div class="menu">
       <a href="/metoda">Metóda</a>
       <a href="/vysledky">Výsledky</a>
-      <a href="/#clenstvo">Členstvo</a>
+      <a href="/clenstvo">Členstvo</a>
       <a href="/o-mne">O mne</a>
       <a href="/otazky">Otázky</a>
       <a href="/formular">Formulár</a>
@@ -843,7 +846,7 @@ footer .copy { margin-top: 28px !important; }
       <li><a href="/">Úvod</a></li>
       <li><a href="/metoda">Metóda<small>ako vzniká tip</small></a></li>
       <li><a href="/vysledky">Výsledky<small>všetky tipy</small></a></li>
-      <li><a href="/#clenstvo">Členstvo<small>Platinum</small></a></li>
+      <li><a href="/clenstvo">Členstvo<small>Platinum</small></a></li>
       <li><a href="/o-mne">O mne</a></li>
       <li><a href="/otazky">Otázky</a></li>
       <li><a href="/formular">Formulár<small>napíšte mi</small></a></li>
@@ -884,6 +887,13 @@ footer .copy { margin-top: 28px !important; }
       <a class="back" href="/">← Úvod</a><div class="eyebrow">O mne</div>
       <h1>Kto stojí za <em>TipRadarom</em></h1>
       <p>Prečo som TipRadar založil a čo od neho môžete čakať.</p>
+    </div>
+  </header>
+  <header class="page-head" data-pages="clenstvo">
+    <div class="wrap">
+      <a class="back" href="/">← Úvod</a><div class="eyebrow">Členstvo</div>
+      <h1>Vstúpte do <em>klubu</em></h1>
+      <p>Jedno členstvo, všetci členovia dostávajú rovnaké tipy. Vyberte si dĺžku. Čím dlhšie, tým nižšia cena za mesiac a tým viac navyše.</p>
     </div>
   </header>
   <header class="page-head" data-pages="formular">
@@ -1123,7 +1133,7 @@ footer .copy { margin-top: 28px !important; }
     </div>
   </section>
 
-  <section class="sec" id="clenstvo" data-pages="home">
+  <section class="sec" id="clenstvo" data-pages="home clenstvo">
     <div class="wrap">
       <div class="sec-head center">
         <div><div class="eyebrow">Členstvo</div><h2>Vstúpte do <em>klubu</em></h2>
@@ -1237,7 +1247,7 @@ footer .copy { margin-top: 28px !important; }
       <div class="eyebrow">TipRadar Platinum</div>
       <h2>Chcete tipy dostávať <em>aj vy?</em></h2>
       <p>Zapíšte sa do poradovníka alebo sa pridajte ku komunite na Telegrame.</p>
-      <div class="actions"><a class="btn" href="/#clenstvo">Pozrieť členstvo <span class="arr" aria-hidden="true">→</span></a><a class="btn btn-ghost" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener">Telegram komunita</a></div>
+      <div class="actions"><a class="btn" href="/clenstvo">Pozrieť členstvo <span class="arr" aria-hidden="true">→</span></a><a class="btn btn-ghost" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener">Telegram komunita</a></div>
     </div>
   </section>
 </main>
@@ -1777,8 +1787,6 @@ footer .copy { margin-top: 28px !important; }
   // Starý odkaz: kurz má vlastnú stránku.
   if (location.hash === "#skola") { location.replace("/kurz"); return; }
   var id = decodeURIComponent((location.hash || "").slice(1));
-  // tipradar.eu/clenstvo (bez #) – Instagram časť za # niekedy zahodí.
-  if (!id && /^\/clenstvo\/?$/.test(location.pathname)) id = "clenstvo";
   if (!id || !document.getElementById(id)) return;
   if ("scrollRestoration" in history) history.scrollRestoration = "manual";
   var stop = false, until = Date.now() + 4000;
