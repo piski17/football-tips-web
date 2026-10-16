@@ -775,6 +775,22 @@
   button, input, select, textarea { font-family: inherit; font-variant-numeric: lining-nums; }
   /* čísla v rovnakej výške aj tam, kde skratka font: nastavenie prepíše */
   *, *::before, *::after { font-variant-numeric: lining-nums !important; }
+
+  /* ===== kompaktnejšie rozloženie: menšie medzery, nadpisy do jedného riadku, kde sa zmestia ===== */
+  h1, h2, h3 { text-wrap: balance; }
+  .sec { padding: 104px 0; }
+  .sec-head { margin-bottom: 52px; }
+  .page-head { padding: 72px 0 64px; }
+  .finale { padding: 112px 0; }
+  .finale h2 { max-width: none; font-size: clamp(40px, 5vw, 76px); }
+  .split h2, .join h2 { font-size: clamp(36px, 3.5vw, 54px); }
+  .split { gap: 56px; }
+  @media (max-width: 760px) {
+    .sec { padding: 68px 0; }
+    .sec-head { margin-bottom: 32px; }
+    .page-head { padding: 44px 0 40px; }
+    .finale { padding: 80px 0; }
+  }
 </style>
 
 </head>
@@ -934,7 +950,7 @@
   <section class="sec" id="ako" data-pages="home">
     <div class="wrap">
       <div class="sec-head">
-        <div><div class="eyebrow">Ako to funguje</div><h2>Tri kroky<br>k <em>tipu</em></h2></div>
+        <div><div class="eyebrow">Ako to funguje</div><h2>Tri kroky k&nbsp;<em>tipu</em></h2></div>
         <div class="idx" aria-hidden="true">01</div>
       </div>
       <div class="how">
@@ -1018,7 +1034,7 @@
   <section class="sec alt" id="vysledky" data-pages="home vysledky">
     <div class="wrap">
       <div class="sec-head" data-pages="home">
-        <div><div class="eyebrow">Overené výsledky</div><h2>Čísla, ktoré<br>sa nedajú <em>prikrášliť</em></h2>
+        <div><div class="eyebrow">Overené výsledky</div><h2>Čísla, ktoré sa nedajú <em>prikrášliť</em></h2>
         <p class="lead">Čísla sa načítavajú priamo z TipRadaru. Každý tip sa vyhodnotí podľa skutočného výsledku zápasu. Tipy na zápasy, ktoré sa ešte nehrali, vidia len členovia.</p></div>
         <div class="idx" aria-hidden="true">02</div>
       </div>
