@@ -872,6 +872,8 @@
 
   /* ===== čitateľnosť: dlhšie texty, tlačidlá a formuláre v písme Outfit; nadpisy, menu, štítky a čísla ostávajú v Cormorant Garamond ===== */
   body, p, li, .lead, .intro, .btn, input, select, textarea, label, .small, .note, td, th, dd, dt, summary, details { font-family: "Outfit", "Helvetica Neue", Arial, sans-serif !important; font-size-adjust: none !important; }
+  /* pätička bez hornej časti (logo, odkazy): právny text hneď na začiatku */
+  .foot-legal { margin-top: 0 !important; padding-top: 0 !important; border-top: 0 !important; }
 </style>
 </head>
 <body>
@@ -1005,19 +1007,6 @@
 
 <footer>
   <div class="wrap">
-    <div class="foot-top">
-      <div>
-        <a class="brand" href="/"><svg aria-hidden="true"><use href="#logo"/></svg>TipRadar</a>
-        <p class="tag">Futbalové tipy podložené štatistickým modelom. Tipujeme len tam, kde to dáva zmysel.</p>
-        <div class="foot-social">
-          <a href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener" aria-label="Telegram – TipRadar bot" title="Telegram"><svg aria-hidden="true"><use href="#i-tg"/></svg></a>
-          <a href="https://www.instagram.com/tipradar.eu/" target="_blank" rel="noopener" aria-label="Instagram – tipradar.eu" title="Instagram"><svg aria-hidden="true"><use href="#i-ig"/></svg></a>
-          <a href="mailto:info@tipradar.eu" aria-label="E-mail info@tipradar.eu" title="info@tipradar.eu"><svg aria-hidden="true"><use href="#i-mail"/></svg></a>
-        </div>
-      </div>
-      <div class="foot-col"><h4>Web</h4><a href="/metoda">Metóda</a><a href="/vysledky">Výsledky</a><a href="/#clenstvo">Členstvo</a><a href="/o-mne">O mne</a></div>
-      <div class="foot-col"><h4>Viac</h4><a href="/kurz">Kurz stávkovania</a><a href="/video">Video</a><a href="/otazky">Otázky</a><a href="/formular">Formulár</a><a data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener">Telegram komunita</a></div>
-    </div>
     <div class="foot-legal">
       <p>TipRadar je analytický nástroj založený na štatistickom modeli, nie stávková kancelária ani finančné poradenstvo. Tipy sú informatívne a nezaručujú výsledok. Minulé výsledky nie sú zárukou budúcich. O tom, či a koľko staviť, rozhodujete vždy vy.</p>
       <p class="rg"><span class="age" aria-label="Len pre osoby staršie ako 18 rokov">18+</span><span>Hrajte zodpovedne a len za peniaze, ktorých stratu si môžete dovoliť. Ak vám stávkovanie prerastá cez hlavu, pomoc a register vylúčených osôb nájdete na <a href="https://www.urhh.sk" target="_blank" rel="noopener">urhh.sk</a>.</span></p>
