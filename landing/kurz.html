@@ -812,6 +812,8 @@
   html { overflow-x: clip; }
   /* menu sa drží hore pri posúvaní aj na podstránkach (overflow: hidden na body to rušilo) */
   body { overflow-x: clip; }
+  /* menu veľkými písmenami */
+  .menu a { text-transform: uppercase; letter-spacing: .09em; font-size: 13px; font-weight: 600; padding: 11px 15px; }
   /* zlaté slová: priestor pre spodok písmen (y, p, j) a pravý okraj, aby sa neodrezali */
   .shine, h1 em, h2 em, h3 em { padding: 0 .08em .16em; margin: 0 -.08em; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
   /* nadpisy podstránok na jeden riadok (na mobile sa zalomia podľa šírky) */
