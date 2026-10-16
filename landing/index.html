@@ -733,6 +733,13 @@
   /* nadpisy stránok z menu veľkými písmenami */
   .page-head h1, .skola-text h2 { text-transform: uppercase; letter-spacing: -0.01em; line-height: 1.02; }
   .page-head h1 { font-size: clamp(34px, 5vw, 68px); }
+  /* pás súťaží pod úvodom: jemné zlaté písmo namiesto veľkých čísel */
+  .marquee { padding: 22px 0 26px; background: linear-gradient(180deg, #0E0D0B, #12100D); }
+  .marquee-label { margin-bottom: 16px; text-align: center; font: 700 11.5px/1 var(--sans); letter-spacing: .28em; text-transform: uppercase; color: var(--faint); }
+  .marquee-track { animation-duration: 46s; }
+  .marquee span { gap: 46px; padding-right: 46px; font: 600 clamp(17px, 1.9vw, 24px)/1 var(--display); letter-spacing: .16em; text-transform: uppercase; color: var(--gold-hi); }
+  .marquee span i { width: 6px; height: 6px; background: var(--gold); opacity: .7; }
+  @media (max-width: 640px) { .marquee-label { font-size: 10.5px; letter-spacing: .22em; } .marquee span { gap: 32px; padding-right: 32px; } }
   #clenstvo .sec-head h2, #clenstvo h2:first-of-type { text-transform: uppercase; letter-spacing: -0.01em; }
   .skola-text h2 { font-size: clamp(34px, 4.6vw, 64px); }
   /* zlaté slová: priestor pre spodok písmen (y, p, j) a pravý okraj, aby sa neodrezali */
@@ -876,10 +883,11 @@
     <span class="scroll-cue" aria-hidden="true"></span>
   </section>
 
-  <div class="marquee" data-pages="home" aria-hidden="true">
+  <div class="marquee" data-pages="home" aria-label="Súťaže, ktoré model sleduje">
+    <div class="marquee-label">Model sleduje 6 najsilnejších súťaží</div>
     <div class="marquee-track">
-      <span><b>120</b> zápasov denne<i></i><b>1 200</b> trhov<i></i>Góly<i></i>Rohy<i></i>Karty<i></i>Strely<i></i>Fauly<i></i><b>2 – 3</b> tipy denne<i></i></span>
-      <span><b>120</b> zápasov denne<i></i><b>1 200</b> trhov<i></i>Góly<i></i>Rohy<i></i>Karty<i></i>Strely<i></i>Fauly<i></i><b>2 – 3</b> tipy denne<i></i></span>
+      <span>Premier League<i></i>La Liga<i></i>Serie A<i></i>Bundesliga<i></i>Ligue 1<i></i>Liga majstrov<i></i></span>
+      <span aria-hidden="true">Premier League<i></i>La Liga<i></i>Serie A<i></i>Bundesliga<i></i>Ligue 1<i></i>Liga majstrov<i></i></span>
     </div>
   </div>
 
