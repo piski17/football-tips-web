@@ -39,8 +39,8 @@
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" />
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
 <noscript><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" /></noscript>
-<!-- krajšie písmeno „y“ v nadpisoch (z písma Onest, ostatné písmená ostávajú Sora) -->
-<link href="https://fonts.googleapis.com/css2?family=Onest:wght@600;700;800&amp;text=y%C3%BD&amp;display=swap" rel="stylesheet" />
+<!-- písmo nadpisov -->
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600;1,700&amp;display=swap" rel="stylesheet" />
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Mrs+Saint+Delafield&amp;text=Michael&amp;display=swap" />
 <link href="https://fonts.googleapis.com/css2?family=Mrs+Saint+Delafield&amp;text=Michael&amp;display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
 <noscript><link href="https://fonts.googleapis.com/css2?family=Mrs+Saint+Delafield&amp;text=Michael&amp;display=swap" rel="stylesheet" /></noscript>
@@ -67,7 +67,7 @@
     --win: #7FBF9A;
     --loss: #C0707C;
     --sans: "Outfit", "Helvetica Neue", Arial, system-ui, sans-serif;
-    --display: "Onest", "Sora", "Outfit", "Helvetica Neue", Arial, sans-serif;
+    --display: "Sora", "Outfit", "Helvetica Neue", Arial, sans-serif;
     --serif: var(--sans);
     --r: 22px;
     --r-sm: 14px;
@@ -752,6 +752,21 @@
   .nav-social a { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; color: var(--gold-hi); transition: background .25s, color .25s; }
   .nav-social a:hover { background: rgba(217,192,138,.12); color: var(--gold); }
   .nav-social svg { width: 18px; height: 18px; }
+
+  /* ===== písmo nadpisov: Cormorant Garamond (luxusné pätkové), zlaté slová plnou zlatou kurzívou ===== */
+  h1, h2, h3, .lux h3.lux-name { font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif; font-weight: 700; letter-spacing: 0; }
+  h1 { line-height: 1.02; }
+  h2 { line-height: 1.04; }
+  h3 { font-weight: 700; font-size: 1.18em; }
+  .hero h1 { font-size: clamp(50px, 6.6vw, 98px); }
+  h2 { font-size: clamp(40px, 5.2vw, 74px); }
+  .finale h2 { font-size: clamp(44px, 6.6vw, 98px); }
+  .page-head h1, .skola-text h2, #clenstvo .sec-head h2, #clenstvo h2:first-of-type { letter-spacing: .02em; }
+  .page-head h1 { font-size: clamp(40px, 6vw, 88px); }
+  .skola-text h2 { font-size: clamp(40px, 5.2vw, 74px); }
+  .shine, h1 em, h2 em, h3 em, .hero h1 em { display: inline; padding: 0 .04em 0 0; margin: 0; background: none; -webkit-background-clip: border-box; background-clip: border-box; color: var(--gold); -webkit-text-fill-color: var(--gold); font-style: italic; font-weight: 600; animation: none; }
+  #kto h2 em { color: #8A6E35; -webkit-text-fill-color: #8A6E35; }
+  @media (max-width: 640px) { .hero h1 { font-size: clamp(44px, 12.5vw, 60px); } }
 </style>
 
 </head>

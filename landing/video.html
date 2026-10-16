@@ -20,8 +20,8 @@
 <link rel="apple-touch-icon" href="/favicon-256.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<!-- krajšie písmeno „y“ v nadpisoch (z písma Onest, ostatné písmená ostávajú Sora) -->
-<link href="https://fonts.googleapis.com/css2?family=Onest:wght@600;700;800&amp;text=y%C3%BD&amp;display=swap" rel="stylesheet" />
+<!-- písmo nadpisov -->
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600;1,700&amp;display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
 <style>
   /* TipRadar „Onyx“ – rovnaké farby a písmo ako tipradar.eu */
@@ -38,7 +38,7 @@
     --success: #8fc4a2;
     --text: #efe8d8;
     --text-muted: #a89f8e;
-    --font-display: "Onest", "Sora", "Helvetica Neue", Arial, sans-serif;
+    --font-display: "Sora", "Helvetica Neue", Arial, sans-serif;
     --font-body: "Outfit", "Helvetica Neue", Arial, sans-serif;
     color-scheme: dark;
   }
@@ -370,6 +370,10 @@
   .mock-tip-explain { font-style: normal; }
   .back-home { border-radius: 999px !important; font: 700 13px/1 var(--font-body) !important; letter-spacing: 0 !important; text-transform: none !important; }
   .play-btn { border-radius: 50% !important; }
+
+  /* písmo nadpisov: Cormorant Garamond, zlaté slová plnou zlatou kurzívou */
+  h1, h2, h3 { font-family: "Cormorant Garamond", Georgia, serif !important; font-weight: 700 !important; letter-spacing: 0 !important; line-height: 1.04 !important; }
+  h1 em, h2 em, h3 em { background: none !important; -webkit-background-clip: border-box !important; background-clip: border-box !important; color: var(--gold) !important; -webkit-text-fill-color: var(--gold) !important; font-style: italic !important; font-weight: 600 !important; animation: none !important; }
 </style>
 </head>
 <body>

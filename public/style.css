@@ -16,7 +16,7 @@ html { font-size-adjust: .5; } /* Noto Serif Display + Jost v rovnakej veľkosti
   --text: #F4EEE2;
   --text-muted: #BFB6A6;
 
-  --font-display: "Noto Serif Display", Georgia, "Times New Roman", serif;
+  --font-display: "Cormorant Garamond", Georgia, "Times New Roman", serif; /* rovnaké písmo nadpisov ako tipradar.eu */
   --font-body: "Jost", "Helvetica Neue", Arial, system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
@@ -1851,3 +1851,7 @@ details.low-value-list[open] > summary { margin-bottom: 6px; }
 .seat-strip .ss-i b i { font-style: normal; font-weight: 500; font-size: 11px; color: var(--text-muted, #8a8478); }
 .seat-strip .ss-i.full b { color: #C0707C; }
 @media (max-width: 640px) { .seat-strip .ss-h { display: none; } }
+
+/* písmo nadpisov Cormorant Garamond: čísla v rovnakej výške (nie „starodávne“ skákajúce číslice) */
+body { font-variant-numeric: lining-nums; }
+h1, h2, h3, h4 { font-weight: 700; letter-spacing: 0; }
