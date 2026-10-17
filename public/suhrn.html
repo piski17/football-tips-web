@@ -1108,8 +1108,14 @@ h2 { font-size: 22px; }
   }
   const goldGrad = (x0, x1) => { const g = w.createLinearGradient(x0, 0, x1, 0); g.addColorStop(0, '#F3E6C4'); g.addColorStop(1, '#D9C08A'); return g; };
   const hline = (x0, x1, y) => { w.strokeStyle = C.line; w.lineWidth = 1.5; w.beginPath(); w.moveTo(x0, y); w.lineTo(x1, y); w.stroke(); };
-  // Prvý obrázok: 9 tipov so štatistikou; ďalšie (karusel): po 12 tipov.
-  function weekPages(rows) { const out = [rows.slice(0, 9)]; for (let i = 9; i < rows.length; i += 12) out.push(rows.slice(i, i + 12)); return out; }
+  // Ako pri dennom súhrne: najprv tipy (po 12 na obrázok), štatistika týždňa
+  // až na poslednom obrázku spolu s posledným najviac 9 tipmi.
+  function weekPages(rows) {
+    const cut = Math.max(rows.length - 9, 0), out = [];
+    for (let i = 0; i < cut; i += 12) out.push(rows.slice(i, Math.min(i + 12, cut)));
+    out.push(rows.slice(cut));
+    return out;
+  }
   function drawWeek(i, pages) {
     const W = 1080, H = 1350, L = 100, R = 980, s = weekStats(weekTips), list = pages[i] || [], total = pages.length;
     w.clearRect(0, 0, W, H); w.fillStyle = C.bg; w.fillRect(0, 0, W, H);
@@ -1121,7 +1127,7 @@ h2 { font-size: 22px; }
     spaced('TÝŽDEŇ ' + isoWeek(weekStart) + ' · ' + weekLabel(weekStart).toUpperCase(), L + 74, 136, 6, 'left');
     if (total > 1) { w.font = F(600, 24); spaced((i + 1) + ' / ' + total, R, 136, 3, 'right'); }
     let top;
-    if (i === 0) {
+    if (i === total - 1) {
       w.textAlign = 'left'; w.fillStyle = C.text; w.font = S(600, 92);
       const a = 'Týždeň v '; w.fillText(a, L, 254);
       const aw = w.measureText(a).width;
@@ -1142,7 +1148,7 @@ h2 { font-size: 22px; }
       });
       top = 474;
     } else {
-      w.textAlign = 'left'; w.fillStyle = C.text; w.font = S(600, 64); w.fillText('Ďalšie tipy týždňa', L, 230);
+      w.textAlign = 'left'; w.fillStyle = C.text; w.font = S(600, 64); w.fillText(i === 0 ? 'Tipy týždňa' : 'Ďalšie tipy týždňa', L, 230);
       top = 280;
     }
     // Tipy: deň · zápas a tip · kurz · zisk
@@ -1170,7 +1176,7 @@ h2 { font-size: 22px; }
       hline(L, R, y + rowH);
     });
     if (!list.length) { w.textAlign = 'left'; w.fillStyle = C.muted; w.font = F(400, 28); w.fillText('V tomto týždni nie sú žiadne tipy.', L, top + 60); }
-    if (i < total - 1) { w.textAlign = 'right'; w.fillStyle = C.gold; w.font = F(500, 22); w.fillText('Ďalšie tipy na ďalšej snímke  →', R, top + list.length * rowH + 40); }
+    if (i < total - 1) { w.textAlign = 'right'; w.fillStyle = C.gold; w.font = F(500, 22); w.fillText(i === total - 2 ? 'Ďalšie tipy a vyhodnotenie na ďalšej snímke  →' : 'Ďalšie tipy na ďalšej snímke  →', R, top + list.length * rowH + 40); }
     // Päta: logo, TipRadar, tipradar.eu · 1 j. = 1 % bankrollu · 18+
     wMark(L + 28, 1226, 28);
     w.textAlign = 'left'; w.fillStyle = C.text; w.font = S(600, 36); w.fillText('TipRadar', L + 74, 1226);
