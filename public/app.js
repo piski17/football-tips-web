@@ -1918,7 +1918,7 @@ closeTipsBtn.addEventListener("click", () => {
 // ---- Členovia (platba beží mimo appky, napr. bankovým prevodom) ----
 
 // Ceny musia sedieť s PRICES na tipradar.eu (landing/index.html).
-// TipRadar Platinum: jedno členstvo, tri dĺžky (1 mesiac 100 miest, 3 mesiace 70, sezóna 30).
+// TipRadar Platinum: jedno členstvo, tri dĺžky (1 a 3 mesiace bez obmedzenia miest, sezóna 30).
 // Sezóna sa ukladá ako tier "group" – počíta sa do miest na sezónu.
 const MEMBER_PRICES = { m1: 49, m3: 129, season: 299 };
 const MEMBER_NAME = { m1: "Platinum 1 mesiac", m3: "Platinum 3 mesiace", season: "Platinum sezóna" };

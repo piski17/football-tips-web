@@ -210,14 +210,15 @@ async function seasonSeats(): Promise<{ taken: number; total: number; activeVip:
   return { taken: activeVip.length, total, activeVip };
 }
 /** Aktívni členovia na 1 alebo 3 mesiace (7 dní tolerancia po splatnosti). Staršie záznamy bez dĺžky = 1 mesiac. */
-async function shortSeats(length: "m1" | "m3"): Promise<{ taken: number; total: number; active: Subscriber[] }> {
+async function shortSeats(length: "m1" | "m3"): Promise<{ taken: number; total: number | null; active: Subscriber[] }> {
   const graceMs = 7 * 24 * 60 * 60 * 1000;
   const active = (await listSubscribers()).filter(
     (s) => s.tier !== "group" && (s.length ?? "m1") === length && new Date(s.nextPaymentDue).getTime() + graceMs >= Date.now()
   );
   return { taken: active.length, total: length === "m3" ? SEATS_M3 : SEATS_M1, active };
 }
-type TermSeats = Record<"m1" | "m3" | "season", { occupied: number; total: number; left: number }>;
+/** total a left sú null, ak dĺžka členstva nemá obmedzený počet miest. */
+type TermSeats = Record<"m1" | "m3" | "season", { occupied: number; total: number | null; left: number | null }>;
 /**
  * Obsadené miesta pre každú dĺžku členstva (rovnako ako na webe): pred spustením predaja
  * sa rátajú členovia aj záujemcovia v poradovníku, počas predaja len aktívni členovia.
@@ -232,7 +233,8 @@ async function termSeats(): Promise<TermSeats> {
     waitM3 = leads.filter((l) => l.plan === "seria").length;
     waitM1 = leads.filter((l) => l.plan === "start").length;
   }
-  const row = (taken: number, total: number) => {
+  const row = (taken: number, total: number | null) => {
+    if (total == null) return { occupied: taken, total: null, left: null };
     const occupied = Math.min(taken, total);
     return { occupied, total, left: total - occupied };
   };
@@ -242,9 +244,11 @@ async function termSeats(): Promise<TermSeats> {
 async function freeSeatsLine(): Promise<string | undefined> {
   try {
     const t = await termSeats();
-    const part = (label: string, r: { left: number; total: number }) =>
-      r.left > 0 ? `${label} <b>${r.left}/${r.total}</b>` : `${label} <b>obsadené</b>`;
-    return `🔥 Voľné miesta v Platinum: ${part("1 mesiac", t.m1)} · ${part("3 mesiace", t.m3)} · ${part("sezóna", t.season)}`;
+    const s = t.season;
+    if (s.total == null || s.left == null) return undefined;
+    return s.left > 0
+      ? `🔥 Platinum na celú sezónu: voľných <b>${s.left} z ${s.total}</b> miest`
+      : `🔥 Platinum na celú sezónu: všetkých ${s.total} miest je obsadených`;
   } catch {
     return undefined;
   }
@@ -269,7 +273,7 @@ app.get("/zaplatit", async (req, res) => {
     }
     if (term === "m3" || term === "m1") {
       const { taken, total } = await shortSeats(term);
-      if (taken >= total) {
+      if (total != null && taken >= total) {
         res.redirect(302, `https://t.me/${BOT_USERNAME}?start=${term === "m3" ? "seria" : "start"}_waitlist`);
         return;
       }
@@ -1118,7 +1122,7 @@ app.delete("/api/tips/:id/slip", async (req, res) => {
 });
 
 // Verejné počítadlo VIP miest (len čísla, žiadne mená). Aktívny VIP = typ „group"
-// s platbou nie viac ako 7 dní po splatnosti. Počet miest: SEATS_M1 (100), SEATS_M3 (70), SEATS_SEASON (30).
+// s platbou nie viac ako 7 dní po splatnosti. Počet miest: 1 a 3 mesiace bez obmedzenia, sezóna SEATS_SEASON (30).
 app.get("/api/public/vip-seats", async (_req, res) => {
   res.set("Access-Control-Allow-Origin", "*");
   try {
