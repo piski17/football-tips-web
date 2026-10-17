@@ -240,10 +240,44 @@ function minOddsFor(bet) {
  * Tipsport, Niké – v API nie sú). Predvyplnený je kurz z API, ak je. Vráti kurz,
  * alebo null = tip neukladať (zrušené alebo kurz pod minimom).
  */
-function askRealOdds(bet) {
+/**
+ * Okno na zadanie textu v štýle appky (namiesto window.prompt, ktorý Mac appka
+ * nepodporuje). Vráti zadaný text, alebo null pri zrušení.
+ */
+function promptModal(label, value = "") {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.innerHTML = `
+      <div class="modal" style="max-width:340px;">
+        <h3 style="margin-bottom:12px;">${escapeHtml(label)}</h3>
+        <input type="text" inputmode="decimal" id="promptModalInput" style="width:100%;box-sizing:border-box;" />
+        <div style="display:flex;gap:10px;margin-top:16px;">
+          <button class="btn-primary" id="promptModalOk" style="flex:1;">OK</button>
+          <button class="btn-ghost" id="promptModalCancel" style="flex:1;">Zrušiť</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    const input = overlay.querySelector("#promptModalInput");
+    input.value = value;
+    const done = (result) => {
+      overlay.remove();
+      resolve(result);
+    };
+    overlay.querySelector("#promptModalOk").onclick = () => done(input.value);
+    overlay.querySelector("#promptModalCancel").onclick = () => done(null);
+    input.onkeydown = (e) => {
+      if (e.key === "Enter") done(input.value);
+      if (e.key === "Escape") done(null);
+    };
+    setTimeout(() => { input.focus(); input.select(); }, 0);
+  });
+}
+
+async function askRealOdds(bet) {
   const min = minOddsFor(bet);
   const pre = typeof bet.odds === "number" && bet.odds > 1 ? fmtOdds(bet.odds) : "";
-  const raw = window.prompt(`KURZ tvojej stávkovky, napr. 1,85 (minimum ${fmtOdds(min)}):`, pre);
+  const raw = await promptModal(`KURZ tvojej stávkovky, napr. 1,85 (minimum ${fmtOdds(min)})`, pre);
   if (raw == null) return null;
   const odd = parseFloat(String(raw).replace(",", "."));
   if (!(odd > 1)) { showToast("Neplatný kurz – tip sa neuložil."); return null; }
@@ -660,6 +694,7 @@ function renderAnalysis(r) {
 
     ${gamesPlayedHtml}
     ${warningHtml}
+    ${lineupBarHtml(r)}
 
     ${matchHasStarted(r.fixture) ? `<div class="match-locked">⏱ ${MATCH_STARTED_TEXT}</div>` : ""}${topBetsHtml}${noBetsHtml}${lowValueHtml}
     <div id="saveTipMsg"></div>
@@ -728,6 +763,7 @@ function renderAnalysis(r) {
   wireTicketButtons(r);
   wireScorerSaveButtons(r);
   wirePossession(r);
+  wireLineupBar(r);
   if (matchHasStarted(r.fixture)) {
     document
       .querySelectorAll(".save-best-bet-btn, .add-to-ticket-btn, .scorer-save-btn")
@@ -736,6 +772,30 @@ function renderAnalysis(r) {
         b.title = MATCH_STARTED_TEXT;
       });
   }
+}
+
+// ---- Potvrdená zostava: prepočet tesne pred zápasom (17. 10. 2026) ----
+// Zostavy API zverejňuje zvyčajne asi hodinu pred výkopom. Prepočet načíta analýzu
+// znova – s aktuálnou zostavou (hráč na lavičke = čiastočne chýba) aj aktuálnymi kurzami.
+function lineupBarHtml(r) {
+  if (matchHasStarted(r.fixture)) return "";
+  const lc = r.lineupConfirmed || {};
+  const both = lc.home && lc.away;
+  const mins = Math.round((new Date(r.fixture.date).getTime() - Date.now()) / 60000);
+  const when = mins > 0 && mins < 24 * 60 ? ` Výkop o ${mins >= 60 ? `${Math.floor(mins / 60)} h ${mins % 60} min` : `${mins} min`}.` : "";
+  const text = both
+    ? "✓ Počítané s potvrdenou zostavou (hráči na lavičke sa rátajú ako čiastočne chýbajúci)."
+    : `Zostava ešte nie je zverejnená – zvyčajne býva asi hodinu pred výkopom. Potom klikni Prepočítať.${when}`;
+  return `<div class="stat-line" style="align-items:center;gap:10px;margin:-4px 0 14px;">
+    <span class="muted small" style="flex:1">${escapeHtml(text)}</span>
+    <button type="button" class="btn-ghost" id="lineupRecalcBtn">🔄 Prepočítať</button>
+  </div>`;
+}
+
+function wireLineupBar(r) {
+  const btn = document.getElementById("lineupRecalcBtn");
+  if (!btn) return;
+  btn.onclick = () => analyzeFixture(r.fixture, r.fixture.league.id, r.fixture.league.season);
 }
 
 // ---- Držanie lopty: hranica zo stávkovky (17. 10. 2026) ----
@@ -835,7 +895,7 @@ function wirePossession(r) {
         if (matchHasStarted(r.fixture)) { showToast(MATCH_STARTED_TEXT); return; }
         const x = rows[Number(b.dataset.poss)];
         const watch = b.dataset.watch === "1";
-        const odds = watch ? null : x.odds ?? askRealOdds({ probability: x.probability });
+        const odds = watch ? null : x.odds ?? (await askRealOdds({ probability: x.probability }));
         if (!watch && odds == null) return;
         const tip = {
           id: `${r.fixture.fixtureId}-${Date.now()}`,
@@ -1060,7 +1120,7 @@ function initSaveTipButton(r) {
       const chosenBet = (fromLow ? r.lowValueBets : r.bestBets)?.[idx];
       if (!chosenBet) return;
       // Vyradený tip uložený ručne („Uložiť aj tak") a sledovaný tip: bez otázky na kurz.
-      const realOdds = watch || fromLow ? chosenBet.odds ?? null : askRealOdds(chosenBet);
+      const realOdds = watch || fromLow ? chosenBet.odds ?? null : await askRealOdds(chosenBet);
       if (!watch && !fromLow && realOdds == null) return;
 
       const tip = {
@@ -1411,6 +1471,57 @@ function renderBankrollSimulation(tips) {
   `;
 }
 
+// Úspešnosť, zisk a ROI podľa typu stávky + porovnanie s tým, čo model čakal (17. 10. 2026).
+// Zisk a ROI sa rátajú pri vklade 1 jednotka na tip, len z tipov s kurzom.
+// Kalibrácia: pri aspoň 20 tipoch v trhu a rozdiele aspoň 10 bodov appka upozorní,
+// že model v tomto trhu preceňuje / podceňuje.
+const CALIBRATION_MIN_TIPS = 20;
+const CALIBRATION_GAP = 10;
+
+function marketStats(list) {
+  const won = list.filter((t) => t.status === "won").length;
+  const withOdds = list.filter((t) => typeof t.odds === "number" && t.odds > 1);
+  const profit = withOdds.reduce((sum, t) => sum + (t.status === "won" ? t.odds - 1 : -1), 0);
+  const probs = list.filter((t) => typeof t.probability === "number");
+  return {
+    won,
+    total: list.length,
+    pct: (won / list.length) * 100,
+    expected: probs.length ? probs.reduce((a, t) => a + t.probability, 0) / probs.length : null,
+    profit,
+    roi: withOdds.length ? (profit / withOdds.length) * 100 : null,
+    withOdds: withOdds.length,
+  };
+}
+
+function marketBreakdownRow(label, st, bold) {
+  const color = st.profit > 0 ? "var(--success)" : st.profit < 0 ? "var(--danger)" : "inherit";
+  let calib = "";
+  if (st.expected != null) {
+    const gap = st.pct - st.expected;
+    if (st.total < CALIBRATION_MIN_TIPS) calib = `model čakal ${st.expected.toFixed(0)} %`;
+    else if (gap <= -CALIBRATION_GAP) calib = `⚠️ model čakal ${st.expected.toFixed(0)} % – preceňuje`;
+    else if (gap >= CALIBRATION_GAP) calib = `model čakal ${st.expected.toFixed(0)} % – podceňuje`;
+    else calib = `model čakal ${st.expected.toFixed(0)} % ✓`;
+  }
+  const money = st.withOdds
+    ? ` · zisk <strong style="color:${color}">${signed(st.profit, 1)} j.</strong> · ROI <strong style="color:${color}">${signed(st.roi, 0)} %</strong>`
+    : "";
+  return `
+        <div class="market-breakdown-row">
+          <div class="market-breakdown-label">
+            <span>${bold ? `<strong>${escapeHtml(label)}</strong>` : escapeHtml(label)}</span>
+            <span class="muted small">${st.won}/${st.total} · ${st.pct.toFixed(0)} %${money}</span>
+          </div>
+          <div class="market-breakdown-bar" style="position:relative">
+            <div class="market-breakdown-bar-fill" style="width: ${st.pct}%;"></div>
+            ${st.expected != null ? `<div title="Model čakal ${st.expected.toFixed(0)} %" style="position:absolute;top:-2px;bottom:-2px;left:${st.expected}%;width:2px;background:var(--gold);"></div>` : ""}
+          </div>
+          ${calib ? `<div class="muted small" style="margin-top:2px">${calib}</div>` : ""}
+        </div>
+      `;
+}
+
 function renderMarketBreakdown(tips) {
   const decidedTips = tips.filter((t) => t.status === "won" || t.status === "lost");
   if (decidedTips.length === 0) {
@@ -1419,32 +1530,16 @@ function renderMarketBreakdown(tips) {
   }
 
   const byMarket = {};
-  for (const t of decidedTips) {
-    if (!byMarket[t.market]) byMarket[t.market] = { won: 0, total: 0 };
-    byMarket[t.market].total++;
-    if (t.status === "won") byMarket[t.market].won++;
-  }
-
-  const rows = Object.entries(byMarket).sort((a, b) => b[1].total - a[1].total);
+  for (const t of decidedTips) (byMarket[t.market] ??= []).push(t);
+  const rows = Object.entries(byMarket)
+    .map(([market, list]) => [market, marketStats(list)])
+    .sort((a, b) => b[1].total - a[1].total);
 
   marketBreakdownEl.innerHTML = `
-    <div class="market-breakdown-title">Úspešnosť podľa typu stávky</div>
-    ${rows
-      .map(([market, stats]) => {
-        const pct = (stats.won / stats.total) * 100;
-        return `
-        <div class="market-breakdown-row">
-          <div class="market-breakdown-label">
-            <span>${escapeHtml(market)}</span>
-            <span class="muted small">${stats.won}/${stats.total} · ${pct.toFixed(0)} %</span>
-          </div>
-          <div class="market-breakdown-bar">
-            <div class="market-breakdown-bar-fill" style="width: ${pct}%;"></div>
-          </div>
-        </div>
-      `;
-      })
-      .join("")}
+    <div class="market-breakdown-title">Úspešnosť a zisk podľa typu stávky</div>
+    <p class="muted small" style="margin:-4px 0 8px">Zisk pri vklade 1 jednotka na tip. Zlatá čiarka = koľko model čakal. Hodnotenie modelu (preceňuje / podceňuje) sa ukáže od ${CALIBRATION_MIN_TIPS} tipov v trhu.</p>
+    ${marketBreakdownRow("Spolu", marketStats(decidedTips), true)}
+    ${rows.map(([market, st]) => marketBreakdownRow(market, st, false)).join("")}
   `;
 }
 
@@ -1995,6 +2090,25 @@ clearAllTipsBtn.addEventListener("click", async () => {
   }
 });
 
+const tipsComingBtn = document.getElementById("tipsComingBtn");
+tipsComingBtn.addEventListener("click", async () => {
+  const target = await askTelegramTarget();
+  if (!target) return;
+  tipsComingBtn.disabled = true;
+  try {
+    await fetchJson("/api/telegram/tips-coming", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ target }),
+    });
+    showToast("Odoslané.");
+  } catch (err) {
+    showToast(`Odoslanie zlyhalo: ${err.message}`);
+  } finally {
+    tipsComingBtn.disabled = false;
+  }
+});
+
 noTipTodayBtn.addEventListener("click", async () => {
   const target = await askTelegramTarget();
   if (!target) return;
@@ -2500,7 +2614,7 @@ function renderDayTips() {
         return;
       }
       const watchOnly = btn.dataset.watch === "1";
-      const realOdds = watchOnly ? bet.odds ?? null : askRealOdds(bet);
+      const realOdds = watchOnly ? bet.odds ?? null : await askRealOdds(bet);
       if (!watchOnly && realOdds == null) return;
       const tip = {
         id: `${r.fixture.fixtureId}-${Date.now()}`,

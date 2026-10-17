@@ -606,7 +606,8 @@ app.post("/api/analyze", async (req, res) => {
       false,
       missingPlayers,
       seasonGamesAny,
-      referee
+      referee,
+      lineup
     );
 
     // Tichá evidencia tipov vyradených pre rozpor so stávkovkami (na pozadí, nič neblokuje).
@@ -1155,6 +1156,24 @@ app.get("/api/debug/odds/:fixtureId", async (req, res) => {
 
 app.get("/api/telegram/targets", (_req, res) => {
   res.json({ targets: availableTelegramTargets() });
+});
+
+// Ohlásenie v kanáli: tipy prídu o pár minút (tlačidlo v Histórii tipov, 17. 10. 2026).
+app.post("/api/telegram/tips-coming", async (req, res) => {
+  try {
+    if (!isTelegramEnabled()) {
+      res.status(400).json({ error: "Telegram nie je na serveri nastavený." });
+      return;
+    }
+    const target = parseTarget(req.body?.target ?? "both");
+    const text =
+      `⏳ <b>Dnešné tipy pridáme o pár minút</b>\n\n` +
+      `Model práve prechádza zápasy a kurzy. Zapnite si upozornenia, nech vám nič neujde. 🔔`;
+    const sent = await sendCustomMessage(text, target);
+    res.json({ ok: sent.length > 0 });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
 });
 
 app.post("/api/telegram/no-tip-today", async (req, res) => {

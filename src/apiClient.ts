@@ -933,7 +933,7 @@ export async function getFixtureGoalscorerIds(fixtureId: number): Promise<number
  */
 export async function getFixtureLineupPlayerIds(
   fixtureId: number
-): Promise<{ homeIds: number[] | null; awayIds: number[] | null }> {
+): Promise<{ homeIds: number[] | null; awayIds: number[] | null; homeStartIds?: number[] | null; awayStartIds?: number[] | null }> {
   try {
     const res = await client().get("/fixtures/lineups", { params: { fixture: fixtureId } });
     checkApiErrors(res.data);
@@ -950,7 +950,12 @@ export async function getFixtureLineupPlayerIds(
       return ids.length > 0 ? ids : null;
     };
 
-    return { homeIds: extractIds(teams[0]), awayIds: extractIds(teams[1]) };
+    // Základná jedenástka zvlášť – hráč na lavičke sa v modeli počíta ako čiastočne chýbajúci.
+    const startIds = (team: any): number[] | null => {
+      const ids = (team?.startXI ?? []).map((p: any) => p.player?.id).filter((id: any): id is number => typeof id === "number");
+      return ids.length > 0 ? ids : null;
+    };
+    return { homeIds: extractIds(teams[0]), awayIds: extractIds(teams[1]), homeStartIds: startIds(teams[0]), awayStartIds: startIds(teams[1]) };
   } catch {
     return { homeIds: null, awayIds: null };
   }
