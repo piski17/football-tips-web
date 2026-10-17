@@ -1007,6 +1007,24 @@ export function predictMatch(
     } else if (b.marketConflict) {
       b.rejectReason = b.marketConflict;
       lowValueBets.push(b);
+    } else if (ev == null && b.market === "Vyššie držanie lopty") {
+      // Držanie lopty: stávkovky ho cez API neponúkajú, no v ponuke ho často majú.
+      // Tip sa odporučí s minimálnym kurzom – pod ním by nemal hodnotu +5 % alebo by
+      // bol pod 1,50. Skutočný kurz Michal overí v stávkovke a zadá pri uložení.
+      const p = b.probability / 100;
+      b.minOdds = Math.max(MIN_ODDS, Math.ceil((MIN_EXPECTED_VALUE / p) * 100) / 100);
+      const maxOdds = Math.floor((SUSPICIOUS_EXPECTED_VALUE / p) * 100) / 100;
+      const f2 = (x: number) => x.toFixed(2).replace(".", ",");
+      b.explanation =
+        (b.explanation ? b.explanation + " " : "") +
+        `Kurz over v stávkovke: hraj len pri kurze aspoň ${f2(b.minOdds)}` +
+        (maxOdds > b.minOdds ? ` (nad ${f2(maxOdds)} je hodnota podozrivo vysoká – radšej vynechaj).` : ".");
+      if (maxOdds <= b.minOdds) {
+        b.rejectReason = "pri tejto dôvere by tip potreboval podozrivo vysoký kurz";
+        lowValueBets.push(b);
+      } else {
+        pickPool.push(b);
+      }
     } else if (ev == null && oddsAvailable) {
       // Stávkovky k zápasu kurzy majú, ale tento trh (alebo túto hranicu) neponúkajú -
       // na tip sa reálne nedá staviť. Ručne ho stále možno pridať ("Uložiť aj tak").

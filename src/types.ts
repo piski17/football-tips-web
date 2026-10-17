@@ -64,6 +64,11 @@ export interface MarketPick {
   minGamesPlayed?: number;
   /** Skutočný kurz (medián stávkoviek z API-Football), ak je k dispozícii. */
   odds?: number | null;
+  /**
+   * Držanie lopty (17. 10. 2026): API naň kurzy nemá, preto model povie minimálny
+   * kurz (hodnota +5 %, aspoň 1,50) a skutočný kurz Michal overí v stávkovke.
+   */
+  minOdds?: number;
   /** Z koľkých stávkoviek kurz pochádza. */
   oddsBookmakers?: number;
   /** Očakávaná hodnota: pravdepodobnosť × kurz (napr. 1,08 = +8 %). */
