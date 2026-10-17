@@ -9,7 +9,7 @@ import {
   TeamGoalPriorsResult,
   SquadPlayer,
   PlayerSeasonStats,
-  RawPlayerStat, H2HStats, MissingPlayer } from "./types";
+  RawPlayerStat, H2HStats, MissingPlayer, RefereeProfile } from "./types";
 
 const BASE_URL = "https://v3.football.api-sports.io";
 
@@ -160,6 +160,7 @@ function mapFixture(item: any): Fixture {
     elapsed: item.fixture.status?.elapsed ?? null,
     goalsHome: item.goals?.home ?? null,
     goalsAway: item.goals?.away ?? null,
+    referee: item.fixture.referee ?? null,
   };
 }
 
@@ -219,9 +220,9 @@ export async function getTeamStatistics(
       return Object.values(buckets).reduce((sum: number, bucket: any) => sum + (bucket?.total ?? 0), 0);
     };
     const totalYellow = sumCardBuckets(d.cards?.yellow);
-    const totalRed = sumCardBuckets(d.cards?.red);
     const totalGames = d.fixtures?.played?.total ?? 0;
-    const cardsPerGame = totalGames > 0 ? (totalYellow + totalRed) / totalGames : 0;
+    // Karty = len žlté (17. 10. 2026, Michalovo rozhodnutie) – červené stávkovky rátajú rôzne.
+    const cardsPerGame = totalGames > 0 ? totalYellow / totalGames : 0;
 
     return {
       team: { id: d.team.id, name: d.team.name, logo: d.team.logo },
@@ -277,7 +278,7 @@ export interface TeamExtendedStatsAverages {
   shotsOnGoalAgainst?: number | null;
   foulsAgainst?: number | null;
   offsidesAgainst?: number | null;
-  /** Karty tímu (žlté + červené) a karty jeho súperov, priemer na zápas. */
+  /** Karty tímu (len žlté) a karty jeho súperov, priemer na zápas. */
   cards?: number | null;
   cardsAgainst?: number | null;
   /** Góly tímu a jeho súperov v posledných zápasoch (novšie s väčšou váhou) – aktuálna forma. */
@@ -391,10 +392,9 @@ export async function getTeamExtendedStatsAverages(
               row[key + "Against"] = parseStatValue(opp.find((s: any) => s.type === apiName)?.value);
             }
           }
-          // Karty = žlté + červené. Chýbajúca hodnota v API znamená 0 kariet.
+          // Karty = len žlté (od 17. 10. 2026). Chýbajúca hodnota v API znamená 0 kariet.
           const cardsOf = (list: any[]) =>
-            (parseStatValue(list.find((s: any) => s.type === "Yellow Cards")?.value) ?? 0) +
-            (parseStatValue(list.find((s: any) => s.type === "Red Cards")?.value) ?? 0);
+            parseStatValue(list.find((s: any) => s.type === "Yellow Cards")?.value) ?? 0;
           row.cards = cardsOf(own);
           row.cardsAgainst = opp.length ? cardsOf(opp) : null;
           return row;
@@ -880,7 +880,8 @@ export async function getFixtureCornersAndCards(
 
     return {
       corners: found.corners ? totals.corners : null,
-      cards: found.cardsYellow || found.cardsRed ? (totals.cardsYellow ?? 0) + (totals.cardsRed ?? 0) : null,
+      // Karty = len žlté (od 17. 10. 2026); bez žltých, no s červenou = 0 žltých.
+      cards: found.cardsYellow || found.cardsRed ? totals.cardsYellow ?? 0 : null,
       shotsOnGoal: found.shotsOnGoal ? totals.shotsOnGoal : null,
       fouls: found.fouls ? totals.fouls : null,
       offsides: found.offsides ? totals.offsides : null,
@@ -1045,5 +1046,151 @@ export async function getFixtureMissingPlayers(fixtureId: number): Promise<Missi
     return out;
   } catch {
     return [];
+  }
+}
+
+// ---------- Rozhodca (17. 10. 2026) ----------
+// Fauly a karty veľmi závisia od toho, kto píska. Porovnáme posledné zápasy
+// rozhodcu v lige s priemerom ligy a očakávané fauly a karty tím mierne posunieme.
+const REF_GAMES = 10; // koľko posledných zápasov rozhodcu
+const REF_MIN_GAMES = 3; // pri menej zápasoch rozhodcu nepoužijeme
+const REF_BASELINE_GAMES = 20; // vzorka zápasov ligy pre priemer
+const REF_SHRINK = 6; // váha = n / (n + 6): pri 10 zápasoch 62 %, pri 3 zápasoch 33 %
+const REF_FOULS_RANGE: [number, number] = [0.85, 1.15];
+const REF_CARDS_RANGE: [number, number] = [0.8, 1.2];
+const TTL_REFEREE = 12 * 60 * 60 * 1000;
+const TTL_FX_STATS = 7 * 24 * 60 * 60 * 1000;
+
+/** "Michael Oliver, England" a "M. Oliver" -> "m oliver" (API píše mená rôzne). */
+export function refereeKey(name: string | null | undefined): string {
+  if (!name) return "";
+  const base = name.split(",")[0].normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z\s.-]/g, " ").trim();
+  const parts = base.split(/[\s.]+/).filter(Boolean);
+  if (parts.length === 0) return "";
+  if (parts.length === 1) return parts[0];
+  return parts[0][0] + " " + parts[parts.length - 1];
+}
+
+/** Rozhodca zápasu podľa ID (keď ho klient neposlal). */
+export async function getFixtureReferee(fixtureId: number): Promise<string | null> {
+  const key = `fxReferee:${fixtureId}`;
+  const cached = getCached<string | null>(key);
+  if (cached !== undefined) return cached;
+  try {
+    const res = await client().get("/fixtures", { params: { id: fixtureId } });
+    checkApiErrors(res.data);
+    const ref: string | null = res.data?.response?.[0]?.fixture?.referee ?? null;
+    setCached(key, ref, 60 * 60 * 1000);
+    return ref;
+  } catch {
+    return null;
+  }
+}
+
+/** Fauly a karty (oba tímy spolu) v odohranom zápase; null, ak API údaje nemá. */
+async function fixtureFoulsCards(fixtureId: number): Promise<{ fouls: number | null; cards: number | null } | null> {
+  const rawKey = `fxStatsRaw:${fixtureId}`;
+  let teams = getCached<any[]>(rawKey);
+  if (teams === undefined) {
+    try {
+      const res = await client().get("/fixtures/statistics", { params: { fixture: fixtureId } });
+      checkApiErrors(res.data);
+      teams = (res.data?.response ?? []) as any[];
+      if (teams.length) setCached(rawKey, teams, TTL_FX_STATS);
+    } catch {
+      return null;
+    }
+  }
+  if (!teams || teams.length !== 2) return null;
+  const val = (t: any, type: string) => parseStatValue((t.statistics ?? []).find((s: any) => s.type === type)?.value);
+  const foulsParts = teams.map((t) => val(t, "Fouls"));
+  const fouls = foulsParts.every((v) => v !== null) ? (foulsParts as number[]).reduce((a, b) => a + b, 0) : null;
+  // Karty = len žlté; chýbajúca hodnota znamená 0 (ako pri tímových štatistikách).
+  const cards = teams.reduce((a, t) => a + (val(t, "Yellow Cards") ?? 0), 0);
+  return { fouls, cards };
+}
+
+async function finishedLeagueFixtures(leagueId: number, season: number): Promise<any[]> {
+  const key = `leagueFinished:${leagueId}:${season}`;
+  const cached = getCached<any[]>(key);
+  if (cached !== undefined) return cached;
+  const res = await client().get("/fixtures", { params: { league: leagueId, season, status: "FT-AET-PEN" } });
+  checkApiErrors(res.data);
+  const list = ((res.data?.response ?? []) as any[]).sort(
+    (a, b) => new Date(b.fixture?.date).getTime() - new Date(a.fixture?.date).getTime()
+  );
+  setCached(key, list, TTL_REFEREE);
+  return list;
+}
+
+async function averageFoulsCards(fixtureIds: number[]): Promise<{ fouls: number | null; cards: number | null; n: number }> {
+  const rows = (await mapSequential(fixtureIds, (id) => fixtureFoulsCards(id))).filter(
+    (r): r is { fouls: number | null; cards: number | null } => r !== null
+  );
+  const avg = (vals: (number | null)[]) => {
+    const v = vals.filter((x): x is number => x !== null);
+    return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
+  };
+  return { fouls: avg(rows.map((r) => r.fouls)), cards: avg(rows.map((r) => r.cards)), n: rows.length };
+}
+
+/**
+ * Vplyv rozhodcu na fauly a karty: priemer z jeho posledných zápasov v lige
+ * (aktuálna + minulá sezóna) oproti priemeru ligy, zmenšený podľa počtu zápasov
+ * a ohraničený. Pri neznámom rozhodcovi alebo málo dátach vráti null.
+ */
+export async function getRefereeProfile(
+  leagueId: number,
+  season: number,
+  referee: string | null | undefined
+): Promise<RefereeProfile | null> {
+  const rk = refereeKey(referee);
+  if (!rk) return null;
+  const cacheKey = `refProfile:${leagueId}:${season}:${rk}`;
+  const cached = getCached<RefereeProfile | null>(cacheKey);
+  if (cached !== undefined) return cached;
+  try {
+    let fixtures = await finishedLeagueFixtures(leagueId, season);
+    let refFixtures = fixtures.filter((f: any) => refereeKey(f.fixture?.referee) === rk);
+    if (refFixtures.length < REF_GAMES) {
+      try {
+        const [prevSeason] = await getPreviousSeasons(leagueId, season, 1);
+        if (prevSeason) {
+          const prev = await finishedLeagueFixtures(leagueId, prevSeason);
+          refFixtures = [...refFixtures, ...prev.filter((f: any) => refereeKey(f.fixture?.referee) === rk)];
+          if (fixtures.length < REF_BASELINE_GAMES) fixtures = [...fixtures, ...prev];
+        }
+      } catch {
+        // minulá sezóna nie je – pokračujeme s tým, čo máme
+      }
+    }
+    refFixtures = refFixtures.slice(0, REF_GAMES);
+    if (refFixtures.length < REF_MIN_GAMES) {
+      setCached(cacheKey, null, TTL_REFEREE);
+      return null;
+    }
+    const baselineKey = `refBaseline:${leagueId}:${season}`;
+    let baseline = getCached<{ fouls: number | null; cards: number | null; n: number }>(baselineKey);
+    if (baseline === undefined) {
+      baseline = await averageFoulsCards(fixtures.slice(0, REF_BASELINE_GAMES).map((f: any) => f.fixture.id));
+      if (baseline.n >= 10) setCached(baselineKey, baseline, TTL_REFEREE);
+    }
+    const ref = await averageFoulsCards(refFixtures.map((f: any) => f.fixture.id));
+    if (ref.n < REF_MIN_GAMES || baseline.n < 10) return null;
+    const w = ref.n / (ref.n + REF_SHRINK);
+    const factor = (refAvg: number | null, baseAvg: number | null, [lo, hi]: [number, number]) =>
+      refAvg !== null && baseAvg !== null && baseAvg > 0 ? Math.min(hi, Math.max(lo, 1 + w * (refAvg / baseAvg - 1))) : 1;
+    const profile: RefereeProfile = {
+      name: String(referee).split(",")[0].trim(),
+      games: ref.n,
+      foulsFactor: factor(ref.fouls, baseline.fouls, REF_FOULS_RANGE),
+      cardsFactor: factor(ref.cards, baseline.cards, REF_CARDS_RANGE),
+      avgFouls: ref.fouls,
+      avgCards: ref.cards,
+    };
+    setCached(cacheKey, profile, TTL_REFEREE);
+    return profile;
+  } catch {
+    return null;
   }
 }

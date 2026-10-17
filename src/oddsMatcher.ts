@@ -104,6 +104,16 @@ function isTeamBet(bet: string, side: "home" | "away", kind: "goals" | "corners"
   return /^total\s*-\s*(home|away)$/.test(b) || /(goal|total|over)/.test(b);
 }
 
+/**
+ * Karty počítame len žlté (17. 10. 2026). Ak stávkovky ponúkajú trh so žltými
+ * kartami, berieme kurzy len z neho; inak všeobecný trh kariet (nie červené ani body).
+ */
+function cardOdds(odds: MarketOdds[]): MarketOdds[] {
+  const yellow = odds.filter((o) => /yellow/i.test(o.bet) && !/red|point|1st|2nd|first|second|half|home|away|team|player/i.test(o.bet));
+  if (yellow.length) return yellow;
+  return odds.filter((o) => isOverUnderBet(o.bet, "Karty") && !/red|point|booking/i.test(o.bet));
+}
+
 /** Patrí stávka z API k trhu nad/pod v TipRadare (bez ohľadu na hranicu)? */
 function isOverUnderBet(bet: string, market: string): boolean {
   const team = TEAM_OU_MARKETS[market];
@@ -121,8 +131,9 @@ function isOverUnderBet(bet: string, market: string): boolean {
 export function offeredLines(odds: MarketOdds[] | undefined, market: string): number[] {
   if (!odds || odds.length === 0) return [];
   const lines = new Set<number>();
+  if (market === "Karty") odds = cardOdds(odds);
   for (const o of odds) {
-    if (!isOverUnderBet(o.bet, market)) continue;
+    if (market !== "Karty" && !isOverUnderBet(o.bet, market)) continue;
     const v = parseOverUnder(o.value);
     // len polovičné hranice (x,5) – pri celých číslach (napr. 10) sa stávka môže vracať
     if (v && Math.abs((v.line % 1) - 0.5) < 0.001) lines.add(v.line);
@@ -172,9 +183,10 @@ export function findOdds(
   if (OU_PATTERNS[pick.market] || TEAM_OU_MARKETS[pick.market]) {
     const target = parseOverUnder(pick.selection);
     if (!target) return null;
+    const pool = pick.market === "Karty" ? cardOdds(odds) : odds;
     return best(
-      odds.filter((o) => {
-        if (!isOverUnderBet(o.bet, pick.market)) return false;
+      pool.filter((o) => {
+        if (pick.market !== "Karty" && !isOverUnderBet(o.bet, pick.market)) return false;
         const v = parseOverUnder(o.value);
         return !!v && v.dir === target.dir && Math.abs(v.line - target.line) < 0.001;
       })

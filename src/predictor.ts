@@ -24,7 +24,7 @@ import {
   MarketPick,
   OverUnderMarket,
   PlayerGoalPrediction,
-  RawPlayerStat, H2HStats, MissingPlayer } from "./types";
+  RawPlayerStat, H2HStats, MissingPlayer, RefereeProfile } from "./types";
 
 // Predvolené váhy jednotlivých faktorov pri výsledku zápasu (1/X/2).
 // Pokus z 5. 10. 2026 (len Poisson s korekciou remíz, bez formy a vzájomných
@@ -569,7 +569,9 @@ export function predictMatch(
    * v tejto sezóne vo VŠETKÝCH súťažiach. Pravidlo „aspoň 3 zápasy" sa potom
    * posudzuje podľa neho, nie podľa 1 – 2 zápasov v skupine/ligovej fáze.
    */
-  seasonGamesAnyCompetition?: number | null
+  seasonGamesAnyCompetition?: number | null,
+  /** Vplyv rozhodcu na fauly a karty (null = rozhodca neznámy alebo málo dát). */
+  referee?: RefereeProfile | null
 ): PredictionResult {
   const xg = expectedGoals(homeStats, awayStats, leagueAvg, homePriorsResult, awayPriorsResult);
   // Aktuálna forma podľa gólov: útok tímu v posledných zápasoch oproti sezóne
@@ -666,7 +668,7 @@ export function predictMatch(
         : null;
   if (baseCards !== null && baseCards > 0) {
     const cardsBlend = blendH2H(baseCards, "cards");
-    const expectedCards = cardsBlend.value;
+    const expectedCards = cardsBlend.value * (referee?.cardsFactor ?? 1);
     if (cardsBlend.h2h) h2hNotes.karty = `Vo vzájomných zápasoch (${cardsBlend.h2h.n}) padlo v priemere ${fmt1(cardsBlend.h2h.avg)} kariet.`;
     const cardsOU = overdispersedOverUnder(expectedCards, CARDS_LINE, VAR_RATIO.cards);
     cards = { expected: expectedCards, line: CARDS_LINE, ...cardsOU };
@@ -686,7 +688,7 @@ export function predictMatch(
   let fouls: OverUnderMarket | undefined;
   if (extraStatsAvg?.homeFouls != null && extraStatsAvg?.awayFouls != null) {
     const b = blendH2H(extraStatsAvg.homeFouls + extraStatsAvg.awayFouls, "fouls");
-    const expected = b.value;
+    const expected = b.value * (referee?.foulsFactor ?? 1);
     if (b.h2h) h2hNotes.fauly = `Vo vzájomných zápasoch (${b.h2h.n}) v priemere ${fmt1(b.h2h.avg)} faulov.`;
     const { over, under } = poissonOverUnder(expected, FOULS_LINE);
     fouls = { expected, line: FOULS_LINE, over, under };
@@ -731,6 +733,16 @@ export function predictMatch(
     fixture.awayTeam.name
   } ${xg.away.toFixed(1)} – oba tímy majú reálnu šancu skórovať.`;
 
+  // Rozhodca (17. 10. 2026): pri faulov a kartách krátka poznámka, o koľko ich posunul.
+  const refereeNote = (kind: "fouls" | "cards"): string => {
+    if (!referee) return "";
+    const f = kind === "fouls" ? referee.foulsFactor : referee.cardsFactor;
+    const pct = Math.round((f - 1) * 100);
+    const eff = pct === 0 ? "bez úpravy" : `${pct > 0 ? "+" : "−"}${Math.abs(pct)} %`;
+    const avg = kind === "fouls" ? referee.avgFouls : referee.avgCards;
+    const what = kind === "fouls" ? "faulov" : "žltých kariet";
+    return ` Rozhodca ${referee.name}: v posledných ${referee.games} zápasoch ligy v priemere ${avg != null ? fmt1(avg) : "?"} ${what} (${eff}).`;
+  };
   const statExplanation = (expected: number, line: number): string =>
     `Priemer oboch tímov v tejto štatistike za posledné zápasy je ${expected.toFixed(
       1
@@ -799,7 +811,9 @@ export function predictMatch(
 
   if (cards) {
     const exp = cards.expected;
-    addOverUnder("Karty", "karty", (line) => overdispersedOverUnder(exp, line, VAR_RATIO.cards), (line) => statExplanation(exp, line));
+    addOverUnder("Karty", "karty", (line) => overdispersedOverUnder(exp, line, VAR_RATIO.cards), (line) =>
+      `Očakávané žlté karty oboch tímov spolu: ${fmt1(exp)}, hranica ${line}.${refereeNote("cards")}`
+    );
   }
 
   if (shotsOnGoal) {
@@ -809,7 +823,7 @@ export function predictMatch(
 
   if (fouls) {
     const exp = fouls.expected;
-    addOverUnder("Fauly", "fauly", (line) => poissonOverUnder(exp, line), (line) => statExplanation(exp, line));
+    addOverUnder("Fauly", "fauly", (line) => poissonOverUnder(exp, line), (line) => statExplanation(exp, line) + refereeNote("fouls"));
   }
 
   // Vyššie držanie lopty - odhad z priemerného držania lopty oboch tímov.
@@ -1083,6 +1097,7 @@ export function predictMatch(
       away: awayTopScorer,
     },
     bestScorer,
+    referee: referee ?? null,
     lineupConfirmed: {
       home: Boolean(homeLineupIds && homeLineupIds.length > 0),
       away: Boolean(awayLineupIds && awayLineupIds.length > 0),

@@ -24,6 +24,8 @@ export interface Fixture {
   elapsed?: number | null; // odohraná minúta, ak zápas prebieha
   goalsHome?: number | null; // aktuálne skóre, ak zápas prebieha alebo skončil
   goalsAway?: number | null;
+  /** Rozhodca zápasu, ak ho API už pozná (napr. "Michael Oliver, England"). */
+  referee?: string | null;
 }
 
 export interface TeamStatistics {
@@ -45,7 +47,7 @@ export interface TeamStatistics {
       average: { home: number; away: number; total: number };
     };
   };
-  /** Priemerný počet žltých + červených kariet tímu za zápas (celá sezóna). */
+  /** Priemerný počet žltých kariet tímu za zápas (celá sezóna). */
   cardsPerGame: number;
 }
 
@@ -143,6 +145,8 @@ export interface OutcomeProbabilities {
 
 export interface PredictionResult {
   fixture: Fixture;
+  /** Rozhodca a jeho vplyv na fauly a karty (null = neznámy alebo málo dát). */
+  referee?: RefereeProfile | null;
   expectedGoals: {
     home: number;
     away: number;
@@ -351,4 +355,14 @@ export interface Subscriber {
   cardSent?: boolean; // VIP kovová karta odoslaná
   note?: string;
   createdAt: string; // ISO
+}
+
+/** Ako rozhodca ovplyvňuje fauly a karty oproti priemeru ligy (1 = bez vplyvu). */
+export interface RefereeProfile {
+  name: string;
+  games: number;
+  foulsFactor: number;
+  cardsFactor: number;
+  avgFouls: number | null;
+  avgCards: number | null;
 }

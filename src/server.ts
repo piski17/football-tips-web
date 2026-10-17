@@ -14,6 +14,8 @@ import express, { NextFunction, Request, Response } from "express";
 import path from "path";
 import {
   getFixturesByLeague,
+  getFixtureReferee,
+  getRefereeProfile,
   getTeamStatistics,
   getHeadToHead,
   getLeagueAverages,
@@ -556,6 +558,9 @@ app.post("/api/analyze", async (req, res) => {
       getFixtureOdds(fixture.fixtureId),
     ]);
     const missingPlayers = await getFixtureMissingPlayers(fixture.fixtureId);
+    // Rozhodca: z údajov zápasu, inak ho dočítame z API (pri chybe sa jednoducho nepoužije).
+    const refereeName = fixture.referee ?? (await getFixtureReferee(fixture.fixtureId).catch(() => null));
+    const referee = await getRefereeProfile(Number(leagueId), Number(season), refereeName).catch(() => null);
 
     // Štatistiky posledných vzájomných zápasov (rohy, karty…) – pri chybe sa jednoducho nepoužijú.
     const h2hStats = await getHeadToHeadStats(h2h, fixture.homeTeam.name).catch(() => []);
@@ -600,7 +605,8 @@ app.post("/api/analyze", async (req, res) => {
       { home: { goalsFor: homeExtStats.goalsFor ?? null, goalsAgainst: homeExtStats.goalsAgainst ?? null, games: homeExtStats.goalsGames ?? 0 }, away: { goalsFor: awayExtStats.goalsFor ?? null, goalsAgainst: awayExtStats.goalsAgainst ?? null, games: awayExtStats.goalsGames ?? 0 } },
       false,
       missingPlayers,
-      seasonGamesAny
+      seasonGamesAny,
+      referee
     );
 
     // Tichá evidencia tipov vyradených pre rozpor so stávkovkami (na pozadí, nič neblokuje).
