@@ -748,6 +748,11 @@ function normCdf(x) {
   return x >= 0 ? (1 + y) / 2 : (1 - y) / 2;
 }
 
+function evPct(ev) {
+  const p = Math.round((ev - 1) * 100);
+  return `${p >= 0 ? "+" : "−"}${Math.abs(p)} %`;
+}
+
 function possessionHtml(r) {
   if (!r.possession) return "";
   const h = translateTeamName(r.fixture.homeTeam.name), a = translateTeamName(r.fixture.awayTeam.name);
@@ -760,6 +765,8 @@ function possessionHtml(r) {
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center">
         <select id="possTeam" aria-label="Tím"><option value="home">${escapeHtml(h)}</option><option value="away"${eh < 50 ? " selected" : ""}>${escapeHtml(a)}</option></select>
         <input type="text" id="possLine" inputmode="decimal" placeholder="Hranica, napr. 55,5" style="width:150px" aria-label="Hranica držania lopty v %" />
+        <input type="text" id="possOddsOver" inputmode="decimal" placeholder="Kurz „a viac“" style="width:120px" aria-label="Kurz na a viac" />
+        <input type="text" id="possOddsUnder" inputmode="decimal" placeholder="Kurz „menej ako“" style="width:130px" aria-label="Kurz na menej ako" />
         <button type="button" class="btn-ghost" id="possCalc">Vypočítať</button>
       </div>
       <div id="possResult" style="margin-top:10px"></div>
@@ -780,18 +787,47 @@ function wirePossession(r) {
     const teamName = side === "home" ? r.fixture.homeTeam.name : r.fixture.awayTeam.name;
     const market = side === "home" ? "Držanie lopty domácich" : "Držanie lopty hostí";
     const lineTxt = String(line).replace(".", ",");
+    const oddOf = (id) => {
+      const v = parseFloat(String(document.getElementById(id).value).replace(",", "."));
+      return v > 1 && v <= 20 ? Math.round(v * 100) / 100 : null;
+    };
     const rows = [
-      { label: `${translateTeamName(teamName)} ${lineTxt} % a viac`, selection: `Over ${line}`, probability: over },
-      { label: `${translateTeamName(teamName)} menej ako ${lineTxt} %`, selection: `Under ${line}`, probability: 100 - over },
+      { label: `${translateTeamName(teamName)} ${lineTxt} % a viac`, selection: `Over ${line}`, probability: over, odds: oddOf("possOddsOver") },
+      { label: `${translateTeamName(teamName)} menej ako ${lineTxt} %`, selection: `Under ${line}`, probability: 100 - over, odds: oddOf("possOddsUnder") },
     ];
+    // Rovnaké pravidlá ako pri ostatných tipoch: šanca 68 – 80 %, a ak je zadaný kurz,
+    // tak aspoň 1,50 a výhodnosť (šanca × kurz) 1,05 až 1,25.
+    rows.forEach((x) => {
+      if (x.odds != null) {
+        x.ev = (x.probability / 100) * x.odds;
+        x.ok = x.probability >= 68 && x.probability <= 80 && x.odds >= 1.5 && x.ev >= 1.05 && x.ev <= 1.25;
+      } else {
+        x.ok = x.probability >= 68 && x.probability <= 80;
+      }
+    });
+    const good = rows.filter((x) => x.ok);
+    if (good.length > 1 && good.every((x) => x.ev != null)) {
+      const best = good.reduce((a, b) => (b.ev > a.ev ? b : a));
+      rows.forEach((x) => { x.ok = x === best; });
+    }
+    const whyNot = (x) => {
+      if (x.probability < 68 || x.probability > 80) return "Mimo pásma 68 – 80 % – neodporúčame.";
+      if (x.odds < 1.5) return "Kurz pod 1,50 – neodporúčame.";
+      if (x.ev < 1.05) return `Kurz je na túto šancu nízky (výhodnosť ${evPct(x.ev)}) – neodporúčame.`;
+      if (x.ev > 1.25) return `Podozrivo vysoká výhodnosť (${evPct(x.ev)}), model sa asi mýli – neodporúčame.`;
+      return "Druhá možnosť je výhodnejšia.";
+    };
     out.innerHTML = rows
       .map((x, i) => {
-        const inBand = x.probability >= 68 && x.probability <= 80;
         const min = minOddsFor({ probability: x.probability });
-        return `<div class="stat-line"><span>${escapeHtml(x.label)}</span><strong>${x.probability.toFixed(0)} %</strong></div>
-          ${inBand
-            ? `<div style="display:flex;gap:8px;margin:4px 0 10px;align-items:center"><span class="muted small" style="flex:1">Hraj len pri kurze aspoň <strong>${fmtOdds(min)}</strong></span><button type="button" class="btn-primary" data-poss="${i}">Uložiť tento tip</button><button type="button" class="btn-ghost" data-poss="${i}" data-watch="1">👁 Len sledovať</button></div>`
-            : `<p class="muted small" style="margin:2px 0 10px">Mimo pásma 68 – 80 % – neodporúčame.</p>`}`;
+        const info = x.odds != null
+          ? `Odporúčame · kurz <strong>${fmtOdds(x.odds)}</strong> · výhodnosť <strong>${evPct(x.ev)}</strong>`
+          : `Hraj len pri kurze aspoň <strong>${fmtOdds(min)}</strong>`;
+        const oddsTxt = x.odds != null ? ` · kurz ${fmtOdds(x.odds)}` : "";
+        return `<div class="stat-line"><span>${escapeHtml(x.label)}${oddsTxt}</span><strong>${x.probability.toFixed(0)} %</strong></div>
+          ${x.ok
+            ? `<div style="display:flex;gap:8px;margin:4px 0 10px;align-items:center"><span class="muted small" style="flex:1">${info}</span><button type="button" class="btn-primary" data-poss="${i}">Uložiť tento tip</button><button type="button" class="btn-ghost" data-poss="${i}" data-watch="1">👁 Len sledovať</button></div>`
+            : `<p class="muted small" style="margin:2px 0 10px">${whyNot(x)}</p>`}`;
       })
       .join("");
     out.querySelectorAll("[data-poss]").forEach((b) => {
@@ -799,7 +835,7 @@ function wirePossession(r) {
         if (matchHasStarted(r.fixture)) { showToast(MATCH_STARTED_TEXT); return; }
         const x = rows[Number(b.dataset.poss)];
         const watch = b.dataset.watch === "1";
-        const odds = watch ? null : askRealOdds({ probability: x.probability });
+        const odds = watch ? null : x.odds ?? askRealOdds({ probability: x.probability });
         if (!watch && odds == null) return;
         const tip = {
           id: `${r.fixture.fixtureId}-${Date.now()}`,
@@ -833,7 +869,9 @@ function wirePossession(r) {
     });
   };
   btn.onclick = calc;
-  lineEl.onkeydown = (e) => { if (e.key === "Enter") calc(); };
+  ["possLine", "possOddsOver", "possOddsUnder"].forEach((id) => {
+    document.getElementById(id).onkeydown = (e) => { if (e.key === "Enter") calc(); };
+  });
 }
 
 function probRow(label, value) {
