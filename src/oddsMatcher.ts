@@ -80,11 +80,16 @@ const OU_PATTERNS: Record<string, RegExp> = {
 };
 
 /** Trhy na jeden tím: názov trhu v TipRadare -> strana a druh štatistiky. */
-export const TEAM_OU_MARKETS: Record<string, { side: "home" | "away"; kind: "goals" | "corners" }> = {
+type TeamKind = "goals" | "corners" | "cards" | "shots";
+export const TEAM_OU_MARKETS: Record<string, { side: "home" | "away"; kind: TeamKind }> = {
   "Góly domácich": { side: "home", kind: "goals" },
   "Góly hostí": { side: "away", kind: "goals" },
   "Rohy domácich": { side: "home", kind: "corners" },
   "Rohy hostí": { side: "away", kind: "corners" },
+  "Karty domácich": { side: "home", kind: "cards" },
+  "Karty hostí": { side: "away", kind: "cards" },
+  "Strely na bránu domácich": { side: "home", kind: "shots" },
+  "Strely na bránu hostí": { side: "away", kind: "shots" },
 };
 
 // Pri trhoch jedného tímu nechceme polčasy, handicapy, preteky a kombinácie.
@@ -95,11 +100,14 @@ const TEAM_EXCLUDED = /(1st|2nd|first|second|half|asian|handicap|exact|odd\/even
  * Názvy sa u API-Football líšia, preto je porovnanie voľnejšie: musí obsahovať
  * stranu (home/away, nie obe) a pri rohoch slovo corner, pri góloch žiadnu inú štatistiku.
  */
-function isTeamBet(bet: string, side: "home" | "away", kind: "goals" | "corners"): boolean {
+function isTeamBet(bet: string, side: "home" | "away", kind: TeamKind): boolean {
   const b = bet.trim().toLowerCase();
   const other = side === "home" ? "away" : "home";
   if (!b.includes(side) || b.includes(other) || TEAM_EXCLUDED.test(b)) return false;
   if (kind === "corners") return /corner/.test(b);
+  // Karty tímu: len žlté alebo všeobecné karty, nie červené ani body za karty.
+  if (kind === "cards") return /(card|yellow)/.test(b) && !/(red|point|booking)/.test(b);
+  if (kind === "shots") return /shot/.test(b) && /(target|goal)/.test(b);
   if (/(corner|card|booking|shot|foul|offside|throw|goal ?kick|tackle|save|possession)/.test(b)) return false;
   return /^total\s*-\s*(home|away)$/.test(b) || /(goal|total|over)/.test(b);
 }

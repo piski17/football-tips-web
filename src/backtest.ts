@@ -230,7 +230,8 @@ async function outcomes(fixture: Fixture, pickSets: MarketPick[][]): Promise<Sam
         stats.fouls,
         stats.offsides,
         stats.possession,
-        stats.cornersByTeam ?? null
+        stats.cornersByTeam ?? null,
+        { cards: stats.cardsByTeam ?? null, shots: stats.shotsByTeam ?? null }
       );
       if (status === "won" || status === "lost")
         out.push({

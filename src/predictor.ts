@@ -63,12 +63,17 @@ const MARKET_CALIBRATION: Record<string, number> = {
   rohy: 0.72,
   rohy_timu: 0.75,
   karty: 0.8,
+  // Trhy jedného tímu (17. 10. 2026) – zatiaľ rovnako ako trh celého zápasu,
+  // spätným testom ešte neoverené.
+  karty_timu: 0.8,
+  strely_timu: 0.8,
 };
 const EARLY_SEASON_CALIBRATION: Record<string, number> = {
   goly: 0.9,
   goly_timu: 0.9,
   // spolu s MARKET_CALIBRATION 0,8 × 0,75 = 0,6 na začiatku sezóny
   karty: 0.75,
+  karty_timu: 0.75,
   btts: 0.5,
 };
 /** Koeficient kalibrácie pre trh pri danom počte odohraných zápasov v sezóne. */
@@ -116,8 +121,12 @@ const DEFAULT_LINES: Record<string, number[]> = {
   "Rohy": [8.5, 9.5, 10.5],
   "Rohy domácich": [3.5, 4.5, 5.5, 6.5],
   "Rohy hostí": [3.5, 4.5, 5.5, 6.5],
-  "Karty": [3.5, 4.5],
+  "Karty": [2.5, 3.5, 4.5],
+  "Karty domácich": [0.5, 1.5, 2.5],
+  "Karty hostí": [0.5, 1.5, 2.5],
   "Strely na bránu": [7.5, 8.5, 9.5],
+  "Strely na bránu domácich": [2.5, 3.5, 4.5, 5.5],
+  "Strely na bránu hostí": [2.5, 3.5, 4.5, 5.5],
   "Fauly": [20.5, 21.5, 22.5],
 };
 
@@ -762,8 +771,10 @@ export function predictMatch(
   // pravdepodobnejšiu; z jednej kategórie sa nakoniec vyberie hranica s najväčšou hodnotou.
   const hasOdds = !!marketOdds && marketOdds.length > 0;
   const linesFor = (market: string): number[] => {
-    const offered = hasOdds ? offeredLines(marketOdds, market) : [];
-    return offered.length ? offered : DEFAULT_LINES[market] ?? [];
+    // Keď stávkovky k zápasu kurzy majú, počítame LEN hranice, ktoré ponúkajú
+    // (17. 10. 2026) – pevné hranice nižšie sú len pre analýzu bez kurzov a spätný test.
+    if (hasOdds) return offeredLines(marketOdds, market);
+    return DEFAULT_LINES[market] ?? [];
   };
   const addOverUnder = (
     market: string,
@@ -819,6 +830,28 @@ export function predictMatch(
   if (shotsOnGoal) {
     const exp = shotsOnGoal.expected;
     addOverUnder("Strely na bránu", "strely", (line) => overdispersedOverUnder(exp, line, VAR_RATIO.shotsOnGoal), (line) => statExplanation(exp, line));
+  }
+
+  // Žlté karty a strely na bránu jedného tímu (17. 10. 2026): vlastný priemer tímu
+  // zmiešaný s tým, koľko dovolí súper (ako pri rohoch tímu); karty aj s rozhodcom.
+  if (extraStatsAvg?.homeCards != null && extraStatsAvg?.awayCards != null && cards) {
+    const rf = referee?.cardsFactor ?? 1;
+    const hk = extraStatsAvg.homeCards * rf, ak = extraStatsAvg.awayCards * rf;
+    addOverUnder("Karty domácich", "karty_timu", (line) => overdispersedOverUnder(hk, line, VAR_RATIO.cards), (line) =>
+      `${fixture.homeTeam.name}: očakávané žlté karty ${fmt1(hk)} (aj s ohľadom na súpera), hranica ${line}.${refereeNote("cards")}`
+    );
+    addOverUnder("Karty hostí", "karty_timu", (line) => overdispersedOverUnder(ak, line, VAR_RATIO.cards), (line) =>
+      `${fixture.awayTeam.name}: očakávané žlté karty ${fmt1(ak)} (aj s ohľadom na súpera), hranica ${line}.${refereeNote("cards")}`
+    );
+  }
+  if (extraStatsAvg?.homeShotsOnGoal != null && extraStatsAvg?.awayShotsOnGoal != null) {
+    const hs = extraStatsAvg.homeShotsOnGoal, as = extraStatsAvg.awayShotsOnGoal;
+    addOverUnder("Strely na bránu domácich", "strely_timu", (line) => overdispersedOverUnder(hs, line, VAR_RATIO.shotsOnGoal), (line) =>
+      `${fixture.homeTeam.name} má v priemere ${fmt1(hs)} striel na bránu (aj s ohľadom na súpera), hranica ${line}.`
+    );
+    addOverUnder("Strely na bránu hostí", "strely_timu", (line) => overdispersedOverUnder(as, line, VAR_RATIO.shotsOnGoal), (line) =>
+      `${fixture.awayTeam.name} má v priemere ${fmt1(as)} striel na bránu (aj s ohľadom na súpera), hranica ${line}.`
+    );
   }
 
   if (fouls) {

@@ -27,7 +27,8 @@ export function evaluateTip(
   actualFouls: number | null = null,
   actualOffsides: number | null = null,
   actualPossession: { team: string; value: number }[] | null = null,
-  actualCornersByTeam: { team: string; value: number }[] | null = null
+  actualCornersByTeam: { team: string; value: number }[] | null = null,
+  actualTeamStats: { cards?: { team: string; value: number }[] | null; shots?: { team: string; value: number }[] | null } | null = null
 ): "won" | "lost" | "void" {
   const overUnder = (actual: number | null): "won" | "lost" | "void" => {
     if (actual === null) return "void";
@@ -37,12 +38,13 @@ export function evaluateTip(
     return actual > line === isOver ? "won" : "lost";
   };
   // Rohy jedného tímu: podľa názvu tímu, inak podľa poradia (API vracia najprv domácich).
-  const teamCorners = (side: "home" | "away"): number | null => {
-    if (!actualCornersByTeam || actualCornersByTeam.length !== 2) return null;
+  const teamValue = (list: { team: string; value: number }[] | null | undefined, side: "home" | "away"): number | null => {
+    if (!list || list.length !== 2) return null;
     const name = side === "home" ? tip.homeTeam : tip.awayTeam;
-    const byName = actualCornersByTeam.find((c) => c.team === name);
-    return (byName ?? actualCornersByTeam[side === "home" ? 0 : 1]).value;
+    const byName = list.find((c) => c.team === name);
+    return (byName ?? list[side === "home" ? 0 : 1]).value;
   };
+  const teamCorners = (side: "home" | "away"): number | null => teamValue(actualCornersByTeam, side);
   switch (tip.market) {
     case "Góly domácich":
       return overUnder(homeGoals);
@@ -52,6 +54,14 @@ export function evaluateTip(
       return overUnder(teamCorners("home"));
     case "Rohy hostí":
       return overUnder(teamCorners("away"));
+    case "Karty domácich":
+      return overUnder(teamValue(actualTeamStats?.cards, "home"));
+    case "Karty hostí":
+      return overUnder(teamValue(actualTeamStats?.cards, "away"));
+    case "Strely na bránu domácich":
+      return overUnder(teamValue(actualTeamStats?.shots, "home"));
+    case "Strely na bránu hostí":
+      return overUnder(teamValue(actualTeamStats?.shots, "away"));
 
     case "Vyššie držanie lopty": {
       if (actualPossession === null) return "void";
@@ -183,7 +193,7 @@ const VOID_STATUSES = ["CANC", "ABD", "AWD", "WO"];
 /** Odložený / prerušený zápas - ak sa neodohrá do 3 dní, stávka sa vracia. */
 const DELAYED_STATUSES = ["PST", "TBD", "SUSP", "INT"];
 const DELAYED_VOID_AFTER_MS = 3 * 24 * 60 * 60 * 1000;
-export const STATS_MARKETS = ["Rohy", "Rohy domácich", "Rohy hostí", "Karty", "Strely na bránu", "Fauly", "Ofsajdy", "Vyššie držanie lopty"];
+export const STATS_MARKETS = ["Rohy", "Rohy domácich", "Rohy hostí", "Karty", "Karty domácich", "Karty hostí", "Strely na bránu domácich", "Strely na bránu hostí", "Strely na bránu", "Fauly", "Ofsajdy", "Vyššie držanie lopty"];
 
 export interface SettledBet {
   status: "won" | "lost" | "void";
@@ -227,6 +237,7 @@ export async function settleBet(
   let offsides: number | null = null;
   let possession: { team: string; value: number }[] | null = null;
   let cornersByTeam: { team: string; value: number }[] | null = null;
+  let teamStats: { cards?: { team: string; value: number }[] | null; shots?: { team: string; value: number }[] | null } | null = null;
   // Štatistiky z API zahŕňajú aj predĺženie - pri takom zápase sa nedá určiť
   // stav po 90 minútach, preto takýto tip vraciame (void).
   if (STATS_MARKETS.includes(bet.market) && !wentToExtraTime) {
@@ -238,6 +249,7 @@ export async function settleBet(
     offsides = stats.offsides;
     possession = stats.possession;
     cornersByTeam = stats.cornersByTeam ?? null;
+    teamStats = { cards: stats.cardsByTeam ?? null, shots: stats.shotsByTeam ?? null };
   }
 
   let scorerIds: number[] | null = null;
@@ -257,7 +269,8 @@ export async function settleBet(
     fouls,
     offsides,
     possession,
-    cornersByTeam
+    cornersByTeam,
+    teamStats
   );
   return { status, homeGoals: result.homeGoals, awayGoals: result.awayGoals };
 }
@@ -334,7 +347,8 @@ export async function settleFixtureBets(
       s?.fouls ?? null,
       s?.offsides ?? null,
       s?.possession ?? null,
-      s?.cornersByTeam ?? null
+      s?.cornersByTeam ?? null,
+      s ? { cards: s.cardsByTeam ?? null, shots: s.shotsByTeam ?? null } : null
     );
   });
 }

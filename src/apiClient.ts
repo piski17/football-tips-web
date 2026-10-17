@@ -834,6 +834,9 @@ export async function getFixtureCornersAndCards(
   possession: { team: string; value: number }[] | null;
   /** Rohy jednotlivých tímov (v poradí domáci, hostia, tak ako ich vracia API). */
   cornersByTeam?: { team: string; value: number }[] | null;
+  /** Žlté karty a strely na bránu jednotlivých tímov (domáci, hostia). */
+  cardsByTeam?: { team: string; value: number }[] | null;
+  shotsByTeam?: { team: string; value: number }[] | null;
 }> {
   try {
     const res = await client().get("/fixtures/statistics", { params: { fixture: fixtureId } });
@@ -878,7 +881,20 @@ export async function getFixtureCornersAndCards(
       if (value !== null && t.team?.name) cornersByTeam.push({ team: t.team.name, value });
     }
 
+    // Žlté karty tímu: chýbajúci údaj = 0, ak má API štatistiky oboch tímov.
+    const byTeam = (type: string, missingIsZero: boolean): { team: string; value: number }[] | null => {
+      const out: { team: string; value: number }[] = [];
+      for (const t of teams) {
+        const stat = (t.statistics ?? []).find((s: any) => s.type === type);
+        const value = parseStatValue(stat?.value) ?? (missingIsZero && (t.statistics ?? []).length ? 0 : null);
+        if (value !== null && t.team?.name) out.push({ team: t.team.name, value });
+      }
+      return out.length === 2 ? out : null;
+    };
+
     return {
+      cardsByTeam: byTeam("Yellow Cards", true),
+      shotsByTeam: byTeam("Shots on Goal", false),
       corners: found.corners ? totals.corners : null,
       // Karty = len žlté (od 17. 10. 2026); bez žltých, no s červenou = 0 žltých.
       cards: found.cardsYellow || found.cardsRed ? totals.cardsYellow ?? 0 : null,
@@ -889,7 +905,7 @@ export async function getFixtureCornersAndCards(
       cornersByTeam: found.corners && cornersByTeam.length === 2 ? cornersByTeam : null,
     };
   } catch {
-    return { corners: null, cards: null, shotsOnGoal: null, fouls: null, offsides: null, possession: null, cornersByTeam: null };
+    return { corners: null, cards: null, shotsOnGoal: null, fouls: null, offsides: null, possession: null, cornersByTeam: null, cardsByTeam: null, shotsByTeam: null };
   }
 }
 
