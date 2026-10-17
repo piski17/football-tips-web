@@ -3329,7 +3329,7 @@ function renderBacktestComparison(r, old) {
     <h4 style="margin:14px 0 0;">Nový model oproti pôvodnému (tie isté zápasy)</h4>
     <div class="bt-summary">Pásmo 68 – 80 %: pôvodný model <strong>${ob.count}</strong> tipov, vyšlo <strong>${pct(ob.hitRate)}</strong> · nový model <strong>${nb.count}</strong> tipov, vyšlo <strong>${pct(nb.hitRate)}</strong>.</div>
     <table class="bt-table"><thead><tr><th>Trh</th><th class="num">Model → realita – pôvodný</th><th class="num">Model → realita – nový</th><th class="num">Chyba – pôvodný</th><th class="num">Chyba – nový</th><th class="num">V pásme – pôvodný</th><th class="num">V pásme – nový</th></tr></thead><tbody>${rows}</tbody></table>
-    <p class="muted small">Chyba = ako ďaleko boli percentá modelu od skutočnosti (Brierovo skóre × 100). <strong>Nižšia je lepšia.</strong> Zelená: nový model je presnejší, červená: horší. Nový model = forma z gólov + kalibrácia striel, faulov, rohov a kariet (celá sezóna) a gólov a kariet navyše na začiatku sezóny. Kalibrácia (6. 10. 2026) vznikla z testov aug. – okt. 2024 a mar. – máj 2025 – na poctivé overenie testuj iné obdobie, napr. aug. – dec. 2023 (sezóna 2023).</p>`;
+    <p class="muted small">Chyba = ako ďaleko boli percentá modelu od skutočnosti (Brierovo skóre × 100). <strong>Nižšia je lepšia.</strong> Zelená: nový model je presnejší, červená: horší. Nový model = forma z gólov + kalibrácia striel, faulov, rohov a kariet (celá sezóna) a gólov navyše na začiatku sezóny. Kalibrácia (17. 10. 2026) vznikla z testov aug. – okt. 2024 a aug. – okt. 2026 – na poctivé overenie testuj iné obdobie, napr. mar. – máj 2025 (sezóna 2024).</p>`;
 }
 
 async function pollBacktest(id) {

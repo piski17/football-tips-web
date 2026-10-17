@@ -57,23 +57,25 @@ export const LEGACY_WEIGHTS: PredictionWeights = DEFAULT_WEIGHTS;
 // 3. test (aug. – dec. 2023, 298 zápasov, mimo obdobia kalibrácie): pásmo 68 – 80 %
 // model 73 % → realita 73 %. Strely tam v pásme vychádzali len na 65 % (najlepšie k
 // 0,70), preto 0,8 = priemer troch testov (0,85 / 0,95 / 0,70).
+// 17. 10. 2026 (po pridaní rozhodcov a väčšieho rozptylu faulov a rohov) dva spätné
+// testy po 300 zápasov: aug. – okt. 2024 a aug. – okt. 2026. Model bol v oboch
+// príliš opatrný (pásmo 68 – 80 %: model 73 % → realita 78 %). Zmenené len trhy,
+// kde sa oba testy zhodli: fauly 0,95 / 0,90, rohy tímu 0,80 / 0,85, strely tímu
+// 0,95 / 1,00, karty aj karty tímu 1,00 / 1,00 (oba testy sú zo začiatku sezóny,
+// koniec sezóny overený nie je – preto karty 0,9 a bez zvláštnej úpravy na začiatku).
+// Rohy (0,70 / 0,90) a strely (0,80 / 1,00) sa nezhodli – ostávajú.
 const MARKET_CALIBRATION: Record<string, number> = {
   strely: 0.8,
-  fauly: 0.8,
+  fauly: 0.9,
   rohy: 0.72,
-  rohy_timu: 0.75,
-  karty: 0.8,
-  // Trhy jedného tímu (17. 10. 2026) – zatiaľ rovnako ako trh celého zápasu,
-  // spätným testom ešte neoverené.
-  karty_timu: 0.8,
-  strely_timu: 0.8,
+  rohy_timu: 0.8,
+  karty: 0.9,
+  karty_timu: 0.9,
+  strely_timu: 0.95,
 };
 const EARLY_SEASON_CALIBRATION: Record<string, number> = {
   goly: 0.9,
   goly_timu: 0.9,
-  // spolu s MARKET_CALIBRATION 0,8 × 0,75 = 0,6 na začiatku sezóny
-  karty: 0.75,
-  karty_timu: 0.75,
   btts: 0.5,
 };
 /** Koeficient kalibrácie pre trh pri danom počte odohraných zápasov v sezóne. */
