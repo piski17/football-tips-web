@@ -961,6 +961,28 @@ export async function getFixtureLineupPlayerIds(
   }
 }
 
+/** Kontrola zostavy: čo presne vráti API pre zápas (počet tímov, hráčov, chyby). */
+export async function getFixtureLineupsDebug(fixtureId: number): Promise<{
+  results: number;
+  errors: string[];
+  teams: { team: string; formation: string | null; startXI: number; substitutes: number }[];
+}> {
+  const res = await client().get("/fixtures/lineups", { params: { fixture: fixtureId } });
+  const errors = res.data?.errors;
+  const errorList: string[] = !errors ? [] : Array.isArray(errors) ? errors.map(String) : Object.entries(errors).map(([k, v]) => `${k}: ${String(v)}`);
+  const teams: any[] = res.data?.response ?? [];
+  return {
+    results: Number(res.data?.results ?? teams.length),
+    errors: errorList,
+    teams: teams.map((t) => ({
+      team: t?.team?.name ?? "?",
+      formation: t?.formation ?? null,
+      startXI: (t?.startXI ?? []).length,
+      substitutes: (t?.substitutes ?? []).length,
+    })),
+  };
+}
+
 /**
  * Skutočné predzápasové kurzy stávkových kancelárií pre zápas (endpoint /odds).
  * Pre každú kombináciu stávka + voľba vráti medián naprieč stávkovkami.

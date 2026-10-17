@@ -788,14 +788,37 @@ function lineupBarHtml(r) {
     : `Zostava ešte nie je zverejnená – zvyčajne býva asi hodinu pred výkopom. Potom klikni Prepočítať.${when}`;
   return `<div class="stat-line" style="align-items:center;gap:10px;margin:-4px 0 14px;">
     <span class="muted small" style="flex:1">${escapeHtml(text)}</span>
+    ${both ? "" : `<button type="button" class="btn-ghost" id="lineupCheckBtn" title="Ukáže, čo k zostave vracia API">Skontrolovať API</button>`}
     <button type="button" class="btn-ghost" id="lineupRecalcBtn">🔄 Prepočítať</button>
-  </div>`;
+  </div>
+  <div id="lineupCheckOut" class="muted small" style="margin:-8px 0 14px;"></div>`;
 }
 
 function wireLineupBar(r) {
   const btn = document.getElementById("lineupRecalcBtn");
   if (!btn) return;
   btn.onclick = () => analyzeFixture(r.fixture, r.fixture.league.id, r.fixture.league.season);
+  const check = document.getElementById("lineupCheckBtn");
+  const out = document.getElementById("lineupCheckOut");
+  if (!check || !out) return;
+  check.onclick = async () => {
+    check.disabled = true;
+    out.textContent = "Pýtam sa API…";
+    try {
+      const d = await fetchJson(`/api/debug/lineups/${r.fixture.fixtureId}`);
+      if (d.errors?.length) out.textContent = `API vrátilo chybu: ${d.errors.join(" | ")}`;
+      else if (!d.teams?.length) out.textContent = `API zostavu k tomuto zápasu zatiaľ nemá (0 tímov, čas kontroly ${new Date().toLocaleTimeString("sk-SK", { hour: "2-digit", minute: "2-digit" })}).`;
+      else
+        out.textContent =
+          "API zostavu má: " +
+          d.teams.map((t) => `${translateTeamName(t.team)} ${t.startXI} + ${t.substitutes} náhradníkov${t.formation ? ` (${t.formation})` : ""}`).join(", ") +
+          ". Klikni Prepočítať.";
+    } catch (err) {
+      out.textContent = `Kontrola zlyhala: ${err.message}`;
+    } finally {
+      check.disabled = false;
+    }
+  };
 }
 
 // ---- Držanie lopty: hranica zo stávkovky (17. 10. 2026) ----

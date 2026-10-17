@@ -25,6 +25,7 @@ import {
   getPlayerSeasonStats,
   getTeamPlayersWithStats,
   getFixtureLineupPlayerIds,
+  getFixtureLineupsDebug,
   getFixtureMissingPlayers,
   getFixtureOdds,
   getRecentFormAnyCompetition,
@@ -1149,6 +1150,16 @@ app.get("/api/debug/odds/:fixtureId", async (req, res) => {
     const fixtureId = parseInt(req.params.fixtureId, 10);
     const odds = await getFixtureOdds(fixtureId);
     res.json({ count: odds.length, bets: Array.from(new Set(odds.map((o) => o.bet))).sort(), odds });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
+// Kontrola zostavy z Histórie/analýzy: čo k zápasu vracia API-Football (17. 10. 2026).
+app.get("/api/debug/lineups/:fixtureId", async (req, res) => {
+  try {
+    const fixtureId = parseInt(req.params.fixtureId, 10);
+    res.json(await getFixtureLineupsDebug(fixtureId));
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
