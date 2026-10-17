@@ -261,6 +261,8 @@ export interface SavedTip {
   probability: number;
   /** Skutočný kurz v čase uloženia (medián stávkoviek), ak bol k dispozícii. */
   odds?: number | null;
+  /** Kurz z API (medián stávkoviek) v čase uloženia; `odds` je kurz Michalovej stávkovky. */
+  apiOdds?: number | null;
   /** Uzatvárací kurz – kurz toho istého tipu tesne pred výkopom (null = nepodarilo sa zistiť). */
   closingOdds?: number | null;
   closingOddsAt?: string;

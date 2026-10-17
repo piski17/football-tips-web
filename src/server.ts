@@ -674,6 +674,14 @@ app.post("/api/player-goal", async (req, res) => {
 
 // ---- Uložené tipy (spätné vyhodnotenie) ----
 
+/**
+ * Kurz pri uložení pre uzatvárací kurz: porovnávame kurz z API pri uložení s kurzom
+ * z API pred výkopom (rovnaký zdroj). `odds` je od 17. 10. kurz Michalovej stávkovky.
+ */
+function clvOpen(t: SavedTip): number | null | undefined {
+  return t.apiOdds ?? t.odds;
+}
+
 app.post("/api/tips", async (req, res) => {
   try {
     const tip: SavedTip = req.body;
@@ -923,10 +931,10 @@ app.get("/api/public/track-record", async (_req, res) => {
       });
     // Uzatvárací kurz: o koľko bol kurz pri tipe vyšší než kurz tesne pred výkopom.
     const withClosing = all.filter(
-      (t) => typeof t.odds === "number" && t.odds > 1 && typeof t.closingOdds === "number" && t.closingOdds > 1
+      (t) => typeof clvOpen(t) === "number" && clvOpen(t)! > 1 && typeof t.closingOdds === "number" && t.closingOdds > 1
     );
     const clvAvg = withClosing.length
-      ? withClosing.reduce((sum, t) => sum + (t.odds! / t.closingOdds! - 1) * 100, 0) / withClosing.length
+      ? withClosing.reduce((sum, t) => sum + (clvOpen(t)! / t.closingOdds! - 1) * 100, 0) / withClosing.length
       : null;
     // „Včerajší tip“ na úvod stránky: posledný deň s vyhodnotenými tipmi. Vyberá sa bez ohľadu
     // na výsledok (zápas s najneskorším výkopom), aby to nebolo vyberanie len výhier.
@@ -1018,7 +1026,7 @@ app.get("/api/public/track-record", async (_req, res) => {
       freeTip,
       clv: {
         total: withClosing.length,
-        beat: withClosing.filter((t) => t.odds! > t.closingOdds!).length,
+        beat: withClosing.filter((t) => clvOpen(t)! > t.closingOdds!).length,
         avg: clvAvg === null ? null : Math.round(clvAvg * 10) / 10,
       },
       recent,
@@ -1716,17 +1724,17 @@ app.get("/api/clv/summary", async (_req, res) => {
   try {
     const tips = await listTips();
     const done = tips.filter(
-      (t) => typeof t.odds === "number" && t.odds > 1 && typeof t.closingOdds === "number" && t.closingOdds > 1
+      (t) => typeof clvOpen(t) === "number" && clvOpen(t)! > 1 && typeof t.closingOdds === "number" && t.closingOdds > 1
     );
-    const clv = (t: SavedTip) => (t.odds! / t.closingOdds! - 1) * 100;
+    const clv = (t: SavedTip) => (clvOpen(t)! / t.closingOdds! - 1) * 100;
     const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
     const markets = Array.from(new Set(done.map((t) => t.market)));
     res.json({
       total: done.length,
       pending: tips.filter(needsClosingOdds).length,
       avgClv: avg(done.map(clv)),
-      beat: done.filter((t) => t.odds! > t.closingOdds!).length,
-      worse: done.filter((t) => t.odds! < t.closingOdds!).length,
+      beat: done.filter((t) => clvOpen(t)! > t.closingOdds!).length,
+      worse: done.filter((t) => clvOpen(t)! < t.closingOdds!).length,
       byMarket: markets
         .map((m) => {
           const list = done.filter((t) => t.market === m);

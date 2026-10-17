@@ -228,17 +228,26 @@ function betOddsHtml(bet) {
   return ` · kurz ~${impliedOdds(bet.probability).replace(".", ",")} <span class="muted small">(odhad – stávkovky kurz neponúkajú)</span>`;
 }
 
+/** Minimálny kurz tipu: hodnota aspoň +5 % pri dôvere modelu a zároveň aspoň 1,50. */
+function minOddsFor(bet) {
+  if (typeof bet.minOdds === "number") return bet.minOdds;
+  const p = (bet.probability ?? 0) / 100;
+  return p > 0 ? Math.max(1.5, Math.ceil((1.05 / p) * 100) / 100) : 1.5;
+}
+
 /**
- * Držanie lopty: kurz nemá API, Michal ho zadá sám. Vráti kurz, null = tip neukladať.
- * Pri tipe so skutočným kurzom vráti jeho kurz bez otázky.
+ * Pri každom uložení tipu sa appka spýta na kurz Michalovej stávkovky (Fortuna,
+ * Tipsport, Niké – v API nie sú). Predvyplnený je kurz z API, ak je. Vráti kurz,
+ * alebo null = tip neukladať (zrušené alebo kurz pod minimom).
  */
 function askRealOdds(bet) {
-  if (typeof bet.minOdds !== "number" || (typeof bet.odds === "number" && bet.odds > 1)) return bet.odds ?? null;
-  const raw = window.prompt(`Aký kurz ponúka stávkovka? (minimum ${fmtOdds(bet.minOdds)})`, "");
+  const min = minOddsFor(bet);
+  const pre = typeof bet.odds === "number" && bet.odds > 1 ? fmtOdds(bet.odds) : "";
+  const raw = window.prompt(`Kurz tvojej stávkovky (minimum ${fmtOdds(min)}):`, pre);
   if (raw == null) return null;
   const odd = parseFloat(String(raw).replace(",", "."));
   if (!(odd > 1)) { showToast("Neplatný kurz – tip sa neuložil."); return null; }
-  if (odd < bet.minOdds) { showToast(`Kurz ${fmtOdds(odd)} je pod minimom ${fmtOdds(bet.minOdds)} – tip radšej vynechaj.`); return null; }
+  if (odd < min) { showToast(`Kurz ${fmtOdds(odd)} je pod minimom ${fmtOdds(min)} – tip sa neuložil, radšej ho vynechaj.`); return null; }
   return Math.round(odd * 100) / 100;
 }
 
@@ -910,8 +919,9 @@ function initSaveTipButton(r) {
       const watch = btn.dataset.watch === "1"; // len sledovať
       const chosenBet = (fromLow ? r.lowValueBets : r.bestBets)?.[idx];
       if (!chosenBet) return;
-      const realOdds = watch ? chosenBet.odds ?? null : askRealOdds(chosenBet);
-      if (!watch && typeof chosenBet.minOdds === "number" && realOdds == null) return;
+      // Vyradený tip uložený ručne („Uložiť aj tak") a sledovaný tip: bez otázky na kurz.
+      const realOdds = watch || fromLow ? chosenBet.odds ?? null : askRealOdds(chosenBet);
+      if (!watch && !fromLow && realOdds == null) return;
 
       const tip = {
         id: `${r.fixture.fixtureId}-${Date.now()}`,
@@ -928,6 +938,7 @@ function initSaveTipButton(r) {
         selection: chosenBet.selection,
         probability: chosenBet.probability,
         odds: realOdds,
+        ...(typeof chosenBet.odds === "number" ? { apiOdds: chosenBet.odds } : {}),
         ...(fromLow ? { overrideFilter: true } : {}),
         ...(watch ? { watchOnly: true } : {}),
         savedAt: new Date().toISOString(),
@@ -2350,7 +2361,7 @@ function renderDayTips() {
       }
       const watchOnly = btn.dataset.watch === "1";
       const realOdds = watchOnly ? bet.odds ?? null : askRealOdds(bet);
-      if (!watchOnly && typeof bet.minOdds === "number" && realOdds == null) return;
+      if (!watchOnly && realOdds == null) return;
       const tip = {
         id: `${r.fixture.fixtureId}-${Date.now()}`,
         fixtureId: r.fixture.fixtureId,
@@ -2366,6 +2377,7 @@ function renderDayTips() {
         selection: bet.selection,
         probability: bet.probability,
         odds: realOdds,
+        ...(typeof bet.odds === "number" ? { apiOdds: bet.odds } : {}),
         savedAt: new Date().toISOString(),
         status: "pending",
         // V Tipoch dňa označený ⭐ Silný tip dňa si značku nesie aj do Histórie tipov.
