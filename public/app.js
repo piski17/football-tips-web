@@ -243,10 +243,12 @@ function minOddsFor(bet) {
 function askRealOdds(bet) {
   const min = minOddsFor(bet);
   const pre = typeof bet.odds === "number" && bet.odds > 1 ? fmtOdds(bet.odds) : "";
-  const raw = window.prompt(`Kurz tvojej stávkovky (minimum ${fmtOdds(min)}):`, pre);
+  const raw = window.prompt(`KURZ tvojej stávkovky, napr. 1,85 (minimum ${fmtOdds(min)}):`, pre);
   if (raw == null) return null;
   const odd = parseFloat(String(raw).replace(",", "."));
   if (!(odd > 1)) { showToast("Neplatný kurz – tip sa neuložil."); return null; }
+  // Poistka: kurz nad 20 pri tipe s dôverou 68 – 80 % je takmer iste preklep (napr. hranica namiesto kurzu).
+  if (odd > 20) { showToast(`${fmtOdds(odd)} nevyzerá ako kurz – tip sa neuložil. Zadaj kurz, napr. 1,85.`); return null; }
   if (odd < min) { showToast(`Kurz ${fmtOdds(odd)} je pod minimom ${fmtOdds(min)} – tip sa neuložil, radšej ho vynechaj.`); return null; }
   return Math.round(odd * 100) / 100;
 }
@@ -661,6 +663,7 @@ function renderAnalysis(r) {
 
     ${matchHasStarted(r.fixture) ? `<div class="match-locked">⏱ ${MATCH_STARTED_TEXT}</div>` : ""}${topBetsHtml}${noBetsHtml}${lowValueHtml}
     <div id="saveTipMsg"></div>
+    ${possessionHtml(r)}
 
     <div class="prob-section">
       <div class="section-title">Pravdepodobnosť výsledku</div>
@@ -724,6 +727,7 @@ function renderAnalysis(r) {
   initSaveTipButton(r);
   wireTicketButtons(r);
   wireScorerSaveButtons(r);
+  wirePossession(r);
   if (matchHasStarted(r.fixture)) {
     document
       .querySelectorAll(".save-best-bet-btn, .add-to-ticket-btn, .scorer-save-btn")
@@ -732,6 +736,104 @@ function renderAnalysis(r) {
         b.title = MATCH_STARTED_TEXT;
       });
   }
+}
+
+// ---- Držanie lopty: hranica zo stávkovky (17. 10. 2026) ----
+// API kurzy na držanie lopty nemá a stávkovky ho ponúkajú ako hranicu v % (napr. 55,5 a viac).
+// Model dá očakávané držanie, Michal zadá hranicu a appka vypočíta šancu a minimálny kurz.
+function normCdf(x) {
+  // Abramowitz–Stegun 7.1.26
+  const t = 1 / (1 + 0.3275911 * Math.abs(x) / Math.SQRT2);
+  const y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-(x * x) / 2);
+  return x >= 0 ? (1 + y) / 2 : (1 - y) / 2;
+}
+
+function possessionHtml(r) {
+  if (!r.possession) return "";
+  const h = translateTeamName(r.fixture.homeTeam.name), a = translateTeamName(r.fixture.awayTeam.name);
+  const eh = r.possession.expectedHome;
+  return `
+    <div class="prob-section" id="possBox">
+      <div class="section-title">Držanie lopty – výpočet podľa hranice stávkovky</div>
+      <div class="stat-line"><span>Očakávané držanie ${escapeHtml(h)}</span><strong>${eh.toFixed(0)} %</strong></div>
+      <div class="stat-line"><span>Očakávané držanie ${escapeHtml(a)}</span><strong>${(100 - eh).toFixed(0)} %</strong></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center">
+        <select id="possTeam" aria-label="Tím"><option value="home">${escapeHtml(h)}</option><option value="away"${eh < 50 ? " selected" : ""}>${escapeHtml(a)}</option></select>
+        <input type="text" id="possLine" inputmode="decimal" placeholder="Hranica, napr. 55,5" style="width:150px" aria-label="Hranica držania lopty v %" />
+        <button type="button" class="btn-ghost" id="possCalc">Vypočítať</button>
+      </div>
+      <div id="possResult" style="margin-top:10px"></div>
+    </div>`;
+}
+
+function wirePossession(r) {
+  const btn = document.getElementById("possCalc");
+  if (!btn || !r.possession) return;
+  const out = document.getElementById("possResult");
+  const lineEl = document.getElementById("possLine");
+  const calc = () => {
+    const side = document.getElementById("possTeam").value;
+    const line = parseFloat(String(lineEl.value).replace(",", "."));
+    if (!(line > 0 && line < 100)) { out.innerHTML = `<p class="muted small">Zadaj hranicu v %, napr. 55,5.</p>`; return; }
+    const exp = side === "home" ? r.possession.expectedHome : 100 - r.possession.expectedHome;
+    const over = (1 - normCdf((line - exp) / r.possession.sd)) * 100;
+    const teamName = side === "home" ? r.fixture.homeTeam.name : r.fixture.awayTeam.name;
+    const market = side === "home" ? "Držanie lopty domácich" : "Držanie lopty hostí";
+    const lineTxt = String(line).replace(".", ",");
+    const rows = [
+      { label: `${translateTeamName(teamName)} ${lineTxt} % a viac`, selection: `Over ${line}`, probability: over },
+      { label: `${translateTeamName(teamName)} menej ako ${lineTxt} %`, selection: `Under ${line}`, probability: 100 - over },
+    ];
+    out.innerHTML = rows
+      .map((x, i) => {
+        const inBand = x.probability >= 68 && x.probability <= 80;
+        const min = minOddsFor({ probability: x.probability });
+        return `<div class="stat-line"><span>${escapeHtml(x.label)}</span><strong>${x.probability.toFixed(0)} %</strong></div>
+          ${inBand
+            ? `<div style="display:flex;gap:8px;margin:4px 0 10px;align-items:center"><span class="muted small" style="flex:1">Hraj len pri kurze aspoň <strong>${fmtOdds(min)}</strong></span><button type="button" class="btn-primary" data-poss="${i}">Uložiť tento tip</button><button type="button" class="btn-ghost" data-poss="${i}" data-watch="1">👁 Len sledovať</button></div>`
+            : `<p class="muted small" style="margin:2px 0 10px">Mimo pásma 68 – 80 % – neodporúčame.</p>`}`;
+      })
+      .join("");
+    out.querySelectorAll("[data-poss]").forEach((b) => {
+      b.onclick = async () => {
+        if (matchHasStarted(r.fixture)) { showToast(MATCH_STARTED_TEXT); return; }
+        const x = rows[Number(b.dataset.poss)];
+        const watch = b.dataset.watch === "1";
+        const odds = watch ? null : askRealOdds({ probability: x.probability });
+        if (!watch && odds == null) return;
+        const tip = {
+          id: `${r.fixture.fixtureId}-${Date.now()}`,
+          fixtureId: r.fixture.fixtureId,
+          leagueId: r.fixture.league.id,
+          season: r.fixture.league.season,
+          leagueName: r.fixture.league.name,
+          homeTeam: r.fixture.homeTeam.name,
+          awayTeam: r.fixture.awayTeam.name,
+          homeTeamLogo: r.fixture.homeTeam.logo,
+          awayTeamLogo: r.fixture.awayTeam.logo,
+          matchDate: r.fixture.date,
+          market,
+          selection: x.selection,
+          probability: Math.round(x.probability * 10) / 10,
+          odds,
+          ...(watch ? { watchOnly: true } : {}),
+          savedAt: new Date().toISOString(),
+          status: "pending",
+        };
+        b.disabled = true;
+        try {
+          await fetchJson("/api/tips", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(tip) });
+          b.textContent = watch ? "✓ Sledované" : "✓ Uložené";
+          if (!watch) await maybeOfferTelegram(tip.id);
+        } catch (err) {
+          showToast(`Uloženie zlyhalo: ${err?.message ?? String(err)}`);
+          b.disabled = false;
+        }
+      };
+    });
+  };
+  btn.onclick = calc;
+  lineEl.onkeydown = (e) => { if (e.key === "Enter") calc(); };
 }
 
 function probRow(label, value) {

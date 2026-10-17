@@ -859,6 +859,9 @@ export function predictMatch(
     addOverUnder("Fauly", "fauly", (line) => poissonOverUnder(exp, line), (line) => statExplanation(exp, line) + refereeNote("fouls"));
   }
 
+  // Očakávané držanie lopty domácich (v %) a rozptyl – appka z nich počíta šancu
+  // na hranicu, ktorú zadá Michal zo stávkovky (napr. Arsenal 55,5 % a viac).
+  let possessionInfo: { expectedHome: number; sd: number } | null = null;
   // Vyššie držanie lopty - odhad z priemerného držania lopty oboch tímov.
   // Odhad domácich = priemer (ich držanie, 100 - držanie súpera). Skutočné
   // držanie v zápase kolíše okolo odhadu približne o ±8 percentuálnych bodov
@@ -868,20 +871,30 @@ export function predictMatch(
     const expectedHome = possBlend.value;
     if (possBlend.h2h) h2hNotes.drzanie_lopty = `Vo vzájomných zápasoch (${possBlend.h2h.n}) mali domáci loptu v priemere ${possBlend.h2h.avg.toFixed(0)} %.`;
     const POSSESSION_SD = 8;
-    const homeHigher = normalCdf((expectedHome - 50) / POSSESSION_SD) * 100;
-    const homeFavoured = homeHigher >= 50;
+    possessionInfo = { expectedHome, sd: POSSESSION_SD };
+    // Stávkovky ponúkajú držanie lopty ako hranicu v % (napr. Liverpool 55,5 % a viac).
+    // Pre tím s vyšším očakávaným držaním vyberieme hranicu x,5, pri ktorej je šanca
+    // na „a viac" v pásme 68 – 80 % a najbližšie k 72 % (vyšší kurz, no stále s rezervou).
+    const homeFavoured = expectedHome >= 50;
+    const teamExp = homeFavoured ? expectedHome : 100 - expectedHome;
     const team = homeFavoured ? fixture.homeTeam.name : fixture.awayTeam.name;
-    candidates.push({
-      market: "Vyššie držanie lopty",
-      selection: team,
-      probability: homeFavoured ? homeHigher : 100 - homeHigher,
-      category: "drzanie_lopty",
-      explanation: `Priemerné držanie lopty: ${fixture.homeTeam.name} ${extraStatsAvg.homePossession.toFixed(
-        0
-      )} %, ${fixture.awayTeam.name} ${extraStatsAvg.awayPossession.toFixed(0)} %. Odhad pre tento zápas ${expectedHome.toFixed(
-        0
-      )}:${(100 - expectedHome).toFixed(0)}.`,
-    });
+    let bestLine: { line: number; p: number } | null = null;
+    for (let line = 30.5; line <= 80.5; line += 1) {
+      const p = (1 - normalCdf((line - teamExp) / POSSESSION_SD)) * 100;
+      if (p < MIN_PROBABILITY || p > MAX_PROBABILITY) continue;
+      if (!bestLine || Math.abs(p - 72) < Math.abs(bestLine.p - 72)) bestLine = { line, p };
+    }
+    if (bestLine) {
+      candidates.push({
+        market: homeFavoured ? "Držanie lopty domácich" : "Držanie lopty hostí",
+        selection: `Over ${bestLine.line}`,
+        probability: bestLine.p,
+        category: "drzanie_lopty",
+        explanation: `Očakávané držanie lopty: ${team} ${teamExp.toFixed(0)} % (priemery: ${fixture.homeTeam.name} ${extraStatsAvg.homePossession.toFixed(
+          0
+        )} %, ${fixture.awayTeam.name} ${extraStatsAvg.awayPossession.toFixed(0)} %). Ak má stávkovka inú hranicu, prepočítaj ju vo výpočte držania lopty nižšie.`,
+      });
+    }
   }
 
   for (const c of candidates) {
@@ -1007,18 +1020,15 @@ export function predictMatch(
     } else if (b.marketConflict) {
       b.rejectReason = b.marketConflict;
       lowValueBets.push(b);
-    } else if (ev == null && b.market === "Vyššie držanie lopty") {
-      // Držanie lopty: stávkovky ho cez API neponúkajú, no v ponuke ho často majú.
-      // Tip sa odporučí s minimálnym kurzom – pod ním by nemal hodnotu +5 % alebo by
-      // bol pod 1,50. Skutočný kurz Michal overí v stávkovke a zadá pri uložení.
+    } else if (ev == null && b.category === "drzanie_lopty") {
+      // Držanie lopty: API naň kurzy nemá. Tip sa odporučí s minimálnym kurzom (hodnota
+      // +5 %, aspoň 1,50); skutočný kurz a hranicu Michal overí v stávkovke.
       const p = b.probability / 100;
       b.minOdds = Math.max(MIN_ODDS, Math.ceil((MIN_EXPECTED_VALUE / p) * 100) / 100);
       const maxOdds = Math.floor((SUSPICIOUS_EXPECTED_VALUE / p) * 100) / 100;
       const f2 = (x: number) => x.toFixed(2).replace(".", ",");
-      b.explanation =
-        (b.explanation ? b.explanation + " " : "") +
-        `Kurz over v stávkovke: hraj len pri kurze aspoň ${f2(b.minOdds)}` +
-        (maxOdds > b.minOdds ? ` (nad ${f2(maxOdds)} je hodnota podozrivo vysoká – radšej vynechaj).` : ".");
+      b.explanation = (b.explanation ? b.explanation + " " : "") +
+        `Hraj len pri kurze aspoň ${f2(b.minOdds)}` + (maxOdds > b.minOdds ? `, nad ${f2(maxOdds)} je hodnota podozrivo vysoká.` : ".");
       if (maxOdds <= b.minOdds) {
         b.rejectReason = "pri tejto dôvere by tip potreboval podozrivo vysoký kurz";
         lowValueBets.push(b);
@@ -1149,6 +1159,7 @@ export function predictMatch(
     },
     bestScorer,
     referee: referee ?? null,
+    possession: possessionInfo,
     lineupConfirmed: {
       home: Boolean(homeLineupIds && homeLineupIds.length > 0),
       away: Boolean(awayLineupIds && awayLineupIds.length > 0),

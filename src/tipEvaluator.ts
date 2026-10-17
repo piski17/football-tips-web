@@ -62,6 +62,11 @@ export function evaluateTip(
       return overUnder(teamValue(actualTeamStats?.shots, "home"));
     case "Strely na bránu hostí":
       return overUnder(teamValue(actualTeamStats?.shots, "away"));
+    // Držanie lopty tímu v % proti hranici zo stávkovky (napr. Over 55.5).
+    case "Držanie lopty domácich":
+      return overUnder(teamValue(actualPossession, "home"));
+    case "Držanie lopty hostí":
+      return overUnder(teamValue(actualPossession, "away"));
 
     case "Vyššie držanie lopty": {
       if (actualPossession === null) return "void";
@@ -193,7 +198,7 @@ const VOID_STATUSES = ["CANC", "ABD", "AWD", "WO"];
 /** Odložený / prerušený zápas - ak sa neodohrá do 3 dní, stávka sa vracia. */
 const DELAYED_STATUSES = ["PST", "TBD", "SUSP", "INT"];
 const DELAYED_VOID_AFTER_MS = 3 * 24 * 60 * 60 * 1000;
-export const STATS_MARKETS = ["Rohy", "Rohy domácich", "Rohy hostí", "Karty", "Karty domácich", "Karty hostí", "Strely na bránu domácich", "Strely na bránu hostí", "Strely na bránu", "Fauly", "Ofsajdy", "Vyššie držanie lopty"];
+export const STATS_MARKETS = ["Rohy", "Rohy domácich", "Rohy hostí", "Karty", "Karty domácich", "Karty hostí", "Strely na bránu domácich", "Strely na bránu hostí", "Strely na bránu", "Fauly", "Ofsajdy", "Vyššie držanie lopty", "Držanie lopty domácich", "Držanie lopty hostí"];
 
 export interface SettledBet {
   status: "won" | "lost" | "void";

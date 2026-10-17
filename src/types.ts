@@ -152,6 +152,8 @@ export interface PredictionResult {
   fixture: Fixture;
   /** Rozhodca a jeho vplyv na fauly a karty (null = neznámy alebo málo dát). */
   referee?: RefereeProfile | null;
+  /** Očakávané držanie lopty domácich v % a smerodajná odchýlka (pre výpočet hranice). */
+  possession?: { expectedHome: number; sd: number } | null;
   expectedGoals: {
     home: number;
     away: number;
