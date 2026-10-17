@@ -68,7 +68,7 @@
       <button class="btn-ghost" id="openTicketBtn">Tiket <span id="ticketCount"></span></button>
       <button class="btn-ghost" id="openTipsBtn">História tipov</button>
       <button class="btn-ghost" id="openSubscribersBtn">Členovia</button>
-      <div class="seat-strip" id="seatStrip" hidden title="TipRadar Platinum: 1 a 3 mesiace = počet členov (bez obmedzenia), sezóna = voľné miesta">
+      <div class="seat-strip" id="seatStrip" hidden title="TipRadar Platinum: počet členov podľa dĺžky členstva (sezóna má najviac 30 miest)">
         <span class="ss-h">Platinum</span>
         <span class="ss-i" data-seat="m1"><small>1 mes.</small><b>–</b></span>
         <span class="ss-i" data-seat="m3"><small>3 mes.</small><b>–</b></span>
@@ -313,7 +313,7 @@
         document.querySelectorAll("#seatStrip [data-seat]").forEach((el) => {
           const r = t[el.dataset.seat];
           // 1 a 3 mesiace sú bez obmedzenia miest (total = null)
-          el.querySelector("b").innerHTML = r.total == null ? `${r.occupied}<i> čl.</i>` : r.left > 0 ? `${r.left}<i>/${r.total}</i>` : "plné";
+          el.querySelector("b").innerHTML = r.total == null ? `${r.occupied}<i> čl.</i>` : `${r.occupied}<i> / ${r.total} čl.</i>`;
           el.classList.toggle("full", r.total != null && r.left <= 0);
         });
         document.getElementById("seatStrip").hidden = false;
