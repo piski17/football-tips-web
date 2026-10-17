@@ -10,7 +10,7 @@ import {
   MIN_GAMES_TO_RECOMMEND,
   MIN_PROBABILITY,
   MAX_PROBABILITY,
-  MIN_BOOKMAKERS_FEW_GAMES,
+  MIN_BOOKMAKERS,
 } from "./oddsMatcher";
 import {
   Fixture,
@@ -182,7 +182,9 @@ function overdispersedOverUnder(mean: number, line: number, varRatio: number): {
   return { over: 100 - under, under };
 }
 // Pomer rozptylu k priemeru (z väčšej nestability týchto štatistík).
-const VAR_RATIO = { cards: 1.4, shotsOnGoal: 1.35, offsides: 1.3 };
+// Fauly a rohy kolíšu viac, ako predpokladá čistý Poisson (raz 18, raz 32 faulov),
+// preto aj pri nich počítame s väčším rozptylom – inak model tipy nadhodnocuje.
+const VAR_RATIO = { cards: 1.4, shotsOnGoal: 1.35, offsides: 1.3, fouls: 1.3, corners: 1.2 };
 
 // Vplyv chýbajúcich hráčov (6. 10. 2026). Útok: podiel chýbajúcich na góloch
 // a asistenciách tímu (asistencia = pol gólu) × ATTACK_WEIGHT, najviac −15 %.
@@ -692,7 +694,7 @@ export function predictMatch(
     const b = blendH2H(homeCornersAvg + awayCornersAvg, "corners");
     const expected = b.value;
     if (b.h2h) h2hNotes.rohy = `Vo vzájomných zápasoch (${b.h2h.n}) padlo v priemere ${fmt1(b.h2h.avg)} rohov.`;
-    const { over, under } = poissonOverUnder(expected, CORNERS_LINE);
+    const { over, under } = overdispersedOverUnder(expected, CORNERS_LINE, VAR_RATIO.corners);
     corners = { expected, line: CORNERS_LINE, over, under };
   }
 
@@ -731,7 +733,7 @@ export function predictMatch(
     const b = blendH2H(extraStatsAvg.homeFouls + extraStatsAvg.awayFouls, "fouls");
     const expected = b.value * (referee?.foulsFactor ?? 1);
     if (b.h2h) h2hNotes.fauly = `Vo vzájomných zápasoch (${b.h2h.n}) v priemere ${fmt1(b.h2h.avg)} faulov.`;
-    const { over, under } = poissonOverUnder(expected, FOULS_LINE);
+    const { over, under } = overdispersedOverUnder(expected, FOULS_LINE, VAR_RATIO.fouls);
     fouls = { expected, line: FOULS_LINE, over, under };
   }
 
@@ -846,18 +848,18 @@ export function predictMatch(
 
   if (corners) {
     const exp = corners.expected;
-    addOverUnder("Rohy", "rohy", (line) => poissonOverUnder(exp, line), (line) => statExplanation(exp, line), { mean: exp });
+    addOverUnder("Rohy", "rohy", (line) => overdispersedOverUnder(exp, line, VAR_RATIO.corners), (line) => statExplanation(exp, line), { mean: exp, varRatio: VAR_RATIO.corners });
   }
   // Rohy jedného tímu: vlastné rohy tímu zmiešané s tým, koľko rohov dovolí súper.
   if (homeCornersAvg != null && awayCornersAvg != null) {
     const hc = homeCornersAvg, ac = awayCornersAvg;
-    addOverUnder("Rohy domácich", "rohy_timu", (line) => poissonOverUnder(hc, line), (line) =>
+    addOverUnder("Rohy domácich", "rohy_timu", (line) => overdispersedOverUnder(hc, line, VAR_RATIO.corners), (line) =>
       `${fixture.homeTeam.name} má v priemere ${fmt1(hc)} rohov na zápas (aj s ohľadom na súpera), hranica ${line}.`,
-      { mean: hc }
+      { mean: hc, varRatio: VAR_RATIO.corners }
     );
-    addOverUnder("Rohy hostí", "rohy_timu", (line) => poissonOverUnder(ac, line), (line) =>
+    addOverUnder("Rohy hostí", "rohy_timu", (line) => overdispersedOverUnder(ac, line, VAR_RATIO.corners), (line) =>
       `${fixture.awayTeam.name} má v priemere ${fmt1(ac)} rohov na zápas (aj s ohľadom na súpera), hranica ${line}.`,
-      { mean: ac }
+      { mean: ac, varRatio: VAR_RATIO.corners }
     );
   }
 
@@ -902,7 +904,7 @@ export function predictMatch(
 
   if (fouls) {
     const exp = fouls.expected;
-    addOverUnder("Fauly", "fauly", (line) => poissonOverUnder(exp, line), (line) => statExplanation(exp, line) + refereeNote("fouls"), { mean: exp });
+    addOverUnder("Fauly", "fauly", (line) => overdispersedOverUnder(exp, line, VAR_RATIO.fouls), (line) => statExplanation(exp, line) + refereeNote("fouls"), { mean: exp, varRatio: VAR_RATIO.fouls });
   }
 
   // Očakávané držanie lopty domácich (v %) a rozptyl – appka z nich počíta šancu
@@ -1063,9 +1065,10 @@ export function predictMatch(
       // Kurz pod minimom (predvolene 1,50) - tip má hodnotu, ale zisk z výhry je malý.
       b.rejectReason = `kurz pod ${MIN_ODDS.toFixed(2).replace(".", ",")}`;
       lowValueBets.push(b);
-    } else if (fewGames && (b.oddsBookmakers ?? 0) < MIN_BOOKMAKERS_FEW_GAMES) {
-      // Málo dát a kurz len od jednej stávkovky - hodnota sa nedá spoľahlivo overiť.
-      b.rejectReason = "kurz len od 1 stávkovky pri málo dátach v sezóne";
+    } else if ((b.oddsBookmakers ?? 0) < MIN_BOOKMAKERS) {
+      // Kurz len od jednej stávkovky býva nespoľahlivý (často hranica, ktorú
+      // naše stávkovky ani neponúkajú) - hodnota sa nedá overiť.
+      b.rejectReason = "kurz len od 1 stávkovky";
       lowValueBets.push(b);
     } else if (ev > SUSPICIOUS_EXPECTED_VALUE && fewGames) {
       b.rejectReason = "podozrivo vysoká hodnota pri málo dátach v sezóne";

@@ -64,8 +64,8 @@ export const MAX_PROBABILITY = 80;
  * testoch vyšli tipy 70 – 80 % o ~3 body častejšie ako celé pásmo 68 – 80 %.
  */
 export const STRONG_TIP_MIN_PROBABILITY = 70;
-/** Pri málo dátach v sezóne (pod MIN_GAMES_FOR_TRUST) musí kurz ponúkať aspoň toľko stávkoviek. */
-export const MIN_BOOKMAKERS_FEW_GAMES = 2;
+/** Kurz pre odporúčaný tip musí ponúkať aspoň toľko stávkoviek. */
+export const MIN_BOOKMAKERS = 2;
 
 // Stávky na polčasy, jednotlivé tímy, handicapy a pod. - tie nechceme.
 const EXCLUDED = /(1st|2nd|first|second|half|home|away|team|exact|asian|handicap|odd\/even|european|double|draw no|interval|minute|min\b|1x2|race|highest|player|&|\/ ?both|result\/)/i;
