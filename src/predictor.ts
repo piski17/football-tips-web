@@ -227,6 +227,15 @@ function teamAbsence(players: RawPlayerStat[] | undefined, missingIds: Set<numbe
   };
 }
 
+/** Model trhu nad/pod pre kalkulačku: priemer, rozptyl/priemer (1 = Poisson) a kalibrácia. */
+export interface LineModel {
+  market: string;
+  category: string;
+  mean: number;
+  varRatio: number;
+  calibration: number;
+}
+
 export interface LineupInfo {
   homeIds?: number[] | null;
   awayIds?: number[] | null;
@@ -799,12 +808,17 @@ export function predictMatch(
     if (hasOdds) return offeredLines(marketOdds, market);
     return DEFAULT_LINES[market] ?? [];
   };
+  // Model každého trhu nad/pod (priemer a rozptyl) – appka z neho v kalkulačke počíta
+  // šancu na hranicu, ktorú Michal zadá zo svojej stávkovky (17. 10. 2026).
+  const lineModels: LineModel[] = [];
   const addOverUnder = (
     market: string,
     category: string,
     dist: (line: number) => { over: number; under: number },
-    explain: (line: number) => string
+    explain: (line: number) => string,
+    model?: { mean: number; varRatio?: number }
   ) => {
+    if (model && isFinite(model.mean)) lineModels.push({ market, category, mean: model.mean, varRatio: model.varRatio ?? 1, calibration: 1 });
     for (const line of linesFor(market)) {
       const { over, under } = dist(line);
       const isOver = over >= under;
@@ -818,41 +832,46 @@ export function predictMatch(
     }
   };
 
-  addOverUnder("Góly", "goly", (line) => poissonOverUnder(xg.home + xg.away, line), () => golyExplanation);
+  addOverUnder("Góly", "goly", (line) => poissonOverUnder(xg.home + xg.away, line), () => golyExplanation, { mean: xg.home + xg.away });
   // Góly jedného tímu: Poissonovo rozdelenie z očakávaných gólov tímu.
   // Z oboch tímov spolu najviac jeden tip (kategória „goly_timu“).
   addOverUnder("Góly domácich", "goly_timu", (line) => poissonOverUnder(xg.home, line), () =>
-    `Očakávané góly ${fixture.homeTeam.name}: ${xg.home.toFixed(1)} (súper ${fixture.awayTeam.name} ${xg.away.toFixed(1)}).${absences?.text ? ` ${absences.text}` : ""}`
+    `Očakávané góly ${fixture.homeTeam.name}: ${xg.home.toFixed(1)} (súper ${fixture.awayTeam.name} ${xg.away.toFixed(1)}).${absences?.text ? ` ${absences.text}` : ""}`,
+    { mean: xg.home }
   );
   addOverUnder("Góly hostí", "goly_timu", (line) => poissonOverUnder(xg.away, line), () =>
-    `Očakávané góly ${fixture.awayTeam.name}: ${xg.away.toFixed(1)} (súper ${fixture.homeTeam.name} ${xg.home.toFixed(1)}).${absences?.text ? ` ${absences.text}` : ""}`
+    `Očakávané góly ${fixture.awayTeam.name}: ${xg.away.toFixed(1)} (súper ${fixture.homeTeam.name} ${xg.home.toFixed(1)}).${absences?.text ? ` ${absences.text}` : ""}`,
+    { mean: xg.away }
   );
 
   if (corners) {
     const exp = corners.expected;
-    addOverUnder("Rohy", "rohy", (line) => poissonOverUnder(exp, line), (line) => statExplanation(exp, line));
+    addOverUnder("Rohy", "rohy", (line) => poissonOverUnder(exp, line), (line) => statExplanation(exp, line), { mean: exp });
   }
   // Rohy jedného tímu: vlastné rohy tímu zmiešané s tým, koľko rohov dovolí súper.
   if (homeCornersAvg != null && awayCornersAvg != null) {
     const hc = homeCornersAvg, ac = awayCornersAvg;
     addOverUnder("Rohy domácich", "rohy_timu", (line) => poissonOverUnder(hc, line), (line) =>
-      `${fixture.homeTeam.name} má v priemere ${fmt1(hc)} rohov na zápas (aj s ohľadom na súpera), hranica ${line}.`
+      `${fixture.homeTeam.name} má v priemere ${fmt1(hc)} rohov na zápas (aj s ohľadom na súpera), hranica ${line}.`,
+      { mean: hc }
     );
     addOverUnder("Rohy hostí", "rohy_timu", (line) => poissonOverUnder(ac, line), (line) =>
-      `${fixture.awayTeam.name} má v priemere ${fmt1(ac)} rohov na zápas (aj s ohľadom na súpera), hranica ${line}.`
+      `${fixture.awayTeam.name} má v priemere ${fmt1(ac)} rohov na zápas (aj s ohľadom na súpera), hranica ${line}.`,
+      { mean: ac }
     );
   }
 
   if (cards) {
     const exp = cards.expected;
     addOverUnder("Karty", "karty", (line) => overdispersedOverUnder(exp, line, VAR_RATIO.cards), (line) =>
-      `Očakávané žlté karty oboch tímov spolu: ${fmt1(exp)}, hranica ${line}.${refereeNote("cards")}`
+      `Očakávané žlté karty oboch tímov spolu: ${fmt1(exp)}, hranica ${line}.${refereeNote("cards")}`,
+      { mean: exp, varRatio: VAR_RATIO.cards }
     );
   }
 
   if (shotsOnGoal) {
     const exp = shotsOnGoal.expected;
-    addOverUnder("Strely na bránu", "strely", (line) => overdispersedOverUnder(exp, line, VAR_RATIO.shotsOnGoal), (line) => statExplanation(exp, line));
+    addOverUnder("Strely na bránu", "strely", (line) => overdispersedOverUnder(exp, line, VAR_RATIO.shotsOnGoal), (line) => statExplanation(exp, line), { mean: exp, varRatio: VAR_RATIO.shotsOnGoal });
   }
 
   // Žlté karty a strely na bránu jedného tímu (17. 10. 2026): vlastný priemer tímu
@@ -861,25 +880,29 @@ export function predictMatch(
     const rf = referee?.cardsFactor ?? 1;
     const hk = extraStatsAvg.homeCards * rf, ak = extraStatsAvg.awayCards * rf;
     addOverUnder("Karty domácich", "karty_timu", (line) => overdispersedOverUnder(hk, line, VAR_RATIO.cards), (line) =>
-      `${fixture.homeTeam.name}: očakávané žlté karty ${fmt1(hk)} (aj s ohľadom na súpera), hranica ${line}.${refereeNote("cards")}`
+      `${fixture.homeTeam.name}: očakávané žlté karty ${fmt1(hk)} (aj s ohľadom na súpera), hranica ${line}.${refereeNote("cards")}`,
+      { mean: hk, varRatio: VAR_RATIO.cards }
     );
     addOverUnder("Karty hostí", "karty_timu", (line) => overdispersedOverUnder(ak, line, VAR_RATIO.cards), (line) =>
-      `${fixture.awayTeam.name}: očakávané žlté karty ${fmt1(ak)} (aj s ohľadom na súpera), hranica ${line}.${refereeNote("cards")}`
+      `${fixture.awayTeam.name}: očakávané žlté karty ${fmt1(ak)} (aj s ohľadom na súpera), hranica ${line}.${refereeNote("cards")}`,
+      { mean: ak, varRatio: VAR_RATIO.cards }
     );
   }
   if (extraStatsAvg?.homeShotsOnGoal != null && extraStatsAvg?.awayShotsOnGoal != null) {
     const hs = extraStatsAvg.homeShotsOnGoal, as = extraStatsAvg.awayShotsOnGoal;
     addOverUnder("Strely na bránu domácich", "strely_timu", (line) => overdispersedOverUnder(hs, line, VAR_RATIO.shotsOnGoal), (line) =>
-      `${fixture.homeTeam.name} má v priemere ${fmt1(hs)} striel na bránu (aj s ohľadom na súpera), hranica ${line}.`
+      `${fixture.homeTeam.name} má v priemere ${fmt1(hs)} striel na bránu (aj s ohľadom na súpera), hranica ${line}.`,
+      { mean: hs, varRatio: VAR_RATIO.shotsOnGoal }
     );
     addOverUnder("Strely na bránu hostí", "strely_timu", (line) => overdispersedOverUnder(as, line, VAR_RATIO.shotsOnGoal), (line) =>
-      `${fixture.awayTeam.name} má v priemere ${fmt1(as)} striel na bránu (aj s ohľadom na súpera), hranica ${line}.`
+      `${fixture.awayTeam.name} má v priemere ${fmt1(as)} striel na bránu (aj s ohľadom na súpera), hranica ${line}.`,
+      { mean: as, varRatio: VAR_RATIO.shotsOnGoal }
     );
   }
 
   if (fouls) {
     const exp = fouls.expected;
-    addOverUnder("Fauly", "fauly", (line) => poissonOverUnder(exp, line), (line) => statExplanation(exp, line) + refereeNote("fouls"));
+    addOverUnder("Fauly", "fauly", (line) => poissonOverUnder(exp, line), (line) => statExplanation(exp, line) + refereeNote("fouls"), { mean: exp });
   }
 
   // Očakávané držanie lopty domácich (v %) a rozptyl – appka z nich počíta šancu
@@ -908,6 +931,7 @@ export function predictMatch(
       const k = calibrationFactor(c.category, minGamesPlayed);
       if (k < 1) c.probability = 50 + k * (c.probability - 50);
     }
+    for (const m of lineModels) m.calibration = Math.min(1, calibrationFactor(m.category, minGamesPlayed));
   }
 
   const sortedBets = candidates.sort((a, b) => b.probability - a.probability);
@@ -1147,6 +1171,7 @@ export function predictMatch(
     bestScorer,
     referee: referee ?? null,
     possession: possessionInfo,
+    lineModels,
     lineupConfirmed: {
       home: Boolean(homeLineupIds && homeLineupIds.length > 0),
       away: Boolean(awayLineupIds && awayLineupIds.length > 0),

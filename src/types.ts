@@ -154,6 +154,8 @@ export interface PredictionResult {
   referee?: RefereeProfile | null;
   /** Očakávané držanie lopty domácich v % a smerodajná odchýlka (pre výpočet hranice). */
   possession?: { expectedHome: number; sd: number } | null;
+  /** Modely trhov nad/pod pre kalkulačku hranice zo stávkovky. */
+  lineModels?: { market: string; category: string; mean: number; varRatio: number; calibration: number }[];
   expectedGoals: {
     home: number;
     away: number;

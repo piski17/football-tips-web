@@ -698,6 +698,7 @@ function renderAnalysis(r) {
 
     ${matchHasStarted(r.fixture) ? `<div class="match-locked">⏱ ${MATCH_STARTED_TEXT}</div>` : ""}${topBetsHtml}${noBetsHtml}${lowValueHtml}
     <div id="saveTipMsg"></div>
+    ${lineCalcHtml(r)}
     ${possessionHtml(r)}
 
     <div class="prob-section">
@@ -763,6 +764,7 @@ function renderAnalysis(r) {
   wireTicketButtons(r);
   wireScorerSaveButtons(r);
   wirePossession(r);
+  wireLineCalc(r);
   wireLineupBar(r);
   if (matchHasStarted(r.fixture)) {
     document
@@ -836,6 +838,91 @@ function evPct(ev) {
   return `${p >= 0 ? "+" : "−"}${Math.abs(p)} %`;
 }
 
+// ---- Kalkulačka hranice pre všetky trhy nad/pod (17. 10. 2026) ----
+// Stávkovky (napr. Tipsport) majú často inú hranicu, ako model našiel v API
+// (fauly 24,5 vs. 27,5). Michal zadá hranicu a kurzy a appka spočíta šancu
+// rovnakým rozdelením ako model (Poisson, pri kartách a strelách negatívne
+// binomické) vrátane kalibrácie trhu.
+function poissonUnder(mean, line) {
+  let pmf = Math.exp(-mean), under = 0;
+  for (let k = 0; k <= Math.floor(line); k++) {
+    under += pmf;
+    pmf = (pmf * mean) / (k + 1);
+  }
+  return Math.min(1, under);
+}
+
+function negBinUnder(mean, line, varRatio) {
+  if (!(mean > 0) || varRatio <= 1.0001) return poissonUnder(Math.max(mean, 0.01), line);
+  const rr = mean / (varRatio - 1);
+  const p = rr / (rr + mean);
+  let pmf = Math.pow(p, rr), under = 0;
+  for (let k = 0; k <= Math.floor(line); k++) {
+    under += pmf;
+    pmf = pmf * ((k + rr) / (k + 1)) * (1 - p);
+  }
+  return Math.min(1, Math.max(0, under));
+}
+
+function lineMarketLabel(r, market) {
+  const h = translateTeamName(r.fixture.homeTeam.name), a = translateTeamName(r.fixture.awayTeam.name);
+  if (market.endsWith(" domácich")) return `${market.replace(/ domácich$/, "")} – ${h}`;
+  if (market.endsWith(" hostí")) return `${market.replace(/ hostí$/, "")} – ${a}`;
+  return market;
+}
+
+function lineCalcHtml(r) {
+  const models = r.lineModels || [];
+  if (!models.length) return "";
+  return `
+    <div class="prob-section" id="lineCalcBox">
+      <div class="section-title">Výpočet podľa hranice tvojej stávkovky</div>
+      <p class="muted small" style="margin:-4px 0 10px">Ak má stávkovka inú hranicu ako tip vyššie, zadaj jej hranicu a kurzy. Appka spočíta šancu rovnako ako model.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <select id="lcMarket" aria-label="Trh">${models
+          .map((m, i) => `<option value="${i}">${escapeHtml(lineMarketLabel(r, m.market))} (čaká ${fmtNum(m.mean, 1)})</option>`)
+          .join("")}</select>
+        <input type="text" id="lcLine" inputmode="decimal" placeholder="Hranica, napr. 24,5" style="width:140px" aria-label="Hranica" />
+        <input type="text" id="lcOddsOver" inputmode="decimal" placeholder="Kurz „viac ako“" style="width:120px" aria-label="Kurz na viac ako" />
+        <input type="text" id="lcOddsUnder" inputmode="decimal" placeholder="Kurz „menej ako“" style="width:130px" aria-label="Kurz na menej ako" />
+        <button type="button" class="btn-ghost" id="lcCalc">Vypočítať</button>
+      </div>
+      <div id="lcResult" style="margin-top:10px"></div>
+    </div>`;
+}
+
+function wireLineCalc(r) {
+  const btn = document.getElementById("lcCalc");
+  if (!btn || !r.lineModels) return;
+  const out = document.getElementById("lcResult");
+  const calc = () => {
+    const m = r.lineModels[Number(document.getElementById("lcMarket").value)];
+    const line = parseFloat(String(document.getElementById("lcLine").value).replace(",", "."));
+    if (!m) return;
+    if (!(line > 0) || Math.abs((line % 1) - 0.5) > 1e-9) {
+      out.innerHTML = `<p class="muted small">Zadaj hranicu s ,5 – napr. 24,5.</p>`;
+      return;
+    }
+    let under = negBinUnder(m.mean, line, m.varRatio) * 100;
+    // rovnaká kalibrácia trhu ako pri tipoch modelu (stiahne šancu bližšie k 50 %)
+    if (m.calibration < 1) under = 50 + m.calibration * (under - 50);
+    const oddOf = (id) => {
+      const v = parseFloat(String(document.getElementById(id).value).replace(",", "."));
+      return v > 1 && v <= 20 ? Math.round(v * 100) / 100 : null;
+    };
+    const name = lineMarketLabel(r, m.market);
+    const lineTxt = String(line).replace(".", ",");
+    renderCalcRows(out, r, m.market, [
+      { label: `${name} viac ako ${lineTxt}`, selection: `Over ${line}`, probability: 100 - under, odds: oddOf("lcOddsOver") },
+      { label: `${name} menej ako ${lineTxt}`, selection: `Under ${line}`, probability: under, odds: oddOf("lcOddsUnder") },
+    ]);
+  };
+  btn.onclick = calc;
+  ["lcLine", "lcOddsOver", "lcOddsUnder"].forEach((id) => {
+    document.getElementById(id).onkeydown = (e) => { if (e.key === "Enter") calc(); };
+  });
+}
+
 function possessionHtml(r) {
   if (!r.possession) return "";
   const h = translateTeamName(r.fixture.homeTeam.name), a = translateTeamName(r.fixture.awayTeam.name);
@@ -854,6 +941,86 @@ function possessionHtml(r) {
       </div>
       <div id="possResult" style="margin-top:10px"></div>
     </div>`;
+}
+
+/**
+ * Spoločné vyhodnotenie kalkulačiek (držanie lopty aj ostatné trhy): šanca 68 – 80 %,
+ * a ak je zadaný kurz, tak aspoň 1,50 a výhodnosť 1,05 – 1,25. Vykreslí riadky
+ * s tlačidlami na uloženie. rows: [{ label, selection, probability, odds }].
+ */
+function renderCalcRows(out, r, market, rows) {
+  // Rovnaké pravidlá ako pri ostatných tipoch: šanca 68 – 80 %, a ak je zadaný kurz,
+  // tak aspoň 1,50 a výhodnosť (šanca × kurz) 1,05 až 1,25.
+  rows.forEach((x) => {
+    if (x.odds != null) {
+      x.ev = (x.probability / 100) * x.odds;
+      x.ok = x.probability >= 68 && x.probability <= 80 && x.odds >= 1.5 && x.ev >= 1.05 && x.ev <= 1.25;
+    } else {
+      x.ok = x.probability >= 68 && x.probability <= 80;
+    }
+  });
+  const good = rows.filter((x) => x.ok);
+  if (good.length > 1 && good.every((x) => x.ev != null)) {
+    const best = good.reduce((a, b) => (b.ev > a.ev ? b : a));
+    rows.forEach((x) => { x.ok = x === best; });
+  }
+  const whyNot = (x) => {
+    if (x.probability < 68 || x.probability > 80) return "Mimo pásma 68 – 80 % – neodporúčame.";
+    if (x.odds < 1.5) return "Kurz pod 1,50 – neodporúčame.";
+    if (x.ev < 1.05) return `Kurz je na túto šancu nízky (výhodnosť ${evPct(x.ev)}) – neodporúčame.`;
+    if (x.ev > 1.25) return `Podozrivo vysoká výhodnosť (${evPct(x.ev)}), model sa asi mýli – neodporúčame.`;
+    return "Druhá možnosť je výhodnejšia.";
+  };
+  out.innerHTML = rows
+    .map((x, i) => {
+      const min = minOddsFor({ probability: x.probability });
+      const info = x.odds != null
+        ? `Odporúčame · kurz <strong>${fmtOdds(x.odds)}</strong> · výhodnosť <strong>${evPct(x.ev)}</strong>`
+        : `Hraj len pri kurze aspoň <strong>${fmtOdds(min)}</strong>`;
+      const oddsTxt = x.odds != null ? ` · kurz ${fmtOdds(x.odds)}` : "";
+      return `<div class="stat-line"><span>${escapeHtml(x.label)}${oddsTxt}</span><strong>${x.probability.toFixed(0)} %</strong></div>
+        ${x.ok
+          ? `<div style="display:flex;gap:8px;margin:4px 0 10px;align-items:center"><span class="muted small" style="flex:1">${info}</span><button type="button" class="btn-primary" data-poss="${i}">Uložiť tento tip</button><button type="button" class="btn-ghost" data-poss="${i}" data-watch="1">👁 Len sledovať</button></div>`
+          : `<p class="muted small" style="margin:2px 0 10px">${whyNot(x)}</p>`}`;
+    })
+    .join("");
+  out.querySelectorAll("[data-poss]").forEach((b) => {
+    b.onclick = async () => {
+      if (matchHasStarted(r.fixture)) { showToast(MATCH_STARTED_TEXT); return; }
+      const x = rows[Number(b.dataset.poss)];
+      const watch = b.dataset.watch === "1";
+      const odds = watch ? null : x.odds ?? (await askRealOdds({ probability: x.probability }));
+      if (!watch && odds == null) return;
+      const tip = {
+        id: `${r.fixture.fixtureId}-${Date.now()}`,
+        fixtureId: r.fixture.fixtureId,
+        leagueId: r.fixture.league.id,
+        season: r.fixture.league.season,
+        leagueName: r.fixture.league.name,
+        homeTeam: r.fixture.homeTeam.name,
+        awayTeam: r.fixture.awayTeam.name,
+        homeTeamLogo: r.fixture.homeTeam.logo,
+        awayTeamLogo: r.fixture.awayTeam.logo,
+        matchDate: r.fixture.date,
+        market,
+        selection: x.selection,
+        probability: Math.round(x.probability * 10) / 10,
+        odds,
+        ...(watch ? { watchOnly: true } : {}),
+        savedAt: new Date().toISOString(),
+        status: "pending",
+      };
+      b.disabled = true;
+      try {
+        await fetchJson("/api/tips", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(tip) });
+        b.textContent = watch ? "✓ Sledované" : "✓ Uložené";
+        if (!watch) await maybeOfferTelegram(tip.id);
+      } catch (err) {
+        showToast(`Uloženie zlyhalo: ${err?.message ?? String(err)}`);
+        b.disabled = false;
+      }
+    };
+  });
 }
 
 function wirePossession(r) {
@@ -878,78 +1045,7 @@ function wirePossession(r) {
       { label: `${translateTeamName(teamName)} ${lineTxt} % a viac`, selection: `Over ${line}`, probability: over, odds: oddOf("possOddsOver") },
       { label: `${translateTeamName(teamName)} menej ako ${lineTxt} %`, selection: `Under ${line}`, probability: 100 - over, odds: oddOf("possOddsUnder") },
     ];
-    // Rovnaké pravidlá ako pri ostatných tipoch: šanca 68 – 80 %, a ak je zadaný kurz,
-    // tak aspoň 1,50 a výhodnosť (šanca × kurz) 1,05 až 1,25.
-    rows.forEach((x) => {
-      if (x.odds != null) {
-        x.ev = (x.probability / 100) * x.odds;
-        x.ok = x.probability >= 68 && x.probability <= 80 && x.odds >= 1.5 && x.ev >= 1.05 && x.ev <= 1.25;
-      } else {
-        x.ok = x.probability >= 68 && x.probability <= 80;
-      }
-    });
-    const good = rows.filter((x) => x.ok);
-    if (good.length > 1 && good.every((x) => x.ev != null)) {
-      const best = good.reduce((a, b) => (b.ev > a.ev ? b : a));
-      rows.forEach((x) => { x.ok = x === best; });
-    }
-    const whyNot = (x) => {
-      if (x.probability < 68 || x.probability > 80) return "Mimo pásma 68 – 80 % – neodporúčame.";
-      if (x.odds < 1.5) return "Kurz pod 1,50 – neodporúčame.";
-      if (x.ev < 1.05) return `Kurz je na túto šancu nízky (výhodnosť ${evPct(x.ev)}) – neodporúčame.`;
-      if (x.ev > 1.25) return `Podozrivo vysoká výhodnosť (${evPct(x.ev)}), model sa asi mýli – neodporúčame.`;
-      return "Druhá možnosť je výhodnejšia.";
-    };
-    out.innerHTML = rows
-      .map((x, i) => {
-        const min = minOddsFor({ probability: x.probability });
-        const info = x.odds != null
-          ? `Odporúčame · kurz <strong>${fmtOdds(x.odds)}</strong> · výhodnosť <strong>${evPct(x.ev)}</strong>`
-          : `Hraj len pri kurze aspoň <strong>${fmtOdds(min)}</strong>`;
-        const oddsTxt = x.odds != null ? ` · kurz ${fmtOdds(x.odds)}` : "";
-        return `<div class="stat-line"><span>${escapeHtml(x.label)}${oddsTxt}</span><strong>${x.probability.toFixed(0)} %</strong></div>
-          ${x.ok
-            ? `<div style="display:flex;gap:8px;margin:4px 0 10px;align-items:center"><span class="muted small" style="flex:1">${info}</span><button type="button" class="btn-primary" data-poss="${i}">Uložiť tento tip</button><button type="button" class="btn-ghost" data-poss="${i}" data-watch="1">👁 Len sledovať</button></div>`
-            : `<p class="muted small" style="margin:2px 0 10px">${whyNot(x)}</p>`}`;
-      })
-      .join("");
-    out.querySelectorAll("[data-poss]").forEach((b) => {
-      b.onclick = async () => {
-        if (matchHasStarted(r.fixture)) { showToast(MATCH_STARTED_TEXT); return; }
-        const x = rows[Number(b.dataset.poss)];
-        const watch = b.dataset.watch === "1";
-        const odds = watch ? null : x.odds ?? (await askRealOdds({ probability: x.probability }));
-        if (!watch && odds == null) return;
-        const tip = {
-          id: `${r.fixture.fixtureId}-${Date.now()}`,
-          fixtureId: r.fixture.fixtureId,
-          leagueId: r.fixture.league.id,
-          season: r.fixture.league.season,
-          leagueName: r.fixture.league.name,
-          homeTeam: r.fixture.homeTeam.name,
-          awayTeam: r.fixture.awayTeam.name,
-          homeTeamLogo: r.fixture.homeTeam.logo,
-          awayTeamLogo: r.fixture.awayTeam.logo,
-          matchDate: r.fixture.date,
-          market,
-          selection: x.selection,
-          probability: Math.round(x.probability * 10) / 10,
-          odds,
-          ...(watch ? { watchOnly: true } : {}),
-          savedAt: new Date().toISOString(),
-          status: "pending",
-        };
-        b.disabled = true;
-        try {
-          await fetchJson("/api/tips", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(tip) });
-          b.textContent = watch ? "✓ Sledované" : "✓ Uložené";
-          if (!watch) await maybeOfferTelegram(tip.id);
-        } catch (err) {
-          showToast(`Uloženie zlyhalo: ${err?.message ?? String(err)}`);
-          b.disabled = false;
-        }
-      };
-    });
+    renderCalcRows(out, r, market, rows);
   };
   btn.onclick = calc;
   ["possLine", "possOddsOver", "possOddsUnder"].forEach((id) => {
