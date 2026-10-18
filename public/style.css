@@ -2116,3 +2116,6 @@ select option { background: #261D16; color: var(--text); }
 .member-stats .ms-bar > span { display: block; height: 100%; background: linear-gradient(90deg, #B8995E, #F3E6C4); }
 .member-stats .ms-warn b { color: #E3B567; }
 @media (max-width: 640px) { .member-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .member-stats .ms-vip { grid-column: 1 / -1; } }
+
+/* menu Nástroje veľkými písmenami ako zvyšok lišty */
+.tools-item { text-transform: uppercase; letter-spacing: .08em; font-size: 12.5px; font-weight: 600; }
