@@ -1722,7 +1722,7 @@ h1, h2, h3 { text-transform: uppercase; letter-spacing: .02em; }
   const judge = (sc) => {
     const ev = Math.round((sc.p / 100 * sc.odds - 1) * 100);
     if (sc.p < 68 || sc.p > 80) return { ok: false, t: "Tip nepošleme", w: "Dôvera modelu je mimo pásma 68–80\u00a0%.", v: "—" };
-    if (sc.odds < 1.5 || ev < 5) return { ok: false, t: "Tip nepošleme", w: "Kurz je príliš nízky, hodnota tu nie je.", v: (ev > 0 ? "+" : "\u2212") + Math.abs(ev) + "\u00a0%" };
+    if (sc.odds < 1.6 || ev < 5) return { ok: false, t: "Tip nepošleme", w: "Kurz je príliš nízky, hodnota tu nie je.", v: (ev > 0 ? "+" : "\u2212") + Math.abs(ev) + "\u00a0%" };
     return { ok: true, t: "Tip odošleme", w: "Model vidí vyššiu šancu, než naznačuje kurz.", v: "+" + ev + "\u00a0%" };
   };
   let raf;

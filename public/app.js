@@ -228,11 +228,11 @@ function betOddsHtml(bet) {
   return ` · kurz ~${impliedOdds(bet.probability).replace(".", ",")} <span class="muted small">(odhad – stávkovky kurz neponúkajú)</span>`;
 }
 
-/** Minimálny kurz tipu: hodnota aspoň +5 % pri dôvere modelu a zároveň aspoň 1,50. */
+/** Minimálny kurz tipu: hodnota aspoň +5 % pri dôvere modelu a zároveň aspoň 1,60. */
 function minOddsFor(bet) {
   if (typeof bet.minOdds === "number") return bet.minOdds;
   const p = (bet.probability ?? 0) / 100;
-  return p > 0 ? Math.max(1.5, Math.ceil((1.05 / p) * 100) / 100) : 1.5;
+  return p > 0 ? Math.max(1.6, Math.ceil((1.05 / p) * 100) / 100) : 1.6;
 }
 
 /**
@@ -956,16 +956,16 @@ function wireLineCalc(r) {
 
 /**
  * Spoločné vyhodnotenie kalkulačiek (držanie lopty aj ostatné trhy): šanca 68 – 80 %,
- * a ak je zadaný kurz, tak aspoň 1,50 a výhodnosť 1,05 – 1,25. Vykreslí riadky
+ * a ak je zadaný kurz, tak aspoň 1,60 a výhodnosť 1,05 – 1,25. Vykreslí riadky
  * s tlačidlami na uloženie. rows: [{ label, selection, probability, odds }].
  */
 function renderCalcRows(out, r, market, rows) {
   // Rovnaké pravidlá ako pri ostatných tipoch: šanca 68 – 80 %, a ak je zadaný kurz,
-  // tak aspoň 1,50 a výhodnosť (šanca × kurz) 1,05 až 1,25.
+  // tak aspoň 1,60 a výhodnosť (šanca × kurz) 1,05 až 1,25.
   rows.forEach((x) => {
     if (x.odds != null) {
       x.ev = (x.probability / 100) * x.odds;
-      x.ok = x.probability >= 68 && x.probability <= 80 && x.odds >= 1.5 && x.ev >= 1.05 && x.ev <= 1.25;
+      x.ok = x.probability >= 68 && x.probability <= 80 && x.odds >= 1.6 && x.ev >= 1.05 && x.ev <= 1.25;
     } else {
       x.ok = x.probability >= 68 && x.probability <= 80;
     }
@@ -977,7 +977,7 @@ function renderCalcRows(out, r, market, rows) {
   }
   const whyNot = (x) => {
     if (x.probability < 68 || x.probability > 80) return "Mimo pásma 68 – 80 % – neodporúčame.";
-    if (x.odds < 1.5) return "Kurz pod 1,50 – neodporúčame.";
+    if (x.odds < 1.6) return "Kurz pod 1,60 – neodporúčame.";
     if (x.ev < 1.05) return `Kurz je na túto šancu nízky (výhodnosť ${evPct(x.ev)}) – neodporúčame.`;
     if (x.ev > 1.25) return `Podozrivo vysoká výhodnosť (${evPct(x.ev)}), model sa asi mýli – neodporúčame.`;
     return "Druhá možnosť je výhodnejšia.";
@@ -3364,7 +3364,7 @@ function renderBacktestOptimizer(o) {
     <table class="bt-table"><thead><tr><th>Trh</th><th class="num">Tipov</th><th class="num">k teraz</th><th class="num">k najlepšie</th><th class="num">Chyba teraz</th><th class="num">Chyba najlepšie</th><th class="num">Model → realita</th></tr></thead><tbody>${cal}</tbody></table>
     <p class="muted small">2. krok: s najlepšou kalibráciou všetky kombinácie pásma dôvery a minimálneho počtu odohraných zápasov. Najlepšie = najvyššia úspešnosť pri aspoň polovici tipov oproti terajšku.</p>
     <table class="bt-table"><thead><tr><th>Nastavenie</th><th class="num">Tipov</th><th class="num">Model</th><th class="num">Realita</th><th class="num">Rozdiel</th></tr></thead><tbody>${set}</tbody></table>
-    ${best && mk ? `<p class="muted small">Trhy v najlepšom nastavení (${best.lo}–${best.hi} %). Pri kurze 1,50 je tip v zisku od úspešnosti 66,7 % – červené trhy by pri takých kurzoch prerábali.</p>
+    ${best && mk ? `<p class="muted small">Trhy v najlepšom nastavení (${best.lo}–${best.hi} %). Pri kurze 1,60 je tip v zisku od úspešnosti 62,5 % – červené trhy by pri takých kurzoch prerábali.</p>
     <table class="bt-table"><thead><tr><th>Trh</th><th class="num">Tipov</th><th class="num">Vyšlo</th></tr></thead><tbody>${mk}</tbody></table>` : ""}
     <p class="muted small"><strong>Pozor:</strong> nastavenie nájdené na jednom období môže sedieť len náhodou. Zmenu sa oplatí urobiť, až keď podobné čísla vyjdú aj na inom období (napr. aug. – okt. 2024 a mar. – máj 2025).</p>`;
 }
