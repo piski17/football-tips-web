@@ -2049,12 +2049,14 @@ function renderSubscribersList(subs) {
   const income = active.reduce((sum, s) => sum + (Number(s.priceEur) || 0), 0);
   const ending = active.filter((s) => daysUntil(s.nextPaymentDue) <= 7).length;
 
+  const vipPct = Math.min(100, Math.round((vip / 30) * 100));
+  subscribersSummaryEl.className = "member-stats";
   subscribersSummaryEl.innerHTML = `
-    <span>Aktívni: <strong>${active.length}</strong></span>
-    <span>Platinum 1 a 3 mesiace: <strong>${active.length - vip}</strong></span>
-    <span>Platinum 6 mesiacov: <strong>${vip}</strong></span>
-    <span>Zaplatené (aktívni): <strong>${income} €</strong></span>
-    <span>Končí do 7 dní: <strong>${ending}</strong></span>
+    <div class="ms-tile"><small>Aktívni</small><b>${active.length}</b></div>
+    <div class="ms-tile"><small>1 a 3 mesiace</small><b>${active.length - vip}</b></div>
+    <div class="ms-tile ms-vip"><small>6 mesiacov</small><b>${vip}<i> / 30</i></b><span class="ms-bar"><span style="width:${vipPct}%"></span></span></div>
+    <div class="ms-tile"><small>Zaplatené</small><b>${income}<i> €</i></b></div>
+    <div class="ms-tile${ending ? " ms-warn" : ""}"><small>Končí do 7 dní</small><b>${ending}</b></div>
   `;
 
   memberFilterEl.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b.dataset.f === memberFilter));
