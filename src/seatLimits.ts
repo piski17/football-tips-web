@@ -1,6 +1,6 @@
 // Počet miest v TipRadar Platinum podľa dĺžky členstva.
 // Od 17. 10. 2026 je členstvo na 1 a 3 mesiace bez obmedzenia (null = neobmedzene),
-// obmedzená je len celá sezóna. Dá sa zmeniť na Renderi premennou SEATS_SEASON.
+// obmedzených je len 6 mesiacov (kód "season"). Dá sa zmeniť na Renderi premennou SEATS_SEASON.
 function envSeats(name: string, fallback: number): number {
   const n = Number(typeof process !== "undefined" ? process.env[name] : undefined);
   return Number.isFinite(n) && n >= 1 ? Math.floor(n) : fallback;

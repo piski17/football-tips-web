@@ -25,7 +25,7 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 // Kanál TipRadar Platinum (starší názov premennej TELEGRAM_CHAT_ID_PREMIUM stále funguje).
 const TELEGRAM_CHAT_ID_PREMIUM = process.env.TELEGRAM_CHAT_ID_PLATINUM || process.env.TELEGRAM_CHAT_ID_PREMIUM;
 const TELEGRAM_CHAT_ID_VIP = process.env.TELEGRAM_CHAT_ID_VIP;
-// VIP chat (skupina pre členov na 3 mesiace a sezónu). Bot v nej musí byť administrátor s právom pozývať.
+// VIP chat (skupina pre členov na 3 a 6 mesiacov). Bot v nej musí byť administrátor s právom pozývať.
 const TELEGRAM_CHAT_ID_VIPCHAT = process.env.TELEGRAM_CHAT_ID_VIPCHAT;
 // Bezplatný kanál: TELEGRAM_CHAT_ID_FREE (napr. -100… alebo @nazovkanala). Ak chýba a kanál je verejný,
 // použije sa názov z TELEGRAM_FREE_CHANNEL_URL (https://t.me/nazovkanala → @nazovkanala).
@@ -392,13 +392,13 @@ const BENEFIT_CHAT = `• <b>💬 Súkromný VIP chat</b> – na vaše otázky o
 const BENEFIT_KURZ = `• <b>📚 Kurz stávkovania zadarmo</b> v hodnote 99 €`;
 const PLAN_START = `🟡 <b>Platinum · 1 mesiac</b> – 49 €\n${BENEFITS_BASE}`;
 const PLAN_SERIA = `🔶 <b>Platinum · 3 mesiace</b> – 129 € (43 € mesačne)\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
-const PLAN_SAMPION = `🏆 <b>Platinum · celá sezóna</b> – 299 € (37 € mesačne) · <b>len ${SEATS_SEASON} miest</b>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_KURZ}`;
+const PLAN_SAMPION = `🏆 <b>Platinum · 6 mesiacov</b> – 239 € (40 € mesačne) · <b>len ${SEATS_SEASON} miest</b>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_KURZ}`;
 
 const FAQ_ANSWERS: Record<string, string> = {
   faq_price:
     `💰 <b>TipRadar Platinum</b>\n\nJedno členstvo v troch dĺžkach. Všetci členovia dostávajú rovnaké tipy.\n\n` +
     `${PLAN_START}\n\n${PLAN_SERIA}\n\n${PLAN_SAMPION}\n\n` +
-    `Sezóna = do 31. 5. 2027. Členstvo sa samo nepredlžuje, žiadna viazanosť.` +
+    `Členstvo sa samo nepredlžuje, žiadna viazanosť. Cez letnú prestávku (jún – júl) sa pozastaví a o tento čas sa vám predĺži.` +
     (process.env.SALES_OPEN === "true" ? "" : `\n\n🗓 <b>Predaj členstiev spúšťame čoskoro.</b> Napíšte sem „Mám záujem" a ozveme sa vám ako prvým.`),
   faq_how:
     `❓ <b>Ako to funguje</b>\n\n` +
@@ -445,7 +445,7 @@ const JOIN_MESSAGES: Record<string, string> = {
   sampion: `✨ <b>Členstvo TipRadar</b>\n\n${PLAN_SAMPION}\n\n${NEXT_STEP}`,
   clenstvo: `✨ <b>Členstvo TipRadar</b>\n\n${PLAN_START}\n\n${PLAN_SERIA}\n\n${PLAN_SAMPION}\n\n${NEXT_STEP}`,
   sampion_waitlist:
-    `🏆 <b>Platinum na celú sezónu – poradovník</b>\n\nVšetkých ${SEATS_SEASON} miest je momentálne obsadených. Váš záujem sme si zapísali – keď sa miesto uvoľní, ozveme sa vám ako prvým.\n\n` +
+    `🏆 <b>Platinum na 6 mesiacov – poradovník</b>\n\nVšetkých ${SEATS_SEASON} miest je momentálne obsadených. Váš záujem sme si zapísali – keď sa miesto uvoľní, ozveme sa vám ako prvým.\n\n` +
     `Dovtedy môžete začať s členstvom Platinum na <b>1 mesiac</b> (49 €) alebo na <b>3 mesiace</b> (129 €) – stačí sem napísať, ktoré chcete.`,
 };
 // Staré odkazy (t.me/TipRadarAiBot?start=premium / vip) ešte môžu kolovať – ukážu celé členstvo.
@@ -463,7 +463,7 @@ function payKeyboard(chatId: number | string, only?: Term) {
   const all: [Term, string][] = [
     ["m1", "1 mesiac · 49 €"],
     ["m3", "3 mesiace · 129 € (+ VIP chat)"],
-    ["season", "◆ Celá sezóna · 299 €"],
+    ["season", "◆ 6 mesiacov · 239 €"],
   ];
   return { inline_keyboard: all.filter(([t]) => !only || t === only).map(([t, l]) => row(t, only ? `Zaplatiť ${PAY_TERMS[t].price} €` : l)) };
 }
@@ -489,13 +489,13 @@ function PRELAUNCH_MESSAGE(plan: string): string {
 const LEAD_LABEL: Record<string, string> = {
   start: "Platinum 1 mesiac",
   seria: "Platinum 3 mesiace",
-  sampion: "Platinum celá sezóna",
-  sampion_waitlist: "Platinum sezóna – náhradník",
+  sampion: "Platinum 6 mesiacov",
+  sampion_waitlist: "Platinum 6 mesiacov – náhradník",
   seria_waitlist: "Platinum 3 mesiace – náhradník",
   start_waitlist: "Platinum 1 mesiac – náhradník",
   premium: "členstvo (starý odkaz Premium)",
-  vip: "Platinum sezóna (starý odkaz VIP)",
-  vip_waitlist: "Platinum sezóna – náhradník",
+  vip: "Platinum 6 mesiacov (starý odkaz VIP)",
+  vip_waitlist: "Platinum 6 mesiacov – náhradník",
   clenstvo: "členstvo (zatiaľ nevybral)",
   otazka: "všeobecná otázka",
 };
@@ -631,7 +631,7 @@ export async function notifyAdminExpiringSubscribers(
 
   const lines = expiring
     .map((s) => {
-      const tierLabel = s.tier === "group" ? "PLATINUM SEZÓNA" : "PLATINUM 1 / 3 MESIACE";
+      const tierLabel = s.tier === "group" ? "PLATINUM 6 MESIACOV" : "PLATINUM 1 / 3 MESIACE";
       const when = s.daysLeft < 0 ? "už skončilo" : s.daysLeft === 0 ? "končí dnes" : `končí o ${s.daysLeft} d.`;
       return `• ${s.name} (${tierLabel}) — ${when}`;
     })
@@ -821,7 +821,7 @@ export async function redeemPayment(token: string, chatId: number | string, from
   const current = (await listSubscribers())
     .filter((s) => String(s.telegramChatId) === tg && s.id !== "pay_" + p!.token && new Date(s.nextPaymentDue).getTime() > Date.now())
     .sort((a, b) => b.nextPaymentDue.localeCompare(a.nextPaymentDue))[0];
-  const start = current && term !== "season" ? new Date(current.nextPaymentDue) : new Date(p.paidAt ?? Date.now());
+  const start = current ? new Date(current.nextPaymentDue) : new Date(p.paidAt ?? Date.now());
   const until = paidUntil(term, start);
   const name = personName(from);
   const channel = await createInviteLink(TELEGRAM_CHAT_ID_PREMIUM, name);
@@ -1001,7 +1001,7 @@ export async function sendSalesOpenToWaitlist(): Promise<{ sent: number; skipped
       `Ahoj${first ? " " + first : ""} 👋\n\n` +
       `Zapísal si sa do poradovníka na <b>TipRadar Platinum</b>. Predaj je práve otvorený a ty máš prednosť.\n\n` +
       `◆ denné tipy 1 – 2 hodiny pred výkopom\n◆ pri každom kurz, šanca a sadzba\n◆ večerné vyhodnotenie\n\n` +
-      `Na 1 a 3 mesiace sa môžeš pridať kedykoľvek, celá sezóna má len <b>${SEATS_SEASON}</b> miest. Vyber si dĺžku 👇`;
+      `Na 1 a 3 mesiace sa môžeš pridať kedykoľvek, na 6 mesiacov je len <b>${SEATS_SEASON}</b> miest. Vyber si dĺžku 👇`;
     try {
       await axios.post(
         `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,

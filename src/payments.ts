@@ -16,14 +16,43 @@ export const BANK = {
 };
 /** Adresa webu (predvolene https://tipradar.eu). */
 export const PUBLIC_URL = (process.env.PUBLIC_URL || "https://tipradar.eu").replace(/\/+$/, "");
-/** Koniec sezóny pre členstvo „Celá sezóna". */
-export const SEASON_END = process.env.SEASON_END || "2027-05-31";
+/**
+ * Letná prestávka: počas nej sa čas členstva nepočíta (všetky dĺžky).
+ * Členstvo sa 1. 6. pozastaví a 1. 8. pokračuje, o čo príde, sa predĺži.
+ */
+export const SUMMER_PAUSE = { fromMonth: 6, toMonth: 7 }; // jún a júl
 
+/**
+ * Koniec členstva na `months` mesiacov od `from`, bez letnej prestávky.
+ * Rovnaký výpočet je v appke (public/app.js, memberEnd).
+ */
+export function addActiveMonths(from: Date, months: number): Date {
+  const calEnd = new Date(from);
+  const day = calEnd.getUTCDate();
+  calEnd.setUTCMonth(calEnd.getUTCMonth() + months);
+  if (calEnd.getUTCDate() < day) calEnd.setUTCDate(0); // 31. 1. + 1 mesiac = 28./29. 2.
+  let remaining = calEnd.getTime() - from.getTime();
+  let cursor = new Date(from);
+  for (let guard = 0; guard < 20; guard++) {
+    const y = cursor.getUTCFullYear();
+    const pauseStart = Date.UTC(y, SUMMER_PAUSE.fromMonth - 1, 1);
+    const pauseEnd = Date.UTC(y, SUMMER_PAUSE.toMonth, 1); // 1. 8. 00:00
+    const t = cursor.getTime();
+    if (t >= pauseStart && t < pauseEnd) { cursor = new Date(pauseEnd); continue; }
+    const nextPause = t < pauseStart ? pauseStart : Date.UTC(y + 1, SUMMER_PAUSE.fromMonth - 1, 1);
+    if (t + remaining <= nextPause) return new Date(t + remaining);
+    remaining -= nextPause - t;
+    cursor = new Date(nextPause);
+  }
+  return calEnd;
+}
+
+// Kód "season" ostáva kvôli uloženým členom, od 18. 10. 2026 znamená 6 mesiacov (30 miest).
 export type Term = "m1" | "m3" | "season";
 export const PAY_TERMS: Record<Term, { price: number; name: string; months?: number }> = {
   m1: { price: 49, name: "1 mesiac", months: 1 },
   m3: { price: 129, name: "3 mesiace", months: 3 },
-  season: { price: 299, name: "celá sezóna" },
+  season: { price: 239, name: "6 mesiacov", months: 6 },
 };
 export function isTerm(v: unknown): v is Term {
   return v === "m1" || v === "m3" || v === "season";
@@ -37,12 +66,9 @@ export function paymentsEnabled(): boolean {
   return process.env.SALES_OPEN === "true" && bankEnabled();
 }
 
-/** Do kedy platí členstvo zaplatené dnes. */
+/** Do kedy platí členstvo zaplatené dnes (jún a júl sa nepočítajú). */
 export function paidUntil(term: Term, from = new Date()): string {
-  if (term === "season") return new Date(SEASON_END + "T23:59:59Z").toISOString();
-  const d = new Date(from);
-  d.setMonth(d.getMonth() + (PAY_TERMS[term].months ?? 1));
-  return d.toISOString();
+  return addActiveMonths(new Date(from), PAY_TERMS[term].months ?? 1).toISOString();
 }
 
 // ---- Evidencia platieb (Upstash, lokálne súbor) ----

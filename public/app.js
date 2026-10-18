@@ -1898,12 +1898,14 @@ closeTipsBtn.addEventListener("click", () => {
 // ---- Členovia (platba beží mimo appky, napr. bankovým prevodom) ----
 
 // Ceny musia sedieť s PRICES na tipradar.eu (landing/index.html).
-// TipRadar Platinum: jedno členstvo, tri dĺžky (1 a 3 mesiace bez obmedzenia miest, sezóna 30).
-// Sezóna sa ukladá ako tier "group" – počíta sa do miest na sezónu.
-const MEMBER_PRICES = { m1: 49, m3: 129, season: 299 };
-const MEMBER_NAME = { m1: "Platinum 1 mesiac", m3: "Platinum 3 mesiace", season: "Platinum sezóna" };
-const MEMBER_LENGTH_LABEL = { m1: "1 mesiac", m3: "3 mesiace", season: "sezóna" };
-const SEASON_END = "2027-05-31";
+// TipRadar Platinum: jedno členstvo, tri dĺžky (1 a 3 mesiace bez obmedzenia miest, 6 mesiacov 30).
+// 6 mesiacov má kvôli uloženým dátam kód "season" a ukladá sa ako tier "group" – počíta sa do miest.
+const MEMBER_PRICES = { m1: 49, m3: 129, season: 239 };
+const MEMBER_NAME = { m1: "Platinum 1 mesiac", m3: "Platinum 3 mesiace", season: "Platinum 6 mesiacov" };
+const MEMBER_LENGTH_LABEL = { m1: "1 mesiac", m3: "3 mesiace", season: "6 mesiacov" };
+const MEMBER_MONTHS = { m1: 1, m3: 3, season: 6 };
+// Letná prestávka: jún a júl sa do členstva nepočítajú (rovnako ako src/payments.ts).
+const SUMMER_PAUSE = { fromMonth: 6, toMonth: 7 };
 let memberFilter = "active";
 let lastSubs = [];
 
@@ -1917,15 +1919,27 @@ function todayIso() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-/** Koniec členstva: od dátumu `from` pridá dĺžku; sezóna končí vždy 31. 5. 2027. */
+/** Koniec členstva: od dátumu `from` pridá dĺžku, jún a júl sa nepočítajú (členstvo sa pozastaví). */
 function memberEnd(from, length) {
-  if (length === "season") return new Date(`${SEASON_END}T23:59:00`);
-  const d = new Date(`${String(from).slice(0, 10)}T23:59:00`);
-  const months = length === "m3" ? 3 : 1;
-  const day = d.getDate();
-  d.setMonth(d.getMonth() + months);
-  if (d.getDate() < day) d.setDate(0); // napr. 31. 1. + 1 mesiac = 28./29. 2.
-  return d;
+  const start = new Date(`${String(from).slice(0, 10)}T23:59:00`);
+  const calEnd = new Date(start);
+  const day = calEnd.getDate();
+  calEnd.setMonth(calEnd.getMonth() + (MEMBER_MONTHS[length] || 1));
+  if (calEnd.getDate() < day) calEnd.setDate(0); // napr. 31. 1. + 1 mesiac = 28./29. 2.
+  let remaining = calEnd.getTime() - start.getTime();
+  let cursor = start;
+  for (let guard = 0; guard < 20; guard++) {
+    const y = cursor.getFullYear();
+    const pauseStart = new Date(y, SUMMER_PAUSE.fromMonth - 1, 1).getTime();
+    const pauseEnd = new Date(y, SUMMER_PAUSE.toMonth, 1).getTime(); // 1. 8.
+    const t = cursor.getTime();
+    if (t >= pauseStart && t < pauseEnd) { cursor = new Date(pauseEnd); continue; }
+    const nextPause = t < pauseStart ? pauseStart : new Date(y + 1, SUMMER_PAUSE.fromMonth - 1, 1).getTime();
+    if (t + remaining <= nextPause) return new Date(t + remaining);
+    remaining -= nextPause - t;
+    cursor = new Date(nextPause);
+  }
+  return calEnd;
 }
 
 function syncMemberPrice() {
@@ -1967,7 +1981,7 @@ function renderSubscribersList(subs) {
   subscribersSummaryEl.innerHTML = `
     <span>Aktívni: <strong>${active.length}</strong></span>
     <span>Platinum 1 a 3 mesiace: <strong>${active.length - vip}</strong></span>
-    <span>Platinum sezóna: <strong>${vip}</strong></span>
+    <span>Platinum 6 mesiacov: <strong>${vip}</strong></span>
     <span>Zaplatené (aktívni): <strong>${income} €</strong></span>
     <span>Končí do 7 dní: <strong>${ending}</strong></span>
   `;
@@ -2022,10 +2036,6 @@ function renderSubscribersList(subs) {
       const sub = subs.find((s) => s.id === id);
       if (!sub) return;
       const length = sub.length || "m1";
-      if (length === "season" && daysUntil(sub.nextPaymentDue) >= 0) {
-        showToast("Sezónne členstvo platí do 31. 5. 2027, predĺžiť sa dá až potom.");
-        return;
-      }
       // Predĺženie nadväzuje na koniec, ak ešte platí, inak začína dnes.
       const from = daysUntil(sub.nextPaymentDue) >= 0 ? sub.nextPaymentDue : todayIso();
       const end = memberEnd(from, length);
@@ -2112,12 +2122,12 @@ addSubscriberBtn.addEventListener("click", async () => {
     return;
   }
   const length = subLengthSelect.value;
-  const tier = length === "season" ? "group" : "individual"; // celá sezóna = obmedzené miesta
+  const tier = length === "season" ? "group" : "individual"; // 6 mesiacov = obmedzené miesta
   const start = subStartInput.value || todayIso();
   const priceRaw = subPriceInput.value.trim();
   const priceEur = priceRaw === "" ? MEMBER_PRICES[length] : Number(priceRaw);
   const end = memberEnd(start, length);
-  if (end.getTime() < Date.now() && length !== "season") {
+  if (end.getTime() < Date.now()) {
     if (!window.confirm(`Toto členstvo by skončilo už ${end.toLocaleDateString("sk-SK")}. Pridať aj tak?`)) return;
   }
 
@@ -3626,7 +3636,7 @@ document.addEventListener("click", async (e) => {
   btn.disabled = false;
   renderLeads();
 });
-const LEAD_PLAN_LABEL = { start: "Platinum 1 mesiac", seria: "Platinum 3 mesiace", sampion: "Platinum sezóna", sampion_waitlist: "Platinum sezóna (náhradník)", seria_waitlist: "Platinum 3 mesiace (náhradník)", start_waitlist: "Platinum 1 mesiac (náhradník)", premium: "starý odkaz Premium", vip: "Platinum sezóna (starý odkaz VIP)", vip_waitlist: "Platinum sezóna (náhradník)", clenstvo: "nevybral", otazka: "otázka z webu" };
+const LEAD_PLAN_LABEL = { start: "Platinum 1 mesiac", seria: "Platinum 3 mesiace", sampion: "Platinum 6 mesiacov", sampion_waitlist: "Platinum 6 mesiacov (náhradník)", seria_waitlist: "Platinum 3 mesiace (náhradník)", start_waitlist: "Platinum 1 mesiac (náhradník)", premium: "starý odkaz Premium", vip: "Platinum 6 mesiacov (starý odkaz VIP)", vip_waitlist: "Platinum 6 mesiacov (náhradník)", clenstvo: "nevybral", otazka: "otázka z webu" };
 async function renderLeads() {
   const el = document.getElementById("leadsList");
   if (!el) return;

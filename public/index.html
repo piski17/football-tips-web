@@ -68,11 +68,11 @@
       <button class="btn-ghost" id="openTicketBtn">Tiket <span id="ticketCount"></span></button>
       <button class="btn-ghost" id="openTipsBtn">História tipov</button>
       <button class="btn-ghost" id="openSubscribersBtn">Členovia</button>
-      <div class="seat-strip" id="seatStrip" hidden title="TipRadar Platinum: počet členov podľa dĺžky členstva (sezóna má najviac 30 miest)">
+      <div class="seat-strip" id="seatStrip" hidden title="TipRadar Platinum: počet členov podľa dĺžky členstva (6 mesiacov má najviac 30 miest)">
         <span class="ss-h">Platinum</span>
         <span class="ss-i" data-seat="m1"><small>1 mes.</small><b>–</b></span>
         <span class="ss-i" data-seat="m3"><small>3 mes.</small><b>–</b></span>
-        <span class="ss-i" data-seat="season"><small>Sezóna</small><b>–</b></span>
+        <span class="ss-i" data-seat="season"><small>6 mes.</small><b>–</b></span>
       </div>
       <div class="tools-menu" id="toolsMenu">
         <button class="btn-ghost" id="toolsBtn" aria-haspopup="true" aria-expanded="false">Nástroje <span aria-hidden="true">▾</span></button>
@@ -190,12 +190,12 @@
         <input type="text" id="subTelegramChatId" placeholder="Telegram chat ID (voliteľné)" />
         <select id="subTier" aria-label="Členstvo" hidden>
           <option value="individual">Platinum 1 / 3 mesiace</option>
-          <option value="group">Platinum sezóna</option>
+          <option value="group">Platinum 6 mesiacov</option>
         </select>
         <select id="subLength" aria-label="Dĺžka">
           <option value="m1">Platinum · 1 mesiac (49 €)</option>
           <option value="m3" selected>Platinum · 3 mesiace (129 €)</option>
-          <option value="season">Platinum · sezóna do 31. 5. 2027 (299 €)</option>
+          <option value="season">Platinum · 6 mesiacov (239 €)</option>
         </select>
         <label class="member-field">Od <input type="date" id="subStart" /></label>
         <label class="member-field">Cena <input type="number" id="subPrice" min="0" step="1" inputmode="decimal" /> €</label>

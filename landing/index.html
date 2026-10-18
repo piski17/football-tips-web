@@ -566,7 +566,7 @@
   .seats { margin: 0 0 18px; font-size: 14.5px; color: var(--muted); }
   .seats b { color: var(--text); }
   .seats[hidden] { display: none; }
-  /* Miesta na sezónu: každé miesto jeden štvorček (zlatý = obsadené) */
+  /* Miesta na 6 mesiacov: každé miesto jeden štvorček (zlatý = obsadené) */
   .seat-grid { display: grid; grid-template-columns: repeat(var(--cols, 15), minmax(0, 1fr)); gap: 5px; margin-top: 12px; }
   .seat-grid[hidden] { display: none; }
   .seat-grid i { aspect-ratio: 1; border-radius: 4px; box-shadow: inset 0 0 0 1px var(--line-2); transition: background .5s var(--ease), box-shadow .5s var(--ease); }
@@ -1154,7 +1154,7 @@ h1, h2, h3 { text-transform: uppercase; letter-spacing: .02em; }
       <div class="term-switch" role="tablist" aria-label="Dĺžka členstva">
         <button type="button" role="tab" data-term="m1" aria-selected="false">1 mesiac</button>
         <button type="button" role="tab" data-term="m3" aria-selected="true">3 mesiace <em>−12&nbsp;%</em></button>
-        <button type="button" role="tab" data-term="season" aria-selected="false">Celá sezóna <em>−24&nbsp;%</em></button>
+        <button type="button" role="tab" data-term="season" aria-selected="false">6 mesiacov <em>−19&nbsp;%</em></button>
       </div>
       <article class="lux glow">
         <div class="lux-head">
@@ -1182,7 +1182,7 @@ h1, h2, h3 { text-transform: uppercase; letter-spacing: .02em; }
           </div>
           <a class="btn" id="memberCta" href="https://t.me/TipRadarAiBot?start=seria" target="_blank" rel="noopener">Zapísať sa do poradovníka</a>
           <p class="pay-note" id="payNote" hidden>Bankovým prevodom cez QR kód · bez poplatkov</p>
-          <p class="small">Bez automatického predlžovania.</p>
+          <p class="small">Bez automatického predlžovania. Cez letnú prestávku (jún – júl) sa členstvo pozastaví a o tento čas sa vám predĺži.</p>
         </div>
       </article>
     </div>
@@ -1210,7 +1210,7 @@ h1, h2, h3 { text-transform: uppercase; letter-spacing: .02em; }
         <details><summary>Čo je zisk v jednotkách a ROI?</summary><p>Jednotka je rovnaká suma na každý tip, napríklad 10 €. Zisk +5 jednotiek pri 10 € na tip je +50 €. ROI hovorí, koľko percent z vložených peňazí sa vrátilo navyše.</p></details>
         <details><summary>Zaručujete výhru?</summary><p>Nie. Žiadny model nevie zaručiť výsledok zápasu. TipRadar vyberá stávky, pri ktorých je šanca podľa štatistík vyššia, než naznačuje kurz. Rozhoduje dlhodobý výsledok, preto zverejňujeme aj prehraté tipy.</p></details>
         <details><summary>Ako overujete, že model funguje?</summary><p>Spätným testom na odohraných zápasoch a mesačnou kontrolou, či tipy s dôverou 70&nbsp;% naozaj vychádzajú zhruba v 70&nbsp;% prípadov. Tipy vyradené pre veľký rozpor s kurzami si zapisujeme a porovnávame, kto mal pravdu.</p></details>
-        <details><summary>Aké dlhé je členstvo?</summary><p>Na 1 mesiac, na 3 mesiace alebo na celú sezónu do 31. 5. 2027. Dlhšie členstvo vychádza lacnejšie na mesiac. Žiadne sa samo nepredlžuje. Pred koncom vám pripomenieme, že končí.</p></details>
+        <details><summary>Aké dlhé je členstvo?</summary><p>Na 1, 3 alebo 6 mesiacov odo dňa, keď sa pridáte. Dlhšie členstvo vychádza lacnejšie na mesiac. Cez letnú prestávku (jún – júl), keď sa takmer nehrá, sa členstvo pozastaví a 1. augusta pokračuje, takže o žiadne zápasy neprídete. Žiadne sa samo nepredlžuje. Pred koncom vám pripomenieme, že končí.</p></details>
         <details><summary>Ako členstvo zruším?</summary><p>Stačí napísať. Členstvo platí do konca zaplateného obdobia a samo sa nepredlžuje.</p></details>
       </div>
     </div>
@@ -1546,7 +1546,7 @@ h1, h2, h3 { text-transform: uppercase; letter-spacing: .02em; }
     const TERMS = {
       m1: { price: 49, unit: "mesačne", name: "členstvo na 1 mesiac", note: "mesačne · bez viazanosti", start: "start", order: 1 },
       m3: { price: 129, unit: "za 3 mesiace", name: "členstvo na 3 mesiace", note: "43 € mesačne · ušetríte 18 €", start: "seria", order: 2 },
-      season: { price: 299, unit: "celá sezóna", name: "členstvo na celú sezónu", note: "do 31. 5. 2027 · 37 € mesačne · ušetríte 93 €", start: "sampion", order: 3 },
+      season: { price: 239, unit: "za 6 mesiacov", name: "členstvo na 6 mesiacov", note: "40 € mesačne · ušetríte 55 €", start: "sampion", order: 3 },
     };
     const $$ = (s) => document.querySelectorAll(s);
     function apply(term) {
@@ -1561,7 +1561,7 @@ h1, h2, h3 { text-transform: uppercase; letter-spacing: .02em; }
       const cta = document.getElementById("memberCta");
       const S = window.__sales || { open: false };
       const seat = (window.__seats || {})[term];
-      // 1 a 3 mesiace sú bez obmedzenia miest (total = null), obmedzená je len celá sezóna
+      // 1 a 3 mesiace sú bez obmedzenia miest (total = null), obmedzených je len 6 mesiacov
       const limited = !!(seat && seat.total != null);
       $$("[data-limit-tag]").forEach((el) => { el.hidden = !seat; if (seat) el.textContent = limited ? `len ${seat.total} miest` : "bez obmedzenia miest"; });
       if (cta) {
@@ -1571,7 +1571,7 @@ h1, h2, h3 { text-transform: uppercase; letter-spacing: .02em; }
         if (pay) cta.removeAttribute("target"); else cta.target = "_blank";
         const note = document.getElementById("payNote");
         if (note) note.hidden = !pay;
-        cta.textContent = pay ? "Zaplatiť " + t.price + " €" : !S.open ? "Zapísať sa do poradovníka" : full ? "Zapísať sa ako náhradník" : term === "season" ? "Rezervovať miesto na sezónu" : term === "m3" ? "Pridať sa na 3 mesiace" : "Pridať sa na mesiac";
+        cta.textContent = pay ? "Zaplatiť " + t.price + " €" : !S.open ? "Zapísať sa do poradovníka" : full ? "Zapísať sa ako náhradník" : term === "season" ? "Rezervovať miesto na 6 mesiacov" : term === "m3" ? "Pridať sa na 3 mesiace" : "Pridať sa na mesiac";
       }
       const seats = document.getElementById("vipSeats");
       if (seats) {
@@ -1581,8 +1581,8 @@ h1, h2, h3 { text-transform: uppercase; letter-spacing: .02em; }
         if (limited) {
           const left = Math.max(0, seat.left);
           $("vipSeatsText").innerHTML = left > 0
-            ? `Zostáva <b class="num">${left} z ${seat.total}</b> miest na celú sezónu${S.open ? "" : " · rezervácie z poradovníka sú započítané"}`
-            : `Všetkých <b class="num">${seat.total}</b> miest na celú sezónu je obsadených`;
+            ? `Zostáva <b class="num">${left} z ${seat.total}</b> miest na 6 mesiacov${S.open ? "" : " · rezervácie z poradovníka sú započítané"}`
+            : `Všetkých <b class="num">${seat.total}</b> miest na 6 mesiacov je obsadených`;
           grid.style.setProperty("--cols", seat.total <= 30 ? 15 : 20);
           grid.innerHTML = Array.from({ length: seat.total }, () => "<i></i>").join("");
           const cells = grid.querySelectorAll("i");
@@ -1592,7 +1592,7 @@ h1, h2, h3 { text-transform: uppercase; letter-spacing: .02em; }
         } else if (seat) {
           const sz = (window.__seats || {}).season;
           const sezona = sz && sz.total != null && sz.left > 0
-            ? `<button type="button" class="to-season" data-go-season>Celá sezóna má len ${sz.total} miest, zostáva ${sz.left} →</button>`
+            ? `<button type="button" class="to-season" data-go-season>6 mesiacov má len ${sz.total} miest, zostáva ${sz.left} →</button>`
             : "";
           $("vipSeatsText").innerHTML = `<div class="open-note">${S.open ? "Pridať sa môžete kedykoľvek, bez čakania na miesto." : "Bez obmedzenia počtu miest, miesto vám nikto nezoberie."}</div>${sezona}`;
           const go = seats.querySelector("[data-go-season]");

@@ -200,7 +200,7 @@ app.get(["/metoda", "/metoda/", "/vysledky", "/vysledky/", "/otazky", "/otazky/"
   res.sendFile(path.join(__dirname, "..", "landing", "index.html"));
 });
 // ---- Platba za členstvo (prevod cez QR kód) – bez hesla ----
-/** Koľko miest na sezónu je obsadených (aktívne členstvo „group", 7 dní tolerancia po splatnosti). */
+/** Koľko miest na 6 mesiacov je obsadených (aktívne členstvo „group", 7 dní tolerancia po splatnosti). */
 async function seasonSeats(): Promise<{ taken: number; total: number; activeVip: Subscriber[] }> {
   const total = SEATS_SEASON;
   const graceMs = 7 * 24 * 60 * 60 * 1000;
@@ -247,8 +247,8 @@ async function freeSeatsLine(): Promise<string | undefined> {
     const s = t.season;
     if (s.total == null || s.left == null) return undefined;
     return s.left > 0
-      ? `🔥 Platinum na celú sezónu: voľných <b>${s.left} z ${s.total}</b> miest`
-      : `🔥 Platinum na celú sezónu: všetkých ${s.total} miest je obsadených`;
+      ? `🔥 Platinum na 6 mesiacov: voľných <b>${s.left} z ${s.total}</b> miest`
+      : `🔥 Platinum na 6 mesiacov: všetkých ${s.total} miest je obsadených`;
   } catch {
     return undefined;
   }
@@ -1122,7 +1122,7 @@ app.delete("/api/tips/:id/slip", async (req, res) => {
 });
 
 // Verejné počítadlo VIP miest (len čísla, žiadne mená). Aktívny VIP = typ „group"
-// s platbou nie viac ako 7 dní po splatnosti. Počet miest: 1 a 3 mesiace bez obmedzenia, sezóna SEATS_SEASON (30).
+// s platbou nie viac ako 7 dní po splatnosti. Počet miest: 1 a 3 mesiace bez obmedzenia, 6 mesiacov SEATS_SEASON (30).
 app.get("/api/public/vip-seats", async (_req, res) => {
   res.set("Access-Control-Allow-Origin", "*");
   try {
