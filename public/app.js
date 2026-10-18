@@ -3001,9 +3001,21 @@ document.getElementById("archiveResolvedBtn").addEventListener("click", () => ar
 
 // Jednorazové upratanie histórie po zmene minimálneho kurzu na 1,60 (18. 10. 2026):
 // zmaže VŠETKY tipy s kurzom pod 1,60 – výhry aj prehry, aby štatistika ostala poctivá.
-// Tikety a tipy bez zadaného kurzu nechá tak.
+// Berie aj skryté tipy. Pri tipe bez zadaného kurzu použije odhad z pravdepodobnosti
+// (rovnaký „~1,43“, aký ukazuje História tipov). Tikety nechá tak.
+function effectiveTipOdds(t) {
+  if (typeof t.odds === "number" && t.odds > 1) return t.odds;
+  return t.probability > 0 ? 100 / t.probability : null;
+}
+
 async function deleteLowOddsTips() {
-  const toDelete = currentHistoryTips.filter((t) => !t.legs && !t.watchOnly && typeof t.odds === "number" && t.odds < 1.6);
+  const toDelete = currentHistoryTips.filter((t) => {
+    if (t.legs || t.watchOnly) return false;
+    const o = effectiveTipOdds(t);
+    return o != null && Math.round(o * 100) / 100 < 1.6;
+  });
+  const estimated = toDelete.filter((t) => !(typeof t.odds === "number" && t.odds > 1)).length;
+  const hidden = toDelete.filter((t) => t.archived).length;
   if (toDelete.length === 0) {
     showToast("Nie sú žiadne tipy s kurzom pod 1,60.");
     return;
@@ -3011,7 +3023,7 @@ async function deleteLowOddsTips() {
   const won = toDelete.filter((t) => t.status === "won").length;
   const lost = toDelete.filter((t) => t.status === "lost").length;
   const ok = window.confirm(
-    `Natrvalo zmazať ${plural(toDelete.length, "tip", "tipy", "tipov")} s kurzom pod 1,60?\n\nVyhraté: ${won} · Prehraté: ${lost} · Ostatné: ${toDelete.length - won - lost}\n\nZmažú sa aj zo štatistík a prezentácie. Táto akcia sa nedá vrátiť späť.`
+    `Natrvalo zmazať ${plural(toDelete.length, "tip", "tipy", "tipov")} s kurzom pod 1,60?\n\nVyhraté: ${won} · Prehraté: ${lost} · Ostatné: ${toDelete.length - won - lost}\nZ toho skrytých: ${hidden} · bez zadaného kurzu (odhad ~): ${estimated}\n\nZmažú sa aj zo štatistík a prezentácie. Táto akcia sa nedá vrátiť späť.`
   );
   if (!ok) return;
   let failed = 0;
