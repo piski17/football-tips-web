@@ -1838,7 +1838,11 @@ function renderTipsList(allTips) {
   // Skryté (archivované) tipy sa v zozname nezobrazujú, ale rátajú sa do štatistík
   // a ostávajú na prezentačnej stránke.
   const archivedCount = tips.filter((t) => t.archived).length;
-  const visible = showArchivedTips ? tips : tips.filter((t) => !t.archived);
+  // Zoradené podľa času zápasu (najnovšie hore) – aj tipy doplnené alebo obnovené dodatočne sedia na správnom mieste.
+  const byMatchTime = (a, b) =>
+    new Date(b.matchDate).getTime() - new Date(a.matchDate).getTime() ||
+    new Date(b.savedAt || 0).getTime() - new Date(a.savedAt || 0).getTime();
+  const visible = (showArchivedTips ? tips : tips.filter((t) => !t.archived)).slice().sort(byMatchTime);
   const archivedBar =
     archivedCount > 0
       ? `<div class="archived-bar">Skrytých tipov: <strong>${archivedCount}</strong> (rátajú sa do štatistík aj na prezentácii) · <button class="link-btn" id="toggleArchivedBtn">${
