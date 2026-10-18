@@ -915,9 +915,28 @@ h2 { font-size: clamp(32px, 3.9vw, 54px) !important; }
 .ns-grid { gap: 4px 14px; }
 .ns-grid b { font-size: 15.5px; }
 .ns-grid small { margin-top: 2px; font-size: 7.5px; letter-spacing: .12em; }
+/* o niečo väčšia, hrubšie písmo (18. 10. 2026) */
+.nstat { gap: 12px; padding: 9px 15px 9px 10px; border-radius: 16px; }
+.ns-ring { width: 68px; height: 68px; }
+.ns-ring b { margin-top: -7px; font: 700 18px/1 "Outfit", "Helvetica Neue", Arial, sans-serif; letter-spacing: -0.02em; }
+.ns-ring b i { font-size: 11px; font-weight: 700; }
+.ns-ring small { bottom: 17px; font-size: 6px; font-weight: 700; }
+.ns-live { font-size: 8.5px; font-weight: 700; }
+.ns-grid { gap: 5px 16px; }
+.ns-grid b { font: 700 16px/1 "Outfit", "Helvetica Neue", Arial, sans-serif; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.ns-grid small { font-size: 8px; font-weight: 700; }
+/* zarovnanie: rovnaké stĺpce, číslo a popis presne pod sebou, nadpis cez celú šírku */
+.ns-body { align-items: stretch; }
+.ns-live { justify-content: center; padding-bottom: 4px; border-bottom: 1px solid rgba(243,230,196,.12); }
+.ns-grid { grid-template-columns: repeat(2, minmax(64px, 1fr)); column-gap: 0; row-gap: 3px; }
+.nstat { padding-top: 7px; padding-bottom: 7px; }
+.ns-body { gap: 4px; }
+.ns-grid > span { align-items: center; text-align: center; padding: 0 8px; }
+.ns-grid > span:nth-child(odd) { border-right: 1px solid rgba(243,230,196,.12); }
+.ns-grid b { display: flex; align-items: baseline; justify-content: center; min-height: 16px; }
 /* počítač: pod ikonkami v lište, pri posune stránky sa schová */
 .nav-right { position: relative; }
-.nstat-nav { position: absolute; right: 0; top: calc(100% + 8px); z-index: 5; }
+.nstat-nav { position: absolute; right: 0; top: calc(100% + 4px); z-index: 5; }
 html.scrolled .nstat-nav { opacity: 0; transform: translateY(-8px); pointer-events: none; }
 .nstat-mob { display: none; }
 @media (max-width: 1100px) {
@@ -1633,7 +1652,8 @@ h2 { font-size: clamp(28px, 3.1vw, 44px) !important; }
           <span><b><span class="w">${won}</span><span class="sl">/</span><span class="l">${lost}</span></b><small>W / L</small></span>
           <span><b class="${roi == null ? "" : roi >= 0 ? "up" : "down"}">${roi == null ? "–" : sgn(roi, roi % 1 ? 1 : 0) + "&nbsp;%"}</b><small>ROI</small></span>
         </span></span>`;
-    ["nstatNav", "nstatMob"].forEach((id) => { const el = document.getElementById(id); if (el) { el.innerHTML = html; el.hidden = false; } });
+    // každá karta vlastné id prechodu farieb, inak skrytá karta „zoberie“ farbu aj tej viditeľnej
+    ["nstatNav", "nstatMob"].forEach((id) => { const el = document.getElementById(id); if (el) { el.innerHTML = html.replace(/nsg/g, "nsg-" + id); el.hidden = false; } });
   }
 
   // ---------- zoznam tipov ----------
