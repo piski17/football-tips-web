@@ -4,29 +4,30 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="dark" />
-<meta name="theme-color" content="#0C0B0A" />
+<meta name="theme-color" content="#1B1510" />
 <title>Ochrana osobných údajov – TipRadar</title>
 <meta name="robots" content="noindex" />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet" />
 <style>
-  html { font-size-adjust: .5; } /* Noto Serif Display + Jost v rovnakej veľkosti ako predtým */
-
-  :root { --bg: #0C0B0A; --rule: #2E2A24; --rule-gold: rgba(217,192,138,.32); --gold: #D9C08A; --gold-hi: #F3E6C4; --text: #F4EEE2; --muted: #BFB6A6; --faint: #8C8476; }
+  /* rovnaké farby a písmo ako tipradar.eu */
+  :root { --bg: #1B1510; --line: rgba(217,192,138,.16); --gold: #D9C08A; --gold-hi: #F3E6C4; --text: #F4EEE2; --muted: #C9BFAE; --faint: #8C8476; --gold-grad: linear-gradient(135deg, #F8EDD3 0%, #E6CF9C 35%, #D9C08A 55%, #B8995E 100%); --panel: linear-gradient(180deg, rgba(48,38,29,.92), rgba(34,27,20,.92)); }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 400 17px/1.7 "Jost", "Helvetica Neue", Arial, sans-serif; border-top: 2px solid var(--gold); -webkit-font-smoothing: antialiased; }
-  .wrap { width: min(760px, 100% - 48px); margin-inline: auto; padding: 56px 0 96px; }
-  @media (max-width: 640px) { .wrap { width: calc(100% - 32px); padding-top: 40px; } }
-  a { color: var(--gold-hi); text-decoration-color: var(--rule-gold); text-underline-offset: 4px; }
-  .back { font-size: 12px; letter-spacing: .2em; text-transform: uppercase; text-decoration: none; color: var(--gold); }
-  h1, h2 { font-family: "Noto Serif Display", Georgia, serif; font-weight: 400; letter-spacing: -0.02em; }
-  h1 { font-size: clamp(36px, 5vw, 52px); line-height: 1.1; margin: 40px 0 8px; }
-  h2 { font-size: 24px; margin: 44px 0 10px; padding-top: 28px; border-top: 1px solid var(--rule); }
+  body { margin: 0; background: radial-gradient(60% 40% at 88% 0%, rgba(217,192,138,.12), transparent 70%), var(--bg); color: var(--text); font: 400 16px/1.7 "Outfit", "Helvetica Neue", Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+  .wrap { width: min(760px, 100% - 48px); margin-inline: auto; padding: 48px 0 80px; }
+  @media (max-width: 640px) { .wrap { width: calc(100% - 32px); padding-top: 32px; } }
+  a { color: var(--gold-hi); text-decoration-color: rgba(217,192,138,.4); text-underline-offset: 4px; }
+  .back { display: inline-block; padding: 7px 14px; border: 1px solid var(--line); border-radius: 999px; font-size: 13px; text-decoration: none; color: var(--muted); }
+  .back:hover { color: var(--gold-hi); border-color: rgba(217,192,138,.4); }
+  h1, h2 { font-family: "Cormorant Garamond", Georgia, serif; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; line-height: 1.1; }
+  h1 { font-size: clamp(30px, 3.4vw, 46px); margin: 28px 0 6px; }
+  h2 { font-size: 22px; margin: 36px 0 10px; padding-top: 24px; border-top: 1px solid var(--line); color: var(--gold-hi); }
   p, li { color: var(--muted); }
   p { margin: 0 0 12px; }
   ul { padding-left: 20px; margin: 0 0 12px; }
+  li::marker { color: var(--gold); }
   strong { color: var(--text); font-weight: 600; }
   .date { font-size: 14px; color: var(--faint); }
 </style>

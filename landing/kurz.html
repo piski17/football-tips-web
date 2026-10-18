@@ -880,6 +880,12 @@ footer .copy { margin-top: 28px !important; }
 /* všetky nadpisy na celom webe veľkými písmenami */
 h1, h2, h3 { text-transform: uppercase; letter-spacing: .02em; }
 .hero h1 { letter-spacing: .01em; }
+/* ===== jednotné veľkosti na celom webe (18. 10. 2026) ===== */
+body { font-size: 16px; }
+.skola-text h2 { font-size: clamp(30px, 3.6vw, 52px) !important; }
+.skola-text p, .skola-text .muted { font-size: 16.5px; }
+.skola-price b { font-size: 56px; }
+@media (max-width: 520px) { .skola-price b { font-size: 48px; } }
 </style>
 </head>
 <body>

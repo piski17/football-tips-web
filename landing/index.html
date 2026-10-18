@@ -873,6 +873,29 @@ h2 { font-size: clamp(32px, 3.9vw, 54px) !important; }
   .lux-price b { font-size: 52px; }
   .payback { padding: 24px 16px 20px; }
 }
+/* ===== jednotné veľkosti na celom webe (18. 10. 2026): rovnaká mierka nadpisov a medzier na všetkých podstránkach ===== */
+body { font-size: 16px; }
+.hero h1 { font-size: clamp(38px, 4.4vw, 64px) !important; }
+h2 { font-size: clamp(28px, 3.1vw, 44px) !important; }
+.split h2, .join h2, .letter h2 { font-size: clamp(26px, 2.5vw, 36px) !important; }
+.finale h2 { font-size: clamp(28px, 3vw, 42px) !important; }
+.page-head { padding: 56px 0 50px; }
+.page-head h1 { font-size: clamp(30px, 3.4vw, 50px) !important; }
+.page-head p { margin-top: 16px; font-size: 17px; }
+.lead, .split > :first-child > p { font-size: 16.5px; }
+.sec { padding: 68px 0; }
+.finale { padding: 76px 0; }
+.letter p { font-size: 16.5px; }
+.letter p:first-of-type { margin: 26px auto 22px; max-width: 34ch; font-size: clamp(19px, 1.9vw, 24px); }
+.lux h3.lux-name { font-size: clamp(40px, 5vw, 58px); }
+.lux-price b { font-size: clamp(44px, 5.4vw, 60px); }
+@media (max-width: 760px) {
+  .page-head { padding: 40px 0 36px; }
+  .page-head p { font-size: 16px; }
+  .sec { padding: 50px 0; }
+  .finale { padding: 56px 0; }
+  .letter p { font-size: 15.5px; }
+}
 </style>
 
 </head>
