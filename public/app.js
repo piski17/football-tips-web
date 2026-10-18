@@ -1542,7 +1542,8 @@ function stakeTierPercent(probability) {
 function renderCalibrationReport(tips) {
   // Tikety vynechávame - ich pravdepodobnosť je kombinovaná naprieč viacerými
   // zápasmi, takže sa nedá zmysluplne porovnať s jedným percentom.
-  const resolved = tips.filter((t) => !t.legs && (t.status === "won" || t.status === "lost"));
+  // Obnovené tipy bez známej dôvery modelu (odhad z kurzu) kalibráciu neskresľujú.
+  const resolved = tips.filter((t) => !t.legs && !t.probabilityEstimated && (t.status === "won" || t.status === "lost"));
 
   if (resolved.length === 0) {
     calibrationResultEl.innerHTML = `<p class="muted small">Zatiaľ nemáš dosť vyhodnotených tipov na kalibráciu.</p>`;
@@ -3040,6 +3041,37 @@ async function deleteLowOddsTips() {
 }
 
 document.getElementById("deleteLowOddsBtn").addEventListener("click", () => deleteLowOddsTips());
+
+// Obnova tipov pod 1,60 z denného súhrnu (/suhrn), ak boli z histórie zmazané.
+async function restoreFromDaily() {
+  try {
+    const preview = await fetchJson("/api/tips/restore-from-daily", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ maxOdds: 1.6, dryRun: true }),
+    });
+    if (!preview.count) {
+      showToast("V dennom súhrne nie sú žiadne vyhodnotené tipy pod 1,60, ktoré by v histórii chýbali.");
+      return;
+    }
+    const sample = preview.tips.slice(0, 8).map((t) => `${t.day} · ${t.match} · ${t.tip} · ${fmtOdds(t.odds)}`).join("\n");
+    const ok = window.confirm(
+      `Vrátiť do histórie ${plural(preview.count, "tip", "tipy", "tipov")} z denného súhrnu?\n\nVyhraté: ${preview.won} · Prehraté: ${preview.lost}\n\n${sample}${preview.count > 8 ? "\n…" : ""}`
+    );
+    if (!ok) return;
+    const done = await fetchJson("/api/tips/restore-from-daily", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ maxOdds: 1.6 }),
+    });
+    showToast(`Obnovené: ${plural(done.count, "tip", "tipy", "tipov")}.`);
+  } catch (err) {
+    showToast(`Obnova zlyhala: ${err.message}`);
+  }
+  openTipsHistory();
+}
+
+document.getElementById("restoreDailyBtn").addEventListener("click", () => restoreFromDaily());
 
 
 // ---- Oprava tipu v histórii (výsledok, kurz, pri tikete výsledky zápasov) ----

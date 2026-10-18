@@ -274,6 +274,9 @@ export interface SavedTip {
   overrideFilter?: boolean;
   /** Tip doplnený ručne po zápase (s výsledkom) - neprechádza automatickým vyhodnotením. */
   manualEntry?: boolean;
+  /** Tip obnovený z denného súhrnu (18. 10. 2026) – dôvera modelu nie je známa, ak nebola v texte tipu. */
+  restoredFromDaily?: boolean;
+  probabilityEstimated?: boolean;
   /** Len sledovať: tip sa vyhodnotí, ale neráta sa do štatistík, nie je na webe a neposiela sa členom. */
   watchOnly?: boolean;
   /** Tip skrytý z histórie tipov - naďalej sa ráta do štatistík a zobrazuje na prezentačnej stránke. */

@@ -1601,6 +1601,80 @@ app.put("/api/daily/:day", async (req, res) => {
   }
 });
 
+// Obnova tipov do Histórie tipov z denného súhrnu (/suhrn) – napr. po zmazaní tipov
+// pod 1,60 (18. 10. 2026). Berie len vyhodnotené tipy (výhra/prehra/vrátené) s kurzom
+// pod maxOdds, ktoré v histórii ešte nie sú. dryRun: len spočíta, nič neuloží.
+function bratislavaIso(day: string, time: string): string {
+  const t = /^\d{1,2}:\d{2}$/.test(time) ? time.padStart(5, "0") : "12:00";
+  const guess = new Date(`${day}T${t}:00Z`);
+  const local = new Date(guess.toLocaleString("en-US", { timeZone: "Europe/Bratislava" }));
+  const utc = new Date(guess.toLocaleString("en-US", { timeZone: "UTC" }));
+  return new Date(guess.getTime() - (local.getTime() - utc.getTime())).toISOString();
+}
+
+app.post("/api/tips/restore-from-daily", async (req, res) => {
+  try {
+    const maxOdds = Number(req.body?.maxOdds) > 1 ? Number(req.body.maxOdds) : 1.6;
+    const dryRun = req.body?.dryRun === true;
+    const days = await getAllDays();
+    const existing = await listTips();
+    const ids = new Set(existing.map((t) => t.id));
+    const norm = (x: string) => x.toLowerCase().normalize("NFD").replace(/[^a-z0-9]/g, "");
+    const existingKeys = new Set(
+      existing.map((t) => `${dayKeySk(new Date(t.matchDate))}|${norm(t.homeTeam ?? "")}|${typeof t.odds === "number" ? t.odds.toFixed(2) : ""}`)
+    );
+    const found: SavedTip[] = [];
+    for (const [day, entry] of Object.entries<any>(days)) {
+      const list: any[] = entry?.state?.tips ?? [];
+      list.forEach((d, i) => {
+        const odds = Number(String(d?.odds ?? "").replace(",", ".").trim());
+        if (!d?.match || !d?.tip || !(odds > 1) || odds >= maxOdds) return;
+        if (!["won", "lost", "void"].includes(d.result)) return;
+        const id = `restored-${day}-${i}`;
+        const parts = String(d.match).split(/\s+(?:—|–|-|vs\.?)\s+/i);
+        const home = (parts[0] ?? d.match).trim();
+        const away = (parts[1] ?? "").trim();
+        const key = `${day}|${norm(home)}|${odds.toFixed(2)}`;
+        if (ids.has(id) || existingKeys.has(key)) return;
+        const text = String(d.tip).trim();
+        const pct = text.match(/(\d{2})\s*%/);
+        const colon = text.indexOf(":");
+        const market = colon > 0 ? text.slice(0, colon).trim() : "Obnovený tip";
+        const selection = (colon > 0 ? text.slice(colon + 1) : text).replace(/·?\s*\d{2}\s*%/, "").trim();
+        const matchDate = bratislavaIso(day, String(d.time ?? ""));
+        found.push({
+          id,
+          fixtureId: 0,
+          leagueId: 0,
+          season: Number(day.slice(0, 4)),
+          leagueName: "",
+          homeTeam: home,
+          awayTeam: away,
+          matchDate,
+          market,
+          selection,
+          probability: pct ? Number(pct[1]) : Math.round(100 / odds),
+          probabilityEstimated: !pct,
+          odds: Math.round(odds * 100) / 100,
+          manualEntry: true,
+          restoredFromDaily: true,
+          savedAt: matchDate,
+          status: d.result,
+        } as SavedTip);
+      });
+    }
+    if (!dryRun) for (const t of found) await saveTip(t);
+    res.json({
+      count: found.length,
+      won: found.filter((t) => t.status === "won").length,
+      lost: found.filter((t) => t.status === "lost").length,
+      tips: found.map((t) => ({ day: dayKeySk(new Date(t.matchDate)), match: `${t.homeTeam} – ${t.awayTeam}`, tip: `${t.market}: ${t.selection}`, odds: t.odds, status: t.status })),
+    });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
 // Jednorazový prenos zo starej verzie na claude.ai – nahrá len dni, ktoré tu ešte nie sú vyplnené.
 app.post("/api/daily/import", async (req, res) => {
   try {
