@@ -389,10 +389,10 @@ const BENEFITS_BASE =
   `• <b>Pri každom tipe</b> kurz, šanca podľa modelu, dôvod a odporúčaná sadzba\n` +
   `• <b>Večerné vyhodnotenie</b> a týždenný prehľad úspešnosti, zisku a ROI`;
 const BENEFIT_CHAT = `• <b>💬 Súkromný VIP chat</b> – na vaše otázky odpisujem priamo ja`;
-const BENEFIT_KURZ = `• <b>📚 Kurz stávkovania zadarmo</b> v hodnote 99 €`;
+const BENEFIT_MENTOR = `• <b>🤝 Mentoring 1 na 1 počas celých 6 mesiacov</b> – osobné stretnutia alebo videohovory priamo so mnou`;
 const PLAN_START = `🟡 <b>Platinum · 1 mesiac</b> – 49 €\n${BENEFITS_BASE}`;
 const PLAN_SERIA = `🔶 <b>Platinum · 3 mesiace</b> – 119 € (namiesto 147 €, ušetríte 28 €)\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
-const PLAN_SAMPION = `🏆 <b>Platinum · 6 mesiacov</b> – 219 € (namiesto 294 €, ušetríte 75 €) · <b>len ${SEATS_SEASON} miest</b>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_KURZ}`;
+const PLAN_SAMPION = `🏆 <b>Platinum · 6 mesiacov</b> – 219 € (namiesto 294 €, ušetríte 75 €) · <b>len ${SEATS_SEASON} miest</b>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_MENTOR}`;
 
 const FAQ_ANSWERS: Record<string, string> = {
   faq_price:
