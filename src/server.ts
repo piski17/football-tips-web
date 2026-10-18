@@ -168,7 +168,7 @@ const LANDING_HOSTS = (process.env.LANDING_HOSTS || "tipradar.eu,www.tipradar.eu
   .filter(Boolean);
 
 // Stará adresa *.onrender.com: návštevníkov stránok trvalo (301) presmerujeme na
-// vlastnú doménu – úvod a video na tipradar.eu, všetko ostatné na app.tipradar.eu.
+// vlastnú doménu – úvod a podstránky na tipradar.eu, všetko ostatné na app.tipradar.eu.
 // API (vrátane Telegram webhooku a synchronizácie Mac appky), /health a POST
 // požiadavky necháme bez zmeny, aby nič neprestalo fungovať.
 app.use((req, res, next) => {
@@ -189,9 +189,9 @@ app.get("/", (req, res, next) => {
   }
   next();
 });
-// Verejná video prezentácia (tipradar.eu/video) – bez hesla, na každej adrese.
+// Video prezentácia bola zrušená – staré odkazy na /video presmeruje na úvod.
 app.get(["/video", "/video/"], (_req, res) => {
-  res.sendFile(path.join(__dirname, "..", "landing", "video.html"));
+  res.redirect(301, "/");
 });
 // Podstránky prezentácie (tipradar.eu/metoda, /vysledky, /otazky, /formular) – bez hesla.
 // Je to ten istý súbor ako úvod, podľa adresy sa v ňom zobrazí iná časť.

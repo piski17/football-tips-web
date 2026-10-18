@@ -1,7 +1,7 @@
 import * as crypto from "crypto";
 import axios from "axios";
 
-// Jednoduchá návštevnosť verejných stránok (tipradar.eu, /video) – bez cookies.
+// Jednoduchá návštevnosť verejných stránok (tipradar.eu, /kurz) – bez cookies.
 // Pre každý deň: počet zobrazení, počet rôznych návštevníkov, odkiaľ prišli
 // a kliknutia na dôležité tlačidlá. Návštevník sa rozlišuje len podľa skráteného
 // odtlačku (IP + prehliadač + dátum), ktorý sa na druhý deň zmení – nikoho nesledujeme.
@@ -41,7 +41,7 @@ export function sourceFrom(referrer: string, utm: string): string {
   return host.slice(0, 40);
 }
 
-const ALLOWED_PAGES = ["/", "/video", "/kurz"];
+const ALLOWED_PAGES = ["/", "/kurz"];
 const ALLOWED_CLICKS = ["free", "premium", "vip", "telegram", "instagram", "email", "kurz", "formular"];
 
 export async function recordHit(input: { page: string; source: string; click?: string; ip: string; ua: string }): Promise<void> {
