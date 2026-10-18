@@ -2999,6 +2999,36 @@ async function archiveAllResolved() {
 
 document.getElementById("archiveResolvedBtn").addEventListener("click", () => archiveAllResolved());
 
+// Jednorazové upratanie histórie po zmene minimálneho kurzu na 1,60 (18. 10. 2026):
+// zmaže VŠETKY tipy s kurzom pod 1,60 – výhry aj prehry, aby štatistika ostala poctivá.
+// Tikety a tipy bez zadaného kurzu nechá tak.
+async function deleteLowOddsTips() {
+  const toDelete = currentHistoryTips.filter((t) => !t.legs && !t.watchOnly && typeof t.odds === "number" && t.odds < 1.6);
+  if (toDelete.length === 0) {
+    showToast("Nie sú žiadne tipy s kurzom pod 1,60.");
+    return;
+  }
+  const won = toDelete.filter((t) => t.status === "won").length;
+  const lost = toDelete.filter((t) => t.status === "lost").length;
+  const ok = window.confirm(
+    `Natrvalo zmazať ${plural(toDelete.length, "tip", "tipy", "tipov")} s kurzom pod 1,60?\n\nVyhraté: ${won} · Prehraté: ${lost} · Ostatné: ${toDelete.length - won - lost}\n\nZmažú sa aj zo štatistík a prezentácie. Táto akcia sa nedá vrátiť späť.`
+  );
+  if (!ok) return;
+  let failed = 0;
+  for (const t of toDelete) {
+    try {
+      const res = await fetch(`/api/tips/${encodeURIComponent(t.id)}`, { method: "DELETE" });
+      if (!res.ok) failed++;
+    } catch {
+      failed++;
+    }
+  }
+  showToast(failed ? `Zmazané, ale ${failed} sa nepodarilo – skús to znova.` : "Tipy s kurzom pod 1,60 sú zmazané.");
+  openTipsHistory();
+}
+
+document.getElementById("deleteLowOddsBtn").addEventListener("click", () => deleteLowOddsTips());
+
 
 // ---- Oprava tipu v histórii (výsledok, kurz, pri tikete výsledky zápasov) ----
 const STATUS_OPTIONS = [
