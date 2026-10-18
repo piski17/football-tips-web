@@ -1614,28 +1614,37 @@ function bratislavaIso(day: string, time: string): string {
 
 app.post("/api/tips/restore-from-daily", async (req, res) => {
   try {
-    const maxOdds = Number(req.body?.maxOdds) > 1 ? Number(req.body.maxOdds) : 1.6;
+    // maxOdds je voliteľné – bez neho vráti všetky chýbajúce tipy bez ohľadu na kurz
+    // (zmazané mohli byť aj tipy, ktoré v histórii nemali kurz a mazalo sa podľa odhadu).
+    const maxOdds = Number(req.body?.maxOdds) > 1 ? Number(req.body.maxOdds) : Infinity;
     const dryRun = req.body?.dryRun === true;
     const days = await getAllDays();
     const existing = await listTips();
     const ids = new Set(existing.map((t) => t.id));
     const norm = (x: string) => x.toLowerCase().normalize("NFD").replace(/[^a-z0-9]/g, "");
-    const existingKeys = new Set(
-      existing.map((t) => `${dayKeySk(new Date(t.matchDate))}|${norm(t.homeTeam ?? "")}|${typeof t.odds === "number" ? t.odds.toFixed(2) : ""}`)
-    );
+    // Tip už v histórii je, ak sedí deň, začiatok mena domácich a kurz (alebo tip v histórii kurz nemá).
+    const already = (day: string, home: string, odds: number) =>
+      existing.some((t) => {
+        if (dayKeySk(new Date(t.matchDate)) !== day) return false;
+        const a = norm(t.homeTeam ?? ""), b = norm(home);
+        if (!a || !b || !(a.startsWith(b.slice(0, 5)) || b.startsWith(a.slice(0, 5)))) return false;
+        return typeof t.odds !== "number" || Math.abs(t.odds - odds) < 0.005;
+      });
     const found: SavedTip[] = [];
+    const skipped = { noResult: 0, badOdds: 0, overMax: 0, inHistory: 0 };
     for (const [day, entry] of Object.entries<any>(days)) {
       const list: any[] = entry?.state?.tips ?? [];
       list.forEach((d, i) => {
-        const odds = Number(String(d?.odds ?? "").replace(",", ".").trim());
-        if (!d?.match || !d?.tip || !(odds > 1) || odds >= maxOdds) return;
-        if (!["won", "lost", "void"].includes(d.result)) return;
+        if (!d?.match || !d?.tip) return;
+        const odds = Number(String(d?.odds ?? "").replace(",", ".").replace(/[^0-9.]/g, ""));
+        if (!(odds > 1)) { skipped.badOdds++; return; }
+        if (!["won", "lost", "void"].includes(d.result)) { skipped.noResult++; return; }
+        if (odds >= maxOdds) { skipped.overMax++; return; }
         const id = `restored-${day}-${i}`;
         const parts = String(d.match).split(/\s+(?:—|–|-|vs\.?)\s+/i);
         const home = (parts[0] ?? d.match).trim();
         const away = (parts[1] ?? "").trim();
-        const key = `${day}|${norm(home)}|${odds.toFixed(2)}`;
-        if (ids.has(id) || existingKeys.has(key)) return;
+        if (ids.has(id) || already(day, home, odds)) { skipped.inHistory++; return; }
         const text = String(d.tip).trim();
         const pct = text.match(/(\d{2})\s*%/);
         const colon = text.indexOf(":");
@@ -1665,6 +1674,7 @@ app.post("/api/tips/restore-from-daily", async (req, res) => {
     }
     if (!dryRun) for (const t of found) await saveTip(t);
     res.json({
+      skipped,
       count: found.length,
       won: found.filter((t) => t.status === "won").length,
       lost: found.filter((t) => t.status === "lost").length,

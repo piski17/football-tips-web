@@ -3042,27 +3042,28 @@ async function deleteLowOddsTips() {
 
 document.getElementById("deleteLowOddsBtn").addEventListener("click", () => deleteLowOddsTips());
 
-// Obnova tipov pod 1,60 z denného súhrnu (/suhrn), ak boli z histórie zmazané.
+// Obnova tipov z denného súhrnu (/suhrn), ktoré v histórii chýbajú (bez ohľadu na kurz).
 async function restoreFromDaily() {
   try {
     const preview = await fetchJson("/api/tips/restore-from-daily", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ maxOdds: 1.6, dryRun: true }),
+      body: JSON.stringify({ dryRun: true }),
     });
     if (!preview.count) {
-      showToast("V dennom súhrne nie sú žiadne vyhodnotené tipy pod 1,60, ktoré by v histórii chýbali.");
+      const sk = preview.skipped || {};
+      showToast(`V histórii nič nechýba. Zo súhrnu: už v histórii ${sk.inHistory || 0}, bez výsledku ${sk.noResult || 0}, bez kurzu ${sk.badOdds || 0}.`);
       return;
     }
     const sample = preview.tips.slice(0, 8).map((t) => `${t.day} · ${t.match} · ${t.tip} · ${fmtOdds(t.odds)}`).join("\n");
     const ok = window.confirm(
-      `Vrátiť do histórie ${plural(preview.count, "tip", "tipy", "tipov")} z denného súhrnu?\n\nVyhraté: ${preview.won} · Prehraté: ${preview.lost}\n\n${sample}${preview.count > 8 ? "\n…" : ""}`
+      `Vrátiť do histórie ${plural(preview.count, "tip", "tipy", "tipov")} z denného súhrnu?\n\nVyhraté: ${preview.won} · Prehraté: ${preview.lost}\nPreskočené – už v histórii: ${preview.skipped?.inHistory ?? 0} · bez výsledku: ${preview.skipped?.noResult ?? 0} · bez kurzu: ${preview.skipped?.badOdds ?? 0}\n\n${sample}${preview.count > 8 ? "\n…" : ""}`
     );
     if (!ok) return;
     const done = await fetchJson("/api/tips/restore-from-daily", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ maxOdds: 1.6 }),
+      body: JSON.stringify({}),
     });
     showToast(`Obnovené: ${plural(done.count, "tip", "tipy", "tipov")}.`);
   } catch (err) {
