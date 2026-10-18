@@ -3040,7 +3040,7 @@ async function deleteLowOddsTips() {
   openTipsHistory();
 }
 
-document.getElementById("deleteLowOddsBtn").addEventListener("click", () => deleteLowOddsTips());
+// Tlačidlo „Zmazať tipy pod 1,60“ je z Histórie tipov odstránené (jednorazové upratanie bolo hotové).
 
 // Obnova tipov z denného súhrnu (/suhrn), ktoré v histórii chýbajú (bez ohľadu na kurz).
 async function restoreFromDaily() {
