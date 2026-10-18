@@ -51,8 +51,8 @@ export function addActiveMonths(from: Date, months: number): Date {
 export type Term = "m1" | "m3" | "season";
 export const PAY_TERMS: Record<Term, { price: number; name: string; months?: number }> = {
   m1: { price: 49, name: "1 mesiac", months: 1 },
-  m3: { price: 129, name: "3 mesiace", months: 3 },
-  season: { price: 239, name: "6 mesiacov", months: 6 },
+  m3: { price: 119, name: "3 mesiace", months: 3 },
+  season: { price: 219, name: "6 mesiacov", months: 6 },
 };
 export function isTerm(v: unknown): v is Term {
   return v === "m1" || v === "m3" || v === "season";

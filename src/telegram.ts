@@ -391,8 +391,8 @@ const BENEFITS_BASE =
 const BENEFIT_CHAT = `• <b>💬 Súkromný VIP chat</b> – na vaše otázky odpisujem priamo ja`;
 const BENEFIT_KURZ = `• <b>📚 Kurz stávkovania zadarmo</b> v hodnote 99 €`;
 const PLAN_START = `🟡 <b>Platinum · 1 mesiac</b> – 49 €\n${BENEFITS_BASE}`;
-const PLAN_SERIA = `🔶 <b>Platinum · 3 mesiace</b> – 129 € (43 € mesačne)\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
-const PLAN_SAMPION = `🏆 <b>Platinum · 6 mesiacov</b> – 239 € (40 € mesačne) · <b>len ${SEATS_SEASON} miest</b>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_KURZ}`;
+const PLAN_SERIA = `🔶 <b>Platinum · 3 mesiace</b> – 119 € (namiesto 147 €, ušetríte 28 €)\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
+const PLAN_SAMPION = `🏆 <b>Platinum · 6 mesiacov</b> – 219 € (namiesto 294 €, ušetríte 75 €) · <b>len ${SEATS_SEASON} miest</b>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_KURZ}`;
 
 const FAQ_ANSWERS: Record<string, string> = {
   faq_price:
@@ -446,7 +446,7 @@ const JOIN_MESSAGES: Record<string, string> = {
   clenstvo: `✨ <b>Členstvo TipRadar</b>\n\n${PLAN_START}\n\n${PLAN_SERIA}\n\n${PLAN_SAMPION}\n\n${NEXT_STEP}`,
   sampion_waitlist:
     `🏆 <b>Platinum na 6 mesiacov – poradovník</b>\n\nVšetkých ${SEATS_SEASON} miest je momentálne obsadených. Váš záujem sme si zapísali – keď sa miesto uvoľní, ozveme sa vám ako prvým.\n\n` +
-    `Dovtedy môžete začať s členstvom Platinum na <b>1 mesiac</b> (49 €) alebo na <b>3 mesiace</b> (129 €) – stačí sem napísať, ktoré chcete.`,
+    `Dovtedy môžete začať s členstvom Platinum na <b>1 mesiac</b> (49 €) alebo na <b>3 mesiace</b> (119 €) – stačí sem napísať, ktoré chcete.`,
 };
 // Staré odkazy (t.me/TipRadarAiBot?start=premium / vip) ešte môžu kolovať – ukážu celé členstvo.
 JOIN_MESSAGES.premium = JOIN_MESSAGES.clenstvo;
@@ -462,8 +462,8 @@ function payKeyboard(chatId: number | string, only?: Term) {
   const row = (t: Term, label: string) => [{ text: label, url: `${PUBLIC_URL}/zaplatit?term=${t}&c=${chatId}` }];
   const all: [Term, string][] = [
     ["m1", "1 mesiac · 49 €"],
-    ["m3", "3 mesiace · 129 € (+ VIP chat)"],
-    ["season", "◆ 6 mesiacov · 239 €"],
+    ["m3", "3 mesiace · 119 € (+ VIP chat)"],
+    ["season", "◆ 6 mesiacov · 219 €"],
   ];
   return { inline_keyboard: all.filter(([t]) => !only || t === only).map(([t, l]) => row(t, only ? `Zaplatiť ${PAY_TERMS[t].price} €` : l)) };
 }

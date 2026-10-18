@@ -1900,7 +1900,7 @@ closeTipsBtn.addEventListener("click", () => {
 // Ceny musia sedieť s PRICES na tipradar.eu (landing/index.html).
 // TipRadar Platinum: jedno členstvo, tri dĺžky (1 a 3 mesiace bez obmedzenia miest, 6 mesiacov 30).
 // 6 mesiacov má kvôli uloženým dátam kód "season" a ukladá sa ako tier "group" – počíta sa do miest.
-const MEMBER_PRICES = { m1: 49, m3: 129, season: 239 };
+const MEMBER_PRICES = { m1: 49, m3: 119, season: 219 };
 const MEMBER_NAME = { m1: "Platinum 1 mesiac", m3: "Platinum 3 mesiace", season: "Platinum 6 mesiacov" };
 const MEMBER_LENGTH_LABEL = { m1: "1 mesiac", m3: "3 mesiace", season: "6 mesiacov" };
 const MEMBER_MONTHS = { m1: 1, m3: 3, season: 6 };

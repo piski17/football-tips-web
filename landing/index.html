@@ -544,6 +544,7 @@
   .lux-price { margin-top: 30px; }
   .lux-price b { font: 800 clamp(64px, 9vw, 92px)/1 var(--sans); letter-spacing: -0.05em; }
   .per-month { margin: 12px 0 0; min-height: 1.4em; color: var(--gold-hi); font-size: 16px; font-weight: 600; }
+  .per-month s { color: var(--muted); font-weight: 500; text-decoration-thickness: 1px; }
   .limit-tag { display: inline-block; margin-top: 18px; padding: 9px 18px; border-radius: 999px; background: rgba(217,192,138,.1); box-shadow: inset 0 0 0 1px var(--line-2); font: 800 12px/1 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--gold-hi); }
   .limit-tag[hidden] { display: none; }
   .lux-rule { display: flex; align-items: center; gap: 16px; margin: 38px 0 8px; font: 800 12px/1 var(--sans); letter-spacing: .24em; text-transform: uppercase; color: var(--gold); }
@@ -1153,8 +1154,8 @@ h1, h2, h3 { text-transform: uppercase; letter-spacing: .02em; }
       </div>
       <div class="term-switch" role="tablist" aria-label="Dĺžka členstva">
         <button type="button" role="tab" data-term="m1" aria-selected="false">1 mesiac</button>
-        <button type="button" role="tab" data-term="m3" aria-selected="true">3 mesiace <em>−12&nbsp;%</em></button>
-        <button type="button" role="tab" data-term="season" aria-selected="false">6 mesiacov <em>−19&nbsp;%</em></button>
+        <button type="button" role="tab" data-term="m3" aria-selected="true">3 mesiace <em>−19&nbsp;%</em></button>
+        <button type="button" role="tab" data-term="season" aria-selected="false">6 mesiacov <em>−26&nbsp;%</em></button>
       </div>
       <article class="lux glow">
         <div class="lux-head">
@@ -1162,8 +1163,8 @@ h1, h2, h3 { text-transform: uppercase; letter-spacing: .02em; }
           <div class="lux-brand">TipRadar</div>
           <h3 class="lux-name plat-text">Platinum</h3>
           <div class="lux-term" data-term-name>členstvo na 3 mesiace</div>
-          <div class="lux-price"><b class="num" data-price>129 €</b></div>
-          <p class="per-month" data-permonth>43 € mesačne · ušetríte 18 €</p>
+          <div class="lux-price"><b class="num" data-price>119 €</b></div>
+          <p class="per-month" data-permonth>namiesto <s>147 €</s> (3 × 49 €) · ušetríte 28 €</p>
           <span class="limit-tag" data-limit-tag hidden>len 50 miest</span>
         </div>
         <div class="lux-rule"><span>V členstve</span></div>
@@ -1545,8 +1546,8 @@ h1, h2, h3 { text-transform: uppercase; letter-spacing: .02em; }
   (function () {
     const TERMS = {
       m1: { price: 49, unit: "mesačne", name: "členstvo na 1 mesiac", note: "mesačne · bez viazanosti", start: "start", order: 1 },
-      m3: { price: 129, unit: "za 3 mesiace", name: "členstvo na 3 mesiace", note: "43 € mesačne · ušetríte 18 €", start: "seria", order: 2 },
-      season: { price: 239, unit: "za 6 mesiacov", name: "členstvo na 6 mesiacov", note: "40 € mesačne · ušetríte 55 €", start: "sampion", order: 3 },
+      m3: { price: 119, unit: "za 3 mesiace", name: "členstvo na 3 mesiace", note: "namiesto <s>147 €</s> (3 × 49 €) · ušetríte 28 €", start: "seria", order: 2 },
+      season: { price: 219, unit: "za 6 mesiacov", name: "členstvo na 6 mesiacov", note: "namiesto <s>294 €</s> (6 × 49 €) · ušetríte 75 €", start: "sampion", order: 3 },
     };
     const $$ = (s) => document.querySelectorAll(s);
     function apply(term) {
