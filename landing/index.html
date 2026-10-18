@@ -873,6 +873,8 @@ h2 { font-size: clamp(32px, 3.9vw, 54px) !important; }
   .lux-price b { font-size: 52px; }
   .payback { padding: 24px 16px 20px; }
 }
+.ledger .d .tm { display: block; margin-top: 2px; font-size: 13px; font-weight: 500; color: var(--faint); }
+@media (max-width: 560px) { .ledger .d .tm { display: inline; margin: 0 0 0 8px; } }
 /* ===== jednotné veľkosti na celom webe (18. 10. 2026): rovnaká mierka nadpisov a medzier na všetkých podstránkach ===== */
 body { font-size: 16px; }
 .hero h1 { font-size: clamp(38px, 4.4vw, 64px) !important; }
@@ -1215,7 +1217,7 @@ h2 { font-size: clamp(28px, 3.1vw, 44px) !important; }
           <button class="tab" data-f="won" aria-pressed="false">Vyšli</button>
           <button class="tab" data-f="lost" aria-pressed="false">Nevyšli</button>
         </div>
-        <div class="ledger-cols"><span>Dátum</span><span>Zápas a tip</span><span>Kurz</span><span>Výsledok</span></div>
+        <div class="ledger-cols"><span>Dátum a čas</span><span>Zápas a tip</span><span>Kurz</span><span>Výsledok</span></div>
         <ul class="ledger" id="list"><li class="empty">Načítavam…</li></ul>
         <div class="pager" id="pager" hidden>
           <span class="num" id="pgInfo"></span>
@@ -1461,7 +1463,7 @@ h2 { font-size: clamp(28px, 3.1vw, 44px) !important; }
   const MONTHS = ["január", "február", "marec", "apríl", "máj", "jún", "júl", "august", "september", "október", "november", "december"];
   const cls = (v) => (v > 0 ? "pos" : v < 0 ? "neg" : "");
   const mqPhone = window.matchMedia("(max-width: 700px)");
-  const row = (r) => `<li><span class="d num">${dayLabel(r.day)}</span><span class="m">${esc(r.match)}<span class="b">${esc(r.bet)}</span></span><span class="o num">${r.odds ? fmt(r.odds, 2) : ""}</span><span class="r ${esc(r.status)}">${RES[r.status] || ""}</span></li>`;
+  const row = (r) => `<li><span class="d num">${dayLabel(r.day)}${r.time ? `<small class="tm">${esc(r.time)}</small>` : ""}</span><span class="m">${esc(r.match)}<span class="b">${esc(r.bet)}</span></span><span class="o num">${r.odds ? fmt(r.odds, 2) : ""}</span><span class="r ${esc(r.status)}">${RES[r.status] || ""}</span></li>`;
   const paintRange = (el) => el.style.setProperty("--fill", ((el.value - el.min) / (el.max - el.min)) * 100 + "%");
 
 

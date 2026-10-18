@@ -870,13 +870,15 @@ app.get("/api/public/track-record", async (_req, res) => {
     // Čakajúce tipy sa nikdy nezverejňujú, tie patria len platiacim klientom.
     const recent = all
       .filter((t) => t.status === "won" || t.status === "lost" || t.status === "void")
-      .map((t) => ({ t, day: tipDayKey(t) ?? "" }))
-      .sort((a, b) => (a.day < b.day ? 1 : a.day > b.day ? -1 : 0))
+      .map((t) => ({ t, day: tipDayKey(t) ?? "", kick: tipKickMs(t) }))
+      // najnovší zápas hore: podľa času výkopu, pri rovnakom čase podľa uloženia
+      .sort((a, b) => b.kick - a.kick || String(b.t.savedAt || "").localeCompare(String(a.t.savedAt || "")))
       .slice(0, 50)
-      .map(({ t, day }) => {
+      .map(({ t, day, kick }) => {
         const isTicket = Array.isArray(t.legs) && t.legs.length > 0;
         return {
           day,
+          time: kick ? timeSk(new Date(kick)) : "",
           match: isTicket
             ? `Tiket (${plural(t.legs!.length, "zápas", "zápasy", "zápasov")})`
             : `${translateTeamName(t.homeTeam)} – ${translateTeamName(t.awayTeam)}`,
@@ -1237,6 +1239,18 @@ function isStrongTipOfDay(tip: SavedTip, all: SavedTip[]): boolean {
 /** Deň (YYYY-MM-DD) podľa slovenského času. */
 function dayKeySk(date: Date): string {
   return new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Bratislava" }).format(date);
+}
+
+/** Čas výkopu v Bratislave, napríklad „20:45“. */
+function timeSk(date: Date): string {
+  return new Intl.DateTimeFormat("sk-SK", { timeZone: "Europe/Bratislava", hour: "2-digit", minute: "2-digit", hour12: false }).format(date);
+}
+
+/** Výkop tipu v ms; pri tikete výkop posledného zápasu. 0, ak dátum chýba. */
+function tipKickMs(t: SavedTip): number {
+  const dates = t.legs && t.legs.length > 0 ? t.legs.map((l) => l.matchDate) : [t.matchDate];
+  const times = dates.map((d) => new Date(d).getTime()).filter((n) => !isNaN(n));
+  return times.length ? Math.max(...times) : 0;
 }
 
 /** Tip patrí k dňu výkopu; tiket k dňu posledného zápasu (vtedy sa dohrá). */
