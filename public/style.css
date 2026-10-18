@@ -1858,3 +1858,194 @@ h1, h2, h3, h4 { font-weight: 700; letter-spacing: 0; }
 
 /* nadpisy veľkými písmenami ako na tipradar.eu (logo a názvy tímov ostávajú) */
 h2:not(.match-header-teams), h3 { text-transform: uppercase; letter-spacing: .02em; }
+
+/* ================================================================
+   LUXUSNÝ VZHĽAD – farby a písmo rovnaké ako tipradar.eu (18. 10. 2026)
+   Teplá onyxová hnedočierna, zlatý prechod, zaoblené karty s jemnou
+   zlatou linkou, text Outfit, nadpisy a čísla Cormorant Garamond.
+   Musí byť na úplnom konci súboru.
+   ================================================================ */
+:root {
+  /* rovnaké hodnoty ako na tipradar.eu (landing/index.html) */
+  --bg: #1B1510;
+  --bg-2: #261D16;
+  --surface: #221A14;
+  --surface-alt: #2C231B;
+  --border: rgba(217, 192, 138, 0.16);
+  --line: rgba(217, 192, 138, 0.32);
+  --accent: #D9C08A;
+  --accent-strong: #F3E6C4;
+  --gold: #D9C08A;
+  --gold-bright: #F3E6C4;
+  --rose-hi: #F3E6C4;
+  --rose-deep: #B8995E;
+  --text: #F4EEE2;
+  --text-muted: #CFC6B6;
+  --faint: #A39A8B;
+  --success: #7FBF9A;
+  --danger: #C0707C;
+  --gold-grad: linear-gradient(135deg, #F8EDD3 0%, #E6CF9C 35%, #D9C08A 55%, #B8995E 100%);
+  --panel: linear-gradient(180deg, rgba(48, 38, 29, 0.92), rgba(34, 27, 20, 0.92));
+  --r: 18px;
+  --r-sm: 12px;
+  --font-body: "Outfit", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --font-display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+}
+html { font-size-adjust: none; }
+html, body { background-color: var(--bg); }
+body {
+  font-family: var(--font-body);
+  color: var(--text);
+  background:
+    radial-gradient(1100px 620px at 88% -8%, rgba(217, 192, 138, 0.13), transparent 62%),
+    radial-gradient(900px 600px at -10% 110%, rgba(184, 153, 94, 0.07), transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
+}
+button, input, select, textarea { font-family: var(--font-body); }
+::selection { background: rgba(217, 192, 138, 0.35); color: #fff; }
+
+/* farby písma ako na webe */
+p, .muted, .small, .disclaimer, .tip-explanation, .field-group label, .member-field, .member-check,
+.fixture-row .time span, .fixture-row .vs, .tip-callout .tip-meta, .market-card .market-label,
+.seat-strip .ss-h, .seat-strip .ss-i small, .seat-strip .ss-i b i { color: var(--text-muted); }
+.text-success { color: var(--success); }
+.text-danger { color: var(--danger); }
+
+/* nadpisy a čísla: Cormorant Garamond ako na webe */
+h1, h2, h3, h4, .brand h1, .column-header h2, .match-header h2, .modal h3, .stat-card h4, .leads-title,
+.tip-callout .tip-outcome, .market-card .market-value, .best-bet-prob, .best-bet-rank,
+.live-score, .fixture-row .time strong, .day-tip-rank, .splash-word {
+  font-family: var(--font-display); font-weight: 600;
+}
+.brand h1 { font-size: 23px; letter-spacing: 0; }
+.column-header h2 { font-size: 22px; letter-spacing: .04em; }
+.match-header h2 { font-size: 34px; letter-spacing: 0; }
+.section-title, .market-breakdown-title, .league-group-header {
+  font-family: var(--font-display); font-weight: 600; text-transform: uppercase;
+  letter-spacing: .1em; font-size: 13px; line-height: 1.5; color: var(--accent);
+}
+
+/* horná lišta: priesvitná so zlatou linkou */
+.topbar {
+  background: rgba(27, 21, 16, 0.78);
+  backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 0 rgba(217, 192, 138, 0.06), 0 18px 40px -30px rgba(0, 0, 0, 0.9);
+}
+.fixture-column { border-right: 1px solid var(--border); background: rgba(20, 15, 11, 0.35); }
+
+/* tlačidlá ako na webe: zlatá „pilulka“ s prechodom / priehľadná so zlatým rámom */
+.btn-primary {
+  background: var(--gold-grad); color: #17130A; border: 1px solid rgba(243, 230, 196, 0.5);
+  border-radius: 999px; font-weight: 600;
+  box-shadow: 0 10px 28px -14px rgba(217, 192, 138, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transition: transform .2s, box-shadow .2s, filter .2s;
+}
+.btn-primary:hover { background: var(--gold-grad); filter: brightness(1.06); box-shadow: 0 14px 34px -14px rgba(217, 192, 138, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.4); }
+.btn-primary:active { transform: translateY(1px); }
+.btn-ghost, .tip-save-btn {
+  border: 1px solid var(--line); border-radius: 999px; color: var(--text);
+  background: rgba(255, 255, 255, 0.02);
+  transition: border-color .2s, background .2s, color .2s;
+}
+.btn-ghost:hover, .tip-save-btn:hover { border-color: var(--accent); background: rgba(217, 192, 138, 0.08); color: var(--accent-strong); }
+.btn-mini, .link-btn, .h2h-toggle { border-radius: 999px; }
+.member-filter button, .member-btn { border-radius: 999px; }
+.member-filter button { background: rgba(255, 255, 255, 0.02); border-color: var(--border); }
+.member-filter button.active { border-color: var(--accent); color: var(--accent-strong); background: rgba(217, 192, 138, 0.1); }
+
+/* polia formulárov */
+.date-input, .custom-league-input, .field-group input, .scorer-select,
+.subscriber-form input, .subscriber-form select, .bankroll-controls input,
+.edit-select, .edit-row input, .bt-fields input, .modal input, .modal select, .modal textarea,
+.analysis-column input[type="text"], .analysis-column input[type="number"], .analysis-column select,
+.member-form input, .member-form select, .manual-tip-form input, .manual-tip-form select {
+  background: rgba(12, 9, 7, 0.45); color: var(--text);
+  border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; min-height: 38px;
+  transition: border-color .2s, box-shadow .2s;
+}
+input::placeholder, textarea::placeholder { color: var(--faint); opacity: 1; }
+.date-input:focus, .custom-league-input:focus, .field-group input:focus, .scorer-select:focus,
+.analysis-column input:focus, .analysis-column select:focus, .modal input:focus, .modal select:focus, .modal textarea:focus,
+.member-form input:focus, .member-form select:focus {
+  outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(217, 192, 138, 0.14);
+}
+select option { background: #261D16; color: var(--text); }
+
+/* zoznam zápasov: zaoblené karty s jemným prechodom */
+.fixture-row {
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--r-sm);
+  transition: border-color .2s, transform .2s, box-shadow .2s;
+}
+.fixture-row:hover { background: var(--panel); border-color: var(--line); transform: translateY(-1px); box-shadow: 0 12px 26px -18px rgba(0, 0, 0, 0.9); }
+.fixture-row.selected {
+  background: linear-gradient(180deg, rgba(64, 50, 34, 0.95), rgba(40, 31, 22, 0.95));
+  border-color: rgba(217, 192, 138, 0.55);
+  box-shadow: 0 0 0 1px rgba(217, 192, 138, 0.18), 0 16px 34px -20px rgba(217, 192, 138, 0.45);
+}
+.fixture-row .time strong { color: var(--accent-strong); font-size: 21px; }
+.league-item { border-radius: 999px; }
+
+/* analýza: karty ako na webe */
+.tip-callout, .stat-card, .market-card, .best-bet-row, .day-tip, .tip-row, .bt-summary,
+.match-locked, .monthly-stat {
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--r-sm);
+  box-shadow: 0 18px 40px -30px rgba(0, 0, 0, 0.9);
+}
+.tip-callout {
+  position: relative; border-radius: var(--r); border: 1px solid var(--line);
+  background:
+    radial-gradient(600px 180px at 0% 0%, rgba(217, 192, 138, 0.12), transparent 70%),
+    var(--panel);
+  box-shadow: inset 0 1px 0 rgba(243, 230, 196, 0.08), 0 24px 50px -32px rgba(0, 0, 0, 0.95);
+}
+.tip-callout .tip-outcome { color: var(--accent-strong); }
+.stat-card h4 { color: var(--text); }
+.market-card .market-value { color: var(--accent-strong); }
+.best-bet-row:first-child { background: linear-gradient(180deg, rgba(64, 50, 34, 0.9), rgba(40, 31, 22, 0.9)); border-color: var(--line); }
+.tip-row:hover { border-color: var(--line); }
+.tip-row.tip-row-won { background: linear-gradient(180deg, rgba(127, 191, 154, 0.08), rgba(34, 27, 20, 0.9)); border-color: rgba(127, 191, 154, 0.32); }
+.tip-row.tip-row-lost { background: linear-gradient(180deg, rgba(192, 112, 124, 0.08), rgba(34, 27, 20, 0.9)); border-color: rgba(192, 112, 124, 0.32); }
+.tip-status, .strong-tip, .member-tag, .override-badge { border-radius: 999px; }
+.form-pill { border-radius: 6px; color: #1B1510; }
+
+/* pruhy pravdepodobnosti: zlatý prechod, zaoblené */
+.prob-bar-track, .market-breakdown-bar, .bt-bar { background: rgba(217, 192, 138, 0.1); border-radius: 999px; overflow: hidden; }
+.prob-bar-fill, .market-breakdown-bar-fill, .bt-bar i, .splash-progress-fill {
+  background: linear-gradient(90deg, #B8995E, #D9C08A 55%, #F3E6C4); border-radius: 999px;
+}
+
+/* odpočet miest v lište */
+.seat-strip { border-radius: 999px; border-color: var(--line); background: rgba(255, 255, 255, 0.02); }
+.seat-strip .ss-h { color: var(--accent); }
+
+/* menu Nástroje, okná, upozornenia */
+.tools-pop {
+  background: linear-gradient(180deg, rgba(48, 38, 29, 0.98), rgba(34, 27, 20, 0.98));
+  border: 1px solid var(--line); border-radius: var(--r-sm); padding: 8px;
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.9);
+}
+.tools-item { border-radius: 8px; }
+.modal-overlay { background: rgba(10, 7, 5, 0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.modal {
+  background: linear-gradient(180deg, rgba(48, 38, 29, 0.98), rgba(30, 23, 17, 0.98));
+  border: 1px solid var(--line); border-radius: var(--r);
+  box-shadow: inset 0 1px 0 rgba(243, 230, 196, 0.08), 0 40px 90px -40px rgba(0, 0, 0, 0.95);
+}
+@media (max-width: 640px) { .modal { border-radius: var(--r) var(--r) 0 0; } }
+.toast { background: var(--surface-alt); border: 1px solid var(--line); border-radius: 999px; }
+.splash-screen { background: radial-gradient(800px 500px at 50% 30%, rgba(217, 192, 138, 0.1), transparent 65%), var(--bg); }
+.skeleton { background: linear-gradient(90deg, rgba(48, 38, 29, 0.6) 25%, rgba(64, 50, 34, 0.75) 50%, rgba(48, 38, 29, 0.6) 75%); background-size: 200% 100%; border-radius: var(--r-sm); }
+
+* { scrollbar-color: rgba(217, 192, 138, 0.25) transparent; }
+::-webkit-scrollbar-thumb { background: rgba(217, 192, 138, 0.25); border-radius: 999px; }
+#lineCalcBox { margin-top: 22px; }
+.shadow-summary:not(:empty) { padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--r-sm); background: rgba(255, 255, 255, 0.02); }
+@media (max-width: 640px) {
+  /* tlačidlá pod tipom: „Uložiť tento tip“ cez celú šírku, ostatné pod ním */
+  div:has(> .save-best-bet-btn) { flex-wrap: wrap; }
+  div:has(> .save-best-bet-btn) > .btn-primary { flex: 1 1 100% !important; }
+  .stat-line:has(#lineupRecalcBtn) { flex-wrap: wrap; }
+  .stat-line:has(#lineupRecalcBtn) > span { flex: 1 1 100% !important; }
+}
