@@ -1685,8 +1685,9 @@ h1, h2, h3 { text-transform: uppercase; letter-spacing: .02em; }
         const svg = document.querySelector(".growth"); if (svg) svg.classList.add("go");
       };
       if ("IntersectionObserver" in window) {
+        // sleduje sa riadok s číslami: celá sekcia je na podstránke /vysledky vysoká, 15 % z nej sa na obrazovku nezmestí
         const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { play(); io.disconnect(); } }, { threshold: 0.15 });
-        io.observe($("vysledky"));
+        io.observe(document.querySelector("#vysledky .figures"));
       } else play();
       let t = `Od začiatku ${n} ${tipsWord(n)}, ${d.won} ${verb(d.won)}.`;
       const m = d.month;
