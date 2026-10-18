@@ -2049,3 +2049,8 @@ select option { background: #261D16; color: var(--text); }
   .stat-line:has(#lineupRecalcBtn) { flex-wrap: wrap; }
   .stat-line:has(#lineupRecalcBtn) > span { flex: 1 1 100% !important; }
 }
+/* horná lišta veľkými písmenami (Tiket, História tipov, Členovia, Platinum, Nástroje) */
+.topbar .btn-ghost, .seat-strip .ss-h, .seat-strip .ss-i small, .seat-strip .ss-i b i {
+  text-transform: uppercase; letter-spacing: .08em;
+}
+.topbar .btn-ghost { font-size: 12.5px; }
