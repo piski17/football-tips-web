@@ -1019,7 +1019,7 @@ export function predictMatch(
   //  - stávkovky k zápasu zatiaľ nemajú kurzy -> vyradiť (hodnota sa nedá overiť;
   //    odhadovaný kurz z dôvery 68 – 80 % by bol vždy len 1,25 – 1,47),
   //  - pod +5 %: tip nemá hodnotu -> vyradiť,
-  //  - kurz pod MIN_ODDS (predvolene 1,60) -> vyradiť,
+  //  - kurz pod MIN_ODDS (predvolene 1,55) -> vyradiť,
   //  - nad +25 % a málo odohraných zápasov v sezóne: model stojí na slabých
   //    dátach a rozdiel oproti trhu je takmer iste jeho chyba -> vyradiť,
   //  - nad +25 % a dát je dosť: tiež vyradiť (rozpor s trhom) -> tichá evidencia,
