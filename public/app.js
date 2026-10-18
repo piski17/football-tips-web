@@ -699,7 +699,6 @@ function renderAnalysis(r) {
     ${matchHasStarted(r.fixture) ? `<div class="match-locked">⏱ ${MATCH_STARTED_TEXT}</div>` : ""}${topBetsHtml}${noBetsHtml}${lowValueHtml}
     <div id="saveTipMsg"></div>
     ${lineCalcHtml(r)}
-    ${possessionHtml(r)}
 
     <div class="prob-section">
       <div class="section-title">Pravdepodobnosť výsledku</div>
@@ -763,7 +762,6 @@ function renderAnalysis(r) {
   initSaveTipButton(r);
   wireTicketButtons(r);
   wireScorerSaveButtons(r);
-  wirePossession(r);
   wireLineCalc(r);
   wireLineupBar(r);
   if (matchHasStarted(r.fixture)) {
@@ -873,7 +871,15 @@ function lineMarketLabel(r, market) {
 
 function lineCalcHtml(r) {
   const models = r.lineModels || [];
-  if (!models.length) return "";
+  const poss = r.possession;
+  if (!models.length && !poss) return "";
+  const h = translateTeamName(r.fixture.homeTeam.name), a = translateTeamName(r.fixture.awayTeam.name);
+  // držanie lopty je v tom istom zozname ako ostatné trhy (hodnota "poss-home" / "poss-away")
+  const possOpts = poss
+    ? [["home", h, poss.expectedHome], ["away", a, 100 - poss.expectedHome]]
+        .map(([side, name, exp]) => `<option value="poss-${side}">Držanie lopty – ${escapeHtml(name)} (čaká ${exp.toFixed(0)} %)</option>`)
+        .join("")
+    : "";
   return `
     <div class="prob-section" id="lineCalcBox">
       <div class="section-title">Výpočet podľa hranice tvojej stávkovky</div>
@@ -881,7 +887,7 @@ function lineCalcHtml(r) {
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
         <select id="lcMarket" aria-label="Trh">${models
           .map((m, i) => `<option value="${i}">${escapeHtml(lineMarketLabel(r, m.market))} (čaká ${fmtNum(m.mean, 1)})</option>`)
-          .join("")}</select>
+          .join("")}${possOpts}</select>
         <input type="text" id="lcLine" inputmode="decimal" placeholder="Hranica, napr. 24,5" style="width:140px" aria-label="Hranica" />
         <input type="text" id="lcOddsOver" inputmode="decimal" placeholder="Kurz „viac ako“" style="width:120px" aria-label="Kurz na viac ako" />
         <input type="text" id="lcOddsUnder" inputmode="decimal" placeholder="Kurz „menej ako“" style="width:130px" aria-label="Kurz na menej ako" />
@@ -893,11 +899,39 @@ function lineCalcHtml(r) {
 
 function wireLineCalc(r) {
   const btn = document.getElementById("lcCalc");
-  if (!btn || !r.lineModels) return;
+  if (!btn) return;
   const out = document.getElementById("lcResult");
+  const sel = document.getElementById("lcMarket");
+  const lineEl = document.getElementById("lcLine"), overEl = document.getElementById("lcOddsOver");
+  const isPoss = () => sel.value.startsWith("poss-");
+  // pri držaní lopty je hranica v % a stávkovky píšu „a viac“
+  const syncHints = () => {
+    lineEl.placeholder = isPoss() ? "Hranica, napr. 55,5" : "Hranica, napr. 24,5";
+    overEl.placeholder = isPoss() ? "Kurz „a viac“" : "Kurz „viac ako“";
+    out.innerHTML = "";
+  };
+  sel.onchange = syncHints;
+  syncHints();
+  const oddOf = (id) => {
+    const v = parseFloat(String(document.getElementById(id).value).replace(",", "."));
+    return v > 1 && v <= 20 ? Math.round(v * 100) / 100 : null;
+  };
+  const calcPossession = (side, line) => {
+    if (!(line > 0 && line < 100)) { out.innerHTML = `<p class="muted small">Zadaj hranicu v %, napr. 55,5.</p>`; return; }
+    const exp = side === "home" ? r.possession.expectedHome : 100 - r.possession.expectedHome;
+    const over = (1 - normCdf((line - exp) / r.possession.sd)) * 100;
+    const teamName = translateTeamName(side === "home" ? r.fixture.homeTeam.name : r.fixture.awayTeam.name);
+    const market = side === "home" ? "Držanie lopty domácich" : "Držanie lopty hostí";
+    const lineTxt = String(line).replace(".", ",");
+    renderCalcRows(out, r, market, [
+      { label: `${teamName} ${lineTxt} % a viac`, selection: `Over ${line}`, probability: over, odds: oddOf("lcOddsOver") },
+      { label: `${teamName} menej ako ${lineTxt} %`, selection: `Under ${line}`, probability: 100 - over, odds: oddOf("lcOddsUnder") },
+    ]);
+  };
   const calc = () => {
-    const m = r.lineModels[Number(document.getElementById("lcMarket").value)];
-    const line = parseFloat(String(document.getElementById("lcLine").value).replace(",", "."));
+    const line = parseFloat(String(lineEl.value).replace(",", "."));
+    if (isPoss()) { if (r.possession) calcPossession(sel.value.slice(5), line); return; }
+    const m = (r.lineModels || [])[Number(sel.value)];
     if (!m) return;
     if (!(line > 0) || Math.abs((line % 1) - 0.5) > 1e-9) {
       out.innerHTML = `<p class="muted small">Zadaj hranicu s ,5 – napr. 24,5.</p>`;
@@ -906,10 +940,6 @@ function wireLineCalc(r) {
     let under = negBinUnder(m.mean, line, m.varRatio) * 100;
     // rovnaká kalibrácia trhu ako pri tipoch modelu (stiahne šancu bližšie k 50 %)
     if (m.calibration < 1) under = 50 + m.calibration * (under - 50);
-    const oddOf = (id) => {
-      const v = parseFloat(String(document.getElementById(id).value).replace(",", "."));
-      return v > 1 && v <= 20 ? Math.round(v * 100) / 100 : null;
-    };
     const name = lineMarketLabel(r, m.market);
     const lineTxt = String(line).replace(".", ",");
     renderCalcRows(out, r, m.market, [
@@ -921,26 +951,6 @@ function wireLineCalc(r) {
   ["lcLine", "lcOddsOver", "lcOddsUnder"].forEach((id) => {
     document.getElementById(id).onkeydown = (e) => { if (e.key === "Enter") calc(); };
   });
-}
-
-function possessionHtml(r) {
-  if (!r.possession) return "";
-  const h = translateTeamName(r.fixture.homeTeam.name), a = translateTeamName(r.fixture.awayTeam.name);
-  const eh = r.possession.expectedHome;
-  return `
-    <div class="prob-section" id="possBox">
-      <div class="section-title">Držanie lopty – výpočet podľa hranice stávkovky</div>
-      <div class="stat-line"><span>Očakávané držanie ${escapeHtml(h)}</span><strong>${eh.toFixed(0)} %</strong></div>
-      <div class="stat-line"><span>Očakávané držanie ${escapeHtml(a)}</span><strong>${(100 - eh).toFixed(0)} %</strong></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center">
-        <select id="possTeam" aria-label="Tím"><option value="home">${escapeHtml(h)}</option><option value="away"${eh < 50 ? " selected" : ""}>${escapeHtml(a)}</option></select>
-        <input type="text" id="possLine" inputmode="decimal" placeholder="Hranica, napr. 55,5" style="width:150px" aria-label="Hranica držania lopty v %" />
-        <input type="text" id="possOddsOver" inputmode="decimal" placeholder="Kurz „a viac“" style="width:120px" aria-label="Kurz na a viac" />
-        <input type="text" id="possOddsUnder" inputmode="decimal" placeholder="Kurz „menej ako“" style="width:130px" aria-label="Kurz na menej ako" />
-        <button type="button" class="btn-ghost" id="possCalc">Vypočítať</button>
-      </div>
-      <div id="possResult" style="margin-top:10px"></div>
-    </div>`;
 }
 
 /**
@@ -1020,36 +1030,6 @@ function renderCalcRows(out, r, market, rows) {
         b.disabled = false;
       }
     };
-  });
-}
-
-function wirePossession(r) {
-  const btn = document.getElementById("possCalc");
-  if (!btn || !r.possession) return;
-  const out = document.getElementById("possResult");
-  const lineEl = document.getElementById("possLine");
-  const calc = () => {
-    const side = document.getElementById("possTeam").value;
-    const line = parseFloat(String(lineEl.value).replace(",", "."));
-    if (!(line > 0 && line < 100)) { out.innerHTML = `<p class="muted small">Zadaj hranicu v %, napr. 55,5.</p>`; return; }
-    const exp = side === "home" ? r.possession.expectedHome : 100 - r.possession.expectedHome;
-    const over = (1 - normCdf((line - exp) / r.possession.sd)) * 100;
-    const teamName = side === "home" ? r.fixture.homeTeam.name : r.fixture.awayTeam.name;
-    const market = side === "home" ? "Držanie lopty domácich" : "Držanie lopty hostí";
-    const lineTxt = String(line).replace(".", ",");
-    const oddOf = (id) => {
-      const v = parseFloat(String(document.getElementById(id).value).replace(",", "."));
-      return v > 1 && v <= 20 ? Math.round(v * 100) / 100 : null;
-    };
-    const rows = [
-      { label: `${translateTeamName(teamName)} ${lineTxt} % a viac`, selection: `Over ${line}`, probability: over, odds: oddOf("possOddsOver") },
-      { label: `${translateTeamName(teamName)} menej ako ${lineTxt} %`, selection: `Under ${line}`, probability: 100 - over, odds: oddOf("possOddsUnder") },
-    ];
-    renderCalcRows(out, r, market, rows);
-  };
-  btn.onclick = calc;
-  ["possLine", "possOddsOver", "possOddsUnder"].forEach((id) => {
-    document.getElementById(id).onkeydown = (e) => { if (e.key === "Enter") calc(); };
   });
 }
 
