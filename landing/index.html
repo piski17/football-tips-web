@@ -815,6 +815,30 @@ footer .copy { margin-top: 28px !important; }
 /* všetky nadpisy na celom webe veľkými písmenami */
 h1, h2, h3 { text-transform: uppercase; letter-spacing: .02em; }
 .hero h1 { letter-spacing: .01em; }
+
+/* ===== kalkulačka návratnosti členstva (pod cenníkom) ===== */
+.payback { max-width: 720px; margin: 28px auto 0; padding: 34px 34px 28px; border-radius: var(--r); border: 1px solid var(--line); background: var(--panel); }
+.payback-head { text-align: center; }
+.payback-head h3 { margin: 6px 0 10px; font-size: clamp(28px, 3.4vw, 40px); }
+.payback-head p { margin: 0 auto; max-width: 520px; color: var(--muted); }
+.payback-stake { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 26px; color: var(--muted); font-weight: 600; }
+.payback-input { display: inline-flex; align-items: center; gap: 8px; padding: 0 16px; height: 52px; border-radius: 999px; border: 1px solid var(--line-2); background: rgba(217,192,138,.06); }
+.payback-input input { width: 90px; border: 0; background: none; color: var(--text); font: 700 20px/1 "Outfit", Arial, sans-serif !important; font-variant-numeric: lining-nums tabular-nums !important; text-align: right; outline: none; }
+.payback-input b { color: var(--gold); font-weight: 700; }
+.payback-chips { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.payback-pct { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 14px; color: var(--muted); font-weight: 600; }
+.payback-stake-out { margin: 14px 0 0; text-align: right; color: var(--gold-hi); font-weight: 600; }
+.payback-chips button { padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--gold-hi); font-weight: 600; cursor: pointer; }
+.payback-chips button[aria-pressed="true"] { background: rgba(217,192,138,.14); border-color: var(--line-2); }
+.payback-rows { margin-top: 22px; border-top: 1px solid var(--line); }
+.payback-row { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; align-items: baseline; padding: 16px 4px; border-bottom: 1px solid var(--line); }
+.payback-row.on { background: rgba(217,192,138,.06); border-radius: 14px; padding-inline: 14px; }
+.payback-row .t { font-weight: 700; color: var(--text); }
+.payback-row .t small { margin-left: 8px; color: var(--faint); font-weight: 600; }
+.payback-row .u { font: 700 30px/1 "Cormorant Garamond", Georgia, serif; color: var(--gold); text-align: right; }
+.payback-row .m { grid-column: 1 / -1; color: var(--muted); font-size: 15px; }
+.payback-note { margin: 16px 0 0; color: var(--faint); font-size: 14px; text-align: center; }
+@media (max-width: 640px) { .payback { padding: 26px 18px 22px; } .payback-stake, .payback-pct { flex-direction: column; align-items: stretch; } .payback-stake-out { text-align: center; } .payback-input { justify-content: flex-end; } .payback-chips { justify-content: center; } }
 </style>
 
 </head>
@@ -1186,6 +1210,26 @@ h1, h2, h3 { text-transform: uppercase; letter-spacing: .02em; }
           <p class="small">Bez automatického predlžovania. Cez letnú prestávku (jún – júl) sa členstvo pozastaví a o tento čas sa vám predĺži.</p>
         </div>
       </article>
+      <div class="payback glow" id="payback">
+        <div class="payback-head">
+          <div class="eyebrow">Kalkulačka</div>
+          <h3>Kedy sa vám členstvo <em>vráti</em></h3>
+          <p>Zadajte svoj bank a koľko percent z neho vsádzate na jeden tip (odporúčame 1 – 3 %, skúsenejší najviac 5 %). Uvidíte, koľko jednotiek zisku treba, aby sa vám cena členstva vrátila.</p>
+        </div>
+        <label class="payback-stake">
+          <span>Váš bank (suma na stávkovanie)</span>
+          <span class="payback-input"><input type="text" inputmode="decimal" id="paybackBank" value="1000" aria-label="Bank v eurách" /><b>€</b></span>
+        </label>
+        <div class="payback-pct">
+          <span>Vklad na jeden tip</span>
+          <div class="payback-chips" role="group" aria-label="Vklad na tip v percentách banku">
+            <button type="button" data-pct="1">1 %</button><button type="button" data-pct="2">2 %</button><button type="button" data-pct="3">3 %</button><button type="button" data-pct="5" title="Pre skúsenejších – najvyšší odporúčaný vklad">5 %</button>
+          </div>
+        </div>
+        <p class="payback-stake-out" id="paybackStakeOut"></p>
+        <div class="payback-rows" id="paybackRows"></div>
+        <p class="payback-note">Jednotka = suma, ktorú vsádzate na jeden tip (bank × percento). Výpočet ukazuje len návratnosť ceny, výhru nezaručuje.</p>
+      </div>
     </div>
   </section>
 
@@ -1542,6 +1586,40 @@ h1, h2, h3 { text-transform: uppercase; letter-spacing: .02em; }
     }
   });
 
+
+  // ---------- kalkulačka návratnosti členstva ----------
+  (function () {
+    const PLANS = [
+      { term: "m1", name: "1 mesiac", price: 49, months: 1 },
+      { term: "m3", name: "3 mesiace", price: 119, months: 3 },
+      { term: "season", name: "6 mesiacov", price: 219, months: 6 },
+    ];
+    const bankEl = document.getElementById("paybackBank");
+    const rows = document.getElementById("paybackRows");
+    const stakeOut = document.getElementById("paybackStakeOut");
+    if (!bankEl || !rows) return;
+    let pct = 2;
+    const f = (n, d) => n.toLocaleString("sk-SK", { minimumFractionDigits: d, maximumFractionDigits: d });
+    const current = () => (document.querySelector('.term-switch [aria-selected="true"]') || {}).dataset?.term || "m3";
+    function draw() {
+      const bank = parseFloat(String(bankEl.value).replace(/\s/g, "").replace(",", ".").replace(/[^0-9.]/g, ""));
+      document.querySelectorAll(".payback-chips [data-pct]").forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.pct) === pct)));
+      if (!(bank > 0)) { stakeOut.textContent = ""; rows.innerHTML = '<p class="payback-note">Zadajte bank, napríklad 1 000 €.</p>'; return; }
+      const stake = (bank * pct) / 100;
+      stakeOut.textContent = `Vklad na tip: ${f(stake, stake % 1 ? 2 : 0)} € (= 1 jednotka)`;
+      const cur = current();
+      rows.innerHTML = PLANS.map((p) => {
+        const units = p.price / stake;
+        const growth = (p.price / bank) * 100;
+        const m = (p.months > 1 ? `približne +${f(units / p.months, 1)} j za mesiac · ` : "") + `bank musí narásť o ${f(growth, 1)} % (${f(p.price, 0)} €)`;
+        return `<div class="payback-row${p.term === cur ? " on" : ""}"><div class="t">${p.name}<small>${p.price} €</small></div><div class="u num">+${f(units, 1)} j</div><div class="m">${m}</div></div>`;
+      }).join("");
+    }
+    bankEl.addEventListener("input", draw);
+    document.querySelectorAll(".payback-chips [data-pct]").forEach((b) => b.addEventListener("click", () => { pct = Number(b.dataset.pct); draw(); }));
+    document.querySelectorAll(".term-switch [data-term]").forEach((b) => b.addEventListener("click", () => setTimeout(draw, 0)));
+    draw();
+  })();
   // ---------- TipRadar Platinum: dĺžka členstva ----------
   (function () {
     const TERMS = {
