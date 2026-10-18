@@ -656,8 +656,6 @@ function renderAnalysis(r) {
     </div>
     <div style="display:flex; gap:8px; margin: 4px 0 8px;">
       <button class="btn-primary save-best-bet-btn" data-bet-idx="${idx}" style="flex:1;">Uložiť tento tip</button>
-      <button class="btn-ghost save-best-bet-btn" data-bet-idx="${idx}" data-watch="1" style="flex:1;" title="Tip sa vyhodnotí, ale nebude v štatistikách, na webe ani v Telegrame">👁 Len sledovať</button>
-      <button class="btn-ghost add-to-ticket-btn" data-bet-idx="${idx}" style="flex:1;">+ Do tiketu</button>
     </div>
   `
     )
@@ -991,7 +989,7 @@ function renderCalcRows(out, r, market, rows) {
       const oddsTxt = x.odds != null ? ` · kurz ${fmtOdds(x.odds)}` : "";
       return `<div class="stat-line"><span>${escapeHtml(x.label)}${oddsTxt}</span><strong>${x.probability.toFixed(0)} %</strong></div>
         ${x.ok
-          ? `<div style="display:flex;gap:8px;margin:4px 0 10px;align-items:center"><span class="muted small" style="flex:1">${info}</span><button type="button" class="btn-primary" data-poss="${i}">Uložiť tento tip</button><button type="button" class="btn-ghost" data-poss="${i}" data-watch="1">👁 Len sledovať</button></div>`
+          ? `<div style="display:flex;gap:8px;margin:4px 0 10px;align-items:center"><span class="muted small" style="flex:1">${info}</span><button type="button" class="btn-primary" data-poss="${i}">Uložiť tento tip</button></div>`
           : `<p class="muted small" style="margin:2px 0 10px">${whyNot(x)}</p>`}`;
     })
     .join("");
@@ -1852,14 +1850,14 @@ function renderTipsList(allTips) {
 
   if (visible.length === 0) {
     tipsListEl.innerHTML =
-      archivedBar + `<p class="empty-state">${tips.length === 0 ? "Zatiaľ nemáš uložené žiadne tipy." : "Všetky tipy sú skryté."}</p>` + watchSectionHtml(watchTips);
+      archivedBar + `<p class="empty-state">${tips.length === 0 ? "Zatiaľ nemáš uložené žiadne tipy." : "Všetky tipy sú skryté."}</p>`;
     if (!watchTips.length) {
       wireArchivedToggle();
       return;
     }
   }
 
-  tipsListEl.innerHTML = archivedBar + visible.map(historyRowHtml).join("") + watchSectionHtml(watchTips);
+  tipsListEl.innerHTML = archivedBar + visible.map(historyRowHtml).join(""); // „Sledované tipy“ sa už nezobrazujú (18. 10. 2026)
 
   wireArchivedToggle();
 
@@ -2747,8 +2745,6 @@ function renderDayTips() {
         </div>
         <div class="day-tip-actions">
           <button class="btn-primary btn-mini" data-save="${i}">Uložiť</button>
-          <button class="btn-ghost btn-mini" data-save="${i}" data-watch="1" title="Tip sa vyhodnotí, ale nebude v štatistikách, na webe ani v Telegrame">👁 Sledovať</button>
-          <button class="btn-ghost btn-mini" data-ticket="${i}">+ Do tiketu</button>
         </div>
       </div>`;
     })
@@ -3138,8 +3134,6 @@ function openEditTip(tip) {
       <label class="edit-row">Kurz <input type="text" id="editOdds" inputmode="decimal" value="${
         typeof tip.odds === "number" && tip.odds > 1 ? String(tip.odds).replace(".", ",") : ""
       }" placeholder="napr. 1,75" /></label>
-      <label class="edit-row" style="justify-content:flex-start;gap:10px;cursor:pointer;"><input type="checkbox" id="editWatch" ${tip.watchOnly ? "checked" : ""} style="width:18px;height:18px;flex:0 0 auto;" /> 👁 Len sledovať</label>
-      <p class="muted small" style="margin:-4px 0 6px;">Sledovaný tip sa neráta do štatistík, nie je na webe a neposiela sa členom.</p>
       <p class="muted small" id="editMsg" style="min-height:1.4em;"></p>
       <div class="modal-actions">
         <button class="btn-ghost" id="editCancelBtn">Zrušiť</button>
@@ -3164,7 +3158,7 @@ function openEditTip(tip) {
       $e("editMsg").textContent = "Kurz musí byť číslo väčšie ako 1 (napr. 1,75), alebo nechaj políčko prázdne.";
       return;
     }
-    const edit = { odds, watchOnly: $e("editWatch").checked };
+    const edit = { odds };
     if (isTicket) edit.legs = legStatuses().map((status) => ({ status }));
     else edit.status = $e("editStatus").value;
     $e("editSaveBtn").disabled = true;

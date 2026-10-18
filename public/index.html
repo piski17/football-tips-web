@@ -65,7 +65,7 @@
         <button class="btn-primary" id="loadFixturesBtn" title="Obnoviť zápasy">↻</button>
       </div>
 
-      <button class="btn-ghost" id="openTicketBtn">Tiket <span id="ticketCount"></span></button>
+      <button class="btn-ghost" id="openTicketBtn" hidden style="display:none">Tiket <span id="ticketCount"></span></button>
       <button class="btn-ghost" id="openTipsBtn">História tipov</button>
       <button class="btn-ghost" id="openSubscribersBtn">Členovia</button>
       <div class="seat-strip" id="seatStrip" hidden title="TipRadar Platinum: počet členov podľa dĺžky členstva (6 mesiacov má najviac 30 miest)">
@@ -251,7 +251,6 @@
           <option>Fauly</option>
           <option>Vyššie držanie lopty</option>
           <option>Strelec gólov</option>
-          <option>Tiket</option>
         </select>
         <input type="text" id="mtSelection" placeholder="Tip, napr. Áno alebo Nad 2,5" />
         <input type="text" id="mtOdds" inputmode="decimal" placeholder="Kurz, napr. 1,67" />
