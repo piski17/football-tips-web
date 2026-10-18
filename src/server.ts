@@ -34,7 +34,7 @@ import {
 } from "./apiClient";
 import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS } from "./predictor";
 import { LeaguePreset, SavedTip } from "./types";
-import { saveTip, listTips, updateTip, deleteTip, clearAllTips } from "./tipsStore";
+import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText } from "./tipsStore";
 import { computeTicketStatus, settleBet, settleFixtureBets, tipHasStartedMatch, MATCH_STARTED_MESSAGE, buildTipEdit } from "./tipEvaluator";
 import {
   sendTipToTelegram,
@@ -1648,8 +1648,10 @@ app.post("/api/tips/restore-from-daily", async (req, res) => {
         const text = String(d.tip).trim();
         const pct = text.match(/(\d{2})\s*%/);
         const colon = text.indexOf(":");
-        const market = colon > 0 ? text.slice(0, colon).trim() : "Obnovený tip";
-        const selection = (colon > 0 ? text.slice(colon + 1) : text).replace(/·?\s*\d{2}\s*%/, "").trim();
+        const clean = text.replace(/·?\s*\d{2}\s*%/, "").trim();
+        const split = colon > 0 ? null : splitMarketText(clean);
+        const market = colon > 0 ? text.slice(0, colon).trim() : split ? split.market : "Obnovený tip";
+        const selection = colon > 0 ? clean.slice(clean.indexOf(":") + 1).trim() : split ? split.selection : clean;
         const matchDate = bratislavaIso(day, String(d.time ?? ""));
         found.push({
           id,

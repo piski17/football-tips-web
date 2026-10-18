@@ -118,8 +118,30 @@ export async function saveTip(tip: SavedTip): Promise<void> {
   });
 }
 
-/** Staršie tipy mali trh pomenovaný "Obaja tímy skórujú" - zobrazujeme správne "Oba tímy skórujú". */
+// Trhy, podľa ktorých sa z voľného textu („Góly hostí pod 1,5“) oddelí trh a výber.
+const KNOWN_MARKETS = [
+  "Strely na bránu domácich", "Strely na bránu hostí", "Strely na bránu", "Držanie lopty domácich", "Držanie lopty hostí",
+  "Vyššie držanie lopty", "Góly domácich", "Góly hostí", "Góly", "Rohy domácich", "Rohy hostí", "Rohy",
+  "Karty domácich", "Karty hostí", "Karty", "Fauly", "Ofsajdy", "Oba tímy skórujú", "Výsledok zápasu",
+  "Dvojšanca", "Strelec gólov",
+];
+
+/** Rozdelí voľný text tipu na trh a výber, ak sa začína známym trhom (inak null). */
+export function splitMarketText(text: string): { market: string; selection: string } | null {
+  const t = text.trim();
+  const m = KNOWN_MARKETS.find((k) => t.toLowerCase().startsWith(k.toLowerCase() + " ") || t.toLowerCase().startsWith(k.toLowerCase() + ":"));
+  if (!m) return null;
+  const rest = t.slice(m.length).replace(/^[:\s]+/, "").trim();
+  return rest ? { market: m, selection: rest.charAt(0).toUpperCase() + rest.slice(1) } : null;
+}
+
+/** Staršie tipy mali trh pomenovaný "Obaja tímy skórujú" - zobrazujeme správne "Oba tímy skórujú".
+ *  Tipy obnovené z denného súhrnu bez trhu („Obnovený tip“) dostanú trh z textu výberu. */
 function normalizeTip(t: SavedTip): SavedTip {
+  if (t.market === "Obnovený tip") {
+    const split = splitMarketText(t.selection);
+    if (split) t = { ...t, ...split };
+  }
   const fix = (m: string) => (m === "Obaja tímy skórujú" ? "Oba tímy skórujú" : m);
   const legs = t.legs ? t.legs.map((l) => ({ ...l, market: fix(l.market) })) : t.legs;
   return { ...t, market: fix(t.market), ...(legs ? { legs } : {}) };
