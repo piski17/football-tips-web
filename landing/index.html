@@ -1160,8 +1160,51 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
   .finale { padding: 80px 0; }
 }
 /* font: … !important vyššie zruší rovnako vysoké číslice, preto ich vrátime */
-#clenstvo .lux-price b, #clenstvo .lux h3.lux-name, .sc-total, .hero.hx h1, h2, .page-head h1 { font-variant-numeric: lining-nums !important; }
+#clenstvo .lux-price b, #clenstvo .lux h3.lux-name, .sc-total, .hero.hx h1, h2, .page-head h1, .yday-date b, .yday-main h3 em { font-variant-numeric: lining-nums !important; }
 @media (max-width: 400px) { #clenstvo .lux-r .term-switch button { font-size: 12.5px; } .hx-live b { font-size: 30px; } }
+
+/* ---- vylepšenia 19. 10. 2026 večer: radar, ikonky, päta ---- */
+.hx-radar { position: absolute; left: 50%; top: 330px; width: min(1180px, 140vw); aspect-ratio: 1; transform: translate(-50%, -50%); opacity: .9; -webkit-mask-image: radial-gradient(closest-side, #000 35%, transparent 72%); mask-image: radial-gradient(closest-side, #000 35%, transparent 72%); }
+.hx-radar i { position: absolute; border-radius: 50%; border: 1px solid rgba(217,192,138,.13); }
+.hx-radar i:nth-child(1) { inset: 0; } .hx-radar i:nth-child(2) { inset: 10%; } .hx-radar i:nth-child(3) { inset: 20%; } .hx-radar i:nth-child(4) { inset: 30%; } .hx-radar i:nth-child(5) { inset: 40%; border-color: rgba(217,192,138,.2); }
+.hx-radar .sw { position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(from 0deg, transparent 0 290deg, rgba(217,192,138,.03) 310deg, rgba(243,230,196,.14) 358deg, rgba(243,230,196,.32) 360deg); animation: spin 9s linear infinite; }
+.hx-radar b { position: absolute; left: var(--x); top: var(--y); width: 7px; height: 7px; margin: -3.5px; border-radius: 50%; background: var(--gold-hi); box-shadow: 0 0 14px 3px rgba(243,230,196,.55); opacity: 0; animation: blip 9s var(--d) infinite; }
+@keyframes blip { 0% { opacity: 0; transform: scale(.4); } 4% { opacity: 1; transform: scale(1.2); } 30% { opacity: 0; transform: scale(1); } 100% { opacity: 0; } }
+.hx-spark .ln { stroke-dasharray: 1; stroke-dashoffset: 1; animation: drawLine 2s .6s var(--ease) forwards; }
+@media (prefers-reduced-motion: reduce) { .hx-radar .sw, .hx-radar b { animation: none; } .hx-spark .ln { stroke-dasharray: none; stroke-dashoffset: 0; animation: none; } }
+
+#ako .sec-head { grid-template-columns: minmax(0, 1fr); text-align: center; justify-items: center; }
+#ako .steps li { text-align: center; padding: 38px 30px 34px; }
+#ako .steps .ic { display: grid; place-items: center; width: 64px; height: 64px; margin: 0 auto; border-radius: 20px; border: 1px solid var(--line-2); background: radial-gradient(circle at 30% 20%, rgba(243,230,196,.16), rgba(217,192,138,.03)); color: var(--gold-hi); box-shadow: 0 10px 30px -12px rgba(217,192,138,.45); }
+#ako .steps .ic svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+#ako .steps .n { display: block; margin-top: 22px; font: 500 12px/1 var(--sans) !important; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); background: none; -webkit-text-fill-color: currentColor; }
+#ako .steps h3 { margin-top: 10px; }
+#ako .more { display: block; width: max-content; margin: 30px auto 0; }
+
+.yday-card { position: relative; overflow: hidden; }
+.yday-card::before { content: ""; position: absolute; left: 0; top: 18%; bottom: 18%; width: 3px; border-radius: 3px; background: var(--gold-grad); }
+.yday-date b { font: 600 52px/1 var(--display) !important; color: var(--gold-hi); }
+.yday-main h3 { font-weight: 600; font-size: 30px; }
+.yday-main h3 em { display: inline-block; margin-left: 12px; padding: 4px 12px; border-radius: 10px; border: 1px solid var(--line-2); font: 600 22px/1 var(--display) !important; font-style: normal; color: var(--gold-hi); -webkit-text-fill-color: var(--gold-hi); background: rgba(217,192,138,.07); vertical-align: middle; }
+.yday-badge { font: 600 14px/1 var(--sans); letter-spacing: .1em; text-transform: uppercase; padding: 14px 22px; box-shadow: 0 0 30px -8px rgba(134,199,161,.45); }
+.yday-badge.lost { box-shadow: 0 0 30px -8px rgba(208,124,136,.45); }
+
+.foot-top { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 28px; padding-bottom: 30px; margin-bottom: 30px; border-bottom: 1px solid var(--line); }
+.foot-top .brand { display: inline-flex; align-items: center; gap: 10px; font-size: 26px; text-decoration: none; color: var(--text); }
+.foot-top .brand svg { width: 34px; height: 34px; }
+.foot-top p { margin: 0; color: var(--muted); font-size: 15px; }
+.foot-social { display: flex; gap: 10px; }
+.foot-social a { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line-2); color: var(--gold-hi); transition: background .25s, border-color .25s; }
+.foot-social a:hover { background: rgba(217,192,138,.1); border-color: var(--gold); }
+.foot-social svg { width: 19px; height: 19px; }
+/* rovnako vysoké číslice aj tu */
+.yday-date b, .yday-main h3 em { font-variant-numeric: lining-nums !important; }
+@media (max-width: 860px) {
+  .hx-radar { top: 270px; width: 900px; }
+  #ako .steps .ic { width: 56px; height: 56px; }
+  .yday-main h3 { font-size: 26px; }
+  .foot-top { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; gap: 16px; }
+}
 </style>
 
 </head>
@@ -1262,7 +1305,7 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
   </header>
 
   <section class="hero hx" data-pages="home">
-    <div class="hx-bg" aria-hidden="true"></div>
+    <div class="hx-bg" aria-hidden="true"><div class="hx-radar"><i></i><i></i><i></i><i></i><i></i><span class="sw"></span><b style="--x:68%;--y:30%;--d:1.2s"></b><b style="--x:27%;--y:62%;--d:4.6s"></b><b style="--x:76%;--y:71%;--d:7.4s"></b></div></div>
     <div class="wrap">
       <span class="hx-pill"><i></i>Tipy podložené dátami</span>
       <h1>Futbal <em>očami dát.</em></h1>
@@ -1305,9 +1348,9 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
       <div class="how">
         <div>
           <ol class="steps">
-            <li class="card"><span class="n">01</span><div><h3>Model prepočíta každý zápas</h3><p>Góly, rohy, karty, strely aj fauly z posledných zápasov oboch tímov. V bežný deň okolo 120 zápasov a 1 200 trhov.</p></div></li>
-            <li class="card"><span class="n">02</span><div><h3>Porovná šancu s kurzom</h3><p>Tip prejde, len keď model vidí vyššiu šancu, než naznačuje kurz stávkovej kancelárie. Väčšina zápasov neprejde.</p></div></li>
-            <li class="card"><span class="n">03</span><div><h3>Tip príde do Telegramu</h3><p>1 – 2 hodiny pred výkopom, večer vyhodnotenie. Výhry aj prehry zverejníme.</p></div></li>
+            <li class="card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 12 18.4 5.6"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/></svg></span><span class="n">Krok 1</span><div><h3>Model prepočíta každý zápas</h3><p>Góly, rohy, karty, strely aj fauly z posledných zápasov oboch tímov. V bežný deň okolo 120 zápasov a 1 200 trhov.</p></div></li>
+            <li class="card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v16M6 20h12M4 8h16"/><path d="M4 8l-2.5 6a3 3 0 0 0 5 0L4 8ZM20 8l-2.5 6a3 3 0 0 0 5 0L20 8Z"/></svg></span><span class="n">Krok 2</span><div><h3>Porovná šancu s kurzom</h3><p>Tip prejde, len keď model vidí vyššiu šancu, než naznačuje kurz stávkovej kancelárie. Väčšina zápasov neprejde.</p></div></li>
+            <li class="card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 4 3 11l6 2 2 6 3-4 5 4 2-15Z"/><path d="m9 13 8-6"/></svg></span><span class="n">Krok 3</span><div><h3>Tip príde do Telegramu</h3><p>1 – 2 hodiny pred výkopom, večer vyhodnotenie. Výhry aj prehry zverejníme.</p></div></li>
           </ol>
           <a class="more" href="/metoda">Celý postup a kalkulačka hodnoty <span aria-hidden="true">→</span></a>
         </div>
@@ -1536,6 +1579,15 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
 
 <footer>
   <div class="wrap">
+    <div class="foot-top">
+      <a class="brand" href="/"><svg aria-hidden="true"><use href="#logo"/></svg>TipRadar</a>
+      <p>Futbal očami dát. Tipy s hodnotou, výhry aj prehry zverejnené.</p>
+      <div class="foot-social">
+        <a href="https://www.instagram.com/tipradar.eu/" target="_blank" rel="noopener" aria-label="Instagram"><svg aria-hidden="true"><use href="#i-ig"/></svg></a>
+        <a href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener" aria-label="Telegram"><svg aria-hidden="true"><use href="#i-tg"/></svg></a>
+        <a href="mailto:info@tipradar.eu" aria-label="E-mail"><svg aria-hidden="true"><use href="#i-mail"/></svg></a>
+      </div>
+    </div>
     <div class="foot-legal">
       <p>TipRadar je analytický nástroj založený na štatistickom modeli, nie stávková kancelária ani finančné poradenstvo. Tipy sú informatívne a nezaručujú výsledok. Minulé výsledky nie sú zárukou budúcich. O tom, či a koľko staviť, rozhodujete vždy vy.</p>
       <p class="rg"><span class="age" aria-label="Len pre osoby staršie ako 18 rokov">18+</span><span>Hrajte zodpovedne a len za peniaze, ktorých stratu si môžete dovoliť. Ak vám stávkovanie prerastá cez hlavu, pomoc a register vylúčených osôb nájdete na <a href="https://www.urhh.sk" target="_blank" rel="noopener">urhh.sk</a>.</span></p>
@@ -1785,15 +1837,17 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
     const box = $("hxLive");
     if (!box || !d || !d.totalResolved) return;
     const pr = d.withOdds > 0 ? d.profit : null;
-    $("hxProfit").textContent = pr == null ? "–" : `${signed(pr, 1)} j.`;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const put = (id, v, dec, f) => { if (v == null) { $(id).textContent = "–"; return; } if (reduce) $(id).textContent = f(v); else countUp($(id), v, dec, f); };
+    put("hxProfit", pr, 1, (v) => `${signed(v, 1)} j.`);
     $("hxProfit").className = "num " + cls(pr || 0);
-    $("hxRate").textContent = d.winRate == null ? "–" : `${d.winRate} %`;
+    put("hxRate", d.winRate, 0, (v) => `${v} %`);
     $("hxRateSub").textContent = `${d.won} z ${d.totalResolved} ${ofTips(d.totalResolved)}`;
-    $("hxRoi").textContent = d.roi == null ? "–" : `${signed(d.roi, 1)} %`;
+    put("hxRoi", d.roi, 1, (v) => `${signed(v, 1)} %`);
     $("hxRoi").className = "num " + cls(d.roi || 0);
     const m = d.month || {};
     const [, mm] = String(m.key || "").split("-").map(Number);
-    $("hxMonth").textContent = m.withOdds > 0 ? `${signed(m.profit, 1)} j.` : "–";
+    put("hxMonth", m.withOdds > 0 ? m.profit : null, 1, (v) => `${signed(v, 1)} j.`);
     $("hxMonth").className = "num " + cls(m.profit || 0);
     $("hxMonthSub").textContent = mm ? `${MONTHS[mm - 1]} · ${m.won || 0} z ${m.totalResolved || 0} vyšlo` : "";
     const pts = (d.timeline && d.timeline.points) || [];
@@ -1803,7 +1857,7 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
       const W = 1000, H = 80, lo = Math.min(0, ...cum), hi = Math.max(0.5, ...cum), span = hi - lo || 1;
       const x = (i) => (i / (cum.length - 1)) * W, y = (v) => 8 + (1 - (v - lo) / span) * (H - 14);
       const dd = cum.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
-      $("hxSpark").innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="hxg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#D9C08A" stop-opacity=".28"/><stop offset="1" stop-color="#D9C08A" stop-opacity="0"/></linearGradient></defs><path d="${dd} L${W},${H} L0,${H} Z" fill="url(#hxg)"/><path d="${dd}" fill="none" stroke="#F3E6C4" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`;
+      $("hxSpark").innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="hxg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#D9C08A" stop-opacity=".28"/><stop offset="1" stop-color="#D9C08A" stop-opacity="0"/></linearGradient></defs><path d="${dd} L${W},${H} L0,${H} Z" fill="url(#hxg)"/><path class="ln" d="${dd}" pathLength="1" fill="none" stroke="#F3E6C4" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`;
     } else $("hxSpark").remove();
     box.hidden = false;
   }
