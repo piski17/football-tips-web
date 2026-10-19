@@ -996,7 +996,7 @@ h2 { font-size: clamp(28px, 3.1vw, 44px) !important; }
 .mon-list .mn small { margin-left: 8px; font-size: 11.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); }
 .mon-list .num { font-family: var(--display); font-weight: 700; }
 .mon-list .w { color: var(--win); } .mon-list .l { color: var(--loss); }
-.mon-list .pos { color: var(--gold-hi); } .mon-list .neg { color: var(--loss); }
+.mon-list .pos { color: var(--win); } .mon-list .neg { color: var(--loss); }
 @media (max-width: 760px) {
   .mon { padding: 24px 18px 20px; } .mon h3 { font-size: 25px; }
   .mon-chart { height: 170px; gap: 6px; } .mon-bar .v { font-size: 11.5px; } .mon-bar .k { font-size: 11px; }
@@ -1012,7 +1012,7 @@ h2 { font-size: clamp(28px, 3.1vw, 44px) !important; }
 .growth-hover::after { content: ""; position: absolute; left: -6px; top: var(--y); width: 12px; height: 12px; margin-top: -6px; border-radius: 50%; background: var(--gold-hi); box-shadow: 0 0 0 4px rgba(243,230,196,.18); }
 .growth-tip { position: absolute; z-index: 5; pointer-events: none; transform: translate(-50%, calc(-100% - 14px)); background: #1B1510; border: 1px solid var(--line-2); border-radius: 12px; padding: 8px 12px; font-size: 13px; line-height: 1.45; white-space: nowrap; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
 .growth-tip b { font-family: var(--display); font-size: 15px; }
-.growth-tip .pos { color: var(--gold-hi); } .growth-tip .neg { color: var(--loss); }
+.growth-tip .pos { color: var(--win); } .growth-tip .neg { color: var(--loss); }
 .growth-hover[hidden], .growth-tip[hidden] { display: none; }
 
 /* =====================================================================
@@ -1084,7 +1084,7 @@ html[data-page="home"] .nstat-nav { display: none !important; }
 .hx-live small { display: block; font: 500 11.5px/1.3 var(--sans); letter-spacing: .16em; text-transform: uppercase; color: var(--faint); }
 .hx-live b { display: block; margin-top: 14px; font: 600 46px/1 var(--display); color: var(--text); white-space: nowrap; }
 .hx-live b.gold { color: transparent; background: var(--gold-grad); -webkit-background-clip: text; background-clip: text; }
-.hx-live b.pos { color: var(--gold-hi); } .hx-live b.neg { color: var(--loss); }
+.hx-live b.pos { color: var(--win); } .hx-live b.neg { color: var(--loss); }
 .hx-live span { display: block; margin-top: 8px; font-size: 13.5px; font-weight: 300; color: var(--muted); }
 .hx-live .hx-spark { grid-column: 1 / -1; padding: 0; height: 80px; border-left: 0 !important; border-top: 1px solid var(--line); }
 .hx-spark svg { display: block; width: 100%; height: 100%; }
@@ -1786,7 +1786,7 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
     if (!box || !d || !d.totalResolved) return;
     const pr = d.withOdds > 0 ? d.profit : null;
     $("hxProfit").textContent = pr == null ? "–" : `${signed(pr, 1)} j.`;
-    $("hxProfit").className = "num " + (pr > 0 ? "gold" : cls(pr || 0));
+    $("hxProfit").className = "num " + cls(pr || 0);
     $("hxRate").textContent = d.winRate == null ? "–" : `${d.winRate} %`;
     $("hxRateSub").textContent = `${d.won} z ${d.totalResolved} ${ofTips(d.totalResolved)}`;
     $("hxRoi").textContent = d.roi == null ? "–" : `${signed(d.roi, 1)} %`;
