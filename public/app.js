@@ -792,6 +792,8 @@ function renderAnalysis(r, root, opts = {}) {
   const lc = r.lineupConfirmed || {};
   const both = lc.home && lc.away;
   const chips = [];
+  // Rozhodcu služba často zverejní až deň pred zápasom – dovtedy model ráta karty a fauly bez neho.
+  if (!referee && !isDone) chips.push(`<span class="st" title="Rozhodcu zvyčajne zverejnia deň pred zápasom alebo v deň zápasu. Potom stačí kliknúť Prepočítať.">Rozhodca zatiaľ nie je známy · karty a fauly bez neho</span>`);
   if (!started) {
     chips.push(both ? `<span class="st g">✓ Potvrdená zostava</span>` : `<span class="st">Zostava ešte nie je zverejnená</span>`);
     const mins = Math.round((kick.getTime() - Date.now()) / 60000);
