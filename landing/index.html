@@ -1211,37 +1211,18 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
 }
 
 /* dnešný tip zadarmo + ukážka Telegramu pri krokoch */
-.ftip { padding: 20px 0 0; }
-.ftip[hidden] { display: none; }
-.ftip-card { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 32px; padding: 30px 34px; border-radius: 22px; border: 1px solid rgba(134,199,161,.35); background: radial-gradient(90% 140% at 0% 0%, rgba(134,199,161,.1), transparent 60%), var(--panel); overflow: hidden; }
-.ftip-tag { display: inline-flex; align-items: center; gap: 9px; font: 600 12px/1 var(--sans); letter-spacing: .16em; text-transform: uppercase; color: var(--win); }
-.ftip-tag i { width: 8px; height: 8px; border-radius: 50%; background: var(--win); box-shadow: 0 0 0 4px rgba(134,199,161,.2); animation: pulse 2.2s ease-in-out infinite; }
-.ftip-lg { margin-top: 12px; font: 500 12px/1.4 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
-.ftip-lg:empty { display: none; }
-.ftip-card h3 { margin-top: 6px; font-size: 30px; font-weight: 600; }
-.ftip-bet { margin-top: 6px; color: var(--muted); font-size: 16.5px; }
-.ftip-bet b { color: var(--text); font-weight: 600; }
-.ftip-meta { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-top: 12px; font-size: 13.5px; color: var(--faint); }
-.ftip-meta b { margin-left: 5px; color: var(--gold-hi); }
-.ftip-r { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; max-width: 260px; }
-.ftip-r small { font-size: 12.5px; color: var(--faint); line-height: 1.45; }
 #ako .how { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, .7fr); gap: 56px; align-items: center; }
 #ako .steps { grid-template-columns: minmax(0, 1fr); gap: 14px; }
 #ako .steps li { display: flex; align-items: flex-start; gap: 22px; text-align: left; padding: 26px 28px; }
 #ako .steps li > .ic { flex: none; margin: 0; }
 #ako .steps li > div { flex: 1; min-width: 0; }
 #ako .steps li .n { margin-top: 2px; }
-.ftip-r .yday-badge[hidden] { display: none; }
 #ako .steps li:hover { transform: translateX(6px); }
 #ako .steps h3 { margin-top: 6px; }
 #ako .more { margin: 22px 0 0; }
 #ako .phone { width: 300px; }
 @media (max-width: 960px) { #ako .how { grid-template-columns: minmax(0, 1fr); gap: 44px; } }
 @media (max-width: 760px) {
-  .ftip-card { grid-template-columns: minmax(0, 1fr); padding: 24px 20px; gap: 20px; }
-  .ftip-card h3 { font-size: 26px; }
-  .ftip-r { max-width: none; }
-  .ftip-r .btn { width: 100%; }
   #ako .steps li { gap: 16px; padding: 22px 20px; }
   #ako .steps .ic { width: 52px; height: 52px; border-radius: 16px; }
 }
@@ -1374,25 +1355,6 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
           <div class="meta" id="ydMeta"></div>
         </div>
         <div class="yday-res"><span class="yday-badge" id="ydBadge"></span><a href="/vysledky">Všetky výsledky →</a></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="ftip" id="ftip" data-pages="home" aria-label="Dnešný tip zadarmo" hidden>
-    <div class="wrap">
-      <div class="ftip-card">
-        <div class="ftip-l">
-          <span class="ftip-tag"><i></i><span id="ftLbl">Dnešný tip zadarmo</span></span>
-          <div class="ftip-lg" id="ftLeague"></div>
-          <h3 id="ftMatch"></h3>
-          <p class="ftip-bet" id="ftBet"></p>
-          <div class="ftip-meta" id="ftMeta"></div>
-        </div>
-        <div class="ftip-r">
-          <span class="yday-badge" id="ftBadge" hidden></span>
-          <a class="btn" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener"><svg width="18" height="18" aria-hidden="true"><use href="#i-tg"/></svg>Chcem tipy zadarmo</a>
-          <small>Bezplatný kanál na Telegrame · členovia Platinum dostávajú všetky tipy</small>
-        </div>
       </div>
     </div>
   </section>
@@ -2244,31 +2206,6 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
         b.className = "yday-badge" + (L.status === "lost" ? " lost" : L.status === "void" ? " void" : "");
         b.textContent = L.status === "won" ? "✓ Vyšlo" : L.status === "lost" ? "✗ Nevyšlo" : "↺ Vrátené";
         yd.hidden = false;
-      }
-      // Dnešný tip zadarmo (z bezplatného kanála) – neopakuje sa, ak je to ten istý zápas ako včerajší tip
-      const F = d.freeTip, ft = document.getElementById("ftip");
-      if (ft && F && F.match && !(L && L.match === F.match && L.day === F.day)) {
-        const settledF = F.status === "won" || F.status === "lost" || F.status === "void";
-        const todayKey = new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Bratislava" });
-        $("ftLbl").textContent = F.day === todayKey ? "Dnešný tip zadarmo" : "Tip zadarmo";
-        $("ftLeague").textContent = F.league || "";
-        const kt = F.kickoff ? new Date(F.kickoff).toLocaleTimeString("sk-SK", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Bratislava" }) : "";
-        $("ftMatch").textContent = F.match;
-        const fi = String(F.bet || "").indexOf(": ");
-        $("ftBet").innerHTML = fi > 0 ? `${esc(F.bet.slice(0, fi))}: <b>${esc(F.bet.slice(fi + 2))}</b>` : `<b>${esc(F.bet || "")}</b>`;
-        const fm = [];
-        if (kt) fm.push(`<span>Výkop<b class="num">${kt}</b></span>`);
-        if (F.odds) fm.push(`<span>Kurz<b class="num">${String(Number(F.odds).toFixed(2)).replace(".", ",")}</b></span>`);
-        if (F.probability) fm.push(`<span>Dôvera<b class="num">${F.probability}&nbsp;%</b></span>`);
-        if (F.score) fm.push(`<span>Výsledok<b class="num">${esc(F.score)}</b></span>`);
-        $("ftMeta").innerHTML = fm.join("");
-        const fb = $("ftBadge");
-        if (settledF) {
-          fb.className = "yday-badge" + (F.status === "lost" ? " lost" : F.status === "void" ? " void" : "");
-          fb.textContent = F.status === "won" ? "✓ Vyšlo" : F.status === "lost" ? "✗ Nevyšlo" : "↺ Vrátené";
-          fb.hidden = false;
-        }
-        ft.hidden = false;
       }
       if (!d.totalResolved) { $("month").textContent = "Čísla sa zobrazia po prvých vyhodnotených tipoch."; return; }
       const n = d.totalResolved;
