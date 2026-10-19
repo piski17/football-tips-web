@@ -886,6 +886,23 @@ body { font-size: 16px; }
 .skola-text p, .skola-text .muted { font-size: 16.5px; }
 .skola-price b { font-size: 56px; }
 @media (max-width: 520px) { .skola-price b { font-size: 48px; } }
+
+/* NOVÝ DIZAJN (19. 10. 2026) – rovnaký vzhľad ako úvodná stránka */
+:root { --bg: #120E0A; --bg-2: #1A140F; --line: rgba(217,192,138,.14); --line-2: rgba(217,192,138,.3); --text: #F4EEE2; --muted: #BDB3A2; --faint: #8C8374;
+  --gold-grad: linear-gradient(135deg, #FBF1D8 0%, #E6CF9C 40%, #C9A96A 75%, #A8894F 100%); --panel: linear-gradient(180deg, rgba(255,245,225,.045), rgba(255,245,225,.015));
+  --sans: "Outfit", "Helvetica Neue", Arial, system-ui, sans-serif; --display: "Cormorant Garamond", Georgia, serif; }
+body { background: var(--bg); font-family: var(--sans); }
+p, li { font-weight: 300; }
+h1, h2, h3, .page-head h1, .skola-text h2 { font-family: var(--display); font-weight: 600; text-transform: none; letter-spacing: -0.01em; font-variant-numeric: lining-nums !important; }
+h1 em, h2 em, h3 em { font-style: italic; color: transparent; -webkit-text-fill-color: transparent; background: var(--gold-grad); -webkit-background-clip: text; background-clip: text; padding-right: .06em; }
+.nav { background: rgba(18,14,10,.62); border-bottom: 1px solid var(--line); }
+.nav .menu a { font: 400 14.5px/1 var(--sans); letter-spacing: .02em; text-transform: none; }
+.brand { font-family: var(--display); font-weight: 600; }
+.eyebrow { padding: 0; border: 0; background: none; font: 500 12.5px/1 var(--sans); letter-spacing: .2em; text-transform: uppercase; color: var(--gold); }
+.eyebrow::before { display: none; }
+.btn { font: 600 15.5px/1 var(--sans); background: var(--gold-grad); color: #1A130A; }
+.btn::after { display: none; }
+.btn-ghost { background: transparent; color: var(--gold-hi); box-shadow: inset 0 0 0 1px var(--line-2); }
 </style>
 </head>
 <body>
@@ -905,13 +922,11 @@ body { font-size: 16px; }
   <div class="wrap">
     <a class="brand" href="/"><svg aria-hidden="true"><use href="#logo"/></svg>TipRadar</a>
     <div class="menu">
-      <a href="/metoda">Metóda</a>
       <a href="/vysledky">Výsledky</a>
       <a href="/clenstvo">Členstvo</a>
-      <a href="/o-mne">O mne</a>
-      <a href="/otazky">Otázky</a>
-      <a href="/formular">Formulár</a>
       <a href="/kurz">Kurz</a>
+      <a href="/o-mne">O mne</a>
+      <a href="/formular">Kontakt</a>
     </div>
     <div class="nav-right">
       <div class="nav-social">
@@ -927,12 +942,11 @@ body { font-size: 16px; }
   <div class="wrap">
     <ul class="ov-links">
       <li><a href="/">Úvod</a></li>
-      <li><a href="/metoda">Metóda<small>ako vzniká tip</small></a></li>
       <li><a href="/vysledky">Výsledky<small>všetky tipy</small></a></li>
       <li><a href="/clenstvo">Členstvo<small>Platinum</small></a></li>
+      <li><a href="/kurz">Kurz<small>Škola stávkovania</small></a></li>
       <li><a href="/o-mne">O mne</a></li>
-      <li><a href="/otazky">Otázky</a></li>
-      <li><a href="/formular">Formulár<small>napíšte mi</small></a></li>
+      <li><a href="/formular">Kontakt<small>napíšte mi</small></a></li>
     </ul>
     <div class="ov-foot">
       <a class="btn" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener"><svg width="18" height="18" aria-hidden="true"><use href="#i-tg"/></svg>Telegram komunita</a>

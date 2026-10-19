@@ -1014,6 +1014,154 @@ h2 { font-size: clamp(28px, 3.1vw, 44px) !important; }
 .growth-tip b { font-family: var(--display); font-size: 15px; }
 .growth-tip .pos { color: var(--gold-hi); } .growth-tip .neg { color: var(--loss); }
 .growth-hover[hidden], .growth-tip[hidden] { display: none; }
+
+/* =====================================================================
+   NOVÝ DIZAJN (19. 10. 2026): tmavá + zlatá, Cormorant na nadpisy,
+   Outfit na text, menej sekcií, viac vzduchu. Prepisuje staršie pravidlá.
+   ===================================================================== */
+:root {
+  --bg: #120E0A; --bg-2: #1A140F; --card: #1E1812;
+  --line: rgba(217,192,138,.14); --line-2: rgba(217,192,138,.3);
+  --text: #F4EEE2; --muted: #BDB3A2; --faint: #8C8374; --win: #86C7A1; --loss: #D07C88;
+  --gold-grad: linear-gradient(135deg, #FBF1D8 0%, #E6CF9C 40%, #C9A96A 75%, #A8894F 100%);
+  --panel: linear-gradient(180deg, rgba(255,245,225,.045), rgba(255,245,225,.015));
+  --sans: "Outfit", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --r: 26px; --r-sm: 16px;
+}
+html { font-size-adjust: none; }
+*, *::before, *::after { font-feature-settings: "lnum" 1; }
+body { background: var(--bg); font-family: var(--sans); font-weight: 400; font-size: 17px; line-height: 1.65; }
+button, input, select, textarea { font-family: var(--sans); }
+p, li, .lead, .note, .small { font-weight: 300; }
+strong, b { font-weight: 600; }
+h1, h2, h3, .hero h1, .page-head h1, .skola-text h2, #clenstvo .sec-head h2, #clenstvo h2:first-of-type {
+  font-family: var(--display); font-weight: 600; text-transform: none; letter-spacing: -0.01em; }
+h1 em, h2 em, h3 em, .hero h1 em { font-style: italic; color: transparent; -webkit-text-fill-color: transparent; background: var(--gold-grad); -webkit-background-clip: text; background-clip: text; padding-right: .06em; }
+h2 { font-size: clamp(38px, 4.4vw, 60px) !important; line-height: 1.04; }
+.page-head h1 { font-size: clamp(44px, 5.4vw, 76px) !important; line-height: 1; }
+.eyebrow { padding: 0; border: 0; background: none; margin-bottom: 18px; font: 500 12.5px/1 var(--sans); letter-spacing: .2em; text-transform: uppercase; color: var(--gold); }
+.eyebrow::before { display: none; }
+.idx { display: none !important; }
+
+/* tlačidlá */
+.btn { min-height: 52px; padding: 0 26px; font: 600 15.5px/1 var(--sans); letter-spacing: .01em; background: var(--gold-grad); color: #1A130A; box-shadow: 0 12px 34px -12px rgba(217,192,138,.6), inset 0 1px 0 rgba(255,255,255,.5); }
+.btn::after { display: none; }
+.btn-ghost { background: transparent; color: var(--gold-hi); box-shadow: inset 0 0 0 1px var(--line-2); }
+.btn-ghost:hover { box-shadow: inset 0 0 0 1px var(--gold); }
+
+/* menu */
+.nav { background: rgba(18,14,10,.62); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border-bottom: 1px solid var(--line); }
+.nav .menu a { font: 400 14.5px/1 var(--sans); letter-spacing: .02em; text-transform: none; }
+.brand { font-family: var(--display); font-weight: 600; letter-spacing: .01em; }
+html[data-page="home"] .nstat-nav { display: none !important; }
+
+/* sekcie */
+.sec { padding: 112px 0; }
+.sec-head { margin-bottom: 52px; }
+.sec-head .lead { font-weight: 300; }
+.card { border-radius: var(--r); border-color: var(--line); background: var(--panel); box-shadow: none; }
+.glow::before, .glow::after { display: none !important; }
+.finale { padding: 124px 0; }
+
+/* ---------- úvod ---------- */
+.hero.hx { min-height: 0; display: block; padding: 150px 0 40px; background: none; text-align: center; overflow: hidden; }
+.hero.hx::before { display: none; }
+.hx-bg { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.hx-bg::before { content: ""; position: absolute; left: 50%; top: -320px; width: 1300px; height: 900px; transform: translateX(-50%); background: radial-gradient(closest-side, rgba(217,192,138,.17), transparent 70%); }
+.hx-bg::after { content: ""; position: absolute; inset: 0; background-image: linear-gradient(rgba(217,192,138,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(217,192,138,.045) 1px, transparent 1px); background-size: 72px 72px; -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 22%, #000 30%, transparent 75%); mask-image: radial-gradient(ellipse 70% 60% at 50% 22%, #000 30%, transparent 75%); }
+.hero.hx .wrap { display: block; }
+.hx-pill { display: inline-flex; align-items: center; gap: 10px; padding: 8px 16px; border: 1px solid var(--line-2); border-radius: 999px; background: rgba(217,192,138,.05); font: 500 12.5px/1 var(--sans); letter-spacing: .16em; text-transform: uppercase; color: var(--gold); }
+.hx-pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--win); box-shadow: 0 0 0 4px rgba(134,199,161,.18); }
+.hero.hx h1 { max-width: 12ch; margin: 26px auto 0; font-size: clamp(52px, 7.4vw, 104px) !important; line-height: .98; text-transform: none; animation: rise 1s var(--ease) both; }
+.hx-lead { max-width: 54ch; margin: 26px auto 0; font-size: 19px; font-weight: 300; color: var(--muted); }
+.hx-cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 36px; }
+.hx-live { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); max-width: 1000px; margin: 72px auto 0; border: 1px solid var(--line-2); border-radius: 28px; background: linear-gradient(180deg, rgba(255,245,225,.06), rgba(255,245,225,.015)); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: 0 40px 120px -40px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.06); text-align: left; text-decoration: none; overflow: hidden; transition: border-color .3s, transform .4s var(--ease); }
+.hx-live[hidden] { display: none; }
+.hx-live:hover { border-color: rgba(217,192,138,.5); transform: translateY(-3px); }
+.hx-live > div { padding: 26px 28px; min-width: 0; }
+.hx-live > div + div { border-left: 1px solid var(--line); }
+.hx-live small { display: block; font: 500 11.5px/1.3 var(--sans); letter-spacing: .16em; text-transform: uppercase; color: var(--faint); }
+.hx-live b { display: block; margin-top: 14px; font: 600 46px/1 var(--display); color: var(--text); white-space: nowrap; }
+.hx-live b.gold { color: transparent; background: var(--gold-grad); -webkit-background-clip: text; background-clip: text; }
+.hx-live b.pos { color: var(--gold-hi); } .hx-live b.neg { color: var(--loss); }
+.hx-live span { display: block; margin-top: 8px; font-size: 13.5px; font-weight: 300; color: var(--muted); }
+.hx-live .hx-spark { grid-column: 1 / -1; padding: 0; height: 80px; border-left: 0 !important; border-top: 1px solid var(--line); }
+.hx-spark svg { display: block; width: 100%; height: 100%; }
+
+/* včerajší tip */
+.yday { padding: 56px 0 0; }
+.yday-card { border-radius: 22px; border: 1px solid var(--line); background: var(--panel); box-shadow: none; }
+
+/* tri kroky */
+#ako .how { display: block; }
+#ako .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+#ako .steps li { display: block; padding: 34px 30px 32px; }
+#ako .steps li:hover { transform: translateY(-4px); }
+#ako .steps .n { display: block; font: 600 70px/1 var(--display); background: linear-gradient(180deg, rgba(243,230,196,.65), rgba(243,230,196,0)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+#ako .steps h3 { margin-top: 16px; font-size: 28px; line-height: 1.15; }
+#ako .steps p { font-size: 16px; }
+#ako .more { display: inline-block; margin-top: 26px; color: var(--gold); font-size: 15px; }
+
+/* výsledky */
+html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .month-line { display: none; }
+.showcase { grid-template-columns: minmax(0, 1fr) !important; border-radius: 28px; border-color: var(--line); background: var(--panel); }
+.sc-head h3 { font-size: 28px; }
+.sc-total { font: 600 44px/1 var(--display) !important; }
+.figures > div { border-radius: 22px; }
+.figures b { font-family: var(--display); font-weight: 600; }
+.more-row { text-align: center; }
+
+/* Platinum: jedna široká karta */
+#clenstvo .lux { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); max-width: 1060px; margin: 0 auto; padding: 0; text-align: left; border-radius: 32px; border: 1px solid var(--line-2); background: linear-gradient(135deg, rgba(255,245,225,.06), rgba(255,245,225,.01)); box-shadow: 0 50px 140px -50px rgba(0,0,0,.9); overflow: hidden; }
+#clenstvo .lux::before, #clenstvo .lux::after { display: none; }
+.lux-l { padding: 50px 50px 46px; }
+.lux-r { padding: 46px 44px 40px; border-left: 1px solid var(--line); background: radial-gradient(120% 90% at 100% 0%, rgba(217,192,138,.16), transparent 60%); display: flex; flex-direction: column; }
+.lux-top { display: flex; align-items: center; gap: 12px; }
+.lux-top .lux-crest { width: 34px; height: 34px; margin: 0; }
+.lux-top .lux-brand { margin: 0; font: 500 12.5px/1 var(--sans); letter-spacing: .2em; text-transform: uppercase; color: var(--gold); }
+#clenstvo .lux h3.lux-name { margin: 18px 0 0; font: 600 58px/1 var(--display) !important; letter-spacing: .01em; text-align: left; }
+#clenstvo .lux-list { margin: 30px 0 0; text-align: left; }
+#clenstvo .lux-list li { font-size: 16px; }
+#clenstvo .lux-list li span { font-weight: 300; }
+#clenstvo .lux-r .term-switch { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin: 0; padding: 4px; width: auto; border-radius: 999px; border: 1px solid var(--line); background: rgba(0,0,0,.18); }
+#clenstvo .lux-r .term-switch button { min-height: 40px; padding: 0 6px; font: 500 13.5px/1.1 var(--sans); border-radius: 999px; white-space: nowrap; }
+#clenstvo .lux-r .term-switch button em { display: none; }
+#clenstvo .lux-r .term-switch [aria-selected="true"] { background: var(--gold-grad); color: #1A130A; font-weight: 600; }
+#clenstvo .lux-term { margin-top: 30px; text-align: left; font: 500 12px/1 var(--sans); letter-spacing: .18em; text-transform: uppercase; color: var(--faint); }
+#clenstvo .lux-price { margin-top: 12px; text-align: left; justify-content: flex-start; }
+#clenstvo .lux-price b { font: 600 84px/1 var(--display) !important; color: transparent; background: var(--gold-grad); -webkit-background-clip: text; background-clip: text; }
+#clenstvo .per-month, #clenstvo .last7 { text-align: left; margin-left: 0; margin-right: 0; }
+#clenstvo .limit-tag { align-self: flex-start; }
+#clenstvo .plan-foot { margin-top: auto; padding-top: 26px; text-align: center; }
+#clenstvo .plan-foot .btn { width: 100%; min-height: 56px; font-size: 16px; }
+#clenstvo .plan-foot .small { font-size: 13px; color: var(--faint); }
+
+/* mobil */
+@media (max-width: 860px) {
+  .sec { padding: 72px 0; }
+  .hero.hx { padding: 108px 0 24px; }
+  .hero.hx h1 { font-size: clamp(46px, 13vw, 64px) !important; }
+  .hx-lead { font-size: 17px; }
+  .hx-live { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 46px; border-radius: 22px; }
+  .hx-live > div { padding: 18px 18px; }
+  .hx-live > div:nth-child(3) { border-left: 0; }
+  .hx-live > div:nth-child(n+3) { border-top: 1px solid var(--line); }
+  .hx-live b { font-size: 34px; }
+  .yday { padding-top: 36px; }
+  #ako .steps { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  #ako .steps li { padding: 24px 22px; }
+  #ako .steps .n { font-size: 50px; }
+  #clenstvo .lux { grid-template-columns: minmax(0, 1fr); border-radius: 24px; }
+  .lux-l, .lux-r { padding: 30px 22px; }
+  .lux-r { border-left: 0; border-top: 1px solid var(--line); }
+  #clenstvo .lux h3.lux-name { font-size: 44px !important; }
+  #clenstvo .lux-price b { font-size: 66px !important; }
+  .finale { padding: 80px 0; }
+}
+/* font: … !important vyššie zruší rovnako vysoké číslice, preto ich vrátime */
+#clenstvo .lux-price b, #clenstvo .lux h3.lux-name, .sc-total, .hero.hx h1, h2, .page-head h1 { font-variant-numeric: lining-nums !important; }
+@media (max-width: 400px) { #clenstvo .lux-r .term-switch button { font-size: 12.5px; } .hx-live b { font-size: 30px; } }
 </style>
 
 </head>
@@ -1034,13 +1182,11 @@ h2 { font-size: clamp(28px, 3.1vw, 44px) !important; }
   <div class="wrap">
     <a class="brand" href="/"><svg aria-hidden="true"><use href="#logo"/></svg>TipRadar</a>
     <div class="menu">
-      <a href="/metoda">Metóda</a>
       <a href="/vysledky">Výsledky</a>
       <a href="/clenstvo">Členstvo</a>
-      <a href="/o-mne">O mne</a>
-      <a href="/otazky">Otázky</a>
-      <a href="/formular">Formulár</a>
       <a href="/kurz">Kurz</a>
+      <a href="/o-mne">O mne</a>
+      <a href="/formular">Kontakt</a>
     </div>
     <div class="nav-right">
       <div class="nav-social">
@@ -1057,12 +1203,11 @@ h2 { font-size: clamp(28px, 3.1vw, 44px) !important; }
   <div class="wrap">
     <ul class="ov-links">
       <li><a href="/">Úvod</a></li>
-      <li><a href="/metoda">Metóda<small>ako vzniká tip</small></a></li>
       <li><a href="/vysledky">Výsledky<small>všetky tipy</small></a></li>
       <li><a href="/clenstvo">Členstvo<small>Platinum</small></a></li>
+      <li><a href="/kurz">Kurz<small>Škola stávkovania</small></a></li>
       <li><a href="/o-mne">O mne</a></li>
-      <li><a href="/otazky">Otázky</a></li>
-      <li><a href="/formular">Formulár<small>napíšte mi</small></a></li>
+      <li><a href="/formular">Kontakt<small>napíšte mi</small></a></li>
     </ul>
     <div class="ov-foot">
       <a class="btn" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener"><svg width="18" height="18" aria-hidden="true"><use href="#i-tg"/></svg>Telegram komunita</a>
@@ -1116,52 +1261,25 @@ h2 { font-size: clamp(28px, 3.1vw, 44px) !important; }
     </div>
   </header>
 
-  <section class="hero" data-pages="home">
-    <div class="hero-rings" aria-hidden="true"><i style="--k:0"></i><i style="--k:1"></i><i style="--k:2"></i><i style="--k:3"></i><i style="--k:4"></i><div class="sweep"></div></div>
+  <section class="hero hx" data-pages="home">
+    <div class="hx-bg" aria-hidden="true"></div>
     <div class="wrap">
-      <div>
-        <a class="nstat nstat-mob" id="nstatMob" href="/vysledky" hidden aria-label="Výsledky TipRadaru"></a>
-        <div class="eyebrow">Komunita športových analýz a štatistického modelu</div>
-        <h1 aria-label="Futbal očami dát."><span class="ln" aria-hidden="true"><span>Futbal</span></span><span class="ln" aria-hidden="true"><span><em>očami dát.</em></span></span></h1>
-        <p class="intro">Náš model denne analyzuje zápasy a porovnáva vypočítané pravdepodobnosti s kurzami stávkových kancelárií. Tip odporučíme iba vtedy, keď kurz nedoceňuje reálnu šancu výsledku, preto ich je obvykle len niekoľko denne. <strong>Všetky vyhodnotené tipy zverejňujeme transparentne, výhry aj prehry.</strong></p>
-        <div class="actions">
-          <a class="btn" href="#clenstvo">Zapísať sa do poradovníka <span class="arr" aria-hidden="true">→</span></a>
-          <a class="btn btn-ghost" href="#vysledky">Pozrieť výsledky</a>
-        </div>
-        <ul class="proof">
-          <li><svg aria-hidden="true"><use href="#i-check"/></svg>Výhry aj prehry zverejnené</li>
-          <li><svg aria-hidden="true"><use href="#i-check"/></svg>Tipy 1 – 2 hodiny pred výkopom</li>
-          <li><svg aria-hidden="true"><use href="#i-check"/></svg>Bez automatického predlžovania</li>
-        </ul>
+      <span class="hx-pill"><i></i>Tipy podložené dátami</span>
+      <h1>Futbal <em>očami dát.</em></h1>
+      <p class="hx-lead">Model každý deň prepočíta stovky zápasov a pošle len tie tipy, kde je šanca vyššia, než ukazuje kurz. Každý výsledok zverejníme, výhry aj prehry.</p>
+      <div class="hx-cta">
+        <a class="btn" href="/clenstvo">Pridať sa do Platinum <span class="arr" aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/vysledky">Pozrieť výsledky</a>
       </div>
-
-      <figure class="duel glow" id="duel" aria-label="Ilustrácia: model porovnáva svoju pravdepodobnosť s kurzom stávkovej kancelárie">
-        <div class="duel-head"><span>Model vs. kancelária</span><span class="duel-live"><i></i>práve porovnáva</span></div>
-        <div class="duel-mkt"><span id="duelCat">Góly v zápase</span><b id="duelLine">Viac ako <em>2,5</em></b></div>
-        <div class="duel-row model">
-          <div class="top"><span>Náš model</span><b class="num" id="duelModel">71&nbsp;%</b></div>
-          <div class="duel-track"><div class="duel-band" title="pásmo dôvery 68–80 %"></div><div class="duel-fill" id="duelModelBar"></div></div>
-        </div>
-        <div class="duel-row book">
-          <div class="top"><span>Kancelária <small id="duelOdds">kurz 1,66</small></span><b class="num" id="duelBook">60&nbsp;%</b></div>
-          <div class="duel-track"><div class="duel-fill" id="duelBookBar"></div></div>
-          <div class="duel-axis"><span>0&nbsp;%</span><em>pásmo dôvery 68–80&nbsp;%</em><span>100&nbsp;%</span></div>
-        </div>
-        <div class="duel-verdict" id="duelVerdict"><span><strong id="duelTitle">Tip odošleme</strong><span id="duelWhy">Model vidí vyššiu šancu, než naznačuje kurz.</span></span><b class="num" id="duelEv">+18&nbsp;%</b></div>
-        <div class="duel-dots" id="duelDots" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></div>
-        <figcaption>Ilustrácia. Väčšina trhov neprejde a vtedy tip nepošleme.</figcaption>
-      </figure>
+      <a class="hx-live" id="hxLive" href="/vysledky" aria-label="Výsledky TipRadaru" hidden>
+        <div><small>Zisk od začiatku</small><b class="num" id="hxProfit">–</b><span>pri rovnakom vklade na tip</span></div>
+        <div><small>Vyšlo</small><b class="num" id="hxRate">–</b><span id="hxRateSub"></span></div>
+        <div><small>ROI</small><b class="num" id="hxRoi">–</b><span>na každý vsadený tip</span></div>
+        <div><small>Tento mesiac</small><b class="num" id="hxMonth">–</b><span id="hxMonthSub"></span></div>
+        <div class="hx-spark" id="hxSpark"></div>
+      </a>
     </div>
-    <span class="scroll-cue" aria-hidden="true"></span>
   </section>
-
-  <div class="marquee" data-pages="home" aria-label="Súťaže, ktoré model sleduje">
-    <div class="marquee-label">Model sleduje 6 najsilnejších súťaží</div>
-    <div class="marquee-track">
-      <span>Premier League<i></i>La Liga<i></i>Serie A<i></i>Bundesliga<i></i>Ligue 1<i></i>Liga majstrov<i></i></span>
-      <span aria-hidden="true">Premier League<i></i>La Liga<i></i>Serie A<i></i>Bundesliga<i></i>Ligue 1<i></i>Liga majstrov<i></i></span>
-    </div>
-  </div>
 
   <section class="yday" id="yday" data-pages="home" aria-label="Posledný vyhodnotený tip" hidden>
     <div class="wrap">
@@ -1192,23 +1310,6 @@ h2 { font-size: clamp(28px, 3.1vw, 44px) !important; }
             <li class="card"><span class="n">03</span><div><h3>Tip príde do Telegramu</h3><p>1 – 2 hodiny pred výkopom, večer vyhodnotenie. Výhry aj prehry zverejníme.</p></div></li>
           </ol>
           <a class="more" href="/metoda">Celý postup a kalkulačka hodnoty <span aria-hidden="true">→</span></a>
-        </div>
-        <div class="how-phone">
-          <figure class="phone" aria-label="Ukážka: takto príde tip do Telegramu">
-            <div class="phone-screen">
-              <div class="tg-top">
-                <svg class="back" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                <svg class="tg-ava" aria-hidden="true"><use href="#logo"/></svg>
-                <div><b>TipRadar členovia</b><small>súkromný kanál</small></div>
-              </div>
-              <div class="tg-body">
-                <span class="tg-day">Dnes</span>
-                <div class="tg-msg anim"><b class="h">🎯 Nový tip</b>⚽ Nórsko — Portugalsko<br />📊 Góly: <b>pod 3,5</b><br />📈 Dôvera: <b>71&nbsp;%</b><br />💰 Kurz: <b>1,72</b><br />💵 Odporúčaná sadzba: <b>2&nbsp;% bankrollu</b><i>ℹ️ Priemerný kurz stávkových kancelárií v čase odoslania.</i><span class="t">18:02</span></div>
-                <div class="tg-msg win anim"><b class="h">✅ VÝHRA</b>⚽ Nórsko — Portugalsko<br />📊 Góly: <b>pod 3,5</b><span class="t">22:41</span></div>
-              </div>
-            </div>
-          </figure>
-          <p class="phone-note">Ilustrácia. Tip príde 1 – 2 hodiny pred výkopom, výsledok večer po zápase.</p>
         </div>
       </div>
     </div>
@@ -1283,13 +1384,6 @@ h2 { font-size: clamp(28px, 3.1vw, 44px) !important; }
           <div id="chWrap"><p class="muted" style="margin-top:10px">Graf sa zobrazí po prvých vyhodnotených tipoch.</p></div>
           <div class="form10" id="form10" hidden><span>Posledných 10 tipov</span><div id="last10"></div></div>
         </div>
-        <div class="stake" id="stake" data-pages="home" hidden>
-          <p class="sc-eyebrow">Keby ste od začiatku stavili na každý tip rovnakú sumu</p>
-          <div class="big num" id="calcResult">–</div>
-          <label for="stakeRange"><span>Stávka na jeden tip</span><b class="num" id="stakeOut">10 €</b></label>
-          <input type="range" id="stakeRange" min="5" max="200" step="5" value="10" />
-          <p class="small" id="calcNote" style="margin-top:12px"></p>
-        </div>
       </div>
 
       <div class="mon-sec" id="mesiace" data-pages="vysledky" hidden>
@@ -1327,31 +1421,30 @@ h2 { font-size: clamp(28px, 3.1vw, 44px) !important; }
         <div><div class="eyebrow">Členstvo</div><h2>Vstúpte do <em>klubu</em></h2>
         <p class="lead" style="margin-inline:auto">Jedno členstvo, všetci členovia dostávajú rovnaké tipy. Vyberte si dĺžku. Čím dlhšie, tým nižšia cena za mesiac a tým viac navyše.</p></div>
       </div>
-      <div class="term-switch" role="tablist" aria-label="Dĺžka členstva">
-        <button type="button" role="tab" data-term="m1" aria-selected="false">1 mesiac</button>
-        <button type="button" role="tab" data-term="m3" aria-selected="true">3 mesiace <em>−19&nbsp;%</em></button>
-        <button type="button" role="tab" data-term="season" aria-selected="false">6 mesiacov <em>−26&nbsp;%</em></button>
-      </div>
       <article class="lux glow">
-        <div class="lux-head">
-          <svg class="lux-crest" aria-hidden="true"><use href="#logo"/></svg>
-          <div class="lux-brand">TipRadar</div>
+        <div class="lux-l">
+          <div class="lux-top"><svg class="lux-crest" aria-hidden="true"><use href="#logo"/></svg><div class="lux-brand">TipRadar</div></div>
           <h3 class="lux-name plat-text">Platinum</h3>
-          <div class="lux-term" data-term-name>členstvo na 3 mesiace</div>
-          <div class="lux-price"><b class="num" data-price>119 €</b></div>
-          <p class="per-month" data-permonth>namiesto <s>147 €</s> (3 × 49 €) · ušetríte 28 €</p>
-          <span class="limit-tag" data-limit-tag hidden>len 50 miest</span>
-        </div>
-        <div class="lux-rule"><span>V členstve</span></div>
-        <ul class="lux-list">
+          <ul class="lux-list">
           <li><strong>Denné tipy na Telegrame</strong><span>v súkromnom kanáli, 1&nbsp;–&nbsp;2&nbsp;hodiny pred výkopom</span></li>
           <li><strong>Všetko podstatné pri každom tipe</strong><span>kurz, šanca podľa modelu, dôvod a&nbsp;odporúčaná sadzba</span></li>
           <li><strong>Večerné vyhodnotenie</strong><span>a týždenný prehľad úspešnosti, zisku a&nbsp;ROI</span></li>
           <li class="plus" data-min-term="m3"><strong>Súkromný VIP chat</strong><span>na vaše otázky odpisujem priamo ja</span></li>
           <li class="plus" data-min-term="season"><strong>Mentoring 1 na 1 počas celých 6 mesiacov</strong><span>osobné stretnutia alebo videohovory priamo so mnou</span></li>
         </ul>
-        <p class="last7" id="last7" hidden></p>
-        <div class="plan-foot">
+        </div>
+        <div class="lux-r">
+      <div class="term-switch" role="tablist" aria-label="Dĺžka členstva">
+        <button type="button" role="tab" data-term="m1" aria-selected="false">1 mesiac</button>
+        <button type="button" role="tab" data-term="m3" aria-selected="true">3 mesiace <em>−19&nbsp;%</em></button>
+        <button type="button" role="tab" data-term="season" aria-selected="false">6 mesiacov <em>−26&nbsp;%</em></button>
+      </div>
+          <div class="lux-term" data-term-name>členstvo na 3 mesiace</div>
+          <div class="lux-price"><b class="num" data-price>119 €</b></div>
+          <p class="per-month" data-permonth>namiesto <s>147 €</s> (3 × 49 €) · ušetríte 28 €</p>
+          <span class="limit-tag" data-limit-tag hidden>len 50 miest</span>
+          <p class="last7" id="last7" hidden></p>
+          <div class="plan-foot">
           <div class="seats" id="vipSeats" hidden>
             <div id="vipSeatsText"></div>
             <div class="seat-grid" id="seatGrid" aria-hidden="true" hidden></div>
@@ -1360,27 +1453,8 @@ h2 { font-size: clamp(28px, 3.1vw, 44px) !important; }
           <p class="pay-note" id="payNote" hidden>Bankovým prevodom cez QR kód · bez poplatkov</p>
           <p class="small">Bez automatického predlžovania. Cez letnú prestávku (jún – júl) sa členstvo pozastaví a o tento čas sa vám predĺži.</p>
         </div>
+        </div>
       </article>
-      <div class="payback glow" id="payback">
-        <div class="payback-head">
-          <div class="eyebrow">Kalkulačka</div>
-          <h3>Kedy sa vám členstvo <em>vráti</em></h3>
-          <p>Zadajte svoj bank a koľko percent z neho vsádzate na jeden tip (odporúčame 1 – 3 %, skúsenejší najviac 5 %). Uvidíte, koľko jednotiek zisku treba, aby sa vám cena členstva vrátila.</p>
-        </div>
-        <label class="payback-stake">
-          <span>Váš bank (suma na stávkovanie)</span>
-          <span class="payback-input"><input type="text" inputmode="decimal" id="paybackBank" value="1000" aria-label="Bank v eurách" /><b>€</b></span>
-        </label>
-        <div class="payback-pct">
-          <span>Vklad na jeden tip</span>
-          <div class="payback-chips" role="group" aria-label="Vklad na tip v percentách banku">
-            <button type="button" data-pct="1">1 %</button><button type="button" data-pct="2">2 %</button><button type="button" data-pct="3">3 %</button><button type="button" data-pct="5" title="Pre skúsenejších – najvyšší odporúčaný vklad">5 %</button>
-          </div>
-        </div>
-        <p class="payback-stake-out" id="paybackStakeOut"></p>
-        <div class="payback-rows" id="paybackRows"></div>
-        <p class="payback-note">Jednotka = suma, ktorú vsádzate na jeden tip (bank × percento). Výpočet ukazuje len návratnosť ceny, výhru nezaručuje.</p>
-      </div>
     </div>
   </section>
 
@@ -1397,7 +1471,7 @@ h2 { font-size: clamp(28px, 3.1vw, 44px) !important; }
     </div>
   </section>
 
-  <section class="sec alt" id="otazky" data-pages="otazky">
+  <section class="sec alt" id="otazky" data-pages="otazky clenstvo">
     <div class="wrap split">
       <div><div class="eyebrow">Otázky</div><h2>Čo sa ľudia <em>pýtajú</em></h2></div>
       <div class="faq">
@@ -1706,6 +1780,34 @@ h2 { font-size: clamp(28px, 3.1vw, 44px) !important; }
     $("presnost").hidden = false;
   }
 
+  // ---------- úvod: panel so živými číslami a krivkou zisku ----------
+  function drawHero(d) {
+    const box = $("hxLive");
+    if (!box || !d || !d.totalResolved) return;
+    const pr = d.withOdds > 0 ? d.profit : null;
+    $("hxProfit").textContent = pr == null ? "–" : `${signed(pr, 1)} j.`;
+    $("hxProfit").className = "num " + (pr > 0 ? "gold" : cls(pr || 0));
+    $("hxRate").textContent = d.winRate == null ? "–" : `${d.winRate} %`;
+    $("hxRateSub").textContent = `${d.won} z ${d.totalResolved} ${ofTips(d.totalResolved)}`;
+    $("hxRoi").textContent = d.roi == null ? "–" : `${signed(d.roi, 1)} %`;
+    $("hxRoi").className = "num " + cls(d.roi || 0);
+    const m = d.month || {};
+    const [, mm] = String(m.key || "").split("-").map(Number);
+    $("hxMonth").textContent = m.withOdds > 0 ? `${signed(m.profit, 1)} j.` : "–";
+    $("hxMonth").className = "num " + cls(m.profit || 0);
+    $("hxMonthSub").textContent = mm ? `${MONTHS[mm - 1]} · ${m.won || 0} z ${m.totalResolved || 0} vyšlo` : "";
+    const pts = (d.timeline && d.timeline.points) || [];
+    if (pts.length > 1) {
+      let run = 0;
+      const cum = [0, ...pts.map((p) => (run += p.withOdds > 0 ? p.profit || 0 : 0))];
+      const W = 1000, H = 80, lo = Math.min(0, ...cum), hi = Math.max(0.5, ...cum), span = hi - lo || 1;
+      const x = (i) => (i / (cum.length - 1)) * W, y = (v) => 8 + (1 - (v - lo) / span) * (H - 14);
+      const dd = cum.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+      $("hxSpark").innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="hxg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#D9C08A" stop-opacity=".28"/><stop offset="1" stop-color="#D9C08A" stop-opacity="0"/></linearGradient></defs><path d="${dd} L${W},${H} L0,${H} Z" fill="url(#hxg)"/><path d="${dd}" fill="none" stroke="#F3E6C4" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`;
+    } else $("hxSpark").remove();
+    box.hidden = false;
+  }
+
   // ---------- výsledky pod ikonkami (krúžok s úspešnosťou) ----------
   function drawNavStats(d) {
     const n = Number(d.totalResolved) || 0;
@@ -1756,7 +1858,7 @@ h2 { font-size: clamp(28px, 3.1vw, 44px) !important; }
     $("calcResult").className = "big num " + cls(money);
     $("calcNote").textContent = `${calcData.count} tipov so známym kurzom, spolu vložené ${(calcData.count * stake).toLocaleString("sk-SK")} €. Minulé výsledky nezaručujú budúce.`;
   }
-  $("stakeRange").addEventListener("input", drawCalc);
+  if ($("stakeRange")) $("stakeRange").addEventListener("input", drawCalc);
 
   // ---------- formulár „Máte otázku?" (príde na e-mail) ----------
   document.querySelectorAll("[data-kurz-cta]").forEach((a) => a.addEventListener("click", () => {
@@ -1934,7 +2036,7 @@ h2 { font-size: clamp(28px, 3.1vw, 44px) !important; }
           (l7.withOdds > 0 ? ` · zisk <b class="${pr >= 0 ? "up" : ""}">${pr >= 0 ? "+" : "−"}${Math.abs(pr).toFixed(1).replace(".", ",")}&nbsp;j.</b>` : "");
         el7.hidden = false;
       }
-      drawNavStats(d);
+      drawNavStats(d); drawHero(d);
       window.__bankData = d.bank || []; window.__calc && window.__calc();
       if ($("presnost")) drawCalib(d.calibration);
       recentAll = d.recent || [];
@@ -1970,7 +2072,7 @@ h2 { font-size: clamp(28px, 3.1vw, 44px) !important; }
       $("fCountLbl").textContent = tipsWord(n);
       if (d.withOdds > 0) {
         $("fProfit").className = "num " + cls(d.profit); $("fRoi").className = "num " + cls(d.roi);
-        calcData = { profit: d.profit, count: d.withOdds }; $("stake").hidden = false; drawCalc();
+        calcData = { profit: d.profit, count: d.withOdds }; if ($("stake")) { $("stake").hidden = false; drawCalc(); }
       }
       // čísla a graf sa rozbehnú, keď sa sekcia objaví na obrazovke
       let played = false;
