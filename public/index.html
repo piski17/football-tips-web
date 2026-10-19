@@ -2,8 +2,8 @@
 <html lang="sk">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-  <meta name="theme-color" content="#1B1510" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#100D0A" />
   <meta name="color-scheme" content="dark" />
   <title>TipRadar</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
@@ -11,317 +11,216 @@
   <link rel="apple-touch-icon" href="favicon-256.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="splashScreen" class="splash-screen" role="status" aria-label="TipRadar sa načítava">
+  <!-- Úvodná obrazovka: zmizne sama (CSS) najneskôr po 1,2 s, na dáta nečaká -->
+  <div id="splashScreen" class="splash" aria-hidden="true">
     <div class="splash-inner">
-      <svg class="splash-radar" viewBox="0 0 200 200" aria-hidden="true">
-        <defs>
-          <linearGradient id="spSweep" gradientUnits="userSpaceOnUse" x1="29.5" y1="40.9" x2="100" y2="8">
-            <stop offset="0" stop-color="#D9C08A" stop-opacity="0"/>
-            <stop offset="1" stop-color="#D9C08A" stop-opacity=".38"/>
-          </linearGradient>
-        </defs>
-        <circle cx="100" cy="100" r="94" fill="#12110f"/>
-        <circle cx="100" cy="100" r="86" fill="none" stroke="#D9C08A" stroke-opacity=".45" stroke-width="5" stroke-dasharray="1.1 13.91"/>
-        <circle cx="100" cy="100" r="64" fill="none" stroke="#D9C08A" stroke-opacity=".22" stroke-width="1"/>
-        <circle cx="100" cy="100" r="34" fill="none" stroke="#D9C08A" stroke-opacity=".22" stroke-width="1"/>
-        <path d="M100 8V192M8 100H192" stroke="#D9C08A" stroke-opacity=".12" stroke-width="1"/>
-        <g class="splash-blips" fill="#F3E6C4">
-          <circle cx="134" cy="58" r="3.2"/>
-          <circle cx="62" cy="128" r="2.6"/>
-          <circle cx="146" cy="132" r="2.2"/>
-        </g>
-        <g class="splash-sweep">
-          <path d="M100 100 L29.5 40.9 A92 92 0 0 1 100 8 Z" fill="url(#spSweep)"/>
-          <path d="M100 100 L100 8" stroke="#F3E6C4" stroke-width="2" stroke-linecap="round"/>
-        </g>
-        <circle cx="100" cy="100" r="94" fill="none" stroke="#D9C08A" stroke-width="2"/>
-        <circle cx="100" cy="100" r="4.5" fill="#F3E6C4"/>
+      <svg class="splash-radar" viewBox="0 0 200 200">
+        <circle cx="100" cy="100" r="92" fill="#161412"/>
+        <circle cx="100" cy="100" r="58" fill="none" stroke="#d9c08a" stroke-opacity=".35" stroke-width="3"/>
+        <g class="splash-sweep"><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#d9c08a" fill-opacity=".32"/><line x1="100" y1="100" x2="100" y2="12" stroke="#F3E6C4" stroke-width="5" stroke-linecap="round"/></g>
+        <circle cx="100" cy="100" r="92" fill="none" stroke="#D9C08A" stroke-width="7"/>
+        <circle cx="100" cy="100" r="8" fill="#f3e6c4"/>
       </svg>
       <div class="splash-word">TipRadar</div>
-      <div class="splash-tag">Štatistický model <i></i> Tipy s hodnotou</div>
-      <div class="splash-progress">
-        <div class="splash-progress-track">
-          <div class="splash-progress-fill" id="splashProgressFill"></div>
-        </div>
-        <div class="splash-progress-row"><span>Pripravujem dnešné zápasy</span><span class="splash-progress-pct" id="splashProgressPct">0 %</span></div>
-      </div>
     </div>
   </div>
 
-  <div class="app">
-    <header class="topbar">
-      <div class="brand">
-        <span class="brand-mark"><svg viewBox="0 0 200 200" aria-hidden="true"><defs><linearGradient id="rmBrand" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F3E6C4"/><stop offset=".45" stop-color="#d9c08a"/><stop offset="1" stop-color="#B8995E"/></linearGradient></defs><circle cx="100" cy="100" r="92" fill="#161412"/><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#d9c08a" fill-opacity=".32"/><line x1="100" y1="100" x2="162.2" y2="37.8" stroke="#D9C08A" stroke-width="7" stroke-linecap="round"/><circle cx="100" cy="100" r="92" fill="none" stroke="#D9C08A" stroke-width="8"/><circle cx="100" cy="100" r="58" fill="none" stroke="#d9c08a" stroke-opacity=".5" stroke-width="4"/><circle cx="100" cy="100" r="9" fill="#f3e6c4"/></svg></span>
-        <h1>TipRadar</h1>
+  <div class="shell">
+    <!-- Ľavý panel (počítač) -->
+    <aside class="side">
+      <div class="logo">
+        <svg viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="92" fill="#161412"/><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#d9c08a" fill-opacity=".32"/><line x1="100" y1="100" x2="162.2" y2="37.8" stroke="#D9C08A" stroke-width="7" stroke-linecap="round"/><circle cx="100" cy="100" r="92" fill="none" stroke="#D9C08A" stroke-width="8"/><circle cx="100" cy="100" r="58" fill="none" stroke="#d9c08a" stroke-opacity=".5" stroke-width="4"/><circle cx="100" cy="100" r="9" fill="#f3e6c4"/></svg>
+        <span>TipRadar</span>
       </div>
+      <nav class="nav" id="sideNav" aria-label="Hlavné menu"></nav>
+      <button type="button" class="seats" id="seatBox" title="TipRadar Platinum: počet členov podľa dĺžky členstva (6 mesiacov má najviac 30 miest). Kliknutím otvoríš Členov."></button>
+    </aside>
 
-      <div class="topbar-controls">
-        <input type="date" id="matchDateInput" class="date-input" />
-        <input type="number" id="seasonInput" value="2026" readonly hidden />
-        <button class="btn-primary" id="loadFixturesBtn" title="Obnoviť zápasy">↻</button>
-      </div>
-
-      <button class="btn-ghost" id="openTicketBtn" hidden style="display:none">Tiket <span id="ticketCount"></span></button>
-      <button class="btn-ghost" id="openTipsBtn">História tipov</button>
-      <button class="btn-ghost" id="openSubscribersBtn" hidden style="display:none">Členovia</button>
-      <button type="button" class="seat-strip" id="seatStrip" title="TipRadar Platinum: počet členov podľa dĺžky členstva (6 mesiacov má najviac 30 miest). Kliknutím otvoríš Členov.">
-        <span class="ss-h"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><path d="M12 12 18.2 6.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/></svg><span>Platinum</span></span>
-        <span class="ss-i" data-seat="m1"><small>1 mesiac</small><b>–</b></span>
-        <span class="ss-i" data-seat="m3"><small>3 mesiace</small><b>–</b></span>
-        <span class="ss-i ss-vip" data-seat="season"><small>6 mesiacov</small><b>–</b><i class="ss-bar" aria-hidden="true"><i></i></i></span>
-      </button>
-      <div class="tools-menu" id="toolsMenu">
-        <button class="btn-ghost" id="toolsBtn" aria-haspopup="true" aria-expanded="false">Nástroje <span aria-hidden="true">▾</span></button>
-        <div class="tools-pop" id="toolsPop" role="menu" hidden>
-          <button class="tools-item" role="menuitem" id="openBacktestBtn" title="Overenie presnosti modelu na odohraných zápasoch">Spätný test</button>
-          <a class="tools-item" role="menuitem" href="/suhrn">Denný súhrn</a>
-          <a class="tools-item" role="menuitem" href="/instagram">Instagram</a>
-          <a class="tools-item" role="menuitem" href="/TipRadar-ako-vyberame-tipy.pdf" target="_blank" rel="noopener" title="PDF pre klientov: ako vyberáme tipy">PDF pre klientov</a>
-          <button class="tools-item" role="menuitem" id="openVisitsBtn" title="Koľko ľudí navštívilo tipradar.eu a odkiaľ prišli">Návštevnosť</button>
-        </div>
-      </div>
-    </header>
-
-    <main class="content">
-      <section class="fixture-column">
-        <div class="column-header">
-          <h2>Zápasy dnes</h2>
-          <span class="muted" id="fixtureCount"></span>
-          <button class="btn-ghost btn-mini" id="dayTipsBtn" title="Všetky odporúčané tipy zo zápasov dňa, zoradené od najvyššej dôvery"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" style="vertical-align:-2px;margin-right:5px"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1zM8 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M8 12h8M8 16h5"/></svg>Tipy dňa</button>
-        </div>
-        <div class="fixture-list" id="fixtureList">
-          <p class="empty-state">Načítavam zápasy…</p>
+    <main class="main">
+      <!-- ZÁPASY -->
+      <section class="view" data-view="zapasy" id="viewZapasy">
+        <div class="zap-grid">
+          <div class="zap-list">
+            <header class="top">
+              <h2>Zápasy</h2>
+              <div class="days" id="dayChips">
+                <button type="button" class="chip" data-day="-1">Včera</button>
+                <button type="button" class="chip" data-day="0">Dnes</button>
+                <button type="button" class="chip" data-day="1">Zajtra</button>
+                <button type="button" class="chip chip-date" id="dateChip" title="Vybrať dátum" aria-label="Vybrať dátum">
+                  <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M5 6h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1zM4 10h16M8 4v4M16 4v4"/></svg>
+                  <span id="dateChipText"></span>
+                </button>
+                <input type="date" id="matchDateInput" class="date-hidden" aria-label="Dátum zápasov" tabindex="-1" />
+              </div>
+            </header>
+            <label class="search">
+              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              <input type="search" id="fixtureSearch" placeholder="Hľadať tím alebo ligu" autocomplete="off" />
+            </label>
+            <div class="dt-promo">
+              <div><b>Tipy dňa</b><span id="dtPromoText">Prejde všetky zápasy dňa naraz</span></div>
+              <button type="button" class="btn sm" id="dtPromoBtn">Spustiť</button>
+            </div>
+            <div class="fixture-list" id="fixtureList"><p class="empty">Načítavam zápasy…</p></div>
+          </div>
+          <div class="zap-an">
+            <header class="mtop">
+              <button type="button" class="back" id="anBackBtn" aria-label="Späť na zápasy">‹</button>
+              <b id="anMobileTitle">Analýza</b>
+            </header>
+            <div class="an" id="analysisPane">
+              <div class="an-empty">
+                <svg class="empty-radar" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="92" fill="#161412"/><circle cx="100" cy="100" r="58" fill="none" stroke="#d9c08a" stroke-opacity=".3" stroke-width="2"/><g class="splash-sweep"><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#d9c08a" fill-opacity=".25"/></g><circle cx="100" cy="100" r="92" fill="none" stroke="#D9C08A" stroke-width="3"/><circle cx="100" cy="100" r="6" fill="#f3e6c4"/></svg>
+                <p>Vyber zápas zo zoznamu.</p>
+                <p class="muted small">Zobrazí sa štatistická analýza a odporúčané tipy.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section class="analysis-column" id="analysisColumn">
-        <div class="empty-state analysis-empty">
-          <svg class="empty-radar" viewBox="0 0 200 200" aria-hidden="true"> <defs> <linearGradient id="emSweep" gradientUnits="userSpaceOnUse" x1="29.5" y1="40.9" x2="100" y2="8"> <stop offset="0" stop-color="#D9C08A" stop-opacity="0"/> <stop offset="1" stop-color="#D9C08A" stop-opacity=".38"/> </linearGradient> </defs> <circle cx="100" cy="100" r="94" fill="#12110f"/> <circle cx="100" cy="100" r="86" fill="none" stroke="#D9C08A" stroke-opacity=".45" stroke-width="5" stroke-dasharray="1.1 13.91"/> <circle cx="100" cy="100" r="64" fill="none" stroke="#D9C08A" stroke-opacity=".22" stroke-width="1"/> <circle cx="100" cy="100" r="34" fill="none" stroke="#D9C08A" stroke-opacity=".22" stroke-width="1"/> <path d="M100 8V192M8 100H192" stroke="#D9C08A" stroke-opacity=".12" stroke-width="1"/> <g class="splash-blips" fill="#F3E6C4"> <circle cx="134" cy="58" r="3.2"/> <circle cx="62" cy="128" r="2.6"/> <circle cx="146" cy="132" r="2.2"/> </g> <g class="splash-sweep"> <path d="M100 100 L29.5 40.9 A92 92 0 0 1 100 8 Z" fill="url(#emSweep)"/> <path d="M100 100 L100 8" stroke="#F3E6C4" stroke-width="2" stroke-linecap="round"/> </g> <circle cx="100" cy="100" r="94" fill="none" stroke="#D9C08A" stroke-width="2"/> <circle cx="100" cy="100" r="4.5" fill="#F3E6C4"/> </svg>
-          <p>Vyber zápas zo zoznamu.</p>
-          <p class="muted small">Zobrazí sa štatistická analýza a odporúčaný tip.</p>
+      <!-- TIPY DŇA -->
+      <section class="view" data-view="tipy" id="viewTipy" hidden>
+        <header class="top">
+          <h2>Tipy dňa</h2>
+          <span class="muted small top-sub" id="dtDateLabel"></span>
+          <div class="top-actions"><button type="button" class="btn sm" id="dtRunBtn">Spustiť analýzu</button></div>
+        </header>
+        <div class="page" id="dayTipsPane"></div>
+      </section>
+
+      <!-- HISTÓRIA TIPOV -->
+      <section class="view" data-view="historia" id="viewHistoria" hidden>
+        <header class="top">
+          <h2>História tipov</h2>
+          <div class="top-actions"><button type="button" class="btn sm" id="checkResultsBtn">Skontrolovať výsledky</button></div>
+        </header>
+        <div class="page">
+          <div class="kpis" id="tipsKpis"></div>
+          <div class="override-line muted small" id="overrideLine"></div>
+          <div class="acts">
+            <button type="button" class="btn sm" id="sendDayTipsBtn" title="Poslať všetky tipy vybraného dňa do Telegramu naraz">Poslať tipy dňa</button>
+            <button type="button" class="btn ghost sm" id="tipsComingBtn" title="Poslať do Telegramu oznam, že tipy prídu o pár minút">Tipy o pár minút</button>
+            <button type="button" class="btn ghost sm" id="noTipTodayBtn">Dnes bez tipu</button>
+            <button type="button" class="btn ghost sm" id="monthlyReportBtn" title="Súhrn všetkých tipov za mesiac, s možnosťou odoslať do Telegramu">Mesačný report</button>
+            <button type="button" class="btn ghost sm" id="manualTipBtn" title="Zapísať tip na už odohraný zápas aj s výsledkom">+ Doplniť odohraný tip</button>
+            <button type="button" class="btn ghost sm" id="archiveResolvedBtn" title="Skryť vyhodnotené tipy z histórie – na prezentácii a v štatistikách ostanú">Skryť vyhodnotené</button>
+            <button type="button" class="btn ghost sm" id="restoreDailyBtn" title="Vrátiť do histórie tipy z denného súhrnu (/suhrn), ktoré v histórii chýbajú">Obnoviť z denného súhrnu</button>
+          </div>
+          <div class="filter-row">
+            <div class="chips" id="tipsFilter">
+              <button type="button" class="chip on" data-f="all">Všetky</button>
+              <button type="button" class="chip" data-f="pending">Čakajú</button>
+              <button type="button" class="chip" data-f="resolved">Vyhodnotené</button>
+            </div>
+            <label class="toggle"><input type="checkbox" id="showArchivedToggle" /> <span id="showArchivedLabel">Zobraziť skryté</span></label>
+          </div>
+          <div class="card list-card" id="tipsList"><p class="empty">Načítavam…</p></div>
+
+          <h3 class="sh">Úspešnosť podľa trhov <small>zisk pri vklade 1 jednotka na tip</small></h3>
+          <div class="card" id="marketBreakdown"></div>
+
+          <details class="card adv">
+            <summary>Pokročilé – bankroll, kalibrácia a tiché sledovanie</summary>
+            <div class="adv-body">
+              <h4 class="ct">Bankroll simulátor</h4>
+              <p class="muted small">Simulácia so sadzbou podľa dôvery (1 – 3 %) a skutočným kurzom, ak je uložený, inak „fér“ kurzom z pravdepodobnosti modelu.</p>
+              <label class="inline-field">Počiatočný bankroll <input type="number" id="bankrollStartInput" value="1000" min="1" step="50" /> €</label>
+              <div id="bankrollResult"></div>
+              <h4 class="ct">Kalibračný report</h4>
+              <p class="muted small">Porovnanie predpovedanej pravdepodobnosti s tým, ako často tipy reálne vyšli.</p>
+              <div id="calibrationResult"></div>
+              <h4 class="ct">Tiché sledovanie</h4>
+              <div class="track-line muted small" id="shadowSummary"></div>
+              <div class="track-line muted small" id="clvSummary"></div>
+              <div class="track-line muted small" id="blendSummary"></div>
+            </div>
+          </details>
+
+          <div class="danger-zone">
+            <span class="muted small">Natrvalo zmaže všetky uložené tipy aj ich správy v Telegrame.</span>
+            <button type="button" class="btn danger sm" id="clearAllTipsBtn">Vymazať všetky tipy</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ČLENOVIA -->
+      <section class="view" data-view="clenovia" id="viewClenovia" hidden>
+        <header class="top"><h2>Členovia</h2></header>
+        <div class="page">
+          <div class="seats seats-inline" id="seatBoxMobile"></div>
+          <p class="muted small">Všetci, ktorí si zakúpili členstvo. Po zaplatení ich sem pridaj, appka ti 3 dni pred koncom pripomenie predĺženie.</p>
+          <div class="kpis kpis-members" id="subscribersSummary"></div>
+
+          <div class="card">
+            <h4 class="ct">Pridať člena</h4>
+            <div class="form-grid">
+              <label class="fld">Meno<input type="text" id="subName" placeholder="Meno" /></label>
+              <label class="fld">Kontakt<input type="text" id="subContact" placeholder="E-mail, Telegram…" /></label>
+              <label class="fld">Telegram chat ID<input type="text" id="subTelegramChatId" placeholder="voliteľné" /></label>
+              <label class="fld">Dĺžka
+                <select id="subLength">
+                  <option value="m1">Platinum · 1 mesiac (49 €)</option>
+                  <option value="m3" selected>Platinum · 3 mesiace (119 €)</option>
+                  <option value="season">Platinum · 6 mesiacov (219 €)</option>
+                </select>
+              </label>
+              <label class="fld">Od<input type="date" id="subStart" /></label>
+              <label class="fld">Cena (€)<input type="number" id="subPrice" min="0" step="1" inputmode="decimal" /></label>
+              <label class="fld fld-wide">Poznámka<input type="text" id="subNote" placeholder="voliteľné" /></label>
+              <label class="check"><input type="checkbox" id="subFounder" checked /> Prvý člen (zamknutá cena)</label>
+            </div>
+            <div class="form-foot"><span class="muted small" id="subEndPreview"></span><button type="button" class="btn sm" id="addSubscriberBtn">Pridať člena</button></div>
+          </div>
+
+          <div id="paymentsBox" hidden>
+            <h3 class="sh">Čakajúce platby prevodom</h3>
+            <p class="muted small">Keď platbu s daným variabilným symbolom uvidíš na účte, klikni Potvrdiť. Bot členovi pošle pozvánku a zapíše ho sem.</p>
+            <div class="card list-card" id="paymentsList"></div>
+          </div>
+
+          <div class="filter-row">
+            <h3 class="sh sh-inline">Zoznam členov</h3>
+            <div class="chips" id="memberFilter">
+              <button type="button" class="chip on" data-f="active">Aktívni</button>
+              <button type="button" class="chip" data-f="expired">Skončené</button>
+              <button type="button" class="chip" data-f="all">Všetci</button>
+            </div>
+          </div>
+          <div class="card list-card" id="subscribersList"><p class="empty">Načítavam…</p></div>
+
+          <h3 class="sh">Poradovník <small>záujemcovia z webu</small></h3>
+          <p class="muted small">Ľudia, ktorí na tipradar.eu klikli na členstvo a otvorili bota. Zoradení podľa dátumu zápisu.</p>
+          <div class="sales-row"><button type="button" class="btn sm" id="salesOpenBtn">Otvoriť predaj</button><span class="muted small">Každý z poradovníka dostane od bota správu s tlačidlami na zaplatenie (každý len raz).</span></div>
+          <div class="card list-card" id="leadsList"><p class="empty">Načítavam…</p></div>
+        </div>
+      </section>
+
+      <!-- NÁSTROJE -->
+      <section class="view" data-view="nastroje" id="viewNastroje" hidden>
+        <header class="top"><h2>Nástroje</h2></header>
+        <div class="page">
+          <div class="tools-grid">
+            <button type="button" class="tool" id="openBacktestBtn"><b>Spätný test</b><span>Overenie presnosti modelu na odohraných zápasoch.</span></button>
+            <button type="button" class="tool" id="openVisitsBtn"><b>Návštevnosť</b><span>Koľko ľudí navštívilo tipradar.eu a odkiaľ prišli.</span></button>
+            <button type="button" class="tool" id="openMonthlyBtn2"><b>Mesačný report</b><span>Súhrn tipov za mesiac, s odoslaním do Telegramu.</span></button>
+            <a class="tool" href="/suhrn"><b>Denný súhrn</b><span>Denný prehľad tipov a výsledkov.</span></a>
+            <a class="tool" href="/instagram"><b>Instagram</b><span>Obrázky tipov a výsledkov na Instagram.</span></a>
+            <a class="tool" href="/TipRadar-ako-vyberame-tipy.pdf" target="_blank" rel="noopener"><b>PDF pre klientov</b><span>Ako vyberáme tipy.</span></a>
+          </div>
         </div>
       </section>
     </main>
   </div>
 
-  <div class="modal-overlay" id="ticketModal" hidden>
-    <div class="modal modal-large">
-      <h3>Môj tiket</h3>
-      <p class="muted small">
-        Spoj viacero tipov z rôznych zápasov do jedného tiketu - appka spočíta
-        kombinovanú pravdepodobnosť a z nej odvodený kurz (presne ako "AKO"
-        tiket v stávkovej kancelárii). Ide o kalkulačku pre túto reláciu appky,
-        neukladá sa automaticky do histórie tipov.
-      </p>
-      <div class="tips-summary" id="ticketSummary"></div>
-      <div class="tips-list" id="ticketList"></div>
-      <div class="modal-actions">
-        <button class="btn-ghost" id="clearTicketBtn" style="color: var(--danger); margin-right: auto;">Vymazať tiket</button>
-        <button class="btn-ghost" id="closeTicketBtn">Zavrieť</button>
-        <button class="btn-primary" id="saveTicketBtn">Uložiť tiket do histórie</button>
-      </div>
-    </div>
-  </div>
+  <!-- Spodná lišta (mobil) -->
+  <nav class="tabbar" id="tabBar" aria-label="Hlavné menu"></nav>
 
-  <div class="modal-overlay" id="tipsModal" hidden>
-    <div class="modal modal-large">
-      <h3>História tipov</h3>
-      <div class="tips-summary" id="tipsSummary"></div>
-      <div class="shadow-summary muted small" id="shadowSummary"></div>
-      <div class="shadow-summary muted small" id="clvSummary"></div>
-      <div class="shadow-summary muted small" id="blendSummary"></div>
-      <div class="shadow-summary muted small" id="ticketWatchSummary"></div>
-      <div class="history-tools">
-        <button class="btn-ghost" id="archiveResolvedBtn" title="Skryť vyhodnotené tipy z histórie – na prezentácii a v štatistikách ostanú">Skryť vyhodnotené</button>
-        <button class="btn-ghost" id="restoreDailyBtn" title="Vrátiť do histórie tipy z denného súhrnu (/suhrn), ktoré v histórii chýbajú"><span style="color: var(--gold);">↺</span> Obnoviť z denného súhrnu</button>
-        <button class="btn-ghost" id="manualTipBtn" title="Zapísať tip na už odohraný zápas aj s výsledkom">+ Doplniť odohraný tip</button>
-        <button class="btn-ghost" id="sendDayTipsBtn" title="Poslať všetky tipy vybraného dňa do Telegramu naraz"><span style="color: var(--gold);">✈</span> Poslať tipy dňa</button>
-        <button class="btn-ghost" id="tipsComingBtn" title="Poslať do Telegramu oznam, že tipy prídu o pár minút"><span style="color: var(--gold);">⏳</span> Tipy o pár minút</button>
-        <button class="btn-ghost" id="noTipTodayBtn"><span style="color: var(--danger);">⊘</span> Dnes bez tipu</button>
-        <button class="btn-ghost" id="dailyResultsBtn" hidden style="display:none" title="Poslať vyhodnotenie všetkých tipov a tiketov dňa do Telegramu"><span style="color: var(--success);">☑</span> Denné vyhodnotenie</button>
-        <button class="btn-ghost" id="weeklyReportBtn" hidden style="display:none"><span style="color: var(--gold);">▤</span> Týždenný report</button>
-        <button class="btn-ghost" id="monthlyReportBtn" title="Súhrn všetkých tipov za mesiac, s možnosťou odoslať do Telegramu"><span style="color: var(--gold);">▦</span> Mesačný súhrn</button>
-      </div>
-
-      <div class="market-breakdown" id="marketBreakdown"></div>
-
-      <div class="bankroll-section" id="bankrollSection">
-        <div class="market-breakdown-title">
-          Bankroll simulátor
-          <span class="muted small">– simulácia so sadzbou podľa dôvery a predpokladaným „fér“ kurzom z pravdepodobnosti modelu</span>
-        </div>
-        <div class="bankroll-controls">
-          <label for="bankrollStartInput">Počiatočný bankroll:</label>
-          <input type="number" id="bankrollStartInput" value="1000" min="1" step="50" />
-          <span>€</span>
-        </div>
-        <div id="bankrollResult"></div>
-      </div>
-
-      <div class="bankroll-section" id="calibrationSection">
-        <div class="market-breakdown-title">
-          Kalibračný report
-          <span class="muted small">– porovnanie predpovedanej pravdepodobnosti s tým, ako často tipy reálne vyšli</span>
-        </div>
-        <div id="calibrationResult"></div>
-      </div>
-
-      <div class="tips-list" id="tipsList"></div>
-      <div class="modal-actions">
-        <button class="btn-ghost" id="clearAllTipsBtn" style="color: var(--danger); margin-right: auto;">Vymazať všetky tipy</button>
-        <button class="btn-ghost" id="closeTipsBtn">Zavrieť</button>
-        <button class="btn-primary" id="checkResultsBtn">Skontrolovať výsledky</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="subscribersModal" hidden>
-    <div class="modal modal-large">
-      <h3>Členovia</h3>
-      <p class="muted small" style="margin:-4px 0 12px;">Všetci, ktorí si zakúpili členstvo. Po zaplatení ich sem pridaj, appka ti 3 dni pred koncom pripomenie predĺženie.</p>
-      <div class="tips-summary" id="subscribersSummary"></div>
-
-      <div class="subscriber-form member-form">
-        <input type="text" id="subName" placeholder="Meno" />
-        <input type="text" id="subContact" placeholder="Kontakt (e-mail, Telegram…)" />
-        <input type="text" id="subTelegramChatId" placeholder="Telegram chat ID (voliteľné)" />
-        <select id="subTier" aria-label="Členstvo" hidden>
-          <option value="individual">Platinum 1 / 3 mesiace</option>
-          <option value="group">Platinum 6 mesiacov</option>
-        </select>
-        <select id="subLength" aria-label="Dĺžka">
-          <option value="m1">Platinum · 1 mesiac (49 €)</option>
-          <option value="m3" selected>Platinum · 3 mesiace (119 €)</option>
-          <option value="season">Platinum · 6 mesiacov (219 €)</option>
-        </select>
-        <label class="member-field">Od <input type="date" id="subStart" /></label>
-        <label class="member-field">Cena <input type="number" id="subPrice" min="0" step="1" inputmode="decimal" /> €</label>
-        <label class="member-check"><input type="checkbox" id="subFounder" checked /> Prvý člen (zamknutá cena)</label>
-        <input type="text" id="subNote" placeholder="Poznámka (voliteľné)" />
-        <button class="btn-primary" id="addSubscriberBtn">Pridať člena</button>
-      </div>
-
-      <div id="paymentsBox" hidden>
-        <h4 class="leads-title">Čakajúce platby prevodom</h4>
-        <p class="muted small" style="margin:0 0 8px;">Keď platbu s daným variabilným symbolom uvidíš na účte, klikni Potvrdiť. Bot členovi pošle pozvánku a zapíše ho sem.</p>
-        <div class="tips-list" id="paymentsList"></div>
-      </div>
-      <div class="member-filter" id="memberFilter">
-        <button type="button" data-f="active" class="active">Aktívni</button>
-        <button type="button" data-f="expired">Skončené</button>
-        <button type="button" data-f="all">Všetci</button>
-      </div>
-      <div class="tips-list" id="subscribersList"></div>
-      <h4 class="leads-title">Poradovník – záujemcovia z webu</h4>
-      <p class="muted small" style="margin:0 0 8px;">Ľudia, ktorí na tipradar.eu klikli na členstvo a otvorili bota. Zoradení podľa dátumu zápisu.</p>
-      <div class="lead-sales" style="margin:0 0 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;"><button class="btn-primary" id="salesOpenBtn">Otvoriť predaj</button> <span class="muted small">Každý z poradovníka dostane od bota správu s tlačidlami na zaplatenie (každý len raz).</span></div>
-      <div class="tips-list" id="leadsList"></div>
-      <div class="modal-actions">
-        <button class="btn-ghost" id="closeSubscribersBtn">Zavrieť</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="manualTipModal" hidden>
-    <div class="modal">
-      <h3>Doplniť odohraný tip</h3>
-      <p class="muted small" style="margin: -4px 0 14px;">Pre tipy, ktoré si klientom poslal, ale v TipRadare nie sú uložené. Tip sa uloží rovno s výsledkom a započíta sa do štatistík aj do čísel na prezentačnej stránke.</p>
-      <div class="subscriber-form manual-tip-form">
-        <input type="date" id="mtDate" aria-label="Dátum zápasu" />
-        <input type="time" id="mtTime" aria-label="Čas výkopu (voliteľné)" title="Čas výkopu (voliteľné)" />
-        <input type="text" id="mtHome" placeholder="Domáci, napr. Česko" />
-        <input type="text" id="mtAway" placeholder="Hostia, napr. Chorvátsko" />
-        <select id="mtMarket" aria-label="Trh">
-          <option>Góly</option>
-          <option>Góly domácich</option>
-          <option>Góly hostí</option>
-          <option>Rohy</option>
-          <option>Rohy domácich</option>
-          <option>Rohy hostí</option>
-          <option>Karty</option>
-          <option>Karty domácich</option>
-          <option>Karty hostí</option>
-          <option>Strely na bránu</option>
-          <option>Strely na bránu domácich</option>
-          <option>Strely na bránu hostí</option>
-          <option>Fauly</option>
-          <option>Vyššie držanie lopty</option>
-        </select>
-        <input type="text" id="mtSelection" placeholder="Tip, napr. Áno alebo Nad 2,5" />
-        <input type="text" id="mtOdds" inputmode="decimal" placeholder="Kurz, napr. 1,67" />
-        <input type="text" id="mtProb" inputmode="decimal" placeholder="Dôvera % (voliteľné)" />
-        <select id="mtResult" aria-label="Výsledok">
-          <option value="won">✓ Vyšiel</option>
-          <option value="lost">✗ Nevyšiel</option>
-          <option value="void">↩ Vrátený</option>
-        </select>
-      </div>
-      <div class="muted small" id="mtMsg" style="min-height: 1.4em;"></div>
-      <div class="modal-actions">
-        <button class="btn-ghost" id="mtCloseBtn">Zavrieť</button>
-        <button class="btn-primary" id="mtSaveBtn">Uložiť tip</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="backtestModal" hidden>
-    <div class="modal modal-large">
-      <h3>Spätný test modelu</h3>
-      <p class="muted small" style="margin:-4px 0 14px;">Model vypočíta tipy pre odohrané zápasy len z údajov, ktoré boli známe pred výkopom, a porovná ich so skutočnými výsledkami. Ukáže, pri ktorých trhoch sa percentá zhodujú s realitou a kde model preceňuje alebo podceňuje. Kurzy sa nepoužívajú – test meria presnosť percent, nie zisk.</p>
-      <div class="bt-form">
-        <div class="bt-leagues" id="btLeagues"><span class="muted small">Načítavam ligy…</span></div>
-        <div class="bt-fields">
-          <label>Od <input type="date" id="btFrom" /></label>
-          <label>Do <input type="date" id="btTo" /></label>
-          <label>Sezóna <input type="number" id="btSeason" min="2000" max="2100" /></label>
-          <label>Max. zápasov <input type="number" id="btMax" min="5" max="300" value="60" /></label>
-        </div>
-        <p class="muted small" id="btCost"></p>
-      </div>
-      <div id="btProgress" class="muted small"></div>
-      <div id="btReport"></div>
-      <div class="modal-actions">
-        <button class="btn-ghost" id="btCopyBtn" hidden title="Skopíruje celý výsledok ako text – vlož ho do správy">Kopírovať ako text</button>
-        <button class="btn-ghost" id="btImgBtn" hidden title="Uloží celý výsledok ako jeden obrázok">Uložiť ako obrázok</button>
-        <button class="btn-ghost" id="btCloseBtn">Zavrieť</button>
-        <button class="btn-primary" id="btStartBtn">Spustiť test</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // Menu „Nástroje" v hornej lište
-    (() => {
-      const btn = document.getElementById("toolsBtn"), pop = document.getElementById("toolsPop");
-      const close = () => { pop.hidden = true; btn.setAttribute("aria-expanded", "false"); };
-      btn.addEventListener("click", (e) => { e.stopPropagation(); pop.hidden = !pop.hidden; btn.setAttribute("aria-expanded", String(!pop.hidden)); });
-      pop.addEventListener("click", () => close());
-      document.addEventListener("click", (e) => { if (!e.target.closest("#toolsMenu")) close(); });
-      document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
-    })();
-    // Platinum karta otvára Členov (samostatné tlačidlo Členovia je skryté); ukáže sa aj keď sa čísla nenačítajú
-    document.getElementById("seatStrip").addEventListener("click", () => document.getElementById("openSubscribersBtn").click());
-    // Odpočet voľných miest v Platinum (rovnaké čísla ako na tipradar.eu)
-    fetch("/api/public/vip-seats", { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((d) => {
-        const t = d.terms;
-        if (!t || !t.m1 || !t.m3 || !t.season) return;
-        document.querySelectorAll("#seatStrip [data-seat]").forEach((el) => {
-          const r = t[el.dataset.seat];
-          // 1 a 3 mesiace sú bez obmedzenia miest (total = null)
-          el.querySelector("b").innerHTML = r.total == null ? `${r.occupied}<i> čl.</i>` : `${r.occupied}<i> / ${r.total}</i>`;
-          el.classList.toggle("full", r.total != null && r.left <= 0);
-          const bar = el.querySelector(".ss-bar > i");
-          if (bar && r.total) bar.style.width = Math.min(100, Math.round((r.occupied / r.total) * 100)) + "%";
-        });
-      })
-      .catch(() => {});
-  </script>
   <script src="app.js"></script>
 </body>
 </html>

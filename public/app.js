@@ -1,117 +1,33 @@
+// TipRadar – appka (nový vzhľad 19. 10. 2026). Čistý JavaScript bez knižníc,
+// server (src/server.ts) a jeho API sa nemenili.
+"use strict";
+
 // ---- Preklad názvov reprezentácií do slovenčiny (kluby zostávajú v pôvodnom tvare) ----
 const COUNTRY_NAME_SK = {
-  Albania: "Albánsko",
-  Andorra: "Andorra",
-  Armenia: "Arménsko",
-  Austria: "Rakúsko",
-  Azerbaijan: "Azerbajdžan",
-  Belarus: "Bielorusko",
-  Belgium: "Belgicko",
-  "Bosnia and Herzegovina": "Bosna a Hercegovina",
-  Bulgaria: "Bulharsko",
-  Croatia: "Chorvátsko",
-  Cyprus: "Cyprus",
-  "Czech Republic": "Česko",
-  Denmark: "Dánsko",
-  England: "Anglicko",
-  Estonia: "Estónsko",
-  "Faroe Islands": "Faerské ostrovy",
-  Finland: "Fínsko",
-  France: "Francúzsko",
-  Georgia: "Gruzínsko",
-  Germany: "Nemecko",
-  Gibraltar: "Gibraltár",
-  Greece: "Grécko",
-  Hungary: "Maďarsko",
-  Iceland: "Island",
-  Israel: "Izrael",
-  Italy: "Taliansko",
-  Kazakhstan: "Kazachstan",
-  Kosovo: "Kosovo",
-  Latvia: "Lotyšsko",
-  Liechtenstein: "Lichtenštajnsko",
-  Lithuania: "Litva",
-  Luxembourg: "Luxembursko",
-  Malta: "Malta",
-  Moldova: "Moldavsko",
-  Montenegro: "Čierna Hora",
-  Netherlands: "Holandsko",
-  "North Macedonia": "Severné Macedónsko",
-  "Northern Ireland": "Severné Írsko",
-  Norway: "Nórsko",
-  Poland: "Poľsko",
-  Portugal: "Portugalsko",
-  Romania: "Rumunsko",
-  Russia: "Rusko",
-  "San Marino": "San Maríno",
-  Scotland: "Škótsko",
-  Serbia: "Srbsko",
-  Slovakia: "Slovensko",
-  Slovenia: "Slovinsko",
-  Spain: "Španielsko",
-  Sweden: "Švédsko",
-  Switzerland: "Švajčiarsko",
-  Turkey: "Turecko",
-  Ukraine: "Ukrajina",
-  Wales: "Wales",
+  Albania: "Albánsko", Andorra: "Andorra", Armenia: "Arménsko", Austria: "Rakúsko", Azerbaijan: "Azerbajdžan",
+  Belarus: "Bielorusko", Belgium: "Belgicko", "Bosnia and Herzegovina": "Bosna a Hercegovina", Bulgaria: "Bulharsko",
+  Croatia: "Chorvátsko", Cyprus: "Cyprus", "Czech Republic": "Česko", Denmark: "Dánsko", England: "Anglicko",
+  Estonia: "Estónsko", "Faroe Islands": "Faerské ostrovy", Finland: "Fínsko", France: "Francúzsko", Georgia: "Gruzínsko",
+  Germany: "Nemecko", Gibraltar: "Gibraltár", Greece: "Grécko", Hungary: "Maďarsko", Iceland: "Island", Israel: "Izrael",
+  Italy: "Taliansko", Kazakhstan: "Kazachstan", Kosovo: "Kosovo", Latvia: "Lotyšsko", Liechtenstein: "Lichtenštajnsko",
+  Lithuania: "Litva", Luxembourg: "Luxembursko", Malta: "Malta", Moldova: "Moldavsko", Montenegro: "Čierna Hora",
+  Netherlands: "Holandsko", "North Macedonia": "Severné Macedónsko", "Northern Ireland": "Severné Írsko", Norway: "Nórsko",
+  Poland: "Poľsko", Portugal: "Portugalsko", Romania: "Rumunsko", Russia: "Rusko", "San Marino": "San Maríno",
+  Scotland: "Škótsko", Serbia: "Srbsko", Slovakia: "Slovensko", Slovenia: "Slovinsko", Spain: "Španielsko",
+  Sweden: "Švédsko", Switzerland: "Švajčiarsko", Turkey: "Turecko", Ukraine: "Ukrajina", Wales: "Wales",
   // Alternatívne názvy z API a reprezentácie mimo Európy
-  Czechia: "Česko",
-  "Rep. Of Ireland": "Írsko",
-  "Republic of Ireland": "Írsko",
-  "FYR Macedonia": "Severné Macedónsko",
-  Macedonia: "Severné Macedónsko",
-  "Türkiye": "Turecko",
-  Turkiye: "Turecko",
-  "Bosnia & Herzegovina": "Bosna a Hercegovina",
-  Ireland: "Írsko",
-  Holland: "Holandsko",
-  Kyrgyzstan: "Kirgizsko",
-  Argentina: "Argentína",
-  Brazil: "Brazília",
-  Uruguay: "Uruguaj",
-  Colombia: "Kolumbia",
-  Chile: "Čile",
-  Paraguay: "Paraguaj",
-  Peru: "Peru",
-  Ecuador: "Ekvádor",
-  Bolivia: "Bolívia",
-  Venezuela: "Venezuela",
-  USA: "USA",
-  "United States": "USA",
-  Mexico: "Mexiko",
-  Canada: "Kanada",
-  "Costa Rica": "Kostarika",
-  Panama: "Panama",
-  Jamaica: "Jamajka",
-  Honduras: "Honduras",
-  Haiti: "Haiti",
-  Curacao: "Curaçao",
-  Morocco: "Maroko",
-  Algeria: "Alžírsko",
-  Tunisia: "Tunisko",
-  Egypt: "Egypt",
-  Senegal: "Senegal",
-  Nigeria: "Nigéria",
-  Ghana: "Ghana",
-  Cameroon: "Kamerun",
-  "Ivory Coast": "Pobrežie Slonoviny",
-  "Cote D'Ivoire": "Pobrežie Slonoviny",
-  "South Africa": "Južná Afrika",
-  Mali: "Mali",
-  "Cape Verde Islands": "Kapverdy",
-  Japan: "Japonsko",
-  "South Korea": "Južná Kórea",
-  "Korea Republic": "Južná Kórea",
-  Australia: "Austrália",
-  Iran: "Irán",
-  "Saudi Arabia": "Saudská Arábia",
-  Qatar: "Katar",
-  Iraq: "Irak",
-  Jordan: "Jordánsko",
-  "United Arab Emirates": "Spojené arabské emiráty",
-  Uzbekistan: "Uzbekistan",
-  China: "Čína",
-  "China PR": "Čína",
+  Czechia: "Česko", "Rep. Of Ireland": "Írsko", "Republic of Ireland": "Írsko", "FYR Macedonia": "Severné Macedónsko",
+  Macedonia: "Severné Macedónsko", "Türkiye": "Turecko", Turkiye: "Turecko", "Bosnia & Herzegovina": "Bosna a Hercegovina",
+  Ireland: "Írsko", Holland: "Holandsko", Kyrgyzstan: "Kirgizsko", Argentina: "Argentína", Brazil: "Brazília",
+  Uruguay: "Uruguaj", Colombia: "Kolumbia", Chile: "Čile", Paraguay: "Paraguaj", Peru: "Peru", Ecuador: "Ekvádor",
+  Bolivia: "Bolívia", Venezuela: "Venezuela", USA: "USA", "United States": "USA", Mexico: "Mexiko", Canada: "Kanada",
+  "Costa Rica": "Kostarika", Panama: "Panama", Jamaica: "Jamajka", Honduras: "Honduras", Haiti: "Haiti",
+  Curacao: "Curaçao", Morocco: "Maroko", Algeria: "Alžírsko", Tunisia: "Tunisko", Egypt: "Egypt", Senegal: "Senegal",
+  Nigeria: "Nigéria", Ghana: "Ghana", Cameroon: "Kamerun", "Ivory Coast": "Pobrežie Slonoviny",
+  "Cote D'Ivoire": "Pobrežie Slonoviny", "South Africa": "Južná Afrika", Mali: "Mali", "Cape Verde Islands": "Kapverdy",
+  Japan: "Japonsko", "South Korea": "Južná Kórea", "Korea Republic": "Južná Kórea", Australia: "Austrália", Iran: "Irán",
+  "Saudi Arabia": "Saudská Arábia", Qatar: "Katar", Iraq: "Irak", Jordan: "Jordánsko",
+  "United Arab Emirates": "Spojené arabské emiráty", Uzbekistan: "Uzbekistan", China: "Čína", "China PR": "Čína",
   "New Zealand": "Nový Zéland",
 };
 
@@ -143,137 +59,259 @@ function translateFormLetter(letter) {
 }
 
 /**
- * Preloží mená tímov, ktoré sú vložené priamo vo vete (napr. "Výsledok zápasu:
- * Liechtenstein alebo remíza", vysvetlenie s formou a pod.) - len na zobrazenie,
- * uložené dáta (SavedTip.homeTeam/awayTeam) zostávajú v pôvodnom tvare, aby
- * fungovalo vyhodnocovanie výsledkov (tipEvaluator porovnáva presne s nimi).
+ * Preloží mená tímov vložené priamo vo vete a „Over/Under 2.5“ na „Nad/Pod 2,5“ –
+ * len na zobrazenie. Uložené dáta ostávajú v pôvodnom tvare (vyhodnocovanie
+ * výsledkov porovnáva presne s nimi).
  */
-/** Slovenský tvar podľa počtu: plural(3, "tip", "tipy", "tipov") -> "3 tipy". */
+function translateNamesInText(text, homeOriginal, awayOriginal) {
+  if (!text) return "";
+  let result = String(text);
+  const homeSk = translateTeamName(homeOriginal);
+  const awaySk = translateTeamName(awayOriginal);
+  if (homeOriginal && homeSk !== homeOriginal) result = result.split(homeOriginal).join(homeSk);
+  if (awayOriginal && awaySk !== awayOriginal) result = result.split(awayOriginal).join(awaySk);
+  result = result.replace(/\bOver (\d+(?:\.\d+)?)/g, (_m, n) => "Nad " + n.replace(".", ","));
+  result = result.replace(/\bUnder (\d+(?:\.\d+)?)/g, (_m, n) => "Pod " + n.replace(".", ","));
+  result = result.replace(/(\d)\.(\d)/g, "$1,$2");
+  return result;
+}
+
+// ---- Čísla po slovensky ----
+const NB = " "; // nezlomiteľná medzera pred %
 /** Číslo so slovenskou desatinnou čiarkou: fmtNum(1.845, 2) -> "1,85". */
 function fmtNum(n, digits) {
   return Number(n).toFixed(digits).replace(".", ",");
 }
-
 /** Číslo so znamienkom: +1,5 / −0,8 (typografické mínus). */
 function signed(n, digits) {
   return (n > 0 ? "+" : n < 0 ? "−" : "") + fmtNum(Math.abs(n), digits);
 }
-
+/** Slovenský tvar podľa počtu: plural(3, "tip", "tipy", "tipov") -> "3 tipy". */
 function plural(n, one, few, many) {
   return n + " " + (n === 1 ? one : n >= 2 && n <= 4 ? few : many);
 }
-
 function impliedOdds(probability) {
   return probability > 0 ? (100 / probability).toFixed(2) : "-";
 }
+/** Kurz v slovenskom zápise (1,72). */
+function fmtOdds(n) {
+  return Number(n).toFixed(2).replace(".", ",");
+}
+/** Skutočný kurz tipu, ak je známy – inak odhad z pravdepodobnosti (~1,43). */
+function tipOddsLabel(t) {
+  return typeof t.odds === "number" && t.odds > 1 ? fmtOdds(t.odds) : "~" + impliedOdds(t.probability).replace(".", ",");
+}
+function pctTxt(v, digits = 0) {
+  return v == null || Number.isNaN(v) ? "–" : `${fmtNum(v, digits)}${NB}%`;
+}
+function clampPercent(v) {
+  return Math.max(0, Math.min(100, Number(v) || 0));
+}
+function escapeHtml(str) {
+  return String(str ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+}
+function pad2(n) {
+  return String(n).padStart(2, "0");
+}
+function isoDay(d) {
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+/** Dnešný dátum podľa miestneho času (YYYY-MM-DD). toISOString() by po polnoci vrátil ešte včerajšok. */
+function localToday() {
+  return isoDay(new Date());
+}
+function todayIso() {
+  return localToday();
+}
+function shortDate(d) {
+  return `${d.getDate()}. ${d.getMonth() + 1}.`;
+}
+function longDate(d) {
+  return `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}`;
+}
+function timeHm(d) {
+  return d.toLocaleTimeString("sk-SK", { hour: "2-digit", minute: "2-digit" });
+}
+function dayKeyLabel(key) {
+  const [y, m, d] = String(key || "").split("-").map(Number);
+  return y ? `${d}. ${m}. ${y}` : "";
+}
+const MONTH_NAMES = ["Január", "Február", "Marec", "Apríl", "Máj", "Jún", "Júl", "August", "September", "Október", "November", "December"];
 
-/** Zápas už začal (alebo je odložený/zrušený) - tip ani tiket z neho sa nedá pridať. */
+// ---- Pravidlá tipov ----
+const STRONG_TIP_MIN_PROBABILITY = 70; // STRONG_TIP_MIN_PROBABILITY v oddsMatcher.ts
+let MIN_ODDS = 1.55; // predvolené; ak server pošle MIN_ODDS (/api/public/vip-seats), použije sa ten
+const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté konto"];
+const MATCH_STARTED_TEXT = "Zápas už začal – tip z neho sa už nedá pridať.";
+const LIVE_STATUSES = ["1H", "HT", "2H", "ET", "BT", "P", "SUSP", "INT"];
+const FINISHED_STATUSES = ["FT", "AET", "PEN"];
+
+/** Zápas už začal (alebo je odložený/zrušený) – tip z neho sa nedá pridať. */
 function matchHasStarted(fixture) {
   const status = fixture?.status ?? "NS";
   if (!["NS", "TBD"].includes(status)) return true;
   const t = new Date(fixture?.date).getTime();
   return !isNaN(t) && t <= Date.now();
 }
-
-const MATCH_STARTED_TEXT = "Zápas už začal – tip ani tiket z neho sa už nedá pridať.";
-
-/** Označenie tipu pridaného ručne napriek kontrole kurzu. */
 function isOverrideTip(t) {
   return !!t.overrideFilter || (Array.isArray(t.legs) && t.legs.some((l) => l.overrideFilter));
 }
-
-function manualBadge(t) {
-  return t.manualEntry ? ` <span class="override-badge" style="color: var(--text-muted);" title="Tip doplnený ručne po zápase">✍ doplnené ručne</span>` : "";
-}
-
-function editedBadge(t) {
-  return t.edited ? ` <span class="override-badge" style="color: var(--text-muted);" title="Výsledok alebo kurz bol ručne opravený">✎ upravené</span>` : "";
-}
-
-function overrideBadge(t) {
-  return isOverrideTip(t) ? ` <span class="override-badge" title="Vyradené kontrolou kurzu, pridané ručne">⚠️ mimo filtra</span>` : "";
-}
-
-/** Kurz v slovenskom zápise (1,72). */
-function fmtOdds(n) {
-  return n.toFixed(2).replace(".", ",");
-}
-
-/** Skutočný kurz tipu, ak je známy - inak odhad z pravdepodobnosti (~1,43). */
-function tipOddsLabel(t) {
-  return typeof t.odds === "number" && t.odds > 1 ? fmtOdds(t.odds) : "~" + impliedOdds(t.probability).replace(".", ",");
-}
-
-/** Riadok s kurzom a hodnotou pri tipe v detaile zápasu. */
-/** Odporúčaný tip s dôverou aspoň 70 % (STRONG_TIP_MIN_PROBABILITY v oddsMatcher.ts). */
-const STRONG_TIP_MIN_PROBABILITY = 70;
-function strongTipBadge(p) {
-  return typeof p === "number" && p >= STRONG_TIP_MIN_PROBABILITY
-    ? ' <span class="strong-tip" title="Dôvera 70 % a viac.">★ 70 %+</span>'
-    : "";
-}
-
-/** Silný tip dňa – vo VIP kanáli ho dostane len jeden tip za deň (vyberá server pri odoslaní). */
-const STRONG_OF_DAY_BADGE =
-  ' <span class="strong-tip" title="Tip s najvyššou dôverou dňa (aspoň 70 %). Vo VIP kanáli pôjde ako ⭐ Silný tip dňa – ak ho uložíš a pošleš.">⭐ Silný tip dňa</span>';
-
-function betOddsHtml(bet) {
-  if (typeof bet.odds === "number" && bet.odds > 1) {
-    const ev = Math.round(((bet.expectedValue ?? 0) - 1) * 100);
-    return ` · kurz <strong>${fmtOdds(bet.odds)}</strong> <span class="muted small">(${bet.oddsBookmakers} stáv.)</span> · hodnota <strong style="color:var(--success)">${signed(ev, 0)} %</strong>`;
-  }
-  if (typeof bet.minOdds === "number") {
-    return ` · <strong>hraj len pri kurze aspoň ${fmtOdds(bet.minOdds)}</strong> <span class="muted small">(kurz over v stávkovke)</span>`;
-  }
-  return ` · kurz ~${impliedOdds(bet.probability).replace(".", ",")} <span class="muted small">(odhad – stávkovky kurz neponúkajú)</span>`;
-}
-
-/** Minimálny kurz tipu: hodnota aspoň +5 % pri dôvere modelu a zároveň aspoň 1,55. */
+/** Minimálny kurz tipu: hodnota aspoň +5 % pri dôvere modelu a zároveň aspoň MIN_ODDS. */
 function minOddsFor(bet) {
   if (typeof bet.minOdds === "number") return bet.minOdds;
   const p = (bet.probability ?? 0) / 100;
-  return p > 0 ? Math.max(1.55, Math.ceil((1.05 / p) * 100) / 100) : 1.55;
+  return p > 0 ? Math.max(MIN_ODDS, Math.ceil((1.05 / p) * 100) / 100) : MIN_ODDS;
+}
+function evPct(ev) {
+  const p = Math.round((ev - 1) * 100);
+  return `${p >= 0 ? "+" : "−"}${Math.abs(p)}${NB}%`;
+}
+function strongTipBadge(p) {
+  return typeof p === "number" && p >= STRONG_TIP_MIN_PROBABILITY
+    ? ` <span class="badge-strong" title="Dôvera 70 % a viac.">★ 70${NB}%+</span>`
+    : "";
+}
+/** Kurz a hodnota tipu (rovnaké pravidlá ako predtým betOddsHtml). */
+function betOddsHtml(bet) {
+  if (typeof bet.odds === "number" && bet.odds > 1) {
+    const ev = Math.round(((bet.expectedValue ?? 0) - 1) * 100);
+    const bk = bet.oddsBookmakers ? ` <span class="faint">· ${bet.oddsBookmakers} stáv.</span>` : "";
+    return `<span>Kurz <b>${fmtOdds(bet.odds)}</b>${bk}</span><span>Hodnota <b class="g">${signed(ev, 0)}${NB}%</b></span>`;
+  }
+  if (typeof bet.minOdds === "number") {
+    return `<span><b>Hraj len pri kurze aspoň ${fmtOdds(bet.minOdds)}</b> <span class="faint">(kurz over v stávkovke)</span></span>`;
+  }
+  return `<span>Kurz ~${impliedOdds(bet.probability).replace(".", ",")} <span class="faint">(odhad – stávkovky kurz neponúkajú)</span></span>`;
 }
 
-/**
- * Pri každom uložení tipu sa appka spýta na kurz Michalovej stávkovky (Fortuna,
- * Tipsport, Niké – v API nie sú). Predvyplnený je kurz z API, ak je. Vráti kurz,
- * alebo null = tip neukladať (zrušené alebo kurz pod minimom).
- */
+// ---- Ikony ----
+const ICON = {
+  zapasy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 7l4 3-1.5 5h-5L8 10z"/></svg>',
+  tipy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>',
+  historia: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16M8 15l4-4 3 3 5-6"/></svg>',
+  clenovia: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5M16 4.5a3.5 3.5 0 010 7M18 14.6c2 .7 3.2 2.5 3.6 5.4"/></svg>',
+  nastroje: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>',
+  edit: '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg>',
+  send: '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L6.2 13.1 1.3 11.6c-1-.3-1.1-1 .2-1.5L20.6 2.8c.9-.3 1.6.2 1.3 1.5z"/></svg>',
+  result: '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M5 4l15 8-15 8 3-8z"/></svg>',
+  archive: '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M3 5h18v4H3zM5 9v10h14V9M10 13h4"/></svg>',
+  unarchive: '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M3 5h18v4H3zM5 9v10h14V9M12 17v-5M9.5 14.5 12 12l2.5 2.5"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
+};
+
+/** Kruh s dôverou okolo percenta. */
+function ring(p, size = 64) {
+  const v = clampPercent(p);
+  const C = 2 * Math.PI * 26;
+  return `<div class="ring" style="width:${size}px;height:${size}px" aria-label="Dôvera ${Math.round(v)} %"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="5"/><circle cx="32" cy="32" r="26" fill="none" stroke="url(#ringGrad)" stroke-width="5" stroke-linecap="round" stroke-dasharray="${((C * v) / 100).toFixed(1)} 999"/></svg><b>${Math.round(v)}</b></div>`;
+}
+function crest(logo, cls = "crest") {
+  return logo ? `<img class="${cls}" src="${escapeHtml(logo)}" alt="" loading="lazy" />` : `<span class="${cls}"></span>`;
+}
+function skeletonHtml(rows = 3) {
+  return `<div class="skel-wrap">${Array.from({ length: rows }).map(() => `<div class="skeleton"></div>`).join("")}</div>`;
+}
+
+// ---- Toast, fetch ----
+function showToast(message) {
+  const isError = /zlyhal|chyba|nepodarilo|neplatn|pod minimom|nevyzerá/i.test(message);
+  document.querySelectorAll(".toast").forEach((t) => t.remove()); // naraz len jedno hlásenie
+  const toast = document.createElement("div");
+  toast.className = `toast ${isError ? "toast-error" : "toast-success"}`;
+  toast.setAttribute("role", "status");
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add("toast-visible"));
+  setTimeout(() => {
+    toast.classList.remove("toast-visible");
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}
+
+async function fetchJson(url, options) {
+  const res = await fetch(url, options);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error || `Chyba servera (${res.status})`);
+  }
+  return data;
+}
+function postJson(url, body) {
+  return fetchJson(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body ?? {}),
+  });
+}
+
+// ---- Okná (modály): Escape a klik mimo okna ich zatvoria ----
+const modalStack = [];
+function openModal(innerHtml, { wide = false, cls = "", onClose } = {}) {
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `<div class="modal${wide ? " modal-wide" : ""}${cls ? " " + cls : ""}" role="dialog" aria-modal="true">${innerHtml}</div>`;
+  document.body.appendChild(overlay);
+  document.body.classList.add("modal-open");
+  const entry = { overlay, el: overlay.firstElementChild, closed: false };
+  entry.close = (result) => {
+    if (entry.closed) return;
+    entry.closed = true;
+    overlay.remove();
+    const i = modalStack.indexOf(entry);
+    if (i >= 0) modalStack.splice(i, 1);
+    if (!modalStack.length) document.body.classList.remove("modal-open");
+    if (onClose) onClose(result);
+  };
+  let downOnBackdrop = false;
+  overlay.addEventListener("mousedown", (e) => { downOnBackdrop = e.target === overlay; });
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay && downOnBackdrop) entry.close();
+  });
+  overlay.querySelectorAll("[data-close]").forEach((b) => b.addEventListener("click", () => entry.close()));
+  modalStack.push(entry);
+  return entry;
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  if (modalStack.length) {
+    e.preventDefault();
+    modalStack[modalStack.length - 1].close();
+    return;
+  }
+  // bez otvoreného okna: na mobile Escape zatvorí analýzu zápasu
+  if (document.getElementById("viewZapasy").classList.contains("an-open")) closeMobileAnalysis();
+});
+
 /**
  * Okno na zadanie textu v štýle appky (namiesto window.prompt, ktorý Mac appka
  * nepodporuje). Vráti zadaný text, alebo null pri zrušení.
  */
 function promptModal(label, value = "") {
   return new Promise((resolve) => {
-    const overlay = document.createElement("div");
-    overlay.className = "modal-overlay";
-    overlay.innerHTML = `
-      <div class="modal" style="max-width:340px;">
-        <h3 style="margin-bottom:12px;">${escapeHtml(label)}</h3>
-        <input type="text" inputmode="decimal" id="promptModalInput" style="width:100%;box-sizing:border-box;" />
-        <div style="display:flex;gap:10px;margin-top:16px;">
-          <button class="btn-primary" id="promptModalOk" style="flex:1;">OK</button>
-          <button class="btn-ghost" id="promptModalCancel" style="flex:1;">Zrušiť</button>
-        </div>
-      </div>`;
-    document.body.appendChild(overlay);
-    const input = overlay.querySelector("#promptModalInput");
+    const m = openModal(`
+      <h3 class="modal-title-sm">${escapeHtml(label)}</h3>
+      <input type="text" inputmode="decimal" class="prompt-input" />
+      <div class="modal-actions">
+        <button type="button" class="btn ghost" data-cancel>Zrušiť</button>
+        <button type="button" class="btn" data-ok>OK</button>
+      </div>`, { cls: "modal-sm", onClose: (r) => resolve(r == null ? null : r) });
+    const input = m.el.querySelector(".prompt-input");
     input.value = value;
-    const done = (result) => {
-      overlay.remove();
-      resolve(result);
-    };
-    overlay.querySelector("#promptModalOk").onclick = () => done(input.value);
-    overlay.querySelector("#promptModalCancel").onclick = () => done(null);
-    input.onkeydown = (e) => {
-      if (e.key === "Enter") done(input.value);
-      if (e.key === "Escape") done(null);
-    };
+    m.el.querySelector("[data-ok]").onclick = () => m.close(input.value);
+    m.el.querySelector("[data-cancel]").onclick = () => m.close(null);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); m.close(input.value); }
+    });
     setTimeout(() => { input.focus(); input.select(); }, 0);
   });
 }
 
+/**
+ * Pri každom uložení tipu sa appka spýta na kurz stávkovky (Fortuna, Tipsport,
+ * Niké – v API nie sú). Predvyplnený je kurz z API, ak je. Vráti kurz,
+ * alebo null = tip neukladať (zrušené alebo kurz pod minimom).
+ */
 async function askRealOdds(bet) {
   const min = minOddsFor(bet);
   const pre = typeof bet.odds === "number" && bet.odds > 1 ? fmtOdds(bet.odds) : "";
@@ -287,508 +325,607 @@ async function askRealOdds(bet) {
   return Math.round(odd * 100) / 100;
 }
 
-function skeletonHtml(rows = 3) {
-  return Array.from({ length: rows })
-    .map(() => `<div class="skeleton skeleton-block"></div>`)
-    .join("");
+/** Výber Telegram kanála: "premium", "free", alebo null = neposielať. */
+function askTelegramTarget() {
+  return new Promise((resolve) => {
+    const m = openModal(`
+      <h3>Odoslať do Telegramu?</h3>
+      <div class="tg-choices">
+        <button type="button" class="btn" id="tgChoicePremium">◆ PLATINUM kanál</button>
+        <button type="button" class="btn" id="tgChoiceFree">★ FREE kanál</button>
+        <button type="button" class="btn ghost" id="tgChoiceNone">Neposielať</button>
+      </div>`, { cls: "modal-sm", onClose: (r) => resolve(r || null) });
+    m.el.querySelector("#tgChoicePremium").onclick = () => m.close("premium");
+    m.el.querySelector("#tgChoiceFree").onclick = () => m.close("free");
+    m.el.querySelector("#tgChoiceNone").onclick = () => m.close(null);
+  });
 }
 
-function showToast(message) {
-  const isError = /zlyhal|chyba|nepodarilo/i.test(message);
-  const toast = document.createElement("div");
-  toast.className = `toast ${isError ? "toast-error" : "toast-success"}`;
-  toast.textContent = message;
-  document.body.appendChild(toast);
-  requestAnimationFrame(() => toast.classList.add("toast-visible"));
-  setTimeout(() => {
-    toast.classList.remove("toast-visible");
-    setTimeout(() => toast.remove(), 300);
-  }, 3500);
-}
-
-function translateNamesInText(text, homeOriginal, awayOriginal) {
-  if (!text) return "";
-  let result = text;
-  const homeSk = translateTeamName(homeOriginal);
-  const awaySk = translateTeamName(awayOriginal);
-  if (homeSk !== homeOriginal) result = result.split(homeOriginal).join(homeSk);
-  if (awaySk !== awayOriginal) result = result.split(awayOriginal).join(awaySk);
-  // "Over 2.5" / "Under 2.5" -> "Nad 2,5" / "Pod 2,5" (len na zobrazenie,
-  // uložené dáta ostávajú bez zmeny kvôli vyhodnocovaniu).
-  result = result.replace(/\bOver (\d+(?:\.\d+)?)/g, (_m, n) => "Nad " + n.replace(".", ","));
-  result = result.replace(/\bUnder (\d+(?:\.\d+)?)/g, (_m, n) => "Pod " + n.replace(".", ","));
-  // Desatinné čísla po slovensky (1.8 -> 1,8) - vysvetlenia tipov a varovania.
-  result = result.replace(/(\d)\.(\d)/g, "$1,$2");
-  return result;
-}
-
-// ---- Animácia percenta na úvodnej obrazovke ----
-(function runSplashProgress() {
-  const fill = document.getElementById("splashProgressFill");
-  const pct = document.getElementById("splashProgressPct");
-  if (!fill || !pct) return;
-
-  const duration = 3400; // ms - stihne sa doplniť pred zmiznutím úvodnej obrazovky (3.8s)
-  const start = performance.now();
-
-  function tick(now) {
-    const elapsed = now - start;
-    const progress = Math.min(1, elapsed / duration);
-    const percent = Math.round(progress * 100);
-    fill.style.width = `${percent}%`;
-    pct.textContent = `${percent} %`;
-    if (progress < 1) requestAnimationFrame(tick);
+async function maybeOfferTelegram(tipId) {
+  const target = await askTelegramTarget();
+  if (!target) return;
+  try {
+    await postJson(`/api/tips/${tipId}/telegram`, { target });
+    showToast("Tip odoslaný do Telegram kanála.");
+  } catch (err) {
+    showToast(`Odoslanie do Telegramu zlyhalo: ${err.message}`);
   }
+}
 
-  requestAnimationFrame(tick);
-})();
+// ---- Navigácia (obrazovky) ----
+const VIEWS = [
+  { id: "zapasy", label: "Zápasy", short: "Zápasy" },
+  { id: "tipy", label: "Tipy dňa", short: "Tipy dňa" },
+  { id: "historia", label: "História tipov", short: "História" },
+  { id: "clenovia", label: "Členovia", short: "Členovia" },
+  { id: "nastroje", label: "Nástroje", short: "Nástroje" },
+];
+let currentView = "zapasy";
 
+function renderNav() {
+  const count = fixtureTotalCount ? `<span class="cnt">${fixtureTotalCount}</span>` : "";
+  document.getElementById("sideNav").innerHTML = VIEWS.map(
+    (v) => `<a href="#${v.id}" data-nav="${v.id}" class="${v.id === currentView ? "on" : ""}">${ICON[v.id]}<span>${v.label}</span>${v.id === "zapasy" ? count : ""}</a>`
+  ).join("");
+  document.getElementById("tabBar").innerHTML = VIEWS.map(
+    (v) => `<a href="#${v.id}" data-nav="${v.id}" class="${v.id === currentView ? "on" : ""}">${ICON[v.id]}<span>${v.short}</span></a>`
+  ).join("");
+}
+
+function showView(id) {
+  if (!VIEWS.some((v) => v.id === id)) id = "zapasy";
+  const changed = id !== currentView;
+  currentView = id;
+  document.querySelectorAll(".view").forEach((s) => { s.hidden = s.dataset.view !== id; });
+  renderNav();
+  if (changed) window.scrollTo(0, 0);
+  if (id === "historia") openTipsHistory();
+  if (id === "clenovia") openSubscribers();
+  if (id === "tipy") renderDayTipsView();
+}
+window.addEventListener("hashchange", () => showView(location.hash.slice(1)));
+function goTo(id) {
+  if (location.hash.slice(1) === id) showView(id);
+  else location.hash = id;
+}
+
+// ---- Platinum miesta (rovnaké čísla ako na tipradar.eu) ----
+function seatsHtml(t) {
+  const row = (key, label) => {
+    const r = t && t[key];
+    let val = "–", full = false, bar = "";
+    if (r) {
+      // 1 a 3 mesiace sú bez obmedzenia miest (total = null)
+      val = r.total == null ? `${r.occupied} čl.` : `${r.occupied} / ${r.total}`;
+      full = r.total != null && r.left <= 0;
+      if (r.total) bar = `<div class="bar"><i style="width:${Math.min(100, Math.round((r.occupied / r.total) * 100))}%"></i></div>`;
+    } else if (key === "season") {
+      bar = `<div class="bar"><i style="width:0"></i></div>`;
+    }
+    return `<div class="r${full ? " full" : ""}">${label}<b>${val}</b></div>${bar}`;
+  };
+  return `<small>Platinum</small>${row("m1", "1 mesiac")}${row("m3", "3 mesiace")}${row("season", "6 mesiacov")}`;
+}
+function renderSeats(terms) {
+  document.getElementById("seatBox").innerHTML = seatsHtml(terms);
+  document.getElementById("seatBoxMobile").innerHTML = seatsHtml(terms);
+}
+async function loadSeats() {
+  renderSeats(null);
+  try {
+    const res = await fetch("/api/public/vip-seats", { cache: "no-store" });
+    if (!res.ok) throw new Error();
+    const d = await res.json();
+    if (typeof d.minOdds === "number" && d.minOdds > 1 && d.minOdds < 5) MIN_ODDS = d.minOdds;
+    const t = d.terms;
+    if (!t || !t.m1 || !t.m3 || !t.season) return;
+    renderSeats(t);
+  } catch {
+    /* pri chybe ostane „–“ */
+  }
+}
+document.getElementById("seatBox").addEventListener("click", () => goTo("clenovia"));
+
+// =====================================================================
+// ZÁPASY
+// =====================================================================
 let selectedLeagueIds = new Set();
 let currentFixtures = [];
-let currentAnalysis = null;
-let ticketItems = []; // aktuálne vybrané tipy na spojenie do "tiketu"
-let collapsedLeagues = new Set(); // ligy schované cez tlačidlo, zostáva aj po automatickom obnovení
+let lastFixtureResults = [];
+let fixtureTotalCount = 0;
+let selectedFixtureId = null;
+let fixturesLoading = false;
+let fixturesPromise = null;
+const collapsedLeagues = new Set(); // ligy schované kliknutím, zostáva aj po automatickom obnovení
 
 const matchDateInput = document.getElementById("matchDateInput");
-const seasonInput = document.getElementById("seasonInput");
-const loadFixturesBtn = document.getElementById("loadFixturesBtn");
 const fixtureListEl = document.getElementById("fixtureList");
-const fixtureCountEl = document.getElementById("fixtureCount");
-const analysisColumnEl = document.getElementById("analysisColumn");
-
-const openTicketBtn = document.getElementById("openTicketBtn");
-const ticketCountEl = document.getElementById("ticketCount");
-const ticketModal = document.getElementById("ticketModal");
-const ticketSummaryEl = document.getElementById("ticketSummary");
-const ticketListEl = document.getElementById("ticketList");
-const closeTicketBtn = document.getElementById("closeTicketBtn");
-const clearTicketBtn = document.getElementById("clearTicketBtn");
-const saveTicketBtn = document.getElementById("saveTicketBtn");
-
-const openTipsBtn = document.getElementById("openTipsBtn");
-const tipsModal = document.getElementById("tipsModal");
-const tipsSummaryEl = document.getElementById("tipsSummary");
-const marketBreakdownEl = document.getElementById("marketBreakdown");
-const bankrollStartInput = document.getElementById("bankrollStartInput");
-const bankrollResultEl = document.getElementById("bankrollResult");
-const calibrationResultEl = document.getElementById("calibrationResult");
-const tipsListEl = document.getElementById("tipsList");
-const closeTipsBtn = document.getElementById("closeTipsBtn");
-const checkResultsBtn = document.getElementById("checkResultsBtn");
-const clearAllTipsBtn = document.getElementById("clearAllTipsBtn");
-const noTipTodayBtn = document.getElementById("noTipTodayBtn");
-const weeklyReportBtn = document.getElementById("weeklyReportBtn");
-const dailyResultsBtn = document.getElementById("dailyResultsBtn");
-
-const openSubscribersBtn = document.getElementById("openSubscribersBtn");
-const subscribersModal = document.getElementById("subscribersModal");
-const subscribersSummaryEl = document.getElementById("subscribersSummary");
-const subscribersListEl = document.getElementById("subscribersList");
-const closeSubscribersBtn = document.getElementById("closeSubscribersBtn");
-const addSubscriberBtn = document.getElementById("addSubscriberBtn");
-const subNameInput = document.getElementById("subName");
-const subContactInput = document.getElementById("subContact");
-const subTelegramChatIdInput = document.getElementById("subTelegramChatId");
-const subTierSelect = document.getElementById("subTier");
-const subLengthSelect = document.getElementById("subLength");
-const subStartInput = document.getElementById("subStart");
-const subPriceInput = document.getElementById("subPrice");
-const subFounderInput = document.getElementById("subFounder");
-const subNoteInput = document.getElementById("subNote");
-const memberFilterEl = document.getElementById("memberFilter");
-
-
-async function fetchJson(url, options) {
-  const res = await fetch(url, options);
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(data.error || `Chyba servera (${res.status})`);
-  }
-  return data;
-}
+const fixtureSearchEl = document.getElementById("fixtureSearch");
+const analysisPaneEl = document.getElementById("analysisPane");
+const viewZapasyEl = document.getElementById("viewZapasy");
 
 /**
- * Odhadne sezónu (rok jej začiatku) podľa zvoleného dátumu. Väčšina top
- * európskych líg beží od júla/augusta do mája/júna, preto mesiace júl-december
- * patria do sezóny toho istého roka, a mesiace január-jún do sezóny predošlého roka.
- * Pri súťažiach s jednoročnou sezónou (napr. MS, EURO) si sezónu preplš ručne.
+ * Odhadne sezónu (rok jej začiatku) podľa zvoleného dátumu: júl – december patrí
+ * do sezóny toho istého roka, január – jún do sezóny predošlého roka.
  */
 function guessSeasonFromDate(dateStr) {
   const d = new Date(dateStr);
-  const month = d.getMonth() + 1; // 1-12
+  const month = d.getMonth() + 1;
   return month >= 7 ? d.getFullYear() : d.getFullYear() - 1;
 }
+function currentSeason() {
+  return guessSeasonFromDate(matchDateInput.value || localToday());
+}
+function shiftDay(key, delta) {
+  const [y, m, d] = key.split("-").map(Number);
+  return isoDay(new Date(y, m - 1, d + delta));
+}
+function syncDayChips() {
+  const today = localToday();
+  const val = matchDateInput.value || today;
+  let matched = false;
+  document.querySelectorAll("#dayChips [data-day]").forEach((c) => {
+    const on = shiftDay(today, Number(c.dataset.day)) === val;
+    c.classList.toggle("on", on);
+    if (on) matched = true;
+  });
+  const chip = document.getElementById("dateChip");
+  chip.classList.toggle("on", !matched);
+  const [y, m, d] = val.split("-").map(Number);
+  document.getElementById("dateChipText").textContent = matched ? "" : `${d}. ${m}.${y !== new Date().getFullYear() ? " " + y : ""}`;
+}
+function setMatchDate(key) {
+  if (!key) return;
+  matchDateInput.value = key;
+  syncDayChips();
+  loadFixtures();
+}
+document.getElementById("dayChips").addEventListener("click", (e) => {
+  const c = e.target.closest("[data-day]");
+  if (c) setMatchDate(shiftDay(localToday(), Number(c.dataset.day)));
+});
+document.getElementById("dateChip").addEventListener("click", () => {
+  try {
+    matchDateInput.showPicker();
+  } catch {
+    matchDateInput.focus();
+    matchDateInput.click();
+  }
+});
+matchDateInput.addEventListener("change", () => setMatchDate(matchDateInput.value));
 
 async function init() {
+  document.body.insertAdjacentHTML(
+    "afterbegin",
+    `<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F8EDD3"/><stop offset="1" stop-color="#B8995E"/></linearGradient></defs></svg>`
+  );
   matchDateInput.value = localToday();
-  seasonInput.value = String(guessSeasonFromDate(matchDateInput.value));
-
-  matchDateInput.addEventListener("change", () => {
-    seasonInput.value = String(guessSeasonFromDate(matchDateInput.value));
-    loadFixtures();
-  });
-
-  const leagues = await fetchJson("/api/leagues");
-  leagues.forEach((league) => selectedLeagueIds.add(league.id)); // všetky ligy sú vždy zahrnuté
-
-  // Appka rovno pri otvorení sama načíta dnešné zápasy - netreba na nič klikať.
+  syncDayChips();
+  syncMemberPrice();
+  document.getElementById("subStart").value = todayIso();
+  updateSubEndPreview();
+  showView(location.hash.slice(1) || "zapasy");
+  loadSeats();
+  try {
+    const leagues = await fetchJson("/api/leagues");
+    leagues.forEach((league) => selectedLeagueIds.add(league.id)); // všetky ligy sú vždy zahrnuté
+  } catch (err) {
+    fixtureListEl.innerHTML = `<p class="empty">Ligy sa nepodarilo načítať: ${escapeHtml(err.message)}</p>`;
+    return;
+  }
+  // Appka rovno pri otvorení sama načíta dnešné zápasy – netreba na nič klikať.
   loadFixtures();
 }
 
-/** Dnešný dátum podľa miestneho času (YYYY-MM-DD). toISOString() by po polnoci vrátil ešte včerajšok. */
-function localToday() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
 // Počítadlo načítaní: zoznam smie vykresliť len posledné spustené načítanie
-// (inak by pomalšia staršia odpoveď, napr. na dnešok, prepísala zvolený deň).
+// (inak by pomalšia staršia odpoveď prepísala zvolený deň).
 let fixturesRequestId = 0;
 
-async function loadFixtures(silent = false) {
+function loadFixtures(silent = false) {
+  fixturesPromise = doLoadFixtures(silent);
+  return fixturesPromise;
+}
+
+async function doLoadFixtures(silent) {
   const requestId = ++fixturesRequestId;
-  const season = parseInt(seasonInput.value, 10);
   const date = matchDateInput.value || localToday();
-
-  const leagueIds = new Set(selectedLeagueIds);
-
-  if (leagueIds.size === 0) {
-    if (!silent) {
-      fixtureListEl.innerHTML = `<p class="empty-state">Zaškrtni aspoň jednu ligu.</p>`;
-    }
-    return;
-  }
-
+  const season = guessSeasonFromDate(date);
+  const leagueIds = Array.from(selectedLeagueIds);
+  if (!leagueIds.length) return;
   if (!silent) {
-    fixtureListEl.innerHTML = skeletonHtml(5);
-    loadFixturesBtn.disabled = true;
+    fixturesLoading = true;
+    fixtureListEl.innerHTML = skeletonHtml(6);
+    updateDayTipsPromo();
   }
-
   try {
     const results = await Promise.all(
-      Array.from(leagueIds).map(async (leagueId) => {
+      leagueIds.map(async (leagueId) => {
         try {
-          const fixtures = await fetchJson(
-            `/api/fixtures?league=${encodeURIComponent(leagueId)}&season=${season}&date=${date}`
-          );
-          return { leagueId, fixtures };
+          const fixtures = await fetchJson(`/api/fixtures?league=${encodeURIComponent(leagueId)}&season=${season}&date=${date}`);
+          return { leagueId, fixtures: Array.isArray(fixtures) ? fixtures : [] };
         } catch (err) {
           return { leagueId, fixtures: [], error: String(err?.message ?? err) };
         }
       })
     );
-
     if (requestId !== fixturesRequestId) return; // medzitým sa spustilo novšie načítanie
-    currentFixtures = results.flatMap((r) => r.fixtures);
-    // Chyby API (napr. vyčerpaný denný limit) už nezamlčíme – inak by to vyzeralo ako deň bez zápasov.
     const failed = results.filter((r) => r.error);
+    // Chyby API (napr. vyčerpaný denný limit) nezamlčíme – inak by to vyzeralo ako deň bez zápasov.
     if (failed.length === results.length && failed.length > 0) {
       if (!silent) {
-        fixtureListEl.innerHTML = `<p class="empty-state">Zápasy sa nepodarilo načítať: ${escapeHtml(failed[0].error)}<br><span class="muted small">Skús to o chvíľu znova. Ak ide o denný limit API, obnoví sa o polnoci.</span></p>`;
+        currentFixtures = [];
+        lastFixtureResults = [];
+        fixtureTotalCount = 0;
+        renderNav();
+        fixtureListEl.innerHTML = `<p class="empty">Zápasy sa nepodarilo načítať: ${escapeHtml(failed[0].error)}<br><span class="muted small">Skús to o chvíľu znova. Ak ide o denný limit API, obnoví sa o polnoci.</span></p>`;
       }
       return;
     }
-    renderGroupedFixtureList(results);
-    if (failed.length && !silent) {
-      fixtureListEl.insertAdjacentHTML(
-        "afterbegin",
-        `<p class="muted small" style="margin:0 12px 10px;color:var(--danger);">Pri ${failed.length} ${failed.length === 1 ? "lige" : "ligách"} sa zápasy nepodarilo načítať: ${escapeHtml(failed[0].error)}</p>`
-      );
-    }
+    currentFixtures = results.flatMap((r) => r.fixtures);
+    lastFixtureResults = results;
+    fixtureTotalCount = currentFixtures.length;
+    renderNav();
+    renderFixtureList();
   } catch (err) {
-    if (!silent) {
-      fixtureListEl.innerHTML = `<p class="empty-state">Chyba pri načítaní: ${escapeHtml(err.message)}</p>`;
-    }
+    if (!silent && requestId === fixturesRequestId) fixtureListEl.innerHTML = `<p class="empty">Chyba pri načítaní: ${escapeHtml(err.message)}</p>`;
   } finally {
-    if (!silent && requestId === fixturesRequestId) loadFixturesBtn.disabled = false;
+    if (requestId === fixturesRequestId) {
+      fixturesLoading = false;
+      updateDayTipsPromo();
+    }
   }
 }
 
-loadFixturesBtn.addEventListener("click", () => loadFixtures(false));
-
-// Appka si sama každých pár minút znova natiahne zoznam zápasov (potichu, bez
-// blikania), aby dohraté zápasy automaticky zmizli bez potreby čokoľvek klikať.
+// Appka si sama každé 3 minúty potichu znova natiahne zoznam zápasov,
+// aby dohraté zápasy a živé skóre boli aktuálne bez klikania.
 setInterval(() => {
-  loadFixtures(true);
-}, 3 * 60 * 1000); // 3 minúty
+  if (selectedLeagueIds.size) loadFixtures(true);
+}, 3 * 60 * 1000);
 
-function renderGroupedFixtureList(results) {
-  const totalCount = results.reduce((sum, r) => sum + r.fixtures.length, 0);
-  fixtureCountEl.textContent = totalCount ? `${plural(totalCount, "zápas", "zápasy", "zápasov")}` : "";
+function normText(s) {
+  return String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+}
 
-  const groupsWithMatches = results.filter((r) => r.fixtures.length > 0);
+function fixtureRowHtml(f) {
+  const d = new Date(f.date);
+  const isLive = LIVE_STATUSES.includes(f.status);
+  const isDone = FINISHED_STATUSES.includes(f.status);
+  const liveLabel = f.status === "HT" ? "Polčas" : f.status === "BT" ? "Prestávka" : `${f.elapsed ?? "?"}′`;
+  const timeHtml = isLive
+    ? `<span class="fx-time live">${liveLabel}</span>`
+    : `<span class="fx-time"><time>${escapeHtml(timeHm(d))}</time>${isoDay(d) !== matchDateInput.value ? `<small>${shortDate(d)}</small>` : ""}</span>`;
+  const right = isLive
+    ? `<span class="live-score"><i class="live-dot"></i>${f.goalsHome ?? 0}:${f.goalsAway ?? 0}</span>`
+    : isDone
+      ? `<span class="done-score" title="Koniec zápasu">${f.goalsHome ?? 0}:${f.goalsAway ?? 0}</span>`
+      : "";
+  return `<div class="fx${f.fixtureId === selectedFixtureId ? " on" : ""}" role="button" tabindex="0" data-fid="${f.fixtureId}">
+    ${timeHtml}
+    <div class="t">
+      <div>${crest(f.homeTeam.logo)}<span>${escapeHtml(translateTeamName(f.homeTeam.name))}</span></div>
+      <div>${crest(f.awayTeam.logo)}<span>${escapeHtml(translateTeamName(f.awayTeam.name))}</span></div>
+    </div>
+    ${right}
+  </div>`;
+}
 
-  if (groupsWithMatches.length === 0) {
-    fixtureListEl.innerHTML = `<p class="empty-state">Pre vybrané ligy sa v tento deň nekonajú žiadne zápasy.</p>`;
+function renderFixtureList() {
+  const results = lastFixtureResults;
+  const failed = results.filter((r) => r.error);
+  const q = normText(fixtureSearchEl.value.trim());
+  const groups = results
+    .filter((r) => r.fixtures.length > 0)
+    .map((r) => {
+      const league = r.fixtures[0].league || {};
+      const leagueMatch = q && (normText(league.name).includes(q) || normText(translateLeagueName(league.name)).includes(q));
+      const fixtures = !q || leagueMatch
+        ? r.fixtures
+        : r.fixtures.filter((f) =>
+            [f.homeTeam.name, f.awayTeam.name, translateTeamName(f.homeTeam.name), translateTeamName(f.awayTeam.name)].some((n) => normText(n).includes(q))
+          );
+      return { league, fixtures };
+    })
+    .filter((g) => g.fixtures.length > 0);
+
+  let html = "";
+  if (failed.length) {
+    html += `<p class="list-note">Pri ${failed.length} ${failed.length === 1 ? "lige" : "ligách"} sa zápasy nepodarilo načítať: ${escapeHtml(failed[0].error)}</p>`;
+  }
+  if (!results.some((r) => r.fixtures.length)) {
+    html += `<p class="empty">Pre vybrané ligy sa v tento deň nekonajú žiadne zápasy.</p>`;
+  } else if (!groups.length) {
+    html += `<p class="empty">Pre „${escapeHtml(fixtureSearchEl.value.trim())}“ sa nič nenašlo.</p>`;
+  }
+  html += groups
+    .map(({ league, fixtures }) => {
+      const name = league.name ?? "Liga";
+      const collapsed = collapsedLeagues.has(name) && !q;
+      return `<div class="league-group">
+        <button type="button" class="lg" data-league="${escapeHtml(name)}" aria-expanded="${!collapsed}">
+          ${league.logo ? `<img class="lg-logo" src="${escapeHtml(league.logo)}" alt="" loading="lazy" />` : ""}
+          <span>${escapeHtml(translateLeagueName(name))}</span>
+          <em>${plural(fixtures.length, "zápas", "zápasy", "zápasov")}</em>
+          <span class="chev">${collapsed ? "▸" : "▾"}</span>
+        </button>
+        <div class="lg-rows"${collapsed ? " hidden" : ""}>${fixtures.map(fixtureRowHtml).join("")}</div>
+      </div>`;
+    })
+    .join("");
+  fixtureListEl.innerHTML = html;
+}
+
+fixtureSearchEl.addEventListener("input", () => renderFixtureList());
+
+fixtureListEl.addEventListener("click", (e) => {
+  const lg = e.target.closest(".lg");
+  if (lg) {
+    const name = lg.dataset.league;
+    if (collapsedLeagues.has(name)) collapsedLeagues.delete(name);
+    else collapsedLeagues.add(name);
+    const rows = lg.nextElementSibling;
+    const collapsed = collapsedLeagues.has(name);
+    rows.hidden = collapsed;
+    lg.setAttribute("aria-expanded", String(!collapsed));
+    lg.querySelector(".chev").textContent = collapsed ? "▸" : "▾";
     return;
   }
+  const row = e.target.closest(".fx");
+  if (row) openFixtureRow(row);
+});
+fixtureListEl.addEventListener("keydown", (e) => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const row = e.target.closest(".fx");
+  if (row) { e.preventDefault(); openFixtureRow(row); }
+});
 
-  fixtureListEl.innerHTML = "";
-
-  groupsWithMatches.forEach(({ fixtures }) => {
-    const leagueName = fixtures[0]?.league?.name ?? "Liga";
-    const leagueLogo = fixtures[0]?.league?.logo;
-    const isCollapsed = collapsedLeagues.has(leagueName);
-
-    const group = document.createElement("div");
-    group.className = "league-group";
-
-    const header = document.createElement("button");
-    header.className = "league-group-header";
-    header.innerHTML = `<span style="display:flex; align-items:center; gap:8px;">${
-      leagueLogo ? `<img src="${escapeHtml(leagueLogo)}" class="league-logo" alt="" />` : ""
-    }${escapeHtml(translateLeagueName(leagueName))}</span><span class="chevron">${isCollapsed ? "▸" : "▾"}</span>`;
-    header.addEventListener("click", () => {
-      if (collapsedLeagues.has(leagueName)) collapsedLeagues.delete(leagueName);
-      else collapsedLeagues.add(leagueName);
-      rowsContainer.hidden = collapsedLeagues.has(leagueName);
-      header.querySelector(".chevron").textContent = collapsedLeagues.has(leagueName) ? "▸" : "▾";
-    });
-    group.appendChild(header);
-
-    const rowsContainer = document.createElement("div");
-    rowsContainer.className = "league-group-rows";
-    rowsContainer.hidden = isCollapsed;
-
-    fixtures.forEach((fixture) => {
-      const row = document.createElement("div");
-      row.className = "fixture-row";
-
-      const date = new Date(fixture.date);
-      const time = date.toLocaleString("sk-SK", {
-        day: "2-digit",
-        month: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-
-      const LIVE_STATUSES = ["1H", "HT", "2H", "ET", "BT", "P", "SUSP", "INT"];
-      const isLive = LIVE_STATUSES.includes(fixture.status);
-      const liveLabel = fixture.status === "HT" ? "Polčas" : fixture.status === "BT" ? "Prestávka" : `${fixture.elapsed ?? "?"}'`;
-
-      const timeHtml = isLive
-        ? `<div class="time live">
-             <span class="live-dot"></span>${liveLabel}
-             <div class="live-score">${fixture.goalsHome ?? 0}:${fixture.goalsAway ?? 0}</div>
-           </div>`
-        : `<div class="time"><strong>${escapeHtml(
-            date.toLocaleTimeString("sk-SK", { hour: "2-digit", minute: "2-digit" })
-          )}</strong><span>${date.getDate()}. ${date.getMonth() + 1}.</span></div>`;
-
-      row.innerHTML = `
-        ${timeHtml}
-        <div class="teams">
-          <div class="team-line">
-            ${fixture.homeTeam.logo ? `<img class="team-logo" src="${escapeHtml(fixture.homeTeam.logo)}" alt="" />` : ""}
-            <span class="team-name">${escapeHtml(translateTeamName(fixture.homeTeam.name))}</span>
-          </div>
-          <span class="vs">vs</span>
-          <div class="team-line">
-            ${fixture.awayTeam.logo ? `<img class="team-logo" src="${escapeHtml(fixture.awayTeam.logo)}" alt="" />` : ""}
-            <span class="team-name">${escapeHtml(translateTeamName(fixture.awayTeam.name))}</span>
-          </div>
-        </div>
-      `;
-
-      row.addEventListener("click", () => {
-        document.querySelectorAll(".fixture-row").forEach((n) => n.classList.remove("selected"));
-        row.classList.add("selected");
-        analyzeFixture(fixture, fixture.league.id, fixture.league.season);
-        analysisColumnEl.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-
-      rowsContainer.appendChild(row);
-    });
-
-    group.appendChild(rowsContainer);
-    fixtureListEl.appendChild(group);
-  });
+function openFixtureRow(row) {
+  const fixture = currentFixtures.find((f) => String(f.fixtureId) === row.dataset.fid);
+  if (!fixture) return;
+  fixtureListEl.querySelectorAll(".fx.on").forEach((n) => n.classList.remove("on"));
+  row.classList.add("on");
+  analyzeFixture(fixture);
 }
 
-// Počítadlo zobrazení v pravom stĺpci (analýza zápasu, Tipy dňa): vykresliť smie len
-// posledná požiadavka – pomalšia staršia odpoveď nesmie prepísať novší výber.
+const isMobile = () => window.matchMedia("(max-width: 899px)").matches;
+let listScrollY = 0;
+function openMobileAnalysis(title) {
+  document.getElementById("anMobileTitle").textContent = title;
+  if (!isMobile()) return;
+  if (!viewZapasyEl.classList.contains("an-open")) listScrollY = window.scrollY;
+  viewZapasyEl.classList.add("an-open");
+  window.scrollTo(0, 0);
+}
+function closeMobileAnalysis() {
+  viewZapasyEl.classList.remove("an-open");
+  requestAnimationFrame(() => window.scrollTo(0, listScrollY));
+}
+document.getElementById("anBackBtn").addEventListener("click", closeMobileAnalysis);
+
+// ---- Tipy dňa – karta v zozname zápasov ----
+function updateDayTipsPromo() {
+  const el = document.getElementById("dtPromoText");
+  if (fixturesLoading) { el.textContent = "Načítavam zápasy…"; return; }
+  const n = currentFixtures.filter((f) => !matchHasStarted(f)).length;
+  el.textContent = n ? `Prejde ${plural(n, "zápas", "zápasy", "zápasov")} pred výkopom naraz` : "V tento deň už nie sú zápasy pred výkopom";
+}
+document.getElementById("dtPromoBtn").addEventListener("click", () => {
+  goTo("tipy");
+  showDayTips();
+});
+
+// =====================================================================
+// ANALÝZA ZÁPASU
+// =====================================================================
+// Počítadlo zobrazení analýzy: vykresliť smie len posledná požiadavka –
+// pomalšia staršia odpoveď nesmie prepísať novší výber.
 let analysisViewId = 0;
 
-async function analyzeFixture(fixture, leagueId, season) {
+async function analyzeFixture(fixture) {
   const viewId = ++analysisViewId;
-  analysisColumnEl.innerHTML = skeletonHtml(4);
-
+  selectedFixtureId = fixture.fixtureId;
+  openMobileAnalysis(`${translateTeamName(fixture.homeTeam.name)} – ${translateTeamName(fixture.awayTeam.name)}`);
+  analysisPaneEl.innerHTML = skeletonHtml(5);
+  if (!isMobile()) window.scrollTo({ top: 0, behavior: "smooth" });
   try {
-    const result = await fetchJson("/api/analyze", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fixture, leagueId, season }),
-    });
+    const result = await requestAnalysis(fixture);
     if (viewId !== analysisViewId) return; // medzitým bol vybraný iný zápas
-    currentAnalysis = result;
-    renderAnalysis(result);
+    renderAnalysis(result, analysisPaneEl, { onRecalc: () => analyzeFixture(fixture) });
   } catch (err) {
     if (viewId !== analysisViewId) return;
-    analysisColumnEl.innerHTML = `<div class="empty-state">Analýzu sa nepodarilo vypočítať: ${escapeHtml(err.message)}</div>`;
+    analysisPaneEl.innerHTML = `<div class="empty">Analýzu sa nepodarilo vypočítať: ${escapeHtml(err.message)}</div>`;
   }
 }
 
-function renderAnalysis(r) {
-  // Zobrazí všetky tipy zápasu v pásme 68–80 % (predictor.ts vracia max. 1 na trh).
+function requestAnalysis(fixture) {
+  return postJson("/api/analyze", { fixture, leagueId: fixture.league.id, season: fixture.league.season });
+}
+
+/** Najväčší počet stávkoviek, z ktorých pochádzajú kurzy tipov zápasu. */
+function bookmakersCount(r) {
+  const all = [...(r.bestBets || []), ...(r.lowValueBets || []), ...(r.allCandidates || [])];
+  return all.reduce((mx, b) => Math.max(mx, Number(b.oddsBookmakers) || 0), 0);
+}
+
+function dayWord(d) {
+  const key = isoDay(d), today = localToday();
+  if (key === today) return "Dnes";
+  if (key === shiftDay(today, 1)) return "Zajtra";
+  if (key === shiftDay(today, -1)) return "Včera";
+  return longDate(d);
+}
+
+function renderAnalysis(r, root, opts = {}) {
+  const f = r.fixture;
+  const home = translateTeamName(f.homeTeam.name);
+  const away = translateTeamName(f.awayTeam.name);
+  const tr = (text) => translateNamesInText(text, f.homeTeam.name, f.awayTeam.name);
+  const started = matchHasStarted(f);
+  const kick = new Date(f.date);
+  const referee = f.referee || r.referee?.name || "";
   const topBets = r.bestBets || [];
 
-  const gamesPlayedHtml = r.seasonGamesPlayed
-    ? `<p class="muted small" style="margin: -6px 0 12px;">Odohratých zápasov v tejto sezóne: ${escapeHtml(translateTeamName(r.fixture.homeTeam.name))} ${r.seasonGamesPlayed.home}, ${escapeHtml(translateTeamName(r.fixture.awayTeam.name))} ${r.seasonGamesPlayed.away}</p>`
-    : "";
-
-  const warningHtml = r.sampleSizeWarning
-    ? `<div class="disclaimer" style="margin-top:0;margin-bottom:20px;border-top:none;padding-top:0;color:var(--gold);">⚠️ ${escapeHtml(translateNamesInText(r.sampleSizeWarning, r.fixture.homeTeam.name, r.fixture.awayTeam.name))}</div>`
-    : "";
-
-  const topBetsHtml = topBets
-    .map(
-      (bet, idx) => `
-    <div class="tip-callout" style="${idx > 0 ? "margin-top:10px;" : ""}">
-      <div class="tip-outcome">${idx === 0 ? "🎯" : idx + 1 + "."}</div>
-      <div class="tip-details">
-        <div class="tip-label">${escapeHtml(bet.market)}: ${escapeHtml(translateNamesInText(bet.selection, r.fixture.homeTeam.name, r.fixture.awayTeam.name))}</div>
-        <div class="tip-meta">
-          ${idx === 0 ? "Najvyššia dôvera zo všetkých trhov · " : ""}${bet.probability.toFixed(0)} %${betOddsHtml(bet)}${strongTipBadge(bet.probability)}
-        </div>
-        ${bet.explanation ? `<div class="tip-explanation">💡 ${escapeHtml(translateNamesInText(bet.explanation, r.fixture.homeTeam.name, r.fixture.awayTeam.name))}</div>` : ""}
-        ${bet.valueWarning ? `<div class="tip-explanation" style="color:var(--gold);font-style:normal;">⚠️ ${escapeHtml(bet.valueWarning)}</div>` : ""}
+  // --- hlavička ---
+  const isLive = LIVE_STATUSES.includes(f.status);
+  const isDone = FINISHED_STATUSES.includes(f.status);
+  const midBig = (isLive || isDone) && f.goalsHome != null ? `${f.goalsHome}:${f.goalsAway}` : escapeHtml(isNaN(kick) ? "" : timeHm(kick));
+  const midSub = [
+    isNaN(kick) ? "" : dayWord(kick),
+    isLive ? (f.status === "HT" ? "polčas" : `${f.elapsed ?? "?"}. minúta`) : isDone ? "koniec zápasu" : "",
+    referee ? `rozhodca ${escapeHtml(referee.split(",")[0])}` : "",
+  ].filter(Boolean).join(" · ");
+  const header = `
+    ${opts.back ? `<button type="button" class="btn ghost sm back-link" data-back>${escapeHtml(opts.back.label)}</button>` : ""}
+    <div class="mh">
+      <div class="team">${crest(f.homeTeam.logo, "crest crest-lg")}<span>${escapeHtml(home)}</span></div>
+      <div class="mid">
+        <small>${escapeHtml(translateLeagueName(f.league.name))}</small>
+        <b>${midBig}</b>
+        <span>${midSub}</span>
+        <span class="season">sezóna ${escapeHtml(f.league.season)}</span>
       </div>
+      <div class="team">${crest(f.awayTeam.logo, "crest crest-lg")}<span>${escapeHtml(away)}</span></div>
+    </div>`;
+
+  // --- stav: zostava, odpočet, odohraté zápasy, kurzy ---
+  // Zostavy API zverejňuje zvyčajne asi hodinu pred výkopom. Prepočet načíta analýzu
+  // znova – s aktuálnou zostavou (hráč na lavičke = čiastočne chýba) aj aktuálnymi kurzami.
+  const lc = r.lineupConfirmed || {};
+  const both = lc.home && lc.away;
+  const chips = [];
+  if (!started) {
+    chips.push(both ? `<span class="st g">✓ Potvrdená zostava</span>` : `<span class="st">Zostava ešte nie je zverejnená</span>`);
+    const mins = Math.round((kick.getTime() - Date.now()) / 60000);
+    if (mins > 0 && mins < 24 * 60) chips.push(`<span class="st">Výkop o <b>${mins >= 60 ? `${Math.floor(mins / 60)} h ${mins % 60} min` : `${mins} min`}</b></span>`);
+  }
+  if (r.seasonGamesPlayed) {
+    chips.push(`<span class="st" title="Odohratých zápasov v tejto sezóne: ${escapeHtml(home)} ${r.seasonGamesPlayed.home}, ${escapeHtml(away)} ${r.seasonGamesPlayed.away}">Odohraté <b>${r.seasonGamesPlayed.home}</b> a <b>${r.seasonGamesPlayed.away}</b> zápasov</span>`);
+  }
+  const bk = bookmakersCount(r);
+  if (bk > 0) chips.push(`<span class="st">Kurzy z <b>${bk}</b> ${bk === 1 ? "stávkovky" : "stávkoviek"}</span>`);
+  else if (r.oddsAvailable === false) chips.push(`<span class="st">Bez kurzov stávkoviek</span>`);
+  const lineupBtns = started
+    ? ""
+    : `${both ? "" : `<button type="button" class="btn ghost xs" data-lineup-check title="Ukáže, čo k zostave vracia API">Skontrolovať API</button>`}
+       <button type="button" class="btn ghost xs" data-lineup-recalc>↻ Prepočítať</button>`;
+  const lineupNote = started
+    ? ""
+    : both
+      ? "✓ Počítané s potvrdenou zostavou (hráči na lavičke sa rátajú ako čiastočne chýbajúci)."
+      : "Zostava ešte nie je zverejnená – zvyčajne býva asi hodinu pred výkopom. Potom klikni Prepočítať.";
+  const statusHtml = `
+    <div class="status">${chips.join("")}${lineupBtns}</div>
+    ${lineupNote ? `<p class="note">${escapeHtml(lineupNote)}</p>` : ""}
+    <p class="note" data-lineup-out></p>
+    ${r.sampleSizeWarning ? `<div class="warn-box">⚠️ ${escapeHtml(tr(r.sampleSizeWarning))}</div>` : ""}
+    ${started ? `<div class="locked">⏱ ${MATCH_STARTED_TEXT}</div>` : ""}`;
+
+  // --- odporúčané tipy (server vracia pásmo 68 – 80 %, max. 1 na trh) ---
+  const tipsHtml = topBets.length
+    ? `<div class="tips">${topBets
+        .map(
+          (bet, idx) => `
+        <div class="tip${idx === 0 ? " top" : ""}">
+          ${ring(bet.probability)}
+          <div class="tip-body">
+            <div class="k">${idx === 0 ? "Najsilnejší tip · " : ""}${escapeHtml(bet.market)}</div>
+            <div class="s">${escapeHtml(tr(bet.selection))}${strongTipBadge(bet.probability)}</div>
+            <div class="m"><span>Dôvera <b>${bet.probability.toFixed(0)}${NB}%</b></span>${betOddsHtml(bet)}</div>
+            ${bet.explanation ? `<div class="why">${escapeHtml(tr(bet.explanation))}</div>` : ""}
+            ${bet.valueWarning ? `<div class="why warn">⚠️ ${escapeHtml(bet.valueWarning)}</div>` : ""}
+          </div>
+          <button type="button" class="btn${idx === 0 ? "" : " ghost"}" data-bet-idx="${idx}">Uložiť tip</button>
+        </div>`
+        )
+        .join("")}</div>`
+    : `<div class="empty-card">Pri tomto zápase nie je žiadny tip v pásme 68 – 80${NB}%${(r.lowValueBets || []).length > 0 ? ", ktorý by prešiel kontrolou kurzu" : ""}.</div>`;
+
+  // --- výsledok zápasu + forma ---
+  const pr = r.probabilities || { homeWin: 0, draw: 0, awayWin: 0 };
+  const pills = (form) =>
+    (form || "").slice(-5).split("").map((x) => `<i class="${x === "W" ? "w" : x === "L" ? "l" : "d"}">${translateFormLetter(x)}</i>`).join("") ||
+    `<span class="faint small">bez dát o forme</span>`;
+  const outcomeCard = `
+    <div class="card">
+      <h4 class="ct">Výsledok zápasu</h4>
+      <div class="pb">
+        <div title="${escapeHtml(home)}"><small>Domáci</small><b>${pctTxt(clampPercent(pr.homeWin))}</b></div>
+        <div><small>Remíza</small><b>${pctTxt(clampPercent(pr.draw))}</b></div>
+        <div title="${escapeHtml(away)}"><small>Hostia</small><b>${pctTxt(clampPercent(pr.awayWin))}</b></div>
+      </div>
+      <h4 class="ct" style="margin-top:18px">Forma <span class="faint">posledných 5</span></h4>
+      <div class="form-row">
+        <div><span class="form-team">${escapeHtml(home)}</span><div class="form">${pills(r.form?.home)}</div></div>
+        <div><span class="form-team">${escapeHtml(away)}</span><div class="form">${pills(r.form?.away)}</div></div>
+      </div>
+    </div>`;
+
+  const calcHtml = lineCalcHtml(r);
+  const gridHtml = `<div class="grid2${calcHtml ? "" : " one"}">${calcHtml}${outcomeCard}</div>`;
+
+  // --- karty Štatistiky / Vzájomné zápasy / Tímy ---
+  const tabsHtml = `
+    <div class="tabs" role="tablist">
+      <button type="button" class="on" data-tab="stats" role="tab">Štatistiky</button>
+      <button type="button" data-tab="h2h" role="tab">Vzájomné zápasy</button>
+      <button type="button" data-tab="teams" role="tab">Tímy</button>
     </div>
-    <div style="display:flex; gap:8px; margin: 4px 0 8px;">
-      <button class="btn-primary save-best-bet-btn" data-bet-idx="${idx}" style="flex:1;">Uložiť tento tip</button>
-    </div>
-  `
-    )
-    .join("");
+    <div data-panel="stats">${statsPanelHtml(r, home, away)}</div>
+    <div data-panel="h2h" hidden>${h2hPanelHtml(r, f)}</div>
+    <div data-panel="teams" hidden>
+      <div class="grid2 even">
+        ${teamStatCard(home, r.form?.home, r.form?.homeScore, r.expectedGoals?.home, r.historicalDataInfo && r.historicalDataInfo.home)}
+        ${teamStatCard(away, r.form?.away, r.form?.awayScore, r.expectedGoals?.away, r.historicalDataInfo && r.historicalDataInfo.away)}
+      </div>
+    </div>`;
 
-  const noBetsHtml =
-    topBets.length === 0
-      ? `<div class="empty-state" style="margin-bottom:16px;">Pri tomto zápase nie je žiadny tip v pásme 68–80 %${
-          (r.lowValueBets || []).length > 0 ? ", ktorý by prešiel kontrolou kurzu" : ""
-        }.</div>`
-      : "";
-
-  // Vyradené tipy: z každého trhu len jedna hranica (s najvyššou dôverou), schované pod rozbaľovačom.
-  const lowValueShown = [];
-  (r.lowValueBets || []).forEach((b, i) => {
-    const k = lowValueShown.findIndex((x) => x.b.market === b.market);
-    if (k < 0) lowValueShown.push({ b, i });
-    else if (b.probability > lowValueShown[k].b.probability) lowValueShown[k] = { b, i };
-  });
-  // „Vyradené pre nízky kurz“ sa už nezobrazuje (vyradené tipy idú len do tichého záznamu).
-  const lowValueHtml = "";
-
-  analysisColumnEl.innerHTML = `
-    <div class="match-header">
-      <div class="league-name">${escapeHtml(translateLeagueName(r.fixture.league.name))} · sezóna ${r.fixture.league.season}</div>
-      <h2 class="match-header-teams">
-        ${r.fixture.homeTeam.logo ? `<img class="team-logo-lg" src="${escapeHtml(r.fixture.homeTeam.logo)}" alt="" />` : ""}
-        <span>${escapeHtml(translateTeamName(r.fixture.homeTeam.name))}</span>
-        <span class="vs-lg">—</span>
-        ${r.fixture.awayTeam.logo ? `<img class="team-logo-lg" src="${escapeHtml(r.fixture.awayTeam.logo)}" alt="" />` : ""}
-        <span>${escapeHtml(translateTeamName(r.fixture.awayTeam.name))}</span>
-      </h2>
-    </div>
-
-    ${gamesPlayedHtml}
-    ${warningHtml}
-    ${lineupBarHtml(r)}
-
-    ${matchHasStarted(r.fixture) ? `<div class="match-locked">⏱ ${MATCH_STARTED_TEXT}</div>` : ""}${topBetsHtml}${noBetsHtml}${lowValueHtml}
-    <div id="saveTipMsg"></div>
-    ${lineCalcHtml(r)}
-
-    <div class="prob-section">
-      <div class="section-title">Pravdepodobnosť výsledku</div>
-      ${probRow(translateTeamName(r.fixture.homeTeam.name), r.probabilities.homeWin)}
-      ${probRow("Remíza", r.probabilities.draw)}
-      ${probRow(translateTeamName(r.fixture.awayTeam.name), r.probabilities.awayWin)}
-    </div>
-
-    <div class="stats-grid">
-      ${teamStatCard(translateTeamName(r.fixture.homeTeam.name), r.form.home, r.form.homeScore, r.expectedGoals.home, r.historicalDataInfo && r.historicalDataInfo.home)}
-      ${teamStatCard(translateTeamName(r.fixture.awayTeam.name), r.form.away, r.form.awayScore, r.expectedGoals.away, r.historicalDataInfo && r.historicalDataInfo.away)}
-    </div>
-
-    <div class="prob-section">
-      <div class="section-title">Vzájomné zápasy (posledných ${r.headToHead.matchesConsidered})</div>
-      <div class="stat-line"><span>Výhry ${escapeHtml(translateTeamName(r.fixture.homeTeam.name))}</span><strong>${r.headToHead.homeWins}</strong></div>
-      <div class="stat-line"><span>Remízy</span><strong>${r.headToHead.draws}</strong></div>
-      <div class="stat-line"><span>Výhry ${escapeHtml(translateTeamName(r.fixture.awayTeam.name))}</span><strong>${r.headToHead.awayWins}</strong></div>
-      ${
-        (r.headToHead.matches || []).length
-          ? `<div class="h2h-list">${(r.headToHead.matches || [])
-              .map((m, idx) => {
-                const d = new Date(m.date);
-                const date = isNaN(d.getTime()) ? "" : `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}`;
-                const home = translateTeamName(m.homeWasHome ? r.fixture.homeTeam.name : r.fixture.awayTeam.name);
-                const away = translateTeamName(m.homeWasHome ? r.fixture.awayTeam.name : r.fixture.homeTeam.name);
-                const hg = m.homeWasHome ? m.homeGoals : m.awayGoals;
-                const ag = m.homeWasHome ? m.awayGoals : m.homeGoals;
-                return `<div class="h2h-row${m.usedInModel ? "" : " h2h-old"}${idx >= 5 ? " h2h-extra" : ""}"${idx >= 5 ? " hidden" : ""}><span class="muted">${date}</span><span>${escapeHtml(home)} <strong>${hg} : ${ag}</strong> ${escapeHtml(away)}</span></div>`;
-              })
-              .join("")}</div>
-             ${(r.headToHead.matches || []).length > 5 ? `<button type="button" class="btn-ghost btn-mini h2h-toggle" data-more="${(r.headToHead.matches || []).length - 5}">+ Zobraziť ďalšie (${(r.headToHead.matches || []).length - 5})</button>` : ""}
-             <p class="muted small" style="margin:8px 0 0;">${
-               r.headToHead.usedInModel
-                 ? `Model započítal ${r.headToHead.usedInModel} ${r.headToHead.usedInModel >= 5 ? "najnovších zápasov" : "najnovšie zápasy"} za posledných 10 rokov (sivé nie).`
-                 : "Menej ako 3 vzájomné zápasy za posledných 10 rokov – do odhadu sa nezapočítali."
-             }</p>`
-          : ""
-      }
-    </div>
-
-    <!-- Strelec zápasu odstránený (19. 10. 2026) -->
-
-    <div class="disclaimer">
+  root.innerHTML = `
+    ${header}
+    ${statusHtml}
+    <h3 class="sh">Odporúčané tipy <small>pásmo 68 – 80${NB}%, len s hodnotou</small></h3>
+    ${tipsHtml}
+    <div class="save-msg" data-save-msg></div>
+    ${gridHtml}
+    ${tabsHtml}
+    <p class="disclaimer">
       Toto je štatistický odhad založený na historických dátach (forma, vzájomné zápasy,
       priemer gólov), nie garancia výsledku. Športové stávkovanie nesie finančné riziko –
       stávkuj len sumy, ktoré si môžeš dovoliť stratiť.
-    </div>
-  `;
+    </p>`;
 
-  initSaveTipButton(r);
-  wireTicketButtons(r);
-  wireScorerSaveButtons(r);
-  wireScorerOddsCheck();
-  wireLineCalc(r);
-  wireLineupBar(r);
-  if (matchHasStarted(r.fixture)) {
-    document
-      .querySelectorAll(".save-best-bet-btn, .add-to-ticket-btn, .scorer-save-btn")
-      .forEach((b) => {
-        b.disabled = true;
-        b.title = MATCH_STARTED_TEXT;
-      });
+  // --- ovládanie ---
+  const back = root.querySelector("[data-back]");
+  if (back && opts.back) back.onclick = opts.back.onClick;
+  wireLineupBar(r, root, opts.onRecalc);
+  wireSaveTipButtons(r, root);
+  wireLineCalc(r, root);
+  root.querySelectorAll("[data-tab]").forEach((t) => {
+    t.onclick = () => {
+      root.querySelectorAll("[data-tab]").forEach((x) => x.classList.toggle("on", x === t));
+      root.querySelectorAll("[data-panel]").forEach((p) => { p.hidden = p.dataset.panel !== t.dataset.tab; });
+    };
+  });
+  const h2hToggle = root.querySelector("[data-h2h-toggle]");
+  if (h2hToggle) {
+    h2hToggle.onclick = () => {
+      const open = h2hToggle.dataset.open === "1";
+      root.querySelectorAll(".h2h-extra").forEach((row) => { row.hidden = open; });
+      h2hToggle.dataset.open = open ? "0" : "1";
+      h2hToggle.textContent = open ? `+ Zobraziť ďalšie (${h2hToggle.dataset.more})` : "− Skryť";
+    };
+  }
+  if (started) {
+    root.querySelectorAll("[data-bet-idx], [data-poss]").forEach((b) => {
+      b.disabled = true;
+      b.title = MATCH_STARTED_TEXT;
+    });
   }
 }
 
-// ---- Potvrdená zostava: prepočet tesne pred zápasom (17. 10. 2026) ----
-// Zostavy API zverejňuje zvyčajne asi hodinu pred výkopom. Prepočet načíta analýzu
-// znova – s aktuálnou zostavou (hráč na lavičke = čiastočne chýba) aj aktuálnymi kurzami.
-function lineupBarHtml(r) {
-  if (matchHasStarted(r.fixture)) return "";
-  const lc = r.lineupConfirmed || {};
-  const both = lc.home && lc.away;
-  const mins = Math.round((new Date(r.fixture.date).getTime() - Date.now()) / 60000);
-  const when = mins > 0 && mins < 24 * 60 ? ` Výkop o ${mins >= 60 ? `${Math.floor(mins / 60)} h ${mins % 60} min` : `${mins} min`}.` : "";
-  const text = both
-    ? "✓ Počítané s potvrdenou zostavou (hráči na lavičke sa rátajú ako čiastočne chýbajúci)."
-    : `Zostava ešte nie je zverejnená – zvyčajne býva asi hodinu pred výkopom. Potom klikni Prepočítať.${when}`;
-  return `<div class="stat-line" style="align-items:center;gap:10px;margin:-4px 0 14px;">
-    <span class="muted small" style="flex:1">${escapeHtml(text)}</span>
-    ${both ? "" : `<button type="button" class="btn-ghost" id="lineupCheckBtn" title="Ukáže, čo k zostave vracia API">Skontrolovať API</button>`}
-    <button type="button" class="btn-ghost" id="lineupRecalcBtn">🔄 Prepočítať</button>
-  </div>
-  <div id="lineupCheckOut" class="muted small" style="margin:-8px 0 14px;"></div>`;
-}
-
-function wireLineupBar(r) {
-  const btn = document.getElementById("lineupRecalcBtn");
-  if (!btn) return;
-  btn.onclick = () => analyzeFixture(r.fixture, r.fixture.league.id, r.fixture.league.season);
-  const check = document.getElementById("lineupCheckBtn");
-  const out = document.getElementById("lineupCheckOut");
+function wireLineupBar(r, root, onRecalc) {
+  const btn = root.querySelector("[data-lineup-recalc]");
+  if (btn) btn.onclick = () => (onRecalc ? onRecalc() : null);
+  const check = root.querySelector("[data-lineup-check]");
+  const out = root.querySelector("[data-lineup-out]");
   if (!check || !out) return;
   check.onclick = async () => {
     check.disabled = true;
@@ -796,7 +933,7 @@ function wireLineupBar(r) {
     try {
       const d = await fetchJson(`/api/debug/lineups/${r.fixture.fixtureId}`);
       if (d.errors?.length) out.textContent = `API vrátilo chybu: ${d.errors.join(" | ")}`;
-      else if (!d.teams?.length) out.textContent = `API zostavu k tomuto zápasu zatiaľ nemá (0 tímov, čas kontroly ${new Date().toLocaleTimeString("sk-SK", { hour: "2-digit", minute: "2-digit" })}).`;
+      else if (!d.teams?.length) out.textContent = `API zostavu k tomuto zápasu zatiaľ nemá (0 tímov, čas kontroly ${timeHm(new Date())}).`;
       else
         out.textContent =
           "API zostavu má: " +
@@ -810,26 +947,65 @@ function wireLineupBar(r) {
   };
 }
 
-// ---- Držanie lopty: hranica zo stávkovky (17. 10. 2026) ----
-// API kurzy na držanie lopty nemá a stávkovky ho ponúkajú ako hranicu v % (napr. 55,5 a viac).
-// Model dá očakávané držanie, Michal zadá hranicu a appka vypočíta šancu a minimálny kurz.
+/** Uloženie odporúčaného tipu: kurz zo stávkovky, POST /api/tips, potom Telegram. */
+function wireSaveTipButtons(r, root) {
+  const msgEl = root.querySelector("[data-save-msg]");
+  root.querySelectorAll("[data-bet-idx]").forEach((btn) => {
+    btn.onclick = async () => {
+      if (matchHasStarted(r.fixture)) { showToast(MATCH_STARTED_TEXT); return; }
+      const bet = (r.bestBets || [])[parseInt(btn.dataset.betIdx ?? "0", 10)];
+      if (!bet) return;
+      const realOdds = await askRealOdds(bet);
+      if (realOdds == null) return;
+      const tip = buildTip(r, bet, realOdds);
+      btn.disabled = true;
+      try {
+        await postJson("/api/tips", tip);
+        btn.textContent = "✓ Uložené";
+        msgEl.innerHTML = `✓ Tip uložený (${escapeHtml(bet.market)}: ${escapeHtml(translateNamesInText(bet.selection, r.fixture.homeTeam.name, r.fixture.awayTeam.name))})`;
+        await maybeOfferTelegram(tip.id);
+      } catch (err) {
+        msgEl.innerHTML = `<span class="loss">Uloženie zlyhalo: ${escapeHtml(err.message)}</span>`;
+      } finally {
+        btn.disabled = false;
+      }
+    };
+  });
+}
+
+function buildTip(r, bet, realOdds, extra = {}) {
+  return {
+    id: `${r.fixture.fixtureId}-${Date.now()}`,
+    fixtureId: r.fixture.fixtureId,
+    leagueId: r.fixture.league.id,
+    season: r.fixture.league.season,
+    leagueName: r.fixture.league.name,
+    homeTeam: r.fixture.homeTeam.name,
+    awayTeam: r.fixture.awayTeam.name,
+    homeTeamLogo: r.fixture.homeTeam.logo,
+    awayTeamLogo: r.fixture.awayTeam.logo,
+    matchDate: r.fixture.date,
+    market: bet.market,
+    selection: bet.selection,
+    probability: bet.probability,
+    odds: realOdds,
+    ...(typeof bet.odds === "number" ? { apiOdds: bet.odds } : {}),
+    ...extra,
+    savedAt: new Date().toISOString(),
+    status: "pending",
+  };
+}
+
+// ---- Kalkulačka hranice zo stávkovky (17. 10. 2026) ----
+// Stávkovky majú často inú hranicu, ako model našiel v API. Michal zadá hranicu
+// a kurzy a appka spočíta šancu rovnakým rozdelením ako model (Poisson, pri kartách
+// a strelách negatívne binomické) vrátane kalibrácie trhu. Držanie lopty: normálne rozdelenie.
 function normCdf(x) {
   // Abramowitz–Stegun 7.1.26
   const t = 1 / (1 + 0.3275911 * Math.abs(x) / Math.SQRT2);
   const y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-(x * x) / 2);
   return x >= 0 ? (1 + y) / 2 : (1 - y) / 2;
 }
-
-function evPct(ev) {
-  const p = Math.round((ev - 1) * 100);
-  return `${p >= 0 ? "+" : "−"}${Math.abs(p)} %`;
-}
-
-// ---- Kalkulačka hranice pre všetky trhy nad/pod (17. 10. 2026) ----
-// Stávkovky (napr. Tipsport) majú často inú hranicu, ako model našiel v API
-// (fauly 24,5 vs. 27,5). Michal zadá hranicu a kurzy a appka spočíta šancu
-// rovnakým rozdelením ako model (Poisson, pri kartách a strelách negatívne
-// binomické) vrátane kalibrácie trhu.
 function poissonUnder(mean, line) {
   let pmf = Math.exp(-mean), under = 0;
   for (let k = 0; k <= Math.floor(line); k++) {
@@ -838,7 +1014,6 @@ function poissonUnder(mean, line) {
   }
   return Math.min(1, under);
 }
-
 function negBinUnder(mean, line, varRatio) {
   if (!(mean > 0) || varRatio <= 1.0001) return poissonUnder(Math.max(mean, 0.01), line);
   const rr = mean / (varRatio - 1);
@@ -850,7 +1025,6 @@ function negBinUnder(mean, line, varRatio) {
   }
   return Math.min(1, Math.max(0, under));
 }
-
 function lineMarketLabel(r, market) {
   const h = translateTeamName(r.fixture.homeTeam.name), a = translateTeamName(r.fixture.awayTeam.name);
   if (market.endsWith(" domácich")) return `${market.replace(/ domácich$/, "")} – ${h}`;
@@ -863,58 +1037,56 @@ function lineCalcHtml(r) {
   const poss = r.possession;
   if (!models.length && !poss) return "";
   const h = translateTeamName(r.fixture.homeTeam.name), a = translateTeamName(r.fixture.awayTeam.name);
-  // držanie lopty je v tom istom zozname ako ostatné trhy (hodnota "poss-home" / "poss-away")
   const possOpts = poss
     ? [["home", h, poss.expectedHome], ["away", a, 100 - poss.expectedHome]]
         .map(([side, name, exp]) => `<option value="poss-${side}">Držanie lopty – ${escapeHtml(name)} (čaká ${exp.toFixed(0)} %)</option>`)
         .join("")
     : "";
   return `
-    <div class="prob-section" id="lineCalcBox">
-      <div class="section-title">Výpočet podľa hranice tvojej stávkovky</div>
-      <p class="muted small" style="margin:-4px 0 10px">Ak má stávkovka inú hranicu ako tip vyššie, zadaj jej hranicu a kurzy. Appka spočíta šancu rovnako ako model.</p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <select id="lcMarket" aria-label="Trh">${models
-          .map((m, i) => `<option value="${i}">${escapeHtml(lineMarketLabel(r, m.market))} (čaká ${fmtNum(m.mean, 1)})</option>`)
-          .join("")}${possOpts}</select>
-        <input type="text" id="lcLine" inputmode="decimal" placeholder="Hranica, napr. 24,5" style="width:140px" aria-label="Hranica" />
-        <input type="text" id="lcOddsOver" inputmode="decimal" placeholder="Kurz „viac ako“" style="width:120px" aria-label="Kurz na viac ako" />
-        <input type="text" id="lcOddsUnder" inputmode="decimal" placeholder="Kurz „menej ako“" style="width:130px" aria-label="Kurz na menej ako" />
-        <button type="button" class="btn-ghost" id="lcCalc">Vypočítať</button>
+    <div class="card calc">
+      <h4 class="ct">Kalkulačka hranice tvojej stávkovky</h4>
+      <p class="faint small calc-intro">Ak má stávkovka inú hranicu ako tip vyššie, zadaj jej hranicu a kurzy. Appka spočíta šancu rovnako ako model.</p>
+      <select data-lc="market" aria-label="Trh">${models
+        .map((m, i) => `<option value="${i}">${escapeHtml(lineMarketLabel(r, m.market))} (čaká ${fmtNum(m.mean, 1)})</option>`)
+        .join("")}${possOpts}</select>
+      <div class="f">
+        <label>Hranica<input type="text" data-lc="line" inputmode="decimal" placeholder="napr. 24,5" /></label>
+        <label><span data-lc="overLabel">Kurz viac ako</span><input type="text" data-lc="over" inputmode="decimal" placeholder="napr. 1,85" /></label>
+        <label>Kurz menej ako<input type="text" data-lc="under" inputmode="decimal" placeholder="napr. 1,90" /></label>
       </div>
-      <div id="lcResult" style="margin-top:10px"></div>
+      <button type="button" class="btn ghost sm calc-btn" data-lc="calc">Vypočítať</button>
+      <div class="res" data-lc="result"></div>
     </div>`;
 }
 
-function wireLineCalc(r) {
-  const btn = document.getElementById("lcCalc");
+function wireLineCalc(r, root) {
+  const q = (k) => root.querySelector(`[data-lc="${k}"]`);
+  const btn = q("calc");
   if (!btn) return;
-  const out = document.getElementById("lcResult");
-  const sel = document.getElementById("lcMarket");
-  const lineEl = document.getElementById("lcLine"), overEl = document.getElementById("lcOddsOver");
+  const out = q("result"), sel = q("market"), lineEl = q("line"), overLabel = q("overLabel");
   const isPoss = () => sel.value.startsWith("poss-");
   // pri držaní lopty je hranica v % a stávkovky píšu „a viac“
   const syncHints = () => {
-    lineEl.placeholder = isPoss() ? "Hranica, napr. 55,5" : "Hranica, napr. 24,5";
-    overEl.placeholder = isPoss() ? "Kurz „a viac“" : "Kurz „viac ako“";
+    lineEl.placeholder = isPoss() ? "napr. 55,5" : "napr. 24,5";
+    overLabel.textContent = isPoss() ? "Kurz a viac" : "Kurz viac ako";
     out.innerHTML = "";
   };
   sel.onchange = syncHints;
   syncHints();
-  const oddOf = (id) => {
-    const v = parseFloat(String(document.getElementById(id).value).replace(",", "."));
+  const oddOf = (el) => {
+    const v = parseFloat(String(el.value).replace(",", "."));
     return v > 1 && v <= 20 ? Math.round(v * 100) / 100 : null;
   };
   const calcPossession = (side, line) => {
-    if (!(line > 0 && line < 100)) { out.innerHTML = `<p class="muted small">Zadaj hranicu v %, napr. 55,5.</p>`; return; }
+    if (!(line > 0 && line < 100)) { out.innerHTML = `<p class="faint small">Zadaj hranicu v %, napr. 55,5.</p>`; return; }
     const exp = side === "home" ? r.possession.expectedHome : 100 - r.possession.expectedHome;
     const over = (1 - normCdf((line - exp) / r.possession.sd)) * 100;
     const teamName = translateTeamName(side === "home" ? r.fixture.homeTeam.name : r.fixture.awayTeam.name);
     const market = side === "home" ? "Držanie lopty domácich" : "Držanie lopty hostí";
     const lineTxt = String(line).replace(".", ",");
     renderCalcRows(out, r, market, [
-      { label: `${teamName} ${lineTxt} % a viac`, selection: `Over ${line}`, probability: over, odds: oddOf("lcOddsOver") },
-      { label: `${teamName} menej ako ${lineTxt} %`, selection: `Under ${line}`, probability: 100 - over, odds: oddOf("lcOddsUnder") },
+      { label: `${teamName} ${lineTxt} % a viac`, selection: `Over ${line}`, probability: over, odds: oddOf(q("over")) },
+      { label: `${teamName} menej ako ${lineTxt} %`, selection: `Under ${line}`, probability: 100 - over, odds: oddOf(q("under")) },
     ]);
   };
   const calc = () => {
@@ -923,7 +1095,7 @@ function wireLineCalc(r) {
     const m = (r.lineModels || [])[Number(sel.value)];
     if (!m) return;
     if (!(line > 0) || Math.abs((line % 1) - 0.5) > 1e-9) {
-      out.innerHTML = `<p class="muted small">Zadaj hranicu s ,5 – napr. 24,5.</p>`;
+      out.innerHTML = `<p class="faint small">Zadaj hranicu s ,5 – napr. 24,5.</p>`;
       return;
     }
     let under = negBinUnder(m.mean, line, m.varRatio) * 100;
@@ -932,28 +1104,26 @@ function wireLineCalc(r) {
     const name = lineMarketLabel(r, m.market);
     const lineTxt = String(line).replace(".", ",");
     renderCalcRows(out, r, m.market, [
-      { label: `${name} viac ako ${lineTxt}`, selection: `Over ${line}`, probability: 100 - under, odds: oddOf("lcOddsOver") },
-      { label: `${name} menej ako ${lineTxt}`, selection: `Under ${line}`, probability: under, odds: oddOf("lcOddsUnder") },
+      { label: `${name} viac ako ${lineTxt}`, selection: `Over ${line}`, probability: 100 - under, odds: oddOf(q("over")) },
+      { label: `${name} menej ako ${lineTxt}`, selection: `Under ${line}`, probability: under, odds: oddOf(q("under")) },
     ]);
   };
   btn.onclick = calc;
-  ["lcLine", "lcOddsOver", "lcOddsUnder"].forEach((id) => {
-    document.getElementById(id).onkeydown = (e) => { if (e.key === "Enter") calc(); };
+  ["line", "over", "under"].forEach((k) => {
+    q(k).addEventListener("keydown", (e) => { if (e.key === "Enter") calc(); });
   });
 }
 
 /**
- * Spoločné vyhodnotenie kalkulačiek (držanie lopty aj ostatné trhy): šanca 68 – 80 %,
- * a ak je zadaný kurz, tak aspoň 1,55 a výhodnosť 1,05 – 1,25. Vykreslí riadky
- * s tlačidlami na uloženie. rows: [{ label, selection, probability, odds }].
+ * Spoločné vyhodnotenie kalkulačky: šanca 68 – 80 %, a ak je zadaný kurz, tak aspoň
+ * MIN_ODDS (1,55) a výhodnosť (šanca × kurz) 1,05 – 1,25. Ak vyhovujú obe strany
+ * a obe majú kurz, odporučí sa len tá výhodnejšia. rows: [{ label, selection, probability, odds }].
  */
 function renderCalcRows(out, r, market, rows) {
-  // Rovnaké pravidlá ako pri ostatných tipoch: šanca 68 – 80 %, a ak je zadaný kurz,
-  // tak aspoň 1,55 a výhodnosť (šanca × kurz) 1,05 až 1,25.
   rows.forEach((x) => {
     if (x.odds != null) {
       x.ev = (x.probability / 100) * x.odds;
-      x.ok = x.probability >= 68 && x.probability <= 80 && x.odds >= 1.55 && x.ev >= 1.05 && x.ev <= 1.25;
+      x.ok = x.probability >= 68 && x.probability <= 80 && x.odds >= MIN_ODDS && x.ev >= 1.05 && x.ev <= 1.25;
     } else {
       x.ok = x.probability >= 68 && x.probability <= 80;
     }
@@ -964,8 +1134,8 @@ function renderCalcRows(out, r, market, rows) {
     rows.forEach((x) => { x.ok = x === best; });
   }
   const whyNot = (x) => {
-    if (x.probability < 68 || x.probability > 80) return "Mimo pásma 68 – 80 % – neodporúčame.";
-    if (x.odds < 1.55) return "Kurz pod 1,55 – neodporúčame.";
+    if (x.probability < 68 || x.probability > 80) return `Mimo pásma 68 – 80${NB}% – neodporúčame.`;
+    if (x.odds < MIN_ODDS) return `Kurz pod ${fmtOdds(MIN_ODDS)} – neodporúčame.`;
     if (x.ev < 1.05) return `Kurz je na túto šancu nízky (výhodnosť ${evPct(x.ev)}) – neodporúčame.`;
     if (x.ev > 1.25) return `Podozrivo vysoká výhodnosť (${evPct(x.ev)}), model sa asi mýli – neodporúčame.`;
     return "Druhá možnosť je výhodnejšia.";
@@ -974,22 +1144,24 @@ function renderCalcRows(out, r, market, rows) {
     .map((x, i) => {
       const min = minOddsFor({ probability: x.probability });
       const info = x.odds != null
-        ? `Odporúčame · kurz <strong>${fmtOdds(x.odds)}</strong> · výhodnosť <strong>${evPct(x.ev)}</strong>`
-        : `Hraj len pri kurze aspoň <strong>${fmtOdds(min)}</strong>`;
+        ? `Odporúčame · kurz <b>${fmtOdds(x.odds)}</b> · výhodnosť <b>${evPct(x.ev)}</b>`
+        : `Hraj len pri kurze aspoň <b>${fmtOdds(min)}</b>`;
       const oddsTxt = x.odds != null ? ` · kurz ${fmtOdds(x.odds)}` : "";
-      return `<div class="stat-line"><span>${escapeHtml(x.label)}${oddsTxt}</span><strong>${x.probability.toFixed(0)} %</strong></div>
-        ${x.ok
-          ? `<div style="display:flex;gap:8px;margin:4px 0 10px;align-items:center"><span class="muted small" style="flex:1">${info}</span><button type="button" class="btn-primary" data-poss="${i}">Uložiť tento tip</button></div>`
-          : `<p class="muted small" style="margin:2px 0 10px">${whyNot(x)}</p>`}`;
+      return `<div class="res-row ${x.ok ? "ok" : "no"}">
+          <div class="res-top"><span>${escapeHtml(x.label)}${oddsTxt}</span><b>${x.probability.toFixed(0)}${NB}%</b></div>
+          ${x.ok
+            ? `<div class="res-act"><span class="small">${info}</span><button type="button" class="btn sm" data-poss="${i}">Uložiť tento tip</button></div>`
+            : `<div class="res-why">${whyNot(x)}</div>`}
+        </div>`;
     })
     .join("");
   out.querySelectorAll("[data-poss]").forEach((b) => {
+    if (matchHasStarted(r.fixture)) { b.disabled = true; b.title = MATCH_STARTED_TEXT; }
     b.onclick = async () => {
       if (matchHasStarted(r.fixture)) { showToast(MATCH_STARTED_TEXT); return; }
       const x = rows[Number(b.dataset.poss)];
-      const watch = b.dataset.watch === "1";
-      const odds = watch ? null : x.odds ?? (await askRealOdds({ probability: x.probability }));
-      if (!watch && odds == null) return;
+      const odds = x.odds ?? (await askRealOdds({ probability: x.probability }));
+      if (odds == null) return;
       const tip = {
         id: `${r.fixture.fixtureId}-${Date.now()}`,
         fixtureId: r.fixture.fixtureId,
@@ -1005,15 +1177,14 @@ function renderCalcRows(out, r, market, rows) {
         selection: x.selection,
         probability: Math.round(x.probability * 10) / 10,
         odds,
-        ...(watch ? { watchOnly: true } : {}),
         savedAt: new Date().toISOString(),
         status: "pending",
       };
       b.disabled = true;
       try {
-        await fetchJson("/api/tips", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(tip) });
-        b.textContent = watch ? "✓ Sledované" : "✓ Uložené";
-        if (!watch) await maybeOfferTelegram(tip.id);
+        await postJson("/api/tips", tip);
+        b.textContent = "✓ Uložené";
+        await maybeOfferTelegram(tip.id);
       } catch (err) {
         showToast(`Uloženie zlyhalo: ${err?.message ?? String(err)}`);
         b.disabled = false;
@@ -1022,508 +1193,342 @@ function renderCalcRows(out, r, market, rows) {
   });
 }
 
-function probRow(label, value) {
+// ---- Štatistiky zápasu (porovnanie domácich a hostí) ----
+function cmpRow(label, hv, av, digits, unit = "") {
+  if (!(Number.isFinite(hv) && Number.isFinite(av))) return "";
+  const sum = hv + av;
+  const hp = sum > 0 ? (hv / sum) * 100 : 50;
+  return `<div class="cmp-item"><div class="lb">${escapeHtml(label)}</div><div class="row"><b>${fmtNum(hv, digits)}${unit}</b><div class="dual"><i style="width:${hp.toFixed(1)}%"></i><i style="width:${(100 - hp).toFixed(1)}%"></i></div><b>${fmtNum(av, digits)}${unit}</b></div></div>`;
+}
+
+function statsPanelHtml(r, home, away) {
+  const models = r.lineModels || [];
+  const mean = (name) => {
+    const m = models.find((x) => x.market === name);
+    return m && Number.isFinite(m.mean) ? m.mean : null;
+  };
+  const rows = [];
+  if (r.expectedGoals) rows.push(cmpRow("Očakávané góly", r.expectedGoals.home, r.expectedGoals.away, 2));
+  for (const base of ["Rohy", "Karty", "Strely na bránu"]) {
+    const h = mean(`${base} domácich`), a = mean(`${base} hostí`);
+    if (h != null && a != null) rows.push(cmpRow(base === "Karty" ? "Žlté karty" : base, h, a, 1));
+  }
+  if (r.possession && Number.isFinite(r.possession.expectedHome)) {
+    rows.push(cmpRow("Držanie lopty", r.possession.expectedHome, 100 - r.possession.expectedHome, 0, `${NB}%`));
+  }
+  if (r.form && Number.isFinite(r.form.homeScore)) rows.push(cmpRow("Vážené skóre formy (z 3,00)", r.form.homeScore, r.form.awayScore, 2));
+  if (r.teamSeasonGoalsPerGame) rows.push(cmpRow("Góly na zápas v sezóne", Number(r.teamSeasonGoalsPerGame.home), Number(r.teamSeasonGoalsPerGame.away), 2));
+
+  // očakávané hodnoty za celý zápas
+  const totals = [];
+  const pushTotal = (label, v, digits = 1) => { if (v != null && Number.isFinite(v)) totals.push(`<div><small>${label}</small><b>${fmtNum(v, digits)}</b></div>`); };
+  pushTotal("Góly", mean("Góly") ?? (r.expectedGoals ? r.expectedGoals.home + r.expectedGoals.away : null), 2);
+  pushTotal("Rohy", mean("Rohy") ?? r.corners?.expected);
+  pushTotal("Žlté karty", mean("Karty") ?? r.cards?.expected);
+  pushTotal("Strely na bránu", mean("Strely na bránu") ?? r.shotsOnGoal?.expected);
+  pushTotal("Fauly", mean("Fauly") ?? r.fouls?.expected);
+  pushTotal("Ofsajdy", r.offsides?.expected);
+
+  const ref = r.referee;
+  const factor = (v) => (Number.isFinite(v) ? `${signed(Math.round((v - 1) * 100), 0)}${NB}%` : "–");
+  const refHtml = ref
+    ? `<div class="card ref-card">
+        <h4 class="ct">Rozhodca</h4>
+        <div class="ref-name">${escapeHtml(ref.name)} <span class="faint small">· ${plural(ref.games, "zápas", "zápasy", "zápasov")} v dátach</span></div>
+        <div class="kv-grid">
+          ${ref.avgFouls != null ? `<div><small>Priemer faulov</small><b>${fmtNum(ref.avgFouls, 1)}</b></div>` : ""}
+          ${ref.avgCards != null ? `<div><small>Priemer žltých kariet</small><b>${fmtNum(ref.avgCards, 1)}</b></div>` : ""}
+          <div><small>Vplyv na fauly</small><b>${factor(ref.foulsFactor)}</b></div>
+          <div><small>Vplyv na karty</small><b>${factor(ref.cardsFactor)}</b></div>
+        </div>
+      </div>`
+    : "";
+
+  const cmp = rows.filter(Boolean).join("");
+  if (!cmp && !totals.length && !refHtml) return `<div class="empty-card">Štatistiky pre tento zápas nie sú k dispozícii.</div>`;
   return `
-    <div class="prob-bar-row">
-      <span class="prob-label">${escapeHtml(label)}</span>
-      <div class="prob-bar-track"><div class="prob-bar-fill" style="width:${clampPercent(value)}%"></div></div>
-      <span class="prob-value">${value.toFixed(0)} %</span>
+    ${cmp ? `<div class="card cmp"><div class="cmp-head"><span>${escapeHtml(home)}</span><span>${escapeHtml(away)}</span></div>${cmp}<p class="faint small">Očakávania modelu na tento zápas (rohy, karty a strely podľa celej sezóny).</p></div>` : ""}
+    ${totals.length ? `<div class="card"><h4 class="ct">Očakávané v celom zápase</h4><div class="kv-grid">${totals.join("")}</div></div>` : ""}
+    ${refHtml}`;
+}
+
+function h2hPanelHtml(r, f) {
+  const h = r.headToHead;
+  if (!h) return `<div class="empty-card">Vzájomné zápasy nie sú k dispozícii.</div>`;
+  const home = translateTeamName(f.homeTeam.name), away = translateTeamName(f.awayTeam.name);
+  const matches = h.matches || [];
+  const list = matches
+    .map((m, idx) => {
+      const d = new Date(m.date);
+      const date = isNaN(d.getTime()) ? "" : longDate(d);
+      const hn = translateTeamName(m.homeWasHome ? f.homeTeam.name : f.awayTeam.name);
+      const an = translateTeamName(m.homeWasHome ? f.awayTeam.name : f.homeTeam.name);
+      const hg = m.homeWasHome ? m.homeGoals : m.awayGoals;
+      const ag = m.homeWasHome ? m.awayGoals : m.homeGoals;
+      return `<div class="h2h-row${m.usedInModel ? "" : " h2h-old"}${idx >= 5 ? " h2h-extra" : ""}"${idx >= 5 ? " hidden" : ""}><span class="faint">${date}</span><span>${escapeHtml(hn)} <b>${hg} : ${ag}</b> ${escapeHtml(an)}</span></div>`;
+    })
+    .join("");
+  return `<div class="card">
+    <h4 class="ct">Posledných ${h.matchesConsidered} vzájomných zápasov</h4>
+    <div class="pb">
+      <div><small>Výhry ${escapeHtml(home)}</small><b>${h.homeWins}</b></div>
+      <div><small>Remízy</small><b>${h.draws}</b></div>
+      <div><small>Výhry ${escapeHtml(away)}</small><b>${h.awayWins}</b></div>
     </div>
-  `;
+    ${matches.length ? `<div class="h2h-list">${list}</div>
+      ${matches.length > 5 ? `<button type="button" class="btn ghost xs" data-h2h-toggle data-more="${matches.length - 5}">+ Zobraziť ďalšie (${matches.length - 5})</button>` : ""}
+      <p class="faint small">${
+        h.usedInModel
+          ? `Model započítal ${h.usedInModel} ${h.usedInModel >= 5 ? "najnovších zápasov" : "najnovšie zápasy"} za posledných 10 rokov (sivé nie).`
+          : "Menej ako 3 vzájomné zápasy za posledných 10 rokov – do odhadu sa nezapočítali."
+      }</p>` : ""}
+  </div>`;
 }
 
 function teamStatCard(name, form, formScore, xg, historyInfo) {
   const pills = (form || "")
     .slice(-5)
     .split("")
-    .map((r) => `<div class="form-pill ${r}">${translateFormLetter(r)}</div>`)
+    .map((x) => `<i class="${x === "W" ? "w" : x === "L" ? "l" : "d"}">${translateFormLetter(x)}</i>`)
     .join("");
-
-  const historyLine = historyInfo
-    ? `<div class="stat-line"><span>Historické sezóny použité</span><strong>${historyInfo.seasonsUsed} / ${historyInfo.seasonsChecked}</strong></div>`
-    : `<div class="stat-line"><span>Historické sezóny použité</span><strong>0 (nenájdené)</strong></div>`;
-
   return `
-    <div class="stat-card">
-      <h4>${escapeHtml(name)}</h4>
-      <div class="form-pills">${pills || '<span class="muted small">bez dát o forme</span>'}</div>
-      <div class="stat-line"><span>Vážené skóre formy</span><strong>${fmtNum(formScore, 2)} / 3,00</strong></div>
-      <div class="stat-line"><span>Očakávané góly</span><strong>${fmtNum(xg, 2)}</strong></div>
-      ${historyLine}
-    </div>
-  `;
+    <div class="card">
+      <h4 class="ct">${escapeHtml(name)}</h4>
+      <div class="form">${pills || '<span class="faint small">bez dát o forme</span>'}</div>
+      <div class="stat-line"><span>Vážené skóre formy</span><b>${Number.isFinite(formScore) ? fmtNum(formScore, 2) : "–"} / 3,00</b></div>
+      <div class="stat-line"><span>Očakávané góly</span><b>${Number.isFinite(xg) ? fmtNum(xg, 2) : "–"}</b></div>
+      <div class="stat-line"><span>Historické sezóny použité</span><b>${historyInfo ? `${historyInfo.seasonsUsed} / ${historyInfo.seasonsChecked}` : "0 (nenájdené)"}</b></div>
+    </div>`;
 }
 
-function bestScorerCard(best, r) {
-  if (!best) {
-    return `
-      <div class="stat-card">
-        <p class="muted small">Pre tento zápas sa nenašli štatistiky hráčov.</p>
-      </div>
-    `;
+// =====================================================================
+// TIPY DŇA – všetky odporúčané tipy zo všetkých zápasov dňa, od najvyššej dôvery
+// =====================================================================
+const dayTipsPaneEl = document.getElementById("dayTipsPane");
+const dtRunBtn = document.getElementById("dtRunBtn");
+let dayTips = { items: [], analyzed: 0, failed: 0, date: "", ran: false };
+let dayTipsRun = { running: false, done: 0, total: 0, id: 0 };
+let dayTipsDetail = null; // otvorený zápas z Tipov dňa
+let dayTipsViewId = 0;
+let strongIdx = -1;
+
+function kickoffTime(fixture) {
+  const d = new Date(fixture?.date);
+  return isNaN(d.getTime()) ? "" : timeHm(d);
+}
+
+async function showDayTips() {
+  if (dayTipsRun.running) return;
+  dayTipsDetail = null;
+  if (fixturesLoading && fixturesPromise) {
+    dayTipsPaneEl.innerHTML = `<div class="empty-card">Zápasy sa ešte načítavajú…</div>`;
+    await fixturesPromise.catch(() => {});
   }
-
-  const prediction = best.prediction;
-
-  return `
-    <div class="stat-card">
-      <h4>${escapeHtml(prediction.player.name)} <span class="muted small">(${escapeHtml(translateTeamName(best.team))})</span></h4>
-      <div class="stat-line"><span>Góly / zápasy</span><strong>${prediction.seasonGoals} / ${prediction.appearances}</strong></div>
-      ${prediction.goalsPer90 != null ? `<div class="stat-line"><span>Góly na 90 minút</span><strong>${fmtNum(prediction.goalsPer90, 2)}</strong></div>` : ""}
-      ${prediction.shotsOnPer90 != null ? `<div class="stat-line"><span>Strely na bránu na 90 minút</span><strong>${fmtNum(prediction.shotsOnPer90, 1)}</strong></div>` : ""}
-      ${prediction.expectedMinutes != null ? `<div class="stat-line"><span>Odhad odohraných minút</span><strong>${prediction.expectedMinutes} min${prediction.inLineup ? " · v zostave" : ""}</strong></div>` : ""}
-      ${prediction.penaltyTaker ? `<div class="stat-line"><span>Kope penalty</span><strong>✓ áno</strong></div>` : ""}
-      <div class="tip-callout" style="margin-top:10px; margin-bottom:0; padding: 10px 14px;">
-        <div class="tip-outcome" style="font-size:16px;">⚽</div>
-        <div class="tip-details">
-          <div class="tip-label" style="font-size:13px;">Pravdepodobnosť gólu</div>
-        </div>
-        <div class="best-bet-prob" style="margin-left:auto;">${prediction.probabilityToScore.toFixed(0)} %</div>
-      </div>
-      ${scorerOddsCheckHtml(best, r)}
-      <button
-        class="tip-save-btn scorer-save-btn"
-        style="margin-top:8px; width:100%;"
-        data-player-id="${prediction.player.id}"
-        data-player-name="${escapeHtml(prediction.player.name)}"
-        data-probability="${prediction.probabilityToScore}"
-      >Uložiť tento tip</button>
-    </div>
-  `;
+  const fixtures = currentFixtures.filter((f) => !matchHasStarted(f));
+  const date = matchDateInput.value || localToday();
+  if (fixtures.length === 0) {
+    dayTips = { items: [], analyzed: 0, failed: 0, date, ran: true, none: true };
+    renderDayTipsView();
+    return;
+  }
+  const runId = ++dayTipsRun.id;
+  dayTipsRun = { running: true, done: 0, total: fixtures.length, id: runId };
+  renderDayTipsView();
+  const items = [];
+  let failed = 0;
+  // Zápasy analyzujeme jeden po druhom – šetrne k limitu požiadaviek API,
+  // aby boli výsledky pri každom načítaní rovnaké a úplné.
+  for (const f of fixtures) {
+    try {
+      const r = await requestAnalysis(f);
+      for (const bet of r?.bestBets || []) items.push({ r, bet });
+    } catch {
+      failed++;
+    }
+    dayTipsRun.done++;
+    if (currentView === "tipy" && !dayTipsDetail) renderDayTipsProgress();
+  }
+  items.sort((a, b) => b.bet.probability - a.bet.probability);
+  dayTips = { items, analyzed: fixtures.length, failed, date, ran: true };
+  dayTipsRun.running = false;
+  computeStrongIdx();
+  if (!dayTipsDetail) renderDayTipsView();
+  else updateDtRunBtn();
 }
 
-
-// ---- Strelec: oplatí sa / neoplatí sa ----
-// Stávkovky kurzy na strelcov cez API neposielajú, preto sa kurz zadá ručne.
-// Oplatí sa len keď: hráč je v potvrdenej zostave, odohrá asi aspoň 60 minút,
-// pravdepodobnosť gólu je aspoň 35 % a kurz je vyšší ako 100 ÷ pravdepodobnosť.
-const SCORER_MIN_PROB = 35;
-const SCORER_MIN_MINUTES = 60; // namiesto pevného minima 8 zápasov (19. 10. 2026)
-
-function scorerOddsCheckHtml(best, r) {
-  const p = best.prediction;
-  const isHome = r && best.team === r.fixture.homeTeam.name;
-  const lineupOk = Boolean(r && r.lineupConfirmed && (isHome ? r.lineupConfirmed.home : r.lineupConfirmed.away));
-  const minOdds = p.probabilityToScore > 0 ? 100 / p.probabilityToScore : 0;
-  const checks = [
-    { ok: lineupOk, text: lineupOk ? "Hráč je v potvrdenej zostave" : "Zostava ešte nie je potvrdená" },
-    { ok: p.expectedMinutes == null || p.expectedMinutes >= SCORER_MIN_MINUTES, text: p.expectedMinutes == null ? "Odhad minút nie je k dispozícii" : `Odohrá asi ${p.expectedMinutes} minút (treba aspoň ${SCORER_MIN_MINUTES})` },
-    { ok: p.probabilityToScore >= SCORER_MIN_PROB, text: `Pravdepodobnosť gólu: ${p.probabilityToScore.toFixed(0)} % (treba aspoň ${SCORER_MIN_PROB} %)` },
-  ];
-  const baseOk = checks.every((c) => c.ok);
-  return `
-    <div class="scorer-check" data-min-odds="${minOdds}" data-base-ok="${baseOk ? 1 : 0}" style="margin-top:12px; padding:12px 14px; border-radius:14px; border:1px solid rgba(217,192,138,.16); background:rgba(217,192,138,.05);">
-      <div class="stat-line"><span>Minimálny kurz, pri ktorom sa oplatí</span><strong>${minOdds ? fmtNum(minOdds, 2) : "–"}</strong></div>
-      <ul style="list-style:none; margin:8px 0 10px; padding:0; font-size:13px; line-height:1.6;">
-        ${checks.map((c) => `<li style="color:${c.ok ? "#7FBF9A" : "#C0707C"}">${c.ok ? "✓" : "✗"} ${escapeHtml(c.text)}</li>`).join("")}
-      </ul>
-      <label class="small muted" style="display:flex; align-items:center; gap:10px;">
-        Kurz v stávkovke
-        <input class="scorer-odds-input" type="text" inputmode="decimal" placeholder="napr. 2,80" style="width:110px; margin-left:auto;" />
-      </label>
-      <div class="scorer-verdict" style="margin-top:10px; font-weight:700; font-size:15px; color:#CFC6B6;">Zadaj kurz a appka ti povie, či sa oplatí.</div>
-    </div>
-  `;
-}
-
-function wireScorerOddsCheck() {
-  document.querySelectorAll(".scorer-check").forEach((box) => {
-    const input = box.querySelector(".scorer-odds-input");
-    const out = box.querySelector(".scorer-verdict");
-    const minOdds = parseFloat(box.dataset.minOdds || "0");
-    const baseOk = box.dataset.baseOk === "1";
-    input.addEventListener("input", () => {
-      const odds = parseFloat(input.value.replace(",", "."));
-      if (!odds || odds <= 1) {
-        out.style.color = "#CFC6B6";
-        out.textContent = "Zadaj kurz a appka ti povie, či sa oplatí.";
-        return;
-      }
-      const valueOk = odds > minOdds;
-      if (valueOk && baseOk) {
-        out.style.color = "#7FBF9A";
-        out.textContent = `✓ Oplatí sa – kurz ${fmtNum(odds, 2)} je vyšší ako minimum ${fmtNum(minOdds, 2)}.`;
-      } else if (!valueOk) {
-        out.style.color = "#C0707C";
-        out.textContent = `✗ Neoplatí sa – kurz ${fmtNum(odds, 2)} je nižší ako minimum ${fmtNum(minOdds, 2)}.`;
-      } else {
-        out.style.color = "#C0707C";
-        out.textContent = `✗ Neoplatí sa – kurz je dobrý, ale nie sú splnené podmienky vyššie.`;
-      }
-    });
+// Kandidát na silný tip dňa: najvyššia dôvera (aspoň 70 %), pri zhode vyšší kurz, potom skorší výkop – rovnako ako na serveri.
+function computeStrongIdx() {
+  strongIdx = -1;
+  dayTips.items.forEach(({ r, bet }, i) => {
+    if (typeof bet.probability !== "number" || bet.probability < STRONG_TIP_MIN_PROBABILITY) return;
+    if (strongIdx < 0) { strongIdx = i; return; }
+    const cur = dayTips.items[strongIdx];
+    const a = [bet.probability, bet.odds ?? 0, -new Date(r.fixture.date).getTime()];
+    const b = [cur.bet.probability, cur.bet.odds ?? 0, -new Date(cur.r.fixture.date).getTime()];
+    for (let k = 0; k < a.length; k++) if (a[k] !== b[k]) { if (a[k] > b[k]) strongIdx = i; return; }
   });
 }
 
-function clampPercent(v) {
-  return Math.max(0, Math.min(100, v));
+function updateDtRunBtn() {
+  dtRunBtn.disabled = dayTipsRun.running;
+  dtRunBtn.textContent = dayTipsRun.running ? "Analyzujem…" : dayTips.ran ? "Analyzovať znova" : "Spustiť analýzu";
+  const date = dayTips.ran ? dayTips.date : matchDateInput.value || localToday();
+  document.getElementById("dtDateLabel").textContent = dayKeyLabel(date);
 }
 
-function escapeHtml(str) {
-  const div = document.createElement("div");
-  div.textContent = str ?? "";
-  return div.innerHTML;
+function renderDayTipsProgress() {
+  const p = dayTipsRun;
+  const pct = p.total ? (p.done / p.total) * 100 : 0;
+  dayTipsPaneEl.innerHTML = `<div class="card progress-card">
+    <b>Analyzujem zápasy dňa… ${p.done} / ${p.total}</b>
+    <div class="bar big"><i style="width:${pct.toFixed(1)}%"></i></div>
+    <p class="faint small">Prvé načítanie chvíľu trvá, ďalšie sú rýchle. Môžeš medzitým prejsť na inú obrazovku.</p>
+  </div>`;
+  updateDtRunBtn();
 }
 
-// ---- Uložiť tip ----
+function renderDayTipsView() {
+  updateDtRunBtn();
+  if (dayTipsDetail) { renderDayTipDetail(dayTipsDetail); return; }
+  if (dayTipsRun.running) { renderDayTipsProgress(); return; }
+  if (!dayTips.ran) {
+    const n = currentFixtures.filter((f) => !matchHasStarted(f)).length;
+    dayTipsPaneEl.innerHTML = `<div class="card intro-card">
+      <h3 class="sh" style="margin-top:0">Všetky odporúčané tipy dňa naraz</h3>
+      <p class="muted">Appka prejde všetky zápasy vybraného dňa pred výkopom${fixturesLoading ? "" : ` (${plural(n, "zápas", "zápasy", "zápasov")})`} a ukáže všetky tipy, ktoré prešli pravidlami (68 – 80${NB}% a kontrola kurzu), zoradené od najvyššej dôvery.</p>
+      <button type="button" class="btn" data-dt-start>Spustiť analýzu</button>
+    </div>`;
+    dayTipsPaneEl.querySelector("[data-dt-start]").onclick = () => showDayTips();
+    return;
+  }
+  if (dayTips.none) {
+    dayTipsPaneEl.innerHTML = `<div class="empty-card">V tento deň (${escapeHtml(dayKeyLabel(dayTips.date))}) už nie sú žiadne zápasy pred výkopom.</div>`;
+    return;
+  }
+  const otherDate = dayTips.date !== (matchDateInput.value || localToday());
+  const rows = dayTips.items
+    .map(({ r, bet }, i) => {
+      const f = r.fixture;
+      return `
+      <div class="dtip${i === 0 ? " top" : ""}">
+        <div class="rank">${i + 1}.</div>
+        ${ring(bet.probability, 54)}
+        <div class="dtip-body">
+          <button type="button" class="dtip-match" data-open="${i}" title="Otvoriť detail zápasu">
+            <span class="faint">${escapeHtml(kickoffTime(f))}</span> ${escapeHtml(translateTeamName(f.homeTeam.name))} – ${escapeHtml(translateTeamName(f.awayTeam.name))}
+            <span class="faint small">· ${escapeHtml(translateLeagueName(f.league.name))}</span>
+          </button>
+          <div class="s">${escapeHtml(bet.market)}: <b>${escapeHtml(translateNamesInText(bet.selection, f.homeTeam.name, f.awayTeam.name))}</b>${strongTipBadge(bet.probability)}</div>
+          <div class="m"><span>Dôvera <b>${bet.probability.toFixed(0)}${NB}%</b></span>${betOddsHtml(bet)}</div>
+          ${bet.valueWarning ? `<div class="why warn">⚠️ ${escapeHtml(bet.valueWarning)}</div>` : ""}
+        </div>
+        <button type="button" class="btn sm${i === 0 ? "" : " ghost"}" data-save="${i}">Uložiť</button>
+      </div>`;
+    })
+    .join("");
+  dayTipsPaneEl.innerHTML = `
+    <p class="muted small dt-meta">
+      ${plural(dayTips.items.length, "tip", "tipy", "tipov")} · analyzované: ${plural(dayTips.analyzed, "zápas", "zápasy", "zápasov")} pred výkopom · zoradené od najvyššej dôvery${
+        dayTips.failed ? ` · <span class="loss">${dayTips.failed} sa nepodarilo analyzovať</span>` : ""
+      }${otherDate ? ` · <span class="gold">výsledky sú pre ${escapeHtml(dayKeyLabel(dayTips.date))}</span>` : ""}
+    </p>
+    ${rows ? `<div class="dtips">${rows}</div>` : `<div class="empty-card">V tento deň nie je žiadny tip, ktorý by prešiel pravidlami (68 – 80${NB}% a kontrola kurzu).</div>`}`;
 
-function wireScorerSaveButtons(r) {
-  const buttons = document.querySelectorAll(".scorer-save-btn");
-  buttons.forEach((btn) => {
+  dayTipsPaneEl.querySelectorAll("[data-open]").forEach((btn) => {
+    btn.onclick = () => {
+      const item = dayTips.items[Number(btn.dataset.open)];
+      if (!item) return;
+      dayTipsDetail = item.r;
+      ++dayTipsViewId;
+      renderDayTipDetail(item.r);
+      window.scrollTo(0, 0);
+    };
+  });
+  dayTipsPaneEl.querySelectorAll("[data-save]").forEach((btn) => {
     btn.onclick = async () => {
-      if (matchHasStarted(r.fixture)) {
-        showToast(MATCH_STARTED_TEXT);
-        return;
-      }
-      const playerId = parseInt(btn.dataset.playerId ?? "0", 10);
-      const playerName = btn.dataset.playerName ?? "";
-      const probability = parseFloat(btn.dataset.probability ?? "0");
-
-      const tip = {
-        id: `${r.fixture.fixtureId}-player-${playerId}-${Date.now()}`,
-        fixtureId: r.fixture.fixtureId,
-        leagueId: r.fixture.league.id,
-        season: r.fixture.league.season,
-        leagueName: r.fixture.league.name,
-        homeTeam: r.fixture.homeTeam.name,
-        awayTeam: r.fixture.awayTeam.name,
-        homeTeamLogo: r.fixture.homeTeam.logo,
-        awayTeamLogo: r.fixture.awayTeam.logo,
-        matchDate: r.fixture.date,
-        market: "Strelec gólov",
-        selection: playerName,
-        probability,
-        savedAt: new Date().toISOString(),
-        status: "pending",
-        playerId,
-        playerName,
-      };
-      // kurz zadaný pri kontrole „oplatí sa“ sa uloží spolu s tipom
-      const oddsInput = btn.closest(".stat-card")?.querySelector(".scorer-odds-input");
-      const enteredOdds = oddsInput ? parseFloat(oddsInput.value.replace(",", ".")) : NaN;
-      if (enteredOdds > 1) tip.odds = enteredOdds;
-
+      const idx = Number(btn.dataset.save);
+      const item = dayTips.items[idx];
+      if (!item) return;
+      const { r, bet } = item;
+      if (matchHasStarted(r.fixture)) { showToast(MATCH_STARTED_TEXT); return; }
+      const realOdds = await askRealOdds(bet);
+      if (realOdds == null) return;
+      // Kandidát na ⭐ Silný tip dňa si značku nesie do Histórie tipov (server nechá max. 1 za deň).
+      const tip = buildTip(r, bet, realOdds, idx === strongIdx ? { strongOfDay: true } : {});
       btn.disabled = true;
-      const originalText = btn.textContent;
       try {
-        await fetchJson("/api/tips", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(tip),
-        });
+        await postJson("/api/tips", tip);
         btn.textContent = "✓ Uložené";
-      } catch {
-        btn.textContent = "Uloženie zlyhalo";
-      } finally {
-        setTimeout(() => {
-          btn.textContent = originalText;
-          btn.disabled = false;
-        }, 2000);
-      }
-    };
-  });
-}
-
-function askTelegramTarget() {
-  return new Promise((resolve) => {
-    const overlay = document.createElement("div");
-    overlay.className = "modal-overlay";
-    overlay.innerHTML = `
-      <div class="modal" style="max-width:320px;">
-        <h3>Odoslať do Telegramu?</h3>
-        <div style="display:flex; flex-direction:column; gap:10px; margin-top:18px;">
-          <button class="btn-primary" id="tgChoicePremium">◆ PLATINUM kanál</button>
-          <button class="btn-primary" id="tgChoiceFree">★ FREE kanál</button>
-          <button class="btn-ghost" id="tgChoiceNone">Neposielať</button>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(overlay);
-    const cleanup = (result) => {
-      document.body.removeChild(overlay);
-      resolve(result);
-    };
-    overlay.querySelector("#tgChoicePremium").addEventListener("click", () => cleanup("premium"));
-    overlay.querySelector("#tgChoiceFree").addEventListener("click", () => cleanup("free"));
-    overlay.querySelector("#tgChoiceNone").addEventListener("click", () => cleanup(null));
-  });
-}
-
-async function maybeOfferTelegram(tipId) {
-  const target = await askTelegramTarget();
-  if (!target) return;
-  try {
-    await fetchJson(`/api/tips/${tipId}/telegram`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ target }),
-    });
-  } catch (err) {
-    showToast(`Odoslanie do Telegramu zlyhalo: ${err.message}`);
-  }
-}
-
-function initSaveTipButton(r) {
-  const msgEl = document.getElementById("saveTipMsg");
-  const buttons = document.querySelectorAll(".save-best-bet-btn");
-  if (!msgEl) return;
-
-  buttons.forEach((btn) => {
-    btn.onclick = async () => {
-      const idx = parseInt(btn.dataset.betIdx ?? "0", 10);
-      if (matchHasStarted(r.fixture)) {
-        showToast(MATCH_STARTED_TEXT);
-        return;
-      }
-      const fromLow = btn.dataset.source === "low"; // vyradený tip pridaný ručne
-      const watch = btn.dataset.watch === "1"; // len sledovať
-      const chosenBet = (fromLow ? r.lowValueBets : r.bestBets)?.[idx];
-      if (!chosenBet) return;
-      // Vyradený tip uložený ručne („Uložiť aj tak") a sledovaný tip: bez otázky na kurz.
-      const realOdds = watch || fromLow ? chosenBet.odds ?? null : await askRealOdds(chosenBet);
-      if (!watch && !fromLow && realOdds == null) return;
-
-      const tip = {
-        id: `${r.fixture.fixtureId}-${Date.now()}`,
-        fixtureId: r.fixture.fixtureId,
-        leagueId: r.fixture.league.id,
-        season: r.fixture.league.season,
-        leagueName: r.fixture.league.name,
-        homeTeam: r.fixture.homeTeam.name,
-        awayTeam: r.fixture.awayTeam.name,
-        homeTeamLogo: r.fixture.homeTeam.logo,
-        awayTeamLogo: r.fixture.awayTeam.logo,
-        matchDate: r.fixture.date,
-        market: chosenBet.market,
-        selection: chosenBet.selection,
-        probability: chosenBet.probability,
-        odds: realOdds,
-        ...(typeof chosenBet.odds === "number" ? { apiOdds: chosenBet.odds } : {}),
-        ...(fromLow ? { overrideFilter: true } : {}),
-        ...(watch ? { watchOnly: true } : {}),
-        savedAt: new Date().toISOString(),
-        status: "pending",
-      };
-
-      btn.disabled = true;
-      try {
-        await fetchJson("/api/tips", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(tip),
-        });
-        msgEl.innerHTML = `<p class="muted small" style="margin-top:6px;">✓ ${watch ? "Tip uložený medzi sledované" : "Tip uložený"} (${escapeHtml(chosenBet.market)}: ${escapeHtml(translateNamesInText(chosenBet.selection, r.fixture.homeTeam.name, r.fixture.awayTeam.name))})</p>`;
-        if (!watch) await maybeOfferTelegram(tip.id);
+        await maybeOfferTelegram(tip.id);
       } catch (err) {
-        msgEl.innerHTML = `<p class="muted small" style="margin-top:6px;">Uloženie zlyhalo: ${escapeHtml(err.message)}</p>`;
-      } finally {
+        showToast(`Uloženie zlyhalo: ${err?.message ?? String(err)}`);
         btn.disabled = false;
       }
     };
   });
 }
 
-// ---- Tiket (spojenie viacerých tipov) ----
-
-function wireTicketButtons(r) {
-  const buttons = document.querySelectorAll(".add-to-ticket-btn");
-  buttons.forEach((btn) => {
-    btn.onclick = () => {
-      const idx = parseInt(btn.dataset.betIdx ?? "0", 10);
-      if (matchHasStarted(r.fixture)) {
-        showToast(MATCH_STARTED_TEXT);
-        return;
-      }
-      const fromLow = btn.dataset.source === "low";
-      const bet = (fromLow ? r.lowValueBets : r.bestBets)?.[idx];
-      if (!bet) return;
-
-      const id = `${r.fixture.fixtureId}-${bet.market}-${bet.selection}`;
-      if (ticketItems.some((t) => t.id === id)) {
-        btn.textContent = "✓ Už v tikete";
-        setTimeout(() => (btn.textContent = "+ Do tiketu"), 1500);
-        return;
-      }
-
-      ticketItems.push({
-        id,
-        fixtureId: r.fixture.fixtureId,
-        leagueId: r.fixture.league.id,
-        season: r.fixture.league.season,
-        homeTeam: r.fixture.homeTeam.name,
-        awayTeam: r.fixture.awayTeam.name,
-        matchDate: r.fixture.date,
-        market: bet.market,
-        selection: bet.selection,
-        probability: bet.probability,
-        odds: bet.odds ?? null,
-        ...(fromLow ? { overrideFilter: true } : {}),
-      });
-
-      updateTicketCount();
-      btn.textContent = "✓ Pridané";
-      setTimeout(() => (btn.textContent = "+ Do tiketu"), 1500);
-    };
-  });
-}
-
-function updateTicketCount() {
-  ticketCountEl.textContent = ticketItems.length > 0 ? `(${ticketItems.length})` : "";
-}
-
-function renderTicket() {
-  if (ticketItems.length === 0) {
-    ticketSummaryEl.innerHTML = "";
-    ticketListEl.innerHTML = `<p class="empty-state">Tiket je zatiaľ prázdny – pridaj tipy tlačidlom „+ Do tiketu“ pri analýze zápasu.</p>`;
-    return;
-  }
-
-  const combinedProbability = ticketItems.reduce((acc, t) => acc * (t.probability / 100), 1) * 100;
-  const impliedOdds = combinedProbability > 0 ? 100 / combinedProbability : 0;
-  const allHaveOdds = ticketItems.every((t) => typeof t.odds === "number" && t.odds > 1);
-  const realTicketOdds = allHaveOdds ? ticketItems.reduce((acc, t) => acc * t.odds, 1) : null;
-
-  ticketSummaryEl.innerHTML = `
-    <span>Počet tipov: <strong>${ticketItems.length}</strong></span>
-    <span>Kombinovaná pravdepodobnosť: <strong>${fmtNum(combinedProbability, 1)} %</strong></span>
-    <span>${realTicketOdds ? `Kurz: <strong>${fmtOdds(realTicketOdds)}</strong>` : `Odvodený kurz: <strong>~${fmtNum(impliedOdds, 2)}</strong>`}</span>
-  `;
-
-  ticketListEl.innerHTML = ticketItems
-    .map(
-      (t) => `
-    <div class="tip-row">
-      <div class="tip-row-info">
-        <div class="tip-row-match">${escapeHtml(translateTeamName(t.homeTeam))} — ${escapeHtml(translateTeamName(t.awayTeam))}</div>
-        <div class="tip-row-market">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))} · ${t.probability.toFixed(0)} %</div>
-      </div>
-      <button class="tip-delete-btn" data-ticket-id="${t.id}" title="Odstrániť z tiketu">✕</button>
-    </div>
-  `
-    )
-    .join("");
-
-  ticketListEl.querySelectorAll(".tip-delete-btn").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      const id = e.currentTarget.dataset.ticketId;
-      ticketItems = ticketItems.filter((t) => t.id !== id);
-      updateTicketCount();
-      renderTicket();
-    });
-  });
-}
-
-bankrollStartInput.addEventListener("input", () => {
-  if (lastRenderedTips.length > 0) renderBankrollSimulation(lastRenderedTips);
-});
-
-openTicketBtn.addEventListener("click", () => {
-  ticketModal.hidden = false;
-  renderTicket();
-});
-
-closeTicketBtn.addEventListener("click", () => {
-  ticketModal.hidden = true;
-});
-
-clearTicketBtn.addEventListener("click", () => {
-  if (ticketItems.length === 0) return;
-  if (!window.confirm("Naozaj chceš vymazať celý tiket?")) return;
-  ticketItems = [];
-  updateTicketCount();
-  renderTicket();
-});
-
-saveTicketBtn.addEventListener("click", async () => {
-  if (ticketItems.length < 2) {
-    showToast("Tiket musí obsahovať aspoň 2 tipy.");
-    return;
-  }
-
-  const startedLegs = ticketItems.filter((t) => {
-    const time = new Date(t.matchDate).getTime();
-    return !isNaN(time) && time <= Date.now();
-  });
-  if (startedLegs.length > 0) {
-    showToast(
-      `Tiket obsahuje zápas, ktorý už začal: ${startedLegs
-        .map((t) => `${translateTeamName(t.homeTeam)} – ${translateTeamName(t.awayTeam)}`)
-        .join(", ")}. Odstráň ho z tiketu.`
-    );
-    return;
-  }
-
-  const combinedProbability = ticketItems.reduce((acc, t) => acc * (t.probability / 100), 1) * 100;
-
-  const ticketTip = {
-    id: `ticket-${Date.now()}`,
-    fixtureId: ticketItems[0].fixtureId,
-    leagueId: ticketItems[0].leagueId,
-    season: ticketItems[0].season,
-    leagueName: "Tiket",
-    homeTeam: "Tiket",
-    awayTeam: `${plural(ticketItems.length, "zápas", "zápasy", "zápasov")}`,
-    matchDate: new Date().toISOString(),
-    market: "Tiket",
-    selection: `${plural(ticketItems.length, "tip", "tipy", "tipov")}`,
-    probability: combinedProbability,
-    ...(ticketItems.some((t) => t.overrideFilter) ? { overrideFilter: true } : {}),
-    odds: ticketItems.every((t) => typeof t.odds === "number" && t.odds > 1)
-      ? Math.round(ticketItems.reduce((acc, t) => acc * t.odds, 1) * 100) / 100
-      : null,
-    savedAt: new Date().toISOString(),
-    status: "pending",
-    legs: ticketItems.map((t) => ({
-      fixtureId: t.fixtureId,
-      leagueId: t.leagueId,
-      season: t.season,
-      homeTeam: t.homeTeam,
-      awayTeam: t.awayTeam,
-      matchDate: t.matchDate,
-      market: t.market,
-      selection: t.selection,
-      probability: t.probability,
-      odds: t.odds ?? null,
-      ...(t.overrideFilter ? { overrideFilter: true } : {}),
-      status: "pending",
-    })),
+function renderDayTipDetail(r) {
+  const back = {
+    label: "‹ Späť na tipy dňa",
+    onClick: () => {
+      ++dayTipsViewId;
+      dayTipsDetail = null;
+      renderDayTipsView();
+      window.scrollTo(0, 0);
+    },
   };
-
-  saveTicketBtn.disabled = true;
   try {
-    await fetchJson("/api/tips", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(ticketTip),
+    renderAnalysis(r, dayTipsPaneEl, {
+      back,
+      onRecalc: async () => {
+        const viewId = ++dayTipsViewId;
+        dayTipsPaneEl.innerHTML = skeletonHtml(5);
+        try {
+          const fresh = await requestAnalysis(r.fixture);
+          if (viewId !== dayTipsViewId) return;
+          dayTipsDetail = fresh;
+          renderDayTipDetail(fresh);
+        } catch (err) {
+          if (viewId !== dayTipsViewId) return;
+          dayTipsPaneEl.innerHTML = `<div class="empty">Analýzu sa nepodarilo vypočítať: ${escapeHtml(err.message)}</div>`;
+          dayTipsPaneEl.insertAdjacentHTML("afterbegin", `<button type="button" class="btn ghost sm back-link" data-back2>${back.label}</button>`);
+          dayTipsPaneEl.querySelector("[data-back2]").onclick = back.onClick;
+        }
+      },
     });
-    ticketItems = [];
-    updateTicketCount();
-    renderTicket();
-    await maybeOfferTelegram(ticketTip.id);
   } catch (err) {
-    showToast(`Uloženie tiketu zlyhalo: ${err.message}`);
-  } finally {
-    saveTicketBtn.disabled = false;
+    // Tlačidlo späť na zoznam – vždy, aj keby sa detail nepodarilo vykresliť.
+    dayTipsPaneEl.innerHTML = `<button type="button" class="btn ghost sm back-link" data-back2>${back.label}</button><div class="empty">Detail sa nepodarilo zobraziť: ${escapeHtml(err.message)}</div>`;
+    dayTipsPaneEl.querySelector("[data-back2]").onclick = back.onClick;
   }
-});
+}
 
-// ---- História tipov ----
+dtRunBtn.addEventListener("click", () => showDayTips());
+
+// =====================================================================
+// HISTÓRIA TIPOV
+// =====================================================================
+let currentHistoryTips = [];
+let lastStatTips = [];
+let showArchivedTips = false;
+let tipsFilter = "all";
+const tipsListEl = document.getElementById("tipsList");
+const bankrollStartInput = document.getElementById("bankrollStartInput");
+const checkResultsBtn = document.getElementById("checkResultsBtn");
 
 async function openTipsHistory() {
   void renderShadowSummary();
   void renderBlendSummary();
   void renderClvSummary();
-  // Tiché sledovanie tiketu dňa beží ďalej na pozadí, v Histórii tipov sa už nezobrazuje (14. 10. 2026).
-  tipsModal.hidden = false;
-  tipsListEl.innerHTML = skeletonHtml(2);
+  if (!currentHistoryTips.length) tipsListEl.innerHTML = skeletonHtml(3);
   try {
     const tips = await fetchJson("/api/tips");
     renderTipsList(tips);
   } catch (err) {
-    tipsListEl.innerHTML = `<p class="empty-state">Tipy sa nepodarilo načítať: ${escapeHtml(err.message)}</p>`;
+    tipsListEl.innerHTML = `<p class="empty">Tipy sa nepodarilo načítať: ${escapeHtml(err.message)}</p>`;
   }
 }
-
-let lastRenderedTips = [];
 
 function stakeTierPercent(probability) {
   if (probability >= 70) return 0.03; // vyššia dôvera = väčšia sadzba
@@ -1531,110 +1536,7 @@ function stakeTierPercent(probability) {
   return 0.01;
 }
 
-function renderCalibrationReport(tips) {
-  // Tikety vynechávame - ich pravdepodobnosť je kombinovaná naprieč viacerými
-  // zápasmi, takže sa nedá zmysluplne porovnať s jedným percentom.
-  // Obnovené tipy bez známej dôvery modelu (odhad z kurzu) kalibráciu neskresľujú.
-  const resolved = tips.filter((t) => !t.legs && !t.probabilityEstimated && (t.status === "won" || t.status === "lost"));
-
-  if (resolved.length === 0) {
-    calibrationResultEl.innerHTML = `<p class="muted small">Zatiaľ nemáš dosť vyhodnotených tipov na kalibráciu.</p>`;
-    return;
-  }
-
-  const buckets = [
-    { min: 50, max: 60, label: "50–60 %" },
-    { min: 60, max: 70, label: "60–70 %" },
-    { min: 70, max: 80, label: "70–80 %" },
-    { min: 80, max: 90, label: "80–90 %" },
-    { min: 90, max: 100, label: "90–100 %" },
-  ];
-
-  const rows = buckets
-    .map((b) => {
-      const inBucket = resolved.filter((t) => t.probability >= b.min && t.probability < (b.max === 100 ? 101 : b.max));
-      if (inBucket.length === 0) return null;
-      const won = inBucket.filter((t) => t.status === "won").length;
-      const actualPct = (won / inBucket.length) * 100;
-      const predictedMid = (b.min + b.max) / 2;
-      return { label: b.label, count: inBucket.length, actualPct, predictedMid };
-    })
-    .filter(Boolean);
-
-  if (rows.length === 0) {
-    calibrationResultEl.innerHTML = `<p class="muted small">Zatiaľ nemáš dosť vyhodnotených tipov na kalibráciu.</p>`;
-    return;
-  }
-
-  calibrationResultEl.innerHTML = rows
-    .map(
-      (r) => `
-      <div class="market-breakdown-row">
-        <div class="market-breakdown-label">
-          <span>Predikcia ${r.label}</span>
-          <span class="muted small">realita: ${r.actualPct.toFixed(0)} % · ${plural(r.count, "tip", "tipy", "tipov")}</span>
-        </div>
-        <div class="market-breakdown-bar" style="position:relative;">
-          <div class="market-breakdown-bar-fill" style="width: ${r.actualPct}%;"></div>
-          <div style="position:absolute; left:${r.predictedMid}%; top:-2px; bottom:-2px; width:2px; background:var(--text);"></div>
-        </div>
-      </div>
-    `
-    )
-    .join("") + `<p class="muted small" style="margin-top:8px;">Zlatý pruh = koľko tipov reálne vyšlo. Biela čiarka = stred predikovaného rozsahu (kde by mal pruh byť, ak je model presný).</p>`;
-}
-
-function renderBankrollSimulation(tips) {
-  lastRenderedTips = tips;
-
-  const resolved = tips
-    .filter((t) => t.status === "won" || t.status === "lost")
-    .sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime());
-
-  if (resolved.length === 0) {
-    bankrollResultEl.innerHTML = `<p class="muted small">Zatiaľ nemáš žiadne vyhodnotené tipy na simuláciu.</p>`;
-    return;
-  }
-
-  const startingBankroll = parseFloat(bankrollStartInput.value) || 1000;
-  let bankroll = startingBankroll;
-  const history = [bankroll];
-
-  for (const t of resolved) {
-    const stakePct = stakeTierPercent(t.probability);
-    const stake = bankroll * stakePct;
-    // Skutočný kurz, ak bol pri tipe uložený - inak "fér" kurz odvodený z pravdepodobnosti modelu.
-    const impliedOdds = typeof t.odds === "number" && t.odds > 1 ? t.odds : 100 / t.probability;
-    bankroll += t.status === "won" ? stake * (impliedOdds - 1) : -stake;
-    history.push(bankroll);
-  }
-
-  const totalReturn = ((bankroll - startingBankroll) / startingBankroll) * 100;
-  const maxVal = Math.max(...history);
-  const minVal = Math.min(...history);
-  const range = maxVal - minVal || 1;
-
-  const barsHtml = history
-    .map((v) => {
-      const heightPct = 10 + ((v - minVal) / range) * 90;
-      return `<div class="bankroll-bar" style="height:${heightPct}%;" title="${v.toFixed(0)}€"></div>`;
-    })
-    .join("");
-
-  bankrollResultEl.innerHTML = `
-    <div class="bankroll-summary">
-      <span>Použitých tipov: <strong>${resolved.length}</strong></span>
-      <span>Konečný bankroll: <strong>${bankroll.toFixed(0)}€</strong></span>
-      <span>Celková zmena: <strong style="color:${totalReturn >= 0 ? "var(--success)" : "var(--danger)"};">${signed(totalReturn, 1)} %</strong></span>
-    </div>
-    <div class="bankroll-chart">${barsHtml}</div>
-  `;
-}
-
-// Úspešnosť, zisk a ROI podľa typu stávky + porovnanie s tým, čo model čakal (17. 10. 2026).
-// Zisk a ROI sa rátajú pri vklade 1 jednotka na tip, len z tipov s kurzom.
-// Kalibrácia: pri aspoň 20 tipoch v trhu a rozdiele aspoň 10 bodov appka upozorní,
-// že model v tomto trhu preceňuje / podceňuje.
+// Úspešnosť, zisk a ROI pri vklade 1 jednotka na tip (zisk len z tipov s kurzom).
 const CALIBRATION_MIN_TIPS = 20;
 const CALIBRATION_GAP = 10;
 
@@ -1646,7 +1548,7 @@ function marketStats(list) {
   return {
     won,
     total: list.length,
-    pct: (won / list.length) * 100,
+    pct: list.length ? (won / list.length) * 100 : 0,
     expected: probs.length ? probs.reduce((a, t) => a + t.probability, 0) / probs.length : null,
     profit,
     roi: withOdds.length ? (profit / withOdds.length) * 100 : null,
@@ -1654,314 +1556,804 @@ function marketStats(list) {
   };
 }
 
+function renderTipsList(allTips) {
+  currentHistoryTips = allTips;
+  // Tipy „len sledovať“ sa nerátajú do štatistík ani sa nezobrazujú.
+  const tips = allTips.filter((t) => !t.watchOnly);
+  // Tipy na trhy, ktoré appka už neponúka, ostávajú v zozname, ale nerátajú sa do štatistík.
+  const statTips = tips.filter((t) => !EXCLUDED_STATS_MARKETS.includes(t.market));
+  lastStatTips = statTips;
+  renderTipsKpis(statTips);
+  renderOverrideLine(statTips);
+  renderMarketBreakdown(statTips);
+  renderBankrollSimulation(statTips);
+  renderCalibrationReport(statTips);
+  renderTipRows(tips);
+}
+
+function renderTipsKpis(statTips) {
+  const won = statTips.filter((t) => t.status === "won").length;
+  const lost = statTips.filter((t) => t.status === "lost").length;
+  const pending = statTips.filter((t) => t.status === "pending").length;
+  const decided = won + lost;
+  const decidedTips = statTips.filter((t) => t.status === "won" || t.status === "lost");
+  const st = marketStats(decidedTips);
+  const now = new Date();
+  const monthTips = decidedTips.filter((t) => {
+    const d = new Date(t.matchDate);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  });
+  const ms = marketStats(monthTips);
+  const cls = (v) => (v > 0 ? "g" : v < 0 ? "l" : "");
+  document.getElementById("tipsKpis").innerHTML = `
+    <div class="kpi"><small>Tipov</small><b>${statTips.length}</b><span>${pending ? `${pending} ${pending === 1 ? "čaká" : "čakajú"}` : "nič nečaká"}</span></div>
+    <div class="kpi"><small>Vyšlo</small><b>${decided ? `${Math.round((won / decided) * 100)}${NB}%` : "–"}</b><span>${won} z ${decided}</span></div>
+    <div class="kpi"><small>Zisk</small><b class="${cls(st.profit)}">${st.withOdds ? `${signed(st.profit, 1)}${NB}j.` : "–"}</b><span>1 jednotka na tip</span></div>
+    <div class="kpi"><small>ROI</small><b class="${cls(st.roi)}">${st.roi != null ? `${signed(st.roi, 1)}${NB}%` : "–"}</b><span>na vsadený tip</span></div>
+    <div class="kpi"><small>${MONTH_NAMES[now.getMonth()]}</small><b class="${cls(ms.profit)}">${ms.withOdds ? `${signed(ms.profit, 1)}${NB}j.` : "–"}</b><span>${ms.won} z ${ms.total} vyšlo</span></div>`;
+}
+
+/** Prehľad tipov „mimo filtra“ – či sa oplatí prekonávať kontrolu kurzu. */
+function renderOverrideLine(tips) {
+  const el = document.getElementById("overrideLine");
+  const ov = tips.filter(isOverrideTip);
+  if (!ov.length) { el.innerHTML = ""; return; }
+  const decided = ov.filter((t) => t.status === "won" || t.status === "lost");
+  const won = decided.filter((t) => t.status === "won").length;
+  const withOdds = decided.filter((t) => typeof t.odds === "number" && t.odds > 1);
+  const profit = withOdds.reduce((sum, t) => sum + (t.status === "won" ? t.odds - 1 : -1), 0);
+  el.innerHTML = `<span title="Tipy vyradené kontrolou kurzu, ktoré si pridal ručne">⚠️ Mimo filtra: <b>${won} z ${decided.length}</b>${
+    withOdds.length > 0 ? ` · zisk <b>${signed(profit, 1)}${NB}j.</b>` : ""
+  }${ov.length > decided.length ? ` · čaká ${ov.length - decided.length}` : ""}</span>`;
+}
+
 function marketBreakdownRow(label, st, bold) {
-  const color = st.profit > 0 ? "var(--success)" : st.profit < 0 ? "var(--danger)" : "inherit";
   let calib = "";
   if (st.expected != null) {
     const gap = st.pct - st.expected;
-    if (st.total < CALIBRATION_MIN_TIPS) calib = `model čakal ${st.expected.toFixed(0)} %`;
-    else if (gap <= -CALIBRATION_GAP) calib = `⚠️ model čakal ${st.expected.toFixed(0)} % – preceňuje`;
-    else if (gap >= CALIBRATION_GAP) calib = `model čakal ${st.expected.toFixed(0)} % – podceňuje`;
-    else calib = `model čakal ${st.expected.toFixed(0)} % ✓`;
+    if (st.total < CALIBRATION_MIN_TIPS) calib = `model čakal ${st.expected.toFixed(0)}${NB}%`;
+    else if (gap <= -CALIBRATION_GAP) calib = `⚠️ model čakal ${st.expected.toFixed(0)}${NB}% – preceňuje`;
+    else if (gap >= CALIBRATION_GAP) calib = `model čakal ${st.expected.toFixed(0)}${NB}% – podceňuje`;
+    else calib = `model čakal ${st.expected.toFixed(0)}${NB}% ✓`;
   }
-  const money = st.withOdds
-    ? ` · zisk <strong style="color:${color}">${signed(st.profit, 1)} j.</strong> · ROI <strong style="color:${color}">${signed(st.roi, 0)} %</strong>`
-    : "";
+  const cls = st.profit > 0 ? "g" : st.profit < 0 ? "l" : "";
+  const money = st.withOdds ? ` · zisk <b class="${cls}">${signed(st.profit, 1)}${NB}j.</b> · ROI <b class="${cls}">${signed(st.roi, 0)}${NB}%</b>` : "";
   return `
-        <div class="market-breakdown-row">
-          <div class="market-breakdown-label">
-            <span>${bold ? `<strong>${escapeHtml(label)}</strong>` : escapeHtml(label)}</span>
-            <span class="muted small">${st.won}/${st.total} · ${st.pct.toFixed(0)} %${money}</span>
-          </div>
-          <div class="market-breakdown-bar" style="position:relative">
-            <div class="market-breakdown-bar-fill" style="width: ${st.pct}%;"></div>
-            ${st.expected != null ? `<div title="Model čakal ${st.expected.toFixed(0)} %" style="position:absolute;top:-2px;bottom:-2px;left:${st.expected}%;width:2px;background:var(--gold);"></div>` : ""}
-          </div>
-          ${calib ? `<div class="muted small" style="margin-top:2px">${calib}</div>` : ""}
-        </div>
-      `;
+    <div class="mb-row${bold ? " total" : ""}">
+      <div class="mb-top"><span class="mb-name">${escapeHtml(label)}</span><span class="mb-num">${st.won}/${st.total} · <b>${st.pct.toFixed(0)}${NB}%</b>${money}</span></div>
+      <div class="bar mb-bar">
+        <i style="width:${st.pct.toFixed(1)}%"></i>
+        ${st.expected != null ? `<span class="mark" title="Model čakal ${st.expected.toFixed(0)} %" style="left:${clampPercent(st.expected)}%"></span>` : ""}
+      </div>
+      ${calib ? `<div class="faint small">${calib}</div>` : ""}
+    </div>`;
 }
 
 function renderMarketBreakdown(tips) {
+  const el = document.getElementById("marketBreakdown");
   const decidedTips = tips.filter((t) => t.status === "won" || t.status === "lost");
-  if (decidedTips.length === 0) {
-    marketBreakdownEl.innerHTML = "";
+  if (!decidedTips.length) {
+    el.innerHTML = `<p class="empty">Zatiaľ nie sú vyhodnotené žiadne tipy.</p>`;
     return;
   }
-
   const byMarket = {};
   for (const t of decidedTips) (byMarket[t.market] ??= []).push(t);
   const rows = Object.entries(byMarket)
     .map(([market, list]) => [market, marketStats(list)])
     .sort((a, b) => b[1].total - a[1].total);
-
-  marketBreakdownEl.innerHTML = `
-    <div class="market-breakdown-title">Úspešnosť a zisk podľa typu stávky</div>
-    <p class="muted small" style="margin:-4px 0 8px">Zisk pri vklade 1 jednotka na tip. Zlatá čiarka = koľko model čakal. Hodnotenie modelu (preceňuje / podceňuje) sa ukáže od ${CALIBRATION_MIN_TIPS} tipov v trhu.</p>
+  el.innerHTML = `
+    <p class="faint small mb-intro">Zlatá čiarka = koľko model čakal. Hodnotenie modelu (preceňuje / podceňuje) sa ukáže od ${CALIBRATION_MIN_TIPS} tipov v trhu.</p>
     ${marketBreakdownRow("Spolu", marketStats(decidedTips), true)}
-    ${rows.map(([market, st]) => marketBreakdownRow(market, st, false)).join("")}
-  `;
+    ${rows.map(([market, st]) => marketBreakdownRow(market, st, false)).join("")}`;
 }
 
-/** Samostatný prehľad tipov "mimo filtra" - či sa oplatí prekonávať kontrolu kurzu. */
-function overrideSummaryHtml(tips) {
-  const ov = tips.filter(isOverrideTip);
-  if (ov.length === 0) return "";
-  const decided = ov.filter((t) => t.status === "won" || t.status === "lost");
-  const won = decided.filter((t) => t.status === "won").length;
-  const withOdds = decided.filter((t) => typeof t.odds === "number" && t.odds > 1);
-  const profit = withOdds.reduce((sum, t) => sum + (t.status === "won" ? t.odds - 1 : -1), 0);
-  return `<span title="Tipy vyradené kontrolou kurzu, ktoré si pridal ručne">⚠️ Mimo filtra: <strong>${won} z ${decided.length}</strong>${
-    withOdds.length > 0 ? ` · zisk <strong>${signed(profit, 1)} j.</strong>` : ""
-  }${ov.length > decided.length ? ` · čaká ${ov.length - decided.length}` : ""}</span>`;
-}
-
-const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté konto"];
-
-/** Časť „Sledované tipy“ v Histórii tipov: vlastná úspešnosť, mimo štatistík, webu aj Telegramu. */
-function watchSectionHtml(watchTips) {
-  if (!watchTips.length) return "";
-  const won = watchTips.filter((t) => t.status === "won").length;
-  const lost = watchTips.filter((t) => t.status === "lost").length;
-  const waiting = watchTips.filter((t) => t.status === "pending").length;
-  const withOdds = watchTips.filter((t) => (t.status === "won" || t.status === "lost") && typeof t.odds === "number" && t.odds > 1);
-  const profit = withOdds.reduce((sum, t) => sum + (t.status === "won" ? t.odds - 1 : -1), 0);
-  const sorted = [...watchTips].sort((a, b) => new Date(b.matchDate).getTime() - new Date(a.matchDate).getTime());
-  return `<div class="watch-section">
-    <h3 class="watch-title">👁 Sledované tipy</h3>
-    <p class="muted small" style="margin:0 0 8px;">Vyhodnocujú sa, ale nerátajú sa do štatistík, nie sú na webe a neposielajú sa členom.</p>
-    <div class="tips-summary" style="margin-bottom:8px;">
-      <span>Vyšlo: <strong>${won} z ${won + lost}</strong></span>
-      <span>Úspešnosť: <strong>${won + lost ? Math.round((won / (won + lost)) * 100) + " %" : "—"}</strong></span>
-      ${withOdds.length ? `<span>Zisk: <strong>${signed(profit, 1)} j.</strong></span>` : ""}
-      <span>Čaká: <strong>${waiting}</strong></span>
+function renderBankrollSimulation(tips) {
+  const el = document.getElementById("bankrollResult");
+  const resolved = tips
+    .filter((t) => t.status === "won" || t.status === "lost")
+    .sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime());
+  if (!resolved.length) {
+    el.innerHTML = `<p class="faint small">Zatiaľ nemáš žiadne vyhodnotené tipy na simuláciu.</p>`;
+    return;
+  }
+  const startingBankroll = parseFloat(bankrollStartInput.value) || 1000;
+  let bankroll = startingBankroll;
+  const history = [bankroll];
+  for (const t of resolved) {
+    const stake = bankroll * stakeTierPercent(t.probability);
+    // Skutočný kurz, ak bol pri tipe uložený – inak „fér“ kurz z pravdepodobnosti modelu.
+    const odds = typeof t.odds === "number" && t.odds > 1 ? t.odds : 100 / t.probability;
+    bankroll += t.status === "won" ? stake * (odds - 1) : -stake;
+    history.push(bankroll);
+  }
+  const totalReturn = ((bankroll - startingBankroll) / startingBankroll) * 100;
+  const maxVal = Math.max(...history), minVal = Math.min(...history);
+  const range = maxVal - minVal || 1;
+  el.innerHTML = `
+    <div class="kv-grid">
+      <div><small>Použitých tipov</small><b>${resolved.length}</b></div>
+      <div><small>Konečný bankroll</small><b>${bankroll.toFixed(0)}${NB}€</b></div>
+      <div><small>Celková zmena</small><b class="${totalReturn >= 0 ? "g" : "l"}">${signed(totalReturn, 1)}${NB}%</b></div>
     </div>
-    ${sorted.map(historyRowHtml).join("")}
-  </div>`;
+    <div class="bankroll-chart">${history
+      .map((v) => `<div style="height:${(10 + ((v - minVal) / range) * 90).toFixed(1)}%" title="${v.toFixed(0)} €"></div>`)
+      .join("")}</div>`;
+}
+
+function renderCalibrationReport(tips) {
+  const el = document.getElementById("calibrationResult");
+  // Tikety vynechávame (kombinovaná pravdepodobnosť), aj obnovené tipy s odhadnutou dôverou.
+  const resolved = tips.filter((t) => !t.legs && !t.probabilityEstimated && (t.status === "won" || t.status === "lost"));
+  const buckets = [[50, 60], [60, 70], [70, 80], [80, 90], [90, 100]];
+  const rows = buckets
+    .map(([min, max]) => {
+      const inBucket = resolved.filter((t) => t.probability >= min && t.probability < (max === 100 ? 101 : max));
+      if (!inBucket.length) return null;
+      const won = inBucket.filter((t) => t.status === "won").length;
+      return { label: `${min}–${max}${NB}%`, count: inBucket.length, actualPct: (won / inBucket.length) * 100, predictedMid: (min + max) / 2 };
+    })
+    .filter(Boolean);
+  if (!rows.length) {
+    el.innerHTML = `<p class="faint small">Zatiaľ nemáš dosť vyhodnotených tipov na kalibráciu.</p>`;
+    return;
+  }
+  el.innerHTML =
+    rows
+      .map(
+        (r) => `<div class="mb-row">
+        <div class="mb-top"><span class="mb-name">Predikcia ${r.label}</span><span class="mb-num">realita: <b>${r.actualPct.toFixed(0)}${NB}%</b> · ${plural(r.count, "tip", "tipy", "tipov")}</span></div>
+        <div class="bar mb-bar"><i style="width:${r.actualPct.toFixed(1)}%"></i><span class="mark white" style="left:${r.predictedMid}%"></span></div>
+      </div>`
+      )
+      .join("") +
+    `<p class="faint small">Zlatý pruh = koľko tipov reálne vyšlo. Biela čiarka = stred predikovaného rozsahu (kde by mal pruh byť, ak je model presný).</p>`;
+}
+bankrollStartInput.addEventListener("input", () => renderBankrollSimulation(lastStatTips));
+
+const STATUS_PILL = {
+  won: `<span class="res-b w">✓ Vyšlo</span>`,
+  lost: `<span class="res-b l">✕ Nevyšlo</span>`,
+  void: `<span class="res-b v">↩ Vrátené</span>`,
+  pending: `<span class="res-b p">Čaká</span>`,
+};
+const LEG_ICON = { won: "✓", lost: "✕", void: "↩", pending: "…" };
+
+function tipBadges(t) {
+  let b = "";
+  if (isOverrideTip(t)) b += ` <span class="tag warn" title="Vyradené kontrolou kurzu, pridané ručne">⚠️ mimo filtra</span>`;
+  if (t.manualEntry) b += ` <span class="tag" title="Tip doplnený ručne po zápase">✍ doplnené ručne</span>`;
+  if (t.edited) b += ` <span class="tag" title="Výsledok alebo kurz bol ručne opravený">✎ upravené</span>`;
+  if (t.strongOfDay) b += ` <span class="tag gold" title="Silný tip dňa">⭐ silný tip dňa</span>`;
+  if (t.archived) b += ` <span class="tag" title="Skrytý tip – v štatistikách aj na prezentácii ostáva">skrytý</span>`;
+  return b;
 }
 
 function historyRowHtml(t) {
-      const date = new Date(t.matchDate).toLocaleDateString("sk-SK");
-      const rowClass = t.status === "won" ? "tip-row-won" : t.status === "lost" ? "tip-row-lost" : ""
-      const rowClassFull = rowClass + (t.archived ? " is-archived" : "");
-      const resultIconHtml =
-        t.status === "won"
-          ? `<span class="tip-result-icon won">✓</span>`
-          : t.status === "lost"
-          ? `<span class="tip-result-icon lost">✕</span>`
-          : `<span class="tip-status ${t.status}">${t.status === "void" ? "Vrátené" : "Čaká"}</span>`;
-
-      if (t.legs && t.legs.length > 0) {
-        const legsHtml = t.legs
-          .map(
-            (leg) => `
-            <div class="tip-row-market" style="padding-left: 10px; border-left: 2px solid var(--border); margin-top: 4px;">
-              ${escapeHtml(translateTeamName(leg.homeTeam))} — ${escapeHtml(translateTeamName(leg.awayTeam))}: ${escapeHtml(leg.market)}: ${escapeHtml(translateNamesInText(leg.selection, leg.homeTeam, leg.awayTeam))} · ${leg.probability.toFixed(0)} %
-            </div>`
-          )
-          .join("");
-
-        return `
-        <div class="tip-row ${rowClassFull}" data-row-id="${t.id}" style="align-items: flex-start;">
-          <div class="tip-row-info">
-            <div class="tip-row-match">🎫 Tiket (${plural(t.legs.length, "tip", "tipy", "tipov")}) <span class="muted small">(${date})</span></div>
-            <div class="tip-row-market">Kombinovaná pravdepodobnosť: ${fmtNum(t.probability, 1)} % · kurz ${tipOddsLabel(t)}${overrideBadge(t)}${manualBadge(t)}${editedBadge(t)}</div>
-            ${legsHtml}
-          </div>
-          ${resultIconHtml}
-          ${
-            t.watchOnly
-              ? `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button>`
-              : t.status === "pending"
-              ? `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button><button class="tip-delete-btn" data-send-id="${t.id}" title="Poslať do Telegram kanála" aria-label="Poslať do Telegram kanála"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="display:block"><path fill="currentColor" d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L6.2 13.1 1.3 11.6c-1-.3-1.1-1 .2-1.5L20.6 2.8c.9-.3 1.6.2 1.3 1.5z"/></svg></button>`
-              : `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button><button class="tip-delete-btn" data-result-id="${t.id}" title="Poslať výsledok do Telegramu">➤</button>`
-          }
-        </div>
-      `;
-      }
-
-      return `
-        <div class="tip-row ${rowClassFull}" data-row-id="${t.id}">
-          <div class="tip-row-info">
-            <div class="tip-row-match">${escapeHtml(translateTeamName(t.homeTeam))} — ${escapeHtml(translateTeamName(t.awayTeam))} <span class="muted small">(${date})</span></div>
-            <div class="tip-row-market">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))} · ${t.probability.toFixed(0)} % · kurz ${tipOddsLabel(t)}${overrideBadge(t)}${manualBadge(t)}${editedBadge(t)}</div>
-          </div>
-          ${resultIconHtml}
-          ${
-            t.watchOnly
-              ? `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button>`
-              : t.status === "pending"
-              ? `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button><button class="tip-delete-btn" data-send-id="${t.id}" title="Poslať do Telegram kanála" aria-label="Poslať do Telegram kanála"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="display:block"><path fill="currentColor" d="M21.9 4.3 18.7 19.4c-.2 1-.9 1.3-1.7.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L6.2 13.1 1.3 11.6c-1-.3-1.1-1 .2-1.5L20.6 2.8c.9-.3 1.6.2 1.3 1.5z"/></svg></button>`
-              : `<button class="tip-delete-btn" data-edit-id="${t.id}" title="Upraviť výsledok alebo kurz" aria-label="Upraviť tip"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="display:block"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg></button><button class="tip-delete-btn" data-result-id="${t.id}" title="Poslať výsledok do Telegramu">➤</button>`
-          }
-        </div>
-      `;
+  const d = new Date(t.matchDate);
+  const valid = !isNaN(d.getTime());
+  const dateTxt = valid ? shortDate(d) : "";
+  const yearTxt = valid && d.getFullYear() !== new Date().getFullYear() ? `<small>${d.getFullYear()}</small>` : "";
+  const cls = (t.status === "won" ? " won" : t.status === "lost" ? " lost" : "") + (t.archived ? " is-archived" : "");
+  const isTicket = Array.isArray(t.legs) && t.legs.length > 0;
+  const main = isTicket
+    ? `<b>🎫 Tiket (${plural(t.legs.length, "tip", "tipy", "tipov")})</b>
+       <span>Kombinovaná pravdepodobnosť ${fmtNum(t.probability, 1)}${NB}%${tipBadges(t)}</span>
+       ${t.legs
+         .map(
+           (leg) => `<span class="leg"><i class="leg-${leg.status || "pending"}">${LEG_ICON[leg.status] || "…"}</i> ${escapeHtml(translateTeamName(leg.homeTeam))} – ${escapeHtml(translateTeamName(leg.awayTeam))}: ${escapeHtml(leg.market)}: ${escapeHtml(
+             translateNamesInText(leg.selection, leg.homeTeam, leg.awayTeam)
+           )} · ${Number(leg.probability).toFixed(0)}${NB}%</span>`
+         )
+         .join("")}`
+    : `<b>${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))}</b>
+       <span>${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}${tipBadges(t)}</span>`;
+  const conf = isTicket ? `${fmtNum(t.probability, 1)}${NB}% · ${tipOddsLabel(t)}` : `Dôvera ${Number(t.probability).toFixed(0)}${NB}% · ${tipOddsLabel(t)}`;
+  const btn = (attr, icon, title, extra = "") => `<button type="button" class="ib${extra}" ${attr}="${escapeHtml(t.id)}" title="${title}" aria-label="${title}">${icon}</button>`;
+  const buttons = [btn("data-edit-id", ICON.edit, "Upraviť výsledok alebo kurz")];
+  if (t.status === "pending") {
+    buttons.push(btn("data-send-id", ICON.send, "Poslať do Telegram kanála"));
+  } else {
+    buttons.push(btn("data-result-id", ICON.result, "Poslať výsledok do Telegramu"));
+  }
+  if (t.archived) buttons.push(btn("data-archive-id", ICON.unarchive, "Vrátiť späť do histórie"));
+  else if (t.status !== "pending") buttons.push(btn("data-archive-id", ICON.archive, "Skryť z histórie (v štatistikách ostane)"));
+  if (t.status === "pending") buttons.push(btn("data-delete-id", ICON.trash, "Odstrániť tip z histórie", " danger"));
+  return `<div class="hrow${cls}" data-row-id="${escapeHtml(t.id)}">
+    <span class="d" title="${valid ? escapeHtml(d.toLocaleString("sk-SK")) : ""}">${dateTxt}${yearTxt}</span>
+    <span class="mt">${main}</span>
+    <span class="conf">${conf}</span>
+    ${STATUS_PILL[t.status] || STATUS_PILL.pending}
+    <span class="ic">${buttons.join("")}</span>
+  </div>`;
 }
 
-
-
-function renderTipsList(allTips) {
-  currentHistoryTips = allTips;
-  // Tipy „Len sledovať“ majú vlastnú časť a nerátajú sa do štatistík.
-  const watchTips = allTips.filter((t) => t.watchOnly);
-  const tips = allTips.filter((t) => !t.watchOnly);
-  // Tipy na trhy, ktoré appka už neponúka (dvojšanca, presný výsledok, čisté
-  // konto), ostávajú v zozname, ale nerátajú sa do štatistík.
-  const statTips = tips.filter((t) => !EXCLUDED_STATS_MARKETS.includes(t.market));
-  const won = statTips.filter((t) => t.status === "won").length;
-  const lost = statTips.filter((t) => t.status === "lost").length;
-  const pending = statTips.filter((t) => t.status === "pending").length;
-  const decided = won + lost;
-  const winRate = decided > 0 ? ((won / decided) * 100).toFixed(0) : "—";
-
-  tipsSummaryEl.innerHTML = `
-    <span>Spolu: <strong>${statTips.length}</strong></span>
-    <span>Čaká: <strong>${pending}</strong></span>
-    <span>Vyhral: <strong>${won}</strong></span>
-    <span>Prehral: <strong>${lost}</strong></span>
-    <span>Úspešnosť: <strong>${winRate}${decided > 0 ? " %" : ""}</strong></span>
-    ${overrideSummaryHtml(statTips)}
-  `;
-
-  renderMarketBreakdown(statTips);
-  renderBankrollSimulation(statTips);
-  renderCalibrationReport(statTips);
-
-  // Skryté (archivované) tipy sa v zozname nezobrazujú, ale rátajú sa do štatistík
-  // a ostávajú na prezentačnej stránke.
+function renderTipRows(tips) {
   const archivedCount = tips.filter((t) => t.archived).length;
-  // Zoradené podľa času zápasu (najnovšie hore) – aj tipy doplnené alebo obnovené dodatočne sedia na správnom mieste.
+  const toggle = document.getElementById("showArchivedToggle");
+  toggle.checked = showArchivedTips;
+  toggle.closest(".toggle").hidden = archivedCount === 0 && !showArchivedTips;
+  document.getElementById("showArchivedLabel").textContent = `Zobraziť skryté (${archivedCount})`;
+  document.querySelectorAll("#tipsFilter [data-f]").forEach((b) => b.classList.toggle("on", b.dataset.f === tipsFilter));
+
+  // Zoradené podľa času zápasu (najnovšie hore) – aj tipy doplnené dodatočne sedia na správnom mieste.
   const byMatchTime = (a, b) =>
     new Date(b.matchDate).getTime() - new Date(a.matchDate).getTime() ||
     new Date(b.savedAt || 0).getTime() - new Date(a.savedAt || 0).getTime();
-  const visible = (showArchivedTips ? tips : tips.filter((t) => !t.archived)).slice().sort(byMatchTime);
-  const archivedBar =
-    archivedCount > 0
-      ? `<div class="archived-bar">Skrytých tipov: <strong>${archivedCount}</strong> (rátajú sa do štatistík aj na prezentácii) · <button class="link-btn" id="toggleArchivedBtn">${
-          showArchivedTips ? "Schovať skryté" : "Zobraziť skryté"
-        }</button></div>`
-      : "";
-
-  if (visible.length === 0) {
-    tipsListEl.innerHTML =
-      archivedBar + `<p class="empty-state">${tips.length === 0 ? "Zatiaľ nemáš uložené žiadne tipy." : "Všetky tipy sú skryté."}</p>`;
-    if (!watchTips.length) {
-      wireArchivedToggle();
-      return;
-    }
+  const visible = (showArchivedTips ? tips : tips.filter((t) => !t.archived))
+    .filter((t) => tipsFilter === "all" || (tipsFilter === "pending" ? t.status === "pending" : t.status !== "pending"))
+    .sort(byMatchTime);
+  if (!visible.length) {
+    tipsListEl.innerHTML = `<p class="empty">${
+      tips.length === 0 ? "Zatiaľ nemáš uložené žiadne tipy."
+      : tipsFilter === "pending" ? "Žiadne tipy nečakajú na výsledok."
+      : tipsFilter === "resolved" ? "Žiadne vyhodnotené tipy na zobrazenie."
+      : "Všetky tipy sú skryté."
+    }${archivedCount && !showArchivedTips ? ` Skrytých tipov: ${archivedCount} (rátajú sa do štatistík aj na prezentácii).` : ""}</p>`;
+    return;
   }
-
-  tipsListEl.innerHTML = archivedBar + visible.map(historyRowHtml).join(""); // „Sledované tipy“ sa už nezobrazujú (18. 10. 2026)
-
-  wireArchivedToggle();
-
-  tipsListEl.querySelectorAll("[data-slip-id]").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const tip = currentHistoryTips.find((x) => x.id === btn.dataset.slipId);
-      if (tip) openSlipModal(tip);
-    });
-  });
-  markSlipButtons();
-
-  tipsListEl.querySelectorAll("[data-edit-id]").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const tip = currentHistoryTips.find((x) => x.id === btn.dataset.editId);
-      if (tip) openEditTip(tip);
-    });
-  });
-
-  tipsListEl.querySelectorAll("[data-row-id]").forEach((row) => {
-    row.addEventListener("click", async (e) => {
-      if (e.target.closest("button")) return; // klik na iné tlačidlo v riadku (★/➤) - nie na mazanie
-      const id = row.dataset.rowId;
-      const tip = currentHistoryTips.find((x) => x.id === id);
-      if (tip && (tip.archived || tip.status !== "pending")) {
-        await toggleArchive(tip);
-        return;
-      }
-      const confirmed = window.confirm("Naozaj chceš odstrániť tento tip/tiket z histórie? Táto akcia sa nedá vrátiť späť.");
-      if (!confirmed) return;
-      try {
-        const res = await fetch(`/api/tips/${id}`, { method: "DELETE" });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          showToast(`Zmazanie zlyhalo: ${data.error || "neznáma chyba"}. Skús to prosím znova.`);
-        }
-      } catch (err) {
-        showToast("Zmazanie zlyhalo – skontroluj internetové pripojenie a skús to znova.");
-      } finally {
-        openTipsHistory();
-      }
-    });
-  });
-
-  tipsListEl.querySelectorAll("[data-send-id]").forEach((btn) => {
-    btn.addEventListener("click", async (e) => {
-      const id = e.currentTarget.dataset.sendId;
-      if (!id) return;
-      const target = await askTelegramTarget();
-      if (!target) return;
-      try {
-        await fetchJson(`/api/tips/${id}/telegram`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ target }),
-        });
-        showToast("Tip odoslaný do Telegram kanála.");
-      } catch (err) {
-        showToast(`Odoslanie zlyhalo: ${err.message}`);
-      }
-    });
-  });
-
-  tipsListEl.querySelectorAll("[data-motw-id]").forEach((btn) => {
-    btn.addEventListener("click", async (e) => {
-      const id = e.currentTarget.dataset.motwId;
-      if (!id) return;
-      if (!window.confirm("Poslať do VIP kanála ako ⭐ Silný tip dňa? Ak bol v ten deň silný iný tip, toto ho nahradí.")) return;
-      try {
-        await fetchJson(`/api/tips/${id}/telegram`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ target: "vip", asStrongOfDay: true }),
-        });
-        showToast("Odoslané do VIP ako Silný tip dňa.");
-        renderTipsList(await fetchJson("/api/tips"));
-      } catch (err) {
-        showToast(`Odoslanie zlyhalo: ${err.message}`);
-      }
-    });
-  });
-
-  tipsListEl.querySelectorAll("[data-result-id]").forEach((btn) => {
-    btn.addEventListener("click", async (e) => {
-      const id = e.currentTarget.dataset.resultId;
-      if (!id) return;
-      const target = await askTelegramTarget();
-      if (!target) return;
-      try {
-        await fetchJson(`/api/tips/${id}/telegram-result`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ target }),
-        });
-        showToast("Výsledok odoslaný.");
-      } catch (err) {
-        showToast(`Odoslanie zlyhalo: ${err.message}`);
-      }
-    });
-  });
+  tipsListEl.innerHTML = visible.map(historyRowHtml).join("");
 }
 
-openTipsBtn.addEventListener("click", openTipsHistory);
-closeTipsBtn.addEventListener("click", () => {
-  tipsModal.hidden = true;
+document.getElementById("tipsFilter").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-f]");
+  if (!b) return;
+  tipsFilter = b.dataset.f;
+  renderTipRows(currentHistoryTips.filter((t) => !t.watchOnly));
+});
+document.getElementById("showArchivedToggle").addEventListener("change", (e) => {
+  showArchivedTips = e.target.checked;
+  renderTipRows(currentHistoryTips.filter((t) => !t.watchOnly));
 });
 
-// ---- Členovia (platba beží mimo appky, napr. bankovým prevodom) ----
+tipsListEl.addEventListener("click", async (e) => {
+  const btn = e.target.closest("button");
+  if (!btn) return;
+  const find = (id) => currentHistoryTips.find((x) => x.id === id);
+  if (btn.dataset.editId) {
+    const tip = find(btn.dataset.editId);
+    if (tip) openEditTip(tip);
+  } else if (btn.dataset.sendId) {
+    const target = await askTelegramTarget();
+    if (!target) return;
+    try {
+      await postJson(`/api/tips/${btn.dataset.sendId}/telegram`, { target });
+      showToast("Tip odoslaný do Telegram kanála.");
+    } catch (err) {
+      showToast(`Odoslanie zlyhalo: ${err.message}`);
+    }
+  } else if (btn.dataset.resultId) {
+    const target = await askTelegramTarget();
+    if (!target) return;
+    try {
+      await postJson(`/api/tips/${btn.dataset.resultId}/telegram-result`, { target });
+      showToast("Výsledok odoslaný.");
+    } catch (err) {
+      showToast(`Odoslanie zlyhalo: ${err.message}`);
+    }
+  } else if (btn.dataset.archiveId) {
+    const tip = find(btn.dataset.archiveId);
+    if (tip) await toggleArchive(tip);
+  } else if (btn.dataset.deleteId) {
+    const id = btn.dataset.deleteId;
+    if (!window.confirm("Naozaj chceš odstrániť tento tip z histórie? Zmaže sa aj jeho správa v Telegrame. Táto akcia sa nedá vrátiť späť.")) return;
+    try {
+      const res = await fetch(`/api/tips/${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        showToast(`Zmazanie zlyhalo: ${data.error || "neznáma chyba"}. Skús to prosím znova.`);
+      } else {
+        showToast("Tip odstránený.");
+      }
+    } catch {
+      showToast("Zmazanie zlyhalo – skontroluj internetové pripojenie a skús to znova.");
+    } finally {
+      openTipsHistory();
+    }
+  }
+});
 
+async function setArchived(id, archived) {
+  await postJson(`/api/tips/${encodeURIComponent(id)}/archive`, { archived });
+}
+async function toggleArchive(tip) {
+  const msg = tip.archived
+    ? "Vrátiť tento tip späť do histórie?"
+    : "Skryť tento tip z histórie?\n\nNa prezentačnej stránke aj v štatistikách ostane – len ho tu nebudeš vidieť. Skryté tipy si môžeš kedykoľvek zobraziť.";
+  if (!window.confirm(msg)) return;
+  try {
+    await setArchived(tip.id, !tip.archived);
+  } catch (err) {
+    showToast(`Nepodarilo sa: ${err?.message ?? String(err)}`);
+  } finally {
+    openTipsHistory();
+  }
+}
+async function archiveAllResolved() {
+  const toHide = currentHistoryTips.filter((t) => !t.archived && !t.watchOnly && t.status !== "pending");
+  if (!toHide.length) { showToast("Nie sú žiadne vyhodnotené tipy na skrytie."); return; }
+  const ok = window.confirm(
+    `Skryť ${plural(toHide.length, "vyhodnotený tip", "vyhodnotené tipy", "vyhodnotených tipov")} z histórie?\n\nNa prezentačnej stránke aj v štatistikách ostanú. Čakajúce tipy ostanú viditeľné.`
+  );
+  if (!ok) return;
+  for (const t of toHide) {
+    try { await setArchived(t.id, true); } catch { /* pokračujeme s ďalšími */ }
+  }
+  showToast("Vyhodnotené tipy sú skryté.");
+  openTipsHistory();
+}
+document.getElementById("archiveResolvedBtn").addEventListener("click", () => archiveAllResolved());
+
+checkResultsBtn.addEventListener("click", async () => {
+  checkResultsBtn.disabled = true;
+  checkResultsBtn.textContent = "Kontrolujem…";
+  try {
+    const tips = await fetchJson("/api/tips/check-results", { method: "POST" });
+    renderTipsList(tips);
+    showToast("Výsledky skontrolované.");
+  } catch (err) {
+    showToast(`Kontrola výsledkov zlyhala: ${err.message}`);
+  } finally {
+    checkResultsBtn.disabled = false;
+    checkResultsBtn.textContent = "Skontrolovať výsledky";
+  }
+});
+
+document.getElementById("clearAllTipsBtn").addEventListener("click", async (e) => {
+  const btn = e.currentTarget;
+  if (!window.confirm("Naozaj chceš vymazať ÚPLNE VŠETKY uložené tipy (aj už vyhodnotené)? Táto akcia sa nedá vrátiť späť.")) return;
+  btn.disabled = true;
+  try {
+    await fetchJson("/api/tips", { method: "DELETE" });
+    renderTipsList([]);
+  } catch (err) {
+    showToast(`Vymazanie zlyhalo: ${err.message}. Skús to prosím znova.`);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+/** Jednoduché oznamy do Telegramu: najprv výber kanála, potom odoslanie. */
+function wireTelegramNotice(btnId, url) {
+  const btn = document.getElementById(btnId);
+  btn.addEventListener("click", async () => {
+    const target = await askTelegramTarget();
+    if (!target) return;
+    btn.disabled = true;
+    try {
+      await postJson(url, { target });
+      showToast("Odoslané.");
+    } catch (err) {
+      showToast(`Odoslanie zlyhalo: ${err.message}`);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}
+wireTelegramNotice("tipsComingBtn", "/api/telegram/tips-coming");
+wireTelegramNotice("noTipTodayBtn", "/api/telegram/no-tip-today");
+
+// Obnova tipov z denného súhrnu (/suhrn), ktoré v histórii chýbajú (bez ohľadu na kurz).
+async function restoreFromDaily() {
+  try {
+    const preview = await postJson("/api/tips/restore-from-daily", { dryRun: true });
+    if (!preview.count) {
+      const sk = preview.skipped || {};
+      showToast(`V histórii nič nechýba. Zo súhrnu: už v histórii ${sk.inHistory || 0}, bez výsledku ${sk.noResult || 0}, bez kurzu ${sk.badOdds || 0}.`);
+      return;
+    }
+    const sample = (preview.tips || []).slice(0, 8).map((t) => `${t.day} · ${t.match} · ${t.tip} · ${fmtOdds(t.odds)}`).join("\n");
+    const ok = window.confirm(
+      `Vrátiť do histórie ${plural(preview.count, "tip", "tipy", "tipov")} z denného súhrnu?\n\nVyhraté: ${preview.won} · Prehraté: ${preview.lost}\nPreskočené – už v histórii: ${preview.skipped?.inHistory ?? 0} · bez výsledku: ${preview.skipped?.noResult ?? 0} · bez kurzu: ${preview.skipped?.badOdds ?? 0}\n\n${sample}${preview.count > 8 ? "\n…" : ""}`
+    );
+    if (!ok) return;
+    const done = await postJson("/api/tips/restore-from-daily", {});
+    showToast(`Obnovené: ${plural(done.count, "tip", "tipy", "tipov")}.`);
+  } catch (err) {
+    showToast(`Obnova zlyhala: ${err.message}`);
+  }
+  openTipsHistory();
+}
+document.getElementById("restoreDailyBtn").addEventListener("click", () => restoreFromDaily());
+
+// ---- Oprava tipu v histórii (výsledok, kurz, pri tikete výsledky zápasov) ----
+const STATUS_OPTIONS = [
+  ["won", "✓ Vyšiel"],
+  ["lost", "✗ Nevyšiel"],
+  ["void", "↩ Vrátený"],
+  ["pending", "⏳ Čaká"],
+];
+const STATUS_TEXT = { won: "✓ Vyšiel", lost: "✗ Nevyšiel", void: "↩ Vrátený", pending: "⏳ Čaká" };
+function statusSelect(attr, value) {
+  return `<select ${attr}>${STATUS_OPTIONS.map(([v, l]) => `<option value="${v}"${v === value ? " selected" : ""}>${l}</option>`).join("")}</select>`;
+}
+function ticketStatusFrom(statuses) {
+  if (statuses.includes("lost")) return "lost";
+  if (statuses.includes("pending")) return "pending";
+  if (statuses.every((x) => x === "void")) return "void";
+  return "won";
+}
+
+function openEditTip(tip) {
+  const isTicket = Array.isArray(tip.legs) && tip.legs.length > 0;
+  const title = isTicket
+    ? `🎫 Tiket (${plural(tip.legs.length, "zápas", "zápasy", "zápasov")})`
+    : `${escapeHtml(translateTeamName(tip.homeTeam))} – ${escapeHtml(translateTeamName(tip.awayTeam))}<br>${escapeHtml(tip.market)}: ${escapeHtml(translateNamesInText(tip.selection, tip.homeTeam, tip.awayTeam))}`;
+  const legsHtml = isTicket
+    ? tip.legs
+        .map(
+          (l, i) => `<div class="edit-leg">
+            <div>${escapeHtml(translateTeamName(l.homeTeam))} – ${escapeHtml(translateTeamName(l.awayTeam))}<br><span class="faint small">${escapeHtml(l.market)}: ${escapeHtml(translateNamesInText(l.selection, l.homeTeam, l.awayTeam))}</span></div>
+            ${statusSelect(`data-leg="${i}"`, l.status)}
+          </div>`
+        )
+        .join("")
+    : "";
+  const m = openModal(`
+    <h3>Upraviť tip</h3>
+    <p class="muted small">${title}</p>
+    ${isTicket
+      ? `<div class="edit-legs">${legsHtml}</div><p class="small">Výsledok tiketu: <b data-ticket-status></b> <span class="faint">(vypočíta sa zo zápasov)</span></p>`
+      : `<label class="fld">Výsledok ${statusSelect("data-status", tip.status)}</label>`}
+    <label class="fld">Kurz <input type="text" data-odds inputmode="decimal" value="${typeof tip.odds === "number" && tip.odds > 1 ? String(tip.odds).replace(".", ",") : ""}" placeholder="napr. 1,75" /></label>
+    <p class="faint small form-msg" data-msg></p>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" data-close>Zrušiť</button>
+      <button type="button" class="btn" data-save>Uložiť opravu</button>
+    </div>`);
+  const el = m.el;
+  const legStatuses = () => (isTicket ? tip.legs.map((_, i) => el.querySelector(`[data-leg="${i}"]`).value) : []);
+  const refresh = () => {
+    if (isTicket) el.querySelector("[data-ticket-status]").textContent = STATUS_TEXT[ticketStatusFrom(legStatuses())];
+  };
+  el.querySelectorAll("[data-leg]").forEach((s) => s.addEventListener("change", refresh));
+  refresh();
+  const saveBtn = el.querySelector("[data-save]");
+  saveBtn.onclick = async () => {
+    const oddsText = String(el.querySelector("[data-odds]").value).trim().replace(",", ".");
+    const odds = oddsText === "" ? null : parseFloat(oddsText);
+    if (odds !== null && !(odds > 1)) {
+      el.querySelector("[data-msg]").textContent = "Kurz musí byť číslo väčšie ako 1 (napr. 1,75), alebo nechaj políčko prázdne.";
+      return;
+    }
+    const edit = { odds };
+    if (isTicket) edit.legs = legStatuses().map((status) => ({ status }));
+    else edit.status = el.querySelector("[data-status]").value;
+    saveBtn.disabled = true;
+    try {
+      await postJson(`/api/tips/${encodeURIComponent(tip.id)}/edit`, edit);
+      m.close();
+      showToast("Tip upravený.");
+      openTipsHistory();
+    } catch (err) {
+      el.querySelector("[data-msg]").textContent = `Uloženie zlyhalo: ${err?.message ?? String(err)}`;
+      saveBtn.disabled = false;
+    }
+  };
+}
+
+// ---- Doplnenie odohraného tipu (tip poslaný klientom, ktorý v TipRadare chýba) ----
+const MANUAL_MARKETS = ["Góly", "Góly domácich", "Góly hostí", "Rohy", "Rohy domácich", "Rohy hostí", "Karty", "Karty domácich", "Karty hostí", "Strely na bránu", "Strely na bránu domácich", "Strely na bránu hostí", "Fauly", "Vyššie držanie lopty"];
+let manualLastDate = "";
+
+function openManualTip() {
+  const y = new Date();
+  y.setDate(y.getDate() - 1);
+  const m = openModal(`
+    <h3>Doplniť odohraný tip</h3>
+    <p class="muted small">Pre tipy, ktoré si klientom poslal, ale v TipRadare nie sú uložené. Tip sa uloží rovno s výsledkom a započíta sa do štatistík aj do čísel na prezentačnej stránke.</p>
+    <div class="form-grid">
+      <label class="fld">Dátum zápasu<input type="date" data-mt="date" /></label>
+      <label class="fld">Čas výkopu<input type="time" data-mt="time" title="Čas výkopu (voliteľné)" /></label>
+      <label class="fld">Domáci<input type="text" data-mt="home" placeholder="napr. Česko" /></label>
+      <label class="fld">Hostia<input type="text" data-mt="away" placeholder="napr. Chorvátsko" /></label>
+      <label class="fld">Trh<select data-mt="market">${MANUAL_MARKETS.map((x) => `<option>${x}</option>`).join("")}</select></label>
+      <label class="fld">Tip<input type="text" data-mt="selection" placeholder="napr. Nad 2,5" /></label>
+      <label class="fld">Kurz<input type="text" data-mt="odds" inputmode="decimal" placeholder="napr. 1,67" /></label>
+      <label class="fld">Dôvera %<input type="text" data-mt="prob" inputmode="decimal" placeholder="voliteľné" /></label>
+      <label class="fld">Výsledok<select data-mt="result"><option value="won">✓ Vyšiel</option><option value="lost">✗ Nevyšiel</option><option value="void">↩ Vrátený</option></select></label>
+    </div>
+    <p class="small form-msg" data-mt="msg"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" data-close>Zavrieť</button>
+      <button type="button" class="btn" data-mt="save">Uložiť tip</button>
+    </div>`, { wide: true, onClose: () => openTipsHistory() });
+  const q = (k) => m.el.querySelector(`[data-mt="${k}"]`);
+  q("date").value = manualLastDate || isoDay(y);
+  const msg = (t, ok) => { q("msg").textContent = t; q("msg").className = `small form-msg ${ok ? "win" : "loss"}`; };
+  q("save").onclick = async () => {
+    const date = q("date").value;
+    const home = q("home").value.trim();
+    const away = q("away").value.trim();
+    const selection = q("selection").value.trim();
+    const odds = parseFloat(String(q("odds").value).replace(",", "."));
+    const probInput = parseFloat(String(q("prob").value).replace(",", ".").replace("%", ""));
+    if (!date || !home || !away || !selection) { msg("Vyplň dátum, oba tímy a tip."); return; }
+    if (!(odds > 1)) { msg("Zadaj kurz väčší ako 1 (napr. 1,67)."); return; }
+    const kickoff = new Date(`${date}T${q("time").value || "12:00"}:00`);
+    if (kickoff.getTime() > Date.now()) { msg("Tento formulár je len pre odohrané zápasy. Tipy pred zápasom ukladaj z analýzy zápasu."); return; }
+    const probability = probInput > 0 && probInput <= 100 ? probInput : Math.round(10000 / odds) / 100;
+    const tip = {
+      id: `manual-${Date.now()}`,
+      fixtureId: 0,
+      leagueId: 0,
+      season: kickoff.getFullYear(),
+      leagueName: "",
+      homeTeam: home,
+      awayTeam: away,
+      matchDate: kickoff.toISOString(),
+      market: q("market").value,
+      selection,
+      probability,
+      odds: Math.round(odds * 100) / 100,
+      manualEntry: true,
+      savedAt: new Date().toISOString(),
+      status: q("result").value,
+    };
+    q("save").disabled = true;
+    try {
+      await postJson("/api/tips", tip);
+      manualLastDate = date;
+      msg(`✓ Uložené: ${home} – ${away}, ${tip.market}: ${selection}. Môžeš pridať ďalší tip.`, true);
+      ["home", "away", "selection", "odds", "prob"].forEach((k) => { q(k).value = ""; });
+      q("home").focus();
+    } catch (err) {
+      msg(`Uloženie zlyhalo: ${err?.message ?? String(err)}`);
+    } finally {
+      q("save").disabled = false;
+    }
+  };
+}
+document.getElementById("manualTipBtn").addEventListener("click", () => openManualTip());
+
+// ---- Poslať tipy dňa naraz (z histórie do Telegramu) ----
+function tipDayKey(iso) {
+  const d = new Date(iso);
+  return isNaN(d.getTime()) ? "" : new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Bratislava" }).format(d);
+}
+function tipTimeLabel(iso) {
+  const d = new Date(iso);
+  return isNaN(d.getTime()) ? "" : d.toLocaleTimeString("sk-SK", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Bratislava" });
+}
+function openSendDayTips() {
+  const m = openModal(`
+    <h3>Poslať tipy dňa do Telegramu</h3>
+    <label class="inline-field">Deň <input type="date" data-day></label>
+    <div class="send-list" data-list></div>
+    <p class="faint small" data-info></p>
+    <div class="modal-actions wrap">
+      <button type="button" class="btn ghost" data-close>Zavrieť</button>
+      <button type="button" class="btn" data-target="free">★ Poslať do FREE</button>
+      <button type="button" class="btn" data-target="premium">◆ Poslať do PLATINUM</button>
+    </div>`, { wide: true });
+  const el = m.el;
+  const dayInput = el.querySelector("[data-day]");
+  const listEl = el.querySelector("[data-list]");
+  const infoEl = el.querySelector("[data-info]");
+  // Predvolene dnešok; ak dnes nič nečaká, najbližší deň s čakajúcimi tipmi.
+  const today = tipDayKey(new Date().toISOString());
+  const nextDays = currentHistoryTips
+    .filter((t) => t.status === "pending" && !t.archived && !t.watchOnly)
+    .map((t) => tipDayKey(t.matchDate))
+    .filter((d) => d >= today)
+    .sort();
+  dayInput.value = nextDays.includes(today) || !nextDays.length ? today : nextDays[0];
+  let dayTipsList = [];
+  const selected = () => Array.from(listEl.querySelectorAll("input[type=checkbox]:checked")).map((c) => c.value);
+  const updateInfo = () => {
+    const n = selected().length;
+    infoEl.textContent = dayTipsList.length ? `Vybrané: ${n} z ${dayTipsList.length}. Pôjdu ako samostatné správy, zoradené podľa času výkopu.` : "";
+    el.querySelectorAll("[data-target]").forEach((b) => (b.disabled = n === 0));
+  };
+  const render = () => {
+    dayTipsList = currentHistoryTips
+      .filter((t) => t.status === "pending" && !t.archived && !t.watchOnly && tipDayKey(t.matchDate) === dayInput.value)
+      .sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime());
+    if (!dayTipsList.length) {
+      listEl.innerHTML = `<p class="empty">V tento deň nie sú v histórii žiadne čakajúce tipy.</p>`;
+      updateInfo();
+      return;
+    }
+    listEl.innerHTML = dayTipsList
+      .map((t) => {
+        const sent = (t.telegramMessages || []).length > 0;
+        const isTicket = t.legs && t.legs.length;
+        const title = isTicket
+          ? `🎫 Tiket (${plural(t.legs.length, "tip", "tipy", "tipov")}) · ${fmtNum(t.probability, 1)}${NB}%`
+          : `${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))}`;
+        const sub = isTicket
+          ? t.legs.map((l) => `${escapeHtml(translateTeamName(l.homeTeam))} – ${escapeHtml(translateTeamName(l.awayTeam))}`).join(" · ")
+          : `${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))} · ${Number(t.probability).toFixed(0)}${NB}%${typeof t.odds === "number" && t.odds > 1 ? ` · kurz ${fmtNum(t.odds, 2)}` : ""}`;
+        return `<label class="send-row">
+          <input type="checkbox" value="${escapeHtml(t.id)}" ${sent ? "" : "checked"}>
+          <span><b>${tipTimeLabel(t.matchDate)} · ${title}</b>${sent ? ` <span class="faint small">· už odoslaný</span>` : ""}<br><span class="muted small">${sub}</span></span>
+        </label>`;
+      })
+      .join("");
+    listEl.querySelectorAll("input[type=checkbox]").forEach((c) => c.addEventListener("change", updateInfo));
+    updateInfo();
+  };
+  dayInput.addEventListener("change", render);
+  el.querySelectorAll("[data-target]").forEach((btn) =>
+    btn.addEventListener("click", async () => {
+      const ids = selected();
+      if (!ids.length) return;
+      const channel = btn.dataset.target === "free" ? "FREE" : "PLATINUM";
+      if (!window.confirm(`Poslať ${plural(ids.length, "tip", "tipy", "tipov")} do kanála ${channel}?`)) return;
+      el.querySelectorAll("button").forEach((b) => (b.disabled = true));
+      infoEl.textContent = "Posielam…";
+      try {
+        const r = await postJson("/api/telegram/send-tips", { ids, target: btn.dataset.target });
+        showToast(`Odoslané: ${r.sent}.` + (r.failed ? ` Neodišlo: ${r.failed}.` : ""));
+        m.close();
+        openTipsHistory();
+      } catch (err) {
+        showToast(`Odoslanie zlyhalo: ${err.message}`);
+        el.querySelectorAll("button").forEach((b) => (b.disabled = false));
+        updateInfo();
+      }
+    })
+  );
+  render();
+}
+document.getElementById("sendDayTipsBtn").addEventListener("click", () => openSendDayTips());
+
+// ---- Mesačný report (tipy daného mesiaca, s odoslaním do Telegramu) ----
+function shiftMonth(month, delta) {
+  const [y, m] = month.split("-").map(Number);
+  const d = new Date(Date.UTC(y, m - 1 + delta, 1));
+  return d.toISOString().slice(0, 7);
+}
+function openMonthlyReport(startMonth) {
+  const m = openModal(`
+    <div class="monthly-head">
+      <button type="button" class="btn ghost xs" data-m="-1" aria-label="Predošlý mesiac">‹</button>
+      <h3 data-title>Mesačný report</h3>
+      <button type="button" class="btn ghost xs" data-m="1" aria-label="Ďalší mesiac">›</button>
+    </div>
+    <div data-body><p class="empty">Načítavam…</p></div>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" data-close>Zavrieť</button>
+      <button type="button" class="btn" data-send>Odoslať do Telegramu</button>
+    </div>`, { wide: true });
+  const body = m.el.querySelector("[data-body]");
+  const title = m.el.querySelector("[data-title]");
+  let current = startMonth || null;
+  let loaded = null;
+  async function load() {
+    body.innerHTML = `<p class="empty">Načítavam…</p>`;
+    try {
+      const r = await fetchJson(`/api/reports/monthly${current ? `?month=${encodeURIComponent(current)}` : ""}`);
+      loaded = r;
+      current = r.month;
+      title.textContent = `Mesačný report – ${r.label}`;
+      if (!r.resolved) {
+        body.innerHTML = `<p class="empty">V tomto mesiaci zatiaľ nie sú vyhodnotené žiadne tipy.${r.pending ? ` Ešte sa hrá: ${r.pending}.` : ""}</p>`;
+        return;
+      }
+      const card = (label, value, cls) => `<div><small>${label}</small><b class="${cls || ""}">${value}</b></div>`;
+      body.innerHTML = `
+        <div class="kv-grid big">
+          ${card("Úspešnosť", `${fmtNum(r.rate, 0)}${NB}%`)}
+          ${card("Vyšlo / nevyšlo", `<span class="win">${r.won}</span> / <span class="loss">${r.lost}</span>`)}
+          ${r.profit != null ? card("Zisk", `${signed(r.profit, 1)}${NB}j.`, r.profit >= 0 ? "g" : "l") : ""}
+          ${r.roi != null ? card("ROI", `${signed(r.roi, 0)}${NB}%`, r.roi >= 0 ? "g" : "l") : ""}
+          ${r.avgOdds != null ? card("Priemerný kurz", fmtNum(r.avgOdds, 2)) : ""}
+          ${r.bestStreak >= 2 ? card("Séria výhier", r.bestStreak) : ""}
+        </div>
+        <p class="faint small">${r.voided ? `Vrátené: ${r.voided}. ` : ""}${r.pending ? `Ešte sa hrá: ${r.pending}. ` : ""}${r.bestDay ? `Najlepší deň: ${escapeHtml(r.bestDay.day)} (${signed(r.bestDay.profit, 1)}${NB}j.). ` : ""}${r.oddsCount < r.resolved ? `Zisk je z ${r.oddsCount} tipov so známym kurzom.` : ""}</p>
+        <h4 class="ct">Podľa trhov</h4>
+        ${(r.byMarket || []).map((b) => `
+          <div class="mb-row">
+            <div class="mb-top"><span class="mb-name">${escapeHtml(b.market)}</span><span class="mb-num">${b.won} z ${b.total} · <b>${fmtNum(b.rate, 0)}${NB}%</b></span></div>
+            <div class="bar mb-bar"><i style="width:${Math.round(b.rate)}%"></i></div>
+          </div>`).join("")}`;
+    } catch (err) {
+      body.innerHTML = `<p class="empty">Súhrn sa nepodarilo načítať: ${escapeHtml(err.message || String(err))}</p>`;
+    }
+  }
+  m.el.querySelectorAll("[data-m]").forEach((b) =>
+    b.addEventListener("click", () => {
+      if (!current) return;
+      current = shiftMonth(current, Number(b.dataset.m));
+      load();
+    })
+  );
+  m.el.querySelector("[data-send]").addEventListener("click", async () => {
+    if (!loaded) return;
+    const target = await askTelegramTarget();
+    if (!target) return;
+    try {
+      await postJson("/api/telegram/monthly-report", { month: loaded.month, target });
+      showToast("Mesačný súhrn odoslaný.");
+    } catch (err) {
+      showToast(`Odoslanie zlyhalo: ${err.message}`);
+    }
+  });
+  load();
+}
+document.getElementById("monthlyReportBtn").addEventListener("click", () => openMonthlyReport());
+document.getElementById("openMonthlyBtn2").addEventListener("click", () => openMonthlyReport());
+
+// ---- Uzatvárací kurz (CLV): bol kurz pri zverejnení tipu lepší ako tesne pred výkopom? ----
+async function renderClvSummary() {
+  const el = document.getElementById("clvSummary");
+  try {
+    const d = await fetchJson("/api/clv/summary");
+    if (!d || (!d.total && !d.pending)) { el.textContent = ""; return; }
+    const sign = (v) => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(1).replace(".", ",") + NB + "%";
+    let t = `<b class="gold">Uzatvárací kurz:</b> `;
+    if (d.total) {
+      t += `pri <b>${d.beat} z ${d.total}</b> tipov kurz do výkopu klesol (trh sa posunul k nášmu tipu), pri ${d.worse} stúpol. `;
+      t += `Priemerne sme mali o <b class="${d.avgClv >= 0 ? "g" : "l"}">${sign(d.avgClv)}</b> lepší kurz ako tesne pred zápasom.`;
+      const markets = (d.byMarket || []).filter((x) => x.total >= 3);
+      if (markets.length) t += ` Podľa trhov: ${markets.map((x) => `${escapeHtml(x.market)} ${sign(x.avgClv)} (${x.total})`).join(", ")}.`;
+    } else {
+      t += `zatiaľ žiadny tip so zisteným kurzom tesne pred výkopom.`;
+    }
+    if (d.pending) t += ` Čaká: ${d.pending}.`;
+    el.innerHTML = t;
+    el.title = "Ak je kurz pri zverejnení tipu dlhodobo vyšší ako tesne pred výkopom, model predbieha stávkovky – to je spoľahlivejší znak kvality ako samotná úspešnosť pri malom počte tipov.";
+  } catch {
+    el.textContent = "";
+  }
+}
+
+// ---- Tichá evidencia tipov vyradených pre rozpor so stávkovkami ----
+async function renderShadowSummary() {
+  const el = document.getElementById("shadowSummary");
+  try {
+    const d = await fetchJson("/api/shadow/summary");
+    if (!d) { el.textContent = ""; return; }
+    const head = `<b class="gold">Vyradené tipy (rozpor so stávkovkami):</b> `;
+    if (!d.settled) {
+      el.innerHTML = d.total ? `${head}${d.total} zapísaných, zatiaľ žiadny vyhodnotený.` : "";
+      return;
+    }
+    const p = (v) => (v == null ? "–" : `${Math.round(v)}${NB}%`);
+    let t = `${head}<b>${d.won} z ${d.settled}</b> vyšlo (<b>${p(d.hitRate)}</b>), model im dával v priemere ${p(d.avgModel)}, stávkovky ${p(d.avgMarket)}.`;
+    if (d.withOdds) t += ` Keby sa stavili: <b class="${d.profit >= 0 ? "g" : "l"}">${d.profit >= 0 ? "+" : "−"}${Math.abs(d.profit).toFixed(1).replace(".", ",")}${NB}j.</b>`;
+    if (d.pending) t += ` Čaká: ${d.pending}.`;
+    el.innerHTML = t;
+  } catch {
+    el.textContent = "";
+  }
+}
+
+// ---- Tiché sledovanie: model + stávkovky ako „druhý názor“ ----
+async function renderBlendSummary() {
+  const el = document.getElementById("blendSummary");
+  try {
+    const d = await fetchJson("/api/blend/summary");
+    if (!d || !d.fixtures) { el.textContent = ""; return; }
+    const head = `<b class="gold">Sledovanie „model + stávkovky“:</b> zapísané zápasy: ${d.fixtures}`;
+    if (!d.settledPicks) {
+      el.innerHTML = `${head}, zatiaľ žiadny vyhodnotený. Čísla pribudnú po odohraní zápasov.`;
+      return;
+    }
+    const num = (v, k = 1) => Number(v).toFixed(k).replace(".", ",");
+    const sign = (v) => (v >= 0 ? "+" : "−") + num(Math.abs(v));
+    const best = (d.rows || []).reduce((a, r) => (r.brier != null && (a == null || r.brier < a.brier) ? r : a), null);
+    const enough = d.settledPicks >= 300;
+    const rows = (d.rows || []).map((r) => {
+      const label = r.weight === 0 ? "len model (dnes)" : `${100 - r.weight} % model / ${r.weight} % stávkovky`;
+      const tipsTxt = r.tips ? `${r.won} z ${r.tips} (${Math.round(r.hitRate)}${NB}%), ${sign(r.profit)}${NB}j.` : "žiadny tip";
+      const mark = best && r.weight === best.weight ? " ★" : "";
+      return `<tr><td>${label}${mark}</td><td class="num">${r.brier == null ? "–" : num(r.brier * 100)}</td><td class="num">${tipsTxt}</td></tr>`;
+    }).join("");
+    el.innerHTML = `${head}, vyhodnotené odhady: ${d.settledPicks}${d.pendingFixtures ? `, čakajúce zápasy: ${d.pendingFixtures}` : ""}.
+      ${enough ? "" : `<br><em>Na spoľahlivý záver treba aspoň 300 vyhodnotených odhadov.</em>`}
+      <details class="inner-details"><summary>Porovnať pomery</summary>
+      <div class="table-wrap"><table class="bt-table"><thead><tr><th>Pomer</th><th class="num" title="Ako ďaleko boli percentá od reality. Nižšie = presnejšie.">Chyba</th><th class="num">Tipy, ktoré by prešli</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div>Chyba samotných stávkoviek: ${d.bookmakersBrier == null ? "–" : num(d.bookmakersBrier * 100)}. ★ = najpresnejší pomer.</div></details>`;
+    el.title = "Tipy, ktoré dostávaš, sa nemenia. Appka si len potichu zapisuje odhad modelu aj stávkoviek a po zápase porovná, ktorý pomer by trafil najlepšie.";
+  } catch {
+    el.textContent = "";
+  }
+}
+
+// =====================================================================
+// ČLENOVIA (platba beží mimo appky, napr. bankovým prevodom)
+// =====================================================================
 // Ceny musia sedieť s PRICES na tipradar.eu (landing/index.html).
 // TipRadar Platinum: jedno členstvo, tri dĺžky (1 a 3 mesiace bez obmedzenia miest, 6 mesiacov 30).
 // 6 mesiacov má kvôli uloženým dátam kód "season" a ukladá sa ako tier "group" – počíta sa do miest.
@@ -1973,15 +2365,14 @@ const MEMBER_MONTHS = { m1: 1, m3: 3, season: 6 };
 const SUMMER_PAUSE = { fromMonth: 6, toMonth: 7 };
 let memberFilter = "active";
 let lastSubs = [];
+const subscribersListEl = document.getElementById("subscribersList");
+const subLengthSelect = document.getElementById("subLength");
+const subPriceInput = document.getElementById("subPrice");
+const subStartInput = document.getElementById("subStart");
 
 function daysUntil(dateStr) {
   const diffMs = new Date(dateStr).getTime() - Date.now();
   return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-}
-
-function todayIso() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 /** Koniec členstva: od dátumu `from` pridá dĺžku, jún a júl sa nepočítajú (členstvo sa pozastaví). */
@@ -2008,31 +2399,36 @@ function memberEnd(from, length) {
 }
 
 function syncMemberPrice() {
-  subTierSelect.value = subLengthSelect.value === "season" ? "group" : "individual";
   subPriceInput.value = MEMBER_PRICES[subLengthSelect.value];
+  updateSubEndPreview();
 }
-subTierSelect.addEventListener("change", syncMemberPrice);
+function updateSubEndPreview() {
+  const start = subStartInput.value || todayIso();
+  const end = memberEnd(start, subLengthSelect.value);
+  document.getElementById("subEndPreview").textContent = `Členstvo potrvá do ${end.toLocaleDateString("sk-SK")} (jún a júl sa nepočítajú).`;
+}
 subLengthSelect.addEventListener("change", syncMemberPrice);
+subStartInput.addEventListener("change", updateSubEndPreview);
 
 function subscriberStatus(sub) {
   const days = daysUntil(sub.nextPaymentDue);
-  if (days < 0) return { label: "Skončilo", cls: "lost" };
-  if (days <= 3) return { label: days === 0 ? "Končí dnes" : `Končí o ${days} d.`, cls: "void" };
-  return { label: "Aktívny", cls: "won" };
+  if (days < 0) return { label: "Skončilo", cls: "l" };
+  if (days <= 3) return { label: days === 0 ? "Končí dnes" : `Končí o ${days} d.`, cls: "p" };
+  return { label: "Aktívny", cls: "w" };
 }
 
 async function openSubscribers() {
   void renderLeads();
   void renderPayments();
-  subscribersModal.hidden = false;
+  loadSeats();
   if (!subStartInput.value) subStartInput.value = todayIso();
   if (!subPriceInput.value) syncMemberPrice();
-  subscribersListEl.innerHTML = skeletonHtml(2);
+  if (!lastSubs.length) subscribersListEl.innerHTML = skeletonHtml(2);
   try {
     const subs = await fetchJson("/api/subscribers");
     renderSubscribersList(subs);
   } catch (err) {
-    subscribersListEl.innerHTML = `<p class="muted small">Členov sa nepodarilo načítať: ${escapeHtml(err.message)}</p>`;
+    subscribersListEl.innerHTML = `<p class="empty">Členov sa nepodarilo načítať: ${escapeHtml(err.message)}</p>`;
   }
 }
 
@@ -2042,33 +2438,27 @@ function renderSubscribersList(subs) {
   const vip = active.filter((s) => s.tier === "group").length;
   const income = active.reduce((sum, s) => sum + (Number(s.priceEur) || 0), 0);
   const ending = active.filter((s) => daysUntil(s.nextPaymentDue) <= 7).length;
-
   const vipPct = Math.min(100, Math.round((vip / 30) * 100));
-  subscribersSummaryEl.className = "member-stats";
-  subscribersSummaryEl.innerHTML = `
-    <div class="ms-tile"><small>Aktívni</small><b>${active.length}</b></div>
-    <div class="ms-tile"><small>1 a 3 mesiace</small><b>${active.length - vip}</b></div>
-    <div class="ms-tile ms-vip"><small>6 mesiacov</small><b>${vip}<i> / 30</i></b><span class="ms-bar"><span style="width:${vipPct}%"></span></span></div>
-    <div class="ms-tile"><small>Zaplatené</small><b>${income}<i> €</i></b></div>
-    <div class="ms-tile${ending ? " ms-warn" : ""}"><small>Končí do 7 dní</small><b>${ending}</b></div>
-  `;
-
-  memberFilterEl.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b.dataset.f === memberFilter));
+  document.getElementById("subscribersSummary").innerHTML = `
+    <div class="kpi"><small>Aktívni</small><b>${active.length}</b></div>
+    <div class="kpi"><small>1 a 3 mesiace</small><b>${active.length - vip}</b></div>
+    <div class="kpi"><small>6 mesiacov</small><b>${vip}<span class="faint"> / 30</span></b><div class="bar"><i style="width:${vipPct}%"></i></div></div>
+    <div class="kpi"><small>Zaplatené</small><b>${income}${NB}€</b><span>aktívni členovia</span></div>
+    <div class="kpi${ending ? " warn" : ""}"><small>Končí do 7 dní</small><b>${ending}</b></div>`;
+  document.querySelectorAll("#memberFilter [data-f]").forEach((b) => b.classList.toggle("on", b.dataset.f === memberFilter));
 
   const shown = subs
     .filter((s) => memberFilter === "all" || (memberFilter === "active" ? daysUntil(s.nextPaymentDue) >= 0 : daysUntil(s.nextPaymentDue) < 0))
-    .sort((a, b) => memberFilter === "expired"
+    .sort((a, b) => (memberFilter === "expired"
       ? new Date(b.nextPaymentDue) - new Date(a.nextPaymentDue)
-      : new Date(a.nextPaymentDue) - new Date(b.nextPaymentDue));
-
-  if (shown.length === 0) {
-    subscribersListEl.innerHTML = `<p class="empty-state">${
+      : new Date(a.nextPaymentDue) - new Date(b.nextPaymentDue)));
+  if (!shown.length) {
+    subscribersListEl.innerHTML = `<p class="empty">${
       subs.length === 0 ? "Zatiaľ nemáš žiadnych členov. Po prvej platbe ho pridaj formulárom vyššie."
       : memberFilter === "active" ? "Momentálne nemáš aktívnych členov." : "Žiadne skončené členstvá."
     }</p>`;
     return;
   }
-
   subscribersListEl.innerHTML = shown
     .map((s) => {
       const status = subscriberStatus(s);
@@ -2078,116 +2468,79 @@ function renderSubscribersList(subs) {
       const startDate = s.startDate ? new Date(s.startDate).toLocaleDateString("sk-SK") : null;
       const details = [
         escapeHtml(s.contact || ""),
-        `${MEMBER_LENGTH_LABEL[length]} · ${Number(s.priceEur) || 0} €`,
+        `${MEMBER_LENGTH_LABEL[length] || length} · ${Number(s.priceEur) || 0}${NB}€`,
         startDate ? `${startDate} – ${endDate}` : `do ${endDate}`,
         s.note ? escapeHtml(s.note) : "",
       ].filter(Boolean).join(" · ");
-      return `
-        <div class="tip-row">
-          <div class="tip-row-info">
-            <div class="tip-row-match">${escapeHtml(s.name)}<span class="member-tag ${isVip ? "vip" : "premium"}">${isVip ? "PLATINUM SEZÓNA" : (MEMBER_NAME[length] || "ČLEN").toUpperCase()}</span>${s.founder ? `<span class="member-tag founder">Prvý člen</span>` : ""}</div>
-            <div class="tip-row-market">${details}</div>
-          </div>
-          <span class="tip-status ${status.cls}">${status.label}</span>
-          ${s.telegramChatId ? `<button class="tip-delete-btn member-btn" data-test-reminder-id="${s.id}" title="Poslať testovaciu pripomienku teraz">🔔 Test</button>` : ""}
-          <button class="tip-delete-btn member-btn" data-extend-id="${s.id}" title="Predĺžiť o ďalšie obdobie (${MEMBER_LENGTH_LABEL[length]})">Predĺžiť</button>
-          <button class="tip-delete-btn" data-remove-id="${s.id}" title="Zmazať">✕</button>
-        </div>
-      `;
+      return `<div class="mrow">
+        <span class="mt"><b>${escapeHtml(s.name)} <span class="tag gold">${isVip ? "PLATINUM SEZÓNA" : escapeHtml((MEMBER_NAME[length] || "ČLEN").toUpperCase())}</span>${s.founder ? ` <span class="tag">Prvý člen</span>` : ""}</b><span>${details}</span></span>
+        <span class="res-b ${status.cls}">${status.label}</span>
+        <span class="ic">
+          ${s.telegramChatId ? `<button type="button" class="btn ghost xs" data-test-reminder-id="${escapeHtml(s.id)}" title="Poslať testovaciu pripomienku teraz">🔔 Test</button>` : ""}
+          <button type="button" class="btn ghost xs" data-extend-id="${escapeHtml(s.id)}" title="Predĺžiť o ďalšie obdobie (${MEMBER_LENGTH_LABEL[length] || length})">Predĺžiť</button>
+          <button type="button" class="ib danger" data-remove-id="${escapeHtml(s.id)}" title="Zmazať člena" aria-label="Zmazať člena">${ICON.trash}</button>
+        </span>
+      </div>`;
     })
     .join("");
-
-  subscribersListEl.querySelectorAll("[data-extend-id]").forEach((btn) => {
-    btn.addEventListener("click", async (e) => {
-      const id = e.currentTarget.dataset.extendId;
-      const sub = subs.find((s) => s.id === id);
-      if (!sub) return;
-      const length = sub.length || "m1";
-      // Predĺženie nadväzuje na koniec, ak ešte platí, inak začína dnes.
-      const from = daysUntil(sub.nextPaymentDue) >= 0 ? sub.nextPaymentDue : todayIso();
-      const end = memberEnd(from, length);
-      if (!window.confirm(`Predĺžiť ${sub.name} (${MEMBER_LENGTH_LABEL[length]}) do ${end.toLocaleDateString("sk-SK")}?`)) return;
-      try {
-        await fetchJson(`/api/subscribers/${id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nextPaymentDue: end.toISOString() }),
-        });
-        showToast("Členstvo predĺžené.");
-        openSubscribers();
-      } catch (err) {
-        showToast(`Predĺženie zlyhalo: ${err.message}`);
-      }
-    });
-  });
-
-  subscribersListEl.querySelectorAll("[data-card-id]").forEach((btn) => {
-    btn.addEventListener("click", async (e) => {
-      const id = e.currentTarget.dataset.cardId;
-      const sub = subs.find((s) => s.id === id);
-      if (!sub) return;
-      btn.disabled = true;
-      try {
-        await fetchJson(`/api/subscribers/${id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cardSent: !sub.cardSent }),
-        });
-        openSubscribers();
-      } catch (err) {
-        btn.disabled = false;
-        showToast(`Uloženie zlyhalo: ${err.message}`);
-      }
-    });
-  });
-
-  subscribersListEl.querySelectorAll("[data-test-reminder-id]").forEach((btn) => {
-    btn.addEventListener("click", async (e) => {
-      const id = e.currentTarget.dataset.testReminderId;
-      btn.disabled = true;
-      try {
-        const res = await fetchJson(`/api/subscribers/${id}/test-reminder`, { method: "POST" });
-        showToast(res.ok ? "Testovacia pripomienka odoslaná – skontroluj Telegram." : "Odoslanie zlyhalo.");
-      } catch (err) {
-        showToast(`Odoslanie zlyhalo: ${err.message}`);
-      } finally {
-        btn.disabled = false;
-      }
-    });
-  });
-
-  subscribersListEl.querySelectorAll("[data-remove-id]").forEach((btn) => {
-    btn.addEventListener("click", async (e) => {
-      const id = e.currentTarget.dataset.removeId;
-      if (!window.confirm("Naozaj zmazať tohto člena?")) return;
-      try {
-        await fetchJson(`/api/subscribers/${id}`, { method: "DELETE" });
-        openSubscribers();
-      } catch (err) {
-        showToast(`Zmazanie zlyhalo: ${err.message}`);
-      }
-    });
-  });
 }
 
-memberFilterEl.addEventListener("click", (e) => {
+subscribersListEl.addEventListener("click", async (e) => {
+  const btn = e.target.closest("button");
+  if (!btn) return;
+  if (btn.dataset.extendId) {
+    const sub = lastSubs.find((s) => s.id === btn.dataset.extendId);
+    if (!sub) return;
+    const length = sub.length || "m1";
+    // Predĺženie nadväzuje na koniec, ak ešte platí, inak začína dnes.
+    const from = daysUntil(sub.nextPaymentDue) >= 0 ? sub.nextPaymentDue : todayIso();
+    const end = memberEnd(from, length);
+    if (!window.confirm(`Predĺžiť ${sub.name} (${MEMBER_LENGTH_LABEL[length] || length}) do ${end.toLocaleDateString("sk-SK")}?`)) return;
+    try {
+      await fetchJson(`/api/subscribers/${sub.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nextPaymentDue: end.toISOString() }),
+      });
+      showToast("Členstvo predĺžené.");
+      openSubscribers();
+    } catch (err) {
+      showToast(`Predĺženie zlyhalo: ${err.message}`);
+    }
+  } else if (btn.dataset.testReminderId) {
+    btn.disabled = true;
+    try {
+      const res = await fetchJson(`/api/subscribers/${btn.dataset.testReminderId}/test-reminder`, { method: "POST" });
+      showToast(res.ok ? "Testovacia pripomienka odoslaná – skontroluj Telegram." : "Odoslanie zlyhalo.");
+    } catch (err) {
+      showToast(`Odoslanie zlyhalo: ${err.message}`);
+    } finally {
+      btn.disabled = false;
+    }
+  } else if (btn.dataset.removeId) {
+    if (!window.confirm("Naozaj zmazať tohto člena?")) return;
+    try {
+      await fetchJson(`/api/subscribers/${btn.dataset.removeId}`, { method: "DELETE" });
+      showToast("Člen zmazaný.");
+      openSubscribers();
+    } catch (err) {
+      showToast(`Zmazanie zlyhalo: ${err.message}`);
+    }
+  }
+});
+
+document.getElementById("memberFilter").addEventListener("click", (e) => {
   const b = e.target.closest("button[data-f]");
   if (!b) return;
   memberFilter = b.dataset.f;
   renderSubscribersList(lastSubs);
 });
 
-openSubscribersBtn.addEventListener("click", openSubscribers);
-closeSubscribersBtn.addEventListener("click", () => {
-  subscribersModal.hidden = true;
-});
-
-addSubscriberBtn.addEventListener("click", async () => {
-  const name = subNameInput.value.trim();
-  if (!name) {
-    showToast("Zadaj meno člena.");
-    return;
-  }
+document.getElementById("addSubscriberBtn").addEventListener("click", async (e) => {
+  const btn = e.currentTarget;
+  const nameEl = document.getElementById("subName");
+  const name = nameEl.value.trim();
+  if (!name) { showToast("Zadaj meno člena."); nameEl.focus(); return; }
   const length = subLengthSelect.value;
   const tier = length === "season" ? "group" : "individual"; // 6 mesiacov = obmedzené miesta
   const start = subStartInput.value || todayIso();
@@ -2197,1499 +2550,44 @@ addSubscriberBtn.addEventListener("click", async () => {
   if (end.getTime() < Date.now()) {
     if (!window.confirm(`Toto členstvo by skončilo už ${end.toLocaleDateString("sk-SK")}. Pridať aj tak?`)) return;
   }
-
   const subscriber = {
     id: `sub-${Date.now()}`,
     name,
-    contact: subContactInput.value.trim(),
-    telegramChatId: subTelegramChatIdInput.value.trim() || undefined,
+    contact: document.getElementById("subContact").value.trim(),
+    telegramChatId: document.getElementById("subTelegramChatId").value.trim() || undefined,
     tier,
     priceEur,
     length,
     startDate: new Date(`${start}T12:00:00`).toISOString(),
     nextPaymentDue: end.toISOString(),
-    founder: subFounderInput.checked,
-    note: subNoteInput.value.trim() || undefined,
+    founder: document.getElementById("subFounder").checked,
+    note: document.getElementById("subNote").value.trim() || undefined,
     createdAt: new Date().toISOString(),
   };
-
-  addSubscriberBtn.disabled = true;
+  btn.disabled = true;
   try {
-    await fetchJson("/api/subscribers", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(subscriber),
-    });
-    subNameInput.value = "";
-    subContactInput.value = "";
-    subTelegramChatIdInput.value = "";
-    subNoteInput.value = "";
+    await postJson("/api/subscribers", subscriber);
+    ["subName", "subContact", "subTelegramChatId", "subNote"].forEach((id) => { document.getElementById(id).value = ""; });
     subStartInput.value = todayIso();
+    updateSubEndPreview();
     memberFilter = "active";
     showToast(`${name} pridaný medzi členov.`);
     openSubscribers();
   } catch (err) {
     showToast(`Pridanie zlyhalo: ${err.message}`);
   } finally {
-    addSubscriberBtn.disabled = false;
-  }
-});
-
-checkResultsBtn.addEventListener("click", async () => {
-  checkResultsBtn.disabled = true;
-  checkResultsBtn.textContent = "Kontrolujem…";
-  try {
-    const tips = await fetchJson("/api/tips/check-results", { method: "POST" });
-    renderTipsList(tips);
-  } catch (err) {
-    showToast(`Kontrola výsledkov zlyhala: ${err.message}`);
-  } finally {
-    checkResultsBtn.disabled = false;
-    checkResultsBtn.textContent = "Skontrolovať výsledky";
-  }
-});
-
-clearAllTipsBtn.addEventListener("click", async () => {
-  const confirmed = window.confirm(
-    "Naozaj chceš vymazať ÚPLNE VŠETKY uložené tipy (aj už vyhodnotené)? Táto akcia sa nedá vrátiť späť."
-  );
-  if (!confirmed) return;
-
-  clearAllTipsBtn.disabled = true;
-  try {
-    await fetchJson("/api/tips", { method: "DELETE" });
-    renderTipsList([]);
-  } catch (err) {
-    showToast(`Vymazanie zlyhalo: ${err.message}. Skús to prosím znova.`);
-  } finally {
-    clearAllTipsBtn.disabled = false;
-  }
-});
-
-const tipsComingBtn = document.getElementById("tipsComingBtn");
-tipsComingBtn.addEventListener("click", async () => {
-  const target = await askTelegramTarget();
-  if (!target) return;
-  tipsComingBtn.disabled = true;
-  try {
-    await fetchJson("/api/telegram/tips-coming", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ target }),
-    });
-    showToast("Odoslané.");
-  } catch (err) {
-    showToast(`Odoslanie zlyhalo: ${err.message}`);
-  } finally {
-    tipsComingBtn.disabled = false;
-  }
-});
-
-noTipTodayBtn.addEventListener("click", async () => {
-  const target = await askTelegramTarget();
-  if (!target) return;
-  noTipTodayBtn.disabled = true;
-  try {
-    await fetchJson("/api/telegram/no-tip-today", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ target }),
-    });
-    showToast("Odoslané.");
-  } catch (err) {
-    showToast(`Odoslanie zlyhalo: ${err.message}`);
-  } finally {
-    noTipTodayBtn.disabled = false;
-  }
-});
-
-weeklyReportBtn.addEventListener("click", async () => {
-  const target = await askTelegramTarget();
-  if (!target) return;
-  weeklyReportBtn.disabled = true;
-  try {
-    await fetchJson("/api/telegram/weekly-report", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ target }),
-    });
-    showToast("Odoslané.");
-  } catch (err) {
-    showToast(`Odoslanie zlyhalo: ${err.message}`);
-  } finally {
-    weeklyReportBtn.disabled = false;
-  }
-});
-
-// ---- Poslať tipy dňa naraz (z histórie do Telegramu) ----
-function tipDayKey(iso) {
-  const d = new Date(iso);
-  return isNaN(d.getTime()) ? "" : new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Bratislava" }).format(d);
-}
-function tipTimeLabel(iso) {
-  const d = new Date(iso);
-  return isNaN(d.getTime()) ? "" : d.toLocaleTimeString("sk-SK", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Bratislava" });
-}
-function openSendDayTips() {
-  const overlay = document.createElement("div");
-  overlay.className = "modal-overlay";
-  overlay.innerHTML = `
-    <div class="modal modal-large">
-      <h3>Poslať tipy dňa do Telegramu</h3>
-      <label class="muted small" style="display:flex;align-items:center;gap:10px;margin:6px 0 12px;">Deň <input type="date" data-day></label>
-      <div data-list></div>
-      <p class="muted small" data-info style="margin:10px 0 0;"></p>
-      <div class="modal-actions" style="flex-wrap:wrap;">
-        <button class="btn-ghost" data-close>Zavrieť</button>
-        <button class="btn-primary" data-target="free">★ Poslať do FREE</button>
-        <button class="btn-primary" data-target="premium">◆ Poslať do PLATINUM</button>
-      </div>
-    </div>`;
-  document.body.appendChild(overlay);
-  const dayInput = overlay.querySelector("[data-day]");
-  const listEl = overlay.querySelector("[data-list]");
-  const infoEl = overlay.querySelector("[data-info]");
-  // Predvolene dnešok; ak dnes nič nečaká, najbližší deň s čakajúcimi tipmi.
-  const today = tipDayKey(new Date().toISOString());
-  const nextDays = currentHistoryTips
-    .filter((t) => t.status === "pending" && !t.archived && !t.watchOnly)
-    .map((t) => tipDayKey(t.matchDate))
-    .filter((d) => d >= today)
-    .sort();
-  dayInput.value = nextDays.includes(today) || !nextDays.length ? today : nextDays[0];
-  let dayTips = [];
-
-  const selected = () => Array.from(listEl.querySelectorAll("input[type=checkbox]:checked")).map((c) => c.value);
-  const updateInfo = () => {
-    const n = selected().length;
-    infoEl.textContent = dayTips.length ? `Vybrané: ${n} z ${dayTips.length}. Pôjdu ako samostatné správy, zoradené podľa času výkopu.` : "";
-    overlay.querySelectorAll("[data-target]").forEach((b) => (b.disabled = n === 0));
-  };
-  const render = () => {
-    dayTips = currentHistoryTips
-      .filter((t) => t.status === "pending" && !t.archived && !t.watchOnly && tipDayKey(t.matchDate) === dayInput.value)
-      .sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime());
-    if (!dayTips.length) {
-      listEl.innerHTML = `<p class="empty-state">V tento deň nie sú v histórii žiadne čakajúce tipy.</p>`;
-      updateInfo();
-      return;
-    }
-    listEl.innerHTML = dayTips
-      .map((t) => {
-        const sent = (t.telegramMessages || []).length > 0;
-        const title = t.legs && t.legs.length
-          ? `🎫 Tiket (${plural(t.legs.length, "tip", "tipy", "tipov")}) · ${fmtNum(t.probability, 1)} %`
-          : `${escapeHtml(translateTeamName(t.homeTeam))} — ${escapeHtml(translateTeamName(t.awayTeam))}`;
-        const sub = t.legs && t.legs.length
-          ? t.legs.map((l) => `${escapeHtml(translateTeamName(l.homeTeam))} — ${escapeHtml(translateTeamName(l.awayTeam))}`).join(" · ")
-          : `${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))} · ${t.probability.toFixed(0)} %${typeof t.odds === "number" && t.odds > 1 ? ` · kurz ${fmtNum(t.odds, 2)}` : ""}`;
-        return `<label class="tip-row" style="cursor:pointer;gap:12px;align-items:flex-start;">
-          <input type="checkbox" value="${escapeHtml(t.id)}" ${sent ? "" : "checked"} style="margin-top:4px;">
-          <div class="tip-row-info">
-            <div class="tip-row-match">${tipTimeLabel(t.matchDate)} · ${title}${sent ? ` <span class="muted small">· už odoslaný</span>` : ""}</div>
-            <div class="tip-row-market">${sub}</div>
-          </div></label>`;
-      })
-      .join("");
-    listEl.querySelectorAll("input[type=checkbox]").forEach((c) => c.addEventListener("change", updateInfo));
-    updateInfo();
-  };
-  dayInput.addEventListener("change", render);
-  overlay.querySelector("[data-close]").addEventListener("click", () => overlay.remove());
-  overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
-  overlay.querySelectorAll("[data-target]").forEach((btn) =>
-    btn.addEventListener("click", async () => {
-      const ids = selected();
-      if (!ids.length) return;
-      const channel = btn.dataset.target === "free" ? "FREE" : "PLATINUM";
-      if (!window.confirm(`Poslať ${plural(ids.length, "tip", "tipy", "tipov")} do kanála ${channel}?`)) return;
-      overlay.querySelectorAll("button").forEach((b) => (b.disabled = true));
-      infoEl.textContent = "Posielam…";
-      try {
-        const r = await fetchJson("/api/telegram/send-tips", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids, target: btn.dataset.target }) });
-        showToast(`Odoslané: ${r.sent}.` + (r.failed ? ` Neodišlo: ${r.failed}.` : ""));
-        overlay.remove();
-        fetchJson("/api/tips").then(renderTipsList).catch(() => {});
-      } catch (err) {
-        showToast(`Odoslanie zlyhalo: ${err.message}`);
-        overlay.querySelectorAll("button").forEach((b) => (b.disabled = false));
-        updateInfo();
-      }
-    })
-  );
-  render();
-}
-document.getElementById("sendDayTipsBtn").addEventListener("click", () => openSendDayTips());
-
-// ---- Mesačný súhrn (tipy daného mesiaca, s odoslaním do Telegramu) ----
-function fmtMonthNum(n, digits) {
-  return Number(n).toFixed(digits).replace(".", ",");
-}
-function signedMonthNum(n, digits) {
-  return (n > 0 ? "+" : n < 0 ? "−" : "") + fmtMonthNum(Math.abs(n), digits);
-}
-function shiftMonth(month, delta) {
-  const [y, m] = month.split("-").map(Number);
-  const d = new Date(Date.UTC(y, m - 1 + delta, 1));
-  return d.toISOString().slice(0, 7);
-}
-
-async function openMonthlyReport(startMonth) {
-  const overlay = document.createElement("div");
-  overlay.className = "modal-overlay";
-  overlay.innerHTML = `
-    <div class="modal modal-large monthly-modal">
-      <div class="monthly-head">
-        <button class="btn-ghost btn-mini" data-m="-1" aria-label="Predošlý mesiac">‹</button>
-        <h3 class="monthly-title">Mesačný súhrn</h3>
-        <button class="btn-ghost btn-mini" data-m="1" aria-label="Ďalší mesiac">›</button>
-      </div>
-      <div class="monthly-body"><p class="empty-state">Načítavam…</p></div>
-      <div class="modal-actions">
-        <button class="btn-ghost" data-close>Zavrieť</button>
-        <button class="btn-primary" data-send>Odoslať do Telegramu</button>
-      </div>
-    </div>`;
-  document.body.appendChild(overlay);
-  const body = overlay.querySelector(".monthly-body");
-  const title = overlay.querySelector(".monthly-title");
-  let current = startMonth || null;
-  let loaded = null;
-
-  async function load() {
-    body.innerHTML = `<p class="empty-state">Načítavam…</p>`;
-    try {
-      const r = await getMonthlyReport(current);
-      loaded = r;
-      current = r.month;
-      title.textContent = `Mesačný súhrn – ${r.label}`;
-      if (!r.resolved) {
-        body.innerHTML = `<p class="empty-state">V tomto mesiaci zatiaľ nie sú vyhodnotené žiadne tipy.${r.pending ? ` Ešte sa hrá: ${r.pending}.` : ""}</p>`;
-        return;
-      }
-      const card = (label, value, cls) => `<div class="monthly-stat"><span>${label}</span><b class="${cls || ""}">${value}</b></div>`;
-      body.innerHTML = `
-        <div class="monthly-grid">
-          ${card("Úspešnosť", `${fmtMonthNum(r.rate, 0)} %`)}
-          ${card("Vyšlo / nevyšlo", `<span class="won">${r.won}</span> / <span class="lost">${r.lost}</span>`)}
-          ${r.profit != null ? card("Zisk", `${signedMonthNum(r.profit, 1)} j.`, r.profit >= 0 ? "won" : "lost") : ""}
-          ${r.roi != null ? card("ROI", `${signedMonthNum(r.roi, 0)} %`, r.roi >= 0 ? "won" : "lost") : ""}
-          ${r.avgOdds != null ? card("Priemerný kurz", fmtMonthNum(r.avgOdds, 2)) : ""}
-          ${r.bestStreak >= 2 ? card("Séria výhier", r.bestStreak) : ""}
-        </div>
-        <p class="muted small">${r.voided ? `Vrátené: ${r.voided}. ` : ""}${r.pending ? `Ešte sa hrá: ${r.pending}. ` : ""}${r.bestDay ? `Najlepší deň: ${r.bestDay.day} (${signedMonthNum(r.bestDay.profit, 1)} j.). ` : ""}${r.oddsCount < r.resolved ? `Zisk je z ${r.oddsCount} tipov so známym kurzom.` : ""}</p>
-        <div class="market-breakdown-title">Podľa trhov</div>
-        ${r.byMarket.map((b) => `
-          <div class="market-breakdown-row">
-            <div class="market-breakdown-label"><span>${escapeHtml(b.market)}</span><span>${b.won} z ${b.total} · ${fmtMonthNum(b.rate, 0)} %</span></div>
-            <div class="market-breakdown-bar"><div class="market-breakdown-bar-fill" style="width:${Math.round(b.rate)}%"></div></div>
-          </div>`).join("")}`;
-    } catch (err) {
-      body.innerHTML = `<p class="empty-state">Súhrn sa nepodarilo načítať: ${escapeHtml(err.message || String(err))}</p>`;
-    }
-  }
-
-  overlay.querySelectorAll("[data-m]").forEach((b) =>
-    b.addEventListener("click", () => {
-      if (!current) return;
-      current = shiftMonth(current, Number(b.dataset.m));
-      load();
-    })
-  );
-  overlay.querySelector("[data-close]").addEventListener("click", () => overlay.remove());
-  overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
-  overlay.querySelector("[data-send]").addEventListener("click", async () => {
-    if (!loaded) return;
-    const target = await askTelegramTarget();
-    if (!target) return;
-    try {
-      await sendMonthlyReport(loaded.month, target);
-      showToast("Mesačný súhrn odoslaný.");
-    } catch (err) {
-      showToast(`Odoslanie zlyhalo: ${err.message}`);
-    }
-  });
-  load();
-}
-
-function getMonthlyReport(month) {
-  return fetchJson(`/api/reports/monthly${month ? `?month=${encodeURIComponent(month)}` : ""}`);
-}
-function sendMonthlyReport(month, target) {
-  return fetchJson("/api/telegram/monthly-report", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ month, target }),
-  });
-}
-document.getElementById("monthlyReportBtn").addEventListener("click", () => openMonthlyReport());
-
-// ---- Návštevnosť tipradar.eu (bez cookies) ----
-const VISIT_CLICK_LABELS = {
-  free: "Tipy zadarmo (Telegram kanál)",
-  premium: "Premium – poradovník",
-  vip: "VIP – poradovník",
-  kurz: "Chcem kurz",
-  formular: "Formulár",
-  telegram: "Telegram (iné odkazy)",
-  instagram: "Instagram",
-  email: "E-mail",
-};
-const VISIT_SOURCE_LABELS = { priamo: "Priamo / neznámy zdroj", instagram: "Instagram", facebook: "Facebook", telegram: "Telegram", google: "Google", tiktok: "TikTok", youtube: "YouTube" };
-
-async function openVisits() {
-  const overlay = document.createElement("div");
-  overlay.className = "modal-overlay";
-  overlay.innerHTML = `
-    <div class="modal modal-large">
-      <h3>Návštevnosť tipradar.eu</h3>
-      <p class="muted small">Bez cookies. Návštevník = jeden človek za deň (podľa skráteného odtlačku, ktorý sa každý deň mení).</p>
-      <p class="muted small">Aby sa nepočítali tvoje vlastné návštevy, otvor raz v každom svojom zariadení a prehliadači <a href="https://tipradar.eu/?ja=1" target="_blank" rel="noopener">tipradar.eu/?ja=1</a>. Znova zapneš cez tipradar.eu/?ja=0.</p>
-      <div class="visits-body"><p class="empty-state">Načítavam…</p></div>
-      <div class="modal-actions"><button class="btn-ghost" data-close>Zavrieť</button></div>
-    </div>`;
-  document.body.appendChild(overlay);
-  overlay.querySelector("[data-close]").addEventListener("click", () => overlay.remove());
-  overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
-  const body = overlay.querySelector(".visits-body");
-  try {
-    const { days } = await fetchJson("/api/stats/visits?days=30");
-    const sum = (list, key) => list.reduce((s, d) => s + (d[key] || 0), 0);
-    const merge = (list, key) => {
-      const out = {};
-      for (const d of list) for (const [k, v] of Object.entries(d[key] || {})) out[k] = (out[k] || 0) + v;
-      return Object.entries(out).sort((a, b) => b[1] - a[1]);
-    };
-    const today = days.slice(0, 1), week = days.slice(0, 7);
-    const card = (label, visitors, views) =>
-      `<div class="monthly-stat"><span>${label}</span><b>${visitors}</b><small class="muted">${views} ${views === 1 ? "zobrazenie" : views >= 2 && views <= 4 ? "zobrazenia" : "zobrazení"}</small></div>`;
-    const rows = (entries, labels, total) =>
-      entries.length
-        ? entries.map(([k, v]) => `
-          <div class="market-breakdown-row">
-            <div class="market-breakdown-label"><span>${escapeHtml(labels[k] || k)}</span><span>${v}</span></div>
-            <div class="market-breakdown-bar"><div class="market-breakdown-bar-fill" style="width:${total ? Math.round((v / total) * 100) : 0}%"></div></div>
-          </div>`).join("")
-        : `<p class="muted small">Zatiaľ nič.</p>`;
-    const sources = merge(days, "sources"), clicks = merge(days, "clicks");
-    const maxDay = Math.max(1, ...days.slice(0, 14).map((d) => d.visitors));
-    body.innerHTML = `
-      <div class="monthly-grid">
-        ${card("Dnes", sum(today, "visitors"), sum(today, "views"))}
-        ${card("7 dní", sum(week, "visitors"), sum(week, "views"))}
-        ${card("30 dní", sum(days, "visitors"), sum(days, "views"))}
-      </div>
-      <div class="market-breakdown-title">Posledných 14 dní (návštevníci)</div>
-      <div class="visits-days">
-        ${days.slice(0, 14).reverse().map((d) => `
-          <div class="visits-day" title="${d.day}: ${d.visitors} návštevníkov, ${d.views} zobrazení">
-            <i style="height:${Math.round((d.visitors / maxDay) * 100)}%"></i>
-            <span>${Number(d.day.slice(8, 10))}.</span>
-          </div>`).join("")}
-      </div>
-      <div class="market-breakdown-title">Odkiaľ prišli (30 dní)</div>
-      ${rows(sources, VISIT_SOURCE_LABELS, sources.reduce((s, e) => s + e[1], 0))}
-      <div class="market-breakdown-title" style="margin-top:14px">Kliknutia (30 dní)</div>
-      ${rows(clicks, VISIT_CLICK_LABELS, Math.max(1, ...clicks.map((e) => e[1])))}
-      <p class="muted small" style="margin-top:12px">Tip: do odkazu v bio na Instagrame dajte <b>tipradar.eu/?utm_source=instagram</b>, potom sa zdroj započíta presne aj z aplikácie Instagramu.</p>`;
-  } catch (err) {
-    body.innerHTML = `<p class="empty-state">Návštevnosť sa nepodarilo načítať: ${escapeHtml(err.message || String(err))}</p>`;
-  }
-}
-document.getElementById("openVisitsBtn").addEventListener("click", () => openVisits());
-
-// ---- Denné vyhodnotenie (všetky tipy a tikety dňa naraz do Telegramu) ----
-/** Deň, za ktorý sa posiela vyhodnotenie: dnes, po polnoci (do 6:00) ešte včerajšok. */
-function dailyResultsDay() {
-  const d = new Date();
-  if (d.getHours() < 6) d.setDate(d.getDate() - 1);
-  const pad = (n) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
-
-dailyResultsBtn.addEventListener("click", async () => {
-  const target = await askTelegramTarget();
-  if (!target) return;
-  const day = dailyResultsDay();
-  dailyResultsBtn.disabled = true;
-  try {
-    let res = await fetchJson("/api/telegram/daily-results", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ target, day }),
-    });
-    if (res && res.pendingCount > 0) {
-      const ok = window.confirm(
-        `${res.pendingCount} ${res.pendingCount === 1 ? "tip sa ešte hrá" : res.pendingCount < 5 ? "tipy sa ešte hrajú" : "tipov sa ešte hrá"}. Poslať vyhodnotenie aj tak? (Nedohrané budú označené ⏳.)`
-      );
-      if (!ok) return;
-      res = await fetchJson("/api/telegram/daily-results", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ target, day, force: true }),
-      });
-    }
-    if (res && res.empty) {
-      showToast("Pre dnešok nie sú v histórii žiadne tipy ani tikety.");
-    } else if (res && res.ok) {
-      showToast("Denné vyhodnotenie odoslané.");
-      if (lastRenderedTips) openTipsHistory();
-    } else {
-      showToast("Nepodarilo sa odoslať – skontroluj nastavenie Telegramu.");
-    }
-  } catch (err) {
-    showToast(`Odoslanie zlyhalo: ${err.message}`);
-  } finally {
-    dailyResultsBtn.disabled = false;
-  }
-});
-
-
-// ---- Tipy dňa: všetky odporúčané tipy zo všetkých zápasov dňa, zoradené od najvyššej dôvery ----
-const dayTipsBtn = document.getElementById("dayTipsBtn");
-let dayTipsItems = [];
-let dayTipsInfo = { analyzed: 0, failed: 0 };
-
-function kickoffTime(fixture) {
-  const d = new Date(fixture?.date);
-  return isNaN(d.getTime()) ? "" : d.toLocaleTimeString("sk-SK", { hour: "2-digit", minute: "2-digit" });
-}
-
-async function showDayTips() {
-  const viewId = ++analysisViewId;
-  const fixtures = currentFixtures.filter((f) => !matchHasStarted(f));
-  if (fixtures.length === 0) {
-    analysisColumnEl.innerHTML = `<div class="empty-state">V tento deň už nie sú žiadne zápasy pred výkopom.</div>`;
-    return;
-  }
-  dayTipsBtn.disabled = true;
-  const items = [];
-  let done = 0;
-  let failed = 0;
-  const progress = () => {
-    if (viewId !== analysisViewId) return; // používateľ medzitým otvoril niečo iné
-    analysisColumnEl.innerHTML = `<div class="empty-state">Analyzujem zápasy dňa… ${done} / ${fixtures.length}<br><span class="muted small">Prvé načítanie chvíľu trvá, ďalšie sú rýchle.</span></div>`;
-  };
-  progress();
-  const queue = fixtures.slice();
-  // Zápasy analyzujeme jeden po druhom - šetrne k limitu požiadaviek API,
-  // aby boli výsledky pri každom načítaní rovnaké a úplné.
-  const worker = async () => {
-    while (queue.length > 0) {
-      const f = queue.shift();
-      try {
-        const r = await fetchJson("/api/analyze", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ fixture: f, leagueId: f.league.id, season: f.league.season }),
-        });
-        for (const bet of r?.bestBets || []) items.push({ r, bet });
-      } catch {
-        failed++;
-      }
-      done++;
-      progress();
-    }
-  };
-  try {
-    await worker();
-    items.sort((a, b) => b.bet.probability - a.bet.probability);
-    dayTipsItems = items;
-    dayTipsInfo = { analyzed: fixtures.length, failed };
-    if (viewId !== analysisViewId) return; // zoznam je pripravený, ale nezobrazíme ho cez iný výber
-    renderDayTips();
-  } finally {
-    dayTipsBtn.disabled = false;
-  }
-}
-
-function renderDayTips() {
-  // Kandidát na silný tip dňa: najvyššia dôvera (aspoň 70 %), pri zhode vyšší kurz, potom skorší výkop – rovnako ako na serveri.
-  let strongIdx = -1;
-  dayTipsItems.forEach(({ r, bet }, i) => {
-    if (typeof bet.probability !== "number" || bet.probability < STRONG_TIP_MIN_PROBABILITY) return;
-    if (strongIdx < 0) { strongIdx = i; return; }
-    const cur = dayTipsItems[strongIdx];
-    const a = [bet.probability, bet.odds ?? 0, -new Date(r.fixture.date).getTime()];
-    const b = [cur.bet.probability, cur.bet.odds ?? 0, -new Date(cur.r.fixture.date).getTime()];
-    for (let k = 0; k < a.length; k++) if (a[k] !== b[k]) { if (a[k] > b[k]) strongIdx = i; return; }
-  });
-  const dateLabel = (() => {
-    const [y, m, d] = (matchDateInput.value || "").split("-").map(Number);
-    return y ? `${d}. ${m}. ${y}` : "";
-  })();
-  const rows = dayTipsItems
-    .map(({ r, bet }, i) => {
-      const f = r.fixture;
-      const warn = bet.valueWarning
-        ? `<div class="muted small" style="color:var(--gold);">⚠️ ${escapeHtml(bet.valueWarning)}</div>`
-        : "";
-      return `
-      <div class="day-tip">
-        <div class="day-tip-rank">${i + 1}.</div>
-        <div class="day-tip-main">
-          <button class="day-tip-match" data-open="${i}" title="Otvoriť detail zápasu">
-            <span class="muted">${escapeHtml(kickoffTime(f))}</span> ${escapeHtml(translateTeamName(f.homeTeam.name))} — ${escapeHtml(
-              translateTeamName(f.awayTeam.name)
-            )}
-          </button>
-          <div class="day-tip-bet">${escapeHtml(bet.market)}: <strong>${escapeHtml(
-            translateNamesInText(bet.selection, f.homeTeam.name, f.awayTeam.name)
-          )}</strong></div>
-          <div class="muted small">Dôvera <strong>${bet.probability.toFixed(0)} %</strong>${betOddsHtml(bet)}</div>
-          ${warn}
-        </div>
-        <div class="day-tip-actions">
-          <button class="btn-primary btn-mini" data-save="${i}">Uložiť</button>
-        </div>
-      </div>`;
-    })
-    .join("");
-
-  analysisColumnEl.innerHTML = `
-    <div class="league-name">Tipy dňa${dateLabel ? " · " + dateLabel : ""}</div>
-    <h2 style="margin: 4px 0 6px;">Všetky odporúčané tipy</h2>
-    <p class="muted small" style="margin: 0 0 16px;">
-      ${plural(dayTipsItems.length, "tip", "tipy", "tipov")} · analyzované: ${plural(dayTipsInfo.analyzed, "zápas", "zápasy", "zápasov")} pred výkopom · zoradené od najvyššej dôvery${
-        dayTipsInfo.failed ? ` · ${dayTipsInfo.failed} sa nepodarilo analyzovať` : ""
-      }
-    </p>
-    ${rows || `<div class="empty-state">V tento deň nie je žiadny tip, ktorý by prešiel pravidlami (68–80 % a kontrola kurzu).</div>`}
-  `;
-
-  analysisColumnEl.querySelectorAll("[data-open]").forEach((btn) => {
-    btn.onclick = () => {
-      const item = dayTipsItems[Number(btn.dataset.open)];
-      if (!item) return;
-      ++analysisViewId;
-      currentAnalysis = item.r;
-      try {
-        renderAnalysis(item.r);
-      } finally {
-        // Tlačidlo späť na zoznam - vždy, aj keby sa detail nepodarilo vykresliť.
-        const back = document.createElement("button");
-        back.className = "btn-ghost btn-mini";
-        back.textContent = "‹ Späť na tipy dňa";
-        back.style.marginBottom = "12px";
-        back.onclick = () => { ++analysisViewId; renderDayTips(); };
-        analysisColumnEl.prepend(back);
-        analysisColumnEl.scrollTop = 0;
-      }
-    };
-  });
-
-  analysisColumnEl.querySelectorAll("[data-save]").forEach((btn) => {
-    btn.onclick = async () => {
-      const item = dayTipsItems[Number(btn.dataset.save)];
-      if (!item) return;
-      const { r, bet } = item;
-      if (matchHasStarted(r.fixture)) {
-        showToast(MATCH_STARTED_TEXT);
-        return;
-      }
-      const watchOnly = btn.dataset.watch === "1";
-      const realOdds = watchOnly ? bet.odds ?? null : await askRealOdds(bet);
-      if (!watchOnly && realOdds == null) return;
-      const tip = {
-        id: `${r.fixture.fixtureId}-${Date.now()}`,
-        fixtureId: r.fixture.fixtureId,
-        leagueId: r.fixture.league.id,
-        season: r.fixture.league.season,
-        leagueName: r.fixture.league.name,
-        homeTeam: r.fixture.homeTeam.name,
-        awayTeam: r.fixture.awayTeam.name,
-        homeTeamLogo: r.fixture.homeTeam.logo,
-        awayTeamLogo: r.fixture.awayTeam.logo,
-        matchDate: r.fixture.date,
-        market: bet.market,
-        selection: bet.selection,
-        probability: bet.probability,
-        odds: realOdds,
-        ...(typeof bet.odds === "number" ? { apiOdds: bet.odds } : {}),
-        savedAt: new Date().toISOString(),
-        status: "pending",
-        // V Tipoch dňa označený ⭐ Silný tip dňa si značku nesie aj do Histórie tipov.
-        ...(btn.dataset.watch === "1" ? { watchOnly: true } : Number(btn.dataset.save) === strongIdx ? { strongOfDay: true } : {}),
-      };
-      btn.disabled = true;
-      try {
-        await fetchJson("/api/tips", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(tip),
-        });
-        btn.textContent = tip.watchOnly ? "✓ Sledované" : "✓ Uložené";
-        if (!tip.watchOnly) await maybeOfferTelegram(tip.id);
-      } catch (err) {
-        showToast(`Uloženie zlyhalo: ${err?.message ?? String(err)}`);
-        btn.disabled = false;
-      }
-    };
-  });
-
-  analysisColumnEl.querySelectorAll("[data-ticket]").forEach((btn) => {
-    btn.onclick = () => {
-      const item = dayTipsItems[Number(btn.dataset.ticket)];
-      if (!item) return;
-      const { r, bet } = item;
-      if (matchHasStarted(r.fixture)) {
-        showToast(MATCH_STARTED_TEXT);
-        return;
-      }
-      const id = `${r.fixture.fixtureId}-${bet.market}-${bet.selection}`;
-      if (ticketItems.some((t) => t.id === id)) {
-        btn.textContent = "✓ Už v tikete";
-        return;
-      }
-      ticketItems.push({
-        id,
-        fixtureId: r.fixture.fixtureId,
-        leagueId: r.fixture.league.id,
-        season: r.fixture.league.season,
-        homeTeam: r.fixture.homeTeam.name,
-        awayTeam: r.fixture.awayTeam.name,
-        matchDate: r.fixture.date,
-        market: bet.market,
-        selection: bet.selection,
-        probability: bet.probability,
-        odds: bet.odds ?? null,
-      });
-      updateTicketCount();
-      btn.textContent = "✓ V tikete";
-    };
-  });
-}
-
-dayTipsBtn.addEventListener("click", () => showDayTips());
-
-
-// ---- Doplnenie odohraného tipu (tip poslaný klientom, ktorý v TipRadare chýba) ----
-const manualTipModal = document.getElementById("manualTipModal");
-const mt = (id) => document.getElementById(id);
-
-document.getElementById("manualTipBtn").addEventListener("click", () => {
-  const today = new Date();
-  today.setDate(today.getDate() - 1);
-  const pad = (n) => String(n).padStart(2, "0");
-  if (!mt("mtDate").value) mt("mtDate").value = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
-  mt("mtMsg").textContent = "";
-  manualTipModal.hidden = false;
-});
-document.getElementById("mtCloseBtn").addEventListener("click", () => {
-  manualTipModal.hidden = true;
-  openTipsHistory();
-});
-document.getElementById("mtSaveBtn").addEventListener("click", async () => {
-  const date = mt("mtDate").value;
-  const home = mt("mtHome").value.trim();
-  const away = mt("mtAway").value.trim();
-  const selection = mt("mtSelection").value.trim();
-  const odds = parseFloat(String(mt("mtOdds").value).replace(",", "."));
-  const probInput = parseFloat(String(mt("mtProb").value).replace(",", ".").replace("%", ""));
-  if (!date || !home || !away || !selection) {
-    mt("mtMsg").textContent = "Vyplň dátum, oba tímy a tip.";
-    return;
-  }
-  if (!(odds > 1)) {
-    mt("mtMsg").textContent = "Zadaj kurz väčší ako 1 (napr. 1,67).";
-    return;
-  }
-  const kickoff = new Date(`${date}T${mt("mtTime").value || "12:00"}:00`);
-  if (kickoff.getTime() > Date.now()) {
-    mt("mtMsg").textContent = "Tento formulár je len pre odohrané zápasy. Tipy pred zápasom ukladaj z analýzy zápasu.";
-    return;
-  }
-  const probability = probInput > 0 && probInput <= 100 ? probInput : Math.round(10000 / odds) / 100;
-  const tip = {
-    id: `manual-${Date.now()}`,
-    fixtureId: 0,
-    leagueId: 0,
-    season: kickoff.getFullYear(),
-    leagueName: "",
-    homeTeam: home,
-    awayTeam: away,
-    matchDate: kickoff.toISOString(),
-    market: mt("mtMarket").value,
-    selection,
-    probability,
-    odds: Math.round(odds * 100) / 100,
-    manualEntry: true,
-    savedAt: new Date().toISOString(),
-    status: mt("mtResult").value,
-  };
-  const btn = document.getElementById("mtSaveBtn");
-  btn.disabled = true;
-  try {
-    await fetchJson("/api/tips", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(tip),
-    });
-    mt("mtMsg").textContent = `✓ Uložené: ${home} – ${away}, ${tip.market}: ${selection}. Môžeš pridať ďalší tip.`;
-    mt("mtHome").value = "";
-    mt("mtAway").value = "";
-    mt("mtSelection").value = "";
-    mt("mtOdds").value = "";
-    mt("mtProb").value = "";
-  } catch (err) {
-    mt("mtMsg").textContent = `Uloženie zlyhalo: ${err?.message ?? String(err)}`;
-  } finally {
     btn.disabled = false;
   }
 });
-
-
-// ---- Skrývanie tipov v histórii (archív) ----
-let currentHistoryTips = [];
-let showArchivedTips = false;
-
-function wireArchivedToggle() {
-  const btn = document.getElementById("toggleArchivedBtn");
-  if (btn) btn.onclick = () => {
-    showArchivedTips = !showArchivedTips;
-    renderTipsList(currentHistoryTips);
-  };
-}
-
-async function setArchived(id, archived) {
-  await fetchJson(`/api/tips/${encodeURIComponent(id)}/archive`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ archived }),
-  });
-}
-
-async function toggleArchive(tip) {
-  const msg = tip.archived
-    ? "Vrátiť tento tip späť do histórie?"
-    : "Skryť tento tip z histórie?\n\nNa prezentačnej stránke aj v štatistikách ostane – len ho tu nebudeš vidieť. Skryté tipy si môžeš kedykoľvek zobraziť.";
-  if (!window.confirm(msg)) return;
-  try {
-    await setArchived(tip.id, !tip.archived);
-  } catch (err) {
-    showToast(`Nepodarilo sa: ${err?.message ?? String(err)}`);
-  } finally {
-    openTipsHistory();
-  }
-}
-
-async function archiveAllResolved() {
-  const toHide = currentHistoryTips.filter((t) => !t.archived && !t.watchOnly && t.status !== "pending");
-  if (toHide.length === 0) {
-    showToast("Nie sú žiadne vyhodnotené tipy na skrytie.");
-    return;
-  }
-  const ok = window.confirm(
-    `Skryť ${plural(toHide.length, "vyhodnotený tip", "vyhodnotené tipy", "vyhodnotených tipov")} z histórie?\n\nNa prezentačnej stránke aj v štatistikách ostanú. Čakajúce tipy ostanú viditeľné.`
-  );
-  if (!ok) return;
-  for (const t of toHide) {
-    try {
-      await setArchived(t.id, true);
-    } catch {
-      /* pokračujeme s ďalšími */
-    }
-  }
-  showToast("Vyhodnotené tipy sú skryté.");
-  openTipsHistory();
-}
-
-document.getElementById("archiveResolvedBtn").addEventListener("click", () => archiveAllResolved());
-
-// Jednorazové upratanie histórie po zmene minimálneho kurzu na 1,60 (18. 10. 2026):
-// zmaže VŠETKY tipy s kurzom pod 1,60 – výhry aj prehry, aby štatistika ostala poctivá.
-// Berie aj skryté tipy. Pri tipe bez zadaného kurzu použije odhad z pravdepodobnosti
-// (rovnaký „~1,43“, aký ukazuje História tipov). Tikety nechá tak.
-function effectiveTipOdds(t) {
-  if (typeof t.odds === "number" && t.odds > 1) return t.odds;
-  return t.probability > 0 ? 100 / t.probability : null;
-}
-
-async function deleteLowOddsTips() {
-  const toDelete = currentHistoryTips.filter((t) => {
-    if (t.legs || t.watchOnly) return false;
-    const o = effectiveTipOdds(t);
-    return o != null && Math.round(o * 100) / 100 < 1.6;
-  });
-  const estimated = toDelete.filter((t) => !(typeof t.odds === "number" && t.odds > 1)).length;
-  const hidden = toDelete.filter((t) => t.archived).length;
-  if (toDelete.length === 0) {
-    showToast("Nie sú žiadne tipy s kurzom pod 1,60.");
-    return;
-  }
-  const won = toDelete.filter((t) => t.status === "won").length;
-  const lost = toDelete.filter((t) => t.status === "lost").length;
-  const ok = window.confirm(
-    `Natrvalo zmazať ${plural(toDelete.length, "tip", "tipy", "tipov")} s kurzom pod 1,60?\n\nVyhraté: ${won} · Prehraté: ${lost} · Ostatné: ${toDelete.length - won - lost}\nZ toho skrytých: ${hidden} · bez zadaného kurzu (odhad ~): ${estimated}\n\nZmažú sa aj zo štatistík a prezentácie. Táto akcia sa nedá vrátiť späť.`
-  );
-  if (!ok) return;
-  let failed = 0;
-  for (const t of toDelete) {
-    try {
-      const res = await fetch(`/api/tips/${encodeURIComponent(t.id)}`, { method: "DELETE" });
-      if (!res.ok) failed++;
-    } catch {
-      failed++;
-    }
-  }
-  showToast(failed ? `Zmazané, ale ${failed} sa nepodarilo – skús to znova.` : "Tipy s kurzom pod 1,60 sú zmazané.");
-  openTipsHistory();
-}
-
-// Tlačidlo „Zmazať tipy pod 1,60“ je z Histórie tipov odstránené (jednorazové upratanie bolo hotové).
-
-// Obnova tipov z denného súhrnu (/suhrn), ktoré v histórii chýbajú (bez ohľadu na kurz).
-async function restoreFromDaily() {
-  try {
-    const preview = await fetchJson("/api/tips/restore-from-daily", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ dryRun: true }),
-    });
-    if (!preview.count) {
-      const sk = preview.skipped || {};
-      showToast(`V histórii nič nechýba. Zo súhrnu: už v histórii ${sk.inHistory || 0}, bez výsledku ${sk.noResult || 0}, bez kurzu ${sk.badOdds || 0}.`);
-      return;
-    }
-    const sample = preview.tips.slice(0, 8).map((t) => `${t.day} · ${t.match} · ${t.tip} · ${fmtOdds(t.odds)}`).join("\n");
-    const ok = window.confirm(
-      `Vrátiť do histórie ${plural(preview.count, "tip", "tipy", "tipov")} z denného súhrnu?\n\nVyhraté: ${preview.won} · Prehraté: ${preview.lost}\nPreskočené – už v histórii: ${preview.skipped?.inHistory ?? 0} · bez výsledku: ${preview.skipped?.noResult ?? 0} · bez kurzu: ${preview.skipped?.badOdds ?? 0}\n\n${sample}${preview.count > 8 ? "\n…" : ""}`
-    );
-    if (!ok) return;
-    const done = await fetchJson("/api/tips/restore-from-daily", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({}),
-    });
-    showToast(`Obnovené: ${plural(done.count, "tip", "tipy", "tipov")}.`);
-  } catch (err) {
-    showToast(`Obnova zlyhala: ${err.message}`);
-  }
-  openTipsHistory();
-}
-
-document.getElementById("restoreDailyBtn").addEventListener("click", () => restoreFromDaily());
-
-
-// ---- Oprava tipu v histórii (výsledok, kurz, pri tikete výsledky zápasov) ----
-const STATUS_OPTIONS = [
-  ["won", "✓ Vyšiel"],
-  ["lost", "✗ Nevyšiel"],
-  ["void", "↩ Vrátený"],
-  ["pending", "⏳ Čaká"],
-];
-function statusSelect(id, value) {
-  return `<select id="${id}" class="edit-select">${STATUS_OPTIONS.map(
-    ([v, l]) => `<option value="${v}"${v === value ? " selected" : ""}>${l}</option>`
-  ).join("")}</select>`;
-}
-function ticketStatusFrom(statuses) {
-  if (statuses.includes("lost")) return "lost";
-  if (statuses.includes("pending")) return "pending";
-  if (statuses.every((x) => x === "void")) return "void";
-  return "won";
-}
-const STATUS_TEXT = { won: "✓ Vyšiel", lost: "✗ Nevyšiel", void: "↩ Vrátený", pending: "⏳ Čaká" };
-
-function openEditTip(tip) {
-  let overlay = document.getElementById("editTipModal");
-  if (!overlay) {
-    overlay = document.createElement("div");
-    overlay.className = "modal-overlay";
-    overlay.id = "editTipModal";
-    document.body.appendChild(overlay);
-  }
-  const isTicket = Array.isArray(tip.legs) && tip.legs.length > 0;
-  const title = isTicket
-    ? `🎫 Tiket (${plural(tip.legs.length, "zápas", "zápasy", "zápasov")})`
-    : `${escapeHtml(translateTeamName(tip.homeTeam))} — ${escapeHtml(translateTeamName(tip.awayTeam))}`;
-  const legsHtml = isTicket
-    ? tip.legs
-        .map(
-          (l, i) => `<div class="edit-leg">
-            <div class="edit-leg-name">${escapeHtml(translateTeamName(l.homeTeam))} — ${escapeHtml(translateTeamName(l.awayTeam))}<br><span class="muted small">${escapeHtml(
-              l.market
-            )}: ${escapeHtml(translateNamesInText(l.selection, l.homeTeam, l.awayTeam))}</span></div>
-            ${statusSelect("editLeg" + i, l.status)}
-          </div>`
-        )
-        .join("")
-    : "";
-  overlay.innerHTML = `
-    <div class="modal">
-      <h3>Upraviť tip</h3>
-      <p class="muted small" style="margin:-4px 0 12px;">${title}${
-        isTicket ? "" : `<br>${escapeHtml(tip.market)}: ${escapeHtml(translateNamesInText(tip.selection, tip.homeTeam, tip.awayTeam))}`
-      }</p>
-      ${
-        isTicket
-          ? `<div class="edit-legs">${legsHtml}</div>
-             <p class="small" style="margin:10px 0 0;">Výsledok tiketu: <strong id="editTicketStatus"></strong> <span class="muted">(vypočíta sa zo zápasov)</span></p>`
-          : `<label class="edit-row">Výsledok ${statusSelect("editStatus", tip.status)}</label>`
-      }
-      <label class="edit-row">Kurz <input type="text" id="editOdds" inputmode="decimal" value="${
-        typeof tip.odds === "number" && tip.odds > 1 ? String(tip.odds).replace(".", ",") : ""
-      }" placeholder="napr. 1,75" /></label>
-      <p class="muted small" id="editMsg" style="min-height:1.4em;"></p>
-      <div class="modal-actions">
-        <button class="btn-ghost" id="editCancelBtn">Zrušiť</button>
-        <button class="btn-primary" id="editSaveBtn">Uložiť opravu</button>
-      </div>
-    </div>`;
-  overlay.hidden = false;
-  const $e = (id) => document.getElementById(id);
-  const legStatuses = () => (isTicket ? tip.legs.map((_, i) => $e("editLeg" + i).value) : []);
-  const refreshTicket = () => {
-    if (isTicket) $e("editTicketStatus").textContent = STATUS_TEXT[ticketStatusFrom(legStatuses())];
-  };
-  if (isTicket) tip.legs.forEach((_, i) => $e("editLeg" + i).addEventListener("change", refreshTicket));
-  refreshTicket();
-  $e("editCancelBtn").onclick = () => {
-    overlay.hidden = true;
-  };
-  $e("editSaveBtn").onclick = async () => {
-    const oddsText = String($e("editOdds").value).trim().replace(",", ".");
-    const odds = oddsText === "" ? null : parseFloat(oddsText);
-    if (odds !== null && !(odds > 1)) {
-      $e("editMsg").textContent = "Kurz musí byť číslo väčšie ako 1 (napr. 1,75), alebo nechaj políčko prázdne.";
-      return;
-    }
-    const edit = { odds };
-    if (isTicket) edit.legs = legStatuses().map((status) => ({ status }));
-    else edit.status = $e("editStatus").value;
-    $e("editSaveBtn").disabled = true;
-    try {
-      await fetchJson(`/api/tips/${encodeURIComponent(tip.id)}/edit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(edit),
-      });
-      overlay.hidden = true;
-      showToast("Tip upravený.");
-      openTipsHistory();
-    } catch (err) {
-      $e("editMsg").textContent = `Uloženie zlyhalo: ${err?.message ?? String(err)}`;
-      $e("editSaveBtn").disabled = false;
-    }
-  };
-}
-
-
-// ---- Podané tikety: snímka tiketu pri tipe (na webe sa ukáže po vyhodnotení tipu) ----
-let slipStakes = {};
-async function markSlipButtons() {
-  try {
-    slipStakes = await fetchJson("/api/slips");
-  } catch (err) {
-    return;
-  }
-  tipsListEl.querySelectorAll("[data-slip-id]").forEach((btn) => {
-    const has = Object.prototype.hasOwnProperty.call(slipStakes, btn.dataset.slipId);
-    btn.classList.toggle("has-slip", has);
-    btn.title = has ? "Snímka tiketu je nahraná – zobraziť alebo zmeniť" : "Pridať snímku podaného tiketu";
-  });
-}
-
-/** Zmenší obrázok na max. 1000 px a uloží ako JPEG (data URL). */
-function shrinkImage(file) {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      const scale = Math.min(1, 1000 / Math.max(img.width, img.height));
-      const c = document.createElement("canvas");
-      c.width = Math.round(img.width * scale);
-      c.height = Math.round(img.height * scale);
-      const ctx = c.getContext("2d");
-      ctx.fillStyle = "#fff";
-      ctx.fillRect(0, 0, c.width, c.height);
-      ctx.drawImage(img, 0, 0, c.width, c.height);
-      URL.revokeObjectURL(url);
-      resolve(c.toDataURL("image/jpeg", 0.82));
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("Obrázok sa nepodarilo načítať."));
-    };
-    img.src = url;
-  });
-}
-
-function openSlipModal(tip) {
-  let overlay = document.getElementById("slipModal");
-  if (!overlay) {
-    overlay = document.createElement("div");
-    overlay.className = "modal-overlay";
-    overlay.id = "slipModal";
-    document.body.appendChild(overlay);
-  }
-  const has = Object.prototype.hasOwnProperty.call(slipStakes, tip.id);
-  const isTicket = Array.isArray(tip.legs) && tip.legs.length > 0;
-  const title = isTicket
-    ? `🎫 Tiket (${plural(tip.legs.length, "zápas", "zápasy", "zápasov")})`
-    : `${escapeHtml(translateTeamName(tip.homeTeam))} — ${escapeHtml(translateTeamName(tip.awayTeam))}`;
-  const stake = has && slipStakes[tip.id] != null ? String(slipStakes[tip.id]).replace(".", ",") : "";
-  overlay.innerHTML = `
-    <div class="modal">
-      <h3>Podaný tiket</h3>
-      <p class="muted small" style="margin:-4px 0 12px;">${title}</p>
-      <div id="slipPreview" style="margin-bottom:12px;${has ? "" : "display:none;"}"><img id="slipImg" alt="Snímka tiketu" style="display:block;max-width:100%;max-height:46vh;margin:0 auto;border-radius:6px;border:1px solid var(--border);" ${
-        has ? `src="/api/tips/${encodeURIComponent(tip.id)}/slip?ts=${Date.now()}"` : ""
-      }></div>
-      <label class="edit-row">Snímka <input type="file" id="slipFile" accept="image/*" /></label>
-      <label class="edit-row">Vklad (€) <input type="text" id="slipStake" inputmode="decimal" placeholder="napr. 20" value="${stake}" /></label>
-      <p class="muted small" style="margin:6px 0 0;">Pred nahraním zakry číslo tiketu, číslo účtu, meno a zostatok. Na webe tipradar.eu/vysledky sa snímka ukáže až po vyhodnotení tipu.</p>
-      <p class="muted small" id="slipMsg" style="min-height:1.4em;"></p>
-      <div class="modal-actions">
-        ${has ? `<button class="btn-ghost" id="slipDeleteBtn">Odstrániť</button>` : ""}
-        <button class="btn-ghost" id="slipCancelBtn">Zavrieť</button>
-        <button class="btn-primary" id="slipSaveBtn">Uložiť</button>
-      </div>
-    </div>`;
-  overlay.hidden = false;
-  const $s = (id) => document.getElementById(id);
-  let image = null;
-  $s("slipFile").onchange = async () => {
-    const f = $s("slipFile").files[0];
-    if (!f) return;
-    $s("slipMsg").textContent = "Pripravujem obrázok…";
-    try {
-      image = await shrinkImage(f);
-      $s("slipImg").src = image;
-      $s("slipPreview").style.display = "";
-      $s("slipMsg").textContent = "";
-    } catch (err) {
-      image = null;
-      $s("slipMsg").textContent = err.message;
-    }
-  };
-  $s("slipCancelBtn").onclick = () => {
-    overlay.hidden = true;
-  };
-  if (has)
-    $s("slipDeleteBtn").onclick = async () => {
-      if (!window.confirm("Odstrániť snímku tiketu? Zmizne aj z webu.")) return;
-      try {
-        await fetchJson(`/api/tips/${encodeURIComponent(tip.id)}/slip`, { method: "DELETE" });
-        overlay.hidden = true;
-        showToast("Snímka tiketu odstránená.");
-        markSlipButtons();
-      } catch (err) {
-        $s("slipMsg").textContent = `Odstránenie zlyhalo: ${err?.message ?? String(err)}`;
-      }
-    };
-  $s("slipSaveBtn").onclick = async () => {
-    if (!image && !has) {
-      $s("slipMsg").textContent = "Najprv vyber snímku tiketu.";
-      return;
-    }
-    $s("slipSaveBtn").disabled = true;
-    try {
-      // Pri zmene len vkladu sa pošle pôvodný obrázok znova.
-      let img = image;
-      if (!img) {
-        const blob = await (await fetch(`/api/tips/${encodeURIComponent(tip.id)}/slip`)).blob();
-        img = await new Promise((r) => {
-          const fr = new FileReader();
-          fr.onload = () => r(fr.result);
-          fr.readAsDataURL(blob);
-        });
-      }
-      await fetchJson(`/api/tips/${encodeURIComponent(tip.id)}/slip`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: img, stake: $s("slipStake").value }),
-      });
-      overlay.hidden = true;
-      showToast(tip.status === "pending" ? "Snímka uložená. Na webe sa ukáže po vyhodnotení tipu." : "Snímka uložená, už je na webe.");
-      markSlipButtons();
-    } catch (err) {
-      $s("slipMsg").textContent = `Uloženie zlyhalo: ${err?.message ?? String(err)}`;
-      $s("slipSaveBtn").disabled = false;
-    }
-  };
-}
-
-
-// ---- Spätný test modelu ----
-const backtestModal = document.getElementById("backtestModal");
-let btPollTimer = null;
-
-function btDefaults() {
-  const pad = (n) => String(n).padStart(2, "0");
-  const iso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  const to = new Date(); to.setDate(to.getDate() - 1);
-  const from = new Date(); from.setDate(from.getDate() - 21);
-  if (!document.getElementById("btFrom").value) document.getElementById("btFrom").value = iso(from);
-  if (!document.getElementById("btTo").value) document.getElementById("btTo").value = iso(to);
-  if (!document.getElementById("btSeason").value) document.getElementById("btSeason").value = seasonInput.value;
-}
-function btCost() {
-  const n = parseInt(document.getElementById("btMax").value, 10) || 60;
-  document.getElementById("btCost").textContent =
-    `Odhad: ${n} zápasov ≈ ${n * 15}–${n * 25} požiadaviek na API pri prvom behu (opakované zápasy a tímy sú rýchlejšie). Test beží na serveri, okno môžeš zavrieť a vrátiť sa neskôr.`;
-}
-
-async function openBacktest() {
-  backtestModal.hidden = false;
-  btDefaults(); btCost();
-  try {
-    const leagues = await fetchJson("/api/leagues");
-    document.getElementById("btLeagues").innerHTML = leagues
-      .map((l) => `<label><input type="checkbox" value="${l.id}" checked /> ${escapeHtml(translateLeagueName(l.name))}</label>`)
-      .join("");
-  } catch {
-    document.getElementById("btLeagues").innerHTML = `<span class="muted small">Ligy sa nepodarilo načítať.</span>`;
-  }
-  const last = localStorage.getItem("tipradar-backtest-job");
-  if (last) pollBacktest(last);
-}
-
-function pct(v) { return v == null ? "–" : `${fmtNum(v, 0)} %`; }
-function diffCell(pred, real) {
-  if (pred == null || real == null) return `<td class="num">–</td>`;
-  const d = real - pred;
-  const cls = Math.abs(d) < 5 ? "bt-good" : d < 0 ? "bt-bad" : "";
-  return `<td class="num ${cls}">${d > 0 ? "+" : d < 0 ? "−" : ""}${fmtNum(Math.abs(d), 0)} b.</td>`;
-}
-
-let btLastJob = null;
-function renderBacktest(job) {
-  btLastJob = job;
-  const r = job.report;
-  const p = job.progress || { done: 0, total: 0 };
-  const running = job.status === "running";
-  document.getElementById("btProgress").innerHTML = running
-    ? `Prebieha test: ${p.done} / ${p.total || "?"} zápasov…<div class="bt-bar"><i style="width:${p.total ? (p.done / p.total) * 100 : 3}%"></i></div>`
-    : job.status === "error"
-      ? `Test zlyhal: ${escapeHtml(job.error || "")}`
-      : `Hotovo – ${r ? r.fixturesAnalyzed : 0} zápasov${r && r.fixturesFailed ? `, ${r.fixturesFailed} sa nepodarilo spracovať` : ""}.`;
-  document.getElementById("btStartBtn").disabled = running;
-  const canExport = job.status === "done" && !!(r && r.samples);
-  document.getElementById("btCopyBtn").hidden = !canExport;
-  document.getElementById("btImgBtn").hidden = !canExport;
-  if (!r || !r.samples) { document.getElementById("btReport").innerHTML = running ? "" : `<p class="muted">Pre zvolené obdobie a ligy sa nenašli žiadne vyhodnotiteľné zápasy.</p>`; return; }
-
-  const b = r.bandOverall;
-  const summary = b.count
-    ? `<div class="bt-summary">Tipy v pásme 68 – 80 % (tie, ktoré by appka odporučila): <strong>${b.count}</strong>, model v priemere <strong>${pct(b.avgPredicted)}</strong>, reálne vyšlo <strong class="${b.hitRate < b.avgPredicted - 5 ? "bt-bad" : "bt-good"}">${pct(b.hitRate)}</strong>.</div>`
-    : "";
-  const buckets = r.buckets.filter((x) => x.count > 0).map((x) =>
-    `<tr><td>${x.label}</td><td class="num">${x.count}</td><td class="num">${pct(x.avgPredicted)}</td><td class="num">${pct(x.hitRate)}</td>${diffCell(x.avgPredicted, x.hitRate)}</tr>`).join("");
-  const markets = r.markets.map((m) =>
-    `<tr><td>${escapeHtml(m.market)}</td><td class="num">${m.count}</td><td class="num">${pct(m.avgPredicted)}</td><td class="num">${pct(m.hitRate)}</td>${diffCell(m.avgPredicted, m.hitRate)}<td class="num">${m.inBand.count ? `${pct(m.inBand.hitRate)} <span class="muted">(${m.inBand.count})</span>` : "–"}</td></tr>`).join("");
-  document.getElementById("btReport").innerHTML = `
-    ${summary}
-    <h4 style="margin:14px 0 0;">Podľa dôvery modelu</h4>
-    <table class="bt-table"><thead><tr><th>Pásmo</th><th class="num">Tipov</th><th class="num">Model</th><th class="num">Realita</th><th class="num">Rozdiel</th></tr></thead><tbody>${buckets}</tbody></table>
-    <h4 style="margin:4px 0 0;">Podľa trhov</h4>
-    <table class="bt-table"><thead><tr><th>Trh</th><th class="num">Tipov</th><th class="num">Model</th><th class="num">Realita</th><th class="num">Rozdiel</th><th class="num">V pásme 68–80 %</th></tr></thead><tbody>${markets}</tbody></table>
-    <p class="muted small">Rozdiel = realita mínus predpoveď v percentuálnych bodoch. Zelená: model sedí (do ±5 b.). Červená: model <strong>preceňuje</strong> – tipy vychádzajú menej často, než hovorí. Pri menej ako ~50 tipoch v riadku berte čísla len orientačne.</p>
-    ${renderBacktestComparison(r, job.reportLegacy)}
-    ${running ? "" : renderAbsenceImpact(job.absenceImpact)}
-    ${running ? "" : renderBacktestOptimizer(r.optimizer)}`;
-}
-
-/** Vplyv chýbajúcich hráčov (zranenia, tresty) na presnosť – len zápasy, kde niekto chýbal. */
-function renderAbsenceImpact(a) {
-  if (!a || !a.fixtures || !a.withAbsences || !a.withAbsences.samples) return "";
-  const err = (v) => (v == null ? "–" : fmtNum(v * 100, 1));
-  const band = (x) => (x && x.inBand && x.inBand.count ? `${pct(x.inBand.hitRate)} <span class="muted">(${x.inBand.count})</span>` : "–");
-  const rows = a.withAbsences.markets.filter((m) => /^Góly/.test(m.market)).map((m) => {
-    const o = a.withoutAbsences.markets.find((x) => x.market === m.market);
-    if (!o) return "";
-    const cls = Math.abs(o.brier - m.brier) < 0.0005 ? "" : m.brier < o.brier ? "bt-good" : "bt-bad";
-    return `<tr><td>${escapeHtml(m.market)}</td><td class="num">${m.count}</td><td class="num">${err(o.brier)}</td><td class="num ${cls}">${err(m.brier)}</td><td class="num">${band(o)}</td><td class="num">${band(m)}</td></tr>`;
-  }).join("");
-  const wb = a.withAbsences.bandOverall, ob = a.withoutAbsences.bandOverall;
-  return `
-    <h4 style="margin:18px 0 0;">Vplyv chýbajúcich hráčov</h4>
-    <div class="bt-summary">Zápasy, kde niekto chýbal (zranenie, trest): <strong>${a.fixtures}</strong>. Tipy v pásme bez zohľadnenia: <strong>${ob.count}</strong>, vyšlo <strong>${pct(ob.hitRate)}</strong> · so zohľadnením: <strong>${wb.count}</strong>, vyšlo <strong>${pct(wb.hitRate)}</strong>.</div>
-    <table class="bt-table"><thead><tr><th>Trh</th><th class="num">Tipov</th><th class="num">Chyba – bez</th><th class="num">Chyba – s chýbajúcimi</th><th class="num">V pásme – bez</th><th class="num">V pásme – s</th></tr></thead><tbody>${rows}</tbody></table>
-    <p class="muted small">Chýbajúci hráči menia len očakávané góly, preto sú tu len gólové trhy. Zelená: so zohľadnením chýbajúcich je model presnejší.</p>`;
-}
-
-/** Hľadanie najlepšieho nastavenia (kalibrácia trhov, pásmo dôvery, min. zápasov). */
-function renderBacktestOptimizer(o) {
-  if (!o || !o.calibration || !o.calibration.length) return "";
-  const k = (v) => (v == null || Number.isNaN(v) ? "–" : fmtNum(v, 2));
-  const err = (v) => (v == null || Number.isNaN(v) ? "–" : fmtNum(v * 100, 1));
-  const cal = o.calibration.map((c) => {
-    const enough = c.bestK != null && !Number.isNaN(c.bestK);
-    const better = enough && c.brierNow - c.brierBest > 0.002;
-    return `<tr><td>${escapeHtml(c.markets.join(", "))}</td><td class="num">${c.count}</td><td class="num">${k(c.currentK)}</td><td class="num ${better ? "bt-good" : ""}">${enough ? k(c.bestK) : '<span class="muted">málo tipov</span>'}</td><td class="num">${err(c.brierNow)}</td><td class="num">${enough ? err(c.brierBest) : "–"}</td><td class="num">${enough ? `${pct(c.avgPredictedBest)} → ${pct(c.hitRate)}` : "–"}</td></tr>`;
-  }).join("");
-  const set = o.settings.map((r) => {
-    const label = `${r.lo}–${r.hi} %, min. ${r.minGames} ${r.minGames >= 5 ? "zápasov" : "zápasy"}`;
-    const tag = r.current ? ' <span class="muted">(teraz)</span>' : r.best ? ' <strong class="bt-good">← najlepšie</strong>' : "";
-    return `<tr${r.best ? ' style="background:rgba(127,191,154,.08)"' : ""}><td>${label}${tag}</td><td class="num">${r.count}</td><td class="num">${pct(r.avgPredicted)}</td><td class="num">${pct(r.hitRate)}</td>${diffCell(r.avgPredicted, r.hitRate)}</tr>`;
-  }).join("");
-  const best = o.settings.find((r) => r.best);
-  const mk = o.marketsInBest.map((m) =>
-    `<tr><td>${escapeHtml(m.market)}</td><td class="num">${m.count}</td><td class="num ${m.hitRate >= 66.7 ? "bt-good" : "bt-bad"}">${pct(m.hitRate)}</td></tr>`).join("");
-  return `
-    <h4 style="margin:18px 0 0;">Hľadanie najlepšieho nastavenia</h4>
-    <p class="muted small">1. krok: pre každý trh koeficient kalibrácie k, pri ktorom percentá modelu najlepšie sedia s realitou (1,00 = bez úpravy, nižšie = model je opatrnejší). Zelená: zmena by model spresnila.</p>
-    <table class="bt-table"><thead><tr><th>Trh</th><th class="num">Tipov</th><th class="num">k teraz</th><th class="num">k najlepšie</th><th class="num">Chyba teraz</th><th class="num">Chyba najlepšie</th><th class="num">Model → realita</th></tr></thead><tbody>${cal}</tbody></table>
-    <p class="muted small">2. krok: s najlepšou kalibráciou všetky kombinácie pásma dôvery a minimálneho počtu odohraných zápasov. Najlepšie = najvyššia úspešnosť pri aspoň polovici tipov oproti terajšku.</p>
-    <table class="bt-table"><thead><tr><th>Nastavenie</th><th class="num">Tipov</th><th class="num">Model</th><th class="num">Realita</th><th class="num">Rozdiel</th></tr></thead><tbody>${set}</tbody></table>
-    ${best && mk ? `<p class="muted small">Trhy v najlepšom nastavení (${best.lo}–${best.hi} %). Pri kurze 1,55 je tip v zisku od úspešnosti 64,5 % – červené trhy by pri takých kurzoch prerábali.</p>
-    <table class="bt-table"><thead><tr><th>Trh</th><th class="num">Tipov</th><th class="num">Vyšlo</th></tr></thead><tbody>${mk}</tbody></table>` : ""}
-    <p class="muted small"><strong>Pozor:</strong> nastavenie nájdené na jednom období môže sedieť len náhodou. Zmenu sa oplatí urobiť, až keď podobné čísla vyjdú aj na inom období (napr. aug. – okt. 2024 a mar. – máj 2025).</p>`;
-}
-
-/** Porovnanie nového modelu s pôvodným (do 5. 10. 2026) na tých istých zápasoch. */
-function renderBacktestComparison(r, old) {
-  if (!old || !old.samples) return "";
-  const err = (v) => (v == null ? "–" : fmtNum(v * 100, 1));
-  const band = (x) => (x && x.count ? `${pct(x.hitRate)} <span class="muted">(${x.count})</span>` : "–");
-  const rows = r.markets.map((m) => {
-    const o = old.markets.find((x) => x.market === m.market);
-    if (!o) return "";
-    const same = Math.abs(o.brier - m.brier) < 0.0005 && o.inBand.count === m.inBand.count;
-    const cls = same ? "" : m.brier < o.brier ? "bt-good" : "bt-bad";
-    const mr = (x) => `${pct(x.avgPredicted)} → ${pct(x.hitRate)}`;
-    return `<tr><td>${escapeHtml(m.market)}</td><td class="num">${mr(o)}</td><td class="num">${mr(m)}</td><td class="num">${err(o.brier)}</td><td class="num ${cls}">${err(m.brier)}</td><td class="num">${band(o.inBand)}</td><td class="num">${band(m.inBand)}</td></tr>`;
-  }).join("");
-  const ob = old.bandOverall, nb = r.bandOverall;
-  return `
-    <h4 style="margin:14px 0 0;">Nový model oproti pôvodnému (tie isté zápasy)</h4>
-    <div class="bt-summary">Pásmo 68 – 80 %: pôvodný model <strong>${ob.count}</strong> tipov, vyšlo <strong>${pct(ob.hitRate)}</strong> · nový model <strong>${nb.count}</strong> tipov, vyšlo <strong>${pct(nb.hitRate)}</strong>.</div>
-    <table class="bt-table"><thead><tr><th>Trh</th><th class="num">Model → realita – pôvodný</th><th class="num">Model → realita – nový</th><th class="num">Chyba – pôvodný</th><th class="num">Chyba – nový</th><th class="num">V pásme – pôvodný</th><th class="num">V pásme – nový</th></tr></thead><tbody>${rows}</tbody></table>
-    <p class="muted small">Chyba = ako ďaleko boli percentá modelu od skutočnosti (Brierovo skóre × 100). <strong>Nižšia je lepšia.</strong> Zelená: nový model je presnejší, červená: horší. Nový model = forma z gólov + kalibrácia striel, faulov, rohov a kariet (celá sezóna) a gólov navyše na začiatku sezóny. Kalibrácia (17. 10. 2026) vznikla z testov aug. – okt. 2024 a aug. – okt. 2026 – na poctivé overenie testuj iné obdobie, napr. mar. – máj 2025 (sezóna 2024).</p>`;
-}
-
-async function pollBacktest(id) {
-  clearTimeout(btPollTimer);
-  try {
-    const job = await fetchJson(`/api/backtest/${encodeURIComponent(id)}`);
-    renderBacktest(job);
-    if (job.status === "running") btPollTimer = setTimeout(() => pollBacktest(id), 3000);
-  } catch {
-    localStorage.removeItem("tipradar-backtest-job");
-    document.getElementById("btProgress").textContent = "";
-    document.getElementById("btStartBtn").disabled = false;
-  }
-}
-
-document.getElementById("openBacktestBtn").addEventListener("click", openBacktest);
-
-/** Hlavička exportu: obdobie, sezóna, počet zápasov. */
-function btExportTitle() {
-  const p = (btLastJob && btLastJob.params) || {};
-  const r = btLastJob && btLastJob.report;
-  return `TipRadar – spätný test ${p.from || ""} až ${p.to || ""}, sezóna ${p.season || ""}, ${r ? r.fixturesAnalyzed : 0} zápasov`;
-}
-
-document.getElementById("btCopyBtn").addEventListener("click", async () => {
-  const text = `${btExportTitle()}\n\n${document.getElementById("btReport").innerText}`;
-  try {
-    await navigator.clipboard.writeText(text);
-    showToast("Výsledok je skopírovaný – vlož ho do správy (Cmd+V).");
-  } catch {
-    // schránka nedostupná – stiahne sa ako textový súbor
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([text], { type: "text/plain;charset=utf-8" }));
-    a.download = "spatny-test.txt";
-    a.click();
-    URL.revokeObjectURL(a.href);
-  }
-});
-
-let html2canvasLoading = null;
-function loadHtml2canvas() {
-  if (window.html2canvas) return Promise.resolve(window.html2canvas);
-  if (!html2canvasLoading) {
-    html2canvasLoading = new Promise((resolve, reject) => {
-      const s = document.createElement("script");
-      s.src = "vendor/html2canvas.min.js";
-      s.onload = () => resolve(window.html2canvas);
-      s.onerror = () => { html2canvasLoading = null; reject(new Error("knižnica sa nenačítala")); };
-      document.head.appendChild(s);
-    });
-  }
-  return html2canvasLoading;
-}
-
-document.getElementById("btImgBtn").addEventListener("click", async (e) => {
-  const btn = e.currentTarget;
-  btn.disabled = true;
-  const old = btn.textContent;
-  btn.textContent = "Ukladám…";
-  // celý výsledok (bez rolovania) do jedného širokého obrázka
-  const box = document.createElement("div");
-  box.style.cssText = "position:absolute;left:-10000px;top:0;width:1200px;padding:28px;background:#161412;color:#F4EEE2;";
-  box.innerHTML = `<h3 style="margin:0 0 12px;font-size:20px;">${escapeHtml(btExportTitle())}</h3>${document.getElementById("btReport").innerHTML}`;
-  document.body.appendChild(box);
-  try {
-    const h2c = await loadHtml2canvas();
-    const canvas = await h2c(box, { backgroundColor: "#161412", scale: 1.5 });
-    const p = (btLastJob && btLastJob.params) || {};
-    const a = document.createElement("a");
-    a.href = canvas.toDataURL("image/png");
-    a.download = `spatny-test-${p.from || ""}-${p.to || ""}.png`;
-    a.click();
-  } catch (err) {
-    showToast(`Obrázok sa nepodarilo uložiť (${err.message}). Použi „Kopírovať ako text“.`);
-  } finally {
-    box.remove();
-    btn.disabled = false;
-    btn.textContent = old;
-  }
-});
-document.getElementById("btCloseBtn").addEventListener("click", () => { backtestModal.hidden = true; clearTimeout(btPollTimer); });
-document.getElementById("btMax").addEventListener("input", btCost);
-document.getElementById("btStartBtn").addEventListener("click", async () => {
-  const leagueIds = Array.from(document.querySelectorAll("#btLeagues input:checked")).map((i) => Number(i.value));
-  if (!leagueIds.length) { showToast("Vyber aspoň jednu ligu."); return; }
-  try {
-    const job = await fetchJson("/api/backtest", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        leagueIds,
-        season: parseInt(document.getElementById("btSeason").value, 10),
-        from: document.getElementById("btFrom").value,
-        to: document.getElementById("btTo").value,
-        maxFixtures: parseInt(document.getElementById("btMax").value, 10) || 60,
-      }),
-    });
-    localStorage.setItem("tipradar-backtest-job", job.id);
-    pollBacktest(job.id);
-  } catch (err) {
-    showToast(`Test sa nepodarilo spustiť: ${err.message}`);
-  }
-});
-
-
-// ---- Uzatvárací kurz (CLV): bol kurz pri zverejnení tipu lepší ako tesne pred výkopom? ----
-async function renderClvSummary() {
-  const el = document.getElementById("clvSummary");
-  if (!el) return;
-  try {
-    const d = await fetchJson("/api/clv/summary");
-    if (!d || (!d.total && !d.pending)) { el.textContent = ""; return; }
-    const sign = (v) => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(1).replace(".", ",") + " %";
-    let t = `Uzatvárací kurz: `;
-    if (d.total) {
-      t += `pri <strong>${d.beat} z ${d.total}</strong> tipov kurz do výkopu klesol (trh sa posunul k nášmu tipu), pri ${d.worse} stúpol. `;
-      t += `Priemerne sme mali o <strong class="${d.avgClv >= 0 ? "text-success" : "text-danger"}">${sign(d.avgClv)}</strong> lepší kurz ako tesne pred zápasom.`;
-      const markets = (d.byMarket || []).filter((m) => m.total >= 3);
-      if (markets.length) t += ` Podľa trhov: ${markets.map((m) => `${escapeHtml(m.market)} ${sign(m.avgClv)} (${m.total})`).join(", ")}.`;
-    } else {
-      t += `zatiaľ žiadny tip so zisteným kurzom tesne pred výkopom.`;
-    }
-    if (d.pending) t += ` Čaká: ${d.pending}.`;
-    el.innerHTML = t;
-    el.title = "Ak je kurz pri zverejnení tipu dlhodobo vyšší ako tesne pred výkopom, model predbieha stávkovky – to je spoľahlivejší znak kvality ako samotná úspešnosť pri malom počte tipov.";
-  } catch {
-    el.textContent = "";
-  }
-}
-
-// ---- Tichá evidencia tipov vyradených pre rozpor so stávkovkami ----
-async function renderShadowSummary() {
-  const el = document.getElementById("shadowSummary");
-  if (!el) return;
-  try {
-    const d = await fetchJson("/api/shadow/summary");
-    if (!d) { el.textContent = ""; return; }
-    if (!d.settled) {
-      el.innerHTML = d.total
-        ? `Tichá evidencia vyradených tipov (rozpor so stávkovkami): ${d.total} zapísaných, zatiaľ žiadny vyhodnotený.`
-        : "";
-      return;
-    }
-    const pct = (v) => (v == null ? "–" : `${Math.round(v)} %`);
-    let t = `Tichá evidencia vyradených tipov (rozpor so stávkovkami): <strong>${d.won} z ${d.settled}</strong> vyšlo (<strong>${pct(d.hitRate)}</strong>), model im dával v priemere ${pct(d.avgModel)}, stávkovky ${pct(d.avgMarket)}.`;
-    if (d.withOdds) t += ` Keby sa stavili: <strong class="${d.profit >= 0 ? "text-success" : "text-danger"}">${d.profit >= 0 ? "+" : "−"}${Math.abs(d.profit).toFixed(1).replace(".", ",")} j.</strong>`;
-    if (d.pending) t += ` Čaká: ${d.pending}.`;
-    el.innerHTML = t;
-  } catch {
-    el.textContent = "";
-  }
-}
-
-
-// ---- Tiché sledovanie: model + stávkovky ako „druhý názor" ----
-async function renderBlendSummary() {
-  const el = document.getElementById("blendSummary");
-  if (!el) return;
-  try {
-    const d = await fetchJson("/api/blend/summary");
-    if (!d || !d.fixtures) { el.textContent = ""; return; }
-    const head = `Sledovanie „model + stávkovky“ – zapísané zápasy: ${d.fixtures}`;
-    if (!d.settledPicks) {
-      el.innerHTML = `${head}, zatiaľ žiadny vyhodnotený. Čísla pribudnú po odohraní zápasov.`;
-      return;
-    }
-    const num = (v, k = 1) => Number(v).toFixed(k).replace(".", ",");
-    const sign = (v) => (v >= 0 ? "+" : "−") + num(Math.abs(v));
-    const best = d.rows.reduce((a, r) => (r.brier != null && (a == null || r.brier < a.brier) ? r : a), null);
-    const enough = d.settledPicks >= 300;
-    const rows = d.rows.map((r) => {
-      const label = r.weight === 0 ? "len model (dnes)" : `${100 - r.weight} % model / ${r.weight} % stávkovky`;
-      const tipsTxt = r.tips ? `${r.won} z ${r.tips} (${Math.round(r.hitRate)} %), ${sign(r.profit)} j.` : "žiadny tip";
-      const mark = best && r.weight === best.weight ? " ★" : "";
-      return `<tr><td>${label}${mark}</td><td style="text-align:right">${r.brier == null ? "–" : num(r.brier * 100)}</td><td style="text-align:right">${tipsTxt}</td></tr>`;
-    }).join("");
-    el.innerHTML = `${head}, vyhodnotené odhady: ${d.settledPicks}${d.pendingFixtures ? `, čakajúce zápasy: ${d.pendingFixtures}` : ""}.
-      ${enough ? "" : `<br><em>Na spoľahlivý záver treba aspoň 300 vyhodnotených odhadov.</em>`}
-      <details style="margin-top:4px"><summary style="cursor:pointer">Porovnať pomery</summary>
-      <table style="width:100%;margin-top:4px;border-collapse:collapse"><tr><th style="text-align:left">Pomer</th><th style="text-align:right" title="Ako ďaleko boli percentá od reality. Nižšie = presnejšie.">Chyba</th><th style="text-align:right">Tipy, ktoré by prešli</th></tr>${rows}</table>
-      <div style="margin-top:4px">Chyba samotných stávkoviek: ${d.bookmakersBrier == null ? "–" : num(d.bookmakersBrier * 100)}. ★ = najpresnejší pomer.</div></details>`;
-    el.title = "Tipy, ktoré dostávaš, sa nemenia. Appka si len potichu zapisuje odhad modelu aj stávkoviek a po zápase porovná, ktorý pomer by trafil najlepšie.";
-  } catch {
-    el.textContent = "";
-  }
-}
-
-
-// ---- Tiché sledovanie tiketu dňa (2 zápasy, kurz spolu aspoň 2,00) ----
-async function renderTicketWatch() {
-  const el = document.getElementById("ticketWatchSummary");
-  if (!el) return;
-  try {
-    const d = await fetchJson("/api/ticket-watch/summary");
-    if (!d || !d.total) {
-      el.innerHTML = d && d.candidates
-        ? `Tiché sledovanie tiketu dňa: ${d.candidates} vhodných tipov zapísaných, zatiaľ z nich nevznikol žiadny tiket.`
-        : "";
-      return;
-    }
-    const num = (v, k = 2) => Number(v).toFixed(k).replace(".", ",");
-    const sign = (v) => (v >= 0 ? "+" : "−") + num(Math.abs(v), 1);
-    let t = `Tiché sledovanie tiketu dňa (2 zápasy, kurz spolu aspoň 2,00): `;
-    if (d.settled) {
-      t += `<strong>${d.won} z ${d.settled}</strong> tiketov vyšlo (<strong>${Math.round(d.hitRate)} %</strong>), priemerný kurz ${num(d.avgOdds)}. `;
-      t += `Keby sa stavili: <strong class="${d.profit >= 0 ? "text-success" : "text-danger"}">${sign(d.profit)} j.</strong> (ROI ${sign(d.roi)} %).`;
-    } else {
-      t += `${d.total} ${d.total === 1 ? "tiket" : d.total <= 4 ? "tikety" : "tiketov"}, zatiaľ žiadny vyhodnotený.`;
-    }
-    if (d.pending) t += ` Čaká: ${d.pending}.`;
-    const icon = { won: "✓", lost: "✕", void: "↺", pending: "…" };
-    const day = (k) => { const [y, m, dd] = k.split("-").map(Number); return `${dd}. ${m}. ${y}`; };
-    const rows = (d.tickets || []).map((tk) => {
-      const legs = tk.legs.map((l) => `${icon[l.status]} ${escapeHtml(l.homeTeam)} – ${escapeHtml(l.awayTeam)}: ${escapeHtml(l.market)} ${escapeHtml(l.selection)} (${num(l.odds)}, ${Math.round(l.probability)} %)`).join("<br>");
-      const res = tk.profit == null ? "čaká" : tk.status === "void" ? "vrátený vklad" : `${sign(tk.profit)} j.`;
-      return `<div style="padding:6px 0;border-top:1px solid rgba(127,127,127,.2)"><strong>${day(tk.day)}</strong> – kurz ${num(tk.odds)}, hodnota +${Math.round((tk.value - 1) * 100)} %, ${icon[tk.status]} ${res}<br>${legs}</div>`;
-    }).join("");
-    el.innerHTML = `${t}<details style="margin-top:4px"><summary style="cursor:pointer">Zobraziť tikety</summary>${rows}</details>`;
-  } catch {
-    el.textContent = "";
-  }
-}
-
 
 // ---- Platby prevodom (QR kód) – potvrdenie ----
 function fmtDayTime(iso) {
   const d = new Date(iso);
-  return isNaN(d.getTime()) ? "" : `${d.getDate()}. ${d.getMonth() + 1}. ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  return isNaN(d.getTime()) ? "" : `${d.getDate()}. ${d.getMonth() + 1}. ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 }
 async function renderPayments() {
   const box = document.getElementById("paymentsBox");
   const el = document.getElementById("paymentsList");
-  if (!box || !el) return;
   let list = [];
   try {
     list = await fetchJson("/api/payments");
@@ -3697,27 +2595,26 @@ async function renderPayments() {
     box.hidden = true;
     return;
   }
-  // Čakajúce: najprv tí, čo dali vedieť „Zaplatil som"; vybavené len pre prehľad (posledných 30 dní).
+  if (!Array.isArray(list)) list = [];
+  // Čakajúce: najprv tí, čo dali vedieť „Zaplatil som“; vybavené len pre prehľad (posledných 30 dní).
   const pending = list.filter((p) => p.status === "pending").sort((a, b) => (b.claimedAt ? 1 : 0) - (a.claimedAt ? 1 : 0));
   const done = list.filter((p) => p.status !== "pending").slice(0, 10);
   box.hidden = !pending.length && !done.length;
   const rowHtml = (p) => {
-    const who = p.name ? `${escapeHtml(p.name)}${p.username ? ` <span class="muted">@${escapeHtml(p.username)}</span>` : ""}` : `<span class="muted">zatiaľ bez mena</span>`;
+    const who = p.name ? `${escapeHtml(p.name)}${p.username ? ` <span class="faint">@${escapeHtml(p.username)}</span>` : ""}` : `<span class="faint">zatiaľ bez mena</span>`;
     const state =
       p.status === "pending" ? (p.claimedAt ? `🏦 dal vedieť, že zaplatil · ${fmtDayTime(p.claimedAt)}` : `otvoril platbu · ${fmtDayTime(p.createdAt)} · ešte nedal vedieť`)
       : p.status === "cancelled" ? "✖ zrušené"
       : p.status === "redeemed" ? `✅ potvrdené, pozvánka odoslaná · ${fmtDayTime(p.paidAt)}`
       : `✅ potvrdené · čaká, kým klikne „Zaplatil som“`;
-    return `<div class="tip-row lead-row">
-      <div class="lead-main"><strong>VS ${escapeHtml(p.vs || "")} · ${p.priceEur} €</strong> · ${escapeHtml(p.termName)} · ${who}
-        <div class="muted small">${state}</div></div>
-      <div class="lead-actions">${p.status === "pending" ? `
-        <button class="btn-primary btn-mini" data-pay-ok="${escapeHtml(p.token)}">Potvrdiť</button>
-        <button class="btn-ghost btn-mini" data-pay-no="${escapeHtml(p.token)}">Zrušiť</button>` : `
-        <button class="btn-ghost btn-mini" data-pay-del="${escapeHtml(p.token)}">Odstrániť</button>`}
-      </div></div>`;
+    return `<div class="mrow">
+      <span class="mt"><b>VS ${escapeHtml(p.vs || "")} · ${escapeHtml(p.priceEur)}${NB}€ · ${escapeHtml(p.termName || "")}</b><span>${who} · ${state}</span></span>
+      <span class="ic">${p.status === "pending"
+        ? `<button type="button" class="btn xs" data-pay-ok="${escapeHtml(p.token)}">Potvrdiť</button><button type="button" class="btn ghost xs" data-pay-no="${escapeHtml(p.token)}">Zrušiť</button>`
+        : `<button type="button" class="btn ghost xs" data-pay-del="${escapeHtml(p.token)}">Odstrániť</button>`}</span>
+    </div>`;
   };
-  el.innerHTML = pending.map(rowHtml).join("") + (done.length ? `<p class="muted small" style="margin:10px 0 4px;">Vybavené</p>` + done.map(rowHtml).join("") : "");
+  el.innerHTML = pending.map(rowHtml).join("") + (done.length ? `<p class="list-sub">Vybavené</p>` + done.map(rowHtml).join("") : "");
   el.querySelectorAll("[data-pay-ok]").forEach((b) => {
     b.onclick = async () => {
       const p = pending.find((x) => x.token === b.dataset.payOk);
@@ -3759,9 +2656,8 @@ async function renderPayments() {
 }
 
 // ---- Poradovník záujemcov z webu ----
-document.addEventListener("click", async (e) => {
-  const btn = e.target.closest?.("#salesOpenBtn");
-  if (!btn) return;
+document.getElementById("salesOpenBtn").addEventListener("click", async (e) => {
+  const btn = e.currentTarget;
   if (!window.confirm("Poslať všetkým z poradovníka správu, že predaj je otvorený? Každý ju dostane len raz.")) return;
   btn.disabled = true;
   try {
@@ -3776,38 +2672,38 @@ document.addEventListener("click", async (e) => {
 const LEAD_PLAN_LABEL = { start: "Platinum 1 mesiac", seria: "Platinum 3 mesiace", sampion: "Platinum 6 mesiacov", sampion_waitlist: "Platinum 6 mesiacov (náhradník)", seria_waitlist: "Platinum 3 mesiace (náhradník)", start_waitlist: "Platinum 1 mesiac (náhradník)", premium: "starý odkaz Premium", vip: "Platinum 6 mesiacov (starý odkaz VIP)", vip_waitlist: "Platinum 6 mesiacov (náhradník)", clenstvo: "nevybral", otazka: "otázka z webu" };
 async function renderLeads() {
   const el = document.getElementById("leadsList");
-  if (!el) return;
   try {
     const leads = await fetchJson("/api/leads");
     if (!leads.length) {
-      el.innerHTML = `<p class="empty-state">Zatiaľ sa nikto nezapísal.</p>`;
+      el.innerHTML = `<p class="empty">Zatiaľ sa nikto nezapísal.</p>`;
       return;
     }
     el.innerHTML = leads
       .map((l, i) => {
         const d = new Date(l.firstAt);
-        const date = isNaN(d.getTime()) ? "" : `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}`;
-        return `<div class="tip-row lead-row">
-          <div class="lead-main"><strong>${i + 1}. ${escapeHtml(l.name || "Neznámy")}</strong>${l.username ? ` <span class="muted">@${escapeHtml(l.username)}</span>` : ""}
-            <div class="muted small">${l.paidAt ? "✅ zaplatil · " : l.salesMsgAt ? "✉️ dostal správu o predaji · " : ""}${escapeHtml(LEAD_PLAN_LABEL[l.plan] || l.plan)} · zapísaný ${date} · ${l.email ? `formulár na webe · ${escapeHtml(l.email)}` : `ID ${escapeHtml(l.chatId)}`}</div>${l.note ? `<div class="muted small">„${escapeHtml(l.note)}“</div>` : ""}</div>
-          <div class="lead-actions">
-            ${l.email ? `<a class="btn-ghost btn-mini" href="mailto:${encodeURIComponent(l.email)}">Napísať e-mail</a>` : `<a class="btn-ghost btn-mini" href="tg://user?id=${encodeURIComponent(l.chatId)}">Otvoriť chat</a>`}
-            <button class="btn-ghost btn-mini" data-lead-add="${escapeHtml(l.chatId)}">Pridať ako predplatiteľa</button>
-            <button class="btn-ghost btn-mini" data-lead-del="${escapeHtml(l.chatId)}">Odstrániť</button>
-          </div></div>`;
+        const date = isNaN(d.getTime()) ? "" : longDate(d);
+        return `<div class="mrow lead">
+          <span class="mt"><b>${i + 1}. ${escapeHtml(l.name || "Neznámy")}${l.username ? ` <span class="faint">@${escapeHtml(l.username)}</span>` : ""}</b>
+            <span>${l.paidAt ? "✅ zaplatil · " : l.salesMsgAt ? "✉️ dostal správu o predaji · " : ""}${escapeHtml(LEAD_PLAN_LABEL[l.plan] || l.plan)} · zapísaný ${date} · ${l.email ? `formulár na webe · ${escapeHtml(l.email)}` : `ID ${escapeHtml(l.chatId)}`}</span>
+            ${l.note ? `<span class="faint">„${escapeHtml(l.note)}“</span>` : ""}</span>
+          <span class="ic">
+            ${l.email ? `<a class="btn ghost xs" href="mailto:${encodeURIComponent(l.email)}">Napísať e-mail</a>` : `<a class="btn ghost xs" href="tg://user?id=${encodeURIComponent(l.chatId)}">Otvoriť chat</a>`}
+            <button type="button" class="btn ghost xs" data-lead-add="${escapeHtml(l.chatId)}">Pridať ako člena</button>
+            <button type="button" class="ib danger" data-lead-del="${escapeHtml(l.chatId)}" title="Odstrániť z poradovníka" aria-label="Odstrániť z poradovníka">${ICON.trash}</button>
+          </span></div>`;
       })
       .join("");
     el.querySelectorAll("[data-lead-add]").forEach((b) => {
       b.onclick = () => {
-        const l = leads.find((x) => x.chatId === b.dataset.leadAdd);
+        const l = leads.find((x) => String(x.chatId) === b.dataset.leadAdd);
         if (!l) return;
         document.getElementById("subName").value = l.name || "";
         document.getElementById("subContact").value = l.email || (l.username ? "@" + l.username : "");
         document.getElementById("subTelegramChatId").value = l.email ? "" : l.chatId;
-        document.getElementById("subLength").value = ["sampion", "sampion_waitlist", "vip", "vip_waitlist"].includes(l.plan) ? "season" : l.plan === "seria" || l.plan === "seria_waitlist" ? "m3" : "m1";
+        subLengthSelect.value = ["sampion", "sampion_waitlist", "vip", "vip_waitlist"].includes(l.plan) ? "season" : l.plan === "seria" || l.plan === "seria_waitlist" ? "m3" : "m1";
         syncMemberPrice();
-        document.getElementById("subName")?.scrollIntoView({ behavior: "smooth", block: "center" });
-        showToast("Údaje sú vyplnené – skontroluj ich a klikni na Pridať.");
+        document.getElementById("subName").scrollIntoView({ behavior: "smooth", block: "center" });
+        showToast("Údaje sú vyplnené – skontroluj ich a klikni na Pridať člena.");
       };
     });
     el.querySelectorAll("[data-lead-del]").forEach((b) => {
@@ -3820,20 +2716,358 @@ async function renderLeads() {
       };
     });
   } catch {
-    el.innerHTML = `<p class="empty-state">Poradovník sa nepodarilo načítať.</p>`;
+    el.innerHTML = `<p class="empty">Poradovník sa nepodarilo načítať.</p>`;
   }
 }
 
-init();
+// =====================================================================
+// NÁSTROJE
+// =====================================================================
 
-// Vzájomné zápasy: najprv 5, tlačidlom +/− sa rozbalia alebo zbalia ďalšie.
-document.addEventListener("click", (e) => {
-  const btn = (e.target).closest?.(".h2h-toggle");
-  if (!btn) return;
-  const list = btn.previousElementSibling;
-  if (!list) return;
-  const open = btn.dataset.open === "1";
-  list.querySelectorAll(".h2h-extra").forEach((row) => { (row).hidden = open; });
-  btn.dataset.open = open ? "0" : "1";
-  btn.textContent = open ? `+ Zobraziť ďalšie (${btn.dataset.more})` : "− Skryť";
-});
+// ---- Spätný test modelu ----
+const BT_JOB_KEY = "tipradar-backtest-job";
+let btPollTimer = null;
+let btModal = null;
+let btLastJob = null;
+
+function lsGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); } catch { /* bez úložiska */ } }
+function lsDel(k) { try { localStorage.removeItem(k); } catch { /* bez úložiska */ } }
+
+function pct(v) { return v == null ? "–" : `${fmtNum(v, 0)}${NB}%`; }
+function diffCell(pred, real) {
+  if (pred == null || real == null) return `<td class="num">–</td>`;
+  const d = real - pred;
+  const cls = Math.abs(d) < 5 ? "bt-good" : d < 0 ? "bt-bad" : "";
+  return `<td class="num ${cls}">${d > 0 ? "+" : d < 0 ? "−" : ""}${fmtNum(Math.abs(d), 0)} b.</td>`;
+}
+
+async function openBacktest() {
+  const to = new Date(); to.setDate(to.getDate() - 1);
+  const from = new Date(); from.setDate(from.getDate() - 21);
+  btModal = openModal(`
+    <h3>Spätný test modelu</h3>
+    <p class="muted small">Model vypočíta tipy pre odohrané zápasy len z údajov, ktoré boli známe pred výkopom, a porovná ich so skutočnými výsledkami. Ukáže, pri ktorých trhoch sa percentá zhodujú s realitou a kde model preceňuje alebo podceňuje. Kurzy sa nepoužívajú – test meria presnosť percent, nie zisk.</p>
+    <div class="bt-leagues" id="btLeagues"><span class="faint small">Načítavam ligy…</span></div>
+    <div class="form-grid four">
+      <label class="fld">Od<input type="date" id="btFrom" value="${isoDay(from)}" /></label>
+      <label class="fld">Do<input type="date" id="btTo" value="${isoDay(to)}" /></label>
+      <label class="fld">Sezóna<input type="number" id="btSeason" min="2000" max="2100" value="${currentSeason()}" /></label>
+      <label class="fld">Max. zápasov<input type="number" id="btMax" min="5" max="300" value="60" /></label>
+    </div>
+    <p class="faint small" id="btCost"></p>
+    <div id="btProgress" class="small"></div>
+    <div id="btReport" class="bt-report"></div>
+    <div class="modal-actions wrap">
+      <button type="button" class="btn ghost" id="btCopyBtn" hidden title="Skopíruje celý výsledok ako text – vlož ho do správy">Kopírovať ako text</button>
+      <button type="button" class="btn ghost" id="btImgBtn" hidden title="Uloží celý výsledok ako jeden obrázok">Uložiť ako obrázok</button>
+      <button type="button" class="btn ghost" data-close>Zavrieť</button>
+      <button type="button" class="btn" id="btStartBtn">Spustiť test</button>
+    </div>`, {
+    wide: true,
+    onClose: () => { clearTimeout(btPollTimer); btModal = null; },
+  });
+  const $ = (id) => document.getElementById(id);
+  const btCost = () => {
+    const n = parseInt($("btMax").value, 10) || 60;
+    $("btCost").textContent = `Odhad: ${n} zápasov ≈ ${n * 15}–${n * 25} požiadaviek na API pri prvom behu (opakované zápasy a tímy sú rýchlejšie). Test beží na serveri, okno môžeš zavrieť a vrátiť sa neskôr.`;
+  };
+  btCost();
+  $("btMax").addEventListener("input", btCost);
+  $("btStartBtn").addEventListener("click", startBacktest);
+  $("btCopyBtn").addEventListener("click", copyBacktest);
+  $("btImgBtn").addEventListener("click", saveBacktestImage);
+  try {
+    const leagues = await fetchJson("/api/leagues");
+    if (!btModal) return;
+    $("btLeagues").innerHTML = leagues
+      .map((l) => `<label class="check"><input type="checkbox" value="${l.id}" checked /> ${escapeHtml(translateLeagueName(l.name))}</label>`)
+      .join("");
+  } catch {
+    if (btModal) $("btLeagues").innerHTML = `<span class="faint small">Ligy sa nepodarilo načítať.</span>`;
+  }
+  const last = lsGet(BT_JOB_KEY);
+  if (last && btModal) pollBacktest(last);
+}
+document.getElementById("openBacktestBtn").addEventListener("click", () => openBacktest());
+
+async function startBacktest() {
+  const $ = (id) => document.getElementById(id);
+  const leagueIds = Array.from(document.querySelectorAll("#btLeagues input:checked")).map((i) => Number(i.value));
+  if (!leagueIds.length) { showToast("Vyber aspoň jednu ligu."); return; }
+  try {
+    const job = await postJson("/api/backtest", {
+      leagueIds,
+      season: parseInt($("btSeason").value, 10),
+      from: $("btFrom").value,
+      to: $("btTo").value,
+      maxFixtures: parseInt($("btMax").value, 10) || 60,
+    });
+    lsSet(BT_JOB_KEY, job.id);
+    pollBacktest(job.id);
+  } catch (err) {
+    showToast(`Test sa nepodarilo spustiť: ${err.message}`);
+  }
+}
+
+async function pollBacktest(id) {
+  clearTimeout(btPollTimer);
+  if (!btModal) return;
+  try {
+    const job = await fetchJson(`/api/backtest/${encodeURIComponent(id)}`);
+    if (!btModal) return;
+    renderBacktest(job);
+    if (job.status === "running") btPollTimer = setTimeout(() => pollBacktest(id), 3000);
+  } catch {
+    // úloha už neexistuje (napr. server sa reštartoval)
+    lsDel(BT_JOB_KEY);
+    if (!btModal) return;
+    document.getElementById("btProgress").textContent = "";
+    document.getElementById("btStartBtn").disabled = false;
+  }
+}
+
+function renderBacktest(job) {
+  btLastJob = job;
+  const r = job.report;
+  const p = job.progress || { done: 0, total: 0 };
+  const running = job.status === "running";
+  document.getElementById("btProgress").innerHTML = running
+    ? `Prebieha test: ${p.done} / ${p.total || "?"} zápasov…<div class="bar big"><i style="width:${p.total ? (p.done / p.total) * 100 : 3}%"></i></div>`
+    : job.status === "error"
+      ? `<span class="loss">Test zlyhal: ${escapeHtml(job.error || "")}</span>`
+      : `Hotovo – ${r ? r.fixturesAnalyzed : 0} zápasov${r && r.fixturesFailed ? `, ${r.fixturesFailed} sa nepodarilo spracovať` : ""}.`;
+  document.getElementById("btStartBtn").disabled = running;
+  const canExport = job.status === "done" && !!(r && r.samples);
+  document.getElementById("btCopyBtn").hidden = !canExport;
+  document.getElementById("btImgBtn").hidden = !canExport;
+  const reportEl = document.getElementById("btReport");
+  if (!r || !r.samples) {
+    reportEl.innerHTML = running ? "" : `<p class="muted">Pre zvolené obdobie a ligy sa nenašli žiadne vyhodnotiteľné zápasy.</p>`;
+    return;
+  }
+  const b = r.bandOverall || {};
+  const summary = b.count
+    ? `<div class="bt-summary">Tipy v pásme 68 – 80${NB}% (tie, ktoré by appka odporučila): <strong>${b.count}</strong>, model v priemere <strong>${pct(b.avgPredicted)}</strong>, reálne vyšlo <strong class="${b.hitRate < b.avgPredicted - 5 ? "bt-bad" : "bt-good"}">${pct(b.hitRate)}</strong>.</div>`
+    : "";
+  const buckets = (r.buckets || []).filter((x) => x.count > 0).map((x) =>
+    `<tr><td>${escapeHtml(x.label)}</td><td class="num">${x.count}</td><td class="num">${pct(x.avgPredicted)}</td><td class="num">${pct(x.hitRate)}</td>${diffCell(x.avgPredicted, x.hitRate)}</tr>`).join("");
+  const markets = (r.markets || []).map((m) =>
+    `<tr><td>${escapeHtml(m.market)}</td><td class="num">${m.count}</td><td class="num">${pct(m.avgPredicted)}</td><td class="num">${pct(m.hitRate)}</td>${diffCell(m.avgPredicted, m.hitRate)}<td class="num">${m.inBand && m.inBand.count ? `${pct(m.inBand.hitRate)} <span class="muted">(${m.inBand.count})</span>` : "–"}</td></tr>`).join("");
+  reportEl.innerHTML = `
+    ${summary}
+    <h4>Podľa dôvery modelu</h4>
+    <div class="table-wrap"><table class="bt-table"><thead><tr><th>Pásmo</th><th class="num">Tipov</th><th class="num">Model</th><th class="num">Realita</th><th class="num">Rozdiel</th></tr></thead><tbody>${buckets}</tbody></table></div>
+    <h4>Podľa trhov</h4>
+    <div class="table-wrap"><table class="bt-table"><thead><tr><th>Trh</th><th class="num">Tipov</th><th class="num">Model</th><th class="num">Realita</th><th class="num">Rozdiel</th><th class="num">V pásme 68–80 %</th></tr></thead><tbody>${markets}</tbody></table></div>
+    <p class="muted small">Rozdiel = realita mínus predpoveď v percentuálnych bodoch. Zelená: model sedí (do ±5 b.). Červená: model <strong>preceňuje</strong> – tipy vychádzajú menej často, než hovorí. Pri menej ako ~50 tipoch v riadku berte čísla len orientačne.</p>
+    ${renderBacktestComparison(r, job.reportLegacy)}
+    ${running ? "" : renderAbsenceImpact(job.absenceImpact)}
+    ${running ? "" : renderBacktestOptimizer(r.optimizer)}`;
+}
+
+/** Vplyv chýbajúcich hráčov (zranenia, tresty) na presnosť – len zápasy, kde niekto chýbal. */
+function renderAbsenceImpact(a) {
+  if (!a || !a.fixtures || !a.withAbsences || !a.withAbsences.samples) return "";
+  const err = (v) => (v == null ? "–" : fmtNum(v * 100, 1));
+  const band = (x) => (x && x.inBand && x.inBand.count ? `${pct(x.inBand.hitRate)} <span class="muted">(${x.inBand.count})</span>` : "–");
+  const rows = a.withAbsences.markets.filter((m) => /^Góly/.test(m.market)).map((m) => {
+    const o = a.withoutAbsences.markets.find((x) => x.market === m.market);
+    if (!o) return "";
+    const cls = Math.abs(o.brier - m.brier) < 0.0005 ? "" : m.brier < o.brier ? "bt-good" : "bt-bad";
+    return `<tr><td>${escapeHtml(m.market)}</td><td class="num">${m.count}</td><td class="num">${err(o.brier)}</td><td class="num ${cls}">${err(m.brier)}</td><td class="num">${band(o)}</td><td class="num">${band(m)}</td></tr>`;
+  }).join("");
+  const wb = a.withAbsences.bandOverall, ob = a.withoutAbsences.bandOverall;
+  return `
+    <h4>Vplyv chýbajúcich hráčov</h4>
+    <div class="bt-summary">Zápasy, kde niekto chýbal (zranenie, trest): <strong>${a.fixtures}</strong>. Tipy v pásme bez zohľadnenia: <strong>${ob.count}</strong>, vyšlo <strong>${pct(ob.hitRate)}</strong> · so zohľadnením: <strong>${wb.count}</strong>, vyšlo <strong>${pct(wb.hitRate)}</strong>.</div>
+    <div class="table-wrap"><table class="bt-table"><thead><tr><th>Trh</th><th class="num">Tipov</th><th class="num">Chyba – bez</th><th class="num">Chyba – s chýbajúcimi</th><th class="num">V pásme – bez</th><th class="num">V pásme – s</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="muted small">Chýbajúci hráči menia len očakávané góly, preto sú tu len gólové trhy. Zelená: so zohľadnením chýbajúcich je model presnejší.</p>`;
+}
+
+/** Hľadanie najlepšieho nastavenia (kalibrácia trhov, pásmo dôvery, min. zápasov). */
+function renderBacktestOptimizer(o) {
+  if (!o || !o.calibration || !o.calibration.length) return "";
+  const k = (v) => (v == null || Number.isNaN(v) ? "–" : fmtNum(v, 2));
+  const err = (v) => (v == null || Number.isNaN(v) ? "–" : fmtNum(v * 100, 1));
+  const cal = o.calibration.map((c) => {
+    const enough = c.bestK != null && !Number.isNaN(c.bestK);
+    const better = enough && c.brierNow - c.brierBest > 0.002;
+    return `<tr><td>${escapeHtml(c.markets.join(", "))}</td><td class="num">${c.count}</td><td class="num">${k(c.currentK)}</td><td class="num ${better ? "bt-good" : ""}">${enough ? k(c.bestK) : '<span class="muted">málo tipov</span>'}</td><td class="num">${err(c.brierNow)}</td><td class="num">${enough ? err(c.brierBest) : "–"}</td><td class="num">${enough ? `${pct(c.avgPredictedBest)} → ${pct(c.hitRate)}` : "–"}</td></tr>`;
+  }).join("");
+  const set = (o.settings || []).map((r) => {
+    const label = `${r.lo}–${r.hi} %, min. ${r.minGames} ${r.minGames >= 5 ? "zápasov" : "zápasy"}`;
+    const tag = r.current ? ' <span class="muted">(teraz)</span>' : r.best ? ' <strong class="bt-good">← najlepšie</strong>' : "";
+    return `<tr${r.best ? ' class="bt-best"' : ""}><td>${label}${tag}</td><td class="num">${r.count}</td><td class="num">${pct(r.avgPredicted)}</td><td class="num">${pct(r.hitRate)}</td>${diffCell(r.avgPredicted, r.hitRate)}</tr>`;
+  }).join("");
+  const best = (o.settings || []).find((r) => r.best);
+  const mk = (o.marketsInBest || []).map((m) =>
+    `<tr><td>${escapeHtml(m.market)}</td><td class="num">${m.count}</td><td class="num ${m.hitRate >= 66.7 ? "bt-good" : "bt-bad"}">${pct(m.hitRate)}</td></tr>`).join("");
+  return `
+    <h4>Hľadanie najlepšieho nastavenia</h4>
+    <p class="muted small">1. krok: pre každý trh koeficient kalibrácie k, pri ktorom percentá modelu najlepšie sedia s realitou (1,00 = bez úpravy, nižšie = model je opatrnejší). Zelená: zmena by model spresnila.</p>
+    <div class="table-wrap"><table class="bt-table"><thead><tr><th>Trh</th><th class="num">Tipov</th><th class="num">k teraz</th><th class="num">k najlepšie</th><th class="num">Chyba teraz</th><th class="num">Chyba najlepšie</th><th class="num">Model → realita</th></tr></thead><tbody>${cal}</tbody></table></div>
+    <p class="muted small">2. krok: s najlepšou kalibráciou všetky kombinácie pásma dôvery a minimálneho počtu odohraných zápasov. Najlepšie = najvyššia úspešnosť pri aspoň polovici tipov oproti terajšku.</p>
+    <div class="table-wrap"><table class="bt-table"><thead><tr><th>Nastavenie</th><th class="num">Tipov</th><th class="num">Model</th><th class="num">Realita</th><th class="num">Rozdiel</th></tr></thead><tbody>${set}</tbody></table></div>
+    ${best && mk ? `<p class="muted small">Trhy v najlepšom nastavení (${best.lo}–${best.hi} %). Pri kurze 1,55 je tip v zisku od úspešnosti 64,5 % – červené trhy by pri takých kurzoch prerábali.</p>
+    <div class="table-wrap"><table class="bt-table"><thead><tr><th>Trh</th><th class="num">Tipov</th><th class="num">Vyšlo</th></tr></thead><tbody>${mk}</tbody></table></div>` : ""}
+    <p class="muted small"><strong>Pozor:</strong> nastavenie nájdené na jednom období môže sedieť len náhodou. Zmenu sa oplatí urobiť, až keď podobné čísla vyjdú aj na inom období (napr. aug. – okt. 2024 a mar. – máj 2025).</p>`;
+}
+
+/** Porovnanie nového modelu s pôvodným (do 5. 10. 2026) na tých istých zápasoch. */
+function renderBacktestComparison(r, old) {
+  if (!old || !old.samples) return "";
+  const err = (v) => (v == null ? "–" : fmtNum(v * 100, 1));
+  const band = (x) => (x && x.count ? `${pct(x.hitRate)} <span class="muted">(${x.count})</span>` : "–");
+  const rows = r.markets.map((m) => {
+    const o = old.markets.find((x) => x.market === m.market);
+    if (!o) return "";
+    const same = Math.abs(o.brier - m.brier) < 0.0005 && o.inBand.count === m.inBand.count;
+    const cls = same ? "" : m.brier < o.brier ? "bt-good" : "bt-bad";
+    const mr = (x) => `${pct(x.avgPredicted)} → ${pct(x.hitRate)}`;
+    return `<tr><td>${escapeHtml(m.market)}</td><td class="num">${mr(o)}</td><td class="num">${mr(m)}</td><td class="num">${err(o.brier)}</td><td class="num ${cls}">${err(m.brier)}</td><td class="num">${band(o.inBand)}</td><td class="num">${band(m.inBand)}</td></tr>`;
+  }).join("");
+  const ob = old.bandOverall, nb = r.bandOverall;
+  return `
+    <h4>Nový model oproti pôvodnému (tie isté zápasy)</h4>
+    <div class="bt-summary">Pásmo 68 – 80${NB}%: pôvodný model <strong>${ob.count}</strong> tipov, vyšlo <strong>${pct(ob.hitRate)}</strong> · nový model <strong>${nb.count}</strong> tipov, vyšlo <strong>${pct(nb.hitRate)}</strong>.</div>
+    <div class="table-wrap"><table class="bt-table"><thead><tr><th>Trh</th><th class="num">Model → realita – pôvodný</th><th class="num">Model → realita – nový</th><th class="num">Chyba – pôvodný</th><th class="num">Chyba – nový</th><th class="num">V pásme – pôvodný</th><th class="num">V pásme – nový</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="muted small">Chyba = ako ďaleko boli percentá modelu od skutočnosti (Brierovo skóre × 100). <strong>Nižšia je lepšia.</strong> Zelená: nový model je presnejší, červená: horší. Nový model = forma z gólov + kalibrácia striel, faulov, rohov a kariet (celá sezóna) a gólov navyše na začiatku sezóny. Kalibrácia (17. 10. 2026) vznikla z testov aug. – okt. 2024 a aug. – okt. 2026 – na poctivé overenie testuj iné obdobie, napr. mar. – máj 2025 (sezóna 2024).</p>`;
+}
+
+/** Hlavička exportu: obdobie, sezóna, počet zápasov. */
+function btExportTitle() {
+  const p = (btLastJob && btLastJob.params) || {};
+  const r = btLastJob && btLastJob.report;
+  return `TipRadar – spätný test ${p.from || ""} až ${p.to || ""}, sezóna ${p.season || ""}, ${r ? r.fixturesAnalyzed : 0} zápasov`;
+}
+
+async function copyBacktest() {
+  const text = `${btExportTitle()}\n\n${document.getElementById("btReport").innerText}`;
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast("Výsledok je skopírovaný – vlož ho do správy (Cmd+V).");
+  } catch {
+    // schránka nedostupná – stiahne sa ako textový súbor
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([text], { type: "text/plain;charset=utf-8" }));
+    a.download = "spatny-test.txt";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+}
+
+let html2canvasLoading = null;
+function loadHtml2canvas() {
+  if (window.html2canvas) return Promise.resolve(window.html2canvas);
+  if (!html2canvasLoading) {
+    html2canvasLoading = new Promise((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = "vendor/html2canvas.min.js";
+      s.onload = () => resolve(window.html2canvas);
+      s.onerror = () => { html2canvasLoading = null; reject(new Error("knižnica sa nenačítala")); };
+      document.head.appendChild(s);
+    });
+  }
+  return html2canvasLoading;
+}
+
+async function saveBacktestImage(e) {
+  const btn = e.currentTarget;
+  btn.disabled = true;
+  const old = btn.textContent;
+  btn.textContent = "Ukladám…";
+  // celý výsledok (bez rolovania) do jedného širokého obrázka
+  const box = document.createElement("div");
+  box.className = "bt-export";
+  box.style.cssText = "position:absolute;left:-10000px;top:0;width:1200px;padding:28px;background:#1B1612;color:#F4EEE3;";
+  box.innerHTML = `<h3 style="margin:0 0 12px;font-size:20px;">${escapeHtml(btExportTitle())}</h3>${document.getElementById("btReport").innerHTML}`;
+  document.body.appendChild(box);
+  try {
+    const h2c = await loadHtml2canvas();
+    const canvas = await h2c(box, { backgroundColor: "#1B1612", scale: 1.5 });
+    const p = (btLastJob && btLastJob.params) || {};
+    const a = document.createElement("a");
+    a.href = canvas.toDataURL("image/png");
+    a.download = `spatny-test-${p.from || ""}-${p.to || ""}.png`;
+    a.click();
+  } catch (err) {
+    showToast(`Obrázok sa nepodarilo uložiť (${err.message}). Použi „Kopírovať ako text“.`);
+  } finally {
+    box.remove();
+    btn.disabled = false;
+    btn.textContent = old;
+  }
+}
+
+// ---- Návštevnosť tipradar.eu (bez cookies) ----
+const VISIT_CLICK_LABELS = {
+  free: "Tipy zadarmo (Telegram kanál)",
+  premium: "Premium – poradovník",
+  vip: "VIP – poradovník",
+  kurz: "Chcem kurz",
+  formular: "Formulár",
+  telegram: "Telegram (iné odkazy)",
+  instagram: "Instagram",
+  email: "E-mail",
+};
+const VISIT_SOURCE_LABELS = { priamo: "Priamo / neznámy zdroj", instagram: "Instagram", facebook: "Facebook", telegram: "Telegram", google: "Google", tiktok: "TikTok", youtube: "YouTube" };
+
+async function openVisits() {
+  const m = openModal(`
+    <h3>Návštevnosť tipradar.eu</h3>
+    <p class="muted small">Bez cookies. Návštevník = jeden človek za deň (podľa skráteného odtlačku, ktorý sa každý deň mení).</p>
+    <p class="muted small">Aby sa nepočítali tvoje vlastné návštevy, otvor raz v každom svojom zariadení a prehliadači <a href="https://tipradar.eu/?ja=1" target="_blank" rel="noopener">tipradar.eu/?ja=1</a>. Znova zapneš cez tipradar.eu/?ja=0.</p>
+    <div data-body><p class="empty">Načítavam…</p></div>
+    <div class="modal-actions"><button type="button" class="btn ghost" data-close>Zavrieť</button></div>`, { wide: true });
+  const body = m.el.querySelector("[data-body]");
+  try {
+    const { days } = await fetchJson("/api/stats/visits?days=30");
+    const list = Array.isArray(days) ? days : [];
+    const sum = (arr, key) => arr.reduce((s, d) => s + (d[key] || 0), 0);
+    const merge = (arr, key) => {
+      const out = {};
+      for (const d of arr) for (const [k, v] of Object.entries(d[key] || {})) out[k] = (out[k] || 0) + v;
+      return Object.entries(out).sort((a, b) => b[1] - a[1]);
+    };
+    const today = list.slice(0, 1), week = list.slice(0, 7);
+    const card = (label, visitors, views) =>
+      `<div><small>${label}</small><b>${visitors}</b><span class="faint small">${views} ${views === 1 ? "zobrazenie" : views >= 2 && views <= 4 ? "zobrazenia" : "zobrazení"}</span></div>`;
+    const rows = (entries, labels, total) =>
+      entries.length
+        ? entries.map(([k, v]) => `
+          <div class="mb-row">
+            <div class="mb-top"><span class="mb-name">${escapeHtml(labels[k] || k)}</span><span class="mb-num"><b>${v}</b></span></div>
+            <div class="bar mb-bar"><i style="width:${total ? Math.round((v / total) * 100) : 0}%"></i></div>
+          </div>`).join("")
+        : `<p class="faint small">Zatiaľ nič.</p>`;
+    const sources = merge(list, "sources"), clicks = merge(list, "clicks");
+    const maxDay = Math.max(1, ...list.slice(0, 14).map((d) => d.visitors || 0));
+    if (!m.el.isConnected) return;
+    body.innerHTML = `
+      <div class="kv-grid big">
+        ${card("Dnes", sum(today, "visitors"), sum(today, "views"))}
+        ${card("7 dní", sum(week, "visitors"), sum(week, "views"))}
+        ${card("30 dní", sum(list, "visitors"), sum(list, "views"))}
+      </div>
+      <h4 class="ct">Posledných 14 dní (návštevníci)</h4>
+      <div class="visits-days">
+        ${list.slice(0, 14).reverse().map((d) => `
+          <div class="visits-day" title="${escapeHtml(d.day)}: ${d.visitors} návštevníkov, ${d.views} zobrazení">
+            <i style="height:${Math.round(((d.visitors || 0) / maxDay) * 100)}%"></i>
+            <span>${Number(String(d.day).slice(8, 10))}.</span>
+          </div>`).join("")}
+      </div>
+      <h4 class="ct">Odkiaľ prišli (30 dní)</h4>
+      ${rows(sources, VISIT_SOURCE_LABELS, sources.reduce((s, e) => s + e[1], 0))}
+      <h4 class="ct">Kliknutia (30 dní)</h4>
+      ${rows(clicks, VISIT_CLICK_LABELS, Math.max(1, ...clicks.map((e) => e[1])))}
+      <p class="muted small">Tip: do odkazu v bio na Instagrame daj <b>tipradar.eu/?utm_source=instagram</b>, potom sa zdroj započíta presne aj z aplikácie Instagramu.</p>`;
+  } catch (err) {
+    body.innerHTML = `<p class="empty">Návštevnosť sa nepodarilo načítať: ${escapeHtml(err.message || String(err))}</p>`;
+  }
+}
+document.getElementById("openVisitsBtn").addEventListener("click", () => openVisits());
+
+// ---- Štart ----
+init();
