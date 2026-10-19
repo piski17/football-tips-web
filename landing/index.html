@@ -1447,6 +1447,28 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
           <ul class="mon-list" id="monList"></ul>
         </div>
       </div>
+      <div class="calc-sec" id="kalkulacka" data-pages="vysledky" hidden>
+        <div class="calc">
+          <div>
+            <div class="eyebrow">Kalkulačka</div>
+            <h3>Koľko by ste mali <em>dnes?</em></h3>
+            <label for="calcBank">Váš bank na začiatku</label>
+            <div class="val num" id="calcBankVal">1 000 €</div>
+            <input type="range" id="calcBank" min="50" max="2000" step="50" value="1000" />
+            <label>Vklad na jeden tip</label>
+            <div class="seg" id="calcPct"><button type="button" data-p="1" aria-pressed="false">1 %</button><button type="button" data-p="2" aria-pressed="true">2 %</button><button type="button" data-p="3" aria-pressed="false">3 %</button><button type="button" data-p="5" aria-pressed="false">5 %</button></div>
+            <p class="hint">Na každý tip vsadíte zvolené percento z aktuálneho banku.</p>
+          </div>
+          <div class="res">
+            <small id="calcFrom">Keby ste s nami tipovali od začiatku</small>
+            <div class="big num" id="calcEnd">–</div>
+            <svg viewBox="0 0 400 120" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="calcGrad" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#D9C08A" stop-opacity=".35"/><stop offset="1" stop-color="#D9C08A" stop-opacity="0"/></linearGradient></defs><path id="calcArea" fill="url(#calcGrad)"/><path id="calcLine" fill="none" stroke="#F3E6C4" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>
+            <div class="rows"><div><b class="num" id="calcN">–</b><span>tipov</span></div><div><b class="num" id="calcW">–</b><span>vyšlo</span></div><div><b class="num" id="calcP">–</b><span>zisk</span></div></div>
+            <p class="note">Počíta sa zo všetkých skutočných vyhodnotených tipov vrátane prehier. Minulé výsledky nie sú zárukou budúcich.</p>
+          </div>
+        </div>
+      </div>
+
       <div class="more-row" data-pages="home"><a class="btn btn-ghost" href="/vysledky">Celá história tipov <span class="arr" aria-hidden="true">→</span></a></div>
       <div class="ledger-wrap" data-pages="vysledky">
         <h3>Všetky vyhodnotené tipy</h3>
