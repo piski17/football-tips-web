@@ -738,17 +738,7 @@ function renderAnalysis(r) {
       }
     </div>
 
-    <div class="prob-section">
-      <div class="section-title">Najpravdepodobnejší strelec zápasu</div>
-      <p class="muted small" style="margin: -4px 0 10px;">
-        ${
-          (r.lineupConfirmed && (r.lineupConfirmed.home || r.lineupConfirmed.away))
-            ? "✓ Počíta z potvrdenej zostavy na zápas (kde je k dispozícii)."
-            : "Zostava na tento zápas ešte nie je potvrdená (zvyčajne sa objaví cca hodinu pred výkopom) – počíta sa z celej súpisky."
-        }
-      </p>
-      ${bestScorerCard(r.bestScorer, r)}
-    </div>
+    <!-- Strelec zápasu odstránený (19. 10. 2026) -->
 
     <div class="disclaimer">
       Toto je štatistický odhad založený na historických dátach (forma, vzájomné zápasy,
