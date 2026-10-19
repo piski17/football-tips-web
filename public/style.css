@@ -214,7 +214,7 @@ span.crest { background: radial-gradient(circle at 35% 35%, #5a4a35, #2a2219); b
 .mh .mid span { display: block; font-size: 13px; color: var(--faint); }
 .mh .mid .season { font-size: 12px; opacity: .8; }
 .status { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 18px 0 6px; }
-.st { display: inline-flex; align-items: center; gap: 4px; padding: 7px 12px; border-radius: 12px; background: var(--bg2); border: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+.st { display: inline-block; line-height: 1.4; padding: 7px 12px; border-radius: 12px; background: var(--bg2); border: 1px solid var(--line); font-size: 13px; color: var(--muted); }
 .st b { color: var(--text); font-weight: 600; }
 .st.g { color: var(--win); border-color: rgba(134, 199, 161, .3); }
 .note { font-size: 13px; color: var(--faint); margin: 6px 0 0; }

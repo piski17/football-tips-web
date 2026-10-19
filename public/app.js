@@ -801,7 +801,7 @@ function renderAnalysis(r, root, opts = {}) {
     if (mins > 0 && mins < 24 * 60) chips.push(`<span class="st">Výkop o <b>${mins >= 60 ? `${Math.floor(mins / 60)} h ${mins % 60} min` : `${mins} min`}</b></span>`);
   }
   if (r.seasonGamesPlayed) {
-    chips.push(`<span class="st" title="Odohratých zápasov v tejto sezóne: ${escapeHtml(home)} ${r.seasonGamesPlayed.home}, ${escapeHtml(away)} ${r.seasonGamesPlayed.away}">Odohraté <b>${r.seasonGamesPlayed.home}</b> a <b>${r.seasonGamesPlayed.away}</b> zápasov</span>`);
+    chips.push(`<span class="st" title="Odohratých zápasov v tejto sezóne: ${escapeHtml(home)} ${r.seasonGamesPlayed.home}, ${escapeHtml(away)} ${r.seasonGamesPlayed.away}">Odohraté zápasy: ${escapeHtml(home)} <b>${r.seasonGamesPlayed.home}</b> · ${escapeHtml(away)} <b>${r.seasonGamesPlayed.away}</b></span>`);
   }
   const bk = bookmakersCount(r);
   if (bk > 0) chips.push(`<span class="st">Kurzy z <b>${bk}</b> ${bk === 1 ? "stávkovky" : "stávkoviek"}</span>`);
