@@ -438,7 +438,8 @@
   .stake .big.neg { background: none; color: var(--loss); }
   .stake label { display: flex; justify-content: space-between; margin-top: 22px; font-size: 15px; color: var(--muted); }
   .stake label b { color: var(--text); }
-  @media (max-width: 900px) { .showcase { grid-template-columns: minmax(0, 1fr); } .stake { border-left: 0; border-top: 1px solid var(--line); } .sc-chart, .stake { padding: 26px 20px 24px; } .growth { height: 190px; } .sc-head h3 { font-size: 22px; } .sc-total { font-size: 30px; } }
+  html[data-page="vysledky"] .ledger-wrap { margin-top: 36px; }
+@media (max-width: 900px) { .showcase { grid-template-columns: minmax(0, 1fr); } .stake { border-left: 0; border-top: 1px solid var(--line); } .sc-chart, .stake { padding: 26px 20px 24px; } .growth { height: 190px; } .sc-head h3 { font-size: 22px; } .sc-total { font-size: 30px; } }
   .more-row { margin-top: 36px; }
 
   .ledger-wrap { margin-top: 80px; }
@@ -1423,7 +1424,7 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
         <div><b class="num" id="fRoi">–</b><span>ROI</span></div>
       </div>
       <p class="month-line" id="month">Načítavam…</p>
-      <div class="showcase" data-pages="home vysledky">
+      <div class="showcase" data-pages="nikde">
         <div class="sc-chart">
           <div class="sc-head"><h3 id="chTitle">Ako rástol zisk</h3><span class="sc-total num" id="chTotal"></span></div>
           <div id="chWrap"><p class="muted" style="margin-top:10px">Graf sa zobrazí po prvých vyhodnotených tipoch.</p></div>
@@ -1435,6 +1436,23 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
           <label for="stakeRange"><span>Stávka na jeden tip</span><b class="num" id="stakeOut">10 €</b></label>
           <input type="range" id="stakeRange" min="5" max="200" step="5" value="10" />
           <p class="small" id="calcNote" style="margin-top:12px"></p>
+        </div>
+      </div>
+
+      <div class="ledger-wrap" data-pages="vysledky">
+        <h3>Všetky vyhodnotené tipy</h3>
+        <p class="note">Tak, ako ich dostali členovia.</p>
+        <div class="tabs" role="group" aria-label="Filter">
+          <button class="tab" data-f="all" aria-pressed="true">Všetky</button>
+          <button class="tab" data-f="won" aria-pressed="false">Vyšli</button>
+          <button class="tab" data-f="lost" aria-pressed="false">Nevyšli</button>
+        </div>
+        <div class="ledger-cols"><span>Dátum a čas</span><span>Zápas a tip</span><span>Kurz</span><span>Výsledok</span></div>
+        <ul class="ledger" id="list"><li class="empty">Načítavam…</li></ul>
+        <div class="pager" id="pager" hidden>
+          <span class="num" id="pgInfo"></span>
+          <button class="pg" id="pgPrev" aria-label="Novšie tipy">‹</button>
+          <button class="pg" id="pgNext" aria-label="Staršie tipy">›</button>
         </div>
       </div>
 
@@ -1470,22 +1488,6 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
       </div>
 
       <div class="more-row" data-pages="home"><a class="btn btn-ghost" href="/vysledky">Celá história tipov <span class="arr" aria-hidden="true">→</span></a></div>
-      <div class="ledger-wrap" data-pages="vysledky">
-        <h3>Všetky vyhodnotené tipy</h3>
-        <p class="note">Tak, ako ich dostali členovia.</p>
-        <div class="tabs" role="group" aria-label="Filter">
-          <button class="tab" data-f="all" aria-pressed="true">Všetky</button>
-          <button class="tab" data-f="won" aria-pressed="false">Vyšli</button>
-          <button class="tab" data-f="lost" aria-pressed="false">Nevyšli</button>
-        </div>
-        <div class="ledger-cols"><span>Dátum a čas</span><span>Zápas a tip</span><span>Kurz</span><span>Výsledok</span></div>
-        <ul class="ledger" id="list"><li class="empty">Načítavam…</li></ul>
-        <div class="pager" id="pager" hidden>
-          <span class="num" id="pgInfo"></span>
-          <button class="pg" id="pgPrev" aria-label="Novšie tipy">‹</button>
-          <button class="pg" id="pgNext" aria-label="Staršie tipy">›</button>
-        </div>
-      </div>
     </div>
   </section>
 
