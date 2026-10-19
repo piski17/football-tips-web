@@ -37,7 +37,7 @@
         <span>TipRadar</span>
       </div>
       <nav class="nav" id="sideNav" aria-label="Hlavné menu"></nav>
-      <button type="button" class="seats" id="seatBox" title="TipRadar Platinum: počet členov podľa dĺžky členstva (6 mesiacov má najviac 30 miest). Kliknutím otvoríš Členov."></button>
+      <button type="button" class="seats" id="seatBox" title="TipRadar Platinum: počet členov podľa dĺžky členstva (6 mesiacov má najviac 30 miest). Kliknutím otvoríš sekciu Členovia."></button>
     </aside>
 
     <main class="main">
@@ -107,7 +107,7 @@
             <button type="button" class="btn sm" id="sendDayTipsBtn" title="Poslať všetky tipy vybraného dňa do Telegramu naraz">Poslať tipy dňa</button>
             <button type="button" class="btn ghost sm" id="tipsComingBtn" title="Poslať do Telegramu oznam, že tipy prídu o pár minút">Tipy o pár minút</button>
             <button type="button" class="btn ghost sm" id="noTipTodayBtn">Dnes bez tipu</button>
-            <button type="button" class="btn ghost sm" id="monthlyReportBtn" title="Súhrn všetkých tipov za mesiac, s možnosťou odoslať do Telegramu">Mesačný report</button>
+            <button type="button" class="btn ghost sm" id="monthlyReportBtn" title="Súhrn všetkých tipov za mesiac s možnosťou odoslať ho do Telegramu">Mesačný report</button>
             <button type="button" class="btn ghost sm" id="manualTipBtn" title="Zapísať tip na už odohraný zápas aj s výsledkom">+ Doplniť odohraný tip</button>
             <button type="button" class="btn ghost sm" id="archiveResolvedBtn" title="Skryť vyhodnotené tipy z histórie – na prezentácii a v štatistikách ostanú">Skryť vyhodnotené</button>
             <button type="button" class="btn ghost sm" id="restoreDailyBtn" title="Vrátiť do histórie tipy z denného súhrnu (/suhrn), ktoré v histórii chýbajú">Obnoviť z denného súhrnu</button>
@@ -122,7 +122,7 @@
           </div>
           <div class="card list-card" id="tipsList"><p class="empty">Načítavam…</p></div>
 
-          <h3 class="sh">Úspešnosť podľa trhov <small>zisk pri vklade 1 jednotka na tip</small></h3>
+          <h3 class="sh">Úspešnosť podľa trhov <small>zisk pri vklade 1 jednotky na tip</small></h3>
           <div class="card" id="marketBreakdown"></div>
 
           <details class="card adv">
@@ -189,7 +189,7 @@
 
           <div id="paymentsBox" hidden>
             <h3 class="sh">Čakajúce platby prevodom</h3>
-            <p class="muted small">Keď platbu s daným variabilným symbolom uvidíš na účte, klikni Potvrdiť. Bot členovi pošle pozvánku a zapíše ho sem.</p>
+            <p class="muted small">Keď platbu s daným variabilným symbolom uvidíš na účte, klikni na „Potvrdiť“. Bot členovi pošle pozvánku a zapíše ho sem.</p>
             <div class="card list-card" id="paymentsList"></div>
           </div>
 
@@ -217,7 +217,7 @@
           <div class="tools-grid">
             <button type="button" class="tool" id="openBacktestBtn"><b>Spätný test</b><span>Overenie presnosti modelu na odohraných zápasoch.</span></button>
             <button type="button" class="tool" id="openVisitsBtn"><b>Návštevnosť</b><span>Koľko ľudí navštívilo tipradar.eu a odkiaľ prišli.</span></button>
-            <button type="button" class="tool" id="openMonthlyBtn2"><b>Mesačný report</b><span>Súhrn tipov za mesiac, s odoslaním do Telegramu.</span></button>
+            <button type="button" class="tool" id="openMonthlyBtn2"><b>Mesačný report</b><span>Súhrn tipov za mesiac s odoslaním do Telegramu.</span></button>
             <a class="tool" href="/suhrn"><b>Denný súhrn</b><span>Denný prehľad tipov a výsledkov.</span></a>
             <a class="tool" href="/instagram"><b>Instagram</b><span>Obrázky tipov a výsledkov na Instagram.</span></a>
             <a class="tool" href="/TipRadar-ako-vyberame-tipy.pdf" target="_blank" rel="noopener"><b>PDF pre klientov</b><span>Ako vyberáme tipy.</span></a>

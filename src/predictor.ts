@@ -695,7 +695,7 @@ export function predictMatch(
   if (homeCornersAvg != null && awayCornersAvg != null) {
     const b = blendH2H(homeCornersAvg + awayCornersAvg, "corners");
     const expected = b.value;
-    if (b.h2h) h2hNotes.rohy = `Vo vzájomných zápasoch (${b.h2h.n}) padlo v priemere ${fmt1(b.h2h.avg)} rohov.`;
+    if (b.h2h) h2hNotes.rohy = `Vo vzájomných zápasoch (${b.h2h.n}) padlo v priemere ${fmt1(b.h2h.avg)} rohu.`;
     const { over, under } = overdispersedOverUnder(expected, CORNERS_LINE, VAR_RATIO.corners);
     corners = { expected, line: CORNERS_LINE, over, under };
   }
@@ -714,7 +714,7 @@ export function predictMatch(
   if (baseCards !== null && baseCards > 0) {
     const cardsBlend = blendH2H(baseCards, "cards");
     const expectedCards = cardsBlend.value * (referee?.cardsFactor ?? 1);
-    if (cardsBlend.h2h) h2hNotes.karty = `Vo vzájomných zápasoch (${cardsBlend.h2h.n}) padlo v priemere ${fmt1(cardsBlend.h2h.avg)} kariet.`;
+    if (cardsBlend.h2h) h2hNotes.karty = `Vo vzájomných zápasoch (${cardsBlend.h2h.n}) padlo v priemere ${fmt1(cardsBlend.h2h.avg)} karty.`;
     const cardsOU = overdispersedOverUnder(expectedCards, CARDS_LINE, VAR_RATIO.cards);
     cards = { expected: expectedCards, line: CARDS_LINE, ...cardsOU };
   }
@@ -766,7 +766,7 @@ export function predictMatch(
     fixture.awayTeam.name
   } ${awayFormText}. Posledných ${h2hResult.homeWins + h2hResult.draws + h2hResult.awayWins} vzájomných zápasov: ${
     h2hResult.homeWins
-  }-${h2hResult.draws}-${h2hResult.awayWins} (výhry domáci-remízy-výhry hostia). Očakávané góly ${xg.home.toFixed(
+  }-${h2hResult.draws}-${h2hResult.awayWins} (výhry domácich – remízy – výhry hostí). Očakávané góly ${xg.home.toFixed(
     1
   )}:${xg.away.toFixed(1)}.${recentGoalsText}`;
 
@@ -785,7 +785,7 @@ export function predictMatch(
     const pct = Math.round((f - 1) * 100);
     const eff = pct === 0 ? "bez úpravy" : `${pct > 0 ? "+" : "−"}${Math.abs(pct)} %`;
     const avg = kind === "fouls" ? referee.avgFouls : referee.avgCards;
-    const what = kind === "fouls" ? "faulov" : "žltých kariet";
+    const what = kind === "fouls" ? "faulu" : "žltej karty"; // desatinné číslo -> gen. sg. (23,4 faulu)
     return ` Rozhodca ${referee.name}: v posledných ${referee.games} zápasoch ligy v priemere ${avg != null ? fmt1(avg) : "?"} ${what} (${eff}).`;
   };
   const statExplanation = (expected: number, line: number): string =>
@@ -856,11 +856,11 @@ export function predictMatch(
   if (homeCornersAvg != null && awayCornersAvg != null) {
     const hc = homeCornersAvg, ac = awayCornersAvg;
     addOverUnder("Rohy domácich", "rohy_timu", (line) => overdispersedOverUnder(hc, line, VAR_RATIO.corners), (line) =>
-      `${fixture.homeTeam.name} má v priemere ${fmt1(hc)} rohov na zápas (aj s ohľadom na súpera), hranica ${line}.`,
+      `${fixture.homeTeam.name} má v priemere ${fmt1(hc)} rohu na zápas (aj s ohľadom na súpera), hranica ${line}.`,
       { mean: hc, varRatio: VAR_RATIO.corners }
     );
     addOverUnder("Rohy hostí", "rohy_timu", (line) => overdispersedOverUnder(ac, line, VAR_RATIO.corners), (line) =>
-      `${fixture.awayTeam.name} má v priemere ${fmt1(ac)} rohov na zápas (aj s ohľadom na súpera), hranica ${line}.`,
+      `${fixture.awayTeam.name} má v priemere ${fmt1(ac)} rohu na zápas (aj s ohľadom na súpera), hranica ${line}.`,
       { mean: ac, varRatio: VAR_RATIO.corners }
     );
   }
@@ -1070,10 +1070,10 @@ export function predictMatch(
     } else if ((b.oddsBookmakers ?? 0) < MIN_BOOKMAKERS) {
       // Kurz len od jednej stávkovky býva nespoľahlivý (často hranica, ktorú
       // naše stávkovky ani neponúkajú) - hodnota sa nedá overiť.
-      b.rejectReason = "kurz len od 1 stávkovky";
+      b.rejectReason = "kurz len od jednej stávkovky";
       lowValueBets.push(b);
     } else if (ev > SUSPICIOUS_EXPECTED_VALUE && fewGames) {
-      b.rejectReason = "podozrivo vysoká hodnota pri málo dátach v sezóne";
+      b.rejectReason = "podozrivo vysoká hodnota pri malom množstve dát v sezóne";
       lowValueBets.push(b);
     } else if (ev > SUSPICIOUS_EXPECTED_VALUE) {
       // Hodnota nad +25 % znamená, že model vidí šancu oveľa vyššie ako stávkovky.

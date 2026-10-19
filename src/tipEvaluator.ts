@@ -290,7 +290,7 @@ export function tipHasStartedMatch(tip: { matchDate: string; legs?: { matchDate:
   });
 }
 
-export const MATCH_STARTED_MESSAGE = "Zápas už začal – tip ani tiket z neho sa už nedá pridať.";
+export const MATCH_STARTED_MESSAGE = "Zápas už začal – tip ani tiket z neho sa nedá pridať.";
 
 /** Ručná oprava tipu v histórii (výsledok, kurz, pri tikete výsledky jednotlivých zápasov). */
 export interface TipEdit {

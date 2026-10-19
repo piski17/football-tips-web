@@ -142,7 +142,7 @@ const MONTH_NAMES = ["Január", "Február", "Marec", "Apríl", "Máj", "Jún", "
 const STRONG_TIP_MIN_PROBABILITY = 70; // STRONG_TIP_MIN_PROBABILITY v oddsMatcher.ts
 let MIN_ODDS = 1.55; // predvolené; ak server pošle MIN_ODDS (/api/public/vip-seats), použije sa ten
 const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté konto"];
-const MATCH_STARTED_TEXT = "Zápas už začal – tip z neho sa už nedá pridať.";
+const MATCH_STARTED_TEXT = "Zápas už začal – tip z neho sa nedá pridať.";
 const LIVE_STATUSES = ["1H", "HT", "2H", "ET", "BT", "P", "SUSP", "INT"];
 const FINISHED_STATUSES = ["FT", "AET", "PEN"];
 
@@ -346,7 +346,7 @@ async function maybeOfferTelegram(tipId) {
   if (!target) return;
   try {
     await postJson(`/api/tips/${tipId}/telegram`, { target });
-    showToast("Tip odoslaný do Telegram kanála.");
+    showToast("Tip odoslaný do kanála na Telegrame.");
   } catch (err) {
     showToast(`Odoslanie do Telegramu zlyhalo: ${err.message}`);
   }
@@ -794,7 +794,7 @@ function renderAnalysis(r, root, opts = {}) {
   const chips = [];
   // Rozhodcu služba často zverejní až deň pred zápasom – dovtedy model ráta karty a fauly bez neho.
   if (referee && !r.referee && !isDone) chips.push(`<span class="st" title="Rozhodca pískal v tejto súťaži menej ako 3 zápasy, preto o ňom nie je dosť štatistík.">Rozhodca má málo zápasov v dátach · karty a fauly bez neho</span>`);
-  if (!referee && !isDone) chips.push(`<span class="st" title="Rozhodcu zvyčajne zverejnia deň pred zápasom alebo v deň zápasu. Potom stačí kliknúť Prepočítať.">Rozhodca zatiaľ nie je známy · karty a fauly bez neho</span>`);
+  if (!referee && !isDone) chips.push(`<span class="st" title="Rozhodcu zvyčajne zverejnia deň pred zápasom alebo v deň zápasu. Potom stačí kliknúť na „Prepočítať“.">Rozhodca zatiaľ nie je známy · karty a fauly bez neho</span>`);
   if (!started) {
     chips.push(both ? `<span class="st g">✓ Potvrdená zostava</span>` : `<span class="st">Zostava ešte nie je zverejnená</span>`);
     const mins = Math.round((kick.getTime() - Date.now()) / 60000);
@@ -814,7 +814,7 @@ function renderAnalysis(r, root, opts = {}) {
     ? ""
     : both
       ? "✓ Počítané s potvrdenou zostavou (hráči na lavičke sa rátajú ako čiastočne chýbajúci)."
-      : "Zostava ešte nie je zverejnená – zvyčajne býva asi hodinu pred výkopom. Potom klikni Prepočítať.";
+      : "Zostava ešte nie je zverejnená – zvyčajne býva asi hodinu pred výkopom. Potom klikni na „Prepočítať“.";
   const statusHtml = `
     <div class="status">${chips.join("")}${lineupBtns}</div>
     ${lineupNote ? `<p class="note">${escapeHtml(lineupNote)}</p>` : ""}
@@ -941,7 +941,7 @@ function wireLineupBar(r, root, onRecalc) {
         out.textContent =
           "API zostavu má: " +
           d.teams.map((t) => `${translateTeamName(t.team)} ${t.startXI} + ${t.substitutes} náhradníkov${t.formation ? ` (${t.formation})` : ""}`).join(", ") +
-          ". Klikni Prepočítať.";
+          ". Klikni na „Prepočítať“.";
     } catch (err) {
       out.textContent = `Kontrola zlyhala: ${err.message}`;
     } finally {
@@ -1764,7 +1764,7 @@ function historyRowHtml(t) {
   const btn = (attr, icon, title, extra = "") => `<button type="button" class="ib${extra}" ${attr}="${escapeHtml(t.id)}" title="${title}" aria-label="${title}">${icon}</button>`;
   const buttons = [btn("data-edit-id", ICON.edit, "Upraviť výsledok alebo kurz")];
   if (t.status === "pending") {
-    buttons.push(btn("data-send-id", ICON.send, "Poslať do Telegram kanála"));
+    buttons.push(btn("data-send-id", ICON.send, "Poslať do kanála na Telegrame"));
   } else {
     buttons.push(btn("data-result-id", ICON.result, "Poslať výsledok do Telegramu"));
   }
@@ -1830,7 +1830,7 @@ tipsListEl.addEventListener("click", async (e) => {
     if (!target) return;
     try {
       await postJson(`/api/tips/${btn.dataset.sendId}/telegram`, { target });
-      showToast("Tip odoslaný do Telegram kanála.");
+      showToast("Tip odoslaný do kanála na Telegrame.");
     } catch (err) {
       showToast(`Odoslanie zlyhalo: ${err.message}`);
     }
@@ -2025,7 +2025,7 @@ function openEditTip(tip) {
     const oddsText = String(el.querySelector("[data-odds]").value).trim().replace(",", ".");
     const odds = oddsText === "" ? null : parseFloat(oddsText);
     if (odds !== null && !(odds > 1)) {
-      el.querySelector("[data-msg]").textContent = "Kurz musí byť číslo väčšie ako 1 (napr. 1,75), alebo nechaj políčko prázdne.";
+      el.querySelector("[data-msg]").textContent = "Kurz musí byť číslo väčšie ako 1 (napr. 1,75) alebo nechaj políčko prázdne.";
       return;
     }
     const edit = { odds };
@@ -2324,7 +2324,7 @@ async function renderShadowSummary() {
     }
     const p = (v) => (v == null ? "–" : `${Math.round(v)}${NB}%`);
     let t = `${head}<b>${d.won} z ${d.settled}</b> vyšlo (<b>${p(d.hitRate)}</b>), model im dával v priemere ${p(d.avgModel)}, stávkovky ${p(d.avgMarket)}.`;
-    if (d.withOdds) t += ` Keby sa stavili: <b class="${d.profit >= 0 ? "g" : "l"}">${d.profit >= 0 ? "+" : "−"}${Math.abs(d.profit).toFixed(1).replace(".", ",")}${NB}j.</b>`;
+    if (d.withOdds) t += ` Keby sa na ne stavilo: <b class="${d.profit >= 0 ? "g" : "l"}">${d.profit >= 0 ? "+" : "−"}${Math.abs(d.profit).toFixed(1).replace(".", ",")}${NB}j.</b>`;
     if (d.pending) t += ` Čaká: ${d.pending}.`;
     el.innerHTML = t;
   } catch {
@@ -2675,7 +2675,7 @@ document.getElementById("salesOpenBtn").addEventListener("click", async (e) => {
   btn.disabled = true;
   try {
     const r = await fetchJson("/api/leads/sales-open", { method: "POST" });
-    showToast(`Správa odišla ${r.sent} ľuďom.` + (r.failed ? ` Neodišla: ${r.failed}.` : "") + (r.skipped ? ` Preskočení (už dostali, sú členmi alebo sú z formulára): ${r.skipped}.` : ""));
+    showToast(`Správa odišla ${plural(r.sent, "človeku", "ľuďom", "ľuďom")}.` + (r.failed ? ` Neodišla: ${r.failed}.` : "") + (r.skipped ? ` Preskočení (už dostali, sú členmi alebo sú z formulára): ${r.skipped}.` : ""));
   } catch (err) {
     showToast(err?.message || "Správu sa nepodarilo poslať.");
   }
@@ -2716,7 +2716,7 @@ async function renderLeads() {
         subLengthSelect.value = ["sampion", "sampion_waitlist", "vip", "vip_waitlist"].includes(l.plan) ? "season" : l.plan === "seria" || l.plan === "seria_waitlist" ? "m3" : "m1";
         syncMemberPrice();
         document.getElementById("subName").scrollIntoView({ behavior: "smooth", block: "center" });
-        showToast("Údaje sú vyplnené – skontroluj ich a klikni na Pridať člena.");
+        showToast("Údaje sú vyplnené – skontroluj ich a klikni na „Pridať člena“.");
       };
     });
     el.querySelectorAll("[data-lead-del]").forEach((b) => {
@@ -2849,7 +2849,7 @@ function renderBacktest(job) {
     ? `Prebieha test: ${p.done} / ${p.total || "?"} zápasov…<div class="bar big"><i style="width:${p.total ? (p.done / p.total) * 100 : 3}%"></i></div>`
     : job.status === "error"
       ? `<span class="loss">Test zlyhal: ${escapeHtml(job.error || "")}</span>`
-      : `Hotovo – ${r ? r.fixturesAnalyzed : 0} zápasov${r && r.fixturesFailed ? `, ${r.fixturesFailed} sa nepodarilo spracovať` : ""}.`;
+      : `Hotovo – ${plural(r ? r.fixturesAnalyzed : 0, "zápas", "zápasy", "zápasov")}${r && r.fixturesFailed ? `, ${r.fixturesFailed} sa nepodarilo spracovať` : ""}.`;
   document.getElementById("btStartBtn").disabled = running;
   const canExport = job.status === "done" && !!(r && r.samples);
   document.getElementById("btCopyBtn").hidden = !canExport;
@@ -2873,7 +2873,7 @@ function renderBacktest(job) {
     <div class="table-wrap"><table class="bt-table"><thead><tr><th>Pásmo</th><th class="num">Tipov</th><th class="num">Model</th><th class="num">Realita</th><th class="num">Rozdiel</th></tr></thead><tbody>${buckets}</tbody></table></div>
     <h4>Podľa trhov</h4>
     <div class="table-wrap"><table class="bt-table"><thead><tr><th>Trh</th><th class="num">Tipov</th><th class="num">Model</th><th class="num">Realita</th><th class="num">Rozdiel</th><th class="num">V pásme 68–80 %</th></tr></thead><tbody>${markets}</tbody></table></div>
-    <p class="muted small">Rozdiel = realita mínus predpoveď v percentuálnych bodoch. Zelená: model sedí (do ±5 b.). Červená: model <strong>preceňuje</strong> – tipy vychádzajú menej často, než hovorí. Pri menej ako ~50 tipoch v riadku berte čísla len orientačne.</p>
+    <p class="muted small">Rozdiel = realita mínus predpoveď v percentuálnych bodoch. Zelená: model sedí (do ±5 b.). Červená: model <strong>preceňuje</strong> – tipy vychádzajú menej často, než hovorí. Pri menej ako ~50 tipoch v riadku ber čísla len orientačne.</p>
     ${renderBacktestComparison(r, job.reportLegacy)}
     ${running ? "" : renderAbsenceImpact(job.absenceImpact)}
     ${running ? "" : renderBacktestOptimizer(r.optimizer)}`;
@@ -3030,7 +3030,7 @@ async function openVisits() {
   const m = openModal(`
     <h3>Návštevnosť tipradar.eu</h3>
     <p class="muted small">Bez cookies. Návštevník = jeden človek za deň (podľa skráteného odtlačku, ktorý sa každý deň mení).</p>
-    <p class="muted small">Aby sa nepočítali tvoje vlastné návštevy, otvor raz v každom svojom zariadení a prehliadači <a href="https://tipradar.eu/?ja=1" target="_blank" rel="noopener">tipradar.eu/?ja=1</a>. Znova zapneš cez tipradar.eu/?ja=0.</p>
+    <p class="muted small">Aby sa nepočítali tvoje vlastné návštevy, otvor raz v každom svojom zariadení a prehliadači <a href="https://tipradar.eu/?ja=1" target="_blank" rel="noopener">tipradar.eu/?ja=1</a>. Počítanie znova zapneš cez tipradar.eu/?ja=0.</p>
     <div data-body><p class="empty">Načítavam…</p></div>
     <div class="modal-actions"><button type="button" class="btn ghost" data-close>Zavrieť</button></div>`, { wide: true });
   const body = m.el.querySelector("[data-body]");

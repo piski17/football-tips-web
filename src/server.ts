@@ -283,7 +283,7 @@ app.get("/zaplatit", async (req, res) => {
     res.redirect(303, `/platba?t=${p.token}`);
   } catch (err: any) {
     console.error("Platbu sa nepodarilo pripraviť:", err?.response?.data ?? err?.message ?? err);
-    res.status(502).send(paymentPage("Platba sa teraz nedá spustiť", "Skúste to prosím o chvíľu znova. Ak to nepôjde, napíšte mi na Telegram a vyriešime to.", `https://t.me/${BOT_USERNAME}`, "Napísať na Telegram"));
+    res.status(502).send(paymentPage("Platba sa teraz nedá spustiť", "Skúste to, prosím, o chvíľu znova. Ak to nepôjde, napíšte mi na Telegram a vyriešime to.", `https://t.me/${BOT_USERNAME}`, "Napísať na Telegram"));
   }
 });
 
@@ -293,11 +293,11 @@ app.get("/platba", async (req, res) => {
   try {
     const p = await getPayment(token);
     if (!p || p.method !== "bank") {
-      res.status(404).send(paymentPage("Platbu sme nenašli", "Vyberte si prosím členstvo znova.", "/clenstvo", "Späť na členstvo"));
+      res.status(404).send(paymentPage("Platbu sme nenašli", "Vyberte si, prosím, členstvo znova.", "/clenstvo", "Späť na členstvo"));
       return;
     }
     if (p.status === "cancelled") {
-      res.send(paymentPage("Platba bola zrušená", "Ak chcete členstvo, vyberte si ho prosím znova.", "/clenstvo", "Späť na členstvo"));
+      res.send(paymentPage("Platba bola zrušená", "Ak chcete členstvo, vyberte si ho, prosím, znova.", "/clenstvo", "Späť na členstvo"));
       return;
     }
     const tg = `https://t.me/${BOT_USERNAME}?start=paid_${p.token}`;
@@ -306,7 +306,7 @@ app.get("/platba", async (req, res) => {
       return;
     }
     if (!BANK.iban || !BANK.name) {
-      res.status(503).send(paymentPage("Platba sa teraz nedá spustiť", "Napíšte mi prosím na Telegram a vyriešime to.", `https://t.me/${BOT_USERNAME}`, "Napísať na Telegram"));
+      res.status(503).send(paymentPage("Platba sa teraz nedá spustiť", "Napíšte mi, prosím, na Telegram a vyriešime to.", `https://t.me/${BOT_USERNAME}`, "Napísať na Telegram"));
       return;
     }
     const price = PAY_TERMS[p.term].price;
@@ -356,7 +356,7 @@ a.back{display:block;text-align:center;margin-top:22px;color:#8C8476;font-size:1
 <div class="step">1. Zaplaťte cez QR kód</div>
 <p>Otvorte appku svojej banky, zvoľte platbu cez QR kód a naskenujte ho. Všetky údaje sa vyplnia samy.</p>
 <div class="qr">${svg}</div>
-<p class="center small">Platíte z tohto mobilu? <a class="save" href="${png}" download="tipradar-platba-${esc(p.vs || "")}.png">Uložte si QR kód</a> a v appke banky ho načítajte z galérie, alebo údaje skopírujte:</p>
+<p class="center small">Platíte z tohto mobilu? <a class="save" href="${png}" download="tipradar-platba-${esc(p.vs || "")}.png">Uložte si QR kód</a> a v appke banky ho načítajte z galérie alebo údaje skopírujte:</p>
 <div class="rows">
 ${row("Suma", `${price},00 €`, `${price},00`)}
 ${row("IBAN", ibanNice, BANK.iban)}
@@ -1216,7 +1216,7 @@ app.post("/api/telegram/no-tip-today", async (req, res) => {
         : "both";
     const text =
       `📭 <b>Dnes bez tipu</b>\n\n` +
-      `Model dnes nenašiel žiadnu stávku s dostatočnou hodnotou. Radšej žiadny tip, než zlý tip.\n\n` +
+      `Model dnes nenašiel žiadnu stávku s dostatočnou hodnotou. Radšej žiadny tip než zlý tip.\n\n` +
       `Uvidíme sa nabudúce! 👋`;
     const sent = await sendCustomMessage(text, target);
     res.json({ ok: sent.length > 0 });

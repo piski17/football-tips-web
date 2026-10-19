@@ -227,7 +227,7 @@ function buildMessageText(tip: SavedTip, headerOverride?: string, vip = false, s
     const legsText = tip.legs
       .map(
         (leg) =>
-          `⚽ ${escapeHtml(translateTeamName(leg.homeTeam))} — ${escapeHtml(translateTeamName(leg.awayTeam))}\n   ${escapeHtml(leg.market)}: <b>${escapeHtml(
+          `⚽ ${escapeHtml(translateTeamName(leg.homeTeam))} – ${escapeHtml(translateTeamName(leg.awayTeam))}\n   ${escapeHtml(leg.market)}: <b>${escapeHtml(
             translateNamesInText(leg.selection, leg.homeTeam, leg.awayTeam)
           )}</b> (${leg.probability.toFixed(0)} %)`
       )
@@ -244,7 +244,7 @@ function buildMessageText(tip: SavedTip, headerOverride?: string, vip = false, s
 
   return (
     `${headerOverride ?? (vip && strong ? `⭐ <b>SILNÝ TIP DŇA</b>` : `🎯 <b>Nový tip</b>`)}\n\n` +
-    `⚽ ${escapeHtml(translateTeamName(tip.homeTeam))} — ${escapeHtml(translateTeamName(tip.awayTeam))}\n` +
+    `⚽ ${escapeHtml(translateTeamName(tip.homeTeam))} – ${escapeHtml(translateTeamName(tip.awayTeam))}\n` +
     `📊 ${escapeHtml(tip.market)}: <b>${escapeHtml(translateNamesInText(tip.selection, tip.homeTeam, tip.awayTeam))}</b>\n` +
     `📈 Dôvera: <b>${tip.probability.toFixed(0)} %</b>${vip && strong ? " · ⭐ <b>Najsilnejší tip dňa</b>" : ""}\n` +
     oddsLine +
@@ -329,7 +329,7 @@ export async function sendTipResultToTelegram(
     const legsText = tip.legs
       .map((leg) => {
         const icon = leg.status === "won" ? "✅" : leg.status === "lost" ? "❌" : "➖";
-        return `${icon} ${escapeHtml(translateTeamName(leg.homeTeam))} — ${escapeHtml(translateTeamName(leg.awayTeam))}: ${escapeHtml(
+        return `${icon} ${escapeHtml(translateTeamName(leg.homeTeam))} – ${escapeHtml(translateTeamName(leg.awayTeam))}: ${escapeHtml(
           leg.market
         )}: ${escapeHtml(translateNamesInText(leg.selection, leg.homeTeam, leg.awayTeam))}`;
       })
@@ -339,7 +339,7 @@ export async function sendTipResultToTelegram(
     const header = tip.status === "won" ? "✅ <b>VÝHRA</b>" : "❌ <b>PREHRA</b>";
     text =
       `${header}\n\n` +
-      `⚽ ${escapeHtml(translateTeamName(tip.homeTeam))} — ${escapeHtml(translateTeamName(tip.awayTeam))}\n` +
+      `⚽ ${escapeHtml(translateTeamName(tip.homeTeam))} – ${escapeHtml(translateTeamName(tip.awayTeam))}\n` +
       `📊 ${escapeHtml(tip.market)}: <b>${escapeHtml(translateNamesInText(tip.selection, tip.homeTeam, tip.awayTeam))}</b>`;
   }
 
@@ -399,10 +399,10 @@ const FAQ_ANSWERS: Record<string, string> = {
     `💰 <b>TipRadar Platinum</b>\n\nJedno členstvo v troch dĺžkach. Všetci členovia dostávajú rovnaké tipy.\n\n` +
     `${PLAN_START}\n\n${PLAN_SERIA}\n\n${PLAN_SAMPION}\n\n` +
     `Členstvo sa samo nepredlžuje, žiadna viazanosť. Cez letnú prestávku (jún – júl) sa pozastaví a o tento čas sa vám predĺži.` +
-    (process.env.SALES_OPEN === "true" ? "" : `\n\n🗓 <b>Predaj členstiev spúšťame čoskoro.</b> Napíšte sem „Mám záujem" a ozveme sa vám ako prvým.`),
+    (process.env.SALES_OPEN === "true" ? "" : `\n\n🗓 <b>Predaj členstiev spúšťame čoskoro.</b> Napíšte sem „Mám záujem“ a ozveme sa vám ako prvým.`),
   faq_how:
     `❓ <b>Ako to funguje</b>\n\n` +
-    `TipRadar denne prepočíta desiatky zápasov cez vlastný štatistický model (Poissonovo rozdelenie gólov, vážená forma, vzájomné zápasy, historické dáta) a vyberie tipy s reálnou hodnotou naprieč 8 trhmi (góly v zápase, góly tímu, rohy v zápase, rohy tímu, karty, strely na bránu, fauly, držanie lopty) — s vysvetlením, prečo. Pri každom trhu vyskúša všetky hranice, ktoré stávkové kancelárie ponúkajú, a vyberie tú s najväčšou hodnotou.`,
+    `TipRadar denne prepočíta desiatky zápasov cez vlastný štatistický model (Poissonovo rozdelenie gólov, vážená forma, vzájomné zápasy, historické dáta) a vyberie tipy s reálnou hodnotou naprieč 8 trhmi (góly v zápase, góly tímu, rohy v zápase, rohy tímu, karty, strely na bránu, fauly, držanie lopty) – s vysvetlením, prečo. Pri každom trhu vyskúša všetky hranice, ktoré stávkové kancelárie ponúkajú, a vyberie tú s najväčšou hodnotou.`,
   faq_time:
     `🕒 <b>Kedy prídu tipy</b>\n\n` +
     `Tipy posielame v deň zápasu, <b>1 – 2 hodiny pred výkopom</b> – vtedy sú kurzy aj dáta najpresnejšie a zostane dosť času na stávku.\n\n` +
@@ -434,7 +434,7 @@ async function callTelegramApi(method: string, body: Record<string, unknown>): P
 /** Spracuje jednu prichádzajúcu udalosť z Telegram webhooku (nová správa alebo stlačenie tlačidla). */
 // ---- Záujemcovia o členstvo z tipradar.eu ----
 const NEXT_STEP =
-  `<b>Ako pokračovať:</b> napíšte sem krátku správu (napríklad „Mám záujem o Platinum na 3 mesiace"). Pošleme vám platobné údaje a po platbe vás pridáme do súkromného kanála TipRadar Platinum.\n\n` +
+  `<b>Ako pokračovať:</b> napíšte sem krátku správu (napríklad „Mám záujem o Platinum na 3 mesiace“). Pošleme vám platobné údaje a po platbe vás pridáme do súkromného kanála TipRadar Platinum.\n\n` +
   `Ozveme sa vám zvyčajne do 24 hodín. Bez viazanosti, členstvo sa samo nepredlžuje.`;
 const PAY_STEP =
   `Zaplatíte bankovým prevodom cez QR kód v appke vašej banky, bez poplatkov. Hneď ako platba príde na účet, pošlem vám sem pozvánku do kanála TipRadar Platinum.\n\n` +
@@ -633,7 +633,7 @@ export async function notifyAdminExpiringSubscribers(
     .map((s) => {
       const tierLabel = s.tier === "group" ? "PLATINUM 6 MESIACOV" : "PLATINUM 1 / 3 MESIACE";
       const when = s.daysLeft < 0 ? "už skončilo" : s.daysLeft === 0 ? "končí dnes" : `končí o ${s.daysLeft} d.`;
-      return `• ${s.name} (${tierLabel}) — ${when}`;
+      return `• ${s.name} (${tierLabel}) – ${when}`;
     })
     .join("\n");
 
@@ -700,14 +700,14 @@ export function buildDailyResultsText(tips: SavedTip[], day: string): string {
       lines.push(`${icon(t.status)} 🎫 <b>Tiket</b> (${n} ${n >= 2 && n <= 4 ? "zápasy" : "zápasov"})${oddsTxt(t.odds)}`);
       for (const leg of t.legs) {
         lines.push(
-          `    ${icon(leg.status)} ${escapeHtml(translateTeamName(leg.homeTeam))} — ${escapeHtml(translateTeamName(leg.awayTeam))}: ${escapeHtml(
+          `    ${icon(leg.status)} ${escapeHtml(translateTeamName(leg.homeTeam))} – ${escapeHtml(translateTeamName(leg.awayTeam))}: ${escapeHtml(
             leg.market
           )}: ${escapeHtml(translateNamesInText(leg.selection, leg.homeTeam, leg.awayTeam))}`
         );
       }
     } else {
       lines.push(
-        `${icon(t.status)} <b>${escapeHtml(translateTeamName(t.homeTeam))} — ${escapeHtml(translateTeamName(t.awayTeam))}</b>\n` +
+        `${icon(t.status)} <b>${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))}</b>\n` +
           `    ${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}${oddsTxt(t.odds)}`
       );
     }
@@ -789,11 +789,11 @@ export async function redeemPayment(token: string, chatId: number | string, from
   const say = (text: string, extra: Record<string, unknown> = {}) =>
     callTelegramApi("sendMessage", { chat_id: chatId, text, parse_mode: "HTML", ...extra });
   if (!p) {
-    await say("Túto platbu sa nepodarilo nájsť. Napíšte mi sem prosím, čo sa stalo, a hneď to vyriešim.");
+    await say("Túto platbu sa nepodarilo nájsť. Napíšte mi sem, prosím, čo sa stalo, a hneď to vyriešim.");
     return "unknown";
   }
   if (p.status === "cancelled") {
-    await say("Táto platba bola zrušená. Ak ste zaplatili, napíšte mi sem prosím a hneď to vyriešim.");
+    await say("Táto platba bola zrušená. Ak ste zaplatili, napíšte mi sem, prosím, a hneď to vyriešim.");
     return "unknown";
   }
   if (p.status === "pending") {
@@ -895,7 +895,7 @@ export async function redeemPayment(token: string, chatId: number | string, from
 async function claimBankPayment(p: Payment, chatId: number | string, from: any): Promise<void> {
   const first = !p.claimedAt;
   if (p.chatId && String(p.chatId) !== String(chatId) && p.claimedAt) {
-    await callTelegramApi("sendMessage", { chat_id: chatId, text: "Táto platba patrí inému účtu. Ak je to chyba, napíšte mi sem prosím." });
+    await callTelegramApi("sendMessage", { chat_id: chatId, text: "Táto platba patrí inému účtu. Ak je to chyba, napíšte mi sem, prosím." });
     return;
   }
   p.chatId = String(chatId);
@@ -920,7 +920,7 @@ async function claimBankPayment(p: Payment, chatId: number | string, from: any):
         `Meno: <b>${escapeTg(name)}</b>\n` +
         (p.username ? `Telegram: @${escapeTg(p.username)}\n` : "") +
         `Variabilný symbol: <b>${p.vs}</b>\n\n` +
-        `Keď platbu uvidíš na účte, klikni <b>Potvrdiť</b> a bot mu pošle pozvánku.`,
+        `Keď platbu uvidíš na účte, klikni na <b>Potvrdiť</b> a bot mu pošle pozvánku.`,
       reply_markup: { inline_keyboard: [[{ text: "✅ Potvrdiť platbu", callback_data: `payok:${p.token}` }, { text: "✖ Zrušiť", callback_data: `payno:${p.token}` }]] },
     });
   }
@@ -1000,7 +1000,7 @@ export async function sendSalesOpenToWaitlist(): Promise<{ sent: number; skipped
     const text =
       `Ahoj${first ? " " + first : ""} 👋\n\n` +
       `Zapísal si sa do poradovníka na <b>TipRadar Platinum</b>. Predaj je práve otvorený a ty máš prednosť.\n\n` +
-      `◆ denné tipy 1 – 2 hodiny pred výkopom\n◆ pri každom kurz, šanca a sadzba\n◆ večerné vyhodnotenie\n\n` +
+      `◆ denné tipy 1 – 2 hodiny pred výkopom\n◆ pri každom tipe kurz, šanca a sadzba\n◆ večerné vyhodnotenie\n\n` +
       `Na 1 a 3 mesiace sa môžeš pridať kedykoľvek, na 6 mesiacov je len <b>${SEATS_SEASON}</b> miest. Vyber si dĺžku 👇`;
     try {
       await axios.post(

@@ -210,7 +210,7 @@ export async function getTeamStatistics(
 
     const d = res.data?.response;
     if (!d || !d.team) {
-      throw new Error(`Štatistiky pre tím ${teamId} neboli nájdené (liga ${leagueId}, sezóna ${season}).`);
+      throw new Error(`Štatistiky pre tím ${teamId} sa nenašli (liga ${leagueId}, sezóna ${season}).`);
     }
 
     // Karty prichádzajú rozdelené po 15-minútových intervaloch (žlté aj červené) -

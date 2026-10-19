@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>TipRadar — denný súhrn výsledkov</title>
+<title>TipRadar – denný súhrn výsledkov</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -307,7 +307,7 @@ body, body * { font-variant-numeric: lining-nums tabular-nums !important; }
     </div>
   </header>
   <h1>Denný súhrn výsledkov</h1>
-  <p class="lead">Každý deň zapíš tipy a tikety, ktoré si poslal, a po zápasoch označ, ako dopadli. Úspešnosť, zisk a ROI sa vypočítajú samé (1 jednotka na každý tip). Obrázok stiahneš ako príbeh (1080×1920) alebo príspevok (1080×1350). Šípkami pod tipmi sa presunieš na iný deň, každý deň má vlastné tipy.</p>
+  <p class="lead">Každý deň zapíš tipy a tikety, ktoré si poslal, a po zápasoch označ, ako dopadli. Úspešnosť, zisk a ROI sa vypočítajú samé (1 jednotka na každý tip). Obrázok stiahneš ako príbeh (1080×1920) alebo príspevok (1080×1350). Šípkami pod tipmi sa presunieš na iný deň – každý deň má vlastné tipy.</p>
 
   <div class="layout">
     <div>
@@ -334,7 +334,7 @@ body, body * { font-variant-numeric: lining-nums tabular-nums !important; }
           </div>
           <button class="btn arrow" id="nextDay" aria-label="Nasledujúci deň" title="Nasledujúci deň">›</button>
         </div>
-        <p class="hint">Poradie tipov zmeníš podržaním úchytu ⋮⋮ a potiahnutím. Čas výkopu je nepovinný – pomocou neho zoradíš tipy tlačidlom „⇅ Zoradiť podľa času". Tiket zapíš ako jeden riadok (napr. „Tiket (3 zápasy)") s celkovým kurzom. Do príbehu sa zmestí 6 tipov, do príspevku 10. Štatistiky vždy rátajú so všetkými.</p>
+        <p class="hint">Poradie tipov zmeníš podržaním úchytu ⋮⋮ a potiahnutím. Čas výkopu je nepovinný – pomocou neho zoradíš tipy tlačidlom „⇅ Zoradiť podľa času“. Tiket zapíš ako jeden riadok (napr. „Tiket (3 zápasy)“) s celkovým kurzom. Do príbehu sa zmestí 6 tipov, do príspevku 10. Štatistiky vždy rátajú so všetkými.</p>
       </div>
 
       <div class="panel">
@@ -377,7 +377,7 @@ body, body * { font-variant-numeric: lining-nums tabular-nums !important; }
 
       <div class="panel" id="importPanel">
         <h2>Prenos zo starej verzie</h2>
-        <p class="hint" style="margin-top:0">Ak si tipy zapisoval na stránke na claude.ai, stiahni tam zálohu tlačidlom „Exportovať všetky dni" a nahraj ju sem. Prenesú sa len dni, ktoré tu ešte nemáš vyplnené.</p>
+        <p class="hint" style="margin-top:0">Ak si tipy zapisoval na stránke na claude.ai, stiahni tam zálohu tlačidlom „Exportovať všetky dni“ a nahraj ju sem. Prenesú sa len dni, ktoré tu ešte nemáš vyplnené.</p>
         <div class="actions"><label class="btn" for="importFile" style="cursor:pointer">Nahrať zálohu (.json)</label><input type="file" id="importFile" accept="application/json,.json" hidden></div>
         <div class="status" id="importStatus" role="status"></div>
       </div>
@@ -686,7 +686,7 @@ body, body * { font-variant-numeric: lining-nums tabular-nums !important; }
     state.tips.forEach((t, i) => {
       const r = document.createElement('div'); r.className = 'row';
       r.innerHTML =
-        '<div class="n"><button type="button" class="drag" aria-label="Presunúť tip ' + (i + 1) + ' (potiahni, alebo šípky hore/dole)" title="Podrž a potiahni">⋮⋮</button><span>' + (i + 1) + '.</span></div>' +
+        '<div class="n"><button type="button" class="drag" aria-label="Presunúť tip ' + (i + 1) + ' (potiahni alebo použi šípky hore/dole)" title="Podrž a potiahni">⋮⋮</button><span>' + (i + 1) + '.</span></div>' +
         '<input class="h" type="time" aria-label="Čas výkopu ' + (i + 1) + '" title="Čas výkopu">' +
         '<input class="m" type="text" placeholder="Zápas, napr. Arsenal – Leeds" aria-label="Zápas ' + (i + 1) + '">' +
         '<input class="t" type="text" placeholder="Tip, napr. Góly nad 2,5" aria-label="Tip ' + (i + 1) + '">' +
@@ -1059,7 +1059,7 @@ body, body * { font-variant-numeric: lining-nums tabular-nums !important; }
     if (s.pending) lines.push('⏳ Ešte sa hrá: ' + s.pending);
     lines.push('');
     lines.push(s.profit >= 0
-      ? 'Každý deň zverejňujeme všetky tipy aj s výsledkami, vrátane tých, čo nevyšli.'
+      ? 'Každý deň zverejňujeme všetky tipy aj s výsledkami, vrátane tých, ktoré nevyšli.'
       : 'Dnes to nevyšlo podľa predstáv a ukazujeme to rovnako otvorene ako dobré dni. Hodnotí sa dlhodobý výsledok.');
     lines.push('', 'Počítané pri stávke 1 jednotky na každý tip.', '', '📩 Telegram @TipRadarAiBot (odkaz v biu)', '', '18+ | Hraj zodpovedne. Tipy nezaručujú výsledok.', '', '#futbal #fotbal #football #vysledky #tipradar');
     return lines.join('\n');
