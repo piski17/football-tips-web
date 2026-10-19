@@ -1068,7 +1068,7 @@ function bestScorerCard(best, r) {
   if (!best) {
     return `
       <div class="stat-card">
-        <p class="muted small">Nenašiel sa hráč s dostatočným počtom zápasov v žiadnom z tímov.</p>
+        <p class="muted small">Pre tento zápas sa nenašli štatistiky hráčov.</p>
       </div>
     `;
   }
@@ -1079,6 +1079,10 @@ function bestScorerCard(best, r) {
     <div class="stat-card">
       <h4>${escapeHtml(prediction.player.name)} <span class="muted small">(${escapeHtml(translateTeamName(best.team))})</span></h4>
       <div class="stat-line"><span>Góly / zápasy</span><strong>${prediction.seasonGoals} / ${prediction.appearances}</strong></div>
+      ${prediction.goalsPer90 != null ? `<div class="stat-line"><span>Góly na 90 minút</span><strong>${fmtNum(prediction.goalsPer90, 2)}</strong></div>` : ""}
+      ${prediction.shotsOnPer90 != null ? `<div class="stat-line"><span>Strely na bránu na 90 minút</span><strong>${fmtNum(prediction.shotsOnPer90, 1)}</strong></div>` : ""}
+      ${prediction.expectedMinutes != null ? `<div class="stat-line"><span>Odhad odohraných minút</span><strong>${prediction.expectedMinutes} min${prediction.inLineup ? " · v zostave" : ""}</strong></div>` : ""}
+      ${prediction.penaltyTaker ? `<div class="stat-line"><span>Kope penalty</span><strong>✓ áno</strong></div>` : ""}
       <div class="tip-callout" style="margin-top:10px; margin-bottom:0; padding: 10px 14px;">
         <div class="tip-outcome" style="font-size:16px;">⚽</div>
         <div class="tip-details">
@@ -1101,10 +1105,10 @@ function bestScorerCard(best, r) {
 
 // ---- Strelec: oplatí sa / neoplatí sa ----
 // Stávkovky kurzy na strelcov cez API neposielajú, preto sa kurz zadá ručne.
-// Oplatí sa len keď: hráč je v potvrdenej zostave, má aspoň 8 zápasov,
+// Oplatí sa len keď: hráč je v potvrdenej zostave, odohrá asi aspoň 60 minút,
 // pravdepodobnosť gólu je aspoň 35 % a kurz je vyšší ako 100 ÷ pravdepodobnosť.
 const SCORER_MIN_PROB = 35;
-const SCORER_MIN_APPS = 8;
+const SCORER_MIN_MINUTES = 60; // namiesto pevného minima 8 zápasov (19. 10. 2026)
 
 function scorerOddsCheckHtml(best, r) {
   const p = best.prediction;
@@ -1113,7 +1117,7 @@ function scorerOddsCheckHtml(best, r) {
   const minOdds = p.probabilityToScore > 0 ? 100 / p.probabilityToScore : 0;
   const checks = [
     { ok: lineupOk, text: lineupOk ? "Hráč je v potvrdenej zostave" : "Zostava ešte nie je potvrdená" },
-    { ok: p.appearances >= SCORER_MIN_APPS, text: `Odohrané zápasy: ${p.appearances} (treba aspoň ${SCORER_MIN_APPS})` },
+    { ok: p.expectedMinutes == null || p.expectedMinutes >= SCORER_MIN_MINUTES, text: p.expectedMinutes == null ? "Odhad minút nie je k dispozícii" : `Odohrá asi ${p.expectedMinutes} minút (treba aspoň ${SCORER_MIN_MINUTES})` },
     { ok: p.probabilityToScore >= SCORER_MIN_PROB, text: `Pravdepodobnosť gólu: ${p.probabilityToScore.toFixed(0)} % (treba aspoň ${SCORER_MIN_PROB} %)` },
   ];
   const baseOk = checks.every((c) => c.ok);

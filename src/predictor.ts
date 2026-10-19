@@ -1117,10 +1117,10 @@ export function predictMatch(
   const bestBets = topPick ? [topPick] : [];
 
   const homeTopScorer = homePlayers
-    ? predictTopScorer(filterByLineup(homePlayers, homeLineupIds), xg.home, homeStats.goals.for.average.total)
+    ? predictTopScorer(filterByLineup(homePlayers, homeLineupIds), xg.home, homeStats.goals.for.average.total, homeLineupIds)
     : null;
   const awayTopScorer = awayPlayers
-    ? predictTopScorer(filterByLineup(awayPlayers, awayLineupIds), xg.away, awayStats.goals.for.average.total)
+    ? predictTopScorer(filterByLineup(awayPlayers, awayLineupIds), xg.away, awayStats.goals.for.average.total, awayLineupIds)
     : null;
 
   let bestScorer: { team: string; prediction: PlayerGoalPrediction } | null = null;
@@ -1216,13 +1216,32 @@ export function predictMatch(
   };
 }
 
+/** Typický počet gólov na 90 minút podľa pozície – s ním sa vyrovná malá vzorka zápasov. */
+const SCORER_POSITION_PRIOR: Record<string, number> = { Attacker: 0.3, Midfielder: 0.1, Defender: 0.035, Goalkeeper: 0 };
+/** Koľko „90-minútových zápasov“ váži odhad podľa pozície (čím viac odohral, tým menej). */
+const SCORER_PRIOR_WEIGHT = 6;
+/** Približne každá tretia strela na bránu skončí gólom. */
+const SHOT_ON_CONVERSION = 0.32;
+/** Penaltový exekútor má navyše asi 0,05 očakávaného gólu na zápas. */
+const PENALTY_BONUS = 0.05;
+
+/** Doplnkové údaje hráča pre presnejší odhad strelca (všetky nepovinné). */
+export interface ScorerExtra {
+  minutes?: number;
+  position?: string;
+  shotsOn?: number;
+  penaltyScored?: number;
+  inLineup?: boolean;
+}
+
 /**
  * Odhadne pravdepodobnosť, že konkrétny hráč v tomto zápase skóruje aspoň raz.
- * Logika: z hráčovho pomeru gólov na zápas a celkového priemeru gólov tímu na
- * zápas odvodíme, akým podielom hráč typicky prispieva k gólom tímu. Tento
- * podiel potom aplikujeme na už vypočítaný očakávaný počet gólov tímu v tomto
- * konkrétnom zápase (z Poissonovho modelu) a spočítame Poissonovu
- * pravdepodobnosť aspoň jedného gólu.
+ * Nová logika (19. 10. 2026), bez pevného minima zápasov:
+ * 1) góly na 90 minút, pri malej vzorke vyrovnané typickou hodnotou pre jeho pozíciu,
+ * 2) skombinované so strelami na bránu (tie sú stabilnejšie než samotné góly),
+ * 3) vynásobené tým, koľko minút asi odohrá (základ vs. striedajúci hráč),
+ * 4) upravené podľa toho, koľko gólov má jeho tím dať práve v tomto zápase,
+ * 5) bonus pre penaltového exekútora.
  */
 export function predictPlayerGoal(
   playerName: string,
@@ -1230,12 +1249,28 @@ export function predictPlayerGoal(
   seasonGoals: number,
   appearances: number,
   teamExpectedGoalsThisMatch: number,
-  teamSeasonGoalsPerGame: number
+  teamSeasonGoalsPerGame: number,
+  extra: ScorerExtra = {}
 ): PlayerGoalPrediction {
   const goalsPerGame = appearances > 0 ? seasonGoals / appearances : 0;
-  const shareOfTeamGoals =
-    teamSeasonGoalsPerGame > 0 ? clamp(goalsPerGame / teamSeasonGoalsPerGame, 0, 1) : 0;
-  const lambda = shareOfTeamGoals * teamExpectedGoalsThisMatch;
+  const minutes = extra.minutes && extra.minutes > 0 ? extra.minutes : appearances * 70;
+  const n90 = minutes / 90;
+  const prior = SCORER_POSITION_PRIOR[extra.position ?? ""] ?? 0.12;
+  const k = SCORER_PRIOR_WEIGHT;
+  const goalsPer90 = (seasonGoals + prior * k) / (n90 + k);
+  const hasShots = typeof extra.shotsOn === "number" && extra.shotsOn > 0;
+  const shotsOnPer90 = hasShots && n90 > 0 ? extra.shotsOn! / n90 : undefined;
+  const shotRate = hasShots ? (extra.shotsOn! * SHOT_ON_CONVERSION + prior * k) / (n90 + k) : goalsPer90;
+  const rate = hasShots ? 0.65 * goalsPer90 + 0.35 * shotRate : goalsPer90;
+
+  const avgMinutes = appearances > 0 ? Math.min(90, minutes / appearances) : 60;
+  const expectedMinutes = extra.inLineup ? Math.min(90, Math.max(avgMinutes, 78)) : avgMinutes;
+  const matchFactor =
+    teamSeasonGoalsPerGame > 0 && teamExpectedGoalsThisMatch > 0
+      ? clamp(teamExpectedGoalsThisMatch / teamSeasonGoalsPerGame, 0.5, 1.8)
+      : 1;
+  const penaltyTaker = (extra.penaltyScored ?? 0) >= 1;
+  const lambda = rate * (expectedMinutes / 90) * matchFactor + (penaltyTaker ? PENALTY_BONUS * matchFactor : 0);
   const probabilityToScore = (1 - poissonPmf(0, lambda)) * 100;
 
   return {
@@ -1244,14 +1279,15 @@ export function predictPlayerGoal(
     appearances,
     goalsPerGame,
     probabilityToScore,
+    minutes: extra.minutes && extra.minutes > 0 ? extra.minutes : undefined,
+    goalsPer90: Math.round(goalsPer90 * 100) / 100,
+    shotsOnPer90: shotsOnPer90 != null ? Math.round(shotsOnPer90 * 100) / 100 : undefined,
+    penaltyTaker,
+    expectedMinutes: Math.round(expectedMinutes),
+    inLineup: Boolean(extra.inLineup),
   };
 }
 
-/**
- * Z celej súpisky tímu automaticky vyberie hráča s najvyššou pravdepodobnosťou
- * gólu v tomto zápase. Hráčov s príliš málo odohranými zápasmi (menej ako
- * `minAppearances`) vynechá, aby jeden náhodný gól v 1 zápase neskreslil výber.
- */
 /**
  * Ak je k dispozícii potvrdená zostava (lineupIds), obmedzí zoznam hráčov len
  * na tých, ktorí sú v nej - inak vráti celú súpisku bez zmeny (zostava zatiaľ
@@ -1263,17 +1299,28 @@ function filterByLineup(players: RawPlayerStat[], lineupIds?: number[] | null): 
   return filtered.length > 0 ? filtered : players;
 }
 
+/**
+ * Z celej súpisky tímu vyberie hráča s najvyššou pravdepodobnosťou gólu v tomto zápase.
+ * Pevné minimum zápasov už nie je (19. 10. 2026) – malú vzorku vyrovná odhad podľa pozície.
+ * Brankári a hráči bez jedinej odohranej minúty sa vynechajú.
+ */
 export function predictTopScorer(
   players: RawPlayerStat[],
   teamExpectedGoalsThisMatch: number,
   teamSeasonGoalsPerGame: number,
-  minAppearances: number = 3
+  lineupIds?: number[] | null
 ): PlayerGoalPrediction | null {
-  const eligible = players.filter((p) => p.appearances >= minAppearances);
+  const eligible = players.filter((p) => p.appearances >= 1 && p.position !== "Goalkeeper");
   if (eligible.length === 0) return null;
 
   const predictions = eligible.map((p) =>
-    predictPlayerGoal(p.name, p.id, p.goals, p.appearances, teamExpectedGoalsThisMatch, teamSeasonGoalsPerGame)
+    predictPlayerGoal(p.name, p.id, p.goals, p.appearances, teamExpectedGoalsThisMatch, teamSeasonGoalsPerGame, {
+      minutes: p.minutes,
+      position: p.position,
+      shotsOn: p.shotsOn,
+      penaltyScored: p.penaltyScored,
+      inLineup: Boolean(lineupIds && lineupIds.includes(p.id)),
+    })
   );
 
   predictions.sort((a, b) => b.probabilityToScore - a.probabilityToScore);

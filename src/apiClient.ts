@@ -788,6 +788,9 @@ export async function getTeamPlayersWithStats(
         assists: entry.goals?.assists ?? 0,
         minutes: entry.games?.minutes ?? 0,
         position: entry.games?.position ?? undefined,
+        shotsOn: entry.shots?.on ?? 0,
+        penaltyScored: entry.penalty?.scored ?? 0,
+        starts: entry.games?.lineups ?? 0,
       });
     }
 

@@ -335,6 +335,12 @@ export interface RawPlayerStat {
   minutes?: number;
   /** Pozícia: Goalkeeper / Defender / Midfielder / Attacker. */
   position?: string;
+  /** Strely na bránu v sezóne. */
+  shotsOn?: number;
+  /** Premenené penalty v sezóne (penaltový exekútor). */
+  penaltyScored?: number;
+  /** Zápasy v základnej zostave. */
+  starts?: number;
 }
 
 /** Hráč, ktorý v zápase chýba (zranenie, trest) – z API-Football /injuries. */
@@ -352,6 +358,18 @@ export interface PlayerGoalPrediction {
   appearances: number;
   goalsPerGame: number;
   probabilityToScore: number; // 0-100
+  /** Odohrané minúty v sezóne (ak sú známe). */
+  minutes?: number;
+  /** Góly na 90 minút po vyrovnaní malej vzorky (podľa pozície). */
+  goalsPer90?: number;
+  /** Strely na bránu na 90 minút. */
+  shotsOnPer90?: number;
+  /** Kopal a premenil v sezóne aspoň jednu penaltu. */
+  penaltyTaker?: boolean;
+  /** Koľko minút asi odohrá v tomto zápase. */
+  expectedMinutes?: number;
+  /** Je v potvrdenej základnej zostave. */
+  inLineup?: boolean;
 }
 
 /** Predplatiteľ služby (osobný alebo skupina/kanál na ďalší predaj) - používa len web appka. */
