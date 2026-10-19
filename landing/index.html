@@ -968,6 +968,53 @@ h2 { font-size: clamp(28px, 3.1vw, 44px) !important; }
   .finale { padding: 56px 0; }
   .letter p { font-size: 15.5px; }
 }
+
+/* prehľad po mesiacoch (stránka Výsledky) */
+.mon-sec { margin-top: 28px; }
+.mon-sec[hidden] { display: none; }
+.mon { padding: 34px 36px 28px; border-radius: var(--r); border: 1px solid var(--line); background: var(--panel); }
+.mon .eyebrow { margin-bottom: 18px; }
+.mon h3 { font-size: 32px; font-weight: 800; margin: 0 0 10px; }
+.mon .note { color: var(--muted); margin: 0 0 22px; max-width: 64ch; font-size: 16px; }
+.mon-chart { position: relative; display: flex; align-items: stretch; gap: 10px; height: 210px; padding: 0 2px; }
+.mon-bar { position: relative; flex: 1 1 0; min-width: 0; max-width: 90px; margin: 0 auto; }
+.mon-bar .col { position: absolute; left: 12%; right: 12%; border-radius: 8px; transition: filter .2s; }
+.mon-bar .col.pos { background: linear-gradient(180deg, #F3E6C4, #B8995E); box-shadow: 0 0 18px rgba(243,230,196,.18); }
+.mon-bar .col.neg { background: linear-gradient(0deg, #C0707C, rgba(192,112,124,.55)); }
+.mon-bar:hover .col { filter: brightness(1.15); }
+.mon-bar .v { position: absolute; left: 0; right: 0; text-align: center; font: 700 15px/1 var(--display); white-space: nowrap; }
+.mon-bar .v.pos { color: var(--gold-hi); } .mon-bar .v.neg { color: var(--loss); }
+.mon-bar .k { position: absolute; left: 0; right: 0; bottom: -26px; text-align: center; font-size: 12.5px; color: var(--faint); white-space: nowrap; text-transform: capitalize; }
+.mon-zero { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--rule); }
+.mon-cols, .mon-list li { display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(4, minmax(0, .8fr)) minmax(0, 1fr); gap: 12px; align-items: center; }
+.mon-cols { margin-top: 48px; padding: 0 16px 10px; font: 700 11.5px/1 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+.mon-cols span:nth-child(n+2), .mon-list li > span:nth-child(n+2) { text-align: right; }
+.mon-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.mon-list li { padding: 13px 16px; border-radius: var(--r-sm); border: 1px solid var(--line); font-size: 15.5px; }
+.mon-list li.now { border-color: var(--line-2); background: rgba(217,192,138,.05); }
+.mon-list .mn { font-weight: 700; text-transform: capitalize; }
+.mon-list .mn small { margin-left: 8px; font-size: 11.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); }
+.mon-list .num { font-family: var(--display); font-weight: 700; }
+.mon-list .w { color: var(--win); } .mon-list .l { color: var(--loss); }
+.mon-list .pos { color: var(--gold-hi); } .mon-list .neg { color: var(--loss); }
+@media (max-width: 760px) {
+  .mon { padding: 24px 18px 20px; } .mon h3 { font-size: 25px; }
+  .mon-chart { height: 170px; gap: 6px; } .mon-bar .v { font-size: 11.5px; } .mon-bar .k { font-size: 11px; }
+  .mon-cols { display: none; }
+  .mon-list li { grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; margin-top: 0; }
+  .mon-list li > span:nth-child(2), .mon-list li > span:nth-child(4) { display: none; }
+  .mon-list li > span:nth-child(3) { grid-row: 2; grid-column: 1; text-align: left; font-size: 14px; }
+  .mon-list li > span:nth-child(5) { grid-row: 2; grid-column: 2; font-size: 14px; color: var(--muted); }
+  .mon-list li > span:nth-child(6) { grid-row: 1; grid-column: 2; }
+  .mon-list { margin-top: 44px; }
+}
+/* graf zisku v čase: bod pod myšou */
+.growth-hover { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(243,230,196,.35); pointer-events: none; }
+.growth-hover::after { content: ""; position: absolute; left: -6px; top: var(--y); width: 12px; height: 12px; margin-top: -6px; border-radius: 50%; background: var(--gold-hi); box-shadow: 0 0 0 4px rgba(243,230,196,.18); }
+.growth-tip { position: absolute; z-index: 5; pointer-events: none; transform: translate(-50%, calc(-100% - 14px)); background: #1B1510; border: 1px solid var(--line-2); border-radius: 12px; padding: 8px 12px; font-size: 13px; line-height: 1.45; white-space: nowrap; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+.growth-tip b { font-family: var(--display); font-size: 15px; }
+.growth-tip .pos { color: var(--gold-hi); } .growth-tip .neg { color: var(--loss); }
+.growth-hover[hidden], .growth-tip[hidden] { display: none; }
 </style>
 
 </head>
@@ -1246,6 +1293,16 @@ h2 { font-size: clamp(28px, 3.1vw, 44px) !important; }
         </div>
       </div>
 
+      <div class="mon-sec" id="mesiace" data-pages="vysledky" hidden>
+        <div class="mon">
+          <div class="eyebrow">Po mesiacoch</div>
+          <h3>Zisk <em>mesiac po mesiaci</em></h3>
+          <p class="note">Každý stĺpec je jeden mesiac. Nad nulou je zisk, pod nulou strata, v jednotkách (1 jednotka = vklad na jeden tip).</p>
+          <div class="mon-chart" id="monChart"></div>
+          <div class="mon-cols" aria-hidden="true"><span>Mesiac</span><span>Tipov</span><span>W / L</span><span>Vyšlo</span><span>ROI</span><span>Zisk</span></div>
+          <ul class="mon-list" id="monList"></ul>
+        </div>
+      </div>
       <div class="calib-sec" id="presnost" data-pages="vysledky" hidden>
         <div class="calib">
           <div class="eyebrow">Presnosť modelu</div>
@@ -1584,6 +1641,55 @@ h2 { font-size: clamp(28px, 3.1vw, 44px) !important; }
       svg.style.setProperty("--len", Math.ceil(len) + 4);
       svg.classList.add("draw");
     }
+    chartHover(pts, cum, tl.unit);
+  }
+  // bod pod myšou / prstom v grafe zisku
+  function chartHover(pts, cum, unit) {
+    const wrap = $("chWrap").querySelector(".growth-wrap");
+    if (!wrap || cum.length < 2) return;
+    const svg = wrap.querySelector(".growth"), H = 230, pad = 10;
+    const lo = Math.min(0, ...cum), hi = Math.max(0.5, ...cum), span = hi - lo || 1;
+    const bar = document.createElement("span"), tip = document.createElement("span");
+    bar.className = "growth-hover"; tip.className = "growth-tip"; bar.hidden = tip.hidden = true;
+    wrap.append(bar, tip);
+    const show = (cx) => {
+      const r = svg.getBoundingClientRect();
+      const i = Math.max(1, Math.min(cum.length - 1, Math.round(((cx - r.left) / r.width) * (cum.length - 1))));
+      const p = pts[i - 1], v = cum[i];
+      const left = ((i / (cum.length - 1)) * 100).toFixed(2) + "%", top = (((pad + (1 - (v - lo) / span) * (H - 2 * pad)) / H) * 100).toFixed(2) + "%";
+      bar.style.left = left; bar.style.setProperty("--y", top);
+      tip.style.left = `clamp(80px, ${left}, calc(100% - 80px))`; tip.style.top = top;
+      const when = unit === "week" ? `týždeň od ${dayLabel(p.key)}` : dayLabel(p.key);
+      tip.innerHTML = `${when} · ${p.won}/${p.total} vyšlo<br>spolu <b class="${cls(v)}">${signed(v, 1)} j.</b>`;
+      bar.hidden = tip.hidden = false;
+    };
+    const hide = () => { bar.hidden = tip.hidden = true; };
+    wrap.addEventListener("pointermove", (e) => show(e.clientX));
+    wrap.addEventListener("pointerdown", (e) => show(e.clientX));
+    wrap.addEventListener("pointerleave", hide);
+  }
+  // prehľad po mesiacoch: stĺpce so ziskom a tabuľka
+  function drawMonths(list) {
+    const ms = (list || []).filter((m) => m.totalResolved > 0);
+    if (!ms.length || !$("mesiace")) return;
+    const show = ms.slice(-12);
+    const vals = show.map((m) => m.profit || 0);
+    const hi = Math.max(0, ...vals), lo = Math.min(0, ...vals), span = hi - lo || 1;
+    const H = 100, top = 14, bot = 6; // percentá výšky: miesto na číslo nad/pod stĺpcom
+    const z = top + (hi / span) * (H - top - bot);
+    const mName = (k) => { const [y, m] = k.split("-").map(Number); return MONTHS[m - 1].slice(0, 3) + (show.length > 1 && show[0].key.slice(0, 4) !== show[show.length - 1].key.slice(0, 4) ? " " + String(y).slice(2) : ""); };
+    $("monChart").innerHTML = `<span class="mon-zero" style="top:${z.toFixed(1)}%"></span>` + show.map((m) => {
+      const v = m.profit || 0, h = (Math.abs(v) / span) * (H - top - bot), c = v >= 0 ? "pos" : "neg";
+      const colTop = v >= 0 ? z - h : z;
+      const vPos = v >= 0 ? `top:calc(${(z - h).toFixed(1)}% - 20px)` : `top:calc(${(z + h).toFixed(1)}% + 6px)`;
+      return `<div class="mon-bar" title="${MONTHS[Number(m.key.slice(5)) - 1]} ${m.key.slice(0, 4)}: ${signed(v, 1)} j."><span class="col ${c}" style="top:${colTop.toFixed(1)}%;height:max(3px, ${h.toFixed(1)}%)"></span><span class="v ${c} num" style="${vPos}">${signed(v, 1)}</span><span class="k">${mName(m.key)}</span></div>`;
+    }).join("");
+    const nowKey = new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Bratislava" }).slice(0, 7);
+    $("monList").innerHTML = [...ms].reverse().map((m) => {
+      const [y, mo] = m.key.split("-").map(Number), v = m.profit || 0;
+      return `<li class="${m.key === nowKey ? "now" : ""}"><span class="mn">${MONTHS[mo - 1]} ${y}${m.key === nowKey ? "<small>prebieha</small>" : ""}</span><span class="num">${m.totalResolved}</span><span class="num"><span class="w">${m.won}</span> / <span class="l">${m.totalResolved - m.won}</span></span><span class="num">${m.winRate ?? "–"} %</span><span class="num ${cls(m.roi || 0)}">${m.roi == null ? "–" : signed(m.roi, 1) + " %"}</span><span class="num ${cls(v)}">${signed(v, 1)} j.</span></li>`;
+    }).join("");
+    $("mesiace").hidden = false;
   }
   // posledných 10 tipov ako krúžky (zľava najstarší)
   function drawLast10() {
@@ -1868,7 +1974,7 @@ h2 { font-size: clamp(28px, 3.1vw, 44px) !important; }
       window.__bankData = d.bank || []; window.__calc && window.__calc();
       drawCalib(d.calibration);
       recentAll = d.recent || [];
-      drawList(); drawChart(d.timeline);
+      drawList(); drawChart(d.timeline); drawMonths(d.months);
       // Včerajší (posledný vyhodnotený) tip pod úvodom – výhra aj prehra
       const L = d.latest, yd = document.getElementById("yday");
       if (yd && L && L.day && (L.status === "won" || L.status === "lost" || L.status === "void")) {

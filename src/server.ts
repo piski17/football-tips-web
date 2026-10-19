@@ -932,11 +932,21 @@ app.get("/api/public/track-record", async (_req, res) => {
     }
     const timeline = Array.from(groups.entries())
       .sort((a, b) => (a[0] < b[0] ? -1 : 1))
-      .slice(-12)
       .map(([key, list]) => {
         const sm = summarize(list);
         return { key, won: sm.won, total: sm.totalResolved, rate: sm.winRate, profit: sm.profit, withOdds: sm.withOdds };
       });
+    // Prehľad po mesiacoch (stránka Výsledky): každý mesiac zvlášť, najstarší prvý.
+    const monthGroups = new Map<string, SavedTip[]>();
+    for (const t of resolvedAll) {
+      const mk = (tipDayKey(t) ?? "").slice(0, 7);
+      if (!mk) continue;
+      if (!monthGroups.has(mk)) monthGroups.set(mk, []);
+      monthGroups.get(mk)!.push(t);
+    }
+    const months = Array.from(monthGroups.entries())
+      .sort((a, b) => (a[0] < b[0] ? -1 : 1))
+      .map(([key, list]) => ({ key, ...summarize(list) }));
     // Uzatvárací kurz: o koľko bol kurz pri tipe vyšší než kurz tesne pred výkopom.
     const withClosing = all.filter(
       (t) => typeof clvOpen(t) === "number" && clvOpen(t)! > 1 && typeof t.closingOdds === "number" && t.closingOdds > 1
@@ -1040,6 +1050,7 @@ app.get("/api/public/track-record", async (_req, res) => {
       recent,
       slips,
       timeline: { unit: byWeek ? "week" : "day", points: timeline },
+      months,
       bank,
     });
   } catch (err: any) {
