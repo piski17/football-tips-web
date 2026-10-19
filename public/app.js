@@ -1530,12 +1530,8 @@ async function openTipsHistory() {
   }
 }
 
-function stakeTierPercent(probability) {
-  if (probability >= 70) return 0.03; // vyššia dôvera = väčšia sadzba
-  if (probability >= 60) return 0.02;
-  return 0.01;
-}
-
+// Bankroll simulátor: rovnaké percento z aktuálneho bankrollu na každý tip (1, 2, 3 alebo 5 %).
+let bankrollPct = 2;
 // Úspešnosť, zisk a ROI pri vklade 1 jednotka na tip (zisk len z tipov s kurzom).
 const CALIBRATION_MIN_TIPS = 20;
 const CALIBRATION_GAP = 10;
@@ -1660,7 +1656,7 @@ function renderBankrollSimulation(tips) {
   let bankroll = startingBankroll;
   const history = [bankroll];
   for (const t of resolved) {
-    const stake = bankroll * stakeTierPercent(t.probability);
+    const stake = bankroll * (bankrollPct / 100);
     // Skutočný kurz, ak bol pri tipe uložený – inak „fér“ kurz z pravdepodobnosti modelu.
     const odds = typeof t.odds === "number" && t.odds > 1 ? t.odds : 100 / t.probability;
     bankroll += t.status === "won" ? stake * (odds - 1) : -stake;
@@ -1672,6 +1668,7 @@ function renderBankrollSimulation(tips) {
   el.innerHTML = `
     <div class="kv-grid">
       <div><small>Použitých tipov</small><b>${resolved.length}</b></div>
+      <div><small>Prvý vklad</small><b>${fmtNum(startingBankroll * bankrollPct / 100, startingBankroll * bankrollPct % 100 ? 2 : 0)}${NB}€</b></div>
       <div><small>Konečný bankroll</small><b>${bankroll.toFixed(0)}${NB}€</b></div>
       <div><small>Celková zmena</small><b class="${totalReturn >= 0 ? "g" : "l"}">${signed(totalReturn, 1)}${NB}%</b></div>
     </div>
@@ -1709,6 +1706,13 @@ function renderCalibrationReport(tips) {
     `<p class="faint small">Zlatý pruh = koľko tipov reálne vyšlo. Biela čiarka = stred predikovaného rozsahu (kde by mal pruh byť, ak je model presný).</p>`;
 }
 bankrollStartInput.addEventListener("input", () => renderBankrollSimulation(lastStatTips));
+document.getElementById("bankrollPct").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-pct]");
+  if (!b) return;
+  bankrollPct = Number(b.dataset.pct);
+  document.querySelectorAll("#bankrollPct [data-pct]").forEach((x) => x.classList.toggle("on", x === b));
+  renderBankrollSimulation(lastStatTips);
+});
 
 const STATUS_PILL = {
   won: `<span class="res-b w">✓ Vyšlo</span>`,

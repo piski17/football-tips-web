@@ -129,8 +129,17 @@
             <summary>Pokročilé – bankroll, kalibrácia a tiché sledovanie</summary>
             <div class="adv-body">
               <h4 class="ct">Bankroll simulátor</h4>
-              <p class="muted small">Simulácia so sadzbou podľa dôvery (1 – 3 %) a skutočným kurzom, ak je uložený, inak „fér“ kurzom z pravdepodobnosti modelu.</p>
-              <label class="inline-field">Počiatočný bankroll <input type="number" id="bankrollStartInput" value="1000" min="1" step="50" /> €</label>
+              <p class="muted small">Na každý tip ide zvolené percento z aktuálneho bankrollu. Počíta sa so skutočným kurzom, ak je uložený, inak s „fér“ kurzom z pravdepodobnosti modelu.</p>
+              <div class="bk-controls">
+                <label class="inline-field">Počiatočný bankroll <input type="number" id="bankrollStartInput" value="1000" min="1" step="50" /> €</label>
+                <div class="chips" id="bankrollPct" role="group" aria-label="Vklad na tip">
+                  <span class="faint small">Vklad na tip</span>
+                  <button type="button" class="chip" data-pct="1">1&nbsp;%</button>
+                  <button type="button" class="chip on" data-pct="2">2&nbsp;%</button>
+                  <button type="button" class="chip" data-pct="3">3&nbsp;%</button>
+                  <button type="button" class="chip" data-pct="5">5&nbsp;%</button>
+                </div>
+              </div>
               <div id="bankrollResult"></div>
               <h4 class="ct">Kalibračný report</h4>
               <p class="muted small">Porovnanie predpovedanej pravdepodobnosti s tým, ako často tipy reálne vyšli.</p>

@@ -537,3 +537,9 @@ tr.bt-best { background: rgba(134, 199, 161, .08); }
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition: none !important; }
   .splash { animation: splashOut .01s linear .3s forwards !important; }
 }
+
+/* Bankroll simulátor: výber vkladu 1 / 2 / 3 / 5 % */
+.bk-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; margin: 10px 0 14px; }
+.bk-controls .chips { align-items: center; }
+.bk-controls .chips > span { margin-right: 4px; }
+.bk-controls .chips > span { flex-basis: 100%; margin: 0 0 2px; }
