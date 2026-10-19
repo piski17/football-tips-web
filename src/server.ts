@@ -8,7 +8,6 @@ import { recordBlend, listBlend, updateBlend, blendEntryFrom, blendSummary } fro
 import { recordLegs, listLegs, updateLeg, legCandidatesFrom, legQualifies, buildTickets, TicketLegCandidate, TICKET_RULES } from "./ticketWatchStore";
 import { startBacktest, getBacktest } from "./backtest";
 import { getDay, getAllDays, setDay } from "./dailyStore";
-import { recordScan, scanSummary } from "./scanStore";
 import { saveSlip, deleteSlip, listSlipIds, getSlipImage, MAX_SLIP_CHARS } from "./slipStore";
 import "dotenv/config";
 import express, { NextFunction, Request, Response } from "express";
@@ -616,9 +615,6 @@ app.post("/api/analyze", async (req, res) => {
       lineup
     );
 
-    // Dnešný radar na úvode webu: počet prepočítaných zápasov a trhov za deň výkopu.
-    const scanDate = new Date(fixture.date ?? (fixture.timestamp ? fixture.timestamp * 1000 : Date.now()));
-    void recordScan(dayKeySk(isNaN(scanDate.getTime()) ? new Date() : scanDate), Number(fixture.fixtureId), ((result as any).allCandidates ?? []).length).catch(() => {});
     // Tichá evidencia tipov vyradených pre rozpor so stávkovkami (na pozadí, nič neblokuje).
     void recordShadow(shadowEntriesFrom(fixture, (result as any).lowValueBets ?? [])).catch(() => {});
     // Tiché sledovanie miešania modelu so stávkovkami (na tipy nemá vplyv).
@@ -1039,21 +1035,9 @@ app.get("/api/public/track-record", async (_req, res) => {
       overall: calibRow(singles),
       bands: bands.map((b) => ({ label: b.label, ...calibRow(singles.filter((t) => b.test(t.probability))) })),
     };
-    // Dnešný radar: koľko zápasov model prepočítal a koľko tipov z nich prešlo
-    // (dnes, ráno pred analýzou včera). Len počty, žiadny čakajúci tip sa neprezradí.
-    let radar: { day: string; today: boolean; matches: number; markets: number; tips: number } | null = null;
-    const todayKey = dayKeySk(new Date());
-    for (const [day, today] of [[todayKey, true], [dayKeySk(new Date(Date.now() - 86400000)), false]] as [string, boolean][]) {
-      const scan = await scanSummary(day).catch(() => ({ matches: 0, markets: 0 }));
-      if (scan.matches >= 10) {
-        radar = { day, today, ...scan, tips: all.filter((t) => tipDayKey(t) === day).length };
-        break;
-      }
-    }
     res.json({
       ...summarize(all),
       calibration,
-      radar,
       month: { key: monthKey, ...summarize(inMonth) },
       last7: summarize(inLast7),
       latest,
