@@ -793,6 +793,7 @@ function renderAnalysis(r, root, opts = {}) {
   const both = lc.home && lc.away;
   const chips = [];
   // Rozhodcu služba často zverejní až deň pred zápasom – dovtedy model ráta karty a fauly bez neho.
+  if (referee && !r.referee && !isDone) chips.push(`<span class="st" title="Rozhodca pískal v tejto súťaži menej ako 3 zápasy, preto o ňom nie je dosť štatistík.">Rozhodca má málo zápasov v dátach · karty a fauly bez neho</span>`);
   if (!referee && !isDone) chips.push(`<span class="st" title="Rozhodcu zvyčajne zverejnia deň pred zápasom alebo v deň zápasu. Potom stačí kliknúť Prepočítať.">Rozhodca zatiaľ nie je známy · karty a fauly bez neho</span>`);
   if (!started) {
     chips.push(both ? `<span class="st g">✓ Potvrdená zostava</span>` : `<span class="st">Zostava ešte nie je zverejnená</span>`);
@@ -1244,7 +1245,13 @@ function statsPanelHtml(r, home, away) {
           <div><small>Vplyv na karty</small><b>${factor(ref.cardsFactor)}</b></div>
         </div>
       </div>`
-    : "";
+    : r.fixture.referee
+      ? `<div class="card ref-card">
+        <h4 class="ct">Rozhodca</h4>
+        <div class="ref-name">${escapeHtml(String(r.fixture.referee).split(",")[0])}</div>
+        <p class="muted small">V tejto súťaži pískal zatiaľ menej ako 3 zápasy, takže o ňom nie je dosť štatistík. Model pri kartách a fauloch počíta len s tímami.</p>
+      </div>`
+      : "";
 
   const cmp = rows.filter(Boolean).join("");
   if (!cmp && !totals.length && !refHtml) return `<div class="empty-card">Štatistiky pre tento zápas nie sú k dispozícii.</div>`;
