@@ -31,7 +31,7 @@ import {
  * evidencie, aby sa výsledky dali porovnávať len v rámci jednej verzie. Pri každej
  * zmene modelu, kalibrácie alebo filtrov ju zmeň (napr. na dátum zmeny).
  */
-export const MODEL_VERSION = "2026-10-20b";
+export const MODEL_VERSION = "2026-10-20c";
 
 // Predvolené váhy jednotlivých faktorov pri výsledku zápasu (1/X/2).
 // Pokus z 5. 10. 2026 (len Poisson s korekciou remíz, bez formy a vzájomných
@@ -73,8 +73,9 @@ export const LEGACY_WEIGHTS: PredictionWeights = DEFAULT_WEIGHTS;
 // Rohy (0,70 / 0,90) a strely (0,80 / 1,00) sa nezhodli – ostávajú.
 const MARKET_CALIBRATION: Record<string, number> = {
   strely: 0.8,
-  // Fauly späť na 0,8 (20. 10. 2026): v ostrých tipoch vyšli 2 z 5, „pod“ len 1 zo 4.
-  fauly: 0.8,
+  // Fauly 0,9: spätné testy z 20. 10. 2026 (mar. – máj 2025 a aug. – okt. 2025, po 300
+  // zápasov) našli najlepšie 0,90 a 1,00, pokus s 0,8 bol príliš prísny.
+  fauly: 0.9,
   rohy: 0.72,
   rohy_timu: 0.8,
   karty: 0.9,
@@ -85,6 +86,12 @@ const MARKET_CALIBRATION: Record<string, number> = {
 // ~70 %, vyšlo 7 z 13 (54 %), kým tipy „nad“ vyšli 10 z 10. Šanca „pod“ sa preto zmenší
 // k 50 % (navyše k ostatnej kalibrácii) a rozpor so stávkovkami sa toleruje najviac 12 bodov.
 const GOALS_UNDER_CALIBRATION = 0.85;
+/**
+ * Spojenie so stávkovkami (20. 10. 2026, Michalovo rozhodnutie): keď sú k tipu kurzy,
+ * výsledná šanca = 70 % model + 30 % stávkovky (bez marže). Stávkovky poznajú zranenia,
+ * zostavy a motiváciu, ktoré model nevidí. Pri málo dátach v sezóne platí väčšia váha trhu.
+ */
+const MARKET_BLEND = 0.3;
 const GOALS_UNDER_CONFLICT_LIMIT = 12;
 const isGoalsUnder = (c: { category: string; selection: string }) =>
   (c.category === "goly" || c.category === "goly_timu") && c.selection.startsWith("Under");
@@ -1047,13 +1054,13 @@ export function predictMatch(
           c.modelProbability = modelPct;
           c.marketProbability = pMarket * 100;
         }
-        if (marketWeight > 0) {
-          c.probability = (1 - marketWeight) * modelPct + marketWeight * pMarket * 100;
+        const blendW = legacy ? marketWeight : Math.max(marketWeight, MARKET_BLEND);
+        if (blendW > 0) {
+          c.probability = (1 - blendW) * modelPct + blendW * pMarket * 100;
+          const lead = blendW > MARKET_BLEND ? "Málo dát v sezóne – odhad upravený podľa kurzov stávkoviek" : "Šanca spojená so stávkovkami";
           c.explanation =
             (c.explanation ? c.explanation + " " : "") +
-            `(Málo dát v sezóne – odhad upravený podľa kurzov stávkoviek: model ${modelPct.toFixed(0)} %, stávkovky ${(
-              pMarket * 100
-            ).toFixed(0)} %.)`;
+            `(${lead}: model ${modelPct.toFixed(0)} %, stávkovky ${(pMarket * 100).toFixed(0)} %.)`;
         }
       }
     }
