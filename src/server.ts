@@ -219,7 +219,7 @@ app.use((req, res, next) => {
 
 app.get("/", (req, res, next) => {
   if (LANDING_HOSTS.includes((req.hostname || "").toLowerCase())) {
-    res.sendFile(path.join(__dirname, "..", "landing", "index.html"));
+    res.set("Cache-Control", "no-cache"); res.sendFile(path.join(__dirname, "..", "landing", "index.html"));
     return;
   }
   next();
@@ -232,7 +232,7 @@ app.get(["/video", "/video/"], (_req, res) => {
 // Je to ten istý súbor ako úvod, podľa adresy sa v ňom zobrazí iná časť.
 // tipradar.eu/clenstvo = samostatná stránka Členstvo (aj odkazy z Instagramu a Telegramu).
 app.get(["/metoda", "/metoda/", "/vysledky", "/vysledky/", "/otazky", "/otazky/", "/formular", "/formular/", "/o-mne", "/o-mne/", "/clenstvo", "/clenstvo/"], (_req, res) => {
-  res.sendFile(path.join(__dirname, "..", "landing", "index.html"));
+  res.set("Cache-Control", "no-cache"); res.sendFile(path.join(__dirname, "..", "landing", "index.html"));
 });
 // ---- Platba za členstvo (prevod cez QR kód) – bez hesla ----
 /** Koľko miest na 6 mesiacov je obsadených (aktívne členstvo „group", 7 dní tolerancia po splatnosti). */
@@ -430,7 +430,7 @@ ${href ? `<a class="btn" href="${esc(href)}">${esc(button)}</a>` : ""}<a class="
 
 // Kurz Škola stávkovania (tipradar.eu/kurz) – samostatná stránka, bez hesla.
 app.get(["/kurz", "/kurz/"], (_req, res) => {
-  res.sendFile(path.join(__dirname, "..", "landing", "kurz.html"));
+  res.set("Cache-Control", "no-cache"); res.sendFile(path.join(__dirname, "..", "landing", "kurz.html"));
 });
 // Ikonka stránky a obrázok náhľadu pri zdieľaní musia byť dostupné aj bez hesla.
 app.get(["/favicon.svg", "/favicon-32.png", "/favicon-256.png", "/og-image.png"], (req, res) => {
@@ -444,7 +444,7 @@ app.use("/obrazky", express.static(path.join(__dirname, "..", "landing", "obrazk
 
 // Zásady ochrany osobných údajov (tipradar.eu/ochrana-udajov) – bez hesla.
 app.get(["/ochrana-udajov", "/ochrana-udajov/"], (_req, res) => {
-  res.sendFile(path.join(__dirname, "..", "landing", "ochrana-udajov.html"));
+  res.set("Cache-Control", "no-cache"); res.sendFile(path.join(__dirname, "..", "landing", "ochrana-udajov.html"));
 });
 
 // Formulár „Máte otázku?" na tipradar.eu (bez hesla): meno, e-mail, téma a otázka.
@@ -1221,7 +1221,7 @@ app.get("/api/public/vip-seats", async (_req, res) => {
 
 // Verejná prezentačná stránka (bez hesla). Zobrazuje len texty a súhrnné čísla.
 app.get(["/prezentacia", "/prezentacia/"], (_req, res) => {
-  res.sendFile(path.join(__dirname, "..", "landing", "index.html"));
+  res.set("Cache-Control", "no-cache"); res.sendFile(path.join(__dirname, "..", "landing", "index.html"));
 });
 
 // Diagnostika: aké kurzy vracia API-Football pre zápas (názvy stávok a volieb).
