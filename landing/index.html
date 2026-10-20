@@ -1585,6 +1585,11 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
 #kto .om2-paper h2 { font-size: clamp(28px, 2.8vw, 38px) !important; }
 .om2-values .sec-head h2 { font-size: clamp(28px, 2.8vw, 40px) !important; }
 @media (max-width: 760px) { #kto .om2-paper h2, .om2-values .sec-head h2 { font-size: 27px !important; } }
+/* podpis Michal: celý viditeľný aj v Safari */
+.om2-sign .sig { display: inline-block !important; overflow: visible !important; clip-path: none !important; -webkit-clip-path: none !important; background: none !important; -webkit-background-clip: border-box !important; background-clip: border-box !important; color: #E9D5A6 !important; -webkit-text-fill-color: #E9D5A6 !important; text-shadow: 0 2px 18px rgba(217,192,138,.25); line-height: 1.7 !important; padding: .1em .6em .1em .35em !important; margin: -.35em 0 0 -.35em !important; }
+.js-anim .om2-sign .sig { opacity: 0; transform: translateY(8px); }
+.js-anim .om2-sign.in .sig { opacity: 1; transform: none; transition: opacity 1.4s ease .3s, transform 1.4s ease .3s; }
+.js-anim .om2-sign.in .om2-swash path { transition-delay: 1.2s; }
 </style>
 
 </head>
