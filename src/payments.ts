@@ -4,7 +4,7 @@ import * as crypto from "crypto";
 import axios from "axios";
 import { ibanValid } from "./payBySquare";
 
-// Platby za členstvo TipRadar Platinum: bankový prevod cez QR kód (PAY by square), bez poplatkov.
+// Platby za členstvo TipRadar (Silver, Gold, Platinum): bankový prevod cez QR kód (PAY by square), bez poplatkov.
 // Zapne sa, keď sú na Renderi nastavené SALES_OPEN=true, PAY_IBAN a PAY_NAME.
 // Platbu potvrdíš jedným klikom v appke alebo v Telegrame, bot potom pošle pozvánku.
 
@@ -54,6 +54,15 @@ export const PAY_TERMS: Record<Term, { price: number; name: string; months?: num
   m3: { price: 119, name: "3 mesiace", months: 3 },
   season: { price: 219, name: "6 mesiacov", months: 6 },
 };
+/** Názov členstva podľa dĺžky: 1 mesiac = Silver, 3 mesiace = Gold, 6 mesiacov = Platinum. */
+export const TIER_NAMES: Record<Term, string> = { m1: "Silver", m3: "Gold", season: "Platinum" };
+export function tierName(term: Term): string {
+  return TIER_NAMES[term] ?? TIER_NAMES.m1;
+}
+/** Názov členstva s dĺžkou, napríklad „Silver · 1 mesiac“. */
+export function termLabel(term: Term): string {
+  return `${tierName(term)} · ${PAY_TERMS[term].name}`;
+}
 export function isTerm(v: unknown): v is Term {
   return v === "m1" || v === "m3" || v === "season";
 }
@@ -139,7 +148,7 @@ function newToken(): string {
 
 /** Text v správe pre príjemcu – bez diakritiky a pomlčiek, aby ho zobrazila každá banka. */
 export function bankNote(term: Term): string {
-  return `TipRadar Platinum ${PAY_TERMS[term].name}`;
+  return `TipRadar ${tierName(term)} ${PAY_TERMS[term].name}`;
 }
 
 /** Založí čakajúcu platbu prevodom s vlastným variabilným symbolom. */

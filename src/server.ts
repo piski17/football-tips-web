@@ -48,8 +48,8 @@ import {
   notifyAdminExpiringSubscribers,
   sendCustomMessage,
   sendRenewalReminder,
-  sendTipResultToTelegram, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite } from "./telegram";
-import { paymentsEnabled, isTerm, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, deletePayment, Payment } from "./payments";
+  sendTipResultToTelegram, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite, sendMemberMessage } from "./telegram";
+import { paymentsEnabled, isTerm, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, deletePayment, Payment, termLabel, addActiveMonths, SUMMER_PAUSE } from "./payments";
 import { payBySquareString } from "./payBySquare";
 import QRCode from "qrcode";
 import { sendAdminEmail } from "./mailer";
@@ -93,6 +93,40 @@ function statsTips(tips: SavedTip[]): SavedTip[] {
   // Tipy „Len sledovať“ (napr. Liga majstrov na skúšku) sa vyhodnocujú, ale nerátajú sa
   // do štatistík, na web ani do vyhodnotení pre členov.
   return tips.filter((t) => !EXCLUDED_STATS_MARKETS.includes(t.market) && !t.watchOnly);
+}
+
+/** Súhrn tipov pri rovnakom vklade 1 jednotka na tip (zisk a ROI len z tipov s kurzom). */
+function summarizeTips(list: SavedTip[]) {
+  const resolved = list.filter((t) => t.status === "won" || t.status === "lost");
+  const won = resolved.filter((t) => t.status === "won").length;
+  const withOdds = resolved.filter((t) => typeof t.odds === "number" && t.odds > 1);
+  const profit = withOdds.reduce((sum, t) => sum + (t.status === "won" ? t.odds! - 1 : -1), 0);
+  return {
+    totalResolved: resolved.length,
+    won,
+    winRate: resolved.length > 0 ? Math.round((won / resolved.length) * 100) : null,
+    withOdds: withOdds.length,
+    profit: Math.round(profit * 100) / 100,
+    roi: withOdds.length > 0 ? Math.round((profit / withOdds.length) * 1000) / 10 : null,
+  };
+}
+
+/**
+ * Výsledky po mesiacoch (podľa dňa zápasu v slovenskom čase), najstarší prvý. Rovnaké čísla ukazuje
+ * web (stránka Výsledky) aj garancia „mesiac v strate = mesiac zadarmo“.
+ */
+function monthlyResults(tips: SavedTip[]) {
+  const resolvedAll = statsTips(tips).filter((t) => t.status === "won" || t.status === "lost");
+  const monthGroups = new Map<string, SavedTip[]>();
+  for (const t of resolvedAll) {
+    const mk = (tipDayKey(t) ?? "").slice(0, 7);
+    if (!mk) continue;
+    if (!monthGroups.has(mk)) monthGroups.set(mk, []);
+    monthGroups.get(mk)!.push(t);
+  }
+  return Array.from(monthGroups.entries())
+    .sort((a, b) => (a[0] < b[0] ? -1 : 1))
+    .map(([key, list]) => ({ key, ...summarizeTips(list) }));
 }
 
 /** Pohárové súťaže: tímy v nich hrajú málo zápasov, ale v domácej lige majú dosť dát. */
@@ -302,7 +336,7 @@ app.get("/platba", async (req, res) => {
     }
     const tg = `https://t.me/${BOT_USERNAME}?start=paid_${p.token}`;
     if (p.status !== "pending") {
-      res.send(paymentPage("Platba prijatá, ďakujem!", `Členstvo TipRadar Platinum · ${PAY_TERMS[p.term].name} je zaplatené. Pozvánku do kanála nájdete v Telegrame.`, tg, "Otvoriť Telegram"));
+      res.send(paymentPage("Platba prijatá, ďakujem!", `Členstvo TipRadar ${termLabel(p.term)} je zaplatené. Pozvánku do súkromného kanála nájdete v Telegrame.`, tg, "Otvoriť Telegram"));
       return;
     }
     if (!BANK.iban || !BANK.name) {
@@ -324,7 +358,7 @@ app.get("/platba", async (req, res) => {
 function bankPage(p: Payment, price: number, svg: string, png: string, tg: string): string {
   const esc = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   const ibanNice = BANK.iban.replace(/(.{4})/g, "$1 ").trim();
-  const term = PAY_TERMS[p.term].name;
+  const term = termLabel(p.term);
   const row = (label: string, value: string, copy: string) =>
     `<div class="row"><span class="k">${esc(label)}</span><span class="v">${esc(value)}</span><button type="button" class="cp" data-copy="${esc(copy)}">Kopírovať</button></div>`;
   return `<!doctype html><html lang="sk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -348,9 +382,10 @@ p{color:#BFB6A6;font-size:15px;line-height:1.6;margin:0 0 14px}
 a.btn{display:block;text-align:center;background:linear-gradient(180deg,#F3E6C4,#D9C08A 55%,#B8995E);color:#17130A;text-decoration:none;font-weight:700;font-size:14px;letter-spacing:.12em;text-transform:uppercase;padding:17px 20px;margin-top:6px}
 .small{font-size:13px;color:#8C8476}
 a.back{display:block;text-align:center;margin-top:22px;color:#8C8476;font-size:14px}
+.gar{margin:18px 0 0;padding:14px 16px;border:1px solid rgba(217,192,138,.45);background:rgba(217,192,138,.08);color:#F4EEE2;font-size:14px;text-align:center}.gar b{display:block;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#D9C08A;margin-bottom:4px}
 @media(max-width:480px){.box{padding:30px 18px}.k{flex-basis:96px}h1{font-size:28px}}</style></head>
 <body><div class="box">
-<div class="lab">TipRadar Platinum · ${esc(term)}</div>
+<div class="lab">TipRadar ${esc(term)}</div>
 <h1>Platba prevodom</h1>
 <div class="price">${price} €</div>
 <div class="step">1. Zaplaťte cez QR kód</div>
@@ -369,6 +404,7 @@ ${row("Správa", bankNote(p.term), bankNote(p.term))}
 <p>Po zaplatení kliknite nižšie. Otvorí sa Telegram a hneď ako platba príde na účet, pošlem vám tam osobnú pozvánku do kanála.</p>
 <a class="btn" href="${esc(tg)}">Zaplatil som · pokračovať v Telegrame</a>
 <p class="small" style="margin-top:14px">Okamžitá platba príde do pár minút, bežný prevod zvyčajne do jedného pracovného dňa. Členstvo sa samo nepredlžuje.</p>
+<p class="gar"><b>Garancia</b>Ak mesiac skončí v strate, ďalší mesiac máte zadarmo.</p>
 <a class="back" href="/clenstvo">Späť na členstvo</a>
 </div>
 <script>document.querySelectorAll(".cp").forEach(function(b){b.addEventListener("click",function(){var t=b.getAttribute("data-copy");var done=function(){b.textContent="Skopírované";b.classList.add("ok");setTimeout(function(){b.textContent="Kopírovať";b.classList.remove("ok")},1800)};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,function(){prompt("Skopírujte:",t)})}else{prompt("Skopírujte:",t)}})});</script>
@@ -387,7 +423,7 @@ h1{font-family:'Noto Serif Display',Georgia,serif;font-weight:600;font-size:34px
 p{color:#BFB6A6;font-size:16px;line-height:1.6;margin:0 0 28px}
 a.btn{display:inline-block;background:#D9C08A;color:#17130A;text-decoration:none;font-weight:700;font-size:14px;letter-spacing:.14em;text-transform:uppercase;padding:16px 28px}
 a.back{display:block;margin-top:22px;color:#8C8476;font-size:14px}</style></head>
-<body><div class="box"><div class="lab">TipRadar Platinum</div><h1>${esc(title)}</h1><p>${esc(text)}</p>
+<body><div class="box"><div class="lab">Členstvo TipRadar</div><h1>${esc(title)}</h1><p>${esc(text)}</p>
 ${href ? `<a class="btn" href="${esc(href)}">${esc(button)}</a>` : ""}<a class="back" href="/">Späť na tipradar.eu</a></div></body></html>`;
 }
 
@@ -842,20 +878,7 @@ app.get("/api/public/track-record", async (_req, res) => {
   res.set("Access-Control-Allow-Origin", "*");
   try {
     const tips = await listTips();
-    const summarize = (list: SavedTip[]) => {
-      const resolved = list.filter((t) => t.status === "won" || t.status === "lost");
-      const won = resolved.filter((t) => t.status === "won").length;
-      const withOdds = resolved.filter((t) => typeof t.odds === "number" && t.odds > 1);
-      const profit = withOdds.reduce((sum, t) => sum + (t.status === "won" ? t.odds! - 1 : -1), 0);
-      return {
-        totalResolved: resolved.length,
-        won,
-        winRate: resolved.length > 0 ? Math.round((won / resolved.length) * 100) : null,
-        withOdds: withOdds.length,
-        profit: Math.round(profit * 100) / 100,
-        roi: withOdds.length > 0 ? Math.round((profit / withOdds.length) * 1000) / 10 : null,
-      };
-    };
+    const summarize = summarizeTips;
     const all = statsTips(tips);
     // Podané tikety (snímky) – len pri vyhodnotených tipoch, čakajúci tip sa nesmie prezradiť.
     const slipIds = await listSlipIds().catch(() => new Map<string, number | null>());
@@ -937,16 +960,7 @@ app.get("/api/public/track-record", async (_req, res) => {
         return { key, won: sm.won, total: sm.totalResolved, rate: sm.winRate, profit: sm.profit, withOdds: sm.withOdds };
       });
     // Prehľad po mesiacoch (stránka Výsledky): každý mesiac zvlášť, najstarší prvý.
-    const monthGroups = new Map<string, SavedTip[]>();
-    for (const t of resolvedAll) {
-      const mk = (tipDayKey(t) ?? "").slice(0, 7);
-      if (!mk) continue;
-      if (!monthGroups.has(mk)) monthGroups.set(mk, []);
-      monthGroups.get(mk)!.push(t);
-    }
-    const months = Array.from(monthGroups.entries())
-      .sort((a, b) => (a[0] < b[0] ? -1 : 1))
-      .map(([key, list]) => ({ key, ...summarize(list) }));
+    const months = monthlyResults(tips);
     // Uzatvárací kurz: o koľko bol kurz pri tipe vyšší než kurz tesne pred výkopom.
     const withClosing = all.filter(
       (t) => typeof clvOpen(t) === "number" && clvOpen(t)! > 1 && typeof t.closingOdds === "number" && t.closingOdds > 1
@@ -2194,6 +2208,135 @@ app.delete("/api/subscribers/:id", async (req, res) => {
   }
 });
 
+// ---- Garancia: ak kalendárny mesiac skončí v strate, každý člen aktívny v posledný deň mesiaca dostane 1 mesiac zadarmo ----
+
+/** Predošlý kalendárny mesiac (RRRR-MM) podľa slovenského času. */
+function previousMonthSk(): string {
+  const today = dayKeySk(new Date());
+  return new Date(Date.UTC(Number(today.slice(0, 4)), Number(today.slice(5, 7)) - 2, 1)).toISOString().slice(0, 7);
+}
+
+/** Posledný deň mesiaca (RRRR-MM-DD). */
+function lastDayOfMonth(month: string): string {
+  const [y, m] = month.split("-").map(Number);
+  return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
+}
+
+function fmtDaySk(day: string): string {
+  return `${Number(day.slice(8, 10))}. ${Number(day.slice(5, 7))}. ${day.slice(0, 4)}`;
+}
+
+async function guaranteeStatus(month: string) {
+  const [y, m] = month.split("-").map(Number);
+  const label = `${MONTH_NAMES[m - 1]} ${y}`;
+  const result = monthlyResults(await listTips()).find((r) => r.key === month);
+  const profit = result?.profit ?? 0;
+  const resolved = result?.totalResolved ?? 0;
+  // Jún a júl: letná prestávka, členstvá sú pozastavené – garancia sa nepoužije.
+  const summer = m >= SUMMER_PAUSE.fromMonth && m <= SUMMER_PAUSE.toMonth;
+  const lastDay = lastDayOfMonth(month);
+  const finished = lastDay < dayKeySk(new Date());
+  const inLoss = !summer && profit < 0;
+  let applied = false;
+  let appliedAt: string | null = null;
+  const marker = await getMeta(`guarantee:${month}`);
+  if (marker) {
+    applied = true;
+    try { appliedAt = JSON.parse(marker).appliedAt ?? null; } catch { appliedAt = null; }
+  }
+  const eligible = (await listSubscribers())
+    .filter((s) => {
+      const start = s.startDate ?? s.createdAt;
+      return Boolean(start) && dayKeySk(new Date(start)) <= lastDay && dayKeySk(new Date(s.nextPaymentDue)) >= lastDay;
+    })
+    .map((s) => ({ id: s.id, name: s.name, nextPaymentDue: s.nextPaymentDue, telegramChatId: s.telegramChatId }));
+  return { month, label, profit, resolved, inLoss, summer, finished, applied, appliedAt, eligible };
+}
+
+function guaranteeMonth(input: unknown): string | null {
+  if (input === undefined || input === "") return previousMonthSk();
+  return typeof input === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(input) ? input : null;
+}
+
+app.get("/api/guarantee", async (req, res) => {
+  try {
+    const month = guaranteeMonth(req.query.month);
+    if (!month) {
+      res.status(400).json({ error: "Mesiac musí byť vo formáte RRRR-MM." });
+      return;
+    }
+    const st = await guaranteeStatus(month);
+    res.json({ ...st, eligible: st.eligible.map(({ id, name, nextPaymentDue }) => ({ id, name, nextPaymentDue })) });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
+const guaranteeRunning = new Set<string>();
+app.post("/api/guarantee/apply", async (req, res) => {
+  const month = guaranteeMonth(req.body?.month);
+  if (!month || !req.body?.month) {
+    res.status(400).json({ error: "Chýba mesiac vo formáte RRRR-MM." });
+    return;
+  }
+  if (guaranteeRunning.has(month)) {
+    res.status(409).json({ error: "Garancia za tento mesiac sa práve pridáva." });
+    return;
+  }
+  guaranteeRunning.add(month);
+  try {
+    const st = await guaranteeStatus(month);
+    const Label = st.label.charAt(0).toUpperCase() + st.label.slice(1);
+    if (st.applied) {
+      res.status(409).json({ error: `Garancia za ${st.label} už bola pridaná.`, appliedAt: st.appliedAt });
+      return;
+    }
+    if (st.summer) {
+      res.status(400).json({ error: "Jún a júl sú letná prestávka, garancia sa vtedy nepoužije." });
+      return;
+    }
+    if (!st.finished) {
+      res.status(400).json({ error: `${Label} ešte neskončil.` });
+      return;
+    }
+    if (!st.inLoss) {
+      res.status(400).json({ error: `${Label} neskončil v strate, garancia sa nepoužije.` });
+      return;
+    }
+    const appliedAt = new Date().toISOString();
+    // Značku zapíšeme ešte pred predĺžením, aby sa garancia za mesiac nedala pridať dvakrát.
+    await setMeta(`guarantee:${month}`, JSON.stringify({ appliedAt, ids: st.eligible.map((e) => e.id) }));
+    const notify = req.body?.notify === true;
+    const monthName = MONTH_NAMES[Number(month.slice(5, 7)) - 1];
+    const MonthName = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+    let extended = 0, notified = 0, failed = 0;
+    for (const e of st.eligible) {
+      const until = addActiveMonths(new Date(e.nextPaymentDue), 1).toISOString();
+      const subs = await listSubscribers();
+      const cur = subs.find((x) => x.id === e.id);
+      await updateSubscriber(e.id, {
+        nextPaymentDue: until,
+        note: `${cur?.note ? cur.note + " · " : ""}Garancia za ${st.label}: +1 mesiac zadarmo`,
+      });
+      extended++;
+      if (notify && e.telegramChatId) {
+        const text =
+          `🛡 <b>Garancia TipRadar</b>\n\n${MonthName} skončil v strate, preto máš podľa garancie mesiac zadarmo. ` +
+          `Členstvo ti teraz platí do <b>${fmtDaySk(dayKeySk(new Date(until)))}</b>.`;
+        const ok = await sendMemberMessage(String(e.telegramChatId), text).catch(() => false);
+        if (ok) notified++;
+        else failed++;
+        await new Promise((r) => setTimeout(r, 60)); // Telegram limit ~30 správ za sekundu
+      }
+    }
+    res.json({ ok: true, month, extended, notified, failed });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  } finally {
+    guaranteeRunning.delete(month);
+  }
+});
+
 // ---- Pravidelná kontrola blížiacich sa/vypršaných platieb predplatiteľov ----
 
 async function checkExpiringSubscribers(): Promise<void> {
@@ -2216,7 +2359,7 @@ async function checkExpiringSubscribers(): Promise<void> {
     // Len členstvá, ktoré končia do 3 dní alebo skončili najviac pred 3 dňami (staré skončené už neotravujú).
     const expiring = withDaysLeft.filter((s) => s.daysLeft <= 3 && s.daysLeft >= -3);
     if (expiring.length > 0) {
-      await notifyAdminExpiringSubscribers(expiring.map((s) => ({ name: s.name, tier: s.tier, daysLeft: s.daysLeft })));
+      await notifyAdminExpiringSubscribers(expiring.map((s) => ({ name: s.name, tier: s.tier, length: s.length, daysLeft: s.daysLeft })));
     }
 
     // Osobná pripomienka predplatiteľom, ktorým vyprší platnosť presne o 3 dni

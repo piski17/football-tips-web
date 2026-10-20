@@ -378,7 +378,7 @@ export interface Subscriber {
   name: string;
   contact?: string;
   telegramChatId?: string; // voliteľné - ak vyplnené, appka mu vie poslať osobnú pripomienku pred obnovením
-  tier: "individual" | "group"; // TipRadar Platinum: individual = 1 alebo 3 mesiace, group = 6 mesiacov (obmedzený počet miest)
+  tier: "individual" | "group"; // individual = Silver/Gold (1 alebo 3 mesiace), group = Platinum (6 mesiacov, obmedzený počet miest)
   priceEur: number;
   nextPaymentDue: string; // ISO dátum – do kedy má členstvo zaplatené
   length?: "m1" | "m3" | "season"; // dĺžka členstva (staršie záznamy ju nemajú = 1 mesiac)

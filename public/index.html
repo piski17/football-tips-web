@@ -37,7 +37,7 @@
         <span>TipRadar</span>
       </div>
       <nav class="nav" id="sideNav" aria-label="Hlavné menu"></nav>
-      <button type="button" class="seats" id="seatBox" title="TipRadar Platinum: počet členov podľa dĺžky členstva (6 mesiacov má najviac 30 miest). Kliknutím otvoríš sekciu Členovia."></button>
+      <button type="button" class="seats" id="seatBox" title="Členstvo TipRadar: počet členov podľa dĺžky – Silver (1 mesiac), Gold (3 mesiace), Platinum (6 mesiacov, najviac 30 miest). Kliknutím otvoríš sekciu Členovia."></button>
     </aside>
 
     <main class="main">
@@ -162,6 +162,7 @@
       <section class="view" data-view="clenovia" id="viewClenovia" hidden>
         <header class="top"><h2>Členovia</h2></header>
         <div class="page">
+          <div class="card gar-card" id="guaranteeCard" hidden></div>
           <div class="seats seats-inline" id="seatBoxMobile"></div>
           <p class="muted small">Všetci, ktorí si zakúpili členstvo. Po zaplatení ich sem pridaj, appka ti 3 dni pred koncom pripomenie predĺženie.</p>
           <div class="kpis kpis-members" id="subscribersSummary"></div>
@@ -174,8 +175,8 @@
               <label class="fld">Telegram chat ID<input type="text" id="subTelegramChatId" placeholder="voliteľné" /></label>
               <label class="fld">Dĺžka
                 <select id="subLength">
-                  <option value="m1">Platinum · 1 mesiac (49 €)</option>
-                  <option value="m3" selected>Platinum · 3 mesiace (119 €)</option>
+                  <option value="m1">Silver · 1 mesiac (49 €)</option>
+                  <option value="m3" selected>Gold · 3 mesiace (119 €)</option>
                   <option value="season">Platinum · 6 mesiacov (219 €)</option>
                 </select>
               </label>

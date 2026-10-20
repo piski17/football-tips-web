@@ -1113,7 +1113,7 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
 .figures b { font-family: var(--display); font-weight: 600; }
 .more-row { text-align: center; }
 
-/* Platinum: jedna široká karta */
+/* Členstvo (Silver, Gold, Platinum): jedna široká karta */
 #clenstvo .lux { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); max-width: 1060px; margin: 0 auto; padding: 0; text-align: left; border-radius: 32px; border: 1px solid var(--line-2); background: linear-gradient(135deg, rgba(255,245,225,.06), rgba(255,245,225,.01)); box-shadow: 0 50px 140px -50px rgba(0,0,0,.9); overflow: hidden; }
 #clenstvo .lux::before, #clenstvo .lux::after { display: none; }
 .lux-l { padding: 50px 50px 46px; }
@@ -1129,6 +1129,20 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
 #clenstvo .lux-r .term-switch button { min-height: 40px; padding: 0 6px; font: 500 13.5px/1.1 var(--sans); border-radius: 999px; white-space: nowrap; }
 #clenstvo .lux-r .term-switch button em { display: none; }
 #clenstvo .lux-r .term-switch [aria-selected="true"] { background: var(--gold-grad); color: #1A130A; font-weight: 600; }
+#clenstvo .lux-r .term-switch { border-radius: 20px; }
+#clenstvo .lux-r .term-switch button { min-height: 52px; padding: 7px 4px; border-radius: 16px; white-space: normal; font-size: 12.5px; line-height: 1.25; }
+#clenstvo .lux-r .term-switch button b { display: block; font-size: 15px; font-weight: 700; letter-spacing: .02em; color: var(--text, #F5EFE3); }
+#clenstvo .lux-r .term-switch [aria-selected="true"] b { color: #1A130A; }
+/* Názov členstva podľa dĺžky: Silver / Gold / Platinum */
+.silver-text { background: linear-gradient(100deg, #7C838D 0%, #D5DAE0 30%, #9AA1AB 55%, #E3E6EA 80%, #858C96 100%); background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shine 9s linear infinite; }
+.gold-text { background: linear-gradient(100deg, #A8894F 0%, #F8EDD3 22%, #D9C08A 45%, #B8995E 65%, #F3E6C4 85%, #A8894F 100%); background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shine 8s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .silver-text, .gold-text { animation: none; } }
+/* Garancia na karte členstva */
+#clenstvo .lux-guarantee { display: flex; align-items: center; gap: 14px; margin-top: 22px; padding: 16px 18px; border-radius: 18px; border: 1px solid rgba(217,192,138,.45); background: linear-gradient(135deg, rgba(217,192,138,.18), rgba(217,192,138,.04)); color: var(--text, #F5EFE3); text-decoration: none; box-shadow: 0 14px 40px -24px rgba(217,192,138,.8); transition: border-color .25s, background .25s; }
+#clenstvo .lux-guarantee:hover { border-color: var(--gold); }
+#clenstvo .lux-guarantee svg { flex: none; width: 34px; height: 34px; padding: 6px; border-radius: 50%; background: var(--gold-grad); fill: none; stroke: #1A130A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+#clenstvo .lux-guarantee span { font-size: 15px; line-height: 1.4; }
+#clenstvo .lux-guarantee strong { display: block; font: 600 12px/1.2 var(--sans); letter-spacing: .18em; text-transform: uppercase; color: var(--gold-hi); margin-bottom: 3px; }
 #clenstvo .lux-term { margin-top: 30px; text-align: left; font: 500 12px/1 var(--sans); letter-spacing: .18em; text-transform: uppercase; color: var(--faint); }
 #clenstvo .lux-price { margin-top: 12px; text-align: left; justify-content: flex-start; }
 #clenstvo .lux-price b { font: 600 84px/1 var(--display) !important; color: transparent; background: var(--gold-grad); -webkit-background-clip: text; background-clip: text; }
@@ -1268,7 +1282,7 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
     <ul class="ov-links">
       <li><a href="/">Úvod</a></li>
       <li><a href="/vysledky">Výsledky<small>všetky tipy</small></a></li>
-      <li><a href="/clenstvo">Členstvo<small>Platinum</small></a></li>
+      <li><a href="/clenstvo">Členstvo<small>Silver · Gold · Platinum</small></a></li>
       <li><a href="/kurz">Kurz<small>Škola stávkovania</small></a></li>
       <li><a href="/o-mne">O mne</a></li>
       <li><a href="/formular">Kontakt<small>napíšte mi</small></a></li>
@@ -1314,7 +1328,7 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
     <div class="wrap">
       <a class="back" href="/">← Úvod</a><div class="eyebrow">Členstvo</div>
       <h1>Vstúpte do <em>klubu</em></h1>
-      <p>Jedno členstvo, všetci členovia dostávajú rovnaké tipy. Vyberte si dĺžku. Čím dlhšie, tým nižšia cena za mesiac a tým viac navyše.</p>
+      <p>Silver na 1 mesiac, Gold na 3 mesiace, Platinum na 6 mesiacov. Všetci členovia dostávajú rovnaké tipy aj súkromný VIP chat. Čím dlhšie, tým nižšia cena za mesiac.</p>
     </div>
   </header>
   <header class="page-head" data-pages="formular">
@@ -1332,7 +1346,7 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
       <h1>Futbal <em>očami dát.</em></h1>
       <p class="hx-lead">Model každý deň prepočíta stovky zápasov a pošle len tie tipy, kde je šanca vyššia, než ukazuje kurz. Každý výsledok zverejníme, výhry aj prehry.</p>
       <div class="hx-cta">
-        <a class="btn" href="/clenstvo">Pridať sa do Platinum <span class="arr" aria-hidden="true">→</span></a>
+        <a class="btn" href="/clenstvo">Vybrať členstvo <span class="arr" aria-hidden="true">→</span></a>
         <a class="btn btn-ghost" href="/vysledky">Pozrieť výsledky</a>
       </div>
       <a class="hx-live" id="hxLive" href="/vysledky" aria-label="Výsledky TipRadaru" hidden>
@@ -1530,25 +1544,26 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
     <div class="wrap">
       <div class="sec-head center">
         <div><div class="eyebrow">Členstvo</div><h2>Vstúpte do <em>klubu</em></h2>
-        <p class="lead" style="margin-inline:auto">Jedno členstvo, všetci členovia dostávajú rovnaké tipy. Vyberte si dĺžku. Čím dlhšie, tým nižšia cena za mesiac a tým viac navyše.</p></div>
+        <p class="lead" style="margin-inline:auto">Silver na 1 mesiac, Gold na 3 mesiace, Platinum na 6 mesiacov. Všetci členovia dostávajú rovnaké tipy aj súkromný VIP chat. Čím dlhšie, tým nižšia cena za mesiac.</p></div>
       </div>
       <article class="lux glow">
         <div class="lux-l">
           <div class="lux-top"><svg class="lux-crest" aria-hidden="true"><use href="#logo"/></svg><div class="lux-brand">TipRadar</div></div>
-          <h3 class="lux-name plat-text">Platinum</h3>
+          <h3 class="lux-name gold-text" data-tier-name>Gold</h3>
           <ul class="lux-list">
           <li><strong>Denné tipy na Telegrame</strong><span>v súkromnom kanáli, 1&nbsp;–&nbsp;2&nbsp;hodiny pred výkopom</span></li>
           <li><strong>Všetko podstatné pri každom tipe</strong><span>kurz, šanca podľa modelu, dôvod a&nbsp;odporúčaná sadzba</span></li>
           <li><strong>Večerné vyhodnotenie</strong><span>a týždenný prehľad úspešnosti, zisku a&nbsp;ROI</span></li>
-          <li class="plus" data-min-term="m3"><strong>Súkromný VIP chat</strong><span>na vaše otázky odpisujem priamo ja</span></li>
+          <li><strong>Súkromný VIP chat</strong><span>na vaše otázky odpisujem priamo ja</span></li>
           <li class="plus" data-min-term="season"><strong>Mentoring 1 na 1 počas celých 6 mesiacov</strong><span>osobné stretnutia alebo videohovory priamo so mnou</span></li>
         </ul>
+          <a class="lux-guarantee" href="#garancia"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.4 7.5 9.5 4.3-1.1 7.5-4.9 7.5-9.5V6L12 3Z"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></svg><span><strong>Garancia</strong>Ak mesiac skončí v&nbsp;strate, ďalší mesiac máte zadarmo.</span></a>
         </div>
         <div class="lux-r">
       <div class="term-switch" role="tablist" aria-label="Dĺžka členstva">
-        <button type="button" role="tab" data-term="m1" aria-selected="false">1 mesiac</button>
-        <button type="button" role="tab" data-term="m3" aria-selected="true">3 mesiace <em>−19&nbsp;%</em></button>
-        <button type="button" role="tab" data-term="season" aria-selected="false">6 mesiacov <em>−26&nbsp;%</em></button>
+        <button type="button" role="tab" data-term="m1" aria-selected="false"><b>Silver</b> 1 mesiac</button>
+        <button type="button" role="tab" data-term="m3" aria-selected="true"><b>Gold</b> 3 mesiace <em>−19&nbsp;%</em></button>
+        <button type="button" role="tab" data-term="season" aria-selected="false"><b>Platinum</b> 6 mesiacov <em>−26&nbsp;%</em></button>
       </div>
           <div class="lux-term" data-term-name>členstvo na 3 mesiace</div>
           <div class="lux-price"><b class="num" data-price>119 €</b></div>
@@ -1609,9 +1624,10 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
         <details><summary>Kedy a kam tipy prídu?</summary><p>Do súkromného kanála na Telegrame, 1 – 2 hodiny pred výkopom zápasu. Večer, keď sa zápasy dohrajú, príde vyhodnotenie dňa.</p></details>
         <details><summary>Koľko tipov denne dostanem?</summary><p>Toľko, koľko prejde pravidlami. Niekedy jeden, inokedy viac. Keď neprejde žiadny, nepošleme nič a dáme vám vedieť.</p></details>
         <details><summary>Čo je zisk v jednotkách a ROI?</summary><p>Jednotka je rovnaká suma na každý tip, napríklad 10 €. Zisk +5 jednotiek pri 10 € na tip je +50 €. ROI hovorí, koľko percent z vložených peňazí sa vrátilo navyše.</p></details>
-        <details><summary>Zaručujete výhru?</summary><p>Nie. Žiadny model nevie zaručiť výsledok zápasu. TipRadar vyberá stávky, pri ktorých je šanca podľa štatistík vyššia, než naznačuje kurz. Rozhoduje dlhodobý výsledok, preto zverejňujeme aj prehraté tipy.</p></details>
+        <details><summary>Zaručujete výhru?</summary><p>Nie. Žiadny model nevie zaručiť výsledok zápasu. TipRadar vyberá stávky, pri ktorých je šanca podľa štatistík vyššia, než naznačuje kurz. Rozhoduje dlhodobý výsledok, preto zverejňujeme aj prehraté tipy. Ak však celý mesiac skončí v strate, ďalší mesiac máte zadarmo (pozrite garanciu nižšie).</p></details>
+        <details id="garancia"><summary>Ako funguje garancia?</summary><p>Ak kalendárny mesiac skončí v strate, každý, kto je posledný deň toho mesiaca členom, dostane 1 mesiac zadarmo – členstvo sa mu predĺži o mesiac. Platí rovnako pre Silver, Gold aj Platinum. Mesiac je v strate, keď je súčet zisku všetkých vyhodnotených tipov za mesiac pri rovnakom vklade na tip (1 jednotka) záporný. Je to presne číslo pri danom mesiaci na stránke <a class="link" href="/vysledky#mesiace">Výsledky</a>. Jún a júl sa nepočítajú, vtedy je členstvo pozastavené. O predĺžení vám dáme vedieť na Telegrame.</p></details>
         <details><summary>Ako overujete, že model funguje?</summary><p>Spätným testom na odohraných zápasoch a mesačnou kontrolou, či tipy s dôverou 70&nbsp;% naozaj vychádzajú zhruba v 70&nbsp;% prípadov. Tipy vyradené pre veľký rozpor s kurzami si zapisujeme a porovnávame, kto mal pravdu.</p></details>
-        <details><summary>Aké dlhé je členstvo?</summary><p>Na 1, 3 alebo 6 mesiacov odo dňa, keď sa pridáte. Dlhšie členstvo vychádza lacnejšie na mesiac. Cez letnú prestávku (jún – júl), keď sa takmer nehrá, sa členstvo pozastaví a 1. augusta pokračuje, takže o žiadne zápasy neprídete. Žiadne sa samo nepredlžuje. Pred koncom vám pripomenieme, že končí.</p></details>
+        <details><summary>Aké dlhé je členstvo?</summary><p>Silver na 1 mesiac, Gold na 3 mesiace a Platinum na 6 mesiacov, vždy odo dňa, keď sa pridáte. Dlhšie členstvo vychádza lacnejšie na mesiac. Cez letnú prestávku (jún – júl), keď sa takmer nehrá, sa členstvo pozastaví a 1. augusta pokračuje, takže o žiadne zápasy neprídete. Žiadne sa samo nepredlžuje. Pred koncom vám pripomenieme, že končí.</p></details>
         <details><summary>Ako členstvo zruším?</summary><p>Stačí napísať. Členstvo platí do konca zaplateného obdobia a samo sa nepredlžuje.</p></details>
       </div>
     </div>
@@ -1650,14 +1666,14 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
     <div class="wrap">
       <div class="eyebrow">Začnite ešte dnes</div>
       <h2>Tipujte s <em>rozumom</em>, nie s pocitom.</h2>
-      <p>Pridajte sa do bezplatného kanála na Telegrame alebo si rezervujte miesto v Platinum. Na otázky odpovedám osobne.</p>
+      <p>Pridajte sa do bezplatného kanála na Telegrame alebo si vyberte členstvo Silver, Gold či Platinum. Na otázky odpovedám osobne.</p>
       <div class="actions"><a class="btn" href="/clenstvo">Pozrieť členstvo <span class="arr" aria-hidden="true">→</span></a><a class="btn btn-ghost" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener">Telegram komunita</a></div>
     </div>
   </section>
   <section class="finale" data-pages="metoda vysledky otazky formular o-mne">
     <div class="rings" aria-hidden="true"></div>
     <div class="wrap">
-      <div class="eyebrow">TipRadar Platinum</div>
+      <div class="eyebrow">Členstvo TipRadar</div>
       <h2>Chcete tipy dostávať <em>aj vy?</em></h2>
       <p>Zapíšte sa do poradovníka alebo sa pridajte ku komunite na Telegrame.</p>
       <div class="actions"><a class="btn" href="/clenstvo">Pozrieť členstvo <span class="arr" aria-hidden="true">→</span></a><a class="btn btn-ghost" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener">Telegram komunita</a></div>
@@ -2054,9 +2070,9 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
   // ---------- kalkulačka návratnosti členstva ----------
   (function () {
     const PLANS = [
-      { term: "m1", name: "1 mesiac", price: 49, months: 1 },
-      { term: "m3", name: "3 mesiace", price: 119, months: 3 },
-      { term: "season", name: "6 mesiacov", price: 219, months: 6 },
+      { term: "m1", name: "Silver · 1 mesiac", price: 49, months: 1 },
+      { term: "m3", name: "Gold · 3 mesiace", price: 119, months: 3 },
+      { term: "season", name: "Platinum · 6 mesiacov", price: 219, months: 6 },
     ];
     const bankEl = document.getElementById("paybackBank");
     const rows = document.getElementById("paybackRows");
@@ -2084,12 +2100,12 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
     document.querySelectorAll(".term-switch [data-term]").forEach((b) => b.addEventListener("click", () => setTimeout(draw, 0)));
     draw();
   })();
-  // ---------- TipRadar Platinum: dĺžka členstva ----------
+  // ---------- Členstvo: Silver (1 mesiac), Gold (3 mesiace), Platinum (6 mesiacov) ----------
   (function () {
     const TERMS = {
-      m1: { price: 49, unit: "mesačne", name: "členstvo na 1 mesiac", note: "mesačne · bez viazanosti", start: "start", order: 1 },
-      m3: { price: 119, unit: "za 3 mesiace", name: "členstvo na 3 mesiace", note: "namiesto <s>147 €</s> (3 × 49 €) · ušetríte 28 €", start: "seria", order: 2 },
-      season: { price: 219, unit: "za 6 mesiacov", name: "členstvo na 6 mesiacov", note: "namiesto <s>294 €</s> (6 × 49 €) · ušetríte 75 €", start: "sampion", order: 3 },
+      m1: { tier: "Silver", cls: "silver-text", price: 49, unit: "mesačne", name: "členstvo na 1 mesiac", note: "mesačne · bez viazanosti", start: "start", order: 1 },
+      m3: { tier: "Gold", cls: "gold-text", price: 119, unit: "za 3 mesiace", name: "členstvo na 3 mesiace", note: "namiesto <s>147 €</s> (3 × 49 €) · ušetríte 28 €", start: "seria", order: 2 },
+      season: { tier: "Platinum", cls: "plat-text", price: 219, unit: "za 6 mesiacov", name: "členstvo na 6 mesiacov", note: "namiesto <s>294 €</s> (6 × 49 €) · ušetríte 75 €", start: "sampion", order: 3 },
     };
     const $$ = (s) => document.querySelectorAll(s);
     function apply(term) {
@@ -2098,6 +2114,7 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
       $$("[data-price]").forEach((el) => (el.textContent = t.price + " €"));
       $$("[data-price-unit]").forEach((el) => (el.textContent = t.unit));
       $$("[data-term-name]").forEach((el) => (el.textContent = t.name));
+      $$("[data-tier-name]").forEach((el) => { el.textContent = t.tier; el.classList.remove("silver-text", "gold-text", "plat-text"); el.classList.add(t.cls); });
       $$("[data-permonth]").forEach((el) => (el.innerHTML = t.note || "&nbsp;"));
       $$("[data-only-season]").forEach((el) => (el.hidden = term !== "season"));
       $$("[data-min-term]").forEach((li) => (li.hidden = TERMS[li.dataset.minTerm].order > t.order));
@@ -2147,6 +2164,10 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
     $$(".term-switch [data-term]").forEach((b) => b.addEventListener("click", () => apply(b.dataset.term)));
     window.__applyTerm = apply;
     apply("m3");
+    // Odkaz „Garancia“ na karte rovno otvorí odpoveď v otázkach.
+    const openGuarantee = () => { const d = document.getElementById("garancia"); if (d) d.open = true; };
+    document.querySelectorAll('a[href="#garancia"]').forEach((a) => a.addEventListener("click", openGuarantee));
+    if (location.hash === "#garancia") openGuarantee();
   })();
 
   // ---------- VIP miesta a predaj ----------

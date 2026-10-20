@@ -543,3 +543,19 @@ tr.bt-best { background: rgba(134, 199, 161, .08); }
 .bk-controls .chips { align-items: center; }
 .bk-controls .chips > span { margin-right: 4px; }
 .bk-controls .chips > span { flex-basis: 100%; margin: 0 0 2px; }
+
+/* Garancia (Členovia): mesiac v strate = mesiac zadarmo */
+.gar-card { margin: 0 0 16px; padding: 16px 20px; }
+.gar-card.warn { border-color: rgba(224, 138, 122, .45); background: linear-gradient(135deg, rgba(224, 138, 122, .1), rgba(224, 138, 122, .02)); }
+.gar-card.ok { border-color: rgba(134, 199, 161, .35); }
+.gar-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.gar-head .ct { margin: 0; }
+.gar-nav { display: inline-flex; align-items: center; gap: 8px; }
+.gar-month { min-width: 108px; text-align: center; font-size: 13.5px; color: var(--muted); }
+.gar-line { font-size: 14.5px; }
+.gar-card.warn .gar-line b { color: var(--loss); font-weight: 600; }
+.gar-card.ok .gar-line { color: var(--win); }
+.gar-names { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 0; }
+.gar-names li { padding: 4px 10px; border-radius: 99px; border: 1px solid var(--line2); font-size: 13px; }
+.gar-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; }
+@media (max-width: 560px) { .gar-actions .btn { width: 100%; } }
