@@ -1056,6 +1056,23 @@ html { scrollbar-color: rgba(217,192,138,.35) var(--bg); }
   .ov-links a { font-size: 30px !important; }
 }
 @media (max-width: 380px) { .hero.hx h1 { font-size: 40px !important; } }
+
+/* ===== menu na počítači: elegantné textové menu vľavo (variant C) ===== */
+@media (min-width: 961px) {
+  .wrap { width: min(1200px, 100% - 460px); }
+  .dock { left: 34px !important; padding: 18px 0 18px 0 !important; gap: 4px !important; align-items: stretch !important; background: transparent !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; counter-reset: dk; }
+  .dock::before { display: block; left: 0 !important; right: auto !important; top: 0 !important; bottom: 0 !important; width: 1px !important; height: auto !important; background: linear-gradient(180deg, transparent, rgba(217,192,138,.28) 15%, rgba(217,192,138,.28) 85%, transparent) !important; }
+  .dock a, .dock button { counter-increment: dk; flex-direction: row !important; justify-content: flex-start !important; align-items: baseline !important; width: 176px !important; height: 50px !important; padding: 0 0 0 24px !important; gap: 14px !important; border-radius: 0 !important; color: rgba(183,169,146,.85) !important; font: 600 12.5px/50px Manrope, sans-serif !important; letter-spacing: .2em !important; text-transform: uppercase; transition: color .35s, transform .35s cubic-bezier(.2,.9,.25,1.2) !important; }
+  .dock a::before { content: counter(dk, decimal-leading-zero); font: italic 500 15px/50px "Playfair Display", serif; letter-spacing: 0; color: rgba(217,192,138,.55); transition: color .35s; }
+  .dock svg { display: none !important; }
+  .dock a:hover { color: #F3E6C4 !important; transform: translateX(5px); }
+  .dock a:hover svg { transform: none !important; }
+  .dock a.active { color: #F8EDD3 !important; }
+  .dock a.active::before { color: #E9CF95; }
+  .dock-pill { left: -1px !important; width: 3px !important; height: 50px !important; border-radius: 3px !important; background: linear-gradient(180deg, #F8EDD3, #D9C08A 55%, #A88A4E) !important; box-shadow: 0 0 22px 2px rgba(217,192,138,.55), 0 0 60px 6px rgba(217,192,138,.16) !important; }
+  .dock a.active::after { content: ""; position: absolute; left: 0; top: 6px; bottom: 6px; width: 150px; background: linear-gradient(90deg, rgba(217,192,138,.13), transparent); z-index: -1; pointer-events: none; }
+}
+@media (min-width: 961px) and (max-width: 1180px) { .wrap { width: min(1200px, 100% - 390px); } .dock a, .dock button { width: 150px !important; letter-spacing: .14em !important; } }
 </style>
 </head>
 <body>
