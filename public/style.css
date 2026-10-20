@@ -305,6 +305,17 @@ span.crest { background: radial-gradient(circle at 35% 35%, #5a4a35, #2a2219); b
 .dtip-match:hover { color: var(--gold-hi); text-decoration: underline; text-underline-offset: 3px; }
 .dtip .s { font-size: 16px; margin-top: 3px; }
 .dtip .s b { font: 600 20px/1.2 var(--display); color: var(--gold-hi); font-variant-numeric: lining-nums !important; }
+.dtip-odds { display: flex; align-items: center; gap: 10px; }
+.odds-in { display: flex; flex-direction: column; gap: 4px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.odds-in input { width: 104px; height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line2); background: rgba(0,0,0,.25); color: var(--text); font: 600 17px var(--sans); letter-spacing: 0; text-transform: none; }
+.odds-in input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(217,192,138,.18); }
+.odds-in input:disabled { opacity: .5; }
+.odds-st { min-width: 92px; font-size: 13px; font-weight: 600; }
+.odds-st.ok { color: var(--win); } .odds-st.bad { color: var(--loss); }
+.dt-bulk { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; margin-bottom: 14px; padding: 14px 18px; border-radius: var(--radius); border: 1px dashed var(--line2); }
+.dt-bulk p { margin: 0; max-width: 60ch; }
+.dt-bulk-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.dt-bulk select { margin-left: 6px; height: 40px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--line2); background: var(--panel); color: var(--text); font: inherit; }
 .progress-card b { font-weight: 600; }
 .intro-card { max-width: 720px; }
 .intro-card p { margin-bottom: 16px; }
@@ -502,7 +513,9 @@ tr.bt-best { background: rgba(134, 199, 161, .08); }
 
   .dtip { grid-template-columns: auto minmax(0, 1fr); padding: 14px; gap: 12px; }
   .dtip .rank { display: none; }
-  .dtip > .btn { grid-column: 1 / -1; }
+  .dtip > .btn, .dtip > .dtip-odds { grid-column: 1 / -1; }
+  .dtip-odds { flex-wrap: wrap; } .dtip-odds .btn { margin-left: auto; }
+  .dt-bulk-row, .dt-bulk-row .btn { width: 100%; }
 
   .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .kpis .kpi:first-child:nth-last-child(odd) { grid-column: 1 / -1; }

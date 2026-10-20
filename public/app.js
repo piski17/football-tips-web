@@ -1326,6 +1326,9 @@ function teamStatCard(name, form, formScore, xg, historyInfo) {
 const dayTipsPaneEl = document.getElementById("dayTipsPane");
 const dtRunBtn = document.getElementById("dtRunBtn");
 let dayTips = { items: [], analyzed: 0, failed: 0, date: "", ran: false };
+// Kurzy zadané v Tipoch dňa a už uložené tipy (podľa poradia v zozname); nová analýza ich vynuluje.
+let dayTipOdds = {};
+let dayTipSaved = new Set();
 let dayTipsRun = { running: false, done: 0, total: 0, id: 0 };
 let dayTipsDetail = null; // otvorený zápas z Tipov dňa
 let dayTipsViewId = 0;
@@ -1371,6 +1374,7 @@ async function showDayTips() {
   }
   items.sort((a, b) => b.bet.probability - a.bet.probability);
   dayTips = { items, analyzed: fixtures.length, failed, failedList, date, ran: true };
+  dayTipOdds = {}; dayTipSaved = new Set();
   dayTipsRun.running = false;
   computeStrongIdx();
   if (!dayTipsDetail) renderDayTipsView();
@@ -1443,7 +1447,11 @@ function renderDayTipsView() {
           <div class="m"><span>Dôvera <b>${bet.probability.toFixed(0)}${NB}%</b></span>${betOddsHtml(bet)}</div>
           ${bet.valueWarning ? `<div class="why warn">⚠️ ${escapeHtml(bet.valueWarning)}</div>` : ""}
         </div>
-        <button type="button" class="btn sm${i === 0 ? "" : " ghost"}" data-save="${i}">Uložiť</button>
+        <div class="dtip-odds">
+          <label class="odds-in"><span>Kurz v stávkovke</span><input type="text" inputmode="decimal" autocomplete="off" data-odds="${i}" placeholder="min ${fmtOdds(minOddsFor(bet))}" value="${escapeHtml(dayTipOdds[i] ?? "")}"${dayTipSaved.has(i) ? " disabled" : ""} /></label>
+          <span class="odds-st" data-odds-st="${i}"></span>
+          <button type="button" class="btn sm${i === 0 ? "" : " ghost"}" data-save="${i}"${dayTipSaved.has(i) ? " disabled" : ""}>${dayTipSaved.has(i) ? "✓ Uložené" : "Uložiť"}</button>
+        </div>
       </div>`;
     })
     .join("");
@@ -1454,7 +1462,13 @@ function renderDayTipsView() {
       }${otherDate ? ` · <span class="gold">výsledky sú pre ${escapeHtml(dayKeyLabel(dayTips.date))}</span>` : ""}
     </p>
     ${(dayTips.failedList || []).length ? `<p class="muted small dt-failed">Neanalyzované: ${dayTips.failedList.map((x) => `<b>${escapeHtml(x.match)}</b> (${escapeHtml(x.why)})`).join(", ")}. Skús „Analyzovať znova“, často ide len o chvíľkový výpadok dát.</p>` : ""}
-    ${rows ? `<div class="dtips">${rows}</div>` : `<div class="empty-card">V tento deň nie je žiadny tip, ktorý by prešiel pravidlami (68 – 80${NB}% a kontrola kurzu).</div>`}`;
+    ${rows ? `<div class="dt-bulk">
+      <p class="small muted">Zadaj kurzy zo svojej stávkovky priamo do riadkov (Enter skočí na ďalší) a ulož všetky naraz. Tipy pod minimálnym kurzom sa neuložia.</p>
+      <div class="dt-bulk-row">
+        <label class="small">Telegram <select id="dtBulkTg"><option value="premium">◆ Členský kanál</option><option value="free">★ FREE kanál</option><option value="">Neposielať</option></select></label>
+        <button type="button" class="btn" id="dtBulkSave" disabled>Uložiť všetky s kurzom</button>
+      </div>
+    </div><div class="dtips">${rows}</div>` : `<div class="empty-card">V tento deň nie je žiadny tip, ktorý by prešiel pravidlami (68 – 80${NB}% a kontrola kurzu).</div>`}`;
 
   dayTipsPaneEl.querySelectorAll("[data-open]").forEach((btn) => {
     btn.onclick = () => {
@@ -1466,21 +1480,62 @@ function renderDayTipsView() {
       window.scrollTo(0, 0);
     };
   });
+  // Kurzy zo stávkovky: zadávajú sa priamo v riadkoch, hneď vidno, či kurz stačí.
+  const oddsState = (i) => {
+    const item = dayTips.items[i];
+    const odd = parseOddsInput(dayTipOdds[i]);
+    if (!item || odd == null) return { ok: false, odd: null };
+    const min = minOddsFor(item.bet);
+    return { ok: odd >= min && odd <= 20, odd, min };
+  };
+  const refreshOdds = () => {
+    let n = 0;
+    dayTipsPaneEl.querySelectorAll("[data-odds-st]").forEach((el) => {
+      const i = Number(el.dataset.oddsSt);
+      if (dayTipSaved.has(i)) { el.textContent = ""; el.className = "odds-st"; return; }
+      const st = oddsState(i);
+      el.className = "odds-st" + (st.odd == null ? "" : st.ok ? " ok" : " bad");
+      el.textContent = st.odd == null ? "" : st.ok ? "✓ má hodnotu" : st.odd > 20 ? "✗ preklep?" : `✗ pod ${fmtOdds(st.min)}`;
+      if (st.ok && !matchHasStarted(dayTips.items[i].r.fixture)) n++;
+    });
+    const b = document.getElementById("dtBulkSave");
+    if (b) { b.disabled = n === 0; b.textContent = n ? `Uložiť všetky s kurzom (${n})` : "Uložiť všetky s kurzom"; }
+  };
+  const inputs = [...dayTipsPaneEl.querySelectorAll("[data-odds]")];
+  inputs.forEach((inp, k) => {
+    inp.oninput = () => { dayTipOdds[Number(inp.dataset.odds)] = inp.value; refreshOdds(); };
+    inp.onkeydown = (e) => {
+      if (e.key !== "Enter") return;
+      e.preventDefault();
+      const next = inputs.slice(k + 1).find((x) => !x.disabled);
+      if (next) next.focus(); else document.getElementById("dtBulkSave")?.focus();
+    };
+  });
+  refreshOdds();
+  const saveOne = async (idx, realOdds) => {
+    const { r, bet } = dayTips.items[idx];
+    // Kandidát na ⭐ Silný tip dňa si značku nesie do Histórie tipov (server nechá max. 1 za deň).
+    const tip = buildTip(r, bet, realOdds, idx === strongIdx ? { strongOfDay: true } : {});
+    await postJson("/api/tips", tip);
+    dayTipSaved.add(idx);
+    return tip;
+  };
   dayTipsPaneEl.querySelectorAll("[data-save]").forEach((btn) => {
     btn.onclick = async () => {
       const idx = Number(btn.dataset.save);
       const item = dayTips.items[idx];
       if (!item) return;
-      const { r, bet } = item;
-      if (matchHasStarted(r.fixture)) { showToast(MATCH_STARTED_TEXT); return; }
-      const realOdds = await askRealOdds(bet);
+      if (matchHasStarted(item.r.fixture)) { showToast(MATCH_STARTED_TEXT); return; }
+      const st = oddsState(idx);
+      if (st.odd != null && !st.ok) { showToast(st.odd > 20 ? `${fmtOdds(st.odd)} nevyzerá ako kurz.` : `Kurz ${fmtOdds(st.odd)} je pod minimom ${fmtOdds(st.min)} – tip radšej vynechaj.`); return; }
+      const realOdds = st.ok ? Math.round(st.odd * 100) / 100 : await askRealOdds(item.bet);
       if (realOdds == null) return;
-      // Kandidát na ⭐ Silný tip dňa si značku nesie do Histórie tipov (server nechá max. 1 za deň).
-      const tip = buildTip(r, bet, realOdds, idx === strongIdx ? { strongOfDay: true } : {});
       btn.disabled = true;
       try {
-        await postJson("/api/tips", tip);
+        const tip = await saveOne(idx, realOdds);
         btn.textContent = "✓ Uložené";
+        const inp = dayTipsPaneEl.querySelector(`[data-odds="${idx}"]`); if (inp) inp.disabled = true;
+        refreshOdds();
         await maybeOfferTelegram(tip.id);
       } catch (err) {
         showToast(`Uloženie zlyhalo: ${err?.message ?? String(err)}`);
@@ -1488,6 +1543,30 @@ function renderDayTipsView() {
       }
     };
   });
+  const bulk = document.getElementById("dtBulkSave");
+  if (bulk) bulk.onclick = async () => {
+    const target = document.getElementById("dtBulkTg").value;
+    const todo = dayTips.items.map((_, i) => i).filter((i) => !dayTipSaved.has(i) && oddsState(i).ok && !matchHasStarted(dayTips.items[i].r.fixture));
+    if (!todo.length) return;
+    bulk.disabled = true;
+    let saved = 0, sent = 0, errs = 0;
+    for (const i of todo) {
+      bulk.textContent = `Ukladám… ${saved + errs + 1} / ${todo.length}`;
+      try {
+        const tip = await saveOne(i, Math.round(oddsState(i).odd * 100) / 100);
+        saved++;
+        if (target) { try { await postJson(`/api/tips/${tip.id}/telegram`, { target }); sent++; } catch { errs++; } }
+      } catch { errs++; }
+    }
+    showToast(`Uložené: ${saved}${target ? ` · do Telegramu: ${sent}` : ""}${errs ? ` · chyby: ${errs}` : ""}`);
+    renderDayTipsView();
+  };
+}
+
+/** Kurz z políčka („1,85“ aj „1.85“), inak null. */
+function parseOddsInput(v) {
+  const n = parseFloat(String(v ?? "").trim().replace(",", "."));
+  return n > 1 ? n : null;
 }
 
 function renderDayTipDetail(r) {
