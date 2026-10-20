@@ -1456,6 +1456,32 @@ html { scrollbar-color: rgba(217,192,138,.35) var(--bg); }
 .sign > span:last-child { color: var(--faint) !important; }
 #kto :focus-visible { outline-color: var(--gold) !important; }
 
+
+/* ===== O mne: nový vzhľad (karta zakladateľa, príbeh, zásady) ===== */
+#kto.om-hero { padding: 96px 0 !important; }
+#kto.om-hero::before { bottom: -0.22em; }
+.om-grid { display: grid !important; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 64px; align-items: center; }
+.om-card { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 44px 34px 34px; border-radius: 30px; border: 1px solid rgba(217,192,138,.22); background: linear-gradient(160deg, rgba(217,192,138,.10), rgba(24,19,14,.92) 55%); box-shadow: 0 40px 90px -40px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,245,225,.06); }
+.om-badge { position: relative; width: 150px; height: 150px; display: grid; place-items: center; margin-bottom: 26px; }
+.om-ring { position: absolute; inset: 0; border-radius: 50%; border: 1px solid rgba(217,192,138,.5); }
+.om-ring.r2 { inset: 14px; border-color: rgba(217,192,138,.22); background: radial-gradient(circle at 30% 25%, rgba(243,230,196,.18), rgba(217,192,138,.02) 70%); }
+.om-m { font: 400 92px/1 "Mrs Saint Delafield", "Great Vibes", cursive; background: linear-gradient(100deg, #B8995E, #F3E6C4 45%, #D9C08A 75%); -webkit-background-clip: text; background-clip: text; color: transparent; padding: 0 .2em; transform: translateY(6px); }
+.om-name { font: 600 40px/1 var(--display); color: var(--text); }
+.om-role { margin-top: 10px; font: 600 12px/1 var(--sans); letter-spacing: .2em; text-transform: uppercase; color: var(--gold); }
+.om-facts { list-style: none; margin: 28px 0 0; padding: 22px 0 0; border-top: 1px solid rgba(217,192,138,.16); width: 100%; display: grid; gap: 12px; text-align: left; }
+.om-facts li { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 15.5px; }
+.om-facts i { flex: none; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: rgba(217,192,138,.12); color: var(--gold-hi); font: 700 13px/1 var(--sans); font-style: normal; }
+.om-links { display: grid; gap: 10px; width: 100%; margin-top: 28px; }
+.om-links .btn { width: 100%; justify-content: center; }
+.om-letter { text-align: left !important; max-width: none !important; }
+.om-letter h2 { font-size: clamp(40px, 4.6vw, 64px); }
+.om-letter p:first-of-type { margin: 30px 0 24px !important; max-width: none !important; font-size: clamp(22px, 2.2vw, 28px) !important; padding-left: 26px; border-left: 2px solid var(--gold); }
+.om-letter .sign { align-items: flex-start; }
+.om-letter .sign .sig-line { margin-left: 0; }
+.om-vgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 960px) { .om-grid { grid-template-columns: minmax(0, 1fr); gap: 36px; } .om-card { max-width: 460px; width: 100%; margin: 0 auto; } .om-vgrid { grid-template-columns: minmax(0, 1fr); gap: 10px; } }
+@media (max-width: 760px) { #kto.om-hero { padding: 56px 0 !important; } .om-card { padding: 32px 22px 24px; } .om-badge { width: 120px; height: 120px; } .om-m { font-size: 74px; } .om-name { font-size: 32px; } .om-letter p:first-of-type { padding-left: 16px; font-size: 19px !important; } }
+html[data-page="o-mne"] #kto .om-letter > .eyebrow { display: inline-flex !important; }
 </style>
 
 </head>
@@ -1865,15 +1891,40 @@ html { scrollbar-color: rgba(217,192,138,.35) var(--bg); }
     </div>
   </section>
 
-  <section class="sec" id="kto" data-pages="o-mne">
-    <div class="wrap">
-      <div class="letter">
-        <div class="eyebrow">O mne</div>
-        <h2>Kto za tým je</h2>
+  <section class="sec alt om-hero" id="kto" data-pages="o-mne">
+    <div class="wrap om-grid">
+      <aside class="om-card">
+        <div class="om-badge" aria-hidden="true"><span class="om-ring"></span><span class="om-ring r2"></span><span class="om-m">M</span></div>
+        <b class="om-name">Michael</b>
+        <span class="om-role">Zakladateľ TipRadaru</span>
+        <ul class="om-facts">
+          <li><i aria-hidden="true">✓</i>Každý tip zverejnený</li>
+          <li><i aria-hidden="true">✓</i>Výhry aj prehry</li>
+          <li><i aria-hidden="true">✓</i>Odpovedám osobne</li>
+        </ul>
+        <div class="om-links">
+          <a class="btn" href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener">Napísať na Telegram</a>
+          <a class="btn btn-ghost" href="mailto:info@tipradar.eu">info@tipradar.eu</a>
+        </div>
+      </aside>
+      <div class="letter om-letter">
+        <div class="eyebrow">Môj príbeh</div>
+        <h2>Dáta namiesto <em>pocitov</em></h2>
         <p>Volám sa Michael a TipRadar som založil s jednoduchým cieľom: hľadať zápasy, v ktorých stávkové kancelárie podceňujú skutočnú šancu, a robiť to na základe dát, nie pocitov.</p>
         <p>Transparentnosť je pre mňa základ. Každý tip sa zaznamená v momente odoslania a po zápase sa sám vyhodnotí. Nič sa dodatočne nemaže ani neupravuje, preto tu nájdete aj prehry. Istú výhru nesľubujem. Nesľubuje ju nikto, kto to myslí vážne.</p>
         <p>Ak máte otázku, napíšte mi na <a href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener">Telegram</a> alebo na <a href="mailto:info@tipradar.eu">info@tipradar.eu</a>. Odpovedám osobne.</p>
         <div class="sign"><span class="sig">Michael</span><i class="sig-line" aria-hidden="true"></i><span>zakladateľ TipRadaru</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec om-values" data-pages="o-mne">
+    <div class="wrap">
+      <div class="sec-head center"><div><div class="eyebrow">Čomu verím</div><h2>Tri <em>zásady</em> TipRadaru</h2></div></div>
+      <div class="om-vgrid">
+        <article class="card hm-card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M8 10h8M8 14h5"/></svg></span><h3>Nič neskrývam</h3><p>Každý tip sa uloží v momente odoslania a po zápase sa sám vyhodnotí. Výhry aj prehry ostávajú v histórii.</p></article>
+        <article class="card hm-card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><h3>Dáta, nie pocit</h3><p>Model prepočíta stovky zápasov denne a pošle len tipy, kde je šanca vyššia, než ukazuje kurz.</p></article>
+        <article class="card hm-card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3Z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg></span><h3>Zodpovedne</h3><p>Istú výhru nesľubujem. Odporúčam rovnaký vklad na každý tip a stávkovať len to, čo si môžete dovoliť stratiť.</p></article>
       </div>
     </div>
   </section>
