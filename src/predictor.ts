@@ -31,7 +31,7 @@ import {
  * evidencie, aby sa výsledky dali porovnávať len v rámci jednej verzie. Pri každej
  * zmene modelu, kalibrácie alebo filtrov ju zmeň (napr. na dátum zmeny).
  */
-export const MODEL_VERSION = "2026-10-20";
+export const MODEL_VERSION = "2026-10-20b";
 
 // Predvolené váhy jednotlivých faktorov pri výsledku zápasu (1/X/2).
 // Pokus z 5. 10. 2026 (len Poisson s korekciou remíz, bez formy a vzájomných
@@ -73,13 +73,31 @@ export const LEGACY_WEIGHTS: PredictionWeights = DEFAULT_WEIGHTS;
 // Rohy (0,70 / 0,90) a strely (0,80 / 1,00) sa nezhodli – ostávajú.
 const MARKET_CALIBRATION: Record<string, number> = {
   strely: 0.8,
-  fauly: 0.9,
+  // Fauly späť na 0,8 (20. 10. 2026): v ostrých tipoch vyšli 2 z 5, „pod“ len 1 zo 4.
+  fauly: 0.8,
   rohy: 0.72,
   rohy_timu: 0.8,
   karty: 0.9,
   karty_timu: 0.9,
   strely_timu: 0.95,
 };
+// Góly „pod“ (zápas aj tím) – 20. 10. 2026 podľa rozboru 35 ostrých tipov: model sľuboval
+// ~70 %, vyšlo 7 z 13 (54 %), kým tipy „nad“ vyšli 10 z 10. Šanca „pod“ sa preto zmenší
+// k 50 % (navyše k ostatnej kalibrácii) a rozpor so stávkovkami sa toleruje najviac 12 bodov.
+const GOALS_UNDER_CALIBRATION = 0.85;
+const GOALS_UNDER_CONFLICT_LIMIT = 12;
+const isGoalsUnder = (c: { category: string; selection: string }) =>
+  (c.category === "goly" || c.category === "goly_timu") && c.selection.startsWith("Under");
+/**
+ * Poradie tipov pri výbere hranice a tipu zápasu (20. 10. 2026): hodnota sa počíta zo
+ * šance napoly modelu a napoly stávkoviek. Model tak nevyberá automaticky hranicu,
+ * kde sa so stávkovkami najviac rozchádza (napr. „pod 4,5“), ale tú, kde je hodnota istejšia.
+ */
+function rankValue(b: MarketPick): number {
+  if (typeof b.blendMarket === "number" && typeof b.odds === "number" && b.odds > 1)
+    return ((b.probability + b.blendMarket) / 200) * b.odds;
+  return b.expectedValue ?? 0;
+}
 const EARLY_SEASON_CALIBRATION: Record<string, number> = {
   goly: 0.9,
   goly_timu: 0.9,
@@ -120,6 +138,8 @@ const CARDS_LINE = 3.5;
 const SHOTS_ON_GOAL_LINE = 8.5;
 const FOULS_LINE = 21.5;
 const OFFSIDES_LINE = 3.5;
+/** Hranice držania lopty (v %), ktoré model skúša pri tipoch (stávkovky ich cez API neponúkajú). */
+const POSSESSION_LINES = [30.5, 35.5, 40.5, 45.5, 50.5, 55.5, 60.5, 65.5, 70.5];
 
 // Hranice, ktoré model skúša, keď stávkovky k zápasu ešte nemajú kurzy (a v spätnom
 // teste). Keď kurzy sú, model vyhodnotí presne tie hranice, ktoré stávkovky ponúkajú.
@@ -929,8 +949,29 @@ export function predictMatch(
     if (possBlend.h2h) h2hNotes.drzanie_lopty = `Vo vzájomných zápasoch (${possBlend.h2h.n}) mali domáci loptu v priemere ${possBlend.h2h.avg.toFixed(0)} %.`;
     const POSSESSION_SD = 8;
     possessionInfo = { expectedHome, sd: POSSESSION_SD };
-    // Do odporúčaných tipov držanie lopty nedávame (hranicu by si app vymýšľala) –
-    // počíta sa len v kalkulačke so skutočnou hranicou a kurzom zo stávkovky.
+    // Od 20. 10. 2026 (Michalovo rozhodnutie) je držanie lopty aj medzi bežnými tipmi.
+    // Stávkovky ho cez API neponúkajú, preto model skúša hranice po 5 % (30,5 – 70,5)
+    // pre domácich aj hostí a kurz zadá Michal pri uložení tipu (minimálny kurz ukáže appka).
+    const possTeams: [string, string, number][] = [
+      ["Držanie lopty domácich", fixture.homeTeam.name, expectedHome],
+      ["Držanie lopty hostí", fixture.awayTeam.name, 100 - expectedHome],
+    ];
+    // Len pri zápase, kde jeden tím jasne dominuje (odhad aspoň 58 %), inak by držanie
+    // lopty vyšlo takmer pri každom zápase a zaplavilo Tipy dňa.
+    const possDominant = Math.abs(expectedHome - 50) >= 8;
+    for (const [market, team, exp] of possDominant ? possTeams : []) {
+      for (const line of POSSESSION_LINES) {
+        const over = (1 - normalCdf((line - exp) / POSSESSION_SD)) * 100;
+        const isOver = over >= 50;
+        candidates.push({
+          market,
+          selection: `${isOver ? "Over" : "Under"} ${line}`,
+          probability: isOver ? over : 100 - over,
+          category: "drzanie_lopty",
+          explanation: `${team}: očakávané držanie lopty ${exp.toFixed(0)} %, hranica ${String(line).replace(".", ",")} %. Kurz zadajte zo stávkovky.`,
+        });
+      }
+    }
   }
 
   for (const c of candidates) {
@@ -941,6 +982,7 @@ export function predictMatch(
     for (const c of candidates) {
       const k = calibrationFactor(c.category, minGamesPlayed);
       if (k < 1) c.probability = 50 + k * (c.probability - 50);
+      if (isGoalsUnder(c)) c.probability = 50 + GOALS_UNDER_CALIBRATION * (c.probability - 50);
     }
     for (const m of lineModels) m.calibration = Math.min(1, calibrationFactor(m.category, minGamesPlayed));
   }
@@ -999,7 +1041,8 @@ export function predictMatch(
         // pri štatistikách (rohy, karty…) len tie, ku ktorým sú štatistiky k dispozícii.
         const statKey = H2H_STAT_KEY[c.category];
         const h2hUsed = statKey ? h2hStat(statKey)?.n ?? 0 : h2hG ? h2hG.n : 0;
-        if (Math.abs(modelPct - pMarket * 100) >= marketConflictLimit(h2hUsed)) {
+        const conflictLimit = isGoalsUnder(c) ? GOALS_UNDER_CONFLICT_LIMIT : marketConflictLimit(h2hUsed);
+        if (Math.abs(modelPct - pMarket * 100) >= conflictLimit) {
           c.marketConflict = `model a stávkovky sa výrazne rozchádzajú (model ${modelPct.toFixed(0)} %, stávkovky ${(pMarket * 100).toFixed(0)} %)`;
           c.modelProbability = modelPct;
           c.marketProbability = pMarket * 100;
@@ -1060,6 +1103,11 @@ export function predictMatch(
       b.rejectReason = b.marketConflict;
       b.rejectCode = "conflict";
       lowValueBets.push(b);
+    } else if (ev == null && b.category === "drzanie_lopty") {
+      // Držanie lopty: kurz cez API nie je, tip ide do výberu s minimálnym kurzom,
+      // ktorý Michal porovná so stávkovkou (hodnota +5 % a aspoň MIN_ODDS).
+      b.minOdds = Math.max(MIN_ODDS, Math.ceil((MIN_EXPECTED_VALUE / (b.probability / 100)) * 100) / 100);
+      pickPool.push(b);
     } else if (ev == null && oddsAvailable) {
       // Stávkovky k zápasu kurzy majú, ale tento trh (alebo túto hranicu) neponúkajú -
       // na tip sa reálne nedá staviť. Ručne ho stále možno pridať ("Uložiť aj tak").
@@ -1113,8 +1161,11 @@ export function predictMatch(
   const bestInCategory = new Map<string, MarketPick>();
   for (const bet of pickPool) {
     const cur = bestInCategory.get(bet.category);
-    const ev = bet.expectedValue ?? 0, curEv = cur?.expectedValue ?? 0;
-    if (!cur || ev > curEv || (ev === curEv && bet.probability > cur.probability)) bestInCategory.set(bet.category, bet);
+    const ev = rankValue(bet), curEv = cur ? rankValue(cur) : 0;
+    // Držanie lopty (bez kurzu): hranica s dôverou najbližšie k spodku pásma má najväčšiu
+    // šancu, že kurz v stávkovke dosiahne minimum.
+    const better = bet.category === "drzanie_lopty" && ev === curEv ? bet.probability < (cur?.probability ?? 101) : bet.probability > (cur?.probability ?? -1);
+    if (!cur || ev > curEv || (ev === curEv && better)) bestInCategory.set(bet.category, bet);
   }
   const diversifiedPicks = Array.from(bestInCategory.values()).sort((a, b) => b.probability - a.probability);
   // Meranie (20. 10. 2026): ostatné hranice toho istého trhu dostanú len kód dôvodu
@@ -1126,7 +1177,7 @@ export function predictMatch(
   // s najväčšou hodnotou. Ostatné sa presunú medzi neodporúčané s dôvodom.
   const topPick = diversifiedPicks.reduce<MarketPick | null>((best, b) => {
     if (!best) return b;
-    const ev = b.expectedValue ?? 0, bestEv = best.expectedValue ?? 0;
+    const ev = rankValue(b), bestEv = rankValue(best);
     return ev > bestEv || (ev === bestEv && b.probability > best.probability) ? b : best;
   }, null);
   for (const b of diversifiedPicks) {
