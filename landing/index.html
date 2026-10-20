@@ -9,25 +9,25 @@
     var q = new URLSearchParams(location.search).get("stranka");
     var page = ["metoda", "vysledky", "clenstvo", "otazky", "formular", "o-mne"].indexOf(q || m) >= 0 ? (q || m) : "home";
     document.documentElement.setAttribute("data-page", page);
-    var t = { metoda: "Metóda – ako vzniká tip | TipRadar", vysledky: "Výsledky – všetky vyhodnotené tipy | TipRadar", otazky: "Otázky | TipRadar", formular: "Formulár – napíšte mi | TipRadar", "o-mne": "O mne | TipRadar", clenstvo: "Členstvo | TipRadar" }[page];
+    var t = { metoda: "Metóda – ako vzniká predpoveď | TipRadar", vysledky: "Výsledky – všetky vyhodnotené predpovede | TipRadar", otazky: "Otázky | TipRadar", formular: "Formulár – napíšte mi | TipRadar", "o-mne": "O mne | TipRadar", clenstvo: "Členstvo | TipRadar" }[page];
     if (t) document.title = t;
   })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="dark" />
 <meta name="theme-color" content="#1B1510" />
-<title>TipRadar – futbalové tipy podložené štatistickým modelom</title>
-<meta name="description" content="Futbalové tipy podložené štatistickým modelom. Tip odporučíme iba vtedy, keď kurz nedoceňuje reálnu šancu výsledku. Všetky vyhodnotené tipy zverejňujeme transparentne, výhry aj prehry." />
+<title>TipRadar – futbalové predpovede podložené štatistickým modelom</title>
+<meta name="description" content="Futbalové predpovede podložené štatistickým modelom. Predpoveď odporučíme iba vtedy, keď kurz nedoceňuje reálnu šancu výsledku. Všetky vyhodnotené predpovede zverejňujeme transparentne, výhry aj prehry." />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://tipradar.eu/" />
 <meta property="og:site_name" content="TipRadar" />
 <meta property="og:locale" content="sk_SK" />
 <meta property="og:title" content="TipRadar – futbal očami dát" />
-<meta property="og:description" content="Futbalové tipy podložené štatistickým modelom. Výhry aj prehry zverejnené transparentne." />
+<meta property="og:description" content="Futbalové predpovede podložené štatistickým modelom. Výhry aj prehry zverejnené transparentne." />
 <meta property="og:image" content="https://tipradar.eu/og-image.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
-<meta property="og:image:alt" content="TipRadar – futbalové tipy podložené štatistickým modelom" />
+<meta property="og:image:alt" content="TipRadar – futbalové predpovede podložené štatistickým modelom" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:image" content="https://tipradar.eu/og-image.png" />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -1617,15 +1617,15 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
   <div class="wrap">
     <ul class="ov-links">
       <li><a href="/">Úvod</a></li>
-      <li><a href="/vysledky">Výsledky<small>všetky tipy</small></a></li>
+      <li><a href="/vysledky">Výsledky<small>všetky predpovede</small></a></li>
       <li><a href="/clenstvo">Členstvo<small>Silver · Gold · Platinum</small></a></li>
-      <li><a href="/kurz">Kurz<small>Škola tipovania</small></a></li>
+      <li><a href="/kurz">Kurz<small>Škola stávkovania</small></a></li>
       <li><a href="/o-mne">O mne</a></li>
       <li><a href="/formular">Kontakt<small>napíšte mi</small></a></li>
     </ul>
     <div class="ov-foot">
       <a class="btn" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener"><svg width="18" height="18" aria-hidden="true"><use href="#i-tg"/></svg>Telegram komunita</a>
-      <a class="btn btn-ghost" href="/kurz"><svg width="18" height="18" aria-hidden="true"><use href="#i-book"/></svg>Kurz Škola tipovania</a>
+      <a class="btn btn-ghost" href="/kurz"><svg width="18" height="18" aria-hidden="true"><use href="#i-book"/></svg>Kurz Škola stávkovania</a>
       <div class="ov-contacts"><a href="mailto:info@tipradar.eu">info@tipradar.eu</a><a href="https://www.instagram.com/tipradar.eu/" target="_blank" rel="noopener">Instagram @tipradar.eu</a></div>
     </div>
   </div>
@@ -1646,15 +1646,15 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
   <header class="page-head" data-pages="metoda">
     <div class="wrap">
       <a class="back" href="/">← Úvod</a><div class="eyebrow">Metóda</div>
-      <h1>Ako model vyberá <em>tipy</em></h1>
-      <p>Celý postup od stoviek zápasov po pár tipov denne a vysvetlenie, kedy má tip hodnotu.</p>
+      <h1>Ako model vyberá <em>predpovede</em></h1>
+      <p>Celý postup od stoviek zápasov po pár predpovedí denne a vysvetlenie, kedy má predpoveď hodnotu.</p>
     </div>
   </header>
   <header class="page-head" data-pages="vysledky">
     <div class="wrap">
       <a class="back" href="/">← Úvod</a><div class="eyebrow">Overené výsledky</div>
       <h1>Všetky <em>výsledky</em></h1>
-      <p>Čísla sa načítavajú priamo z TipRadaru. Každý tip sa vyhodnotí podľa skutočného výsledku zápasu. Tipy na zápasy, ktoré sa ešte nehrali, vidia len členovia.</p>
+      <p>Čísla sa načítavajú priamo z TipRadaru. Každá predpoveď sa vyhodnotí podľa skutočného výsledku zápasu. Predpovede na zápasy, ktoré sa ešte nehrali, vidia len členovia.</p>
     </div>
   </header>
   <header class="page-head" data-pages="otazky">
@@ -1668,23 +1668,23 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
     <div class="wrap">
       <a class="back" href="/">← Úvod</a><div class="eyebrow">Členstvo</div>
       <h1>Vstúpte do <em>klubu</em></h1>
-      <p>Silver na 1 mesiac, Gold na 3 mesiace, Platinum na 6 mesiacov. Všetci členovia dostávajú rovnaké tipy aj súkromný VIP chat. Čím dlhšie, tým nižšia cena za mesiac.</p>
+      <p>Silver na 1 mesiac, Gold na 3 mesiace, Platinum na 6 mesiacov. Všetci členovia dostávajú rovnaké predpovede aj súkromný VIP chat. Čím dlhšie, tým nižšia cena za mesiac.</p>
     </div>
   </header>
   <header class="page-head" data-pages="formular">
     <div class="wrap">
       <a class="back" href="/">← Úvod</a><div class="eyebrow">Formulár</div>
       <h1>Napíšte <em>mi</em></h1>
-      <p>Otázka k modelu, tipom, členstvu alebo kurzu? Vyplňte formulár a odpoviem vám osobne na e-mail.</p>
+      <p>Otázka k modelu, predpovediam, členstvu alebo kurzu? Vyplňte formulár a odpoviem vám osobne na e-mail.</p>
     </div>
   </header>
 
   <section class="hero hx" data-pages="home">
     <div class="hx-bg" aria-hidden="true"><div class="hx-radar"><i></i><i></i><i></i><i></i><i></i><span class="sw"></span><b style="--x:68%;--y:30%;--d:1.2s"></b><b style="--x:27%;--y:62%;--d:4.6s"></b><b style="--x:76%;--y:71%;--d:7.4s"></b></div></div>
     <div class="wrap">
-      <span class="hx-pill"><i></i>Tipy podložené dátami</span>
+      <span class="hx-pill"><i></i>Predpovede podložené dátami</span>
       <h1>Futbal <em>očami dát.</em></h1>
-      <p class="hx-lead">Model každý deň prepočíta stovky zápasov a pošle len tie tipy, kde je šanca vyššia, než ukazuje kurz. Každý výsledok zverejníme, výhry aj prehry.</p>
+      <p class="hx-lead">Model každý deň prepočíta stovky zápasov a pošle len tie predpovede, kde je šanca vyššia, než ukazuje kurz. Každý výsledok zverejníme, výhry aj prehry.</p>
       <div class="hx-cta">
         <a class="btn" href="/clenstvo">Vybrať členstvo <span class="arr" aria-hidden="true">→</span></a>
         <a class="btn btn-ghost" href="/vysledky">Pozrieť výsledky</a>
@@ -1701,36 +1701,36 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
   <section class="sec alt hm-res" id="vysledky-uvod" data-pages="home" hidden>
     <div class="wrap">
       <div class="sec-head center">
-        <div><div class="eyebrow">Overené výsledky</div><h2>Čísla od <em>začiatku</em></h2><p class="lead">Všetky tipy pri rovnakom vklade na každý tip. Každý tip sa vyhodnotí podľa skutočného výsledku zápasu, výhry aj prehry.</p></div>
+        <div><div class="eyebrow">Overené výsledky</div><h2>Čísla od <em>začiatku</em></h2><p class="lead">Všetky predpovede pri rovnakom vklade na každú predpoveď. Každá predpoveď sa vyhodnotí podľa skutočného výsledku zápasu, výhry aj prehry.</p></div>
       </div>
         <a class="hx-live" id="hxLive" href="/vysledky" aria-label="Výsledky TipRadaru" hidden>
-          <div><small>Zisk od začiatku</small><b class="num" id="hxProfit">–</b><span>pri rovnakom vklade na tip</span></div>
+          <div><small>Zisk od začiatku</small><b class="num" id="hxProfit">–</b><span>pri rovnakom vklade na predpoveď</span></div>
           <div><small>Vyšlo</small><b class="num" id="hxRate">–</b><span id="hxRateSub"></span></div>
-          <div><small>ROI</small><b class="num" id="hxRoi">–</b><span>na každý vsadený tip</span></div>
+          <div><small>ROI</small><b class="num" id="hxRoi">–</b><span>na každú predpoveď</span></div>
           <div><small>Tento mesiac</small><b class="num" id="hxMonth">–</b><span id="hxMonthSub"></span></div>
           <div class="hx-spark" id="hxSpark"></div>
         </a>
-      <div class="hm-res-more"><a class="more" href="/vysledky">Všetky výsledky a história tipov <span aria-hidden="true">→</span></a></div>
+      <div class="hm-res-more"><a class="more" href="/vysledky">Všetky výsledky a história predpovedí <span aria-hidden="true">→</span></a></div>
     </div>
   </section>
 
   <section class="sec" id="ako" data-pages="home">
     <div class="wrap">
       <div class="sec-head">
-        <div><div class="eyebrow">Ako to funguje</div><h2>Tri kroky k&nbsp;<em>tipu</em></h2></div>
+        <div><div class="eyebrow">Ako to funguje</div><h2>Tri kroky k&nbsp;<em>predpovedi</em></h2></div>
         <div class="idx" aria-hidden="true">01</div>
       </div>
       <div class="how">
         <div>
           <ol class="steps">
             <li class="card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 12 18.4 5.6"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/></svg></span><div><span class="n">Krok 1</span><h3>Model prepočíta každý zápas</h3><p>Góly, rohy, karty, strely aj fauly z posledných zápasov oboch tímov. V bežný deň okolo 120 zápasov a 1 200 trhov.</p></div></li>
-            <li class="card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v16M6 20h12M4 8h16"/><path d="M4 8l-2.5 6a3 3 0 0 0 5 0L4 8ZM20 8l-2.5 6a3 3 0 0 0 5 0L20 8Z"/></svg></span><div><span class="n">Krok 2</span><h3>Porovná šancu s kurzom</h3><p>Tip prejde, len keď model vidí vyššiu šancu, než naznačuje kurz na trhu. Väčšina zápasov neprejde.</p></div></li>
-            <li class="card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 4 3 11l6 2 2 6 3-4 5 4 2-15Z"/><path d="m9 13 8-6"/></svg></span><div><span class="n">Krok 3</span><h3>Tip príde do Telegramu</h3><p>1 – 2 hodiny pred výkopom, večer vyhodnotenie. Výhry aj prehry zverejníme.</p></div></li>
+            <li class="card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v16M6 20h12M4 8h16"/><path d="M4 8l-2.5 6a3 3 0 0 0 5 0L4 8ZM20 8l-2.5 6a3 3 0 0 0 5 0L20 8Z"/></svg></span><div><span class="n">Krok 2</span><h3>Porovná šancu s kurzom</h3><p>Predpoveď prejde, len keď model vidí vyššiu šancu, než naznačuje kurz na trhu. Väčšina zápasov neprejde.</p></div></li>
+            <li class="card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 4 3 11l6 2 2 6 3-4 5 4 2-15Z"/><path d="m9 13 8-6"/></svg></span><div><span class="n">Krok 3</span><h3>Predpoveď príde do Telegramu</h3><p>1 – 2 hodiny pred výkopom, večer vyhodnotenie. Výhry aj prehry zverejníme.</p></div></li>
           </ol>
           <a class="more" href="/metoda">Celý postup a kalkulačka hodnoty <span aria-hidden="true">→</span></a>
         </div>
         <div class="how-phone">
-          <figure class="phone" aria-label="Ukážka: takto príde tip do Telegramu">
+          <figure class="phone" aria-label="Ukážka: takto príde predpoveď do Telegramu">
             <div class="phone-screen">
               <div class="tg-top">
                 <svg class="back" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1739,12 +1739,12 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
               </div>
               <div class="tg-body">
                 <span class="tg-day">Dnes</span>
-                <div class="tg-msg anim"><b class="h">🎯 Nový tip</b>⚽ Nórsko — Portugalsko<br />📊 Góly: <b>pod 3,5</b><br />📈 Dôvera: <b>71&nbsp;%</b><br />💰 Kurz: <b>1,72</b><br />💵 Odporúčaná sadzba: <b>2&nbsp;% bankrollu</b><i>ℹ️ Priemerný kurz na trhu v čase odoslania.</i><span class="t">18:02</span></div>
+                <div class="tg-msg anim"><b class="h">🎯 Nová predpoveď</b>⚽ Nórsko — Portugalsko<br />📊 Góly: <b>pod 3,5</b><br />📈 Dôvera: <b>71&nbsp;%</b><br />💰 Kurz: <b>1,72</b><br />💵 Odporúčaná sadzba: <b>2&nbsp;% bankrollu</b><i>ℹ️ Priemerný kurz na trhu v čase odoslania.</i><span class="t">18:02</span></div>
                 <div class="tg-msg win anim"><b class="h">✅ VÝHRA</b>⚽ Nórsko — Portugalsko<br />📊 Góly: <b>pod 3,5</b><span class="t">22:41</span></div>
               </div>
             </div>
           </figure>
-          <p class="phone-note">Ilustrácia. Tip príde 1 – 2 hodiny pred výkopom, výsledok večer po zápase.</p>
+          <p class="phone-note">Ilustrácia. Predpoveď príde 1 – 2 hodiny pred výkopom, výsledok večer po zápase.</p>
         </div>
       </div>
     </div>
@@ -1757,7 +1757,7 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
         <div class="idx" aria-hidden="true">02</div>
       </div>
       <div class="hm-grid">
-        <article class="card hm-card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M8 10h8M8 14h5"/></svg></span><h3>Nič neskrývame</h3><p>Každý tip sa po zápase vyhodnotí a ostane v histórii. Výhry aj prehry, nič sa nemaže.</p></article>
+        <article class="card hm-card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M8 10h8M8 14h5"/></svg></span><h3>Nič neskrývame</h3><p>Každá predpoveď sa po zápase vyhodnotí a ostane v histórii. Výhry aj prehry, nič sa nemaže.</p></article>
         <article class="card hm-card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><h3>Dáta, nie pocit</h3><p>Model počíta šance zo štatistík oboch tímov, nie podľa mena klubu alebo dojmu z posledného zápasu.</p></article>
         <article class="card hm-card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3Z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg></span><h3>Garancia</h3><p>Ak celé vaše členstvo skončí v strate, ďalší mesiac máte zadarmo. Platí pre Silver, Gold aj Platinum.</p></article>
         <article class="card hm-card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4V5Z"/><path d="M8 9h8M8 12h5"/></svg></span><h3>Súkromný VIP chat</h3><p>Vo všetkých členstvách. Pýtajte sa, debatujte o zápasoch a na otázky odpovedám osobne.</p></article>
@@ -1768,7 +1768,7 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
   <section class="sec hm-plans" id="clenstva" data-pages="home">
     <div class="wrap">
       <div class="sec-head center">
-        <div><div class="eyebrow">Členstvo</div><h2>Vyberte si <em>dĺžku</em></h2><p class="lead">Všetci členovia dostávajú rovnaké tipy, súkromný VIP chat aj garanciu. Líšia sa len dĺžkou a cenou za mesiac.</p></div>
+        <div><div class="eyebrow">Členstvo</div><h2>Vyberte si <em>dĺžku</em></h2><p class="lead">Všetci členovia dostávajú rovnaké predpovede, súkromný VIP chat aj garanciu. Líšia sa len dĺžkou a cenou za mesiac.</p></div>
         <div class="idx" aria-hidden="true">03</div>
       </div>
       <div class="hm-tiers">
@@ -1782,11 +1782,11 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
   <section class="sec alt hm-kurz" id="skola-uvod" data-pages="home">
     <div class="wrap">
       <a class="card hm-kurz-card" href="/kurz">
-        <div class="hm-kurz-img"><img src="/skola/kurz-01.jpg" alt="Titulná strana kurzu Škola tipovania" loading="lazy" /></div>
+        <div class="hm-kurz-img"><img src="/skola/kurz-01.jpg" alt="Titulná strana kurzu Škola stávkovania" loading="lazy" /></div>
         <div class="hm-kurz-txt">
           <div class="eyebrow">Exkluzívny kurz</div>
-          <h2>Škola <em>tipovania</em></h2>
-          <p>48 strán a 10 kapitol o tom, čo väčšina tipérov preskočí: ako chrániť bank, ako spoznať tip s hodnotou a ako nedovoliť emóciám rozhodovať za vás.</p>
+          <h2>Škola <em>stávkovania</em></h2>
+          <p>48 strán a 10 kapitol o tom, čo väčšina ľudí preskočí: ako chrániť bank, ako spoznať predpoveď s hodnotou a ako nedovoliť emóciám rozhodovať za vás.</p>
           <div class="hm-kurz-buy"><b class="num">99&nbsp;€</b><span>jednorazová platba</span><span class="btn">Pozrieť kurz <span class="arr" aria-hidden="true">→</span></span></div>
         </div>
       </a>
@@ -1797,17 +1797,17 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
     <div class="wrap split">
       <div>
         <div class="eyebrow">Postup</div>
-        <h2>Ako vzniká <em>tip</em></h2>
+        <h2>Ako vzniká <em>predpoveď</em></h2>
         <p>Každý zápas prejde rovnakými pravidlami. Väčšina neprejde a vtedy radšej nepošleme nič.</p>
       </div>
       <div>
         <ol class="funnel">
           <li class="card"><div class="c num">120</div><div><h3>zápasov v bežný deň</h3><p>Pri každom zápase model zoberie góly, rohy, karty, strely, fauly a držanie lopty z posledných stretnutí oboch tímov, vlastné aj tie, ktoré tím dovolí súperovi. Keď je dát málo, pomôžu tri minulé sezóny.</p></div></li>
           <li class="card"><div class="c num">1 200</div><div><h3>vypočítaných trhov</h3><p>Model počíta osem trhov: góly v zápase aj góly každého tímu, rohy v zápase aj rohy každého tímu, karty, strely na bránu, fauly a držanie lopty. Pri kartách a strelách počíta s väčším rozptylom, lebo kolíšu viac.</p></div></li>
-          <li class="card"><div class="c num">140</div><div><h3>s dôverou 68 – 80&nbsp;%</h3><p>Veľmi isté tipy mávajú nízky kurz a veľmi neisté často nevychádzajú. Ďalej idú len tipy v tomto pásme.</p></div></li>
-          <li class="card"><div class="c num">15</div><div><h3>s hodnotou a kurzom</h3><p>Model vyskúša všetky hranice, ktoré ponúka trh (napríklad rohy 8,5 / 9,5 / 10,5) a vyberie tú s najväčšou hodnotou. Tip musí mať hodnotu aspoň +5&nbsp;% a kurz aspoň <span class="minOdds">1,50</span>.</p></div></li>
-          <li class="card"><div class="c num">7</div><div><h3>bez veľkého rozporu s trhom</h3><p>Keď model vidí šancu o 15 – 25 bodov inak ako trh, tip vyradíme. Taký rozdiel často znamená niečo, čo štatistika nevidí, napríklad zranenie. Vyradené tipy si zapisujeme a raz za mesiac kontrolujeme, kto mal pravdu.</p></div></li>
-          <li class="card"><div class="c num">2 – 3</div><div><h3>tipy pre členov</h3><p>Najviac jeden tip na trh v zápase, 1 – 2 hodiny pred výkopom. Večer ich vyhodnotíme podľa skutočného výsledku.</p></div></li>
+          <li class="card"><div class="c num">140</div><div><h3>s dôverou 68 – 80&nbsp;%</h3><p>Veľmi isté predpovede mávajú nízky kurz a veľmi neisté často nevychádzajú. Ďalej idú len predpovede v tomto pásme.</p></div></li>
+          <li class="card"><div class="c num">15</div><div><h3>s hodnotou a kurzom</h3><p>Model vyskúša všetky hranice, ktoré ponúka trh (napríklad rohy 8,5 / 9,5 / 10,5) a vyberie tú s najväčšou hodnotou. Predpoveď musí mať hodnotu aspoň +5&nbsp;% a kurz aspoň <span class="minOdds">1,50</span>.</p></div></li>
+          <li class="card"><div class="c num">7</div><div><h3>bez veľkého rozporu s trhom</h3><p>Keď model vidí šancu o 15 – 25 bodov inak ako trh, predpoveď vyradíme. Taký rozdiel často znamená niečo, čo štatistika nevidí, napríklad zranenie. Vyradené predpovede si zapisujeme a raz za mesiac kontrolujeme, kto mal pravdu.</p></div></li>
+          <li class="card"><div class="c num">2 – 3</div><div><h3>predpovede pre členov</h3><p>Najviac jedna predpoveď na trh v zápase, 1 – 2 hodiny pred výkopom. Večer ich vyhodnotíme podľa skutočného výsledku.</p></div></li>
         </ol>
         <p class="footnote">Počty sú pre ilustráciu, každý deň sú iné.</p>
       </div>
@@ -1818,8 +1818,8 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
     <div class="wrap split">
       <div>
         <div class="eyebrow">Hodnota</div>
-        <h2>Kedy má tip <em>hodnotu</em></h2>
-        <p>Keď model dáva výsledku 68&nbsp;% a kurz je 1,75, z každého eura sa v priemere vráti 0,68 × 1,75 = 1,19 €. To je hodnota +19&nbsp;%. Pri kurze 1,45 by to bolo 0,68 × 1,45 = 0,99 €, teda −1&nbsp;%, a tip by sme neposlali.</p>
+        <h2>Kedy má predpoveď <em>hodnotu</em></h2>
+        <p>Keď model dáva výsledku 68&nbsp;% a kurz je 1,75, z každého eura sa v priemere vráti 0,68 × 1,75 = 1,19 €. To je hodnota +19&nbsp;%. Pri kurze 1,45 by to bolo 0,68 × 1,45 = 0,99 €, teda −1&nbsp;%, a predpoveď by sme neposlali.</p>
         <p>Skúste si to sami posunutím oboch čísel.</p>
       </div>
       <div class="calc glow">
@@ -1845,12 +1845,12 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
     <div class="wrap">
       <div class="sec-head" data-pages="home">
         <div><div class="eyebrow">Overené výsledky</div><h2>Čísla, ktoré sa nedajú <em>prikrášliť</em></h2>
-        <p class="lead">Čísla sa načítavajú priamo z TipRadaru. Každý tip sa vyhodnotí podľa skutočného výsledku zápasu. Tipy na zápasy, ktoré sa ešte nehrali, vidia len členovia.</p></div>
+        <p class="lead">Čísla sa načítavajú priamo z TipRadaru. Každá predpoveď sa vyhodnotí podľa skutočného výsledku zápasu. Predpovede na zápasy, ktoré sa ešte nehrali, vidia len členovia.</p></div>
         <div class="idx" aria-hidden="true">02</div>
       </div>
 
       <div class="figures">
-        <div><b class="num" id="fCount">–</b><span id="fCountLbl">vyhodnotených tipov</span></div>
+        <div><b class="num" id="fCount">–</b><span id="fCountLbl">vyhodnotených predpovedí</span></div>
         <div><b class="num" id="fRate">–</b><span>vyšlo</span></div>
         <div><b class="num" id="fProfit">–</b><span>zisk v jednotkách</span></div>
         <div><b class="num" id="fRoi">–</b><span>ROI</span></div>
@@ -1859,32 +1859,32 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
       <div class="showcase" data-pages="nikde">
         <div class="sc-chart">
           <div class="sc-head"><h3 id="chTitle">Ako rástol zisk</h3><span class="sc-total num" id="chTotal"></span></div>
-          <div id="chWrap"><p class="muted" style="margin-top:10px">Graf sa zobrazí po prvých vyhodnotených tipoch.</p></div>
-          <div class="form10" id="form10" hidden><span>Posledných 10 tipov</span><div id="last10"></div></div>
+          <div id="chWrap"><p class="muted" style="margin-top:10px">Graf sa zobrazí po prvých vyhodnotených predpovediach.</p></div>
+          <div class="form10" id="form10" hidden><span>Posledných 10 predpovedí</span><div id="last10"></div></div>
         </div>
         <div class="stake" id="stake" data-pages="vysledky" hidden>
-          <p class="sc-eyebrow">Keby ste od začiatku stavili na každý tip rovnakú sumu</p>
+          <p class="sc-eyebrow">Keby ste od začiatku vložili na každú predpoveď rovnakú sumu</p>
           <div class="big num" id="calcResult">–</div>
-          <label for="stakeRange"><span>Suma na jeden tip</span><b class="num" id="stakeOut">10 €</b></label>
+          <label for="stakeRange"><span>Suma na jednu predpoveď</span><b class="num" id="stakeOut">10 €</b></label>
           <input type="range" id="stakeRange" min="5" max="200" step="5" value="10" />
           <p class="small" id="calcNote" style="margin-top:12px"></p>
         </div>
       </div>
 
       <div class="ledger-wrap" data-pages="vysledky">
-        <h3>Všetky vyhodnotené tipy</h3>
+        <h3>Všetky vyhodnotené predpovede</h3>
         <p class="note">Tak, ako ich dostali členovia.</p>
         <div class="tabs" role="group" aria-label="Filter">
           <button class="tab" data-f="all" aria-pressed="true">Všetky</button>
           <button class="tab" data-f="won" aria-pressed="false">Vyšli</button>
           <button class="tab" data-f="lost" aria-pressed="false">Nevyšli</button>
         </div>
-        <div class="ledger-cols"><span>Dátum a čas</span><span>Zápas a tip</span><span>Kurz</span><span>Výsledok</span></div>
+        <div class="ledger-cols"><span>Dátum a čas</span><span>Zápas a predpoveď</span><span>Kurz</span><span>Výsledok</span></div>
         <ul class="ledger" id="list"><li class="empty">Načítavam…</li></ul>
         <div class="pager" id="pager" hidden>
           <span class="num" id="pgInfo"></span>
-          <button class="pg" id="pgPrev" aria-label="Novšie tipy">‹</button>
-          <button class="pg" id="pgNext" aria-label="Staršie tipy">›</button>
+          <button class="pg" id="pgPrev" aria-label="Novšie predpovede">‹</button>
+          <button class="pg" id="pgNext" aria-label="Staršie predpovede">›</button>
         </div>
       </div>
 
@@ -1892,8 +1892,8 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
         <div class="mon">
           <div class="eyebrow">Po mesiacoch</div>
           <h3>Zisk <em>mesiac po mesiaci</em></h3>
-          <p class="note">Výsledky za každý mesiac zvlášť. Zisk je v jednotkách (1 jednotka = vklad na jeden tip).</p>
-          <div class="mon-cols" aria-hidden="true"><span>Mesiac</span><span>Tipov</span><span>W / L</span><span>Vyšlo</span><span>ROI</span><span>Zisk</span></div>
+          <p class="note">Výsledky za každý mesiac zvlášť. Zisk je v jednotkách (1 jednotka = vklad na jednu predpoveď).</p>
+          <div class="mon-cols" aria-hidden="true"><span>Mesiac</span><span>Predpovedí</span><span>W / L</span><span>Vyšlo</span><span>ROI</span><span>Zisk</span></div>
           <ul class="mon-list" id="monList"></ul>
         </div>
       </div>
@@ -1905,21 +1905,21 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
             <label for="calcBank">Váš bank na začiatku</label>
             <div class="val num" id="calcBankVal">1 000 €</div>
             <input type="range" id="calcBank" min="50" max="2000" step="50" value="1000" />
-            <label>Vklad na jeden tip</label>
+            <label>Vklad na jednu predpoveď</label>
             <div class="seg" id="calcPct"><button type="button" data-p="1" aria-pressed="false">1 %</button><button type="button" data-p="2" aria-pressed="true">2 %</button><button type="button" data-p="3" aria-pressed="false">3 %</button><button type="button" data-p="5" aria-pressed="false">5 %</button></div>
-            <p class="hint">Na každý tip vsadíte zvolené percento z aktuálneho banku.</p>
+            <p class="hint">Na každú predpoveď vložíte zvolené percento z aktuálneho banku.</p>
           </div>
           <div class="res">
-            <small id="calcFrom">Keby ste s nami tipovali od začiatku</small>
+            <small id="calcFrom">Keby ste sa našimi predpoveďami riadili od začiatku</small>
             <div class="big num" id="calcEnd">–</div>
             <svg viewBox="0 0 400 120" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="calcGrad" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#D9C08A" stop-opacity=".35"/><stop offset="1" stop-color="#D9C08A" stop-opacity="0"/></linearGradient></defs><path id="calcArea" fill="url(#calcGrad)"/><path id="calcLine" fill="none" stroke="#F3E6C4" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>
-            <div class="rows"><div><b class="num" id="calcN">–</b><span>tipov</span></div><div><b class="num" id="calcW">–</b><span>vyšlo</span></div><div><b class="num" id="calcP">–</b><span>zisk</span></div></div>
-            <p class="note">Počíta sa zo všetkých skutočných vyhodnotených tipov vrátane prehier. Minulé výsledky nie sú zárukou budúcich.</p>
+            <div class="rows"><div><b class="num" id="calcN">–</b><span>predpovedí</span></div><div><b class="num" id="calcW">–</b><span>vyšlo</span></div><div><b class="num" id="calcP">–</b><span>zisk</span></div></div>
+            <p class="note">Počíta sa zo všetkých skutočných vyhodnotených predpovedí vrátane prehier. Minulé výsledky nie sú zárukou budúcich.</p>
           </div>
         </div>
       </div>
 
-      <div class="more-row" data-pages="home"><a class="btn btn-ghost" href="/vysledky">Celá história tipov <span class="arr" aria-hidden="true">→</span></a></div>
+      <div class="more-row" data-pages="home"><a class="btn btn-ghost" href="/vysledky">Celá história predpovedí <span class="arr" aria-hidden="true">→</span></a></div>
     </div>
   </section>
 
@@ -1927,15 +1927,15 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
     <div class="wrap">
       <div class="sec-head center">
         <div><div class="eyebrow">Členstvo</div><h2>Vstúpte do <em>klubu</em></h2>
-        <p class="lead" style="margin-inline:auto">Silver na 1 mesiac, Gold na 3 mesiace, Platinum na 6 mesiacov. Všetci členovia dostávajú rovnaké tipy aj súkromný VIP chat. Čím dlhšie, tým nižšia cena za mesiac.</p></div>
+        <p class="lead" style="margin-inline:auto">Silver na 1 mesiac, Gold na 3 mesiace, Platinum na 6 mesiacov. Všetci členovia dostávajú rovnaké predpovede aj súkromný VIP chat. Čím dlhšie, tým nižšia cena za mesiac.</p></div>
       </div>
       <article class="lux glow">
         <div class="lux-l">
           <div class="lux-top"><svg class="lux-crest" aria-hidden="true"><use href="#logo"/></svg><div class="lux-brand">TipRadar</div></div>
           <h3 class="lux-name gold-text" data-tier-name>Gold</h3>
           <ul class="lux-list">
-          <li><strong>Denné tipy na Telegrame</strong><span>v súkromnom kanáli, 1&nbsp;–&nbsp;2&nbsp;hodiny pred výkopom</span></li>
-          <li><strong>Všetko podstatné pri každom tipe</strong><span>kurz, šanca podľa modelu, dôvod a&nbsp;odporúčaná sadzba</span></li>
+          <li><strong>Denné predpovede na Telegrame</strong><span>v súkromnom kanáli, 1&nbsp;–&nbsp;2&nbsp;hodiny pred výkopom</span></li>
+          <li><strong>Všetko podstatné pri každej predpovedi</strong><span>kurz, šanca podľa modelu, dôvod a&nbsp;odporúčaná sadzba</span></li>
           <li><strong>Večerné vyhodnotenie</strong><span>a týždenný prehľad úspešnosti, zisku a&nbsp;ROI</span></li>
           <li><strong>Súkromný VIP chat</strong><span>na vaše otázky odpisujem priamo ja</span></li>
           <li class="plus" data-min-term="season"><strong>Mentoring 1 na 1 počas celých 6 mesiacov</strong><span>osobné stretnutia alebo videohovory priamo so mnou</span></li>
@@ -1968,21 +1968,21 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
         <div class="payback-head">
           <div class="eyebrow">Kalkulačka</div>
           <h3>Kedy sa vám členstvo <em>vráti</em></h3>
-          <p>Zadajte svoj bank a koľko percent z neho vsádzate na jeden tip (odporúčame 1 – 3 %, skúsenejší najviac 5 %). Uvidíte, koľko jednotiek zisku treba, aby sa vám cena členstva vrátila.</p>
+          <p>Zadajte svoj bank a koľko percent z neho vkladáte na jednu predpoveď (odporúčame 1 – 3 %, skúsenejší najviac 5 %). Uvidíte, koľko jednotiek zisku treba, aby sa vám cena členstva vrátila.</p>
         </div>
         <label class="payback-stake">
-          <span>Váš bank (suma na tipy)</span>
+          <span>Váš bank (suma na predpovede)</span>
           <span class="payback-input"><input type="text" inputmode="decimal" id="paybackBank" value="1000" aria-label="Bank v eurách" /><b>€</b></span>
         </label>
         <div class="payback-pct">
-          <span>Vklad na jeden tip</span>
-          <div class="payback-chips" role="group" aria-label="Vklad na tip v percentách banku">
+          <span>Vklad na jednu predpoveď</span>
+          <div class="payback-chips" role="group" aria-label="Vklad na predpoveď v percentách banku">
             <button type="button" data-pct="1">1 %</button><button type="button" data-pct="2">2 %</button><button type="button" data-pct="3">3 %</button><button type="button" data-pct="5" title="Pre skúsenejších – najvyšší odporúčaný vklad">5 %</button>
           </div>
         </div>
         <p class="payback-stake-out" id="paybackStakeOut"></p>
         <div class="payback-rows" id="paybackRows"></div>
-        <p class="payback-note">Jednotka = suma, ktorú vsádzate na jeden tip (bank × percento). Výpočet ukazuje len návratnosť ceny, výhru nezaručuje.</p>
+        <p class="payback-note">Jednotka = suma, ktorú vkladáte na jednu predpoveď (bank × percento). Výpočet ukazuje len návratnosť ceny, výhru nezaručuje.</p>
       </div>
     </div>
   </section>
@@ -2016,8 +2016,8 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
       <div class="om2-paper">
         <div class="eyebrow">Môj príbeh</div>
         <h2>Dáta namiesto <em>pocitov</em></h2>
-        <p class="om2-lead">TipRadar som založil, pretože som chcel tipy, za ktorými stoja čísla, nie dojmy z posledného zápasu. Model preto každý deň prejde stovky zápasov a vyberie len tie, kde vidí skutočnú hodnotu.</p>
-        <p>Transparentnosť je pre mňa základ. Každý tip sa uloží v momente odoslania a po zápase sa sám vyhodnotí. Nič nemažem ani neupravujem, preto tu nájdete aj prehry.</p>
+        <p class="om2-lead">TipRadar som založil, pretože som chcel predpovede, za ktorými stoja čísla, nie dojmy z posledného zápasu. Model preto každý deň prejde stovky zápasov a vyberie len tie, kde vidí skutočnú hodnotu.</p>
+        <p>Transparentnosť je pre mňa základ. Každá predpoveď sa uloží v momente odoslania a po zápase sa sama vyhodnotí. Nič nemažem ani neupravujem, preto tu nájdete aj prehry.</p>
         <blockquote class="om2-quote">Istú výhru nesľubujem. Nesľubuje ju nikto, kto to myslí vážne.</blockquote>
         <p>Ak máte otázku, napíšte mi na <a href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener">Telegram</a> alebo na <a href="mailto:info@tipradar.eu">info@tipradar.eu</a>. Odpovedám osobne.</p>
         <div class="sign om2-sign">
@@ -2033,9 +2033,9 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
     <div class="wrap">
       <div class="sec-head center"><div><div class="eyebrow">Čomu verím</div><h2>Tri <em>zásady</em> TipRadaru</h2></div></div>
       <ol class="om2-list">
-        <li><span class="om2-n">01</span><div><h3>Nič neskrývam</h3><p>Celú históriu tipov si môžete kedykoľvek pozrieť na stránke Výsledky, so ziskom aj stratou.</p></div></li>
-        <li><span class="om2-n">02</span><div><h3>Dáta, nie pocit</h3><p>Tip prejde, len keď model vidí vyššiu šancu, než ukazuje kurz. Väčšina zápasov neprejde.</p></div></li>
-        <li><span class="om2-n">03</span><div><h3>Zodpovedne</h3><p>Odporúčam rovnakú sumu na každý tip a len peniaze, ktorých stratu si môžete dovoliť.</p></div></li>
+        <li><span class="om2-n">01</span><div><h3>Nič neskrývam</h3><p>Celú históriu predpovedí si môžete kedykoľvek pozrieť na stránke Výsledky, so ziskom aj stratou.</p></div></li>
+        <li><span class="om2-n">02</span><div><h3>Dáta, nie pocit</h3><p>Predpoveď prejde, len keď model vidí vyššiu šancu, než ukazuje kurz. Väčšina zápasov neprejde.</p></div></li>
+        <li><span class="om2-n">03</span><div><h3>Zodpovedne</h3><p>Odporúčam rovnakú sumu na každú predpoveď a len peniaze, ktorých stratu si môžete dovoliť.</p></div></li>
       </ol>
     </div>
   </section>
@@ -2044,12 +2044,12 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
     <div class="wrap split">
       <div><div class="eyebrow">Otázky</div><h2>Čo sa ľudia <em>pýtajú</em></h2></div>
       <div class="faq">
-        <details><summary>Kedy a kam tipy prídu?</summary><p>Do súkromného kanála na Telegrame, 1 – 2 hodiny pred výkopom zápasu. Večer, keď sa zápasy dohrajú, príde vyhodnotenie dňa.</p></details>
-        <details><summary>Koľko tipov denne dostanem?</summary><p>Toľko, koľko prejde pravidlami. Niekedy jeden, inokedy viac. Keď neprejde žiadny, nepošleme nič a dáme vám vedieť.</p></details>
-        <details><summary>Čo je zisk v jednotkách a ROI?</summary><p>Jednotka je rovnaká suma na každý tip, napríklad 10 €. Zisk +5 jednotiek pri 10 € na tip je +50 €. ROI hovorí, koľko percent z vložených peňazí sa vrátilo navyše.</p></details>
-        <details><summary>Zaručujete výhru?</summary><p>Nie. Žiadny model nevie zaručiť výsledok zápasu. TipRadar vyberá tipy, pri ktorých je šanca podľa štatistík vyššia, než naznačuje kurz. Rozhoduje dlhodobý výsledok, preto zverejňujeme aj prehraté tipy. Ak však vaše členstvo skončí v strate, ďalší mesiac máte zadarmo (pozrite garanciu nižšie).</p></details>
-        <details id="garancia"><summary>Ako funguje garancia?</summary><p>Ak vaše členstvo (Silver, Gold alebo Platinum) skončí v strate, ďalší mesiac máte zadarmo – členstvo vám predĺžime o mesiac a dáme vám vedieť na Telegrame. Počíta sa za celé obdobie, ktoré ste zaplatili, od prvého po posledný deň: zo všetkých zverejnených tipov s výsledkom v tom čase, pri rovnakom vklade na každý tip (1 jednotka). Ak je súčet záporný, členstvo skončilo v strate. Na samotný mesiac zadarmo sa garancia už nevzťahuje, na ďalšie zaplatené členstvo áno. Letná prestávka (jún – júl) sa nemení: členstvo sa pozastaví a o tento čas predĺži.</p></details>
-        <details><summary>Ako overujete, že model funguje?</summary><p>Spätným testom na odohraných zápasoch a mesačnou kontrolou, či tipy s dôverou 70&nbsp;% naozaj vychádzajú zhruba v 70&nbsp;% prípadov. Tipy vyradené pre veľký rozpor s kurzami si zapisujeme a porovnávame, kto mal pravdu.</p></details>
+        <details><summary>Kedy a kam predpovede prídu?</summary><p>Do súkromného kanála na Telegrame, 1 – 2 hodiny pred výkopom zápasu. Večer, keď sa zápasy dohrajú, príde vyhodnotenie dňa.</p></details>
+        <details><summary>Koľko predpovedí denne dostanem?</summary><p>Toľko, koľko prejde pravidlami. Niekedy jednu, inokedy viac. Keď neprejde žiadna, nepošleme nič a dáme vám vedieť.</p></details>
+        <details><summary>Čo je zisk v jednotkách a ROI?</summary><p>Jednotka je rovnaká suma na každú predpoveď, napríklad 10 €. Zisk +5 jednotiek pri 10 € na predpoveď je +50 €. ROI hovorí, koľko percent z vložených peňazí sa vrátilo navyše.</p></details>
+        <details><summary>Zaručujete výhru?</summary><p>Nie. Žiadny model nevie zaručiť výsledok zápasu. TipRadar vyberá predpovede, pri ktorých je šanca podľa štatistík vyššia, než naznačuje kurz. Rozhoduje dlhodobý výsledok, preto zverejňujeme aj predpovede, ktoré nevyšli. Ak však vaše členstvo skončí v strate, ďalší mesiac máte zadarmo (pozrite garanciu nižšie).</p></details>
+        <details id="garancia"><summary>Ako funguje garancia?</summary><p>Ak vaše členstvo (Silver, Gold alebo Platinum) skončí v strate, ďalší mesiac máte zadarmo – členstvo vám predĺžime o mesiac a dáme vám vedieť na Telegrame. Počíta sa za celé obdobie, ktoré ste zaplatili, od prvého po posledný deň: zo všetkých zverejnených predpovedí s výsledkom v tom čase, pri rovnakom vklade na každú predpoveď (1 jednotka). Ak je súčet záporný, členstvo skončilo v strate. Na samotný mesiac zadarmo sa garancia už nevzťahuje, na ďalšie zaplatené členstvo áno. Letná prestávka (jún – júl) sa nemení: členstvo sa pozastaví a o tento čas predĺži.</p></details>
+        <details><summary>Ako overujete, že model funguje?</summary><p>Spätným testom na odohraných zápasoch a mesačnou kontrolou, či predpovede s dôverou 70&nbsp;% naozaj vychádzajú zhruba v 70&nbsp;% prípadov. Predpovede vyradené pre veľký rozpor s kurzami si zapisujeme a porovnávame, kto mal pravdu.</p></details>
         <details><summary>Aké dlhé je členstvo?</summary><p>Silver na 1 mesiac, Gold na 3 mesiace a Platinum na 6 mesiacov, vždy odo dňa, keď sa pridáte. Dlhšie členstvo vychádza lacnejšie na mesiac. Cez letnú prestávku (jún – júl), keď sa takmer nehrá, sa členstvo pozastaví a 1. augusta pokračuje, takže o žiadne zápasy neprídete. Žiadne sa samo nepredlžuje. Pred koncom vám pripomenieme, že končí.</p></details>
         <details><summary>Ako členstvo zruším?</summary><p>Stačí napísať. Členstvo platí do konca zaplateného obdobia a samo sa nepredlžuje.</p></details>
       </div>
@@ -2061,13 +2061,13 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
       <div>
         <div class="eyebrow">Kontakt</div>
         <h2>Ozvem sa vám <em>osobne</em></h2>
-        <p>Napíšte mi, čo vás zaujíma o modeli, tipoch, členstve alebo kurze. Odpoveď príde na váš e-mail.</p>
+        <p>Napíšte mi, čo vás zaujíma o modeli, predpovediach, členstve alebo kurze. Odpoveď príde na váš e-mail.</p>
       </div>
       <form class="form glow" id="joinForm" novalidate>
         <div class="fields">
           <label class="field"><span class="lbl">Meno</span><input type="text" name="name" autocomplete="name" maxlength="80" required /></label>
           <label class="field"><span class="lbl">E-mail</span><input type="email" name="email" autocomplete="email" inputmode="email" maxlength="120" required /></label>
-          <label class="field wide"><span class="lbl">Čo vás zaujíma</span><span class="select"><select name="plan"><option value="otazka" selected>Všeobecná otázka</option><option value="clenstvo">Členstvo</option><option value="kurz">Kurz tipovania (99 €)</option></select></span></label>
+          <label class="field wide"><span class="lbl">Čo vás zaujíma</span><span class="select"><select name="plan"><option value="otazka" selected>Všeobecná otázka</option><option value="clenstvo">Členstvo</option><option value="kurz">Kurz stávkovania (99 €)</option></select></span></label>
           <label class="field wide"><span class="lbl">Vaša otázka</span><textarea name="note" rows="5" maxlength="500" required></textarea></label>
           <label class="hp" aria-hidden="true">Web <input type="text" name="web" tabindex="-1" autocomplete="off" /></label>
         </div>
@@ -2088,7 +2088,7 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
     <div class="rings" aria-hidden="true"></div>
     <div class="wrap">
       <div class="eyebrow">Začnite ešte dnes</div>
-      <h2>Tipujte s <em>rozumom</em>, nie s pocitom.</h2>
+      <h2>Rozhodujte sa s <em>rozumom</em>, nie s pocitom.</h2>
       <p>Pridajte sa do bezplatného kanála na Telegrame alebo si vyberte členstvo Silver, Gold či Platinum. Na otázky odpovedám osobne.</p>
       <div class="actions"><a class="btn" href="/clenstvo">Pozrieť členstvo <span class="arr" aria-hidden="true">→</span></a><a class="btn btn-ghost" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener">Telegram komunita</a></div>
     </div>
@@ -2097,7 +2097,7 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
     <div class="rings" aria-hidden="true"></div>
     <div class="wrap">
       <div class="eyebrow">Členstvo TipRadar</div>
-      <h2>Chcete tipy dostávať <em>aj vy?</em></h2>
+      <h2>Chcete predpovede dostávať <em>aj vy?</em></h2>
       <p>Zapíšte sa do poradovníka alebo sa pridajte ku komunite na Telegrame.</p>
       <div class="actions"><a class="btn" href="/clenstvo">Pozrieť členstvo <span class="arr" aria-hidden="true">→</span></a><a class="btn btn-ghost" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener">Telegram komunita</a></div>
     </div>
@@ -2108,7 +2108,7 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
   <div class="wrap">
     <div class="foot-top">
       <a class="brand" href="/"><svg aria-hidden="true"><use href="#logo"/></svg>TipRadar</a>
-      <p>Futbal očami dát. Tipy s hodnotou, výhry aj prehry zverejnené.</p>
+      <p>Futbal očami dát. Predpovede s hodnotou, výhry aj prehry zverejnené.</p>
       <div class="foot-social">
         <a href="https://www.instagram.com/tipradar.eu/" target="_blank" rel="noopener" aria-label="Instagram"><svg aria-hidden="true"><use href="#i-ig"/></svg></a>
         <a href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener" aria-label="Telegram"><svg aria-hidden="true"><use href="#i-tg"/></svg></a>
@@ -2116,8 +2116,8 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
       </div>
     </div>
     <div class="foot-legal">
-      <p>TipRadar je analytický nástroj založený na štatistickom modeli, nie finančné poradenstvo. Tipy sú informatívne a nezaručujú výsledok. Minulé výsledky nie sú zárukou budúcich. O tom, ako tipy využijete, rozhodujete vždy vy.</p>
-      <p class="rg"><span class="age" aria-label="Len pre osoby staršie ako 18 rokov">18+</span><span>Hrajte zodpovedne a len za peniaze, ktorých stratu si môžete dovoliť. Ak vám tipovanie prerastá cez hlavu, pomoc a register vylúčených osôb nájdete na <a href="https://www.urhh.sk" target="_blank" rel="noopener">urhh.sk</a>.</span></p>
+      <p>TipRadar je analytický nástroj založený na štatistickom modeli, nie finančné poradenstvo. Predpovede sú informatívne a nezaručujú výsledok. Minulé výsledky nie sú zárukou budúcich. O tom, ako predpovede využijete, rozhodujete vždy vy.</p>
+      <p class="rg"><span class="age" aria-label="Len pre osoby staršie ako 18 rokov">18+</span><span>Hrajte zodpovedne a len za peniaze, ktorých stratu si môžete dovoliť. Ak vám hra prerastá cez hlavu, pomoc a register vylúčených osôb nájdete na <a href="https://www.urhh.sk" target="_blank" rel="noopener">urhh.sk</a>.</span></p>
     </div>
     <div class="copy"><span>© 2026 TipRadar · tipradar.eu</span><a href="/ochrana-udajov">Ochrana osobných údajov</a></div>
   </div>
@@ -2217,10 +2217,10 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
   const signed = (n, d) => (n > 0 ? "+" : n < 0 ? "−" : "") + fmt(Math.abs(n), d);
   const esc = (v) => String(v).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const dayLabel = (key) => { const [, m, d] = String(key).split("-").map(Number); return d ? `${d}. ${m}.` : ""; };
-  const verb = (n) => (n === 1 ? "vyšiel" : n >= 2 && n <= 4 ? "vyšli" : "vyšlo");
-  const ofTips = (n) => (n === 1 ? "tipu" : "tipov");
-  const tipsWord = (n) => (n === 1 ? "vyhodnotený tip" : n >= 2 && n <= 4 ? "vyhodnotené tipy" : "vyhodnotených tipov");
-  const RES = { won: "vyšiel", lost: "nevyšiel", void: "vrátené" };
+  const verb = (n) => (n === 1 ? "vyšla" : n >= 2 && n <= 4 ? "vyšli" : "vyšlo");
+  const ofTips = (n) => (n === 1 ? "predpovede" : "predpovedí");
+  const tipsWord = (n) => (n === 1 ? "vyhodnotená predpoveď" : n >= 2 && n <= 4 ? "vyhodnotené predpovede" : "vyhodnotených predpovedí");
+  const RES = { won: "vyšla", lost: "nevyšla", void: "vrátené" };
   const MONTHS = ["január", "február", "marec", "apríl", "máj", "jún", "júl", "august", "september", "október", "november", "december"];
   const cls = (v) => (v > 0 ? "pos" : v < 0 ? "neg" : "");
   const mqPhone = window.matchMedia("(max-width: 700px)");
@@ -2240,7 +2240,7 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
     $("vMath").textContent = `${fmt(p / 100, 2)} × ${fmt(o, 2)} = ${fmt(ret, 2)}`;
     const band = p >= 68 && p <= 80, val = value >= 5, odd = o >= MIN_ODDS - 1e-9;
     $("vChecks").innerHTML = `<li class="${band ? "ok" : "no"}">šanca v pásme 68 – 80 %</li><li class="${val ? "ok" : "no"}">hodnota aspoň +5 %</li><li class="${odd ? "ok" : "no"}">kurz aspoň ${fmt(MIN_ODDS, 2)}</li>`;
-    $("vOut").innerHTML = band && val && odd ? `<span class="pos">Taký tip by sme poslali.</span>` : `<span class="neg">Taký tip by sme neposlali.</span>`;
+    $("vOut").innerHTML = band && val && odd ? `<span class="pos">Takú predpoveď by sme poslali.</span>` : `<span class="neg">Takú predpoveď by sme neposlali.</span>`;
   }
   $("pRange").addEventListener("input", drawValue); $("oRange").addEventListener("input", drawValue);
   drawValue();
@@ -2348,18 +2348,18 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
     $("calibRows").innerHTML = rows.map((b, i) => {
       const a = pos(b.actual), m = pos(b.predicted), lo = Math.min(a, m), hi = Math.max(a, m);
       const diff = b.actual - b.predicted;
-      return `<div class="calib-row" role="listitem" tabindex="0" data-i="${i}" aria-label="Pásmo ${esc(b.label)}: model ${pct(b.predicted)}, skutočne vyšlo ${pct(b.actual)}, ${b.n} tipov">
-        <div class="lbl"><b>${esc(b.label)}</b><span>${b.n} ${b.n === 1 ? "tip" : b.n < 5 ? "tipy" : "tipov"}</span></div>
+      return `<div class="calib-row" role="listitem" tabindex="0" data-i="${i}" aria-label="Pásmo ${esc(b.label)}: model ${pct(b.predicted)}, skutočne vyšlo ${pct(b.actual)}, ${b.n} predpovedí">
+        <div class="lbl"><b>${esc(b.label)}</b><span>${b.n} ${b.n === 1 ? "predpoveď" : b.n < 5 ? "predpovede" : "predpovedí"}</span></div>
         <div class="calib-track"><i class="gap" style="left:${lo}%;width:${hi - lo}%"></i><i class="ring" style="left:${m}%"></i><i class="dot" style="left:${a}%"></i></div>
         <div class="vals">model ${pct(b.predicted)} · vyšlo <b class="${diff >= 0 ? "up" : ""}">${pct(b.actual)}</b></div>
       </div>`;
     }).join("");
     const o = c.overall;
-    $("calibSum").innerHTML = `Spolu ${o.n} tipov: model v priemere sľúbil <b>${pct(o.predicted)}</b>, skutočne vyšlo <b>${pct(o.actual)}</b>.`;
+    $("calibSum").innerHTML = `Spolu ${o.n} predpovedí: model v priemere sľúbil <b>${pct(o.predicted)}</b>, skutočne vyšlo <b>${pct(o.actual)}</b>.`;
     const tip = $("calibTip"), box = tip.parentElement;
     const show = (row, x, y) => {
       const b = rows[Number(row.dataset.i)];
-      tip.innerHTML = `<b>Pásmo ${esc(b.label)}</b><br>Šanca podľa modelu: ${pct(b.predicted)}<br>Skutočne vyšlo: ${pct(b.actual)}<br>Tipov: ${b.n}`;
+      tip.innerHTML = `<b>Pásmo ${esc(b.label)}</b><br>Šanca podľa modelu: ${pct(b.predicted)}<br>Skutočne vyšlo: ${pct(b.actual)}<br>Predpovedí: ${b.n}`;
       tip.hidden = false;
       const r = box.getBoundingClientRect();
       tip.style.left = Math.min(r.width - tip.offsetWidth - 8, Math.max(8, x - r.left + 14)) + "px";
@@ -2416,7 +2416,7 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
     const html = `<span class="ns-ring"><svg viewBox="0 0 74 74" aria-hidden="true"><defs><linearGradient id="nsg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F8EDD3"/><stop offset="1" stop-color="#B8995E"/></linearGradient></defs><circle cx="37" cy="37" r="31" class="ns-track"/><circle cx="37" cy="37" r="31" class="ns-arc" stroke="url(#nsg)" stroke-dasharray="${dash} 999"/></svg><b>${rate}<i>&nbsp;%</i></b><small>úspešnosť</small></span>
       <span class="ns-body"><span class="ns-live"><i></i>Výsledky naživo</span>
         <span class="ns-grid">
-          <span><b>${n}</b><small>tipov</small></span>
+          <span><b>${n}</b><small>predpovedí</small></span>
           <span><b class="${pr >= 0 ? "up" : "down"}">${sgn(pr, 1)}&nbsp;j.</b><small>zisk</small></span>
           <span><b><span class="w">${won}</span><span class="sl">/</span><span class="l">${lost}</span></b><small>W / L</small></span>
           <span><b class="${roi == null ? "" : roi >= 0 ? "up" : "down"}">${roi == null ? "–" : sgn(roi, roi % 1 ? 1 : 0) + "&nbsp;%"}</b><small>ROI</small></span>
@@ -2430,7 +2430,7 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
   let recentAll = [], filter = "all", page = 0;
   function drawList() {
     const list = recentAll.filter((r) => filter === "all" || r.status === filter);
-    if (!list.length) { $("list").innerHTML = `<li class="empty">${recentAll.length ? "V tomto filtri zatiaľ nič nie je." : "Zatiaľ tu nie sú žiadne vyhodnotené tipy."}</li>`; $("pager").hidden = true; return; }
+    if (!list.length) { $("list").innerHTML = `<li class="empty">${recentAll.length ? "V tomto filtri zatiaľ nič nie je." : "Zatiaľ tu nie sú žiadne vyhodnotené predpovede."}</li>`; $("pager").hidden = true; return; }
     const pages = Math.ceil(list.length / PER_PAGE); page = Math.min(page, pages - 1);
     $("list").innerHTML = list.slice(page * PER_PAGE, (page + 1) * PER_PAGE).map(row).join("");
     $("pager").hidden = pages <= 1; $("pgInfo").textContent = `strana ${page + 1} z ${pages}`;
@@ -2453,7 +2453,7 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
     $("stakeOut").textContent = `${stake} €`;
     $("calcResult").textContent = `${money > 0 ? "+" : money < 0 ? "−" : ""}${Math.round(Math.abs(money)).toLocaleString("sk-SK")} €`;
     $("calcResult").className = "big num " + cls(money);
-    $("calcNote").textContent = `${calcData.count} tipov so známym kurzom, spolu vložené ${(calcData.count * stake).toLocaleString("sk-SK")} €. Minulé výsledky nezaručujú budúce.`;
+    $("calcNote").textContent = `${calcData.count} predpovedí so známym kurzom, spolu vložené ${(calcData.count * stake).toLocaleString("sk-SK")} €. Minulé výsledky nezaručujú budúce.`;
   }
   if ($("stakeRange")) $("stakeRange").addEventListener("input", drawCalc);
 
@@ -2461,12 +2461,12 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
   document.querySelectorAll("[data-kurz-cta]").forEach((a) => a.addEventListener("click", () => {
     const f = document.getElementById("joinForm"); if (!f) return;
     f.plan.value = "kurz";
-    if (!f.note.value.trim()) f.note.value = "Mám záujem o kurz tipovania. Pošlite mi, prosím, platobné údaje.";
+    if (!f.note.value.trim()) f.note.value = "Mám záujem o kurz stávkovania. Pošlite mi, prosím, platobné údaje.";
   }));
   try {
     if (new URLSearchParams(location.search).get("kurz") === "1") {
       const f = document.getElementById("joinForm");
-      if (f) { f.plan.value = "kurz"; if (!f.note.value.trim()) f.note.value = "Mám záujem o kurz tipovania. Pošlite mi, prosím, platobné údaje."; }
+      if (f) { f.plan.value = "kurz"; if (!f.note.value.trim()) f.note.value = "Mám záujem o kurz stávkovania. Pošlite mi, prosím, platobné údaje."; }
     }
   } catch (_) {}
   // Lišta s Telegramom, Instagramom a e-mailom je pripnutá pod hornou lištou.
@@ -2525,7 +2525,7 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
       document.querySelectorAll(".payback-chips [data-pct]").forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.pct) === pct)));
       if (!(bank > 0)) { stakeOut.textContent = ""; rows.innerHTML = '<p class="payback-note">Zadajte bank, napríklad 1 000 €.</p>'; return; }
       const stake = (bank * pct) / 100;
-      stakeOut.textContent = `Vklad na tip: ${f(stake, stake % 1 ? 2 : 0)} € (= 1 jednotka)`;
+      stakeOut.textContent = `Vklad na predpoveď: ${f(stake, stake % 1 ? 2 : 0)} € (= 1 jednotka)`;
       const cur = current();
       rows.innerHTML = PLANS.map((p) => {
         const units = p.price / stake;
@@ -2633,8 +2633,8 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
       const l7 = d.last7, el7 = document.getElementById("last7");
       if (el7 && l7 && l7.totalResolved > 0) {
         const pr = Number(l7.profit) || 0;
-        const tipW = (n) => (n === 1 ? "tipu" : "tipov");
-        const vys = l7.won === 1 ? "vyšiel" : l7.won >= 2 && l7.won <= 4 ? "vyšli" : "vyšlo";
+        const tipW = (n) => (n === 1 ? "predpovede" : "predpovedí");
+        const vys = l7.won === 1 ? "vyšla" : l7.won >= 2 && l7.won <= 4 ? "vyšli" : "vyšlo";
         el7.innerHTML = `Posledných 7 dní: <b>${l7.won} z ${l7.totalResolved}</b> ${tipW(l7.totalResolved)} ${vys}` +
           (l7.withOdds > 0 ? ` · zisk <b class="${pr >= 0 ? "up" : ""}">${pr >= 0 ? "+" : "−"}${Math.abs(pr).toFixed(1).replace(".", ",")}&nbsp;j.</b>` : "");
         el7.hidden = false;
@@ -2644,7 +2644,7 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
       if ($("presnost")) drawCalib(d.calibration);
       recentAll = d.recent || [];
       drawList(); drawChart(d.timeline); drawMonths(d.months);
-      if (!d.totalResolved) { $("month").textContent = "Čísla sa zobrazia po prvých vyhodnotených tipoch."; return; }
+      if (!d.totalResolved) { $("month").textContent = "Čísla sa zobrazia po prvých vyhodnotených predpovediach."; return; }
       const n = d.totalResolved;
       drawLast10();
       $("fCountLbl").textContent = tipsWord(n);
@@ -2681,7 +2681,7 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
       $("month").innerHTML = t;
     })
     .catch(() => {
-      $("list").innerHTML = `<li class="empty">Tipy sa nepodarilo načítať. Skúste obnoviť stránku.</li>`;
+      $("list").innerHTML = `<li class="empty">Predpovede sa nepodarilo načítať. Skúste obnoviť stránku.</li>`;
       $("month").textContent = "Čísla sa nepodarilo načítať. Skúste o chvíľu obnoviť stránku.";
     });
 })();
@@ -2700,9 +2700,9 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
   ];
   const judge = (sc) => {
     const ev = Math.round((sc.p / 100 * sc.odds - 1) * 100);
-    if (sc.p < 68 || sc.p > 80) return { ok: false, t: "Tip nepošleme", w: "Dôvera modelu je mimo pásma 68–80\u00a0%.", v: "—" };
-    if (sc.odds < 1.55 || ev < 5) return { ok: false, t: "Tip nepošleme", w: "Kurz je príliš nízky, hodnota tu nie je.", v: (ev > 0 ? "+" : "\u2212") + Math.abs(ev) + "\u00a0%" };
-    return { ok: true, t: "Tip odošleme", w: "Model vidí vyššiu šancu, než naznačuje kurz.", v: "+" + ev + "\u00a0%" };
+    if (sc.p < 68 || sc.p > 80) return { ok: false, t: "Predpoveď nepošleme", w: "Dôvera modelu je mimo pásma 68–80\u00a0%.", v: "—" };
+    if (sc.odds < 1.55 || ev < 5) return { ok: false, t: "Predpoveď nepošleme", w: "Kurz je príliš nízky, hodnota tu nie je.", v: (ev > 0 ? "+" : "\u2212") + Math.abs(ev) + "\u00a0%" };
+    return { ok: true, t: "Predpoveď odošleme", w: "Model vidí vyššiu šancu, než naznačuje kurz.", v: "+" + ev + "\u00a0%" };
   };
   let raf;
   const countTo = (el, from, to) => { const t0 = performance.now();
@@ -2898,7 +2898,7 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
       document.getElementById("calcW").textContent = won;
       document.getElementById("calcP").textContent = (diff >= 0 ? "+" : "−") + eur(Math.abs(diff));
       var f = (data[0].day || "").split("-");
-      if (f.length === 3) document.getElementById("calcFrom").textContent = "Keby ste s nami tipovali od " + Number(f[2]) + ". " + MES[Number(f[1]) - 1];
+      if (f.length === 3) document.getElementById("calcFrom").textContent = "Keby ste sa našimi predpoveďami riadili od " + Number(f[2]) + ". " + MES[Number(f[1]) - 1];
       var lo = Math.min.apply(null, pts), hi = Math.max.apply(null, pts), span = (hi - lo) || 1;
       var line = pts.map(function (v, i) { return (i ? "L" : "M") + (i / (pts.length - 1) * 400).toFixed(1) + " " + (110 - (v - lo) / span * 100).toFixed(1); }).join(" ");
       document.getElementById("calcLine").setAttribute("d", line);
