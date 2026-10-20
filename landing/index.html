@@ -1329,6 +1329,68 @@ html[data-page="home"] #otazky .faq details[id="garancia"] { scroll-margin-top: 
 .sec.alt { background: linear-gradient(180deg, var(--bg) 0%, #2C2219 22%, #2C2219 78%, var(--bg) 100%) !important; }
 html { scrollbar-color: rgba(217,192,138,.35) var(--bg); }
 .hx-bg { -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent 100%); mask-image: linear-gradient(180deg, #000 55%, transparent 100%); }
+
+/* ===== mobilná verzia: kompaktnejšie, čitateľnejšie, bez prekrývania ===== */
+@media (max-width: 760px) {
+  .jump { display: none !important; }
+  .wrap { width: calc(100% - 36px); }
+  .sec { padding: 48px 0 !important; }
+  .sec-head { margin-bottom: 24px !important; }
+  .sec-head h2, .page-head h1 { font-size: clamp(34px, 9.6vw, 42px) !important; line-height: 1.05; }
+  .sec-head .lead { font-size: 15.5px; margin-top: 12px; }
+  .idx { display: none; }
+  .finale { padding: 52px 0 !important; }
+  .page-head { padding-top: 92px !important; padding-bottom: 20px !important; }
+
+  /* úvod */
+  .hero.hx { min-height: 0 !important; padding-top: 104px !important; padding-bottom: 40px !important; }
+  .hero.hx h1 { font-size: clamp(50px, 14.5vw, 66px) !important; margin-top: 22px; }
+  .hx-lead { font-size: 16.5px !important; margin-top: 20px; line-height: 1.6; }
+  .hx-cta { flex-direction: column; align-items: stretch; gap: 10px; margin-top: 28px; }
+  .hx-cta .btn { width: 100%; justify-content: center; min-height: 54px; }
+
+  .hx-live > div { padding: 16px 14px !important; }
+  .hx-live b { font-size: 30px !important; }
+
+  #ako .steps li { padding: 18px 16px; gap: 14px; }
+  #ako .steps .ic { width: 44px; height: 44px; border-radius: 13px; }
+  #ako .steps .ic svg { width: 22px; height: 22px; }
+  #ako .steps h3 { font-size: 21px; }
+  #ako .steps p { font-size: 14.5px; }
+  #ako .how { gap: 28px !important; }
+  #ako .how-phone { display: none; }
+
+  .hm-grid { gap: 10px !important; }
+  .hm-card { display: grid; grid-template-columns: 44px minmax(0, 1fr); column-gap: 14px; align-items: start; padding: 18px 16px !important; }
+  .hm-card .ic { grid-row: span 2; width: 44px; height: 44px; margin: 0; border-radius: 13px; }
+  .hm-card .ic svg { width: 21px; height: 21px; }
+  .hm-card h3 { font-size: 20px; align-self: center; }
+  .hm-card p { margin-top: 4px; font-size: 14.5px; }
+
+  .hm-tiers { gap: 10px !important; }
+  .hm-tier { display: grid !important; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "flag flag" "tn b" "tl b" "pm pm" "go go"; align-items: end; padding: 20px 18px !important; }
+  .hm-tier .flag { grid-area: flag; position: static !important; justify-self: start; margin-bottom: 12px !important; }
+  .hm-tier .tn { grid-area: tn; font-size: 28px; }
+  .hm-tier .tl { grid-area: tl; margin-top: 6px; font-size: 12px; }
+  .hm-tier b { grid-area: b; margin: 0 !important; font-size: 40px !important; align-self: center; }
+  .hm-tier .pm { grid-area: pm; margin-top: 12px; font-size: 13.5px; }
+  .hm-tier .go { grid-area: go; margin-top: 14px; padding-top: 14px; }
+
+  .hm-kurz-card { padding: 20px !important; gap: 22px !important; }
+  .hm-kurz-img { max-width: 240px !important; margin: 0 auto; }
+  .hm-kurz-buy b { font-size: 38px; }
+
+  /* metóda */
+  .funnel li { display: block !important; padding: 18px 16px !important; }
+  .funnel .c { text-align: left !important; font-size: 34px !important; margin-bottom: 8px; }
+
+  /* päta nad dokom */
+  footer { padding-bottom: 24px !important; }
+}
+@media (max-width: 380px) {
+  .hero.hx h1 { font-size: 46px !important; }
+  .dock a, .dock button { font-size: 10.5px !important; }
+}
 </style>
 
 </head>
