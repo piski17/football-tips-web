@@ -26,6 +26,13 @@ import {
   PlayerGoalPrediction,
   RawPlayerStat, H2HStats, MissingPlayer, RefereeProfile } from "./types";
 
+/**
+ * Verzia modelu (20. 10. 2026): zapisuje sa ku každému uloženému tipu a do tichej
+ * evidencie, aby sa výsledky dali porovnávať len v rámci jednej verzie. Pri každej
+ * zmene modelu, kalibrácie alebo filtrov ju zmeň (napr. na dátum zmeny).
+ */
+export const MODEL_VERSION = "2026-10-20";
+
 // Predvolené váhy jednotlivých faktorov pri výsledku zápasu (1/X/2).
 // Pokus z 5. 10. 2026 (len Poisson s korekciou remíz, bez formy a vzájomných
 // zápasov) vyšiel v spätnom teste horšie (chyba 24,4 oproti 22,9) – model ešte
@@ -1041,39 +1048,48 @@ export function predictMatch(
       // zápasu a „oba tímy skórujú" nie sú v zozname trhov. V analýze ostávajú viditeľné,
       // ručne sa dajú uložiť.
       b.rejectReason = "tento trh neodporúčame";
+      b.rejectCode = "market_excluded";
       lowValueBets.push(b);
     } else if (gamesForRecommend < MIN_GAMES_TO_RECOMMEND) {
       // Príliš málo zápasov v sezóne (napr. začiatok Ligy národov) - odhad stojí
       // hlavne na minulých sezónach a kurzoch, nie na aktuálnej forme.
       b.rejectReason = `málo odohraných zápasov v sezóne (${gamesForRecommend}, treba aspoň ${MIN_GAMES_TO_RECOMMEND})`;
+      b.rejectCode = "few_games";
       lowValueBets.push(b);
     } else if (b.marketConflict) {
       b.rejectReason = b.marketConflict;
+      b.rejectCode = "conflict";
       lowValueBets.push(b);
     } else if (ev == null && oddsAvailable) {
       // Stávkovky k zápasu kurzy majú, ale tento trh (alebo túto hranicu) neponúkajú -
       // na tip sa reálne nedá staviť. Ručne ho stále možno pridať ("Uložiť aj tak").
       b.rejectReason = "stávkovky tento trh neponúkajú";
+      b.rejectCode = "no_market_odds";
       lowValueBets.push(b);
     } else if (ev == null) {
       // Pre zápas zatiaľ nie sú žiadne kurzy - hodnotu ani minimálny kurz nevieme
       // overiť, preto tip neodporučíme. Ručne ho stále možno pridať ("Uložiť aj tak").
       b.rejectReason = "stávkovky zatiaľ neponúkajú kurz";
+      b.rejectCode = "no_odds";
       lowValueBets.push(b);
     } else if (ev < MIN_EXPECTED_VALUE) {
       b.rejectReason = "nízky kurz, bez hodnoty";
+      b.rejectCode = "ev_low";
       lowValueBets.push(b);
     } else if (b.odds != null && b.odds < MIN_ODDS) {
       // Kurz pod minimom (predvolene 1,50) - tip má hodnotu, ale zisk z výhry je malý.
       b.rejectReason = `kurz pod ${MIN_ODDS.toFixed(2).replace(".", ",")}`;
+      b.rejectCode = "min_odds";
       lowValueBets.push(b);
     } else if ((b.oddsBookmakers ?? 0) < MIN_BOOKMAKERS) {
       // Kurz len od jednej stávkovky býva nespoľahlivý (často hranica, ktorú
       // naše stávkovky ani neponúkajú) - hodnota sa nedá overiť.
       b.rejectReason = "kurz len od jednej stávkovky";
+      b.rejectCode = "one_bookmaker";
       lowValueBets.push(b);
     } else if (ev > SUSPICIOUS_EXPECTED_VALUE && fewGames) {
       b.rejectReason = "podozrivo vysoká hodnota pri malom množstve dát v sezóne";
+      b.rejectCode = "ev_high_few_games";
       lowValueBets.push(b);
     } else if (ev > SUSPICIOUS_EXPECTED_VALUE) {
       // Hodnota nad +25 % znamená, že model vidí šancu oveľa vyššie ako stávkovky.
@@ -1084,6 +1100,7 @@ export function predictMatch(
       const mp = marketPct.get(b);
       if (mp != null) b.marketProbability = mp;
       b.rejectReason = b.marketConflict;
+      b.rejectCode = "ev_high";
       lowValueBets.push(b);
     } else {
       pickPool.push(b);
@@ -1100,6 +1117,9 @@ export function predictMatch(
     if (!cur || ev > curEv || (ev === curEv && bet.probability > cur.probability)) bestInCategory.set(bet.category, bet);
   }
   const diversifiedPicks = Array.from(bestInCategory.values()).sort((a, b) => b.probability - a.probability);
+  // Meranie (20. 10. 2026): ostatné hranice toho istého trhu dostanú len kód dôvodu
+  // pre tichú evidenciu (medzi neodporúčané sa nepresúvajú, výber sa nemení).
+  for (const bet of pickPool) if (bestInCategory.get(bet.category) !== bet) bet.rejectCode = "category_lower_ev";
 
   // Najviac 1 odporúčaný tip na zápas (18. 10. 2026): tipy z jedného zápasu spolu súvisia
   // (napr. „menej gólov“ a „menej gólov domácich“ prehrajú naraz), preto ostane len ten
@@ -1112,6 +1132,7 @@ export function predictMatch(
   for (const b of diversifiedPicks) {
     if (b === topPick) continue;
     b.rejectReason = "iný tip z tohto zápasu má vyššiu hodnotu";
+    b.rejectCode = "match_lower_ev";
     lowValueBets.push(b);
   }
   const bestBets = topPick ? [topPick] : [];
@@ -1177,6 +1198,7 @@ export function predictMatch(
     bestBets,
     lowValueBets,
     oddsAvailable,
+    modelVersion: MODEL_VERSION,
     allCandidates: candidates,
     teamSeasonGoalsPerGame: {
       home: homeStats.goals.for.average.total,

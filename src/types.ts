@@ -77,6 +77,11 @@ export interface MarketPick {
   valueWarning?: string;
   /** Dôvod, prečo bol tip vyradený (len pri lowValueBets). */
   rejectReason?: string;
+  /**
+   * Meranie (20. 10. 2026): strojový kód dôvodu vyradenia pre tichú evidenciu
+   * (napr. "ev_low", "min_odds", "conflict", "category_lower_ev"). Na výber nemá vplyv.
+   */
+  rejectCode?: string;
   /** Pri málo dátach: model a stávkovky sa líšia o 15+ bodov (dôvod vyradenia). */
   marketConflict?: string;
   /** Pri rozpore: čistý odhad modelu a odhad stávkoviek (v %), pre tichú evidenciu. */
@@ -150,6 +155,8 @@ export interface OutcomeProbabilities {
 
 export interface PredictionResult {
   fixture: Fixture;
+  /** Verzia modelu (MODEL_VERSION), ktorá výsledok vypočítala. */
+  modelVersion?: string;
   /** Rozhodca a jeho vplyv na fauly a karty (null = neznámy alebo málo dát). */
   referee?: RefereeProfile | null;
   /** Očakávané držanie lopty domácich v % a smerodajná odchýlka (pre výpočet hranice). */
@@ -270,6 +277,20 @@ export interface SavedTip {
   /** Uzatvárací kurz – kurz toho istého tipu tesne pred výkopom (null = nepodarilo sa zistiť). */
   closingOdds?: number | null;
   closingOddsAt?: string;
+  /**
+   * Meranie (20. 10. 2026) – všetko nepovinné, staršie tipy tieto polia nemajú:
+   *  - modelVersion: verzia modelu v čase uloženia (MODEL_VERSION z predictor.ts),
+   *  - marketProb: pravdepodobnosť stávkoviek pre tento tip v % (bez marže, ak boli
+   *    kurzy oboch strán – marketProbDevig = true; inak 1 / kurz),
+   *  - hoursBeforeKickoff: koľko hodín pred výkopom bol tip uložený,
+   *  - closingMarketProb / closingDevig: to isté z kurzov tesne pred výkopom (CLV).
+   */
+  modelVersion?: string;
+  marketProb?: number | null;
+  marketProbDevig?: boolean;
+  hoursBeforeKickoff?: number;
+  closingMarketProb?: number | null;
+  closingDevig?: boolean;
   /** Tip (alebo niektorý zápas tiketu) bol vyradený kontrolou kurzu, ale uložený ručne - "mimo filtra". */
   overrideFilter?: boolean;
   /** Tip doplnený ručne po zápase (s výsledkom) - neprechádza automatickým vyhodnotením. */

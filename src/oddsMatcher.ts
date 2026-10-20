@@ -219,6 +219,23 @@ export function marketProbability(
   const own = findOdds(odds, pick, homeTeam, awayTeam);
   if (!own) return null;
 
+  const others = opposingOdds(odds, pick, homeTeam, awayTeam);
+
+  const ownImplied = 1 / own.odd;
+  if (others.length > 0 && others.every((o) => o !== null)) {
+    const total = ownImplied + others.reduce((sum, o) => sum + 1 / o!.odd, 0);
+    return ownImplied / total;
+  }
+  return ownImplied / 1.05;
+}
+
+/** Kurzy ostatných možností toho istého trhu (pri nad/pod opačná strana, pri 1/X/2 zvyšné dve). */
+function opposingOdds(
+  odds: MarketOdds[],
+  pick: { market: string; selection: string },
+  homeTeam: string,
+  awayTeam: string
+): (OddsMatch | null)[] {
   let others: (OddsMatch | null)[] = [];
   if (pick.market === "Výsledok zápasu") {
     others = [`Výhra ${homeTeam}`, "Remíza", `Výhra ${awayTeam}`]
@@ -233,11 +250,29 @@ export function marketProbability(
       others = [findOdds(odds, { market: pick.market, selection: opposite }, homeTeam, awayTeam)];
     }
   }
+  return others;
+}
 
+/**
+ * Meranie (20. 10. 2026): pravdepodobnosť stávkoviek v % pre zápis k tipom a do tichej
+ * evidencie. Ak sú kurzy všetkých možností trhu, marža sa odráta (devig = true),
+ * inak je to len 1 / kurz (devig = false) – bez odhadu marže, aby sa dalo neskôr
+ * rozlíšiť, čo je presné. Na výber tipov nemá vplyv (ten používa marketProbability).
+ */
+export function marketProbabilityDetail(
+  odds: MarketOdds[],
+  pick: { market: string; selection: string },
+  homeTeam: string,
+  awayTeam: string
+): { prob: number; devig: boolean } | null {
+  if (!odds || odds.length === 0) return null;
+  const own = findOdds(odds, pick, homeTeam, awayTeam);
+  if (!own) return null;
+  const others = opposingOdds(odds, pick, homeTeam, awayTeam);
   const ownImplied = 1 / own.odd;
   if (others.length > 0 && others.every((o) => o !== null)) {
     const total = ownImplied + others.reduce((sum, o) => sum + 1 / o!.odd, 0);
-    return ownImplied / total;
+    return { prob: (ownImplied / total) * 100, devig: true };
   }
-  return ownImplied / 1.05;
+  return { prob: ownImplied * 100, devig: false };
 }

@@ -134,6 +134,11 @@ function beforeDate(fixtures: any[], asOf?: string): any[] {
   return fixtures.filter((f: any) => new Date(f?.fixture?.date).getTime() < t);
 }
 
+/** Zápasy zoradené od najnovšieho (API bez „last“ ich vracia od najstaršieho). */
+function newestFirst(fixtures: any[]): any[] {
+  return [...fixtures].sort((a: any, b: any) => new Date(b?.fixture?.date).getTime() - new Date(a?.fixture?.date).getTime());
+}
+
 /** Odohrané zápasy ligy v období (pre spätný test). */
 export async function getFinishedFixtures(leagueId: number, season: number, from: string, to: string): Promise<Fixture[]> {
   const res = await client().get("/fixtures", { params: { league: leagueId, season, from, to, status: "FT-AET-PEN" } });
@@ -318,20 +323,30 @@ export async function getTeamExtendedStatsAverages(
     // počítajú sa z jednotlivých zápasov. Ak ich aktuálna sezóna nemá dosť
     // (napr. na začiatku sezóny), doplníme zvyšok z tej predošlej, aby bol
     // priemer od začiatku spoľahlivý.
+    // Spätný test (20. 10. 2026): „last“ vracia posledné zápasy CELEJ sezóny. Pri teste
+    // minulej sezóny (napr. aug. – okt. 2024) sú to zápasy z jari, teda všetky po asOf –
+    // filter ich vyhodil a priemer sa potom zobral z konca PREDOŠLEJ sezóny (mesiace starý).
+    // S asOf sa preto načítajú všetky zápasy sezóny a ponechá sa posledných lastN spred výkopu.
+    // Živá analýza (bez asOf) ostáva bez zmeny.
     const currentSeasonRes = await client().get("/fixtures", {
-      params: { team: teamId, league: leagueId, season, last: lastN + extra, status: "FT" },
+      params: asOf
+        ? { team: teamId, league: leagueId, season, status: "FT" }
+        : { team: teamId, league: leagueId, season, last: lastN + extra, status: "FT" },
     });
     checkApiErrors(currentSeasonRes.data);
-    let fixtures: any[] = beforeDate(currentSeasonRes.data?.response ?? [], asOf).slice(0, lastN);
+    let fixtures: any[] = (asOf ? newestFirst(beforeDate(currentSeasonRes.data?.response ?? [], asOf)) : beforeDate(currentSeasonRes.data?.response ?? [], asOf)).slice(0, lastN);
 
     if (fixtures.length < lastN) {
       const remaining = lastN - fixtures.length;
       try {
         const [prevSeason] = await getPreviousSeasons(leagueId, season, 1);
         const prevSeasonRes = await client().get("/fixtures", {
-          params: { team: teamId, league: leagueId, season: prevSeason, last: remaining + extra, status: "FT" },
+          params: asOf
+            ? { team: teamId, league: leagueId, season: prevSeason, status: "FT" }
+            : { team: teamId, league: leagueId, season: prevSeason, last: remaining + extra, status: "FT" },
         });
-        const prevFixtures: any[] = beforeDate(prevSeasonRes.data?.response ?? [], asOf).slice(0, remaining);
+        const prevRaw = beforeDate(prevSeasonRes.data?.response ?? [], asOf);
+        const prevFixtures: any[] = (asOf ? newestFirst(prevRaw) : prevRaw).slice(0, remaining);
         fixtures = [...fixtures, ...prevFixtures];
       } catch {
         // predošlá sezóna nie je k dispozícii - pokračujeme len s tým, čo máme

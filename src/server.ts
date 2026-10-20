@@ -1,9 +1,9 @@
 import { SEATS_M1, SEATS_M3, SEATS_SEASON } from "./seatLimits";
-import { MIN_ODDS, findOdds, STRONG_TIP_MIN_PROBABILITY } from "./oddsMatcher";
+import { MIN_ODDS, findOdds, marketProbabilityDetail, STRONG_TIP_MIN_PROBABILITY } from "./oddsMatcher";
 import { listLeads, deleteLead, recordLead } from "./leadsStore";
 import { getMeta, setMeta } from "./metaStore";
 import * as crypto from "crypto";
-import { recordShadow, listShadow, updateShadow, shadowEntriesFrom, ShadowEntry } from "./shadowStore";
+import { recordShadow, listShadow, updateShadow, shadowEntriesFrom, shadowReasonCode, ShadowEntry } from "./shadowStore";
 import { recordBlend, listBlend, updateBlend, blendEntryFrom, blendSummary } from "./blendStore";
 import { recordLegs, listLegs, updateLeg, legCandidatesFrom, legQualifies, buildTickets, TicketLegCandidate, TICKET_RULES } from "./ticketWatchStore";
 import { startBacktest, getBacktest } from "./backtest";
@@ -32,7 +32,7 @@ import {
   getSeasonGamesAnyCompetition,
   getHeadToHeadStats,
 } from "./apiClient";
-import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS } from "./predictor";
+import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION } from "./predictor";
 import { LeaguePreset, SavedTip } from "./types";
 import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText } from "./tipsStore";
 import { computeTicketStatus, settleBet, settleFixtureBets, tipHasStartedMatch, MATCH_STARTED_MESSAGE, buildTipEdit } from "./tipEvaluator";
@@ -652,15 +652,31 @@ app.post("/api/analyze", async (req, res) => {
       lineup
     );
 
-    // Tichá evidencia tipov vyradených pre rozpor so stávkovkami (na pozadí, nič neblokuje).
-    void recordShadow(shadowEntriesFrom(fixture, (result as any).lowValueBets ?? [])).catch(() => {});
+    // Meranie (20. 10. 2026): pravdepodobnosť stávkoviek (bez marže, ak sú kurzy oboch strán)
+    // pre odporúčané aj vyradené tipy – appka ju pri uložení tipu zapíše k nemu.
+    const marketDetail = (p: { market: string; selection: string }) =>
+      marketOdds && marketOdds.length ? marketProbabilityDetail(marketOdds, p, fixture.homeTeam.name, fixture.awayTeam.name) : null;
+    const marketProbs: Record<string, { prob: number; devig: boolean }> = {};
+    for (const p of [...((result as any).bestBets ?? []), ...((result as any).lowValueBets ?? [])]) {
+      const d = marketDetail(p);
+      if (d) marketProbs[`${p.market}|${p.selection}`] = { prob: Math.round(d.prob * 10) / 10, devig: d.devig };
+    }
+    // Tichá evidencia vyradených tipov (na pozadí, nič neblokuje): od 20. 10. 2026 všetky
+    // dôvody vyradenia (pásmo, hodnota, kurz, rozpor…) pre kandidátov 60 – 85 % s kurzom.
+    void recordShadow(
+      shadowEntriesFrom(fixture, (result as any).allCandidates ?? [], {
+        bestBets: (result as any).bestBets ?? [],
+        marketDetail,
+        modelVersion: MODEL_VERSION,
+      })
+    ).catch(() => {});
     // Tiché sledovanie miešania modelu so stávkovkami (na tipy nemá vplyv).
     void recordBlend(blendEntryFrom(fixture, (result as any).allCandidates ?? [])).catch(() => {});
     // Tiché sledovanie tiketu dňa: kandidáti z odporúčaných aj vyradených tipov (na pozadí).
     void recordLegs(
       legCandidatesFrom(fixture, [...((result as any).bestBets ?? []), ...((result as any).lowValueBets ?? [])])
     ).catch(() => {});
-    res.json(result);
+    res.json({ ...result, marketProbs });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
@@ -725,6 +741,37 @@ function clvOpen(t: SavedTip): number | null | undefined {
   return t.apiOdds ?? t.odds;
 }
 
+/**
+ * Meranie (20. 10. 2026): k novému tipu doplní verziu modelu, čas uloženia pred výkopom
+ * a pravdepodobnosť stávkoviek (appka ju posiela z analýzy; ak chýba, dopočíta sa
+ * z kurzov v pamäti). Na tip samotný, kurz ani správy v Telegrame to nemá vplyv.
+ */
+async function addMeasurement(tip: SavedTip): Promise<void> {
+  try {
+    if (!tip.modelVersion) tip.modelVersion = MODEL_VERSION;
+    const kickoff = new Date(tip.matchDate).getTime();
+    if (tip.hoursBeforeKickoff === undefined && isFinite(kickoff) && kickoff > Date.now())
+      tip.hoursBeforeKickoff = Math.round(((kickoff - Date.now()) / 3600000) * 10) / 10;
+    const valid = typeof tip.marketProb === "number" && tip.marketProb > 0 && tip.marketProb < 100;
+    if (!valid) {
+      delete tip.marketProb;
+      delete tip.marketProbDevig;
+      if (!(tip.legs && tip.legs.length) && tip.fixtureId > 0 && typeof tip.apiOdds === "number") {
+        const odds = await getFixtureOdds(tip.fixtureId);
+        const d = odds.length ? marketProbabilityDetail(odds, tip, tip.homeTeam, tip.awayTeam) : null;
+        if (d) {
+          tip.marketProb = Math.round(d.prob * 10) / 10;
+          tip.marketProbDevig = d.devig;
+        }
+      }
+    } else if (typeof tip.marketProbDevig !== "boolean") {
+      tip.marketProbDevig = false;
+    }
+  } catch {
+    // meranie nesmie zablokovať uloženie tipu
+  }
+}
+
 app.post("/api/tips", async (req, res) => {
   try {
     const tip: SavedTip = req.body;
@@ -740,6 +787,7 @@ app.post("/api/tips", async (req, res) => {
       const taken = !!tip.legs?.length || (await listTips()).some((t) => t.id !== tip.id && t.strongOfDay && t.status !== "void" && dayKeySk(new Date(t.matchDate)) === day);
       tip.strongOfDay = taken ? undefined : true;
     }
+    if (!isManualResult) await addMeasurement(tip);
     await saveTip(tip);
     res.json({ ok: true, telegramAvailable: isTelegramEnabled() });
   } catch (err: any) {
@@ -1797,10 +1845,67 @@ app.get("/api/blend/summary", async (_req, res) => {
   }
 });
 
+// Poradie dôvodov vyradenia v prehľade (podľa poradia filtrov v predictor.ts).
+const SHADOW_REASON_ORDER = [
+  "conflict", "ev_high", "ev_high_few_games", "ev_low", "min_odds", "one_bookmaker", "band_low", "band_high",
+  "category_lower_ev", "match_lower_ev", "market_excluded", "few_games", "no_market_odds", "no_odds", "unknown",
+];
+const SHADOW_GAP_ORDER = ["< 0", "0 – 5", "5 – 10", "10 – 15", "15+", "unknown"];
+
+/** Rozdiel model − stávkovky v bodoch; stávkovky podľa marketProb, pri starších záznamoch marketProbability. */
+function shadowGap(e: ShadowEntry): number | null {
+  const model = typeof e.modelProbability === "number" ? e.modelProbability : e.probability;
+  const market = typeof e.marketProb === "number" ? e.marketProb : typeof e.marketProbability === "number" ? e.marketProbability : null;
+  return typeof model === "number" && market !== null ? model - market : null;
+}
+function shadowGapBucket(e: ShadowEntry): string {
+  const g = shadowGap(e);
+  if (g === null) return "unknown";
+  return g < 0 ? "< 0" : g < 5 ? "0 – 5" : g < 10 ? "5 – 10" : g < 15 ? "10 – 15" : "15+";
+}
+
+/** Prehľad skupín evidencie: počet, vyhodnotené, výhry, úspešnosť, priemer modelu a stávkoviek, zisk pri 1 j. */
+function shadowBreakdown(all: ShadowEntry[], keyOf: (e: ShadowEntry) => string, order: string[]) {
+  const avg = (xs: (number | null | undefined)[]) => {
+    const v = xs.filter((x): x is number => typeof x === "number");
+    return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
+  };
+  const groups = new Map<string, ShadowEntry[]>();
+  for (const e of all) {
+    const k = keyOf(e);
+    groups.set(k, [...(groups.get(k) ?? []), e]);
+  }
+  return Array.from(groups.entries())
+    .map(([key, list]) => {
+      const settled = list.filter((e) => e.status === "won" || e.status === "lost");
+      const won = settled.filter((e) => e.status === "won").length;
+      const withOdds = settled.filter((e) => typeof e.odds === "number" && e.odds! > 1);
+      const profit = withOdds.reduce((sum, e) => sum + (e.status === "won" ? e.odds! - 1 : -1), 0);
+      return {
+        key,
+        count: list.length,
+        settled: settled.length,
+        won,
+        hitRate: settled.length ? (won / settled.length) * 100 : null,
+        avgModel: avg(settled.map((e) => (typeof e.modelProbability === "number" ? e.modelProbability : e.probability))),
+        avgMarket: avg(settled.map((e) => (typeof e.marketProb === "number" ? e.marketProb : e.marketProbability))),
+        withOdds: withOdds.length,
+        profit,
+      };
+    })
+    .sort((a, b) => {
+      const ia = order.indexOf(a.key), ib = order.indexOf(b.key);
+      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || b.count - a.count;
+    });
+}
+
 app.get("/api/shadow/summary", async (_req, res) => {
   try {
     const all = await listShadow();
-    const settled = all.filter((e) => e.status === "won" || e.status === "lost");
+    // Hlavný riadok ostáva len pre tipy s rozporom so stávkovkami (porovnateľný so staršími číslami);
+    // ostatné dôvody vyradenia (od 20. 10. 2026) sú v byReason a byGap.
+    const conflict = all.filter((e) => !e.reasonCode || e.conflict);
+    const settled = conflict.filter((e) => e.status === "won" || e.status === "lost");
     const won = settled.filter((e) => e.status === "won").length;
     const avg = (xs: (number | null)[]) => {
       const v = xs.filter((x): x is number => typeof x === "number");
@@ -1809,8 +1914,8 @@ app.get("/api/shadow/summary", async (_req, res) => {
     const withOdds = settled.filter((e) => typeof e.odds === "number" && e.odds! > 1);
     const profit = withOdds.reduce((sum, e) => sum + (e.status === "won" ? e.odds! - 1 : -1), 0);
     res.json({
-      total: all.length,
-      pending: all.filter((e) => e.status === "pending").length,
+      total: conflict.length,
+      pending: conflict.filter((e) => e.status === "pending").length,
       settled: settled.length,
       won,
       hitRate: settled.length ? (won / settled.length) * 100 : null,
@@ -1819,12 +1924,18 @@ app.get("/api/shadow/summary", async (_req, res) => {
       withOdds: withOdds.length,
       profit,
       roi: withOdds.length ? (profit / withOdds.length) * 100 : null,
+      all: {
+        total: all.length,
+        pending: all.filter((e) => e.status === "pending").length,
+        settled: all.filter((e) => e.status === "won" || e.status === "lost").length,
+      },
+      byReason: shadowBreakdown(all, shadowReasonCode, SHADOW_REASON_ORDER),
+      byGap: shadowBreakdown(all, shadowGapBucket, SHADOW_GAP_ORDER),
     });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
 });
-
 
 // ---- Uzatvárací kurz (CLV) ----
 // Tesne pred výkopom sa ku každému uloženému tipu zistí kurz ešte raz. Ak bol kurz
@@ -1849,6 +1960,22 @@ function needsClosingOdds(t: SavedTip, now = Date.now()): boolean {
   );
 }
 
+/**
+ * Vyradený tip z tichej evidencie čaká na uzatvárací kurz (20. 10. 2026). Skúša sa len
+ * raz, od 15 minút pred výkopom do 3 dní po ňom; staršie záznamy bez kurzu sa nedopĺňajú.
+ */
+function shadowNeedsClosingOdds(e: ShadowEntry, now = Date.now()): boolean {
+  const kickoff = new Date(e.matchDate).getTime();
+  return (
+    !!e.reasonCode &&
+    typeof e.odds === "number" &&
+    e.odds > 1 &&
+    e.closingOdds === undefined &&
+    kickoff - now <= CLOSING_BEFORE_KICKOFF_MS &&
+    now - kickoff <= CLOSING_GIVE_UP_MS
+  );
+}
+
 async function captureClosingOdds(): Promise<void> {
   if (closingOddsRunning) return;
   closingOddsRunning = true;
@@ -1862,12 +1989,45 @@ async function captureClosingOdds(): Promise<void> {
     });
     const byFixture = new Map<number, SavedTip[]>();
     for (const t of due) byFixture.set(t.fixtureId, [...(byFixture.get(t.fixtureId) ?? []), t]);
-    for (const [fixtureId, tips] of byFixture) {
-      closingLastTry.set(fixtureId, now);
+    // Vyradené tipy z tichej evidencie: rovnaký čerstvý kurz zápasu (jedno volanie API na zápas).
+    let shadowDue: ShadowEntry[] = [];
+    try {
+      shadowDue = (await listShadow()).filter((e) => shadowNeedsClosingOdds(e, now));
+    } catch {
+      // evidencia nesmie zastaviť uzatvárací kurz skutočných tipov
+    }
+    const shadowByFixture = new Map<number, ShadowEntry[]>();
+    for (const e of shadowDue) shadowByFixture.set(e.fixtureId, [...(shadowByFixture.get(e.fixtureId) ?? []), e]);
+    const fixtureIds = new Set<number>([...byFixture.keys(), ...shadowByFixture.keys()]);
+    for (const fixtureId of fixtureIds) {
+      const tips = byFixture.get(fixtureId) ?? [];
+      if (tips.length) closingLastTry.set(fixtureId, now);
       const odds = await getFixtureOdds(fixtureId, true);
       for (const t of tips) {
         const match = odds.length ? findOdds(odds, t, t.homeTeam, t.awayTeam) : null;
-        if (match) await updateTip(t.id, { closingOdds: match.odd, closingOddsAt: new Date().toISOString() });
+        if (match) {
+          // Meranie (20. 10. 2026): aj pravdepodobnosť stávkoviek pred výkopom – CLV bez vplyvu marže.
+          const d = marketProbabilityDetail(odds, t, t.homeTeam, t.awayTeam);
+          await updateTip(t.id, {
+            closingOdds: match.odd,
+            closingOddsAt: new Date().toISOString(),
+            ...(d ? { closingMarketProb: Math.round(d.prob * 10) / 10, closingDevig: d.devig } : {}),
+          });
+        }
+      }
+      for (const e of shadowByFixture.get(fixtureId) ?? []) {
+        try {
+          const match = odds.length ? findOdds(odds, e, e.homeTeam, e.awayTeam) : null;
+          const d = match ? marketProbabilityDetail(odds, e, e.homeTeam, e.awayTeam) : null;
+          await updateShadow({
+            ...e,
+            closingOdds: match ? match.odd : null,
+            closingOddsAt: new Date().toISOString(),
+            ...(d ? { closingMarketProb: Math.round(d.prob * 10) / 10, closingDevig: d.devig } : {}),
+          });
+        } catch {
+          // jeden záznam evidencie nesmie zastaviť ostatné
+        }
       }
     }
   } catch (err) {
@@ -1880,21 +2040,85 @@ async function captureClosingOdds(): Promise<void> {
 setInterval(() => void captureClosingOdds(), 10 * 60 * 1000); // kontrola každých 10 minút
 void captureClosingOdds();
 
+/**
+ * CLV jedného tipu v % (20. 10. 2026). Ak sú pri uložení aj pred výkopom kurzy oboch
+ * strán, porovnávajú sa pravdepodobnosti bez marže (zmena marže sa neráta ako pohyb
+ * trhu): (pravdepodobnosť pred výkopom / pri uložení − 1) × 100. Inak ako doteraz kurzy:
+ * (kurz pri uložení / kurz pred výkopom − 1) × 100. Kladné = trh sa posunul k nášmu tipu.
+ */
+const CLV_TIE = 0.5; // |CLV| pod 0,5 % = bez zmeny
+function clvOf(x: {
+  open: number | null | undefined;
+  closingOdds?: number | null;
+  marketProb?: number | null;
+  marketProbDevig?: boolean;
+  closingMarketProb?: number | null;
+  closingDevig?: boolean;
+}): { clv: number; method: "prob" | "price" } | null {
+  if (
+    x.marketProbDevig &&
+    x.closingDevig &&
+    typeof x.marketProb === "number" &&
+    x.marketProb > 0 &&
+    typeof x.closingMarketProb === "number" &&
+    x.closingMarketProb > 0
+  )
+    return { clv: (x.closingMarketProb / x.marketProb - 1) * 100, method: "prob" };
+  if (typeof x.open === "number" && x.open > 1 && typeof x.closingOdds === "number" && x.closingOdds > 1)
+    return { clv: (x.open / x.closingOdds - 1) * 100, method: "price" };
+  return null;
+}
+function clvStats(list: { clv: number; method: "prob" | "price" }[]) {
+  const avg = list.length ? list.reduce((a, b) => a + b.clv, 0) / list.length : null;
+  return {
+    total: list.length,
+    avgClv: avg,
+    beat: list.filter((c) => c.clv >= CLV_TIE).length,
+    tie: list.filter((c) => Math.abs(c.clv) < CLV_TIE).length,
+    worse: list.filter((c) => c.clv <= -CLV_TIE).length,
+    byProbability: list.filter((c) => c.method === "prob").length,
+  };
+}
+
 app.get("/api/clv/summary", async (_req, res) => {
   try {
     const tips = await listTips();
     const done = tips.filter(
       (t) => typeof clvOpen(t) === "number" && clvOpen(t)! > 1 && typeof t.closingOdds === "number" && t.closingOdds > 1
     );
-    const clv = (t: SavedTip) => (clvOpen(t)! / t.closingOdds! - 1) * 100;
+    const clvRes = (t: SavedTip) => clvOf({ ...t, open: clvOpen(t) })!;
+    const clv = (t: SavedTip) => clvRes(t).clv;
     const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
     const markets = Array.from(new Set(done.map((t) => t.market)));
+    // Vyradené tipy z tichej evidencie (od 20. 10. 2026) – podľa dôvodu vyradenia.
+    let shadow: any = null;
+    try {
+      const entries = (await listShadow()).filter((e) => e.reasonCode);
+      const withClv = entries
+        .map((e) => ({ e, c: clvOf({ ...e, open: e.odds }) }))
+        .filter((x): x is { e: ShadowEntry; c: { clv: number; method: "prob" | "price" } } => x.c !== null);
+      const reasons = Array.from(new Set(withClv.map((x) => x.e.reasonCode!)));
+      shadow = {
+        ...clvStats(withClv.map((x) => x.c)),
+        pending: entries.filter((e) => shadowNeedsClosingOdds(e) || (e.closingOdds === undefined && new Date(e.matchDate).getTime() > Date.now())).length,
+        byReason: reasons
+          .map((r) => ({ reason: r, ...clvStats(withClv.filter((x) => x.e.reasonCode === r).map((x) => x.c)) }))
+          .sort((a, b) => b.total - a.total),
+      };
+    } catch {
+      shadow = null;
+    }
+    const stats = clvStats(done.map(clvRes));
     res.json({
       total: done.length,
       pending: tips.filter(needsClosingOdds).length,
-      avgClv: avg(done.map(clv)),
-      beat: done.filter((t) => clvOpen(t)! > t.closingOdds!).length,
-      worse: done.filter((t) => clvOpen(t)! < t.closingOdds!).length,
+      avgClv: stats.avgClv,
+      beat: stats.beat,
+      tie: stats.tie,
+      worse: stats.worse,
+      byProbability: stats.byProbability,
+      tieThreshold: CLV_TIE,
+      shadow,
       byMarket: markets
         .map((m) => {
           const list = done.filter((t) => t.market === m);
@@ -2072,9 +2296,15 @@ async function checkPendingResults(): Promise<void> {
   await captureClosingOdds();
   // vyradené tipy z tichej evidencie vyhodnotíme rovnako ako bežné tipy
   try {
-    for (const e of (await listShadow()).filter((x) => x.status === "pending")) {
-      const settled = await settleBet(e);
-      if (settled) await updateShadow({ ...e, status: settled.status } as ShadowEntry);
+    // Po zápasoch (20. 10. 2026): budúce zápasy sa nepýtajú a výsledok aj štatistiky
+    // zápasu sa načítajú raz pre všetky jeho vyradené tipy (evidencia je teraz väčšia).
+    const byFixture = new Map<number, ShadowEntry[]>();
+    for (const e of (await listShadow()).filter((x) => x.status === "pending" && new Date(x.matchDate).getTime() <= Date.now()))
+      byFixture.set(e.fixtureId, [...(byFixture.get(e.fixtureId) ?? []), e]);
+    for (const entries of byFixture.values()) {
+      const outcomes = await settleFixtureBets(entries[0], entries);
+      if (!outcomes) continue;
+      for (let i = 0; i < entries.length; i++) await updateShadow({ ...entries[i], status: outcomes[i] } as ShadowEntry);
     }
   } catch {
     // evidencia nesmie zastaviť vyhodnotenie skutočných tipov

@@ -976,6 +976,15 @@ function wireSaveTipButtons(r, root) {
   });
 }
 
+/** Meranie (20. 10. 2026): verzia modelu a odhad stávkoviek z analýzy – na tip ani správy nemá vplyv. */
+function measurementFields(r, bet) {
+  const m = r.marketProbs && r.marketProbs[`${bet.market}|${bet.selection}`];
+  return {
+    ...(r.modelVersion ? { modelVersion: r.modelVersion } : {}),
+    ...(m && typeof m.prob === "number" ? { marketProb: m.prob, marketProbDevig: !!m.devig } : {}),
+  };
+}
+
 function buildTip(r, bet, realOdds, extra = {}) {
   return {
     id: `${r.fixture.fixtureId}-${Date.now()}`,
@@ -993,6 +1002,7 @@ function buildTip(r, bet, realOdds, extra = {}) {
     probability: bet.probability,
     odds: realOdds,
     ...(typeof bet.odds === "number" ? { apiOdds: bet.odds } : {}),
+    ...measurementFields(r, bet),
     ...extra,
     savedAt: new Date().toISOString(),
     status: "pending",
@@ -1686,33 +1696,48 @@ function renderBankrollSimulation(tips) {
       .join("")}</div>`;
 }
 
+// Kalibračný report (20. 10. 2026): úzke pásma po 2,5 bodu v rozsahu 65 – 82,5 %, aby bolo
+// vidno, či vyššia dôvera modelu naozaj vychádza častejšie (alebo model preceňuje).
+const CALIBRATION_FROM = 65;
+const CALIBRATION_TO = 82.5;
+const CALIBRATION_STEP = 2.5;
 function renderCalibrationReport(tips) {
   const el = document.getElementById("calibrationResult");
   // Tikety vynechávame (kombinovaná pravdepodobnosť), aj obnovené tipy s odhadnutou dôverou.
   const resolved = tips.filter((t) => !t.legs && !t.probabilityEstimated && (t.status === "won" || t.status === "lost"));
-  const buckets = [[50, 60], [60, 70], [70, 80], [80, 90], [90, 100]];
-  const rows = buckets
-    .map(([min, max]) => {
-      const inBucket = resolved.filter((t) => t.probability >= min && t.probability < (max === 100 ? 101 : max));
-      if (!inBucket.length) return null;
-      const won = inBucket.filter((t) => t.status === "won").length;
-      return { label: `${min}–${max}${NB}%`, count: inBucket.length, actualPct: (won / inBucket.length) * 100, predictedMid: (min + max) / 2 };
-    })
-    .filter(Boolean);
-  if (!rows.length) {
+  if (!resolved.length) {
     el.innerHTML = `<p class="faint small">Zatiaľ nemáš dosť vyhodnotených tipov na kalibráciu.</p>`;
     return;
   }
-  el.innerHTML =
-    rows
-      .map(
-        (r) => `<div class="mb-row">
-        <div class="mb-top"><span class="mb-name">Predikcia ${r.label}</span><span class="mb-num">realita: <b>${r.actualPct.toFixed(0)}${NB}%</b> · ${plural(r.count, "tip", "tipy", "tipov")}</span></div>
-        <div class="bar mb-bar"><i style="width:${r.actualPct.toFixed(1)}%"></i><span class="mark white" style="left:${r.predictedMid}%"></span></div>
-      </div>`
-      )
-      .join("") +
-    `<p class="faint small">Zlatý pruh = koľko tipov reálne vyšlo. Biela čiarka = stred predikovaného rozsahu (kde by mal pruh byť, ak je model presný).</p>`;
+  const pct = (v) => `${fmtNum(v, 1)}${NB}%`;
+  const rows = [];
+  for (let min = CALIBRATION_FROM; min < CALIBRATION_TO - 0.001; min += CALIBRATION_STEP) {
+    const max = min + CALIBRATION_STEP;
+    const last = max >= CALIBRATION_TO - 0.001;
+    const inBucket = resolved.filter((t) => t.probability >= min && (last ? t.probability <= max : t.probability < max));
+    const won = inBucket.filter((t) => t.status === "won").length;
+    rows.push({
+      label: `${fmtNum(min, 1).replace(",0", "")}–${fmtNum(max, 1).replace(",0", "")}${NB}%`,
+      count: inBucket.length,
+      won,
+      predicted: inBucket.length ? inBucket.reduce((a, t) => a + Number(t.probability), 0) / inBucket.length : null,
+      actual: inBucket.length ? (won / inBucket.length) * 100 : null,
+    });
+  }
+  const outside = resolved.filter((t) => t.probability < CALIBRATION_FROM || t.probability > CALIBRATION_TO).length;
+  const promised = resolved.reduce((a, t) => a + Number(t.probability), 0) / resolved.length;
+  const delivered = (resolved.filter((t) => t.status === "won").length / resolved.length) * 100;
+  const diff = delivered - promised;
+  const verdict = Math.abs(diff) < 2 ? "sedí" : diff < 0 ? "model preceňuje" : "model podceňuje";
+  const body = rows
+    .map((r) => {
+      const d = r.count ? r.actual - r.predicted : null;
+      return `<tr><td style="white-space:nowrap">${r.label}</td><td class="num">${r.count || "–"}</td><td class="num">${r.count ? pct(r.predicted) : "–"}</td><td class="num">${r.count ? `${pct(r.actual)} <span class="faint">(${r.won}/${r.count})</span>` : "–"}</td><td class="num ${d == null ? "" : d >= 0 ? "g" : "l"}">${d == null ? "–" : signed(d, 1)}</td></tr>`;
+    })
+    .join("");
+  el.innerHTML = `<p class="small"><b>Model sľúbil ${pct(promised)}, vyšlo ${pct(delivered)}</b> (${plural(resolved.length, "tip", "tipy", "tipov")}, rozdiel <b class="${diff >= 0 ? "g" : "l"}">${signed(diff, 1)}${NB}b.</b> – ${verdict}).</p>
+    <div class="table-wrap"><table class="bt-table"><thead><tr><th>Dôvera</th><th class="num">Tipy</th><th class="num">Model sľúbil</th><th class="num">Vyšlo</th><th class="num">Rozdiel</th></tr></thead><tbody>${body}</tbody></table></div>
+    <p class="faint small">Pri pásme s menej ako 30 tipmi je rozdiel ešte prevažne náhoda.${outside ? ` Mimo pásiem ${CALIBRATION_FROM} – ${fmtNum(CALIBRATION_TO, 1)}${NB}%: ${plural(outside, "tip", "tipy", "tipov")} (započítané v celkovom riadku).` : ""}</p>`;
 }
 bankrollStartInput.addEventListener("input", () => renderBankrollSimulation(lastStatTips));
 document.getElementById("bankrollPct").addEventListener("click", (e) => {
@@ -2292,40 +2317,97 @@ async function renderClvSummary() {
   const el = document.getElementById("clvSummary");
   try {
     const d = await fetchJson("/api/clv/summary");
-    if (!d || (!d.total && !d.pending)) { el.textContent = ""; return; }
+    if (!d || (!d.total && !d.pending && !(d.shadow && d.shadow.total))) { el.textContent = ""; return; }
     const sign = (v) => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(1).replace(".", ",") + NB + "%";
+    const tie = fmtNum(d.tieThreshold ?? 0.5, 1);
+    // Meranie (20. 10. 2026): lepší / bez zmeny (pod ±0,5 %) / horší; kde sú kurzy oboch strán, bez marže.
+    const split = (x) => `lepší <b class="g">${x.beat}</b> · bez zmeny <b>${x.tie ?? 0}</b> · horší <b class="l">${x.worse}</b>`;
     let t = `<b class="gold">Uzatvárací kurz:</b> `;
     if (d.total) {
-      t += `pri <b>${d.beat} z ${d.total}</b> tipov kurz do výkopu klesol (trh sa posunul k nášmu tipu), pri ${d.worse} stúpol. `;
-      t += `Priemerne sme mali o <b class="${d.avgClv >= 0 ? "g" : "l"}">${sign(d.avgClv)}</b> lepší kurz ako tesne pred zápasom.`;
+      t += `z <b>${d.total}</b> tipov: ${split(d)}. `;
+      t += `Priemerne sme mali o <b class="${d.avgClv >= 0 ? "g" : "l"}">${sign(d.avgClv)}</b> lepší kurz ako tesne pred zápasom`;
+      t += d.byProbability ? ` (${d.byProbability} z ${d.total} porovnané bez marže stávkoviek).` : ".";
       const markets = (d.byMarket || []).filter((x) => x.total >= 3);
       if (markets.length) t += ` Podľa trhov: ${markets.map((x) => `${escapeHtml(x.market)} ${sign(x.avgClv)} (${x.total})`).join(", ")}.`;
     } else {
       t += `zatiaľ žiadny tip so zisteným kurzom tesne pred výkopom.`;
     }
     if (d.pending) t += ` Čaká: ${d.pending}.`;
+    const sh = d.shadow;
+    if (sh && (sh.total || sh.pending)) {
+      t += `<br><b class="gold">Uzatvárací kurz vyradených tipov:</b> `;
+      if (sh.total) {
+        t += `z <b>${sh.total}</b>: ${split(sh)}, priemer <b class="${sh.avgClv >= 0 ? "g" : "l"}">${sign(sh.avgClv)}</b>.`;
+        const reasons = (sh.byReason || []).filter((x) => x.total >= 1);
+        if (reasons.length)
+          t += `<details class="inner-details"><summary>Podľa dôvodu vyradenia</summary><div class="table-wrap"><table class="bt-table"><thead><tr><th>Dôvod</th><th class="num">Tipy</th><th class="num">Lepší / bez zmeny / horší</th><th class="num">Priemer</th></tr></thead><tbody>${reasons
+            .map((x) => `<tr><td>${escapeHtml(shadowReasonLabel(x.reason))}</td><td class="num">${x.total}</td><td class="num">${x.beat} / ${x.tie} / ${x.worse}</td><td class="num">${x.avgClv == null ? "–" : sign(x.avgClv)}</td></tr>`)
+            .join("")}</tbody></table></div></details>`;
+      } else {
+        t += `zatiaľ žiadny so zisteným kurzom pred výkopom.`;
+      }
+      if (sh.pending) t += ` Čaká: ${sh.pending}.`;
+    }
     el.innerHTML = t;
-    el.title = "Ak je kurz pri zverejnení tipu dlhodobo vyšší ako tesne pred výkopom, model predbieha stávkovky – to je spoľahlivejší znak kvality ako samotná úspešnosť pri malom počte tipov.";
+    el.title = `Ak je kurz pri zverejnení tipu dlhodobo vyšší ako tesne pred výkopom, model predbieha stávkovky – to je spoľahlivejší znak kvality ako samotná úspešnosť pri malom počte tipov. Rozdiel pod ±${tie} % sa ráta ako bez zmeny.`;
   } catch {
     el.textContent = "";
   }
 }
 
 // ---- Tichá evidencia tipov vyradených pre rozpor so stávkovkami ----
+// Dôvody vyradenia z tichej evidencie (kódy z predictor.ts, 20. 10. 2026).
+const SHADOW_REASON_LABEL = {
+  conflict: "rozpor so stávkovkami",
+  ev_high: "podozrivo vysoká hodnota (nad +25 %)",
+  ev_high_few_games: "vysoká hodnota pri málo dátach",
+  ev_low: "nízka hodnota (pod +5 %)",
+  min_odds: `kurz pod ${fmtNum(1.55, 2)}`,
+  one_bookmaker: "kurz len od jednej stávkovky",
+  band_low: "dôvera pod 68 %",
+  band_high: "dôvera nad 80 %",
+  category_lower_ev: "iná hranica trhu mala vyššiu hodnotu",
+  match_lower_ev: "iný tip zápasu mal vyššiu hodnotu",
+  market_excluded: "trh neodporúčame",
+  few_games: "málo odohraných zápasov",
+  no_market_odds: "trh bez kurzu",
+  no_odds: "zápas bez kurzov",
+  unknown: "neznámy",
+};
+function shadowReasonLabel(code) {
+  return SHADOW_REASON_LABEL[code] || code || "neznámy";
+}
+/** Kompaktná tabuľka skupín tichej evidencie (dôvod alebo rozdiel model − stávkovky). */
+function shadowTableHtml(rows, firstCol, labelOf) {
+  const p = (v) => (v == null ? "–" : `${Math.round(v)}${NB}%`);
+  const body = rows
+    .map((r) => `<tr><td>${escapeHtml(labelOf(r.key))}</td><td class="num">${r.count}</td><td class="num">${r.settled ? `${r.won}/${r.settled}` : "–"}</td><td class="num">${p(r.hitRate)}</td><td class="num">${p(r.avgModel)}</td><td class="num">${p(r.avgMarket)}</td><td class="num ${r.withOdds ? (r.profit >= 0 ? "g" : "l") : ""}">${r.withOdds ? `${signed(r.profit, 1)}${NB}j.` : "–"}</td></tr>`)
+    .join("");
+  return `<div class="table-wrap"><table class="bt-table"><thead><tr><th>${firstCol}</th><th class="num">Spolu</th><th class="num" title="vyšlo / vyhodnotené">Vyšlo</th><th class="num">Úspešnosť</th><th class="num">Model</th><th class="num">Stávkovky</th><th class="num" title="Zisk pri vklade 1 jednotky za zaznamenaný kurz">Zisk</th></tr></thead><tbody>${body}</tbody></table></div>`;
+}
+
 async function renderShadowSummary() {
   const el = document.getElementById("shadowSummary");
   try {
     const d = await fetchJson("/api/shadow/summary");
     if (!d) { el.textContent = ""; return; }
     const head = `<b class="gold">Vyradené tipy (rozpor so stávkovkami):</b> `;
-    if (!d.settled) {
-      el.innerHTML = d.total ? `${head}${d.total} zapísaných, zatiaľ žiadny vyhodnotený.` : "";
-      return;
-    }
     const p = (v) => (v == null ? "–" : `${Math.round(v)}${NB}%`);
-    let t = `${head}<b>${d.won} z ${d.settled}</b> vyšlo (<b>${p(d.hitRate)}</b>), model im dával v priemere ${p(d.avgModel)}, stávkovky ${p(d.avgMarket)}.`;
-    if (d.withOdds) t += ` Keby sa na ne stavilo: <b class="${d.profit >= 0 ? "g" : "l"}">${d.profit >= 0 ? "+" : "−"}${Math.abs(d.profit).toFixed(1).replace(".", ",")}${NB}j.</b>`;
-    if (d.pending) t += ` Čaká: ${d.pending}.`;
+    let t = "";
+    if (!d.settled) {
+      t = d.total ? `${head}${d.total} zapísaných, zatiaľ žiadny vyhodnotený.` : "";
+    } else {
+      t = `${head}<b>${d.won} z ${d.settled}</b> vyšlo (<b>${p(d.hitRate)}</b>), model im dával v priemere ${p(d.avgModel)}, stávkovky ${p(d.avgMarket)}.`;
+      if (d.withOdds) t += ` Keby sa na ne stavilo: <b class="${d.profit >= 0 ? "g" : "l"}">${d.profit >= 0 ? "+" : "−"}${Math.abs(d.profit).toFixed(1).replace(".", ",")}${NB}j.</b>`;
+      if (d.pending) t += ` Čaká: ${d.pending}.`;
+    }
+    // Meranie (20. 10. 2026): všetky dôvody vyradenia a rozdiel model − stávkovky.
+    if (d.all && d.all.total && (d.byReason || []).length) {
+      t += `<details class="inner-details"><summary>Všetky vyradené tipy podľa dôvodu a rozdielu (${d.all.total}, vyhodnotené ${d.all.settled})</summary>
+        ${shadowTableHtml(d.byReason, "Dôvod vyradenia", shadowReasonLabel)}
+        ${shadowTableHtml(d.byGap || [], "Model − stávkovky", (k) => (k === "unknown" ? "neznámy" : `${k} b.`))}
+        <div>Model a stávkovky = priemer pri vyhodnotených tipoch. Stávkovky bez marže, ak boli kurzy oboch strán (staršie záznamy s odhadom marže 5 %). Zisk = vklad 1 jednotky za zaznamenaný kurz. Z každého trhu zápasu sa zapisuje len hranica s najväčšou hodnotou; tipy s rozporom všetky.</div></details>`;
+    }
     el.innerHTML = t;
   } catch {
     el.textContent = "";
