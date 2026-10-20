@@ -960,9 +960,9 @@ html.menu-open .dock-more .x { display: block; stroke: currentColor; fill: none;
 }
 
 
-/* ===== bez bočného posuvníka: farebné pásy siahajú cez celú šírku; polohu ukazuje zlatá čiara hore ===== */
-html { scrollbar-width: none; }
-html::-webkit-scrollbar { display: none; width: 0; height: 0; }
+/* ===== plynulé prechody farieb medzi časťami (bez ostrej hrany) a tmavý posuvník ===== */
+.sec.alt { background: linear-gradient(180deg, var(--bg) 0%, #1D1611 28%, #1D1611 72%, var(--bg) 100%) !important; }
+html { scrollbar-color: rgba(217,192,138,.35) var(--bg); }
 </style>
 </head>
 <body>
