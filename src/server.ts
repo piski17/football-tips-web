@@ -49,13 +49,14 @@ import {
   sendCustomMessage,
   sendRenewalReminder,
   sendTipResultToTelegram, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite, sendMemberMessage } from "./telegram";
-import { paymentsEnabled, isTerm, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, deletePayment, Payment, termLabel, addActiveMonths, SUMMER_PAUSE } from "./payments";
+import { paymentsEnabled, isTerm, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, deletePayment, Payment, termLabel, tierName, addActiveMonths, SUMMER_PAUSE } from "./payments";
 import { payBySquareString } from "./payBySquare";
 import QRCode from "qrcode";
 import { sendAdminEmail } from "./mailer";
 import { listSubscribers, addSubscriber, updateSubscriber, deleteSubscriber } from "./subscribersStore";
 import { recordHit, readStats, sourceFrom } from "./statsStore";
 import { Subscriber } from "./types";
+import { memberPeriods, memberTerm, newPeriodUpdates, currentPeriodStart } from "./guarantee";
 
 /** Slovenský tvar podľa počtu: plural(3, "tip", "tipy", "tipov") -> "3 tipy". */
 /** Číslo so slovenskou desatinnou čiarkou: fmtNum(1.845, 2) -> "1,85". */
@@ -404,7 +405,7 @@ ${row("Správa", bankNote(p.term), bankNote(p.term))}
 <p>Po zaplatení kliknite nižšie. Otvorí sa Telegram a hneď ako platba príde na účet, pošlem vám tam osobnú pozvánku do kanála.</p>
 <a class="btn" href="${esc(tg)}">Zaplatil som · pokračovať v Telegrame</a>
 <p class="small" style="margin-top:14px">Okamžitá platba príde do pár minút, bežný prevod zvyčajne do jedného pracovného dňa. Členstvo sa samo nepredlžuje.</p>
-<p class="gar"><b>Garancia</b>Ak mesiac skončí v strate, ďalší mesiac máte zadarmo.</p>
+<p class="gar"><b>Garancia</b>Ak vaše členstvo (Silver, Gold alebo Platinum) skončí v strate, ďalší mesiac máte zadarmo.</p>
 <a class="back" href="/clenstvo">Späť na členstvo</a>
 </div>
 <script>document.querySelectorAll(".cp").forEach(function(b){b.addEventListener("click",function(){var t=b.getAttribute("data-copy");var done=function(){b.textContent="Skopírované";b.classList.add("ok");setTimeout(function(){b.textContent="Kopírovať";b.classList.remove("ok")},1800)};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,function(){prompt("Skopírujte:",t)})}else{prompt("Skopírujte:",t)}})});</script>
@@ -2160,6 +2161,8 @@ app.get("/api/subscribers", async (_req, res) => {
 app.post("/api/subscribers", async (req, res) => {
   try {
     const subscriber: Subscriber = req.body;
+    // Prvé obdobie začína dňom začiatku členstva (od neho sa počíta garancia).
+    if (!subscriber.periodStart && subscriber.startDate) subscriber.periodStart = subscriber.startDate;
     await addSubscriber(subscriber);
     res.json({ ok: true });
   } catch (err: any) {
@@ -2169,7 +2172,15 @@ app.post("/api/subscribers", async (req, res) => {
 
 app.patch("/api/subscribers/:id", async (req, res) => {
   try {
-    await updateSubscriber(req.params.id, req.body);
+    const body: Partial<Subscriber> = { ...req.body };
+    // Predĺženie z appky (nové obdobie): doterajšie obdobie sa odloží, aby sa dalo vyhodnotiť pre garanciu.
+    if (typeof body.periodStart === "string" && typeof body.nextPaymentDue === "string") {
+      const sub = (await listSubscribers()).find((x) => x.id === req.params.id);
+      if (sub && currentPeriodStart(sub) !== body.periodStart) {
+        Object.assign(body, newPeriodUpdates(sub, body.periodStart, body.nextPaymentDue));
+      }
+    }
+    await updateSubscriber(req.params.id, body);
     res.json({ ok: true });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
@@ -2208,65 +2219,66 @@ app.delete("/api/subscribers/:id", async (req, res) => {
   }
 });
 
-// ---- Garancia: ak kalendárny mesiac skončí v strate, každý člen aktívny v posledný deň mesiaca dostane 1 mesiac zadarmo ----
-
-/** Predošlý kalendárny mesiac (RRRR-MM) podľa slovenského času. */
-function previousMonthSk(): string {
-  const today = dayKeySk(new Date());
-  return new Date(Date.UTC(Number(today.slice(0, 4)), Number(today.slice(5, 7)) - 2, 1)).toISOString().slice(0, 7);
-}
-
-/** Posledný deň mesiaca (RRRR-MM-DD). */
-function lastDayOfMonth(month: string): string {
-  const [y, m] = month.split("-").map(Number);
-  return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
-}
+// ---- Garancia: ak obdobie členstva (Silver 1, Gold 3, Platinum 6 mesiacov) skončí v strate, člen dostane 1 mesiac zadarmo ----
 
 function fmtDaySk(day: string): string {
   return `${Number(day.slice(8, 10))}. ${Number(day.slice(5, 7))}. ${day.slice(0, 4)}`;
 }
 
-async function guaranteeStatus(month: string) {
-  const [y, m] = month.split("-").map(Number);
-  const label = `${MONTH_NAMES[m - 1]} ${y}`;
-  const result = monthlyResults(await listTips()).find((r) => r.key === month);
-  const profit = result?.profit ?? 0;
-  const resolved = result?.totalResolved ?? 0;
-  // Jún a júl: letná prestávka, členstvá sú pozastavené – garancia sa nepoužije.
-  const summer = m >= SUMMER_PAUSE.fromMonth && m <= SUMMER_PAUSE.toMonth;
-  const lastDay = lastDayOfMonth(month);
-  const finished = lastDay < dayKeySk(new Date());
-  const inLoss = !summer && profit < 0;
-  let applied = false;
-  let appliedAt: string | null = null;
-  const marker = await getMeta(`guarantee:${month}`);
-  if (marker) {
-    applied = true;
-    try { appliedAt = JSON.parse(marker).appliedAt ?? null; } catch { appliedAt = null; }
-  }
-  const eligible = (await listSubscribers())
-    .filter((s) => {
-      const start = s.startDate ?? s.createdAt;
-      return Boolean(start) && dayKeySk(new Date(start)) <= lastDay && dayKeySk(new Date(s.nextPaymentDue)) >= lastDay;
-    })
-    .map((s) => ({ id: s.id, name: s.name, nextPaymentDue: s.nextPaymentDue, telegramChatId: s.telegramChatId }));
-  return { month, label, profit, resolved, inLoss, summer, finished, applied, appliedAt, eligible };
-}
+/** Ako dlho po skončení obdobia ho ešte ukazujeme v appke. */
+const GUARANTEE_WINDOW_MS = 60 * 24 * 3600 * 1000;
 
-function guaranteeMonth(input: unknown): string | null {
-  if (input === undefined || input === "") return previousMonthSk();
-  return typeof input === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(input) ? input : null;
-}
-
-app.get("/api/guarantee", async (req, res) => {
-  try {
-    const month = guaranteeMonth(req.query.month);
-    if (!month) {
-      res.status(400).json({ error: "Mesiac musí byť vo formáte RRRR-MM." });
-      return;
+/** Výsledok všetkých období členov: bežiace (priebežne) a skončené za posledných 60 dní. */
+async function guaranteeRows() {
+  const tips = statsTips(await listTips());
+  const now = Date.now();
+  const rows = [];
+  for (const s of await listSubscribers()) {
+    const term = memberTerm(s);
+    for (const p of memberPeriods(s)) {
+      const startMs = new Date(p.start).getTime();
+      const endMs = new Date(p.end).getTime();
+      if (isNaN(startMs) || isNaN(endMs) || startMs > now) continue; // obdobie ešte nezačalo
+      const ended = endMs < now;
+      if (ended && endMs < now - GUARANTEE_WINDOW_MS) continue;
+      // Tipy podľa dňa zápasu (slovenský čas) od prvého po posledný deň obdobia vrátane.
+      // Letná prestávka (jún – júl) sa nepočíta, členstvo je vtedy pozastavené.
+      const from = dayKeySk(new Date(startMs));
+      const to = dayKeySk(new Date(endMs));
+      const inPeriod = tips.filter((t) => {
+        const d = tipDayKey(t);
+        if (d === null || d < from || d > to) return false;
+        const m = Number(d.slice(5, 7));
+        return m < SUMMER_PAUSE.fromMonth || m > SUMMER_PAUSE.toMonth;
+      });
+      const sm = summarizeTips(inPeriod);
+      const free = Boolean(p.free);
+      const applied = (s.guarantees ?? []).some((g) => g.periodStart === p.start);
+      const inLoss = sm.profit < 0;
+      rows.push({
+        id: s.id,
+        name: s.name,
+        term,
+        tier: tierName(term),
+        periodStart: p.start,
+        periodEnd: p.end,
+        profit: sm.profit,
+        resolved: sm.totalResolved,
+        pending: inPeriod.filter((t) => t.status === "pending").length,
+        ended,
+        free,
+        inLoss,
+        eligible: ended && inLoss && !free && !applied,
+        applied,
+      });
     }
-    const st = await guaranteeStatus(month);
-    res.json({ ...st, eligible: st.eligible.map(({ id, name, nextPaymentDue }) => ({ id, name, nextPaymentDue })) });
+  }
+  return rows;
+}
+
+app.get("/api/guarantee", async (_req, res) => {
+  try {
+    res.json(await guaranteeRows());
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
@@ -2274,66 +2286,54 @@ app.get("/api/guarantee", async (req, res) => {
 
 const guaranteeRunning = new Set<string>();
 app.post("/api/guarantee/apply", async (req, res) => {
-  const month = guaranteeMonth(req.body?.month);
-  if (!month || !req.body?.month) {
-    res.status(400).json({ error: "Chýba mesiac vo formáte RRRR-MM." });
+  const id = typeof req.body?.id === "string" ? req.body.id : "";
+  if (!id) {
+    res.status(400).json({ error: "Chýba člen." });
     return;
   }
-  if (guaranteeRunning.has(month)) {
-    res.status(409).json({ error: "Garancia za tento mesiac sa práve pridáva." });
+  if (guaranteeRunning.has(id)) {
+    res.status(409).json({ error: "Garancia pre tohto člena sa práve pridáva." });
     return;
   }
-  guaranteeRunning.add(month);
+  guaranteeRunning.add(id);
   try {
-    const st = await guaranteeStatus(month);
-    const Label = st.label.charAt(0).toUpperCase() + st.label.slice(1);
-    if (st.applied) {
-      res.status(409).json({ error: `Garancia za ${st.label} už bola pridaná.`, appliedAt: st.appliedAt });
+    const rows = (await guaranteeRows()).filter((r) => r.id === id);
+    const wanted = typeof req.body?.periodStart === "string" ? req.body.periodStart : null;
+    const row = rows.find((r) => r.eligible && (!wanted || r.periodStart === wanted));
+    if (!row) {
+      const done = rows.find((r) => r.applied && (!wanted || r.periodStart === wanted));
+      if (done) res.status(409).json({ error: "Garancia za toto obdobie už bola pridaná." });
+      else res.status(400).json({ error: "Člen teraz nemá nárok na mesiac zadarmo." });
       return;
     }
-    if (st.summer) {
-      res.status(400).json({ error: "Jún a júl sú letná prestávka, garancia sa vtedy nepoužije." });
+    const sub = (await listSubscribers()).find((s) => s.id === id);
+    if (!sub) {
+      res.status(404).json({ error: "Člen sa nenašiel." });
       return;
     }
-    if (!st.finished) {
-      res.status(400).json({ error: `${Label} ešte neskončil.` });
-      return;
+    // Mesiac zadarmo nadväzuje na koniec členstva; ak už skončilo, začína dnes.
+    const now = new Date();
+    const oldEnd = new Date(sub.nextPaymentDue);
+    const freeStart = oldEnd.getTime() > now.getTime() ? oldEnd : now;
+    const freeUntil = addActiveMonths(freeStart, 1).toISOString();
+    const appliedAt = now.toISOString();
+    await updateSubscriber(id, {
+      ...newPeriodUpdates(sub, freeStart.toISOString(), freeUntil, true),
+      guarantees: [...(sub.guarantees ?? []), { periodStart: row.periodStart, periodEnd: row.periodEnd, profit: row.profit, appliedAt, freeUntil }],
+      note: `${sub.note ? sub.note + " · " : ""}Garancia (${fmtDaySk(dayKeySk(new Date(row.periodStart)))} – ${fmtDaySk(dayKeySk(new Date(row.periodEnd)))}, ${signed(row.profit, 1)} j.): mesiac zadarmo`,
+    });
+    let notified = false;
+    if (req.body?.notify === true && sub.telegramChatId) {
+      const text =
+        `🛡 <b>Garancia TipRadar</b>\n\nTvoje členstvo ${row.tier} skončilo v strate (${signed(row.profit, 1)} j.), preto máš podľa garancie mesiac zadarmo. ` +
+        `Platí do <b>${fmtDaySk(dayKeySk(new Date(freeUntil)))}</b>.`;
+      notified = await sendMemberMessage(String(sub.telegramChatId), text).catch(() => false);
     }
-    if (!st.inLoss) {
-      res.status(400).json({ error: `${Label} neskončil v strate, garancia sa nepoužije.` });
-      return;
-    }
-    const appliedAt = new Date().toISOString();
-    // Značku zapíšeme ešte pred predĺžením, aby sa garancia za mesiac nedala pridať dvakrát.
-    await setMeta(`guarantee:${month}`, JSON.stringify({ appliedAt, ids: st.eligible.map((e) => e.id) }));
-    const notify = req.body?.notify === true;
-    const monthName = MONTH_NAMES[Number(month.slice(5, 7)) - 1];
-    const MonthName = monthName.charAt(0).toUpperCase() + monthName.slice(1);
-    let extended = 0, notified = 0, failed = 0;
-    for (const e of st.eligible) {
-      const until = addActiveMonths(new Date(e.nextPaymentDue), 1).toISOString();
-      const subs = await listSubscribers();
-      const cur = subs.find((x) => x.id === e.id);
-      await updateSubscriber(e.id, {
-        nextPaymentDue: until,
-        note: `${cur?.note ? cur.note + " · " : ""}Garancia za ${st.label}: +1 mesiac zadarmo`,
-      });
-      extended++;
-      if (notify && e.telegramChatId) {
-        const text =
-          `🛡 <b>Garancia TipRadar</b>\n\n${MonthName} skončil v strate, preto máš podľa garancie mesiac zadarmo. ` +
-          `Členstvo ti teraz platí do <b>${fmtDaySk(dayKeySk(new Date(until)))}</b>.`;
-        const ok = await sendMemberMessage(String(e.telegramChatId), text).catch(() => false);
-        if (ok) notified++;
-        else failed++;
-        await new Promise((r) => setTimeout(r, 60)); // Telegram limit ~30 správ za sekundu
-      }
-    }
-    res.json({ ok: true, month, extended, notified, failed });
+    res.json({ ok: true, id, freeUntil, notified });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   } finally {
-    guaranteeRunning.delete(month);
+    guaranteeRunning.delete(id);
   }
 });
 

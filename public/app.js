@@ -2430,81 +2430,66 @@ function subscriberStatus(sub) {
   return { label: "Aktívny", cls: "w" };
 }
 
-// ---- Garancia: mesiac v strate = každý člen aktívny v posledný deň mesiaca dostane mesiac zadarmo ----
-let guaranteeMonth = null; // null = predošlý mesiac (určí server)
-async function renderGuarantee() {
+// ---- Garancia: ak obdobie členstva (Silver 1, Gold 3, Platinum 6 mesiacov) skončí v strate, člen dostane mesiac zadarmo ----
+let lastGuarantee = [];
+const fmtDay = (iso) => new Date(iso).toLocaleDateString("sk-SK");
+async function loadGuarantee() {
+  try {
+    lastGuarantee = await fetchJson("/api/guarantee");
+  } catch (err) {
+    lastGuarantee = [];
+    const el = document.getElementById("guaranteeCard");
+    if (el) {
+      el.className = "card gar-card";
+      el.innerHTML = `<p class="gar-line faint">Garanciu sa nepodarilo načítať: ${escapeHtml(err.message || String(err))}</p>`;
+      el.hidden = false;
+    }
+    return false;
+  }
+  renderGuarantee();
+  return true;
+}
+function renderGuarantee() {
   const el = document.getElementById("guaranteeCard");
   if (!el) return;
-  try {
-    const g = await fetchJson(`/api/guarantee${guaranteeMonth ? `?month=${encodeURIComponent(guaranteeMonth)}` : ""}`);
-    guaranteeMonth = g.month;
-    const name = g.label.split(" ")[0];
-    const Name = name.charAt(0).toUpperCase() + name.slice(1);
-    const profit = `${signed(g.profit, 1)}${NB}j.`;
-    const isPrev = g.month >= shiftMonth(todayIso().slice(0, 7), -1);
-    const nav = `<span class="gar-nav">
-        <button type="button" class="btn ghost xs" data-gm="-1" aria-label="Predošlý mesiac">‹</button>
-        <span class="gar-month">${escapeHtml(g.label)}</span>
-        <button type="button" class="btn ghost xs" data-gm="1" aria-label="Ďalší mesiac"${isPrev ? " disabled" : ""}>›</button>
-      </span>`;
-    let body;
-    let cls = "";
-    if (g.summer) {
-      body = `<p class="gar-line">${Name} je letná prestávka (členstvá sú pozastavené), garancia sa nepoužije.</p>`;
-    } else if (!g.finished) {
-      body = `<p class="gar-line">${Name} ešte neskončil (zatiaľ ${g.resolved ? profit : "bez vyhodnotených tipov"}).</p>`;
-    } else if (g.applied) {
-      cls = " ok";
-      const when = g.appliedAt ? new Date(g.appliedAt).toLocaleDateString("sk-SK") : "";
-      body = `<p class="gar-line">✓ Garancia za ${escapeHtml(name)} bola pridaná${when ? ` (${when})` : ""}. ${Name} skončil v strate (${profit}).</p>`;
-    } else if (g.inLoss) {
-      cls = " warn";
-      const n = g.eligible.length;
-      body = `<p class="gar-line"><b>${Name} skončil v strate (${profit}).</b> Garancia: ${n === 1 ? "1 člen dostane" : n >= 2 && n <= 4 ? `${n} členovia dostanú` : `${n} členov dostane`} mesiac zadarmo.</p>
-        ${n ? `<ul class="gar-names">${g.eligible.map((e) => `<li>${escapeHtml(e.name)} <span class="faint">· do ${new Date(e.nextPaymentDue).toLocaleDateString("sk-SK")}</span></li>`).join("")}</ul>` : ""}
-        <div class="gar-actions">
-          <label class="check"><input type="checkbox" data-gar-notify checked /> Poslať členom správu do Telegramu</label>
-          <button type="button" class="btn sm" data-gar-apply${n ? "" : " disabled"}>Pridať mesiac zadarmo</button>
-        </div>`;
-    } else {
-      body = `<p class="gar-line faint">${Name} skončil ${g.resolved ? `v zisku (${profit})` : "bez vyhodnotených tipov"}, garancia sa nepoužije.</p>`;
-    }
-    el.className = `card gar-card${cls}`;
-    el.innerHTML = `<div class="gar-head"><h4 class="ct">Garancia</h4>${nav}</div>${body}`;
-    el.hidden = false;
-  } catch (err) {
-    el.className = "card gar-card";
-    el.innerHTML = `<p class="gar-line faint">Garanciu sa nepodarilo načítať: ${escapeHtml(err.message || String(err))}</p>`;
-    el.hidden = false;
-  }
+  const due = lastGuarantee.filter((r) => r.eligible);
+  el.className = `card gar-card${due.length ? " warn" : ""}`;
+  el.innerHTML = due.length
+    ? `<div class="gar-head"><h4 class="ct">Garancia</h4><label class="check"><input type="checkbox" data-gar-notify checked /> Poslať správu do Telegramu</label></div>
+      <p class="gar-line">${due.length === 1 ? "1 členovi skončilo" : `${due.length} členom skončilo`} členstvo v strate – podľa garancie ${due.length === 1 ? "má" : "majú"} nárok na mesiac zadarmo.</p>
+      <div class="gar-rows">${due.map((r) => `
+        <div class="gar-row">
+          <span><b>${escapeHtml(r.name)}</b> <span class="tag gold">${escapeHtml(r.tier.toUpperCase())}</span><br>
+          <span class="muted small">${fmtDay(r.periodStart)} – ${fmtDay(r.periodEnd)} · <span class="l">${signed(r.profit, 1)}${NB}j.</span> (${plural(r.resolved, "tip", "tipy", "tipov")})</span></span>
+          <button type="button" class="btn sm" data-gar-id="${escapeHtml(r.id)}" data-gar-start="${escapeHtml(r.periodStart)}">Pridať mesiac zadarmo</button>
+        </div>`).join("")}</div>`
+    : `<div class="gar-head"><h4 class="ct">Garancia</h4></div><p class="gar-line faint">Teraz nikto nemá nárok na mesiac zadarmo.</p>`;
+  el.hidden = false;
+}
+/** Bežiace obdobie člena (výsledok garancie priebežne). */
+function currentGuaranteeRow(id) {
+  return lastGuarantee.find((r) => r.id === id && !r.ended);
 }
 document.getElementById("guaranteeCard")?.addEventListener("click", async (e) => {
-  const b = e.target.closest("button");
+  const b = e.target.closest("button[data-gar-id]");
   if (!b || b.disabled) return;
-  if (b.dataset.gm && guaranteeMonth) {
-    guaranteeMonth = shiftMonth(guaranteeMonth, Number(b.dataset.gm));
-    renderGuarantee();
-    return;
-  }
-  if (b.hasAttribute("data-gar-apply")) {
-    const card = document.getElementById("guaranteeCard");
-    const notify = !!card.querySelector("[data-gar-notify]")?.checked;
-    const label = card.querySelector(".gar-month")?.textContent || guaranteeMonth;
-    if (!window.confirm(`Pridať všetkým členom aktívnym na konci mesiaca (${label}) 1 mesiac zadarmo?${notify ? " Členovia s Telegramom dostanú správu." : ""} Dá sa to urobiť len raz.`)) return;
-    b.disabled = true;
-    try {
-      const r = await postJson("/api/guarantee/apply", { month: guaranteeMonth, notify });
-      showToast(`Predĺžené: ${r.extended}.` + (notify ? ` Správa odišla: ${r.notified}.` + (r.failed ? ` Neodišla: ${r.failed}.` : "") : ""));
-      openSubscribers();
-    } catch (err) {
-      showToast(`Garanciu sa nepodarilo pridať: ${err.message}`);
-      b.disabled = false;
-    }
+  const row = lastGuarantee.find((r) => r.id === b.dataset.garId && r.periodStart === b.dataset.garStart);
+  if (!row) return;
+  const notify = !!document.querySelector("#guaranteeCard [data-gar-notify]")?.checked;
+  if (!window.confirm(`Pridať ${row.name} mesiac zadarmo? Členstvo ${row.tier} (${fmtDay(row.periodStart)} – ${fmtDay(row.periodEnd)}) skončilo v strate ${signed(row.profit, 1)}${NB}j.${notify ? " Člen dostane správu do Telegramu." : ""}`)) return;
+  b.disabled = true;
+  try {
+    const r = await postJson("/api/guarantee/apply", { id: row.id, periodStart: row.periodStart, notify });
+    showToast(`Mesiac zadarmo pridaný, platí do ${fmtDay(r.freeUntil)}.` + (notify ? (r.notified ? " Správa odišla." : " Správa neodišla.") : ""));
+    openSubscribers();
+  } catch (err) {
+    showToast(`Garanciu sa nepodarilo pridať: ${err.message}`);
+    b.disabled = false;
   }
 });
 
 async function openSubscribers() {
-  void renderGuarantee();
+  const guarantee = loadGuarantee();
   void renderLeads();
   void renderPayments();
   loadSeats();
@@ -2513,6 +2498,7 @@ async function openSubscribers() {
   if (!lastSubs.length) subscribersListEl.innerHTML = skeletonHtml(2);
   try {
     const subs = await fetchJson("/api/subscribers");
+    await guarantee;
     renderSubscribersList(subs);
   } catch (err) {
     subscribersListEl.innerHTML = `<p class="empty">Členov sa nepodarilo načítať: ${escapeHtml(err.message)}</p>`;
@@ -2559,8 +2545,13 @@ function renderSubscribersList(subs) {
         startDate ? `${startDate} – ${endDate}` : `do ${endDate}`,
         s.note ? escapeHtml(s.note) : "",
       ].filter(Boolean).join(" · ");
+      const g = currentGuaranteeRow(s.id);
+      // Priebežný výsledok zaplateného obdobia (mesiac zadarmo sa do garancie nepočíta, ten má len štítok).
+      const period = !g || g.free ? ""
+        : !g.resolved ? `<span class="gar-run faint">Toto obdobie: zatiaľ bez vyhodnotených tipov</span>`
+        : `<span class="gar-run ${g.profit < 0 ? "l" : g.profit > 0 ? "g" : "faint"}">Toto obdobie: ${signed(g.profit, 1)}${NB}j. (${plural(g.resolved, "tip", "tipy", "tipov")})</span>`;
       return `<div class="mrow">
-        <span class="mt"><b>${escapeHtml(s.name)} <span class="tag gold">${escapeHtml((MEMBER_NAME[isVip ? "season" : length] || "ČLEN").toUpperCase())}</span>${s.founder ? ` <span class="tag">Prvý člen</span>` : ""}</b><span>${details}</span></span>
+        <span class="mt"><b>${escapeHtml(s.name)} <span class="tag gold">${escapeHtml((MEMBER_NAME[isVip ? "season" : length] || "ČLEN").toUpperCase())}</span>${s.founder ? ` <span class="tag">Prvý člen</span>` : ""}${g && g.free ? ` <span class="tag free">Mesiac zadarmo</span>` : ""}</b><span>${details}</span>${period}</span>
         <span class="res-b ${status.cls}">${status.label}</span>
         <span class="ic">
           ${s.telegramChatId ? `<button type="button" class="btn ghost xs" data-test-reminder-id="${escapeHtml(s.id)}" title="Poslať testovaciu pripomienku teraz">🔔 Test</button>` : ""}
@@ -2587,7 +2578,8 @@ subscribersListEl.addEventListener("click", async (e) => {
       await fetchJson(`/api/subscribers/${sub.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nextPaymentDue: end.toISOString() }),
+        // Nové obdobie: od konca súčasného (alebo od dnes); garancia sa vzťahuje na celé obdobie.
+        body: JSON.stringify({ nextPaymentDue: end.toISOString(), periodStart: daysUntil(sub.nextPaymentDue) >= 0 ? sub.nextPaymentDue : new Date().toISOString() }),
       });
       showToast("Členstvo predĺžené.");
       openSubscribers();
@@ -2646,6 +2638,7 @@ document.getElementById("addSubscriberBtn").addEventListener("click", async (e) 
     priceEur,
     length,
     startDate: new Date(`${start}T12:00:00`).toISOString(),
+    periodStart: new Date(`${start}T12:00:00`).toISOString(),
     nextPaymentDue: end.toISOString(),
     founder: document.getElementById("subFounder").checked,
     note: document.getElementById("subNote").value.trim() || undefined,

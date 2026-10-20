@@ -4,6 +4,7 @@ import { addSubscriber, listSubscribers, updateSubscriber } from "./subscribersS
 import { paymentsEnabled, savePayment, getPayment, confirmBankPayment, cancelPayment, paidUntil, PAY_TERMS, PUBLIC_URL, Payment, Term, tierName, termLabel, isTerm } from "./payments";
 import axios from "axios";
 import { sendAdminEmail } from "./mailer";
+import { newPeriodUpdates } from "./guarantee";
 import { SavedTip } from "./types";
 
 /** Slovenský tvar podľa počtu: plural(3, "tip", "tipy", "tipov") -> "3 tipy". */
@@ -391,8 +392,8 @@ const BENEFITS_BASE =
   `• <b>Večerné vyhodnotenie</b> a týždenný prehľad úspešnosti, zisku a ROI`;
 const BENEFIT_CHAT = `• <b>💬 Súkromný VIP chat</b> – na vaše otázky odpisujem priamo ja`;
 const BENEFIT_MENTOR = `• <b>🤝 Mentoring 1 na 1 počas celých 6 mesiacov</b> – osobné stretnutia alebo videohovory priamo so mnou`;
-/** Garancia: ak kalendárny mesiac skončí v strate, každý aktívny člen dostane 1 mesiac zadarmo. */
-const GUARANTEE_LINE = `🛡 <b>Garancia:</b> ak mesiac skončí v strate, ďalší mesiac máte zadarmo.`;
+/** Garancia: ak obdobie členstva skončí v strate, člen dostane 1 mesiac zadarmo. */
+const GUARANTEE_LINE = `🛡 <b>Garancia:</b> ak vaše členstvo (Silver, Gold alebo Platinum) skončí v strate, ďalší mesiac máte zadarmo.`;
 const PLAN_START = `🥈 <b>Silver · 1 mesiac</b> – 49 €\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
 const PLAN_SERIA = `🥇 <b>Gold · 3 mesiace</b> – 119 € (namiesto 147 €, ušetríte 28 €)\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
 const PLAN_SAMPION = `💎 <b>Platinum · 6 mesiacov</b> – 219 € (namiesto 294 €, ušetríte 75 €) · <b>len ${SEATS_SEASON} miest</b>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_MENTOR}`;
@@ -852,7 +853,7 @@ export async function redeemPayment(token: string, chatId: number | string, from
   const how = `Prevodom, VS ${p.vs}`;
   if (current) {
     await updateSubscriber(current.id, {
-      nextPaymentDue: until,
+      ...newPeriodUpdates(current, start.toISOString(), until), // nové zaplatené obdobie (garancia platí znova)
       length: term,
       priceEur: PAY_TERMS[term].price,
       ...(term === "season" ? { tier: "group" as const } : {}),
@@ -867,6 +868,7 @@ export async function redeemPayment(token: string, chatId: number | string, from
       tier: term === "season" ? "group" : "individual",
       priceEur: PAY_TERMS[term].price,
       nextPaymentDue: until,
+      periodStart: start.toISOString(),
       length: term,
       startDate: new Date().toISOString(),
       note: how,

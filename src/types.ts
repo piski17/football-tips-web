@@ -372,6 +372,13 @@ export interface PlayerGoalPrediction {
   inLineup?: boolean;
 }
 
+/** Jedno obdobie členstva (od – do). free = mesiac zadarmo podľa garancie. */
+export interface MemberPeriod {
+  start: string;
+  end: string;
+  free?: boolean;
+}
+
 /** Predplatiteľ služby (osobný alebo skupina/kanál na ďalší predaj) - používa len web appka. */
 export interface Subscriber {
   id: string;
@@ -383,6 +390,10 @@ export interface Subscriber {
   nextPaymentDue: string; // ISO dátum – do kedy má členstvo zaplatené
   length?: "m1" | "m3" | "season"; // dĺžka členstva (staršie záznamy ju nemajú = 1 mesiac)
   startDate?: string; // ISO dátum začiatku členstva
+  periodStart?: string; // ISO začiatok aktuálneho obdobia (zaplateného alebo mesiaca zadarmo), koniec = nextPaymentDue
+  freePeriod?: boolean; // aktuálne obdobie je mesiac zadarmo podľa garancie (garancia sa naň nevzťahuje)
+  pastPeriods?: MemberPeriod[]; // predošlé obdobia (posledných pár), aby sa dali vyhodnotiť aj po predĺžení
+  guarantees?: { periodStart: string; periodEnd: string; profit: number; appliedAt: string; freeUntil: string }[]; // použité garancie
   founder?: boolean; // „Prví členovia“ – zamknutá cena
   cardSent?: boolean; // VIP kovová karta odoslaná
   note?: string;
