@@ -25,8 +25,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <!-- písmo nadpisov -->
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&amp;display=swap" rel="stylesheet" />
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700&amp;display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet" />
 <style>
   /* ================================================================
      TipRadar – tipradar.eu · dizajn „Onyx & zlato“ (október 2026)
@@ -49,8 +49,8 @@
     --faint: #A39A8B;
     --win: #7FBF9A;
     --loss: #C0707C;
-    --sans: "Outfit", "Helvetica Neue", Arial, system-ui, sans-serif;
-    --display: "Sora", "Outfit", "Helvetica Neue", Arial, sans-serif;
+    --sans: "Manrope", "Helvetica Neue", Arial, system-ui, sans-serif;
+    --display: "Playfair Display", "Manrope", "Helvetica Neue", Arial, sans-serif;
     --serif: var(--sans);
     --r: 22px;
     --r-sm: 14px;
@@ -832,7 +832,7 @@
   .nav-social svg { width: 18px; height: 18px; }
 
   /* ===== písmo nadpisov: Cormorant Garamond (luxusné pätkové), zlaté slová plnou zlatou kurzívou ===== */
-  h1, h2, h3, .lux h3.lux-name { font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif; font-weight: 700; letter-spacing: 0; }
+  h1, h2, h3, .lux h3.lux-name { font-family: "Playfair Display", Georgia, "Times New Roman", serif; font-weight: 700; letter-spacing: 0; }
   h1 { line-height: 1.02; }
   h2 { line-height: 1.04; }
   h3 { font-weight: 700; font-size: 1.18em; }
@@ -847,9 +847,9 @@
   @media (max-width: 640px) { .hero h1 { font-size: clamp(44px, 12.5vw, 60px); } }
 
   /* ===== celá stránka v písme Cormorant Garamond (font-size-adjust drží rovnakú čitateľnú veľkosť) ===== */
-  :root { --sans: "Cormorant Garamond", Georgia, "Times New Roman", serif; --display: "Cormorant Garamond", Georgia, "Times New Roman", serif; --font-body: "Cormorant Garamond", Georgia, serif; --font-display: "Cormorant Garamond", Georgia, serif; }
+  :root { --sans: "Playfair Display", Georgia, "Times New Roman", serif; --display: "Playfair Display", Georgia, "Times New Roman", serif; --font-body: "Playfair Display", Georgia, serif; --font-display: "Playfair Display", Georgia, serif; }
   html { font-size-adjust: .5; }
-  body { font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif; font-variant-numeric: lining-nums; }
+  body { font-family: "Playfair Display", Georgia, "Times New Roman", serif; font-variant-numeric: lining-nums; }
   button, input, select, textarea { font-family: inherit; font-variant-numeric: lining-nums; }
   /* čísla v rovnakej výške aj tam, kde skratka font: nastavenie prepíše */
   *, *::before, *::after { font-variant-numeric: lining-nums !important; }
@@ -871,7 +871,7 @@
   }
 
   /* ===== čitateľnosť: dlhšie texty, tlačidlá a formuláre v písme Outfit; nadpisy, menu, štítky a čísla ostávajú v Cormorant Garamond ===== */
-  body, p, li, .lead, .intro, .btn, input, select, textarea, label, .small, .note, td, th, dd, dt, summary, details { font-family: "Outfit", "Helvetica Neue", Arial, sans-serif !important; font-size-adjust: none !important; }
+  body, p, li, .lead, .intro, .btn, input, select, textarea, label, .small, .note, td, th, dd, dt, summary, details { font-family: "Manrope", "Helvetica Neue", Arial, sans-serif !important; font-size-adjust: none !important; }
   /* pätička bez hornej časti (logo, odkazy): právny text hneď na začiatku */
   .foot-legal { margin-top: 0 !important; padding-top: 0 !important; border-top: 0 !important; }
 /* pätička bez priesvitného nápisu: kratšia */
@@ -890,7 +890,7 @@ body { font-size: 16px; }
 /* NOVÝ DIZAJN (19. 10. 2026) – rovnaký vzhľad ako úvodná stránka */
 :root { --bg: #120E0A; --bg-2: #1A140F; --line: rgba(217,192,138,.14); --line-2: rgba(217,192,138,.3); --text: #F4EEE2; --muted: #BDB3A2; --faint: #8C8374;
   --gold-grad: linear-gradient(135deg, #FBF1D8 0%, #E6CF9C 40%, #C9A96A 75%, #A8894F 100%); --panel: linear-gradient(180deg, rgba(255,245,225,.045), rgba(255,245,225,.015));
-  --sans: "Outfit", "Helvetica Neue", Arial, system-ui, sans-serif; --display: "Cormorant Garamond", Georgia, serif; }
+  --sans: "Manrope", "Helvetica Neue", Arial, system-ui, sans-serif; --display: "Playfair Display", Georgia, serif; }
 body { background: var(--bg); font-family: var(--sans); }
 p, li { font-weight: 300; }
 h1, h2, h3, .page-head h1, .skola-text h2 { font-family: var(--display); font-weight: 600; text-transform: none; letter-spacing: -0.01em; font-variant-numeric: lining-nums !important; }

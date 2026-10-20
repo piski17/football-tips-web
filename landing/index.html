@@ -36,11 +36,11 @@
 <link rel="preload" as="image" href="/obrazky/zlate-svetlo.jpg" fetchpriority="high" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" />
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
-<noscript><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" /></noscript>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700&display=swap" />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet" /></noscript>
 <!-- písmo nadpisov -->
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&amp;display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700&amp;display=swap" rel="stylesheet" />
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Mrs+Saint+Delafield&amp;text=Michael&amp;display=swap" />
 <link href="https://fonts.googleapis.com/css2?family=Mrs+Saint+Delafield&amp;text=Michael&amp;display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
 <noscript><link href="https://fonts.googleapis.com/css2?family=Mrs+Saint+Delafield&amp;text=Michael&amp;display=swap" rel="stylesheet" /></noscript>
@@ -66,8 +66,8 @@
     --faint: #A39A8B;
     --win: #7FBF9A;
     --loss: #C0707C;
-    --sans: "Outfit", "Helvetica Neue", Arial, system-ui, sans-serif;
-    --display: "Sora", "Outfit", "Helvetica Neue", Arial, sans-serif;
+    --sans: "Manrope", "Helvetica Neue", Arial, system-ui, sans-serif;
+    --display: "Playfair Display", "Manrope", "Helvetica Neue", Arial, sans-serif;
     --serif: var(--sans);
     --r: 22px;
     --r-sm: 14px;
@@ -742,7 +742,7 @@
   .nav-social svg { width: 18px; height: 18px; }
 
   /* ===== písmo nadpisov: Cormorant Garamond (luxusné pätkové), zlaté slová plnou zlatou kurzívou ===== */
-  h1, h2, h3, .lux h3.lux-name { font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif; font-weight: 700; letter-spacing: 0; }
+  h1, h2, h3, .lux h3.lux-name { font-family: "Playfair Display", Georgia, "Times New Roman", serif; font-weight: 700; letter-spacing: 0; }
   h1 { line-height: 1.02; }
   h2 { line-height: 1.04; }
   h3 { font-weight: 700; font-size: 1.18em; }
@@ -757,9 +757,9 @@
   @media (max-width: 640px) { .hero h1 { font-size: clamp(44px, 12.5vw, 60px); } }
 
   /* ===== celá stránka v písme Cormorant Garamond (font-size-adjust drží rovnakú čitateľnú veľkosť) ===== */
-  :root { --sans: "Cormorant Garamond", Georgia, "Times New Roman", serif; --display: "Cormorant Garamond", Georgia, "Times New Roman", serif; --font-body: "Cormorant Garamond", Georgia, serif; --font-display: "Cormorant Garamond", Georgia, serif; }
+  :root { --sans: "Playfair Display", Georgia, "Times New Roman", serif; --display: "Playfair Display", Georgia, "Times New Roman", serif; --font-body: "Playfair Display", Georgia, serif; --font-display: "Playfair Display", Georgia, serif; }
   html { font-size-adjust: .5; }
-  body { font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif; font-variant-numeric: lining-nums; }
+  body { font-family: "Playfair Display", Georgia, "Times New Roman", serif; font-variant-numeric: lining-nums; }
   button, input, select, textarea { font-family: inherit; font-variant-numeric: lining-nums; }
   /* čísla v rovnakej výške aj tam, kde skratka font: nastavenie prepíše */
   *, *::before, *::after { font-variant-numeric: lining-nums !important; }
@@ -781,7 +781,7 @@
   }
 
   /* ===== čitateľnosť: dlhšie texty, tlačidlá a formuláre v písme Outfit; nadpisy, menu, štítky a čísla ostávajú v Cormorant Garamond ===== */
-  body, p, li, .lead, .intro, .btn, input, select, textarea, label, .small, .note, td, th, dd, dt, summary, details { font-family: "Outfit", "Helvetica Neue", Arial, sans-serif !important; font-size-adjust: none !important; }
+  body, p, li, .lead, .intro, .btn, input, select, textarea, label, .small, .note, td, th, dd, dt, summary, details { font-family: "Manrope", "Helvetica Neue", Arial, sans-serif !important; font-size-adjust: none !important; }
   /* pätička bez hornej časti (logo, odkazy): právny text hneď na začiatku */
   .foot-legal { margin-top: 0 !important; padding-top: 0 !important; border-top: 0 !important; }
 /* pätička bez priesvitného nápisu: kratšia */
@@ -800,7 +800,7 @@ h1, h2, h3 { text-transform: uppercase; letter-spacing: .02em; }
 .payback-head p { margin: 0 auto; max-width: 520px; color: var(--muted); }
 .payback-stake { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 26px; color: var(--muted); font-weight: 600; }
 .payback-input { display: inline-flex; align-items: center; gap: 8px; padding: 0 16px; height: 52px; border-radius: 999px; border: 1px solid var(--line-2); background: rgba(217,192,138,.06); }
-.payback-input input { width: 90px; border: 0; background: none; color: var(--text); font: 700 20px/1 "Outfit", Arial, sans-serif !important; font-variant-numeric: lining-nums tabular-nums !important; text-align: right; outline: none; }
+.payback-input input { width: 90px; border: 0; background: none; color: var(--text); font: 700 20px/1 "Manrope", Arial, sans-serif !important; font-variant-numeric: lining-nums tabular-nums !important; text-align: right; outline: none; }
 .payback-input b { color: var(--gold); font-weight: 700; }
 .payback-chips { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
 .payback-pct { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 14px; color: var(--muted); font-weight: 600; }
@@ -812,7 +812,7 @@ h1, h2, h3 { text-transform: uppercase; letter-spacing: .02em; }
 .payback-row.on { background: rgba(217,192,138,.06); border-radius: 14px; padding-inline: 14px; }
 .payback-row .t { font-weight: 700; color: var(--text); }
 .payback-row .t small { margin-left: 8px; color: var(--faint); font-weight: 600; }
-.payback-row .u { font: 700 30px/1 "Cormorant Garamond", Georgia, serif; color: var(--gold); text-align: right; }
+.payback-row .u { font: 700 30px/1 "Playfair Display", Georgia, serif; color: var(--gold); text-align: right; }
 .payback-row .m { grid-column: 1 / -1; color: var(--muted); font-size: 15px; }
 .payback-note { margin: 16px 0 0; color: var(--faint); font-size: 14px; text-align: center; }
 @media (max-width: 640px) { .payback { padding: 26px 18px 22px; } .payback-stake, .payback-pct { flex-direction: column; align-items: stretch; } .payback-stake-out { text-align: center; } .payback-input { justify-content: flex-end; } .payback-chips { justify-content: center; } }
@@ -866,7 +866,7 @@ h2 { font-size: clamp(32px, 3.9vw, 54px) !important; }
 .ns-ring svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); filter: drop-shadow(0 0 6px rgba(217,192,138,.35)); }
 .ns-track { fill: rgba(20,16,12,.25); stroke: rgba(243,230,196,.14); stroke-width: 5; }
 .ns-arc { fill: none; stroke-width: 5; stroke-linecap: round; }
-.ns-ring b { position: relative; margin-top: -8px; font: 700 25px/1 "Cormorant Garamond", Georgia, serif; font-variant-numeric: lining-nums; color: var(--gold-hi); }
+.ns-ring b { position: relative; margin-top: -8px; font: 700 25px/1 "Playfair Display", Georgia, serif; font-variant-numeric: lining-nums; color: var(--gold-hi); }
 .ns-ring b i { font-style: normal; font-size: 15px; color: var(--gold); }
 .ns-ring small { position: absolute; bottom: 24px; font-size: 7px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: rgba(243,230,196,.55); }
 .ns-body { display: flex; flex-direction: column; gap: 8px; position: relative; }
@@ -875,7 +875,7 @@ h2 { font-size: clamp(32px, 3.9vw, 54px) !important; }
 @keyframes nsPulse { 0% { box-shadow: 0 0 0 0 rgba(127,199,154,.55); } 70% { box-shadow: 0 0 0 7px rgba(127,199,154,0); } 100% { box-shadow: 0 0 0 0 rgba(127,199,154,0); } }
 .ns-grid { display: grid; grid-template-columns: auto auto; gap: 7px 22px; }
 .ns-grid > span { display: flex; flex-direction: column; white-space: nowrap; }
-.ns-grid b { font: 700 20px/1 "Cormorant Garamond", Georgia, serif; font-variant-numeric: lining-nums; color: var(--gold-hi); }
+.ns-grid b { font: 700 20px/1 "Playfair Display", Georgia, serif; font-variant-numeric: lining-nums; color: var(--gold-hi); }
 .ns-grid b.up { color: #8FD3A8; } .ns-grid b.down { color: #D88A94; }
 .ns-grid b .w { color: #8FD3A8; } .ns-grid b .l { color: #D88A94; } .ns-grid b .sl { margin: 0 4px; color: rgba(243,230,196,.35); }
 .ns-grid small { margin-top: 3px; font-size: 9px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
@@ -895,12 +895,12 @@ h2 { font-size: clamp(32px, 3.9vw, 54px) !important; }
 /* o niečo väčšia, hrubšie písmo (18. 10. 2026) */
 .nstat { gap: 12px; padding: 9px 15px 9px 10px; border-radius: 16px; }
 .ns-ring { width: 68px; height: 68px; }
-.ns-ring b { margin-top: -7px; font: 700 18px/1 "Outfit", "Helvetica Neue", Arial, sans-serif; letter-spacing: -0.02em; }
+.ns-ring b { margin-top: -7px; font: 700 18px/1 "Manrope", "Helvetica Neue", Arial, sans-serif; letter-spacing: -0.02em; }
 .ns-ring b i { font-size: 11px; font-weight: 700; }
 .ns-ring small { bottom: 17px; font-size: 6px; font-weight: 700; }
 .ns-live { font-size: 8.5px; font-weight: 700; }
 .ns-grid { gap: 5px 16px; }
-.ns-grid b { font: 700 16px/1 "Outfit", "Helvetica Neue", Arial, sans-serif; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.ns-grid b { font: 700 16px/1 "Manrope", "Helvetica Neue", Arial, sans-serif; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
 .ns-grid small { font-size: 8px; font-weight: 700; }
 /* zarovnanie: rovnaké stĺpce, číslo a popis presne pod sebou, nadpis cez celú šírku */
 .ns-body { align-items: stretch; }
@@ -1002,8 +1002,8 @@ h2 { font-size: clamp(28px, 3.1vw, 44px) !important; }
   --text: #F4EEE2; --muted: #BDB3A2; --faint: #8C8374; --win: #86C7A1; --loss: #D07C88;
   --gold-grad: linear-gradient(135deg, #FBF1D8 0%, #E6CF9C 40%, #C9A96A 75%, #A8894F 100%);
   --panel: linear-gradient(180deg, rgba(255,245,225,.045), rgba(255,245,225,.015));
-  --sans: "Outfit", "Helvetica Neue", Arial, system-ui, sans-serif;
-  --display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --sans: "Manrope", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --display: "Playfair Display", Georgia, "Times New Roman", serif;
   --r: 26px; --r-sm: 16px;
 }
 html { font-size-adjust: none; }
