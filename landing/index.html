@@ -1535,6 +1535,56 @@ html[data-page="o-mne"] #kto .om-letter > .eyebrow { display: inline-flex !impor
   .om2-list h3 { font-size: 22px; } .om2-n { font-size: 44px; }
 }
 html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !important; }
+
+/* O mne v2: menšie veľkosti */
+.om2-hero { padding: 120px 0 70px; }
+.om2-hero .hx-radar { top: 240px; width: min(900px, 120vw); }
+.om2-mono { width: 140px; height: 140px; margin-bottom: 24px; }
+.om2-mp { font-size: 64px; }
+.om2-hero h1 { margin-top: 20px; max-width: 22ch; font-size: clamp(32px, 3.6vw, 46px); line-height: 1.15; }
+.om2-intro { max-width: 52ch; margin-top: 18px; font-size: 16.5px; }
+.om2-actions { margin-top: 28px; }
+#kto.om2-story { padding: 80px 0 !important; }
+.om2-paper { max-width: 680px; padding: 48px 54px 44px; }
+.om2-paper::after { left: 54px; right: 54px; }
+.om2-paper h2 { font-size: clamp(28px, 3vw, 38px); }
+.om2-paper p { font-size: 15.5px; line-height: 1.75; }
+.om2-paper .om2-lead { font-size: 17px; }
+.om2-paper .om2-lead::first-letter { font-size: 56px; margin: 6px 10px 0 0; }
+.om2-quote { margin: 26px 0 24px; padding-left: 22px; font-size: clamp(20px, 2vw, 24px); }
+.om2-sign { margin-top: 30px; }
+.om2-sign .sig { font-size: clamp(60px, 6vw, 76px) !important; }
+.om2-swash { width: 170px; height: 22px; margin: -14px 0 10px 8px; }
+.om2-values { padding-top: 40px !important; padding-bottom: 90px !important; }
+.om2-values .sec-head h2 { font-size: clamp(28px, 3.2vw, 40px); }
+.om2-list { max-width: 900px; }
+.om2-list li { padding: 30px 26px 8px; }
+.om2-list li::before { left: 26px; width: 44px; }
+.om2-n { font-size: 38px; }
+.om2-list h3 { margin-top: 12px; font-size: 20px; }
+.om2-list p { font-size: 14.5px; }
+@media (max-width: 760px) {
+  .om2-hero { padding: 96px 0 50px; } .om2-hero .hx-radar { top: 190px; width: 640px; }
+  .om2-mono { width: 108px; height: 108px; margin-bottom: 18px; } .om2-mp { font-size: 50px; }
+  .om2-hero h1 { font-size: 30px; } .om2-intro { font-size: 15.5px; }
+  #kto.om2-story { padding: 30px 0 56px !important; }
+  .om2-paper { padding: 32px 20px 28px; } .om2-paper::after { left: 20px; right: 20px; }
+  .om2-paper p { font-size: 15px; } .om2-paper .om2-lead { font-size: 16px; } .om2-paper .om2-lead::first-letter { font-size: 48px; }
+  .om2-quote { font-size: 19px; padding-left: 14px; }
+  .om2-sign .sig { font-size: 60px !important; }
+  .om2-values .sec-head h2 { font-size: 28px; }
+  .om2-list li { padding: 24px 4px 20px; } .om2-n { font-size: 32px; } .om2-list h3 { font-size: 19px; }
+}
+.om2-sign .sig { line-height: 1.6 !important; padding: .12em .35em 0 .1em !important; margin-top: -.3em; }
+.om2-seal { width: 200px; height: 200px; filter: drop-shadow(0 18px 40px rgba(0,0,0,.55)) drop-shadow(0 0 38px rgba(217,192,138,.18)); }
+.om2-seal-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.om2-seal-txt { transform-origin: 100px 100px; animation: spin 40s linear infinite; }
+.om2-seal .om2-mp { font-size: 62px; transform: translate(-5px, 3px); }
+@media (prefers-reduced-motion: reduce) { .om2-seal-txt { animation: none; } }
+@media (max-width: 760px) { .om2-seal { width: 150px; height: 150px; } .om2-seal .om2-mp { font-size: 46px; } }
+#kto .om2-paper h2 { font-size: clamp(28px, 2.8vw, 38px) !important; }
+.om2-values .sec-head h2 { font-size: clamp(28px, 2.8vw, 40px) !important; }
+@media (max-width: 760px) { #kto .om2-paper h2, .om2-values .sec-head h2 { font-size: 27px !important; } }
 </style>
 
 </head>
@@ -1940,10 +1990,25 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
   <section class="om2-hero" data-pages="o-mne">
     <div class="hx-bg" aria-hidden="true"><div class="hx-radar"><i></i><i></i><i></i><i></i><i></i><span class="sw"></span><b style="--x:70%;--y:28%;--d:1.4s"></b><b style="--x:24%;--y:64%;--d:5s"></b></div></div>
     <div class="wrap">
-      <div class="om2-mono" aria-hidden="true"><span class="om2-ring"></span><span class="om2-ring r2"></span><span class="om2-mp">MP</span></div>
+      <div class="om2-mono om2-seal" aria-hidden="true">
+        <svg class="om2-seal-svg" viewBox="0 0 200 200">
+          <defs>
+            <linearGradient id="omG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F8EDD3"/><stop offset=".45" stop-color="#D9C08A"/><stop offset="1" stop-color="#8E6B2E"/></linearGradient>
+            <radialGradient id="omD" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#3A2E22"/><stop offset="1" stop-color="#15100B"/></radialGradient>
+            <path id="omC" d="M100,100 m-79,0 a79,79 0 1,1 158,0 a79,79 0 1,1 -158,0"/>
+          </defs>
+          <circle cx="100" cy="100" r="97" fill="none" stroke="url(#omG)" stroke-width="1.4"/>
+          <circle cx="100" cy="100" r="91" fill="none" stroke="rgba(217,192,138,.35)" stroke-width=".8" stroke-dasharray="1.5 3.2"/>
+          <g class="om2-seal-txt"><text font-size="10" fill="url(#omG)" font-family="Manrope, sans-serif" font-weight="600"><textPath href="#omC" startOffset="0" textLength="488" lengthAdjust="spacing">TIPRADAR ✦ DÁTA NAMIESTO POCITOV ✦ MICHAL ✦ ZAKLADATEĽ ✦</textPath></text></g>
+          <circle cx="100" cy="100" r="66" fill="url(#omD)" stroke="url(#omG)" stroke-width="1.6"/>
+          <circle cx="100" cy="100" r="61" fill="none" stroke="rgba(217,192,138,.28)" stroke-width=".7"/>
+          <path d="M100 30.5 l3 3.5 -3 3.5 -3 -3.5z M100 162.5 l3 3.5 -3 3.5 -3 -3.5z" fill="url(#omG)"/>
+        </svg>
+        <span class="om2-mp">MP</span>
+      </div>
       <span class="hx-pill"><i></i>O mne</span>
-      <h1>Ahoj, som <em>Michal</em></h1>
-      <p class="om2-intro">Za TipRadarom nestojí anonymná firma, ale človek, ktorý každý tip zverejní aj s výsledkom. Výhry aj prehry.</p>
+      <h1>Som Michal, <em>zakladateľ TipRadaru</em></h1>
+      <p class="om2-intro">TipRadar som vytvoril, aby stávky stáli na dátach, nie na pocitoch. Každý tip zverejním vopred a po zápase sa sám vyhodnotí, nech vyjde alebo nie.</p>
       <div class="om2-actions">
         <a class="btn" href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener">Napísať na Telegram</a>
         <a class="btn btn-ghost" href="mailto:info@tipradar.eu">info@tipradar.eu</a>
