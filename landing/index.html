@@ -1323,6 +1323,11 @@ html[data-page="home"] #otazky .faq details[id="garancia"] { scroll-margin-top: 
   .dock-pill { left: 8px; top: 0; width: 78px !important; height: 66px; }
   .dock a:hover svg { transform: translateX(3px) scale(1.14); }
 }
+
+
+/* ===== bez bočného posuvníka: farebné pásy siahajú cez celú šírku; polohu ukazuje zlatá čiara hore ===== */
+html { scrollbar-width: none; }
+html::-webkit-scrollbar { display: none; width: 0; height: 0; }
 </style>
 
 </head>
