@@ -1280,6 +1280,7 @@ html[data-page]:not([data-page="home"]) .nav { position: absolute; left: 0; righ
 .hm-tier .tl { margin-top: 8px; font-size: 14px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
 .hm-tier b { margin-top: 26px; font: 600 56px/1 var(--display); letter-spacing: -0.04em; font-variant-numeric: lining-nums; }
 .hm-tier .pm { margin-top: 10px; font-size: 14.5px; color: var(--muted); }
+.hm-tier .pm s { opacity: .75; }
 .hm-tier .go { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--line); font-weight: 600; color: var(--gold-hi); }
 .hm-tier .go i { font-style: normal; display: inline-block; transition: transform .3s; }
 .hm-tier:hover .go i { transform: translateX(5px); }
@@ -1506,9 +1507,9 @@ html[data-page="home"] #otazky .faq details[id="garancia"] { scroll-margin-top: 
         <div class="idx" aria-hidden="true">03</div>
       </div>
       <div class="hm-tiers">
-        <a class="card hm-tier silver" href="/clenstvo#silver"><span class="tn">Silver</span><span class="tl">1 mesiac</span><b class="num">49&nbsp;€</b><span class="pm">49&nbsp;€ za mesiac</span><span class="go">Vybrať Silver <i aria-hidden="true">→</i></span></a>
-        <a class="card hm-tier gold" href="/clenstvo#gold"><span class="tn">Gold</span><span class="tl">3 mesiace</span><b class="num">119&nbsp;€</b><span class="pm">39,67&nbsp;€ za mesiac · ušetríte 28&nbsp;€</span><span class="go">Vybrať Gold <i aria-hidden="true">→</i></span></a>
-        <a class="card hm-tier plat" href="/clenstvo#platinum"><span class="flag">Najnižšia cena za mesiac</span><span class="tn">Platinum</span><span class="tl">6 mesiacov</span><b class="num">219&nbsp;€</b><span class="pm">36,50&nbsp;€ za mesiac · ušetríte 75&nbsp;€</span><span class="go">Vybrať Platinum <i aria-hidden="true">→</i></span></a>
+        <a class="card hm-tier silver" href="/clenstvo#silver"><span class="tn">Silver</span><span class="tl">1 mesiac</span><b class="num">49&nbsp;€</b><span class="pm">49&nbsp;€ za mesiac · bez viazanosti</span><span class="go">Vybrať Silver <i aria-hidden="true">→</i></span></a>
+        <a class="card hm-tier gold" href="/clenstvo#gold"><span class="tn">Gold</span><span class="tl">3 mesiace</span><b class="num">119&nbsp;€</b><span class="pm">namiesto <s>147&nbsp;€</s> (3 × 49&nbsp;€) · ušetríte 28&nbsp;€</span><span class="go">Vybrať Gold <i aria-hidden="true">→</i></span></a>
+        <a class="card hm-tier plat" href="/clenstvo#platinum"><span class="flag">Ušetríte najviac</span><span class="tn">Platinum</span><span class="tl">6 mesiacov</span><b class="num">219&nbsp;€</b><span class="pm">namiesto <s>294&nbsp;€</s> (6 × 49&nbsp;€) · ušetríte 75&nbsp;€</span><span class="go">Vybrať Platinum <i aria-hidden="true">→</i></span></a>
       </div>
     </div>
   </section>
@@ -1684,7 +1685,7 @@ html[data-page="home"] #otazky .faq details[id="garancia"] { scroll-margin-top: 
       </div>
           <div class="lux-term" data-term-name>členstvo na 3 mesiace</div>
           <div class="lux-price"><b class="num" data-price>119 €</b></div>
-          <p class="per-month" data-permonth>39,67 € za mesiac · ušetríte 28 €</p>
+          <p class="per-month" data-permonth>namiesto <s>147 €</s> (3 × 49 €) · ušetríte 28 €</p>
           <span class="limit-tag" data-limit-tag hidden>len 50 miest</span>
           <p class="last7" id="last7" hidden></p>
           <div class="plan-foot">
@@ -2235,8 +2236,8 @@ html[data-page="home"] #otazky .faq details[id="garancia"] { scroll-margin-top: 
   (function () {
     const TERMS = {
       m1: { tier: "Silver", cls: "silver-text", price: 49, unit: "mesačne", name: "členstvo na 1 mesiac", note: "49 € za mesiac · bez viazanosti", start: "start", order: 1 },
-      m3: { tier: "Gold", cls: "gold-text", price: 119, unit: "za 3 mesiace", name: "členstvo na 3 mesiace", note: "39,67 € za mesiac · ušetríte 28 €", start: "seria", order: 2 },
-      season: { tier: "Platinum", cls: "plat-text", price: 219, unit: "za 6 mesiacov", name: "členstvo na 6 mesiacov", note: "36,50 € za mesiac · ušetríte 75 €", start: "sampion", order: 3 },
+      m3: { tier: "Gold", cls: "gold-text", price: 119, unit: "za 3 mesiace", name: "členstvo na 3 mesiace", note: "namiesto <s>147 €</s> (3 × 49 €) · ušetríte 28 €", start: "seria", order: 2 },
+      season: { tier: "Platinum", cls: "plat-text", price: 219, unit: "za 6 mesiacov", name: "členstvo na 6 mesiacov", note: "namiesto <s>294 €</s> (6 × 49 €) · ušetríte 75 €", start: "sampion", order: 3 },
     };
     const $$ = (s) => document.querySelectorAll(s);
     function apply(term) {
