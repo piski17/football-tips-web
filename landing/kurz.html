@@ -946,6 +946,18 @@ body { padding-bottom: 104px; }
 html.menu-open .dock-more .dots { display: none; }
 html.menu-open .dock-more .x { display: block; stroke: currentColor; fill: none; stroke-width: 1.8; }
 @media (max-width: 760px) { .overlay { padding-top: calc(96px + env(safe-area-inset-top, 0px)); } }
+
+/* ===== menu ako zvislý panel vľavo (počítač); na mobile ostáva dole ===== */
+@media (min-width: 961px) {
+  body { padding-bottom: 0; }
+  .wrap { width: min(1200px, 100% - 260px); }
+  .dock { left: 22px; top: 50%; bottom: auto; flex-direction: column; gap: 4px; padding: 8px; border-radius: 28px; transform: translate(calc(-100% - 40px), -50%); }
+  .dock.ready { transform: translate(0, -50%); }
+  .dock::before { left: -1px; right: auto; top: 18%; bottom: 18%; width: 1px; height: auto; background: linear-gradient(180deg, transparent, rgba(248,237,211,.75), transparent); }
+  .dock a, .dock button { width: 78px; min-width: 0; height: 66px; padding: 0; }
+  .dock-pill { left: 8px; top: 0; width: 78px !important; height: 66px; }
+  .dock a:hover svg { transform: translateX(3px) scale(1.14); }
+}
 </style>
 </head>
 <body>
@@ -1114,7 +1126,9 @@ html.menu-open .dock-more .x { display: block; stroke: currentColor; fill: none;
     if (!pill) return;
     var a = dock.querySelector("a.active:not(.dock-tg)");
     if (!a || !a.offsetWidth) { pill.style.opacity = "0"; return; }
-    pill.style.opacity = "1"; pill.style.width = a.offsetWidth + "px"; pill.style.transform = "translateX(" + a.offsetLeft + "px)";
+    pill.style.opacity = "1";
+    if (getComputedStyle(dock).flexDirection === "column") { pill.style.width = ""; pill.style.height = a.offsetHeight + "px"; pill.style.transform = "translateY(" + a.offsetTop + "px)"; }
+    else { pill.style.height = ""; pill.style.width = a.offsetWidth + "px"; pill.style.transform = "translateX(" + a.offsetLeft + "px)"; }
   };
   if (dock) {
     new MutationObserver(placePill).observe(dock, { subtree: true, attributes: true, attributeFilter: ["class"] });
