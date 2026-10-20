@@ -1253,6 +1253,8 @@ html[data-page]:not([data-page="home"]) .nav { position: absolute; left: 0; righ
 @media (max-width: 760px) { .page-head { padding-top: calc(40px + 68px); } }
 
 /* ===== úvod: nové sekcie ===== */
+.hm-res .hx-live { margin-top: 0; }
+.hm-res-more { text-align: center; }
 .hm-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
 .hm-card { padding: 30px 26px 28px; }
 .hm-card .ic { display: grid; place-items: center; width: 54px; height: 54px; margin-bottom: 22px; border-radius: 16px; border: 1px solid var(--line-2); background: rgba(217,192,138,.07); color: var(--gold-hi); }
@@ -1421,13 +1423,6 @@ html[data-page="home"] #otazky .faq details[id="garancia"] { scroll-margin-top: 
         <a class="btn" href="/clenstvo">Vybrať členstvo <span class="arr" aria-hidden="true">→</span></a>
         <a class="btn btn-ghost" href="/vysledky">Pozrieť výsledky</a>
       </div>
-      <a class="hx-live" id="hxLive" href="/vysledky" aria-label="Výsledky TipRadaru" hidden>
-        <div><small>Zisk od začiatku</small><b class="num" id="hxProfit">–</b><span>pri rovnakom vklade na tip</span></div>
-        <div><small>Vyšlo</small><b class="num" id="hxRate">–</b><span id="hxRateSub"></span></div>
-        <div><small>ROI</small><b class="num" id="hxRoi">–</b><span>na každý vsadený tip</span></div>
-        <div><small>Tento mesiac</small><b class="num" id="hxMonth">–</b><span id="hxMonthSub"></span></div>
-        <div class="hx-spark" id="hxSpark"></div>
-      </a>
     </div>
   </section>
 
@@ -1483,14 +1478,19 @@ html[data-page="home"] #otazky .faq details[id="garancia"] { scroll-margin-top: 
     </div>
   </section>
 
-  <section class="sec hm-mon" id="mesacne" data-pages="home" hidden>
+  <section class="sec hm-res" id="vysledky-uvod" data-pages="home" hidden>
     <div class="wrap">
       <div class="sec-head center">
-        <div><div class="eyebrow">Mesiac po mesiaci</div><h2>Ako sa <em>darilo</em></h2><p class="lead">Výsledky za posledné mesiace pri rovnakom vklade na každý tip. Jednotka je suma, ktorú si zvolíte, napríklad 10&nbsp;€.</p></div>
-        <div class="idx" aria-hidden="true">03</div>
+        <div><div class="eyebrow">Overené výsledky</div><h2>Čísla od <em>začiatku</em></h2><p class="lead">Všetky tipy pri rovnakom vklade na každý tip. Každý tip sa vyhodnotí podľa skutočného výsledku zápasu, výhry aj prehry.</p></div>
       </div>
-      <div class="hm-months" id="hmMonths"></div>
-      <a class="more" href="/vysledky">Všetky výsledky a história tipov <span aria-hidden="true">→</span></a>
+        <a class="hx-live" id="hxLive" href="/vysledky" aria-label="Výsledky TipRadaru" hidden>
+          <div><small>Zisk od začiatku</small><b class="num" id="hxProfit">–</b><span>pri rovnakom vklade na tip</span></div>
+          <div><small>Vyšlo</small><b class="num" id="hxRate">–</b><span id="hxRateSub"></span></div>
+          <div><small>ROI</small><b class="num" id="hxRoi">–</b><span>na každý vsadený tip</span></div>
+          <div><small>Tento mesiac</small><b class="num" id="hxMonth">–</b><span id="hxMonthSub"></span></div>
+          <div class="hx-spark" id="hxSpark"></div>
+        </a>
+      <div class="hm-res-more"><a class="more" href="/vysledky">Všetky výsledky a história tipov <span aria-hidden="true">→</span></a></div>
     </div>
   </section>
 
@@ -1498,7 +1498,7 @@ html[data-page="home"] #otazky .faq details[id="garancia"] { scroll-margin-top: 
     <div class="wrap">
       <div class="sec-head center">
         <div><div class="eyebrow">Členstvo</div><h2>Vyberte si <em>dĺžku</em></h2><p class="lead">Všetci členovia dostávajú rovnaké tipy, súkromný VIP chat aj garanciu. Líšia sa len dĺžkou a cenou za mesiac.</p></div>
-        <div class="idx" aria-hidden="true">04</div>
+        <div class="idx" aria-hidden="true">03</div>
       </div>
       <div class="hm-tiers">
         <a class="card hm-tier silver" href="/clenstvo#silver"><span class="tn">Silver</span><span class="tl">1 mesiac</span><b class="num">49&nbsp;€</b><span class="pm">49&nbsp;€ za mesiac</span><span class="go">Vybrať Silver <i aria-hidden="true">→</i></span></a>
@@ -1729,7 +1729,7 @@ html[data-page="home"] #otazky .faq details[id="garancia"] { scroll-margin-top: 
     </div>
   </section>
 
-  <section class="sec alt" id="otazky" data-pages="otazky clenstvo home">
+  <section class="sec alt" id="otazky" data-pages="otazky clenstvo">
     <div class="wrap split">
       <div><div class="eyebrow">Otázky</div><h2>Čo sa ľudia <em>pýtajú</em></h2></div>
       <div class="faq">
@@ -2010,20 +2010,6 @@ html[data-page="home"] #otazky .faq details[id="garancia"] { scroll-margin-top: 
     }).join("");
     $("mesiace").hidden = false;
   }
-  // úvod: posledné mesiace ako dlaždice
-  function drawHomeMonths(list) {
-    const box = $("hmMonths"), sec = document.getElementById("mesacne");
-    const ms = (list || []).filter((m) => m.totalResolved > 0).slice(-6);
-    if (!box || !sec || !ms.length) return;
-    const nowKey = new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Bratislava" }).slice(0, 7);
-    const top = Math.max(1, ...ms.map((m) => Math.abs(m.profit || 0)));
-    box.innerHTML = ms.map((m) => {
-      const [y, mo] = m.key.split("-").map(Number), v = m.profit || 0, c = v >= 0 ? "pos" : "neg";
-      const w = Math.max(4, (Math.abs(v) / top) * 100).toFixed(0);
-      return `<div class="hm-m ${c}${m.key === nowKey ? " now" : ""}"><span class="mn">${MONTHS[mo - 1]}${m.key === nowKey ? " <small>prebieha</small>" : ` <small>${y}</small>`}</span><b class="num">${signed(v, 1)}&nbsp;j.</b><span class="bar"><i style="width:${w}%"></i></span><span class="st num">${m.won} z ${m.totalResolved} vyšlo${m.winRate != null ? ` · ${m.winRate}&nbsp;%` : ""}</span></div>`;
-    }).join("");
-    sec.hidden = false;
-  }
   // posledných 10 tipov ako krúžky (zľava najstarší)
   function drawLast10() {
     const l = recentAll.filter((r) => r.status === "won" || r.status === "lost").slice(0, 10).reverse();
@@ -2103,6 +2089,7 @@ html[data-page="home"] #otazky .faq details[id="garancia"] { scroll-margin-top: 
       $("hxSpark").innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="hxg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#D9C08A" stop-opacity=".28"/><stop offset="1" stop-color="#D9C08A" stop-opacity="0"/></linearGradient></defs><path d="${dd} L${W},${H} L0,${H} Z" fill="url(#hxg)"/><path class="ln" d="${dd}" pathLength="1" fill="none" stroke="#F3E6C4" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`;
     } else $("hxSpark").remove();
     box.hidden = false;
+    const hs = document.getElementById("vysledky-uvod"); if (hs) hs.hidden = false;
   }
 
   // ---------- výsledky pod ikonkami (krúžok s úspešnosťou) ----------
@@ -2344,7 +2331,6 @@ html[data-page="home"] #otazky .faq details[id="garancia"] { scroll-margin-top: 
       if ($("presnost")) drawCalib(d.calibration);
       recentAll = d.recent || [];
       drawList(); drawChart(d.timeline); drawMonths(d.months);
-      drawHomeMonths(d.months);
       if (!d.totalResolved) { $("month").textContent = "Čísla sa zobrazia po prvých vyhodnotených tipoch."; return; }
       const n = d.totalResolved;
       drawLast10();
