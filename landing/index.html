@@ -1576,12 +1576,12 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
   .om2-list li { padding: 24px 4px 20px; } .om2-n { font-size: 32px; } .om2-list h3 { font-size: 19px; }
 }
 .om2-sign .sig { line-height: 1.6 !important; padding: .12em .35em 0 .1em !important; margin-top: -.3em; }
-.om2-seal { width: 200px; height: 200px; filter: drop-shadow(0 18px 40px rgba(0,0,0,.55)) drop-shadow(0 0 38px rgba(217,192,138,.18)); }
+.om2-seal { width: 170px; height: 170px; filter: drop-shadow(0 18px 40px rgba(0,0,0,.55)) drop-shadow(0 0 38px rgba(217,192,138,.18)); }
 .om2-seal-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .om2-seal-txt { transform-origin: 100px 100px; animation: spin 40s linear infinite; }
-.om2-seal .om2-mp { font-size: 62px; transform: translate(-5px, 3px); }
+.om2-seal .om2-mp { font-size: 70px; transform: translate(-5px, 3px); }
 @media (prefers-reduced-motion: reduce) { .om2-seal-txt { animation: none; } }
-@media (max-width: 760px) { .om2-seal { width: 150px; height: 150px; } .om2-seal .om2-mp { font-size: 46px; } }
+@media (max-width: 760px) { .om2-seal { width: 130px; height: 130px; } .om2-seal .om2-mp { font-size: 54px; } }
 #kto .om2-paper h2 { font-size: clamp(28px, 2.8vw, 38px) !important; }
 .om2-values .sec-head h2 { font-size: clamp(28px, 2.8vw, 40px) !important; }
 @media (max-width: 760px) { #kto .om2-paper h2, .om2-values .sec-head h2 { font-size: 27px !important; } }
@@ -1619,13 +1619,13 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
       <li><a href="/">Úvod</a></li>
       <li><a href="/vysledky">Výsledky<small>všetky tipy</small></a></li>
       <li><a href="/clenstvo">Členstvo<small>Silver · Gold · Platinum</small></a></li>
-      <li><a href="/kurz">Kurz<small>Škola stávkovania</small></a></li>
+      <li><a href="/kurz">Kurz<small>Škola tipovania</small></a></li>
       <li><a href="/o-mne">O mne</a></li>
       <li><a href="/formular">Kontakt<small>napíšte mi</small></a></li>
     </ul>
     <div class="ov-foot">
       <a class="btn" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener"><svg width="18" height="18" aria-hidden="true"><use href="#i-tg"/></svg>Telegram komunita</a>
-      <a class="btn btn-ghost" href="/kurz"><svg width="18" height="18" aria-hidden="true"><use href="#i-book"/></svg>Kurz Škola stávkovania</a>
+      <a class="btn btn-ghost" href="/kurz"><svg width="18" height="18" aria-hidden="true"><use href="#i-book"/></svg>Kurz Škola tipovania</a>
       <div class="ov-contacts"><a href="mailto:info@tipradar.eu">info@tipradar.eu</a><a href="https://www.instagram.com/tipradar.eu/" target="_blank" rel="noopener">Instagram @tipradar.eu</a></div>
     </div>
   </div>
@@ -1724,7 +1724,7 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
         <div>
           <ol class="steps">
             <li class="card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 12 18.4 5.6"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/></svg></span><div><span class="n">Krok 1</span><h3>Model prepočíta každý zápas</h3><p>Góly, rohy, karty, strely aj fauly z posledných zápasov oboch tímov. V bežný deň okolo 120 zápasov a 1 200 trhov.</p></div></li>
-            <li class="card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v16M6 20h12M4 8h16"/><path d="M4 8l-2.5 6a3 3 0 0 0 5 0L4 8ZM20 8l-2.5 6a3 3 0 0 0 5 0L20 8Z"/></svg></span><div><span class="n">Krok 2</span><h3>Porovná šancu s kurzom</h3><p>Tip prejde, len keď model vidí vyššiu šancu, než naznačuje kurz stávkovej kancelárie. Väčšina zápasov neprejde.</p></div></li>
+            <li class="card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v16M6 20h12M4 8h16"/><path d="M4 8l-2.5 6a3 3 0 0 0 5 0L4 8ZM20 8l-2.5 6a3 3 0 0 0 5 0L20 8Z"/></svg></span><div><span class="n">Krok 2</span><h3>Porovná šancu s kurzom</h3><p>Tip prejde, len keď model vidí vyššiu šancu, než naznačuje kurz na trhu. Väčšina zápasov neprejde.</p></div></li>
             <li class="card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 4 3 11l6 2 2 6 3-4 5 4 2-15Z"/><path d="m9 13 8-6"/></svg></span><div><span class="n">Krok 3</span><h3>Tip príde do Telegramu</h3><p>1 – 2 hodiny pred výkopom, večer vyhodnotenie. Výhry aj prehry zverejníme.</p></div></li>
           </ol>
           <a class="more" href="/metoda">Celý postup a kalkulačka hodnoty <span aria-hidden="true">→</span></a>
@@ -1739,7 +1739,7 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
               </div>
               <div class="tg-body">
                 <span class="tg-day">Dnes</span>
-                <div class="tg-msg anim"><b class="h">🎯 Nový tip</b>⚽ Nórsko — Portugalsko<br />📊 Góly: <b>pod 3,5</b><br />📈 Dôvera: <b>71&nbsp;%</b><br />💰 Kurz: <b>1,72</b><br />💵 Odporúčaná sadzba: <b>2&nbsp;% bankrollu</b><i>ℹ️ Priemerný kurz stávkových kancelárií v čase odoslania.</i><span class="t">18:02</span></div>
+                <div class="tg-msg anim"><b class="h">🎯 Nový tip</b>⚽ Nórsko — Portugalsko<br />📊 Góly: <b>pod 3,5</b><br />📈 Dôvera: <b>71&nbsp;%</b><br />💰 Kurz: <b>1,72</b><br />💵 Odporúčaná sadzba: <b>2&nbsp;% bankrollu</b><i>ℹ️ Priemerný kurz na trhu v čase odoslania.</i><span class="t">18:02</span></div>
                 <div class="tg-msg win anim"><b class="h">✅ VÝHRA</b>⚽ Nórsko — Portugalsko<br />📊 Góly: <b>pod 3,5</b><span class="t">22:41</span></div>
               </div>
             </div>
@@ -1782,11 +1782,11 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
   <section class="sec alt hm-kurz" id="skola-uvod" data-pages="home">
     <div class="wrap">
       <a class="card hm-kurz-card" href="/kurz">
-        <div class="hm-kurz-img"><img src="/skola/kurz-01.jpg" alt="Titulná strana kurzu Škola stávkovania" loading="lazy" /></div>
+        <div class="hm-kurz-img"><img src="/skola/kurz-01.jpg" alt="Titulná strana kurzu Škola tipovania" loading="lazy" /></div>
         <div class="hm-kurz-txt">
           <div class="eyebrow">Exkluzívny kurz</div>
-          <h2>Škola <em>stávkovania</em></h2>
-          <p>48 strán a 10 kapitol o tom, čo väčšina tipérov preskočí: ako chrániť bank, ako spoznať stávku s hodnotou a ako nedovoliť emóciám rozhodovať za vás.</p>
+          <h2>Škola <em>tipovania</em></h2>
+          <p>48 strán a 10 kapitol o tom, čo väčšina tipérov preskočí: ako chrániť bank, ako spoznať tip s hodnotou a ako nedovoliť emóciám rozhodovať za vás.</p>
           <div class="hm-kurz-buy"><b class="num">99&nbsp;€</b><span>jednorazová platba</span><span class="btn">Pozrieť kurz <span class="arr" aria-hidden="true">→</span></span></div>
         </div>
       </a>
@@ -1805,8 +1805,8 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
           <li class="card"><div class="c num">120</div><div><h3>zápasov v bežný deň</h3><p>Pri každom zápase model zoberie góly, rohy, karty, strely, fauly a držanie lopty z posledných stretnutí oboch tímov, vlastné aj tie, ktoré tím dovolí súperovi. Keď je dát málo, pomôžu tri minulé sezóny.</p></div></li>
           <li class="card"><div class="c num">1 200</div><div><h3>vypočítaných trhov</h3><p>Model počíta osem trhov: góly v zápase aj góly každého tímu, rohy v zápase aj rohy každého tímu, karty, strely na bránu, fauly a držanie lopty. Pri kartách a strelách počíta s väčším rozptylom, lebo kolíšu viac.</p></div></li>
           <li class="card"><div class="c num">140</div><div><h3>s dôverou 68 – 80&nbsp;%</h3><p>Veľmi isté tipy mávajú nízky kurz a veľmi neisté často nevychádzajú. Ďalej idú len tipy v tomto pásme.</p></div></li>
-          <li class="card"><div class="c num">15</div><div><h3>s hodnotou a kurzom</h3><p>Model vyskúša všetky hranice, ktoré stávkové kancelárie ponúkajú (napríklad rohy 8,5 / 9,5 / 10,5) a vyberie tú s najväčšou hodnotou. Tip musí mať hodnotu aspoň +5&nbsp;% a kurz aspoň <span class="minOdds">1,50</span>.</p></div></li>
-          <li class="card"><div class="c num">7</div><div><h3>bez veľkého rozporu s trhom</h3><p>Keď model vidí šancu o 15 – 25 bodov inak ako stávkové kancelárie, tip vyradíme. Taký rozdiel často znamená niečo, čo štatistika nevidí, napríklad zranenie. Vyradené tipy si zapisujeme a raz za mesiac kontrolujeme, kto mal pravdu.</p></div></li>
+          <li class="card"><div class="c num">15</div><div><h3>s hodnotou a kurzom</h3><p>Model vyskúša všetky hranice, ktoré ponúka trh (napríklad rohy 8,5 / 9,5 / 10,5) a vyberie tú s najväčšou hodnotou. Tip musí mať hodnotu aspoň +5&nbsp;% a kurz aspoň <span class="minOdds">1,50</span>.</p></div></li>
+          <li class="card"><div class="c num">7</div><div><h3>bez veľkého rozporu s trhom</h3><p>Keď model vidí šancu o 15 – 25 bodov inak ako trh, tip vyradíme. Taký rozdiel často znamená niečo, čo štatistika nevidí, napríklad zranenie. Vyradené tipy si zapisujeme a raz za mesiac kontrolujeme, kto mal pravdu.</p></div></li>
           <li class="card"><div class="c num">2 – 3</div><div><h3>tipy pre členov</h3><p>Najviac jeden tip na trh v zápase, 1 – 2 hodiny pred výkopom. Večer ich vyhodnotíme podľa skutočného výsledku.</p></div></li>
         </ol>
         <p class="footnote">Počty sú pre ilustráciu, každý deň sú iné.</p>
@@ -1828,7 +1828,7 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
           <input type="range" id="pRange" min="50" max="90" step="1" value="68" />
         </div>
         <div>
-          <label for="oRange"><span>Kurz stávkovej kancelárie</span><b class="num" id="oOut">1,75</b></label>
+          <label for="oRange"><span>Kurz na trhu</span><b class="num" id="oOut">1,75</b></label>
           <input type="range" id="oRange" min="1.2" max="2.6" step="0.01" value="1.75" />
         </div>
         <div class="verdict" aria-live="polite">
@@ -1865,7 +1865,7 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
         <div class="stake" id="stake" data-pages="vysledky" hidden>
           <p class="sc-eyebrow">Keby ste od začiatku stavili na každý tip rovnakú sumu</p>
           <div class="big num" id="calcResult">–</div>
-          <label for="stakeRange"><span>Stávka na jeden tip</span><b class="num" id="stakeOut">10 €</b></label>
+          <label for="stakeRange"><span>Suma na jeden tip</span><b class="num" id="stakeOut">10 €</b></label>
           <input type="range" id="stakeRange" min="5" max="200" step="5" value="10" />
           <p class="small" id="calcNote" style="margin-top:12px"></p>
         </div>
@@ -1971,7 +1971,7 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
           <p>Zadajte svoj bank a koľko percent z neho vsádzate na jeden tip (odporúčame 1 – 3 %, skúsenejší najviac 5 %). Uvidíte, koľko jednotiek zisku treba, aby sa vám cena členstva vrátila.</p>
         </div>
         <label class="payback-stake">
-          <span>Váš bank (suma na stávkovanie)</span>
+          <span>Váš bank (suma na tipy)</span>
           <span class="payback-input"><input type="text" inputmode="decimal" id="paybackBank" value="1000" aria-label="Bank v eurách" /><b>€</b></span>
         </label>
         <div class="payback-pct">
@@ -1995,20 +1995,15 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
           <defs>
             <linearGradient id="omG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F8EDD3"/><stop offset=".45" stop-color="#D9C08A"/><stop offset="1" stop-color="#8E6B2E"/></linearGradient>
             <radialGradient id="omD" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#3A2E22"/><stop offset="1" stop-color="#15100B"/></radialGradient>
-            <path id="omC" d="M100,100 m-79,0 a79,79 0 1,1 158,0 a79,79 0 1,1 -158,0"/>
           </defs>
           <circle cx="100" cy="100" r="97" fill="none" stroke="url(#omG)" stroke-width="1.4"/>
-          <circle cx="100" cy="100" r="91" fill="none" stroke="rgba(217,192,138,.35)" stroke-width=".8" stroke-dasharray="1.5 3.2"/>
-          <g class="om2-seal-txt"><text font-size="10" fill="url(#omG)" font-family="Manrope, sans-serif" font-weight="600"><textPath href="#omC" startOffset="0" textLength="488" lengthAdjust="spacing">TIPRADAR ✦ DÁTA NAMIESTO POCITOV ✦ MICHAL ✦ ZAKLADATEĽ ✦</textPath></text></g>
-          <circle cx="100" cy="100" r="66" fill="url(#omD)" stroke="url(#omG)" stroke-width="1.6"/>
-          <circle cx="100" cy="100" r="61" fill="none" stroke="rgba(217,192,138,.28)" stroke-width=".7"/>
-          <path d="M100 30.5 l3 3.5 -3 3.5 -3 -3.5z M100 162.5 l3 3.5 -3 3.5 -3 -3.5z" fill="url(#omG)"/>
+          <circle cx="100" cy="100" r="90" fill="url(#omD)" stroke="rgba(217,192,138,.3)" stroke-width=".8"/>
         </svg>
         <span class="om2-mp">MP</span>
       </div>
       <span class="hx-pill"><i></i>O mne</span>
       <h1>Som Michal, <em>zakladateľ TipRadaru</em></h1>
-      <p class="om2-intro">TipRadar som vytvoril, aby stávky stáli na dátach, nie na pocitoch. Každý tip zverejním vopred a po zápase sa sám vyhodnotí, nech vyjde alebo nie.</p>
+      <p class="om2-intro">Tu sa dozviete, prečo TipRadar vznikol a čo od neho môžete čakať.</p>
       <div class="om2-actions">
         <a class="btn" href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener">Napísať na Telegram</a>
         <a class="btn btn-ghost" href="mailto:info@tipradar.eu">info@tipradar.eu</a>
@@ -2021,8 +2016,8 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
       <div class="om2-paper">
         <div class="eyebrow">Môj príbeh</div>
         <h2>Dáta namiesto <em>pocitov</em></h2>
-        <p class="om2-lead">Volám sa Michal a TipRadar som založil s jednoduchým cieľom: hľadať zápasy, v ktorých stávkové kancelárie podceňujú skutočnú šancu, a robiť to na základe dát, nie pocitov.</p>
-        <p>Transparentnosť je pre mňa základ. Každý tip sa zaznamená v momente odoslania a po zápase sa sám vyhodnotí. Nič sa dodatočne nemaže ani neupravuje, preto tu nájdete aj prehry.</p>
+        <p class="om2-lead">TipRadar som založil, pretože som chcel tipy, za ktorými stoja čísla, nie dojmy z posledného zápasu. Model preto každý deň prejde stovky zápasov a vyberie len tie, kde vidí skutočnú hodnotu.</p>
+        <p>Transparentnosť je pre mňa základ. Každý tip sa uloží v momente odoslania a po zápase sa sám vyhodnotí. Nič nemažem ani neupravujem, preto tu nájdete aj prehry.</p>
         <blockquote class="om2-quote">Istú výhru nesľubujem. Nesľubuje ju nikto, kto to myslí vážne.</blockquote>
         <p>Ak máte otázku, napíšte mi na <a href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener">Telegram</a> alebo na <a href="mailto:info@tipradar.eu">info@tipradar.eu</a>. Odpovedám osobne.</p>
         <div class="sign om2-sign">
@@ -2038,9 +2033,9 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
     <div class="wrap">
       <div class="sec-head center"><div><div class="eyebrow">Čomu verím</div><h2>Tri <em>zásady</em> TipRadaru</h2></div></div>
       <ol class="om2-list">
-        <li><span class="om2-n">01</span><div><h3>Nič neskrývam</h3><p>Každý tip sa uloží v momente odoslania a po zápase sa sám vyhodnotí. Výhry aj prehry ostávajú v histórii.</p></div></li>
-        <li><span class="om2-n">02</span><div><h3>Dáta, nie pocit</h3><p>Model prepočíta stovky zápasov denne a pošle len tipy, kde je šanca vyššia, než ukazuje kurz.</p></div></li>
-        <li><span class="om2-n">03</span><div><h3>Zodpovedne</h3><p>Istú výhru nesľubujem. Odporúčam rovnaký vklad na každý tip a stávkovať len to, čo si môžete dovoliť stratiť.</p></div></li>
+        <li><span class="om2-n">01</span><div><h3>Nič neskrývam</h3><p>Celú históriu tipov si môžete kedykoľvek pozrieť na stránke Výsledky, so ziskom aj stratou.</p></div></li>
+        <li><span class="om2-n">02</span><div><h3>Dáta, nie pocit</h3><p>Tip prejde, len keď model vidí vyššiu šancu, než ukazuje kurz. Väčšina zápasov neprejde.</p></div></li>
+        <li><span class="om2-n">03</span><div><h3>Zodpovedne</h3><p>Odporúčam rovnakú sumu na každý tip a len peniaze, ktorých stratu si môžete dovoliť.</p></div></li>
       </ol>
     </div>
   </section>
@@ -2052,7 +2047,7 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
         <details><summary>Kedy a kam tipy prídu?</summary><p>Do súkromného kanála na Telegrame, 1 – 2 hodiny pred výkopom zápasu. Večer, keď sa zápasy dohrajú, príde vyhodnotenie dňa.</p></details>
         <details><summary>Koľko tipov denne dostanem?</summary><p>Toľko, koľko prejde pravidlami. Niekedy jeden, inokedy viac. Keď neprejde žiadny, nepošleme nič a dáme vám vedieť.</p></details>
         <details><summary>Čo je zisk v jednotkách a ROI?</summary><p>Jednotka je rovnaká suma na každý tip, napríklad 10 €. Zisk +5 jednotiek pri 10 € na tip je +50 €. ROI hovorí, koľko percent z vložených peňazí sa vrátilo navyše.</p></details>
-        <details><summary>Zaručujete výhru?</summary><p>Nie. Žiadny model nevie zaručiť výsledok zápasu. TipRadar vyberá stávky, pri ktorých je šanca podľa štatistík vyššia, než naznačuje kurz. Rozhoduje dlhodobý výsledok, preto zverejňujeme aj prehraté tipy. Ak však vaše členstvo skončí v strate, ďalší mesiac máte zadarmo (pozrite garanciu nižšie).</p></details>
+        <details><summary>Zaručujete výhru?</summary><p>Nie. Žiadny model nevie zaručiť výsledok zápasu. TipRadar vyberá tipy, pri ktorých je šanca podľa štatistík vyššia, než naznačuje kurz. Rozhoduje dlhodobý výsledok, preto zverejňujeme aj prehraté tipy. Ak však vaše členstvo skončí v strate, ďalší mesiac máte zadarmo (pozrite garanciu nižšie).</p></details>
         <details id="garancia"><summary>Ako funguje garancia?</summary><p>Ak vaše členstvo (Silver, Gold alebo Platinum) skončí v strate, ďalší mesiac máte zadarmo – členstvo vám predĺžime o mesiac a dáme vám vedieť na Telegrame. Počíta sa za celé obdobie, ktoré ste zaplatili, od prvého po posledný deň: zo všetkých zverejnených tipov s výsledkom v tom čase, pri rovnakom vklade na každý tip (1 jednotka). Ak je súčet záporný, členstvo skončilo v strate. Na samotný mesiac zadarmo sa garancia už nevzťahuje, na ďalšie zaplatené členstvo áno. Letná prestávka (jún – júl) sa nemení: členstvo sa pozastaví a o tento čas predĺži.</p></details>
         <details><summary>Ako overujete, že model funguje?</summary><p>Spätným testom na odohraných zápasoch a mesačnou kontrolou, či tipy s dôverou 70&nbsp;% naozaj vychádzajú zhruba v 70&nbsp;% prípadov. Tipy vyradené pre veľký rozpor s kurzami si zapisujeme a porovnávame, kto mal pravdu.</p></details>
         <details><summary>Aké dlhé je členstvo?</summary><p>Silver na 1 mesiac, Gold na 3 mesiace a Platinum na 6 mesiacov, vždy odo dňa, keď sa pridáte. Dlhšie členstvo vychádza lacnejšie na mesiac. Cez letnú prestávku (jún – júl), keď sa takmer nehrá, sa členstvo pozastaví a 1. augusta pokračuje, takže o žiadne zápasy neprídete. Žiadne sa samo nepredlžuje. Pred koncom vám pripomenieme, že končí.</p></details>
@@ -2072,7 +2067,7 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
         <div class="fields">
           <label class="field"><span class="lbl">Meno</span><input type="text" name="name" autocomplete="name" maxlength="80" required /></label>
           <label class="field"><span class="lbl">E-mail</span><input type="email" name="email" autocomplete="email" inputmode="email" maxlength="120" required /></label>
-          <label class="field wide"><span class="lbl">Čo vás zaujíma</span><span class="select"><select name="plan"><option value="otazka" selected>Všeobecná otázka</option><option value="clenstvo">Členstvo</option><option value="kurz">Kurz stávkovania (99 €)</option></select></span></label>
+          <label class="field wide"><span class="lbl">Čo vás zaujíma</span><span class="select"><select name="plan"><option value="otazka" selected>Všeobecná otázka</option><option value="clenstvo">Členstvo</option><option value="kurz">Kurz tipovania (99 €)</option></select></span></label>
           <label class="field wide"><span class="lbl">Vaša otázka</span><textarea name="note" rows="5" maxlength="500" required></textarea></label>
           <label class="hp" aria-hidden="true">Web <input type="text" name="web" tabindex="-1" autocomplete="off" /></label>
         </div>
@@ -2121,8 +2116,8 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
       </div>
     </div>
     <div class="foot-legal">
-      <p>TipRadar je analytický nástroj založený na štatistickom modeli, nie stávková kancelária ani finančné poradenstvo. Tipy sú informatívne a nezaručujú výsledok. Minulé výsledky nie sú zárukou budúcich. O tom, či a koľko staviť, rozhodujete vždy vy.</p>
-      <p class="rg"><span class="age" aria-label="Len pre osoby staršie ako 18 rokov">18+</span><span>Hrajte zodpovedne a len za peniaze, ktorých stratu si môžete dovoliť. Ak vám stávkovanie prerastá cez hlavu, pomoc a register vylúčených osôb nájdete na <a href="https://www.urhh.sk" target="_blank" rel="noopener">urhh.sk</a>.</span></p>
+      <p>TipRadar je analytický nástroj založený na štatistickom modeli, nie finančné poradenstvo. Tipy sú informatívne a nezaručujú výsledok. Minulé výsledky nie sú zárukou budúcich. O tom, ako tipy využijete, rozhodujete vždy vy.</p>
+      <p class="rg"><span class="age" aria-label="Len pre osoby staršie ako 18 rokov">18+</span><span>Hrajte zodpovedne a len za peniaze, ktorých stratu si môžete dovoliť. Ak vám tipovanie prerastá cez hlavu, pomoc a register vylúčených osôb nájdete na <a href="https://www.urhh.sk" target="_blank" rel="noopener">urhh.sk</a>.</span></p>
     </div>
     <div class="copy"><span>© 2026 TipRadar · tipradar.eu</span><a href="/ochrana-udajov">Ochrana osobných údajov</a></div>
   </div>
@@ -2449,7 +2444,7 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
   $("pgPrev").addEventListener("click", () => { if (page > 0) { page--; drawList(); } });
   $("pgNext").addEventListener("click", () => { page++; drawList(); });
 
-  // ---------- kalkulačka stávky ----------
+  // ---------- kalkulačka tipu ----------
   let calcData = null;
   function drawCalc() {
     if (!calcData) return;
@@ -2466,12 +2461,12 @@ html[data-page="o-mne"] #kto .om2-paper > .eyebrow { display: inline-flex !impor
   document.querySelectorAll("[data-kurz-cta]").forEach((a) => a.addEventListener("click", () => {
     const f = document.getElementById("joinForm"); if (!f) return;
     f.plan.value = "kurz";
-    if (!f.note.value.trim()) f.note.value = "Mám záujem o kurz stávkovania. Pošlite mi, prosím, platobné údaje.";
+    if (!f.note.value.trim()) f.note.value = "Mám záujem o kurz tipovania. Pošlite mi, prosím, platobné údaje.";
   }));
   try {
     if (new URLSearchParams(location.search).get("kurz") === "1") {
       const f = document.getElementById("joinForm");
-      if (f) { f.plan.value = "kurz"; if (!f.note.value.trim()) f.note.value = "Mám záujem o kurz stávkovania. Pošlite mi, prosím, platobné údaje."; }
+      if (f) { f.plan.value = "kurz"; if (!f.note.value.trim()) f.note.value = "Mám záujem o kurz tipovania. Pošlite mi, prosím, platobné údaje."; }
     }
   } catch (_) {}
   // Lišta s Telegramom, Instagramom a e-mailom je pripnutá pod hornou lištou.
