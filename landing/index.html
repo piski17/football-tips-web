@@ -1620,6 +1620,12 @@ html.menu-open .nav { background: transparent !important; border-bottom-color: t
 @media (max-width: 1180px) { .nq2-plaque { padding: 8px 18px; gap: 10px; } .nq2-t, .nq2-t em { font-size: 15.5px !important; } }
 @media (max-width: 960px) { .nav-quote.nq2 { display: none !important; } }
 @media (prefers-reduced-motion: reduce) { .nq2-plaque::before, .nq2-t em, .nq2-star { animation: none; } }
+
+/* Platinum: štítok na hornom okraji karty, neprekrýva názov */
+@media (min-width: 761px) {
+  .hm-tier.plat { overflow: visible !important; }
+  .hm-tier .flag { top: -13px !important; right: auto !important; left: 30px; padding: 8px 14px; box-shadow: 0 6px 20px -6px rgba(217,192,138,.6), 0 0 0 4px var(--bg); z-index: 2; }
+}
 </style>
 
 <link href="https://fonts.googleapis.com/css2?family=Herr+Von+Muellerhoff&amp;family=Great+Vibes&amp;display=swap" rel="stylesheet" />
