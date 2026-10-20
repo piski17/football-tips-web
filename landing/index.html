@@ -1440,12 +1440,22 @@ html { scrollbar-color: rgba(217,192,138,.35) var(--bg); }
 }
 @media (min-width: 961px) and (max-width: 1180px) { .wrap { width: min(1200px, 100% - 390px); } .dock a, .dock button { width: 150px !important; letter-spacing: .14em !important; } }
 
-/* menu C: tmavý sklenený podklad, aby bolo čitateľné aj nad svetlými časťami (O mne) */
-@media (min-width: 961px) {
-  .dock { left: 22px !important; padding: 16px 14px 16px 0 !important; border-radius: 22px !important; background: rgba(21,16,11,.94) !important; border: 1px solid rgba(217,192,138,.16) !important; -webkit-backdrop-filter: saturate(150%) blur(18px) !important; backdrop-filter: saturate(150%) blur(18px) !important; box-shadow: 0 24px 60px -20px rgba(0,0,0,.6) !important; }
-  .dock::before { left: 0 !important; top: 16px !important; bottom: 16px !important; }
-  .dock-pill { left: -1px !important; }
-}
+/* ===== O mne: tmavé pozadie s plynulými prechodmi ako na úvode (namiesto svetlého) ===== */
+#kto { background: linear-gradient(180deg, var(--bg) 0%, #2C2219 22%, #2C2219 78%, var(--bg) 100%) !important; color: var(--text) !important; }
+#kto::before { color: rgba(217,192,138,.05) !important; }
+#kto .eyebrow { color: var(--gold) !important; background: rgba(217,192,138,.08) !important; border-color: rgba(217,192,138,.3) !important; }
+#kto .eyebrow::before { background: var(--gold) !important; box-shadow: 0 0 0 4px rgba(217,192,138,.15) !important; }
+#kto h2, .letter h2 { color: var(--text) !important; }
+#kto h2 em { color: var(--gold-hi) !important; -webkit-text-fill-color: var(--gold-hi) !important; }
+.letter p { color: var(--muted) !important; }
+.letter p:first-of-type { color: var(--text) !important; }
+.letter p:first-of-type::before, .letter p:first-of-type::after { color: var(--gold) !important; }
+.letter a { color: var(--gold-hi) !important; text-decoration-color: rgba(217,192,138,.45) !important; }
+.sign .sig { background: linear-gradient(100deg, #B8995E 0%, #F3E6C4 45%, #D9C08A 75%, #B8995E 100%) !important; -webkit-background-clip: text !important; background-clip: text !important; }
+.sign .sig-line { background: linear-gradient(90deg, transparent, var(--gold), transparent) !important; }
+.sign > span:last-child { color: var(--faint) !important; }
+#kto :focus-visible { outline-color: var(--gold) !important; }
+
 </style>
 
 </head>
