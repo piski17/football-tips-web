@@ -1025,6 +1025,37 @@ html { scrollbar-color: rgba(217,192,138,.35) var(--bg); }
   .hero.hx h1 { font-size: 46px !important; }
   .dock a, .dock button { font-size: 10.5px !important; }
 }
+
+/* ===== mobilné menu: všetkých 6 položiek naraz, bez „Viac“ ===== */
+@media (max-width: 760px) {
+  .dock { left: 8px !important; right: 8px !important; padding: 5px !important; gap: 0 !important; }
+  .dock .dock-wide { display: flex !important; }
+  .dock .dock-more { display: none !important; }
+  .dock a { flex: 1 1 0; min-width: 0 !important; height: 54px !important; padding: 0 1px !important; gap: 4px !important; font-size: 10.5px !important; letter-spacing: 0 !important; white-space: nowrap; }
+  .dock svg { width: 19px !important; height: 19px !important; }
+  .dock-pill { top: 5px !important; height: 54px !important; border-radius: 16px !important; }
+  .dock a { border-radius: 16px !important; }
+}
+@media (max-width: 350px) { .dock a { font-size: 9.5px !important; } }
+
+/* ===== mobil: menšie texty, nepriehľadné menu ===== */
+@media (max-width: 760px) {
+  .dock { background: rgba(22,17,12,.96) !important; }
+  body { font-size: 15px; }
+  .hero.hx h1 { font-size: clamp(40px, 11.5vw, 50px) !important; }
+  .hx-lead { font-size: 15px !important; }
+  .hx-pill { font-size: 10.5px !important; }
+  .sec-head h2, .page-head h1, .finale h2 { font-size: clamp(28px, 8vw, 34px) !important; }
+  .sec-head .lead, .page-head p, .finale p { font-size: 14.5px !important; }
+  .card h3, .hm-card h3, #ako .steps h3, .funnel h3 { font-size: 18px !important; }
+  .card p, .hm-card p, #ako .steps p, .funnel p, .faq p { font-size: 14px !important; }
+  .faq summary { font-size: 15px !important; }
+  .btn { font-size: 14.5px !important; }
+  .hm-tier .tn { font-size: 24px !important; } .hm-tier b { font-size: 34px !important; }
+  .hm-kurz-txt h2 { font-size: 32px !important; } .hm-kurz-txt p { font-size: 14.5px !important; }
+  .ov-links a { font-size: 30px !important; }
+}
+@media (max-width: 380px) { .hero.hx h1 { font-size: 40px !important; } }
 </style>
 </head>
 <body>
