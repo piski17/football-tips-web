@@ -903,6 +903,49 @@ h1 em, h2 em, h3 em { font-style: italic; color: transparent; -webkit-text-fill-
 .btn { font: 600 15.5px/1 var(--sans); background: var(--gold-grad); color: #1A130A; }
 .btn::after { display: none; }
 .btn-ghost { background: transparent; color: var(--gold-hi); box-shadow: inset 0 0 0 1px var(--line-2); }
+
+/* ===== menu ako plávajúci dok dole (namiesto hornej lišty) ===== */
+.nav, html.scrolled .nav, html[data-page]:not([data-page="home"]) .nav { position: relative; background: transparent !important; border-bottom-color: transparent !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+html[data-page="home"] .nav { position: absolute; left: 0; right: 0; z-index: 50; }
+.nav .wrap, html.scrolled .nav .wrap { height: 84px; justify-content: space-between; }
+.nav-right { margin-left: auto; }
+.mcta { display: none !important; }
+body { padding-bottom: 104px; }
+.dock { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 48; display: flex; align-items: center; gap: 2px; padding: 7px; border-radius: 26px; border: 1px solid rgba(217,192,138,.22); background: rgba(24,19,14,.78); -webkit-backdrop-filter: saturate(160%) blur(20px); backdrop-filter: saturate(160%) blur(20px); box-shadow: 0 24px 60px -18px rgba(0,0,0,.75), 0 0 0 1px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,245,225,.08); transform: translate(-50%, 140%); opacity: 0; transition: transform .8s cubic-bezier(.2,.9,.25,1.15), opacity .5s; }
+.dock.ready { transform: translate(-50%, 0); opacity: 1; }
+.dock::before { content: ""; position: absolute; left: 18%; right: 18%; top: -1px; height: 1px; background: linear-gradient(90deg, transparent, rgba(248,237,211,.75), transparent); pointer-events: none; }
+.dock a, .dock button { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; min-width: 76px; height: 60px; padding: 0 12px; border: 0; border-radius: 19px; background: none; color: var(--muted); font: 500 12.5px/1 var(--sans); letter-spacing: .02em; text-decoration: none; cursor: pointer; transition: color .3s; }
+.dock svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; transition: transform .35s cubic-bezier(.2,.9,.25,1.3); }
+.dock a:hover, .dock button:hover { color: var(--gold-hi); }
+.dock a:hover svg, .dock button:hover svg { transform: translateY(-3px) scale(1.14); }
+.dock a.active { color: #17130A; }
+.dock-pill { position: absolute; left: 0; top: 7px; height: 60px; width: 0; border-radius: 19px; background: var(--gold-grad); box-shadow: 0 10px 28px -10px rgba(217,192,138,.8), inset 0 1px 0 rgba(255,255,255,.5); opacity: 0; transition: transform .55s cubic-bezier(.2,.9,.25,1.1), width .55s cubic-bezier(.2,.9,.25,1.1), opacity .3s; pointer-events: none; }
+.dock-sep { width: 1px; height: 34px; margin: 0 6px; background: var(--line-2); }
+.dock .dock-tg { color: var(--gold-hi); }
+.dock .dock-tg svg { fill: currentColor; stroke: none; }
+.dock .dock-more { display: none; }
+.dock .dock-more svg { fill: currentColor; stroke: none; }
+.nav.open ~ .dock .dock-more, html.menu-open .dock .dock-more { color: var(--gold-hi); }
+.jump { bottom: 22px; }
+@media (max-width: 960px) { .dock a, .dock button { min-width: 64px; padding: 0 8px; } }
+@media (max-width: 760px) {
+  body { padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
+  .dock { left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); justify-content: space-between; padding: 6px; border-radius: 24px; transform: translateY(140%); }
+  .dock.ready { transform: none; }
+  .dock .dock-wide { display: none; }
+  .dock .dock-more { display: flex; }
+  .dock a, .dock button { flex: 1; min-width: 0; height: 58px; padding: 0 2px; font-size: 11.5px; }
+  .dock-pill { top: 6px; height: 58px; }
+  .jump { bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important; right: 14px; }
+  .nav .wrap, html.scrolled .nav .wrap { height: 68px; }
+  .overlay { padding-top: calc(48px + env(safe-area-inset-top, 0px)); padding-bottom: calc(108px + env(safe-area-inset-bottom, 0px)); clip-path: circle(0 at calc(100% - 50px) calc(100% - 50px)); }
+  .nav.open + .overlay { clip-path: circle(150% at calc(100% - 50px) calc(100% - 50px)); }
+}
+
+.dock-more .x { display: none; }
+html.menu-open .dock-more .dots { display: none; }
+html.menu-open .dock-more .x { display: block; stroke: currentColor; fill: none; stroke-width: 1.8; }
+@media (max-width: 760px) { .overlay { padding-top: calc(96px + env(safe-area-inset-top, 0px)); } }
 </style>
 </head>
 <body>
@@ -921,20 +964,12 @@ h1 em, h2 em, h3 em { font-style: italic; color: transparent; -webkit-text-fill-
 <nav class="nav" aria-label="Hlavná navigácia">
   <div class="wrap">
     <a class="brand" href="/"><svg aria-hidden="true"><use href="#logo"/></svg>TipRadar</a>
-    <div class="menu">
-      <a href="/vysledky">Výsledky</a>
-      <a href="/clenstvo">Členstvo</a>
-      <a href="/kurz">Kurz</a>
-      <a href="/o-mne">O mne</a>
-      <a href="/formular">Kontakt</a>
-    </div>
     <div class="nav-right">
       <div class="nav-social">
         <a href="https://www.instagram.com/tipradar.eu/" target="_blank" rel="noopener" aria-label="Instagram – tipradar.eu" title="Instagram"><svg aria-hidden="true"><use href="#i-ig"/></svg></a>
         <a href="mailto:info@tipradar.eu" aria-label="E-mail info@tipradar.eu" title="info@tipradar.eu"><svg aria-hidden="true"><use href="#i-mail"/></svg></a>
         <a href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener" aria-label="Telegram – TipRadar bot" title="Telegram"><svg aria-hidden="true"><use href="#i-tg"/></svg></a>
       </div>
-      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="overlay" aria-label="Menu"><i aria-hidden="true"></i></button>
     </div>
   </div>
 </nav>
@@ -956,6 +991,19 @@ h1 em, h2 em, h3 em { font-style: italic; color: transparent; -webkit-text-fill-
   </div>
 </div>
 
+
+<nav class="dock" aria-label="Hlavná navigácia">
+  <span class="dock-pill" aria-hidden="true"></span>
+  <a href="/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11 12 4l8 7v9h-5v-6H9v6H4z"/></svg><span>Úvod</span></a>
+  <a href="/vysledky"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V11M10 20V5M16 20v-6M21 20H3"/></svg><span>Výsledky</span></a>
+  <a href="/clenstvo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12l3 5-9 11L3 9l3-5Z"/><path d="M3 9h18M9 4l3 16 3-16"/></svg><span>Členstvo</span></a>
+  <a href="/kurz"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5c3-1 6-1 8 1 2-2 5-2 8-1v14c-3-1-6-1-8 1-2-2-5-2-8-1V5Z"/><path d="M12 6v14"/></svg><span>Kurz</span></a>
+  <a class="dock-wide" href="/o-mne"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg><span>O mne</span></a>
+  <a class="dock-wide" href="/formular"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3z"/><path d="m3 7 9 7 9-7"/></svg><span>Kontakt</span></a>
+  <i class="dock-sep dock-wide" aria-hidden="true"></i>
+  <a class="dock-tg dock-wide" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-tg"/></svg><span>Telegram</span></a>
+  <button class="nav-toggle dock-more" type="button" aria-expanded="false" aria-controls="overlay" aria-label="Ďalšie položky menu"><svg class="x" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg><svg class="dots" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg><span>Viac</span></button>
+</nav>
 
 <main id="top" class="kurz-page">
   <div class="lb" id="skolaLb" role="dialog" aria-modal="true" aria-label="Ukážka z kurzu" hidden>
@@ -1045,7 +1093,7 @@ h1 em, h2 em, h3 em { font-style: italic; color: transparent; -webkit-text-fill-
   var nav = document.querySelector(".nav"), tog = document.querySelector(".nav-toggle"), ov = document.getElementById("overlay");
   // menu: na úvode sa odkazy /#časť len posunú, na podstránkach sa zvýrazní aktuálna stránka
   document.querySelectorAll('a[href^="/#"]').forEach(function (a) { if (page === "home") a.setAttribute("href", a.getAttribute("href").slice(1)); });
-  var allLinks = [].slice.call(document.querySelectorAll(".menu a, .ov-links a"));
+  var allLinks = [].slice.call(document.querySelectorAll(".dock a:not(.dock-tg), .ov-links a"));
   allLinks.forEach(function (a) {
     var h = a.getAttribute("href");
     if (page !== "home" && h === "/" + page) a.classList.add("active");
@@ -1061,7 +1109,20 @@ h1 em, h2 em, h3 em { font-style: italic; color: transparent; -webkit-text-fill-
   tog.addEventListener("click", function () { setOpen(!nav.classList.contains("open")); });
   ov.querySelectorAll("a").forEach(function (a) { a.addEventListener("click", function () { setOpen(false); }); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") setOpen(false); });
-  window.addEventListener("resize", function () { if (window.innerWidth > 1080 && nav.classList.contains("open")) setOpen(false); });
+  window.addEventListener("resize", function () { if (window.innerWidth > 760 && nav.classList.contains("open")) setOpen(false); });
+  // dok: zlatá podložka sa presunie pod aktívnu položku
+  var dock = document.querySelector(".dock"), pill = dock && dock.querySelector(".dock-pill");
+  var placePill = function () {
+    if (!pill) return;
+    var a = dock.querySelector("a.active:not(.dock-tg)");
+    if (!a || !a.offsetWidth) { pill.style.opacity = "0"; return; }
+    pill.style.opacity = "1"; pill.style.width = a.offsetWidth + "px"; pill.style.transform = "translateX(" + a.offsetLeft + "px)";
+  };
+  if (dock) {
+    new MutationObserver(placePill).observe(dock, { subtree: true, attributes: true, attributeFilter: ["class"] });
+    window.addEventListener("resize", placePill); window.addEventListener("load", placePill);
+    requestAnimationFrame(function () { placePill(); dock.classList.add("ready"); });
+  }
   // zvýraznenie sekcie na úvode pri posúvaní
   var hashLinks = allLinks.filter(function (a) { return /^#[a-z]/.test(a.getAttribute("href")); });
   var sections = hashLinks.map(function (a) { return document.getElementById(a.getAttribute("href").slice(1)); }).filter(Boolean)

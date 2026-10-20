@@ -338,30 +338,6 @@
   @media (max-width: 960px) { .phone { transform: none; } }
 
   /* ---------- posledný tip ---------- */
-  .yday { position: relative; z-index: 2; padding: 56px 0 0; }
-  .yday[hidden] { display: none; }
-  .yday-card { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 36px; padding: 28px 34px; border-radius: var(--r); background: var(--panel); box-shadow: 0 40px 80px -50px rgba(0,0,0,.9); }
-  .yday-date { text-align: center; padding-right: 34px; border-right: 1px solid var(--line); }
-  .yday-date small { display: block; font: 700 11.5px/1 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
-  .yday-date b { display: block; margin-top: 8px; font: 800 48px/1 var(--sans); letter-spacing: -0.04em; color: var(--gold-hi); }
-  .yday-date span { display: block; margin-top: 4px; font-size: 12.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
-  .yday-main { min-width: 0; }
-  .yday-main .lg { font: 700 12px/1.4 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
-  .yday-main .lg:empty { display: none; }
-  .yday-main h3 { margin-top: 6px; font-size: 28px; font-weight: 800; }
-  .yday-main h3 em { margin-left: 10px; font-size: 22px; }
-  .yday-main h3 em:empty { display: none; }
-  .yday-main p { margin-top: 6px; color: var(--muted); font-size: 16px; overflow-wrap: anywhere; }
-  .yday-main p b { color: var(--text); }
-  .yday-main .meta { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-top: 12px; font-size: 13.5px; color: var(--faint); }
-  .yday-main .meta b { color: var(--gold-hi); margin-left: 5px; }
-  .yday-res { text-align: center; }
-  .yday-badge { display: inline-flex; align-items: center; gap: 10px; padding: 13px 22px; border-radius: 999px; border: 1px solid rgba(127,191,154,.5); background: rgba(127,191,154,.1); color: var(--win); font: 800 13px/1 var(--sans); letter-spacing: .12em; text-transform: uppercase; white-space: nowrap; }
-  .yday-badge.lost { border-color: rgba(192,112,124,.5); background: rgba(192,112,124,.1); color: var(--loss); }
-  .yday-badge.void { border-color: var(--line-2); background: transparent; color: var(--muted); }
-  .yday-res a { display: block; margin-top: 12px; font-size: 14px; font-weight: 600; color: var(--muted); text-decoration: none; }
-  .yday-res a:hover { color: var(--gold-hi); }
-  @media (max-width: 760px) { .yday { padding-top: 40px; } .yday-card { grid-template-columns: minmax(0,1fr); gap: 18px; padding: 24px 20px; text-align: center; } .yday-date { padding: 0 0 16px; border-right: 0; border-bottom: 1px solid var(--line); } .yday-main .meta { justify-content: center; } .yday-main h3 em { display: block; margin: 4px 0 0; } }
 
   /* ---------- metóda ---------- */
   .funnel { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
@@ -1091,8 +1067,6 @@ html[data-page="home"] .nstat-nav { display: none !important; }
 .hx-spark svg { display: block; width: 100%; height: 100%; }
 
 /* včerajší tip */
-.yday { padding: 56px 0 0; }
-.yday-card { border-radius: 22px; border: 1px solid var(--line); background: var(--panel); box-shadow: none; }
 
 /* tri kroky */
 #ako .how { display: block; }
@@ -1163,7 +1137,6 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
   .hx-live > div:nth-child(3) { border-left: 0; }
   .hx-live > div:nth-child(n+3) { border-top: 1px solid var(--line); }
   .hx-live b { font-size: 34px; }
-  .yday { padding-top: 36px; }
   #ako .steps { grid-template-columns: minmax(0, 1fr); gap: 12px; }
   #ako .steps li { padding: 24px 22px; }
   #ako .steps .n { font-size: 50px; }
@@ -1196,13 +1169,6 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
 #ako .steps h3 { margin-top: 10px; }
 #ako .more { display: block; width: max-content; margin: 30px auto 0; }
 
-.yday-card { position: relative; overflow: hidden; }
-.yday-card::before { content: ""; position: absolute; left: 0; top: 18%; bottom: 18%; width: 3px; border-radius: 3px; background: var(--gold-grad); }
-.yday-date b { font: 600 52px/1 var(--display) !important; color: var(--gold-hi); }
-.yday-main h3 { font-weight: 600; font-size: 30px; }
-.yday-main h3 em { display: inline-block; margin-left: 12px; padding: 4px 12px; border-radius: 10px; border: 1px solid var(--line-2); font: 600 22px/1 var(--display) !important; font-style: normal; color: var(--gold-hi); -webkit-text-fill-color: var(--gold-hi); background: rgba(217,192,138,.07); vertical-align: middle; }
-.yday-badge { font: 600 14px/1 var(--sans); letter-spacing: .1em; text-transform: uppercase; padding: 14px 22px; box-shadow: 0 0 30px -8px rgba(134,199,161,.45); }
-.yday-badge.lost { box-shadow: 0 0 30px -8px rgba(208,124,136,.45); }
 
 .foot-top { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 28px; padding-bottom: 30px; margin-bottom: 30px; border-bottom: 1px solid var(--line); }
 .foot-top .brand { display: inline-flex; align-items: center; gap: 10px; font-size: 26px; text-decoration: none; color: var(--text); }
@@ -1213,14 +1179,12 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
 .foot-social a:hover { background: rgba(217,192,138,.1); border-color: var(--gold); }
 .foot-social svg { width: 19px; height: 19px; }
 /* rovnako vysoké číslice aj tu */
-.yday-date b, .yday-main h3 em { font-variant-numeric: lining-nums !important; }
 .stake .big:not(.neg) { background: none; color: var(--win); -webkit-text-fill-color: var(--win); font-family: var(--display); font-weight: 600; font-variant-numeric: lining-nums !important; }
 #clenstvo .payback { max-width: 1060px; margin: 28px auto 0; border-radius: 28px; border-color: var(--line); background: var(--panel); }
 @media (max-width: 900px) { .showcase { grid-template-columns: minmax(0, 1fr) !important; } }
 @media (max-width: 860px) {
   .hx-radar { top: 270px; width: 900px; }
   #ako .steps .ic { width: 56px; height: 56px; }
-  .yday-main h3 { font-size: 26px; }
   .foot-top { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; gap: 16px; }
 }
 
@@ -1241,6 +1205,109 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
   #ako .steps .ic { width: 52px; height: 52px; border-radius: 16px; }
 }
 
+
+/* ===== menu ako plávajúci dok dole (namiesto hornej lišty) ===== */
+.nav, html.scrolled .nav, html[data-page]:not([data-page="home"]) .nav { position: relative; background: transparent !important; border-bottom-color: transparent !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+html[data-page="home"] .nav { position: absolute; left: 0; right: 0; z-index: 50; }
+.nav .wrap, html.scrolled .nav .wrap { height: 84px; justify-content: space-between; }
+.nav-right { margin-left: auto; }
+.mcta { display: none !important; }
+body { padding-bottom: 104px; }
+.dock { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 48; display: flex; align-items: center; gap: 2px; padding: 7px; border-radius: 26px; border: 1px solid rgba(217,192,138,.22); background: rgba(24,19,14,.78); -webkit-backdrop-filter: saturate(160%) blur(20px); backdrop-filter: saturate(160%) blur(20px); box-shadow: 0 24px 60px -18px rgba(0,0,0,.75), 0 0 0 1px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,245,225,.08); transform: translate(-50%, 140%); opacity: 0; transition: transform .8s cubic-bezier(.2,.9,.25,1.15), opacity .5s; }
+.dock.ready { transform: translate(-50%, 0); opacity: 1; }
+.dock::before { content: ""; position: absolute; left: 18%; right: 18%; top: -1px; height: 1px; background: linear-gradient(90deg, transparent, rgba(248,237,211,.75), transparent); pointer-events: none; }
+.dock a, .dock button { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; min-width: 76px; height: 60px; padding: 0 12px; border: 0; border-radius: 19px; background: none; color: var(--muted); font: 500 12.5px/1 var(--sans); letter-spacing: .02em; text-decoration: none; cursor: pointer; transition: color .3s; }
+.dock svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; transition: transform .35s cubic-bezier(.2,.9,.25,1.3); }
+.dock a:hover, .dock button:hover { color: var(--gold-hi); }
+.dock a:hover svg, .dock button:hover svg { transform: translateY(-3px) scale(1.14); }
+.dock a.active { color: #17130A; }
+.dock-pill { position: absolute; left: 0; top: 7px; height: 60px; width: 0; border-radius: 19px; background: var(--gold-grad); box-shadow: 0 10px 28px -10px rgba(217,192,138,.8), inset 0 1px 0 rgba(255,255,255,.5); opacity: 0; transition: transform .55s cubic-bezier(.2,.9,.25,1.1), width .55s cubic-bezier(.2,.9,.25,1.1), opacity .3s; pointer-events: none; }
+.dock-sep { width: 1px; height: 34px; margin: 0 6px; background: var(--line-2); }
+.dock .dock-tg { color: var(--gold-hi); }
+.dock .dock-tg svg { fill: currentColor; stroke: none; }
+.dock .dock-more { display: none; }
+.dock .dock-more svg { fill: currentColor; stroke: none; }
+.nav.open ~ .dock .dock-more, html.menu-open .dock .dock-more { color: var(--gold-hi); }
+.jump { bottom: 22px; }
+@media (max-width: 960px) { .dock a, .dock button { min-width: 64px; padding: 0 8px; } }
+@media (max-width: 760px) {
+  body { padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
+  .dock { left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); justify-content: space-between; padding: 6px; border-radius: 24px; transform: translateY(140%); }
+  .dock.ready { transform: none; }
+  .dock .dock-wide { display: none; }
+  .dock .dock-more { display: flex; }
+  .dock a, .dock button { flex: 1; min-width: 0; height: 58px; padding: 0 2px; font-size: 11.5px; }
+  .dock-pill { top: 6px; height: 58px; }
+  .jump { bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important; right: 14px; }
+  .nav .wrap, html.scrolled .nav .wrap { height: 68px; }
+  .overlay { padding-top: calc(48px + env(safe-area-inset-top, 0px)); padding-bottom: calc(108px + env(safe-area-inset-bottom, 0px)); clip-path: circle(0 at calc(100% - 50px) calc(100% - 50px)); }
+  .nav.open + .overlay { clip-path: circle(150% at calc(100% - 50px) calc(100% - 50px)); }
+}
+
+.dock-more .x { display: none; }
+html.menu-open .dock-more .dots { display: none; }
+html.menu-open .dock-more .x { display: block; stroke: currentColor; fill: none; stroke-width: 1.8; }
+@media (max-width: 760px) { .overlay { padding-top: calc(96px + env(safe-area-inset-top, 0px)); } }
+html[data-page]:not([data-page="home"]) .nav { position: absolute; left: 0; right: 0; z-index: 50; }
+.page-head { padding-top: calc(56px + 84px); }
+@media (max-width: 760px) { .page-head { padding-top: calc(40px + 68px); } }
+
+/* ===== úvod: nové sekcie ===== */
+.hm-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+.hm-card { padding: 30px 26px 28px; }
+.hm-card .ic { display: grid; place-items: center; width: 54px; height: 54px; margin-bottom: 22px; border-radius: 16px; border: 1px solid var(--line-2); background: rgba(217,192,138,.07); color: var(--gold-hi); }
+.hm-card .ic svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.hm-card h3 { font-size: 24px; font-weight: 600; }
+.hm-card p { margin-top: 10px; color: var(--muted); font-size: 15.5px; line-height: 1.6; }
+.hm-months { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; }
+.hm-m { padding: 22px 20px; border-radius: 20px; border: 1px solid var(--line); background: var(--panel); }
+.hm-m.now { border-color: var(--line-2); box-shadow: inset 0 1px 0 rgba(248,237,211,.12); }
+.hm-m .mn { display: block; font: 600 12px/1.3 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
+.hm-m .mn small { color: var(--faint); font-size: 11px; letter-spacing: .08em; }
+.hm-m b { display: block; margin-top: 14px; font: 600 32px/1 var(--display); letter-spacing: -0.03em; font-variant-numeric: lining-nums; }
+.hm-m.pos b { color: var(--win); } .hm-m.neg b { color: var(--loss); }
+.hm-m .bar { display: block; height: 4px; margin-top: 16px; border-radius: 4px; background: rgba(255,255,255,.06); overflow: hidden; }
+.hm-m .bar i { display: block; height: 100%; border-radius: 4px; background: var(--win); }
+.hm-m.neg .bar i { background: var(--loss); }
+.hm-m .st { display: block; margin-top: 12px; font-size: 13.5px; color: var(--faint); }
+.hm-tiers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.hm-tier { display: flex; flex-direction: column; padding: 34px 30px 30px; color: var(--text); text-decoration: none; }
+.hm-tier:hover { border-color: var(--line-2); transform: translateY(-4px); }
+.hm-tier .tn { font: 600 34px/1 var(--display); letter-spacing: -0.02em; }
+.hm-tier.silver .tn { color: #E4E4E8; } .hm-tier.gold .tn { color: var(--gold-hi); } .hm-tier.plat .tn { background: linear-gradient(135deg, #F4F1FF, #BFC7E6 55%, #E9E3D3); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hm-tier .tl { margin-top: 8px; font-size: 14px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+.hm-tier b { margin-top: 26px; font: 600 56px/1 var(--display); letter-spacing: -0.04em; font-variant-numeric: lining-nums; }
+.hm-tier .pm { margin-top: 10px; font-size: 14.5px; color: var(--muted); }
+.hm-tier .go { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--line); font-weight: 600; color: var(--gold-hi); }
+.hm-tier .go i { font-style: normal; display: inline-block; transition: transform .3s; }
+.hm-tier:hover .go i { transform: translateX(5px); }
+.sec-head.center .lead { margin-left: auto; margin-right: auto; }
+.hm-tier.plat { border-color: rgba(217,192,138,.4); }
+.hm-tier { position: relative; }
+.hm-tier .flag { position: absolute; top: 22px; right: 22px; padding: 7px 12px; border-radius: 999px; background: var(--gold-grad); color: #17130A; font: 700 11px/1 var(--sans); letter-spacing: .1em; text-transform: uppercase; }
+.hm-kurz-card { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: center; gap: 56px; padding: 40px; color: var(--text); text-decoration: none; }
+.hm-kurz-card:hover { border-color: var(--line-2); }
+.hm-kurz-img { border-radius: 16px; overflow: hidden; box-shadow: 0 30px 60px -24px rgba(0,0,0,.8); transform: rotate(-2deg); transition: transform .5s var(--ease); }
+.hm-kurz-card:hover .hm-kurz-img { transform: rotate(0) scale(1.02); }
+.hm-kurz-img img { display: block; width: 100%; height: auto; }
+.hm-kurz-txt .eyebrow { margin-bottom: 20px; }
+.hm-kurz-txt p { margin-top: 18px; max-width: 52ch; font-size: 17px; color: var(--muted); }
+.hm-kurz-buy { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin-top: 30px; }
+.hm-kurz-buy b { font: 600 46px/1 var(--display); letter-spacing: -0.03em; color: var(--gold-hi); font-variant-numeric: lining-nums; }
+.hm-kurz-buy > span:not(.btn) { color: var(--faint); font-size: 14px; }
+.hm-kurz-buy .btn { margin-left: auto; }
+html[data-page="home"] #otazky .faq details[id="garancia"] { scroll-margin-top: 30px; }
+@media (max-width: 1080px) { .hm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .hm-months { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 860px) { .hm-tiers { grid-template-columns: minmax(0, 1fr); } .hm-kurz-card { grid-template-columns: minmax(0, 1fr); gap: 30px; padding: 26px; } .hm-kurz-img { max-width: 360px; } }
+@media (max-width: 560px) {
+  .hm-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .hm-card { padding: 24px 22px; }
+  .hm-months { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .hm-m { padding: 18px 16px; } .hm-m b { font-size: 26px; }
+  .hm-tier { padding: 28px 24px 24px; } .hm-tier b { font-size: 48px; }
+  .hm-tier .flag { position: static; align-self: flex-start; margin-bottom: 16px; }
+  .hm-kurz-buy .btn { margin-left: 0; width: 100%; }
+}
 </style>
 
 </head>
@@ -1260,20 +1327,12 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
 <nav class="nav" aria-label="Hlavná navigácia">
   <div class="wrap">
     <a class="brand" href="/"><svg aria-hidden="true"><use href="#logo"/></svg>TipRadar</a>
-    <div class="menu">
-      <a href="/vysledky">Výsledky</a>
-      <a href="/clenstvo">Členstvo</a>
-      <a href="/kurz">Kurz</a>
-      <a href="/o-mne">O mne</a>
-      <a href="/formular">Kontakt</a>
-    </div>
     <div class="nav-right">
       <div class="nav-social">
         <a href="https://www.instagram.com/tipradar.eu/" target="_blank" rel="noopener" aria-label="Instagram – tipradar.eu" title="Instagram"><svg aria-hidden="true"><use href="#i-ig"/></svg></a>
         <a href="mailto:info@tipradar.eu" aria-label="E-mail info@tipradar.eu" title="info@tipradar.eu"><svg aria-hidden="true"><use href="#i-mail"/></svg></a>
         <a href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener" aria-label="Telegram – TipRadar bot" title="Telegram"><svg aria-hidden="true"><use href="#i-tg"/></svg></a>
       </div>
-      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="overlay" aria-label="Menu"><i aria-hidden="true"></i></button>
     </div>
   </div>
 </nav>
@@ -1294,6 +1353,19 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
     </div>
   </div>
 </div>
+
+<nav class="dock" aria-label="Hlavná navigácia">
+  <span class="dock-pill" aria-hidden="true"></span>
+  <a href="/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11 12 4l8 7v9h-5v-6H9v6H4z"/></svg><span>Úvod</span></a>
+  <a href="/vysledky"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V11M10 20V5M16 20v-6M21 20H3"/></svg><span>Výsledky</span></a>
+  <a href="/clenstvo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12l3 5-9 11L3 9l3-5Z"/><path d="M3 9h18M9 4l3 16 3-16"/></svg><span>Členstvo</span></a>
+  <a href="/kurz"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5c3-1 6-1 8 1 2-2 5-2 8-1v14c-3-1-6-1-8 1-2-2-5-2-8-1V5Z"/><path d="M12 6v14"/></svg><span>Kurz</span></a>
+  <a class="dock-wide" href="/o-mne"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg><span>O mne</span></a>
+  <a class="dock-wide" href="/formular"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3z"/><path d="m3 7 9 7 9-7"/></svg><span>Kontakt</span></a>
+  <i class="dock-sep dock-wide" aria-hidden="true"></i>
+  <a class="dock-tg dock-wide" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-tg"/></svg><span>Telegram</span></a>
+  <button class="nav-toggle dock-more" type="button" aria-expanded="false" aria-controls="overlay" aria-label="Ďalšie položky menu"><svg class="x" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg><svg class="dots" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg><span>Viac</span></button>
+</nav>
 
 <main id="top">
   <header class="page-head" data-pages="metoda">
@@ -1359,20 +1431,6 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
     </div>
   </section>
 
-  <section class="yday" id="yday" data-pages="home" aria-label="Posledný vyhodnotený tip" hidden>
-    <div class="wrap">
-      <div class="yday-card glow">
-        <div class="yday-date"><small id="ydLbl">Včerajší tip</small><b class="num" id="ydDay"></b><span id="ydMonth"></span></div>
-        <div class="yday-main">
-          <div class="lg" id="ydLeague"></div>
-          <h3><span id="ydMatch"></span><em class="num" id="ydScore"></em></h3>
-          <p id="ydBet"></p>
-          <div class="meta" id="ydMeta"></div>
-        </div>
-        <div class="yday-res"><span class="yday-badge" id="ydBadge"></span><a href="/vysledky">Všetky výsledky →</a></div>
-      </div>
-    </div>
-  </section>
 
   <section class="sec" id="ako" data-pages="home">
     <div class="wrap">
@@ -1407,6 +1465,60 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
           <p class="phone-note">Ilustrácia. Tip príde 1 – 2 hodiny pred výkopom, výsledok večer po zápase.</p>
         </div>
       </div>
+    </div>
+  </section>
+
+  <section class="sec alt hm-why" id="preco" data-pages="home">
+    <div class="wrap">
+      <div class="sec-head center">
+        <div><div class="eyebrow">Prečo TipRadar</div><h2>Čo dostanete <em>navyše</em></h2></div>
+        <div class="idx" aria-hidden="true">02</div>
+      </div>
+      <div class="hm-grid">
+        <article class="card hm-card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M8 10h8M8 14h5"/></svg></span><h3>Nič neskrývame</h3><p>Každý tip sa po zápase vyhodnotí a ostane v histórii. Výhry aj prehry, nič sa nemaže.</p></article>
+        <article class="card hm-card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><h3>Dáta, nie pocit</h3><p>Model počíta šance zo štatistík oboch tímov, nie podľa mena klubu alebo dojmu z posledného zápasu.</p></article>
+        <article class="card hm-card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3Z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg></span><h3>Garancia</h3><p>Ak celé vaše členstvo skončí v strate, ďalší mesiac máte zadarmo. Platí pre Silver, Gold aj Platinum.</p></article>
+        <article class="card hm-card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4V5Z"/><path d="M8 9h8M8 12h5"/></svg></span><h3>Súkromný VIP chat</h3><p>Vo všetkých členstvách. Pýtajte sa, debatujte o zápasoch a na otázky odpovedám osobne.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec hm-mon" id="mesacne" data-pages="home" hidden>
+    <div class="wrap">
+      <div class="sec-head center">
+        <div><div class="eyebrow">Mesiac po mesiaci</div><h2>Ako sa <em>darilo</em></h2><p class="lead">Výsledky za posledné mesiace pri rovnakom vklade na každý tip. Jednotka je suma, ktorú si zvolíte, napríklad 10&nbsp;€.</p></div>
+        <div class="idx" aria-hidden="true">03</div>
+      </div>
+      <div class="hm-months" id="hmMonths"></div>
+      <a class="more" href="/vysledky">Všetky výsledky a história tipov <span aria-hidden="true">→</span></a>
+    </div>
+  </section>
+
+  <section class="sec alt hm-plans" id="clenstva" data-pages="home">
+    <div class="wrap">
+      <div class="sec-head center">
+        <div><div class="eyebrow">Členstvo</div><h2>Vyberte si <em>dĺžku</em></h2><p class="lead">Všetci členovia dostávajú rovnaké tipy, súkromný VIP chat aj garanciu. Líšia sa len dĺžkou a cenou za mesiac.</p></div>
+        <div class="idx" aria-hidden="true">04</div>
+      </div>
+      <div class="hm-tiers">
+        <a class="card hm-tier silver" href="/clenstvo#silver"><span class="tn">Silver</span><span class="tl">1 mesiac</span><b class="num">49&nbsp;€</b><span class="pm">49&nbsp;€ za mesiac</span><span class="go">Vybrať Silver <i aria-hidden="true">→</i></span></a>
+        <a class="card hm-tier gold" href="/clenstvo#gold"><span class="tn">Gold</span><span class="tl">3 mesiace</span><b class="num">119&nbsp;€</b><span class="pm">39,67&nbsp;€ za mesiac · ušetríte 28&nbsp;€</span><span class="go">Vybrať Gold <i aria-hidden="true">→</i></span></a>
+        <a class="card hm-tier plat" href="/clenstvo#platinum"><span class="flag">Najnižšia cena za mesiac</span><span class="tn">Platinum</span><span class="tl">6 mesiacov</span><b class="num">219&nbsp;€</b><span class="pm">36,50&nbsp;€ za mesiac · ušetríte 75&nbsp;€</span><span class="go">Vybrať Platinum <i aria-hidden="true">→</i></span></a>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec hm-kurz" id="skola-uvod" data-pages="home">
+    <div class="wrap">
+      <a class="card hm-kurz-card" href="/kurz">
+        <div class="hm-kurz-img"><img src="/skola/kurz-01.jpg" alt="Titulná strana kurzu Škola stávkovania" loading="lazy" /></div>
+        <div class="hm-kurz-txt">
+          <div class="eyebrow">Exkluzívny kurz</div>
+          <h2>Škola <em>stávkovania</em></h2>
+          <p>48 strán a 10 kapitol o tom, čo väčšina tipérov preskočí: ako chrániť bank, ako spoznať stávku s hodnotou a ako nedovoliť emóciám rozhodovať za vás.</p>
+          <div class="hm-kurz-buy"><b class="num">99&nbsp;€</b><span>jednorazová platba</span><span class="btn">Pozrieť kurz <span class="arr" aria-hidden="true">→</span></span></div>
+        </div>
+      </a>
     </div>
   </section>
 
@@ -1617,7 +1729,7 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
     </div>
   </section>
 
-  <section class="sec alt" id="otazky" data-pages="otazky clenstvo">
+  <section class="sec alt" id="otazky" data-pages="otazky clenstvo home">
     <div class="wrap split">
       <div><div class="eyebrow">Otázky</div><h2>Čo sa ľudia <em>pýtajú</em></h2></div>
       <div class="faq">
@@ -1706,11 +1818,11 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
   var nav = document.querySelector(".nav"), tog = document.querySelector(".nav-toggle"), ov = document.getElementById("overlay");
   // menu: na úvode sa odkazy /#časť len posunú, na podstránkach sa zvýrazní aktuálna stránka
   document.querySelectorAll('a[href^="/#"]').forEach(function (a) { if (page === "home") a.setAttribute("href", a.getAttribute("href").slice(1)); });
-  var allLinks = [].slice.call(document.querySelectorAll(".menu a, .ov-links a"));
+  var allLinks = [].slice.call(document.querySelectorAll(".dock a:not(.dock-tg), .ov-links a"));
   allLinks.forEach(function (a) {
     var h = a.getAttribute("href");
     if (page !== "home" && h === "/" + page) a.classList.add("active");
-    if (page === "home" && h === "/") a.setAttribute("href", "#top");
+    if (page === "home" && h === "/") { a.setAttribute("href", "#top"); a.classList.add("active"); }
   });
   // celoplošné menu
   var setOpen = function (o) {
@@ -1722,7 +1834,20 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
   tog.addEventListener("click", function () { setOpen(!nav.classList.contains("open")); });
   ov.querySelectorAll("a").forEach(function (a) { a.addEventListener("click", function () { setOpen(false); }); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") setOpen(false); });
-  window.addEventListener("resize", function () { if (window.innerWidth > 1080 && nav.classList.contains("open")) setOpen(false); });
+  window.addEventListener("resize", function () { if (window.innerWidth > 760 && nav.classList.contains("open")) setOpen(false); });
+  // dok: zlatá podložka sa presunie pod aktívnu položku
+  var dock = document.querySelector(".dock"), pill = dock && dock.querySelector(".dock-pill");
+  var placePill = function () {
+    if (!pill) return;
+    var a = dock.querySelector("a.active:not(.dock-tg)");
+    if (!a || !a.offsetWidth) { pill.style.opacity = "0"; return; }
+    pill.style.opacity = "1"; pill.style.width = a.offsetWidth + "px"; pill.style.transform = "translateX(" + a.offsetLeft + "px)";
+  };
+  if (dock) {
+    new MutationObserver(placePill).observe(dock, { subtree: true, attributes: true, attributeFilter: ["class"] });
+    window.addEventListener("resize", placePill); window.addEventListener("load", placePill);
+    requestAnimationFrame(function () { placePill(); dock.classList.add("ready"); });
+  }
   // zvýraznenie sekcie na úvode pri posúvaní
   var hashLinks = allLinks.filter(function (a) { return /^#[a-z]/.test(a.getAttribute("href")); });
   var sections = hashLinks.map(function (a) { return document.getElementById(a.getAttribute("href").slice(1)); }).filter(Boolean)
@@ -1747,7 +1872,7 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
       lockUntil = Date.now() + 1500;
     });
   });
-  if (page === "home" && location.hash && document.querySelector('.menu a[href="' + location.hash + '"]')) {
+  if (page === "home" && location.hash && document.querySelector('.dock a[href="' + location.hash + '"]')) {
     allLinks.forEach(function (x) { x.classList.toggle("active", x.getAttribute("href") === location.hash); });
     lockUntil = Date.now() + 1500;
   }
@@ -1884,6 +2009,20 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
       return `<li class="${m.key === nowKey ? "now" : ""}"><span class="mn">${MONTHS[mo - 1]} ${y}${m.key === nowKey ? "<small>prebieha</small>" : ""}</span><span class="num">${m.totalResolved}</span><span class="num"><span class="w">${m.won}</span> / <span class="l">${m.totalResolved - m.won}</span></span><span class="num">${m.winRate ?? "–"} %</span><span class="num ${cls(m.roi || 0)}">${m.roi == null ? "–" : signed(m.roi, 1) + " %"}</span><span class="num ${cls(v)}">${signed(v, 1)} j.</span></li>`;
     }).join("");
     $("mesiace").hidden = false;
+  }
+  // úvod: posledné mesiace ako dlaždice
+  function drawHomeMonths(list) {
+    const box = $("hmMonths"), sec = document.getElementById("mesacne");
+    const ms = (list || []).filter((m) => m.totalResolved > 0).slice(-6);
+    if (!box || !sec || !ms.length) return;
+    const nowKey = new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Bratislava" }).slice(0, 7);
+    const top = Math.max(1, ...ms.map((m) => Math.abs(m.profit || 0)));
+    box.innerHTML = ms.map((m) => {
+      const [y, mo] = m.key.split("-").map(Number), v = m.profit || 0, c = v >= 0 ? "pos" : "neg";
+      const w = Math.max(4, (Math.abs(v) / top) * 100).toFixed(0);
+      return `<div class="hm-m ${c}${m.key === nowKey ? " now" : ""}"><span class="mn">${MONTHS[mo - 1]}${m.key === nowKey ? " <small>prebieha</small>" : ` <small>${y}</small>`}</span><b class="num">${signed(v, 1)}&nbsp;j.</b><span class="bar"><i style="width:${w}%"></i></span><span class="st num">${m.won} z ${m.totalResolved} vyšlo${m.winRate != null ? ` · ${m.winRate}&nbsp;%` : ""}</span></div>`;
+    }).join("");
+    sec.hidden = false;
   }
   // posledných 10 tipov ako krúžky (zľava najstarší)
   function drawLast10() {
@@ -2035,7 +2174,7 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
     const nav = document.querySelector(".nav"), strip = document.querySelector(".contact-strip");
     if (!nav) return;
     const fit = () => {
-      const h = nav.offsetHeight;
+      const h = /sticky|fixed/.test(getComputedStyle(nav).position) ? nav.offsetHeight : 0;
       document.documentElement.style.setProperty("--nav-h", h + "px");
       document.documentElement.style.scrollPaddingTop = h + (strip ? strip.offsetHeight : 0) + "px";
     };
@@ -2163,7 +2302,8 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
     }
     $$(".term-switch [data-term]").forEach((b) => b.addEventListener("click", () => apply(b.dataset.term)));
     window.__applyTerm = apply;
-    apply("m3");
+    // odkaz z úvodu /clenstvo#silver, #gold, #platinum rovno vyberie dĺžku
+    apply({ silver: "m1", gold: "m3", platinum: "season" }[location.hash.slice(1)] || "m3");
     // Odkaz „Garancia“ na karte rovno otvorí odpoveď v otázkach.
     const openGuarantee = () => { const d = document.getElementById("garancia"); if (d) d.open = true; };
     document.querySelectorAll('a[href="#garancia"]').forEach((a) => a.addEventListener("click", openGuarantee));
@@ -2204,31 +2344,7 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
       if ($("presnost")) drawCalib(d.calibration);
       recentAll = d.recent || [];
       drawList(); drawChart(d.timeline); drawMonths(d.months);
-      // Včerajší (posledný vyhodnotený) tip pod úvodom – výhra aj prehra
-      const L = d.latest, yd = document.getElementById("yday");
-      if (yd && L && L.day && (L.status === "won" || L.status === "lost" || L.status === "void")) {
-        const [ly, lm, ldd] = String(L.day).split("-").map(Number);
-        const pad = (x) => String(x).padStart(2, "0");
-        const now = new Date(), yest = new Date(now.getTime() - 864e5);
-        const key = (t) => `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`;
-        $("ydLbl").textContent = L.day === key(yest) ? "Včerajší tip" : L.day === key(now) ? "Dnešný tip" : "Posledný tip";
-        $("ydDay").textContent = ldd + ".";
-        $("ydMonth").textContent = MONTHS[lm - 1] || "";
-        $("ydLeague").textContent = [L.league, L.strong ? "★ Silný tip dňa" : ""].filter(Boolean).join(" · ");
-        $("ydMatch").textContent = L.match || "";
-        $("ydScore").textContent = L.score || "";
-        const bi = String(L.bet || "").indexOf(": ");
-        $("ydBet").innerHTML = bi > 0 ? `${esc(L.bet.slice(0, bi))}: <b>${esc(L.bet.slice(bi + 2))}</b>` : `<b>${esc(L.bet || "")}</b>`;
-        const meta = [];
-        if (L.odds) meta.push(`<span>Kurz<b class="num">${String(Number(L.odds).toFixed(2)).replace(".", ",")}</b></span>`);
-        if (L.probability) meta.push(`<span>Dôvera<b class="num">${L.probability}&nbsp;%</b></span>`);
-        if (L.dayTotal > 1) meta.push(`<span>V ten deň<b class="num">${L.dayWon} z ${L.dayTotal}</b></span>`);
-        $("ydMeta").innerHTML = meta.join("");
-        const b = $("ydBadge");
-        b.className = "yday-badge" + (L.status === "lost" ? " lost" : L.status === "void" ? " void" : "");
-        b.textContent = L.status === "won" ? "✓ Vyšlo" : L.status === "lost" ? "✗ Nevyšlo" : "↺ Vrátené";
-        yd.hidden = false;
-      }
+      drawHomeMonths(d.months);
       if (!d.totalResolved) { $("month").textContent = "Čísla sa zobrazia po prvých vyhodnotených tipoch."; return; }
       const n = d.totalResolved;
       drawLast10();
@@ -2317,7 +2433,6 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
   io.observe(fig);
 })();
 </script>
-<a class="btn mcta" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.5 4.2 2.9 11.4c-1.3.5-1.3 1.2-.2 1.6l4.8 1.5 1.8 5.6c.2.6.4.8.8.8.4 0 .6-.2.9-.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.6c.3-1.3-.5-1.8-1.3-1.5Zm-4 3.4-8.6 7.8-.3 3.4-1.6-5 10.2-6.4c.5-.3.9 0 .3.2Z" fill="currentColor"/></svg>Telegram komunita</a>
 <button class="jump" id="jump" type="button" aria-label="Na koniec stránky"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 <script>
 (function () {
@@ -2391,7 +2506,7 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
     if (stop || Date.now() > until) return;
     var el = document.getElementById(id), nav = document.querySelector(".nav");
     if (!el) return;
-    var navH = nav ? nav.getBoundingClientRect().height : 0;
+    var navH = nav && /sticky|fixed/.test(getComputedStyle(nav).position) ? nav.getBoundingClientRect().height : 0;
     var y = window.scrollY + el.getBoundingClientRect().top - navH;
     if (Math.abs(window.scrollY - y) > 2) {
       var root = document.documentElement, prev = root.style.scrollBehavior;
