@@ -1074,7 +1074,24 @@ html { scrollbar-color: rgba(217,192,138,.35) var(--bg); }
 }
 @media (min-width: 961px) and (max-width: 1180px) { .wrap { width: min(1200px, 100% - 390px); } .dock a, .dock button { width: 150px !important; letter-spacing: .14em !important; } }
 
+
+/* citát v hornej lište, písaným písmom */
+.nav-quote { flex: 1 1 auto; min-width: 0; margin: 0 20px; text-align: center; white-space: nowrap; overflow: visible; font: 400 30px/1.5 "Great Vibes", cursive !important; color: #E9D5A6; animation: nqIn 1.6s .3s both; }
+.nav-quote span, .nav-quote em { font-family: "Great Vibes", cursive !important; font-size: inherit !important; display: inline-block; padding: 0 .25em; font-style: normal; background: linear-gradient(100deg, #B8995E 0%, #E9D5A6 30%, #FFF8E4 46%, #E9D5A6 62%, #B8995E 100%); background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: nqShine 6s ease-in-out 2s infinite; }
+.nav-quote em { animation-delay: 2.6s; }
+@keyframes nqShine { 0% { background-position: 100% 0; } 50%, 100% { background-position: 0 0; } }
+@keyframes nqIn { from { opacity: 0; transform: translateY(6px); filter: blur(5px); } to { opacity: 1; transform: none; filter: none; } }
+@media (max-width: 1180px) { .nav-quote { font-size: 25px !important; margin: 0 10px; } }
+@media (max-width: 960px) { .nav-quote { display: none; } }
+@media (prefers-reduced-motion: reduce) { .nav-quote, .nav-quote span, .nav-quote em { animation: none; } }
+
+/* horná lišta stále viditeľná */
+.nav, html.scrolled .nav, html[data-page] .nav, html[data-page="home"] .nav, html[data-page]:not([data-page="home"]) .nav { position: fixed !important; top: 0; left: 0; right: 0; z-index: 60; background: rgba(20,15,11,.80) !important; -webkit-backdrop-filter: blur(16px) saturate(140%) !important; backdrop-filter: blur(16px) saturate(140%) !important; border-bottom: 1px solid rgba(217,192,138,.14) !important; }
+.nav .wrap { transition: height .35s ease; }
+html.scrolled .nav .wrap { height: 68px !important; }
+html.menu-open .nav { background: transparent !important; border-bottom-color: transparent !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
 </style>
+<link href="https://fonts.googleapis.com/css2?family=Herr+Von+Muellerhoff&amp;family=Great+Vibes&amp;display=swap" rel="stylesheet" />
 </head>
 <body>
 
@@ -1092,6 +1109,7 @@ html { scrollbar-color: rgba(217,192,138,.35) var(--bg); }
 <nav class="nav" aria-label="Hlavná navigácia">
   <div class="wrap">
     <a class="brand" href="/"><svg aria-hidden="true"><use href="#logo"/></svg>TipRadar</a>
+    <div class="nav-quote" aria-label="Šťastie je náhoda. Disciplína je rozhodnutie."><span>Šťastie je náhoda.</span> <em>Disciplína je rozhodnutie.</em></div>
     <div class="nav-right">
       <div class="nav-social">
         <a href="https://www.instagram.com/tipradar.eu/" target="_blank" rel="noopener" aria-label="Instagram – tipradar.eu" title="Instagram"><svg aria-hidden="true"><use href="#i-ig"/></svg></a>
