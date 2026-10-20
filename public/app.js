@@ -1355,20 +1355,22 @@ async function showDayTips() {
   renderDayTipsView();
   const items = [];
   let failed = 0;
+  const failedList = [];
   // Zápasy analyzujeme jeden po druhom – šetrne k limitu požiadaviek API,
   // aby boli výsledky pri každom načítaní rovnaké a úplné.
   for (const f of fixtures) {
     try {
       const r = await requestAnalysis(f);
       for (const bet of r?.bestBets || []) items.push({ r, bet });
-    } catch {
+    } catch (e) {
       failed++;
+      failedList.push({ match: `${translateTeamName(f.homeTeam.name)} – ${translateTeamName(f.awayTeam.name)}`, why: (e && e.message) || "neznáma chyba" });
     }
     dayTipsRun.done++;
     if (currentView === "tipy" && !dayTipsDetail) renderDayTipsProgress();
   }
   items.sort((a, b) => b.bet.probability - a.bet.probability);
-  dayTips = { items, analyzed: fixtures.length, failed, date, ran: true };
+  dayTips = { items, analyzed: fixtures.length, failed, failedList, date, ran: true };
   dayTipsRun.running = false;
   computeStrongIdx();
   if (!dayTipsDetail) renderDayTipsView();
@@ -1451,6 +1453,7 @@ function renderDayTipsView() {
         dayTips.failed ? ` · <span class="loss">${dayTips.failed} sa nepodarilo analyzovať</span>` : ""
       }${otherDate ? ` · <span class="gold">výsledky sú pre ${escapeHtml(dayKeyLabel(dayTips.date))}</span>` : ""}
     </p>
+    ${(dayTips.failedList || []).length ? `<p class="muted small dt-failed">Neanalyzované: ${dayTips.failedList.map((x) => `<b>${escapeHtml(x.match)}</b> (${escapeHtml(x.why)})`).join(", ")}. Skús „Analyzovať znova“, často ide len o chvíľkový výpadok dát.</p>` : ""}
     ${rows ? `<div class="dtips">${rows}</div>` : `<div class="empty-card">V tento deň nie je žiadny tip, ktorý by prešiel pravidlami (68 – 80${NB}% a kontrola kurzu).</div>`}`;
 
   dayTipsPaneEl.querySelectorAll("[data-open]").forEach((btn) => {
