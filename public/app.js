@@ -2219,12 +2219,11 @@ let manualLastDate = "";
 /** Pravidlá odporúčaného tipu pre ručne doplnený tip – vráti dôvod zamietnutia alebo "". */
 function manualTipProblem(p, odds) {
   if (!(p > 0) || !(odds > 1)) return "";
-  if (p < WATCH_BELOW) return `dôvera ${fmtNum(p, 0)}${NB}% je pod ${WATCH_BELOW}${NB}%`;
+  if (p < 65) return `dôvera ${fmtNum(p, 0)}${NB}% je pod 65${NB}%`;
   if (p > 80) return `dôvera ${fmtNum(p, 0)}${NB}% je nad 80${NB}%`;
-  if (odds < MIN_ODDS) return `kurz ${fmtOdds(odds)} je pod ${fmtOdds(MIN_ODDS)}`;
-  const ev = (p / 100) * odds;
-  if (ev < 1.05) return `pri dôvere ${fmtNum(p, 0)}${NB}% treba kurz aspoň ${fmtOdds(minOddsFor({ probability: p }))}`;
-  if (ev > 1.25) return "podozrivo vysoká hodnota (nad +25 %)";
+  const need = minOddsFor({ probability: p });
+  if (odds < need) return `pri dôvere ${fmtNum(p, 0)}${NB}% treba kurz aspoň ${fmtOdds(need)}, zadaný je ${fmtOdds(odds)}`;
+  if ((p / 100) * odds > 1.25) return "podozrivo vysoká hodnota (nad +25 %)";
   return "";
 }
 
@@ -2261,10 +2260,17 @@ function openManualTip() {
     const why = manualTipProblem(p, odds);
     const box = q("watch");
     if (!(odds > 1) || !(p > 0)) { q("check").textContent = ""; box.disabled = false; return; }
-    q("check").textContent = why ? `✗ Model by tip nepustil: ${why}. Uloží sa len medzi sledované.` : "✓ Tip prešiel kontrolou modelu.";
+    // Skúšobné pásmo 65 – 67 %: kurz sa kontroluje rovnako, ale tip ide aj tak len medzi sledované.
+    const trial = !why && p < WATCH_BELOW;
+    const need = `pri ${fmtNum(p, 0)}${NB}% treba kurz aspoň ${fmtOdds(minOddsFor({ probability: p }))}`;
+    q("check").textContent = why
+      ? `✗ Model by tip nepustil: ${why}. Uloží sa len medzi sledované.`
+      : trial
+        ? `✓ Kurz je v poriadku (${need}). Dôvera je v skúšobnom pásme 65 – 67${NB}%, tip sa uloží medzi sledované.`
+        : `✓ Tip prešiel kontrolou modelu (${need}).`;
     q("check").className = `small ${why ? "loss" : "win"}`;
-    box.checked = !!why;
-    box.disabled = !!why;
+    box.checked = !!why || trial;
+    box.disabled = !!why || trial;
   };
   q("prob").addEventListener("input", checkNow);
   q("odds").addEventListener("input", checkNow);
@@ -2300,7 +2306,7 @@ function openManualTip() {
       status: q("result").value,
     };
     // Dôvera pod 68 % patrí do skúšobného pásma – aj zabudnutý tip ide len medzi sledované.
-    if (q("watch").checked || manualTipProblem(probInput, odds)) tip.watchOnly = true;
+    if (q("watch").checked || manualTipProblem(probInput, odds) || probInput < WATCH_BELOW) tip.watchOnly = true;
     if (!(probInput > 0 && probInput <= 100)) tip.probabilityEstimated = true;
     q("save").disabled = true;
     try {
