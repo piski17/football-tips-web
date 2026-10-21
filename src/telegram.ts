@@ -648,6 +648,17 @@ export async function notifyAdminExpiringSubscribers(
   });
 }
 
+/** Krátka správa len pre administrátora (napr. automaticky vypnutý trh, 21. 10. 2026). */
+export async function notifyAdmin(text: string): Promise<boolean> {
+  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_ADMIN_CHAT_ID) return false;
+  try {
+    await callTelegramApi("sendMessage", { chat_id: TELEGRAM_ADMIN_CHAT_ID, text, parse_mode: "HTML" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Pošle predplatiteľovi osobnú pripomienku pred obnovením platby, s prehľadom celkovej úspešnosti. */
 export async function sendRenewalReminder(
   chatId: string,

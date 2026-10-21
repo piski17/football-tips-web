@@ -82,6 +82,8 @@ export interface MarketPick {
    * (napr. "ev_low", "min_odds", "conflict", "category_lower_ev"). Na výber nemá vplyv.
    */
   rejectCode?: string;
+  /** Oprava presnosti trhu (k), ak bola použitá – marketHealth.ts. */
+  marketCalibration?: number;
   /** Pri málo dátach: model a stávkovky sa líšia o 15+ bodov (dôvod vyradenia). */
   marketConflict?: string;
   /** Pri rozpore: čistý odhad modelu a odhad stávkoviek (v %), pre tichú evidenciu. */
@@ -291,6 +293,8 @@ export interface SavedTip {
   hoursBeforeKickoff?: number;
   closingMarketProb?: number | null;
   closingDevig?: boolean;
+  /** Oprava presnosti trhu (k), ktorá platila pri uložení tipu (21. 10. 2026, marketHealth.ts). */
+  marketCalibration?: number;
   /** Tip (alebo niektorý zápas tiketu) bol vyradený kontrolou kurzu, ale uložený ručne - "mimo filtra". */
   overrideFilter?: boolean;
   /** Tip doplnený ručne po zápase (s výsledkom) - neprechádza automatickým vyhodnotením. */

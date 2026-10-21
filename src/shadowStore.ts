@@ -75,7 +75,8 @@ function writeFile(all: Record<string, ShadowEntry>): void {
 export async function recordShadow(entries: ShadowEntry[]): Promise<void> {
   if (!entries.length) return;
   // Pri plnom úložisku sa zapíšu len tipy s rozporom (záznamy bez reasonCode sú pôvodného druhu).
-  const keep = (e: ShadowEntry, count: number) => count < MAX_SHADOW_ENTRIES || e.conflict || !e.reasonCode;
+  const keep = (e: ShadowEntry, count: number) =>
+    count < MAX_SHADOW_ENTRIES || e.conflict || !e.reasonCode || e.reasonCode === "market_disabled";
   if (!useUpstash) {
     const all = readFile();
     let count = Object.keys(all).length;
@@ -197,8 +198,17 @@ export function shadowEntriesFrom(
       : String(p.marketConflict ?? "neznámy dôvod"));
   const out: ShadowEntry[] = [];
   const bestPerCategory = new Map<string, any>();
+  // Tipy dočasne vypnutého trhu (21. 10. 2026) – z každého trhu zápasu ten s najväčšou
+  // hodnotou, nezávisle od ostatných dôvodov. Podľa nich sa trh sám znova zapne.
+  const disabledPerCategory = new Map<string, any>();
   for (const p of candidates) {
     const code = codeOf(p);
+    if (code === "market_disabled") {
+      const cat = String(p.category ?? p.market);
+      const cur = disabledPerCategory.get(cat);
+      if (!cur || (p.expectedValue ?? 0) > (cur.expectedValue ?? 0)) disabledPerCategory.set(cat, p);
+      continue;
+    }
     // Tipy s rozporom medzi neodporúčanými sa zapisujú všetky (ako pred 20. 10. 2026).
     if (p.marketConflict && p.rejectReason) {
       out.push(base(p, reasonOf(p, code), code));
@@ -209,7 +219,7 @@ export function shadowEntriesFrom(
     const ev = p.expectedValue ?? 0, curEv = cur?.expectedValue ?? 0;
     if (!cur || ev > curEv || (ev === curEv && p.probability > cur.probability)) bestPerCategory.set(cat, p);
   }
-  for (const p of bestPerCategory.values()) {
+  for (const p of [...bestPerCategory.values(), ...disabledPerCategory.values()]) {
     const code = codeOf(p);
     out.push(base(p, reasonOf(p, code), code));
   }

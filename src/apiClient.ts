@@ -291,6 +291,29 @@ export interface TeamExtendedStatsAverages {
   goalsAgainst?: number | null;
   /** Z koľkých zápasov sa forma gólov počítala. */
   goalsGames?: number;
+  /**
+   * Nový model (21. 10. 2026, beží zatiaľ potichu): pomer „60 % xG + 40 % góly“ ku gólom
+   * v tých istých zápasoch – útok (For) a obrana (Against). 1 = bez zmeny, null = málo zápasov s xG.
+   */
+  xgRatioFor?: number | null;
+  xgRatioAgainst?: number | null;
+  xgGames?: number;
+  /** Nový model: priemery len zo zápasov doma (venueHome) a len vonku (venueAway). */
+  venueHome?: VenueStats;
+  venueAway?: VenueStats;
+}
+
+/** Priemery štatistík len z domácich alebo len z vonkajších zápasov (nový model, 21. 10. 2026). */
+export interface VenueStats {
+  games: number;
+  corners: number | null;
+  cornersAgainst: number | null;
+  shotsOnGoal: number | null;
+  shotsOnGoalAgainst: number | null;
+  fouls: number | null;
+  foulsAgainst: number | null;
+  cards: number | null;
+  cardsAgainst: number | null;
 }
 
 /** Hodnota štatistiky z API - číslo, alebo percento ako text ("55%"). */
@@ -310,7 +333,7 @@ export async function getTeamExtendedStatsAverages(
   lastN: number = 10,
   asOf?: string
 ): Promise<TeamExtendedStatsAverages> {
-  const cacheKey = `extStatsAvg4:${leagueId}:${season}:${teamId}:${lastN}:${asOf ?? ""}`;
+  const cacheKey = `extStatsAvg5:${leagueId}:${season}:${teamId}:${lastN}:${asOf ?? ""}`;
   // Pri spätnom teste načítame viac zápasov a ponecháme len tie spred výkopu.
   const extra = asOf ? 15 : 0;
   const cached = getCached<TeamExtendedStatsAverages>(cacheKey);
@@ -412,6 +435,15 @@ export async function getTeamExtendedStatsAverages(
             parseStatValue(list.find((s: any) => s.type === "Yellow Cards")?.value) ?? 0;
           row.cards = cardsOf(own);
           row.cardsAgainst = opp.length ? cardsOf(opp) : null;
+          // Nový model (21. 10. 2026): xG z tej istej odpovede (žiadna požiadavka navyše),
+          // miesto zápasu a góly – pre pomer xG a priemery doma / vonku.
+          row.xg = parseStatValue(own.find((s: any) => s.type === "expected_goals")?.value);
+          row.xgAgainst = parseStatValue(opp.find((s: any) => s.type === "expected_goals")?.value);
+          row.isHome = f.teams?.home?.id === teamId ? 1 : 0;
+          const gh = f?.goals?.home, ga = f?.goals?.away;
+          row.gf = gh == null || ga == null ? null : Number(row.isHome ? gh : ga);
+          row.ga = gh == null || ga == null ? null : Number(row.isHome ? ga : gh);
+          row.time = new Date(f.fixture?.date).getTime() || 0;
           return row;
         } catch {
           return null;
@@ -454,7 +486,43 @@ export async function getTeamExtendedStatsAverages(
       gw += w; gfSum += r.gf * w; gaSum += r.ga * w;
     });
 
+    // Nový model: pomer xG – zápasy s xG aj gólmi, novšie s väčšou váhou (× 0,9 na zápas).
+    const xgRows = valid
+      .filter((r) => r.xg != null && r.xgAgainst != null && r.gf != null && r.ga != null)
+      .sort((a, b) => (b.time ?? 0) - (a.time ?? 0));
+    let xw = 0, xgF = 0, xgA = 0, gF = 0, gA = 0;
+    xgRows.forEach((r, i) => {
+      const w = Math.pow(0.9, i);
+      xw += w; xgF += r.xg! * w; xgA += r.xgAgainst! * w; gF += r.gf! * w; gA += r.ga! * w;
+    });
+    const xgRatio = (xgSum: number, goalSum: number): number | null => {
+      if (xgRows.length < 5 || xw <= 0) return null;
+      // Pri veľmi malom počte gólov by pomer „vybuchol“ – základ aspoň 0,5 gólu na zápas.
+      const goals = Math.max(goalSum / xw, 0.5);
+      const mixed = 0.6 * (xgSum / xw) + 0.4 * (goalSum / xw);
+      return Math.min(1.2, Math.max(0.8, Math.max(mixed, 0.3) / goals));
+    };
+    const venue = (home: 1 | 0): VenueStats => {
+      const list = valid.filter((r) => r.isHome === home);
+      const avg = (key: string): number | null => {
+        const values = list.map((r) => r[key]).filter((v): v is number => v != null);
+        return values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
+      };
+      return {
+        games: list.length,
+        corners: avg("corners"), cornersAgainst: avg("cornersAgainst"),
+        shotsOnGoal: avg("shotsOnGoal"), shotsOnGoalAgainst: avg("shotsOnGoalAgainst"),
+        fouls: avg("fouls"), foulsAgainst: avg("foulsAgainst"),
+        cards: avg("cards"), cardsAgainst: avg("cardsAgainst"),
+      };
+    };
+
     const result: TeamExtendedStatsAverages = {
+      xgRatioFor: xgRatio(xgF, gF),
+      xgRatioAgainst: xgRatio(xgA, gA),
+      xgGames: xgRows.length,
+      venueHome: venue(1),
+      venueAway: venue(0),
       goalsFor: gw > 0 ? gfSum / gw : null,
       goalsAgainst: gw > 0 ? gaSum / gw : null,
       goalsGames: goalRows.length,
@@ -591,6 +659,46 @@ export async function getRecentFormAnyCompetition(teamId: number, count: number 
   } catch {
     return "";
   }
+}
+
+/** Oddych tímu pred zápasom (nový model, 21. 10. 2026). */
+export interface RestInfo {
+  /** Dni od posledného zápasu (vo všetkých súťažiach), null = neznáme. */
+  restDays: number | null;
+  /** Počet zápasov za posledných 14 dní pred výkopom. */
+  games14: number;
+}
+
+/**
+ * Únava a rotácia: koľko dní mal tím voľna od posledného zápasu (aj pohár, Liga majstrov)
+ * a koľko zápasov odohral za posledné 2 týždne. Jedna požiadavka na tím a sezónu (cache 6 h).
+ */
+export async function getRestInfo(teamId: number, season: number, kickoffIso: string): Promise<RestInfo> {
+  const empty: RestInfo = { restDays: null, games14: 0 };
+  const kickoff = new Date(kickoffIso).getTime();
+  if (!isFinite(kickoff)) return empty;
+  const cacheKey = `teamSeasonDates:${teamId}:${season}`;
+  let dates = getCached<number[]>(cacheKey);
+  if (dates === undefined) {
+    try {
+      const res = await client().get("/fixtures", { params: { team: teamId, season } });
+      checkApiErrors(res.data);
+      dates = (res.data?.response ?? [])
+        .filter((f: any) => ["FT", "AET", "PEN"].includes(f?.fixture?.status?.short))
+        .map((f: any) => new Date(f?.fixture?.date).getTime())
+        .filter((t: number) => isFinite(t));
+      setCached(cacheKey, dates, TTL_SQUAD);
+    } catch {
+      return empty;
+    }
+  }
+  const before = (dates ?? []).filter((t) => t < kickoff - 3 * 60 * 60 * 1000).sort((a, b) => b - a);
+  if (!before.length) return empty;
+  const day = 24 * 60 * 60 * 1000;
+  return {
+    restDays: Math.floor((kickoff - before[0]) / day),
+    games14: before.filter((t) => t >= kickoff - 14 * day).length,
+  };
 }
 
 /**

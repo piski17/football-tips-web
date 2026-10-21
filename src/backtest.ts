@@ -20,7 +20,9 @@ import {
   getFixtureCornersAndCards,
   getTeamPlayersWithStats,
   getFixtureMissingPlayers,
+  getRestInfo,
 } from "./apiClient";
+import { newModelInputs } from "./newModel";
 import { predictMatch, DEFAULT_WEIGHTS, LEGACY_WEIGHTS } from "./predictor";
 import { MIN_PROBABILITY, MAX_PROBABILITY, MIN_GAMES_TO_RECOMMEND } from "./oddsMatcher";
 import { evaluateTip, STATS_MARKETS } from "./tipEvaluator";
@@ -121,6 +123,8 @@ export interface BacktestJob {
   report?: BacktestReport;
   /** Ten istý test s pôvodným modelom (do 5. 10. 2026) – na porovnanie. */
   reportLegacy?: BacktestReport;
+  /** Nový model (xG, únava, doma/vonku – 21. 10. 2026) na tých istých zápasoch. */
+  reportNew?: BacktestReport;
   /** Vplyv chýbajúcich hráčov: nový model s nimi a bez nich, len zápasy, kde niekto chýbal. */
   absenceImpact?: { fixtures: number; withAbsences: BacktestReport; withoutAbsences: BacktestReport };
 }
@@ -134,7 +138,7 @@ function mixStat(own: number | null | undefined, opponentAllows: number | null |
 }
 
 /** Tipy pre zápas výhradne z údajov spred výkopu – nový aj pôvodný model z rovnakých údajov. */
-async function predictAsOf(fixture: Fixture, leagueId: number, season: number): Promise<{ current: MarketPick[]; legacy: MarketPick[]; noAbsence: MarketPick[]; absences: boolean }> {
+async function predictAsOf(fixture: Fixture, leagueId: number, season: number): Promise<{ current: MarketPick[]; legacy: MarketPick[]; noAbsence: MarketPick[]; novy: MarketPick[]; absences: boolean }> {
   const asOf = fixture.date;
   let [homeStats, awayStats, h2hAll, leagueAvg, homePriors, awayPriors, homeExt, awayExt] = await Promise.all([
     getTeamStatistics(leagueId, season, fixture.homeTeam.id, asOf),
@@ -167,7 +171,13 @@ async function predictAsOf(fixture: Fixture, leagueId: number, season: number): 
     getFixtureMissingPlayers(fixture.fixtureId),
   ]);
 
-  const run = (legacy: boolean, useMissing = !legacy) => predictMatch(
+  // Nový model: oddych tímov k dátumu zápasu (pri chybe bez únavy) a priemery doma / vonku.
+  const [restHome, restAway] = await Promise.all([
+    getRestInfo(fixture.homeTeam.id, season, asOf).catch(() => null),
+    getRestInfo(fixture.awayTeam.id, season, asOf).catch(() => null),
+  ]);
+  const nm = newModelInputs(homeExt, awayExt, restHome, restAway);
+  const run = (legacy: boolean, useMissing = !legacy, isNew = false) => predictMatch(
     fixture,
     homeStats,
     awayStats,
@@ -176,13 +186,13 @@ async function predictAsOf(fixture: Fixture, leagueId: number, season: number): 
     legacy ? LEGACY_WEIGHTS : DEFAULT_WEIGHTS,
     homePriors,
     awayPriors,
-    mixStat(homeExt.corners, awayExt.cornersAgainst),
-    mixStat(awayExt.corners, homeExt.cornersAgainst),
+    isNew ? nm.homeCorners : mixStat(homeExt.corners, awayExt.cornersAgainst),
+    isNew ? nm.awayCorners : mixStat(awayExt.corners, homeExt.cornersAgainst),
     homePlayers,
     awayPlayers,
     null,
     null,
-    {
+    isNew ? nm.extra : {
       homeShotsOnGoal: mixStat(homeExt.shotsOnGoal, awayExt.shotsOnGoalAgainst),
       awayShotsOnGoal: mixStat(awayExt.shotsOnGoal, homeExt.shotsOnGoalAgainst),
       homeFouls: mixStat(homeExt.fouls, awayExt.foulsAgainst),
@@ -198,11 +208,15 @@ async function predictAsOf(fixture: Fixture, leagueId: number, season: number): 
     h2hStats,
     { home: { goalsFor: homeExt.goalsFor ?? null, goalsAgainst: homeExt.goalsAgainst ?? null, games: homeExt.goalsGames ?? 0 }, away: { goalsFor: awayExt.goalsFor ?? null, goalsAgainst: awayExt.goalsAgainst ?? null, games: awayExt.goalsGames ?? 0 } },
     legacy,
-    useMissing ? missing : undefined
+    useMissing ? missing : undefined,
+    null,
+    null,
+    null,
+    isNew ? nm.variant : null
   );
-  const picks = (legacy: boolean, useMissing = !legacy) =>
-    (run(legacy, useMissing).allCandidates ?? []).filter((c) => c.market !== "Strelec gólov");
-  return { current: picks(false), legacy: picks(true), noAbsence: picks(false, false), absences: missing.length > 0 };
+  const picks = (legacy: boolean, useMissing = !legacy, isNew = false) =>
+    (run(legacy, useMissing, isNew).allCandidates ?? []).filter((c) => c.market !== "Strelec gólov");
+  return { current: picks(false), legacy: picks(true), noAbsence: picks(false, false), novy: picks(false, true, true), absences: missing.length > 0 };
 }
 
 /** Skutočný výsledok každého kandidáta (vyšiel / nevyšiel), vrátené a neznáme vynechá. */
@@ -413,6 +427,7 @@ async function run(job: BacktestJob): Promise<void> {
 
     const samples: Sample[] = [];
     const samplesLegacy: Sample[] = [];
+    const samplesNew: Sample[] = [];
     const absWith: Sample[] = [];
     const absWithout: Sample[] = [];
     let absFixtures = 0;
@@ -420,9 +435,10 @@ async function run(job: BacktestJob): Promise<void> {
     for (const { f, leagueId } of selected) {
       try {
         const picks = await predictAsOf(f, leagueId, season);
-        const [cur, old, noAbs] = await outcomes(f, [picks.current, picks.legacy, picks.noAbsence]);
+        const [cur, old, noAbs, nov] = await outcomes(f, [picks.current, picks.legacy, picks.noAbsence, picks.novy]);
         samples.push(...cur);
         samplesLegacy.push(...old);
+        samplesNew.push(...nov);
         if (picks.absences) {
           absFixtures++;
           absWith.push(...cur);
@@ -436,10 +452,12 @@ async function run(job: BacktestJob): Promise<void> {
       // priebežný výsledok, aby sa dal zobraziť už počas behu
       job.report = buildReport(samples, analyzed, failed);
       job.reportLegacy = buildReport(samplesLegacy, analyzed, failed);
+      job.reportNew = buildReport(samplesNew, analyzed, failed);
     }
     job.report = buildReport(samples, analyzed, failed);
     job.report.optimizer = optimize(samples);
     job.reportLegacy = buildReport(samplesLegacy, analyzed, failed);
+    job.reportNew = buildReport(samplesNew, analyzed, failed);
     job.absenceImpact = {
       fixtures: absFixtures,
       withAbsences: buildReport(absWith, absFixtures, 0),

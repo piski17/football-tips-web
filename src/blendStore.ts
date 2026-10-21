@@ -31,6 +31,9 @@ export interface BlendPick {
   odds: number | null;
   /** Model a stávkovky sa rozchádzajú tak, že tip sa dnes vyradí (tichá evidencia). */
   conflict?: boolean;
+  /** Nový model (xG, únava, doma/vonku, 21. 10. 2026): jeho šanca na tú istú voľbu v % a rozpor. */
+  newModel?: number;
+  newConflict?: boolean;
   outcome?: "won" | "lost" | "void";
 }
 
@@ -56,27 +59,70 @@ function writeFile(all: Record<string, BlendFixture>): void {
   fs.writeFileSync(FILE, JSON.stringify(all));
 }
 
-/** Z výsledku analýzy vyrobí záznam (null, ak zápas už začal alebo nie sú kurzy). */
+/** Kľúč „trh | hranica“ – voľba Over/Under sa môže v novom a súčasnom modeli líšiť. */
+function lineKey(market: string, selection: string): string | null {
+  const m = String(selection).match(/^(Over|Under)\s+(.+)$/);
+  return m ? `${market}|${m[2]}` : null;
+}
+
+/**
+ * Z výsledku analýzy vyrobí záznam (null, ak zápas už začal alebo nie sú kurzy).
+ * `newCandidates` (od 21. 10. 2026) = kandidáti nového modelu z tých istých údajov; ku
+ * každej voľbe sa zapíše aj jeho šanca (ak nový model vidí opačnú stranu, 100 − jeho šanca).
+ * Zapíšu sa aj hranice, ktoré sú blízko pásma len podľa nového modelu.
+ */
 export function blendEntryFrom(
   fixture: { fixtureId: number; date: string; homeTeam: { name: string }; awayTeam: { name: string } },
-  candidates: any[]
+  candidates: any[],
+  newCandidates?: any[] | null
 ): BlendFixture | null {
   if (new Date(fixture.date).getTime() <= Date.now()) return null; // len odhady spred výkopu
-  const picks: BlendPick[] = (candidates || [])
-    .filter((c) => c && typeof c.blendModel === "number" && typeof c.blendMarket === "number")
-    .filter((c) => {
-      const hi = Math.max(c.blendModel, c.blendMarket);
-      const lo = Math.min(c.blendModel, c.blendMarket);
-      return hi >= RECORD_MIN && lo <= RECORD_MAX;
-    })
-    .map((c) => ({
+  const usable = (c: any) => c && typeof c.blendModel === "number" && typeof c.blendMarket === "number";
+  const cur = (candidates || []).filter(usable);
+  const nov = (newCandidates || []).filter(usable);
+  const novByLine = new Map<string, any>();
+  for (const c of nov) {
+    const k = lineKey(c.market, c.selection);
+    if (k) novByLine.set(k, c);
+  }
+  const newProbFor = (market: string, selection: string): { prob: number; conflict: boolean } | null => {
+    const k = lineKey(market, selection);
+    const n = k ? novByLine.get(k) : nov.find((c) => c.market === market && c.selection === selection);
+    if (!n) return null;
+    return { prob: n.selection === selection ? n.blendModel : 100 - n.blendModel, conflict: Boolean(n.marketConflict) };
+  };
+  const seen = new Set<string>();
+  const picks: BlendPick[] = [];
+  const add = (c: any, model: number | null) => {
+    const key = lineKey(c.market, c.selection) ?? `${c.market}|${c.selection}`;
+    if (seen.has(key)) return;
+    const n = newProbFor(c.market, c.selection);
+    const values = [c.blendMarket, ...(model !== null ? [model] : []), ...(n ? [n.prob] : [])];
+    const ref = [...(model !== null ? [model] : []), ...(n ? [n.prob] : [])];
+    const hi = Math.max(...ref, c.blendMarket);
+    const lo = Math.min(...values);
+    if (!(hi >= RECORD_MIN && lo <= RECORD_MAX) || model === null) return;
+    seen.add(key);
+    picks.push({
       market: String(c.market),
       selection: String(c.selection),
-      model: Math.round(c.blendModel * 10) / 10,
+      model: Math.round(model * 10) / 10,
       bookmakers: Math.round(c.blendMarket * 10) / 10,
       odds: typeof c.odds === "number" ? c.odds : null,
       ...(c.marketConflict ? { conflict: true } : {}),
-    }));
+      ...(n ? { newModel: Math.round(n.prob * 10) / 10, ...(n.conflict ? { newConflict: true } : {}) } : {}),
+    });
+  };
+  for (const c of cur) add(c, c.blendModel);
+  // Hranice, kde je blízko pásma len nový model: súčasný model k nim má opačnú voľbu.
+  for (const c of nov) {
+    const k = lineKey(c.market, c.selection);
+    if (!k || seen.has(k)) continue;
+    const opp = cur.find((x) => lineKey(x.market, x.selection) === k);
+    if (!opp) continue;
+    const model = opp.selection === c.selection ? opp.blendModel : 100 - opp.blendModel;
+    add({ ...c, marketConflict: opp.marketConflict }, model); // rozpor súčasného modelu platí aj pre opačnú voľbu
+  }
   if (!picks.length) return null;
   return {
     fixtureId: fixture.fixtureId,
@@ -171,5 +217,70 @@ export function blendSummary(all: BlendFixture[], minOdds = MIN_ODDS): {
     settledPicks: settled.length,
     rows,
     bookmakersBrier: brierOf(settled.map((p) => p.bookmakers)),
+  };
+}
+
+/** Podiel stávkoviek v ostrých tipoch (rovnaký ako MARKET_BLEND v predictor.ts). */
+const LIVE_BLEND = 0.3;
+
+export interface ModelCompareRow {
+  brier: number | null;
+  tips: number;
+  won: number;
+  hitRate: number | null;
+  profit: number;
+  roi: number | null;
+}
+
+/**
+ * Súčasný model oproti novému (xG, únava, doma/vonku) na tých istých vyhodnotených
+ * odhadoch – obidva so 70 % model / 30 % stávkovky ako v ostrých tipoch. Zápasy
+ * zapísané pred 21. 10. 2026 nový odhad nemajú a do porovnania nevstupujú.
+ */
+export function newModelSummary(all: BlendFixture[], minOdds = MIN_ODDS): {
+  settledPicks: number;
+  pendingFixtures: number;
+  current: ModelCompareRow;
+  novy: ModelCompareRow;
+  byMarket: { market: string; picks: number; current: number; novy: number }[];
+} {
+  const withNew = all.filter((f) => f.picks.some((p) => typeof p.newModel === "number"));
+  const settled = withNew
+    .flatMap((f) => (f.status === "settled" ? f.picks : []))
+    .filter((p) => typeof p.newModel === "number" && (p.outcome === "won" || p.outcome === "lost"));
+  const prob = (p: BlendPick, isNew: boolean) => (1 - LIVE_BLEND) * (isNew ? p.newModel! : p.model) + LIVE_BLEND * p.bookmakers;
+  const sq = (p: BlendPick, isNew: boolean) => Math.pow(prob(p, isNew) / 100 - (p.outcome === "won" ? 1 : 0), 2);
+  const row = (isNew: boolean): ModelCompareRow => {
+    const passing = settled.filter((p) => {
+      const pr = prob(p, isNew);
+      if (p.odds == null || (isNew ? p.newConflict : p.conflict) || NOT_RECOMMENDED_MARKETS.includes(p.market)) return false;
+      const ev = (pr / 100) * p.odds;
+      return p.odds >= minOdds && pr >= MIN_PROBABILITY && pr <= MAX_PROBABILITY && ev >= MIN_EXPECTED_VALUE && ev <= SUSPICIOUS_EXPECTED_VALUE;
+    });
+    const won = passing.filter((p) => p.outcome === "won").length;
+    const profit = passing.reduce((a, p) => a + (p.outcome === "won" ? p.odds! - 1 : -1), 0);
+    return {
+      brier: settled.length ? settled.reduce((a, p) => a + sq(p, isNew), 0) / settled.length : null,
+      tips: passing.length,
+      won,
+      hitRate: passing.length ? (won / passing.length) * 100 : null,
+      profit: Math.round(profit * 100) / 100,
+      roi: passing.length ? (profit / passing.length) * 100 : null,
+    };
+  };
+  const markets = Array.from(new Set(settled.map((p) => p.market)));
+  const byMarket = markets
+    .map((market) => {
+      const list = settled.filter((p) => p.market === market);
+      const b = (isNew: boolean) => list.reduce((a, p) => a + sq(p, isNew), 0) / list.length;
+      return { market, picks: list.length, current: b(false), novy: b(true) };
+    })
+    .sort((a, b) => b.picks - a.picks);
+  return {
+    settledPicks: settled.length,
+    pendingFixtures: withNew.filter((f) => f.status === "pending").length,
+    current: row(false),
+    novy: row(true),
+    byMarket,
   };
 }

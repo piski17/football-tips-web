@@ -31,7 +31,60 @@ import {
  * evidencie, aby sa výsledky dali porovnávať len v rámci jednej verzie. Pri každej
  * zmene modelu, kalibrácie alebo filtrov ju zmeň (napr. na dátum zmeny).
  */
-export const MODEL_VERSION = "2026-10-20c";
+export const MODEL_VERSION = "2026-10-21";
+/** Verzia, ktorá sa zapíše, keď tipy vyberá nový model (xG, únava, doma/vonku). */
+export const NEW_MODEL_VERSION = `${MODEL_VERSION}-novy`;
+
+/**
+ * Nový model (21. 10. 2026, Michalovo rozhodnutie): beží potichu vedľa súčasného, kým
+ * porovnanie v reporte neukáže, ktorý je presnejší. Prepnúť sa dá jedným klikom.
+ *  - xg: pomer „60 % xG + 40 % góly“ ku gólom (útok a obrana) z posledných zápasov,
+ *  - rest: oddych tímov (dni od posledného zápasu, počet zápasov za 14 dní),
+ *  - priemery rohov, kariet, striel a faulov len z domácich / vonkajších zápasov dodá
+ *    server cez bežné parametre (extraStatsAvg, homeCornersAvg…).
+ */
+export interface ModelVariant {
+  xg?: { homeFor: number | null; homeAgainst: number | null; awayFor: number | null; awayAgainst: number | null } | null;
+  rest?: { home: { restDays: number | null; games14: number } | null; away: { restDays: number | null; games14: number } | null } | null;
+}
+
+/**
+ * Úpravy trhov podľa ostrých výsledkov (21. 10. 2026), počíta ich server (marketHealth.ts):
+ *  - disabled: trh sa dočasne neodporúča (po 30+ tipoch bez zisku a bez lepšieho kurzu),
+ *  - calibration: oprava percent trhu p' = 50 + k × (p − 50) (po 50+ tipoch).
+ */
+export interface MarketAdjustments {
+  disabled?: Record<string, string>;
+  calibration?: Record<string, number>;
+}
+
+/** Kategória trhu podľa jeho názvu (rovnaká ako `category` pri tipoch modelu). */
+export function marketCategory(market: string): string | null {
+  const m = String(market || "");
+  if (m === "Góly") return "goly";
+  if (m === "Góly domácich" || m === "Góly hostí") return "goly_timu";
+  if (m === "Rohy") return "rohy";
+  if (m === "Rohy domácich" || m === "Rohy hostí") return "rohy_timu";
+  if (m === "Karty") return "karty";
+  if (m === "Karty domácich" || m === "Karty hostí") return "karty_timu";
+  if (m === "Strely na bránu") return "strely";
+  if (m === "Strely na bránu domácich" || m === "Strely na bránu hostí") return "strely_timu";
+  if (m === "Fauly") return "fauly";
+  if (m.startsWith("Držanie lopty")) return "drzanie_lopty";
+  return null;
+}
+
+/**
+ * Únava (nový model): po 2 dňoch voľna tím útočí o 6 % menej, po 3 dňoch o 3 %;
+ * 4 a viac zápasov za 14 dní uberie ďalšie 2 %. Unavený tím aj o polovicu toho viac dostáva.
+ */
+function fatigueFactor(r: { restDays: number | null; games14: number } | null | undefined): number {
+  if (!r) return 1;
+  let f = 1;
+  if (r.restDays != null) f *= r.restDays <= 2 ? 0.94 : r.restDays === 3 ? 0.97 : 1;
+  if (r.games14 >= 4) f *= 0.98;
+  return f;
+}
 
 // Predvolené váhy jednotlivých faktorov pri výsledku zápasu (1/X/2).
 // Pokus z 5. 10. 2026 (len Poisson s korekciou remíz, bez formy a vzájomných
@@ -650,8 +703,24 @@ export function predictMatch(
   /** Vplyv rozhodcu na fauly a karty (null = rozhodca neznámy alebo málo dát). */
   referee?: RefereeProfile | null,
   /** Potvrdená zostava so základnou jedenástkou (ak je už zverejnená). */
-  lineup?: LineupInfo | null
+  lineup?: LineupInfo | null,
+  /** Nový model (xG, únava) – bez neho súčasný model. */
+  variant?: ModelVariant | null,
+  /** Vypnuté trhy a oprava percent podľa ostrých výsledkov. */
+  adjust?: MarketAdjustments | null
 ): PredictionResult {
+  // Nový model – únava: menej rohov a striel unaveného tímu (zvyšok nižšie pri góloch).
+  const tiredHome = fatigueFactor(variant?.rest?.home);
+  const tiredAway = fatigueFactor(variant?.rest?.away);
+  if (variant && (tiredHome < 1 || tiredAway < 1)) {
+    if (homeCornersAvg != null) homeCornersAvg *= tiredHome;
+    if (awayCornersAvg != null) awayCornersAvg *= tiredAway;
+    if (extraStatsAvg) {
+      extraStatsAvg = { ...extraStatsAvg };
+      if (extraStatsAvg.homeShotsOnGoal != null) extraStatsAvg.homeShotsOnGoal *= tiredHome;
+      if (extraStatsAvg.awayShotsOnGoal != null) extraStatsAvg.awayShotsOnGoal *= tiredAway;
+    }
+  }
   const xg = expectedGoals(homeStats, awayStats, leagueAvg, homePriorsResult, awayPriorsResult);
   // Aktuálna forma podľa gólov: útok tímu v posledných zápasoch oproti sezóne
   // a to, koľko v nich dostáva súper.
@@ -663,6 +732,15 @@ export function predictMatch(
   const awayDefenseForm = formRatio(ra?.goalsAgainst, awayStats.goals.against.average.total, awayStats.fixtures.played.total, ra?.games ?? 0);
   xg.home = clamp(xg.home * Math.pow(homeAttackForm * awayDefenseForm, FORM_WEIGHT), 0.15, 5);
   xg.away = clamp(xg.away * Math.pow(awayAttackForm * homeDefenseForm, FORM_WEIGHT), 0.15, 5);
+  // Nový model – xG: góly sa doplnia o kvalitu šancí (60 % xG + 40 % góly) a únavu.
+  if (variant) {
+    const vx = variant.xg;
+    const r = (x: number | null | undefined) => (x == null || !isFinite(x) ? 1 : x);
+    const homeX = vx ? clamp(r(vx.homeFor) * r(vx.awayAgainst), 0.8, 1.25) : 1;
+    const awayX = vx ? clamp(r(vx.awayFor) * r(vx.homeAgainst), 0.8, 1.25) : 1;
+    xg.home = clamp(xg.home * homeX * tiredHome * (1 + (1 - tiredAway) / 2), 0.15, 5);
+    xg.away = clamp(xg.away * awayX * tiredAway * (1 + (1 - tiredHome) / 2), 0.15, 5);
+  }
   // Vzájomné zápasy spresnia očakávané góly (výsledok, góly, oba tímy skórujú…).
   const h2hG = h2hGoals(h2h, fixture.homeTeam.id);
   if (h2hG && h2hG.weight > 0) {
@@ -1064,6 +1142,12 @@ export function predictMatch(
         }
       }
     }
+    // Oprava presnosti trhu podľa ostrých výsledkov (zapne sa sama po 50+ tipoch trhu).
+    const k = adjust?.calibration?.[c.category];
+    if (typeof k === "number" && isFinite(k) && k !== 1) {
+      c.probability = 50 + k * (c.probability - 50);
+      c.marketCalibration = k;
+    }
     c.expectedValue = match ? (c.probability / 100) * match.odd : null;
   }
   // Po úprave podľa trhu sa poradie tipov mohlo zmeniť.
@@ -1109,6 +1193,10 @@ export function predictMatch(
     } else if (b.marketConflict) {
       b.rejectReason = b.marketConflict;
       b.rejectCode = "conflict";
+      lowValueBets.push(b);
+    } else if (ev == null && b.category === "drzanie_lopty" && adjust?.disabled?.[b.category]) {
+      b.rejectReason = `trh je dočasne vypnutý (${adjust.disabled[b.category]})`;
+      b.rejectCode = "market_disabled";
       lowValueBets.push(b);
     } else if (ev == null && b.category === "drzanie_lopty") {
       // Držanie lopty: kurz cez API nie je, tip ide do výberu s minimálnym kurzom,
@@ -1156,6 +1244,13 @@ export function predictMatch(
       if (mp != null) b.marketProbability = mp;
       b.rejectReason = b.marketConflict;
       b.rejectCode = "ev_high";
+      lowValueBets.push(b);
+    } else if (adjust?.disabled?.[b.category]) {
+      // Trh vypnutý automaticky (21. 10. 2026: po 30+ tipoch bez zisku a bez lepšieho kurzu).
+      // Až tu, aby „market_disabled“ dostali len tipy, ktoré by inak prešli všetkými filtrami –
+      // tie sa zapisujú do tichej evidencie a keď sa trhu znova darí, zapne sa sám.
+      b.rejectReason = `trh je dočasne vypnutý (${adjust.disabled[b.category]})`;
+      b.rejectCode = "market_disabled";
       lowValueBets.push(b);
     } else {
       pickPool.push(b);
@@ -1256,7 +1351,7 @@ export function predictMatch(
     bestBets,
     lowValueBets,
     oddsAvailable,
-    modelVersion: MODEL_VERSION,
+    modelVersion: variant ? NEW_MODEL_VERSION : MODEL_VERSION,
     allCandidates: candidates,
     teamSeasonGoalsPerGame: {
       home: homeStats.goals.for.average.total,

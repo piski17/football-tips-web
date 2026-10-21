@@ -2364,9 +2364,11 @@ function openMonthlyReport(startMonth) {
         <h4 class="ct">Podľa trhov</h4>
         ${(r.byMarket || []).map((b) => `
           <div class="mb-row">
-            <div class="mb-top"><span class="mb-name">${escapeHtml(b.market)}</span><span class="mb-num">${b.won} z ${b.total} · <b>${fmtNum(b.rate, 0)}${NB}%</b></span></div>
+            <div class="mb-top"><span class="mb-name">${escapeHtml(b.market)}</span><span class="mb-num">${b.promised != null ? `<span class="faint" title="Priemerná dôvera modelu pri ${b.promisedCount} tipoch">model sľuboval ${fmtNum(b.promised, 0)}${NB}% · </span>` : ""}${b.won} z ${b.total} · <b>${fmtNum(b.rate, 0)}${NB}%</b></span></div>
             <div class="bar mb-bar"><i style="width:${Math.round(b.rate)}%"></i></div>
-          </div>`).join("")}`;
+          </div>`).join("")}
+        <div data-model><p class="faint small">Načítavam stav modelu…</p></div>`;
+      renderModelHealth(body.querySelector("[data-model]"));
     } catch (err) {
       body.innerHTML = `<p class="empty">Súhrn sa nepodarilo načítať: ${escapeHtml(err.message || String(err))}</p>`;
     }
@@ -2390,6 +2392,78 @@ function openMonthlyReport(startMonth) {
     }
   });
   load();
+}
+/**
+ * Model (21. 10. 2026) – len pre Michala, do Telegramu nejde:
+ *  - nový model (xG, únava, doma/vonku) oproti súčasnému + prepínač,
+ *  - stav trhov: automatické vypnutie slabého trhu (30+ tipov) a oprava presnosti (50+ tipov).
+ */
+async function renderModelHealth(el) {
+  if (!el) return;
+  try {
+    const d = await fetchJson("/api/model/health");
+    const nm = d.newModel || {};
+    const err = (v) => (v == null ? "–" : fmtNum(v * 100, 1));
+    const tipsTxt = (r) => (r.tips ? `${r.won} z ${r.tips} (${fmtNum(r.hitRate, 0)}${NB}%), ${signed(r.profit, 1)}${NB}j.` : "žiadny tip");
+    const enough = (nm.settledPicks || 0) >= 300;
+    let better = null;
+    if (nm.current && nm.novy && nm.current.brier != null && nm.novy.brier != null)
+      better = nm.novy.brier < nm.current.brier - 0.0005 ? "novy" : nm.novy.brier > nm.current.brier + 0.0005 ? "current" : "same";
+    const verdict = !nm.settledPicks
+      ? "Zatiaľ žiadny vyhodnotený odhad – čísla pribudnú po odohraní zápasov."
+      : !enough
+      ? `Vyhodnotené odhady: ${nm.settledPicks}. Na spoľahlivý záver treba aspoň 300 (asi 3 – 4 týždne).`
+      : better === "novy"
+      ? `<b class="g">Nový model je presnejší</b> (${nm.settledPicks} vyhodnotených odhadov).`
+      : better === "current"
+      ? `<b>Súčasný model je presnejší</b> – nový zatiaľ nezapínaj (${nm.settledPicks} odhadov).`
+      : `Oba modely sú rovnako presné (${nm.settledPicks} odhadov).`;
+    const markets = (nm.byMarket || []).filter((x) => x.picks >= 10)
+      .map((x) => `<tr><td>${escapeHtml(x.market)}</td><td class="num">${x.picks}</td><td class="num">${err(x.current)}</td><td class="num ${x.novy < x.current - 0.0005 ? "bt-good" : x.novy > x.current + 0.0005 ? "bt-bad" : ""}">${err(x.novy)}</td></tr>`).join("");
+    const rows = (d.rows || []).map((r) => {
+      const status = r.disabled
+        ? `<b class="l" title="${escapeHtml(r.disabledReason || "")}">vypnutý</b>`
+        : r.window >= d.thresholds.disableMin ? `<span class="g">aktívny</span>` : `<span class="faint">zbiera dáta (${r.window}/${d.thresholds.disableMin})</span>`;
+      const cal = r.k == null
+        ? "–"
+        : r.calibrationActive
+        ? `<b>× ${fmtNum(r.k, 2)}</b>`
+        : r.k === 1 ? (r.calTips >= d.thresholds.calibrationMin ? "netreba" : `<span class="faint">netreba (${r.calTips}/${d.thresholds.calibrationMin})</span>`)
+        : `<span class="faint">× ${fmtNum(r.k, 2)} od ${d.thresholds.calibrationMin} tipov (${r.calTips})</span>`;
+      const promise = r.promised != null ? `${fmtNum(r.promised, 0)} → ${fmtNum(r.actual, 0)}${NB}%` : "–";
+      return `<tr><td>${escapeHtml(r.label)}</td><td class="num">${r.tips}</td><td class="num">${promise}</td><td class="num ${r.windowProfit >= 0 ? "g" : "l"}">${r.window ? `${signed(r.windowProfit, 1)}${NB}j.` : "–"}</td><td class="num">${r.avgClv == null ? "–" : `${signed(r.avgClv, 1)}${NB}% (${r.clvCount})`}</td><td>${status}</td><td class="num">${cal}</td></tr>`;
+    }).join("");
+    el.innerHTML = `
+      <h4 class="ct">Model – len pre teba</h4>
+      <p class="small"><b class="gold">Nový model</b> (xG, únava a rotácia, doma / vonku) beží potichu vedľa súčasného. ${verdict}</p>
+      ${nm.settledPicks ? `<div class="table-wrap"><table class="bt-table"><thead><tr><th></th><th class="num" title="Ako ďaleko boli percentá od reality (× 100). Nižšie = presnejšie.">Chyba</th><th class="num">Tipy, ktoré by prešli</th></tr></thead><tbody>
+        <tr><td>Súčasný model${enough && better === "current" ? " ★" : ""}</td><td class="num">${err(nm.current.brier)}</td><td class="num">${tipsTxt(nm.current)}</td></tr>
+        <tr><td>Nový model${enough && better === "novy" ? " ★" : ""}</td><td class="num">${err(nm.novy.brier)}</td><td class="num">${tipsTxt(nm.novy)}</td></tr>
+      </tbody></table></div>` : ""}
+      ${markets ? `<details class="inner-details"><summary>Podľa trhov</summary><div class="table-wrap"><table class="bt-table"><thead><tr><th>Trh</th><th class="num">Odhady</th><th class="num">Chyba – súčasný</th><th class="num">Chyba – nový</th></tr></thead><tbody>${markets}</tbody></table></div></details>` : ""}
+      <p class="small">Tipy teraz vyberá: <b>${nm.active ? "nový model" : "súčasný model"}</b>
+        <button type="button" class="btn ghost xs" data-toggle-model>${nm.active ? "Vrátiť súčasný model" : "Zapnúť nový model"}</button></p>
+      <h4 class="ct">Trhy: sľuboval → vyšlo</h4>
+      ${rows ? `<div class="table-wrap"><table class="bt-table"><thead><tr><th>Trh</th><th class="num">Tipy</th><th class="num" title="Priemerná dôvera modelu → skutočná úspešnosť (posledných najviac 100 tipov)">Sľuboval → vyšlo</th><th class="num" title="Posledných najviac ${d.thresholds.disableWindow} tipov">Zisk</th><th class="num" title="Priemerný uzatvárací kurz (počet tipov)">Uzatvárací kurz</th><th>Stav</th><th class="num">Oprava</th></tr></thead><tbody>${rows}</tbody></table></div>` : `<p class="faint small">Zatiaľ žiadne vyhodnotené tipy.</p>`}
+      <p class="faint small">Trh sa sám vypne, keď má aspoň ${d.thresholds.disableMin} tipov a za posledných ${d.thresholds.disableWindow} je bez zisku a bez lepšieho uzatváracieho kurzu – a sám sa znova zapne, keď sa mu opäť darí. Oprava presnosti sa zapne sama od ${d.thresholds.calibrationMin} tipov trhu. O každej zmene ti príde správa na Telegram.</p>`;
+    const btn = el.querySelector("[data-toggle-model]");
+    if (btn)
+      btn.addEventListener("click", async () => {
+        const next = !nm.active;
+        if (next && !enough && !confirm("Porovnanie ešte nemá dosť vyhodnotených odhadov (aspoň 300). Naozaj zapnúť nový model?")) return;
+        btn.disabled = true;
+        try {
+          await postJson("/api/model/new-model", { active: next });
+          showToast(next ? "Tipy odteraz vyberá nový model." : "Tipy znova vyberá súčasný model.");
+          renderModelHealth(el);
+        } catch (e) {
+          showToast(`Nepodarilo sa: ${e.message}`);
+          btn.disabled = false;
+        }
+      });
+  } catch (e) {
+    el.innerHTML = `<p class="faint small">Stav modelu sa nepodarilo načítať.</p>`;
+  }
 }
 document.getElementById("monthlyReportBtn").addEventListener("click", () => openMonthlyReport());
 document.getElementById("openMonthlyBtn2").addEventListener("click", () => openMonthlyReport());
@@ -2450,6 +2524,7 @@ const SHADOW_REASON_LABEL = {
   band_high: "dôvera nad 80 %",
   category_lower_ev: "iná hranica trhu mala vyššiu hodnotu",
   match_lower_ev: "iný tip zápasu mal vyššiu hodnotu",
+  market_disabled: "trh dočasne vypnutý (slabé výsledky)",
   market_excluded: "trh neodporúčame",
   few_games: "málo odohraných zápasov",
   no_market_odds: "trh bez kurzu",
@@ -3106,6 +3181,7 @@ function renderBacktest(job) {
     <div class="table-wrap"><table class="bt-table"><thead><tr><th>Trh</th><th class="num">Tipov</th><th class="num">Model</th><th class="num">Realita</th><th class="num">Rozdiel</th><th class="num">V pásme 68–80 %</th></tr></thead><tbody>${markets}</tbody></table></div>
     <p class="muted small">Rozdiel = realita mínus predpoveď v percentuálnych bodoch. Zelená: model sedí (do ±5 b.). Červená: model <strong>preceňuje</strong> – tipy vychádzajú menej často, než hovorí. Pri menej ako ~50 tipoch v riadku ber čísla len orientačne.</p>
     ${renderBacktestComparison(r, job.reportLegacy)}
+    ${renderBacktestComparison(job.reportNew, r, true)}
     ${running ? "" : renderAbsenceImpact(job.absenceImpact)}
     ${running ? "" : renderBacktestOptimizer(r.optimizer)}`;
 }
@@ -3159,8 +3235,9 @@ function renderBacktestOptimizer(o) {
 }
 
 /** Porovnanie nového modelu s pôvodným (do 5. 10. 2026) na tých istých zápasoch. */
-function renderBacktestComparison(r, old) {
-  if (!old || !old.samples) return "";
+function renderBacktestComparison(r, old, newModel = false) {
+  if (!r || !r.samples || !old || !old.samples) return "";
+  const names = newModel ? ["súčasný", "nový"] : ["pôvodný", "nový"];
   const err = (v) => (v == null ? "–" : fmtNum(v * 100, 1));
   const band = (x) => (x && x.count ? `${pct(x.hitRate)} <span class="muted">(${x.count})</span>` : "–");
   const rows = r.markets.map((m) => {
@@ -3173,10 +3250,12 @@ function renderBacktestComparison(r, old) {
   }).join("");
   const ob = old.bandOverall, nb = r.bandOverall;
   return `
-    <h4>Nový model oproti pôvodnému (tie isté zápasy)</h4>
-    <div class="bt-summary">Pásmo 68 – 80${NB}%: pôvodný model <strong>${ob.count}</strong> tipov, vyšlo <strong>${pct(ob.hitRate)}</strong> · nový model <strong>${nb.count}</strong> tipov, vyšlo <strong>${pct(nb.hitRate)}</strong>.</div>
-    <div class="table-wrap"><table class="bt-table"><thead><tr><th>Trh</th><th class="num">Model → realita – pôvodný</th><th class="num">Model → realita – nový</th><th class="num">Chyba – pôvodný</th><th class="num">Chyba – nový</th><th class="num">V pásme – pôvodný</th><th class="num">V pásme – nový</th></tr></thead><tbody>${rows}</tbody></table></div>
-    <p class="muted small">Chyba = ako ďaleko boli percentá modelu od skutočnosti (Brierovo skóre × 100). <strong>Nižšia je lepšia.</strong> Zelená: nový model je presnejší, červená: horší. Nový model = forma z gólov + kalibrácia striel, faulov, rohov a kariet (celá sezóna) a gólov navyše na začiatku sezóny. Kalibrácia (17. 10. 2026) vznikla z testov aug. – okt. 2024 a aug. – okt. 2026 – na poctivé overenie testuj iné obdobie, napr. mar. – máj 2025 (sezóna 2024).</p>`;
+    <h4>${newModel ? "Nový model (xG, únava, doma / vonku) oproti súčasnému" : "Nový model oproti pôvodnému"} (tie isté zápasy)</h4>
+    <div class="bt-summary">Pásmo 68 – 80${NB}%: ${names[0]} model <strong>${ob.count}</strong> tipov, vyšlo <strong>${pct(ob.hitRate)}</strong> · ${names[1]} model <strong>${nb.count}</strong> tipov, vyšlo <strong>${pct(nb.hitRate)}</strong>.</div>
+    <div class="table-wrap"><table class="bt-table"><thead><tr><th>Trh</th><th class="num">Model → realita – ${names[0]}</th><th class="num">Model → realita – ${names[1]}</th><th class="num">Chyba – ${names[0]}</th><th class="num">Chyba – ${names[1]}</th><th class="num">V pásme – ${names[0]}</th><th class="num">V pásme – ${names[1]}</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="muted small">Chyba = ako ďaleko boli percentá modelu od skutočnosti (Brierovo skóre × 100). <strong>Nižšia je lepšia.</strong> Zelená: ${names[1]} model je presnejší, červená: horší. ${newModel
+      ? "Nový model (21. 10. 2026) = súčasný model + xG (kvalita šancí), únava a rotácia (dni voľna, zápasy za 14 dní) a rohy, karty, strely a fauly zvlášť doma a vonku. Spätný test je bez kurzov stávkoviek."
+      : "Nový model = forma z gólov + kalibrácia striel, faulov, rohov a kariet (celá sezóna) a gólov navyše na začiatku sezóny. Kalibrácia (17. 10. 2026) vznikla z testov aug. – okt. 2024 a aug. – okt. 2026 – na poctivé overenie testuj iné obdobie, napr. mar. – máj 2025 (sezóna 2024)."}</p>`;
 }
 
 /** Hlavička exportu: obdobie, sezóna, počet zápasov. */

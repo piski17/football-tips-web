@@ -4,7 +4,7 @@ import { listLeads, deleteLead, recordLead } from "./leadsStore";
 import { getMeta, setMeta } from "./metaStore";
 import * as crypto from "crypto";
 import { recordShadow, listShadow, updateShadow, shadowEntriesFrom, shadowReasonCode, ShadowEntry } from "./shadowStore";
-import { recordBlend, listBlend, updateBlend, blendEntryFrom, blendSummary } from "./blendStore";
+import { recordBlend, listBlend, updateBlend, blendEntryFrom, blendSummary, newModelSummary } from "./blendStore";
 import { recordLegs, listLegs, updateLeg, legCandidatesFrom, legQualifies, buildTickets, TicketLegCandidate, TICKET_RULES } from "./ticketWatchStore";
 import { startBacktest, getBacktest } from "./backtest";
 import { getDay, getAllDays, setDay } from "./dailyStore";
@@ -31,8 +31,11 @@ import {
   getRecentFormAnyCompetition,
   getSeasonGamesAnyCompetition,
   getHeadToHeadStats,
+  getRestInfo,
 } from "./apiClient";
-import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION } from "./predictor";
+import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, MarketAdjustments, marketCategory } from "./predictor";
+import { newModelInputs } from "./newModel";
+import { computeMarketHealth, marketChangesText, clvOf, CLV_TIE } from "./marketHealth";
 import { LeaguePreset, SavedTip } from "./types";
 import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText } from "./tipsStore";
 import { computeTicketStatus, settleBet, settleFixtureBets, tipHasStartedMatch, MATCH_STARTED_MESSAGE, buildTipEdit } from "./tipEvaluator";
@@ -48,7 +51,7 @@ import {
   notifyAdminExpiringSubscribers,
   sendCustomMessage,
   sendRenewalReminder,
-  sendTipResultToTelegram, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite, sendMemberMessage } from "./telegram";
+  sendTipResultToTelegram, notifyAdmin, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite, sendMemberMessage } from "./telegram";
 import { paymentsEnabled, isTerm, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, deletePayment, Payment, termLabel, tierName, addActiveMonths, SUMMER_PAUSE } from "./payments";
 import { payBySquareString } from "./payBySquare";
 import QRCode from "qrcode";
@@ -559,6 +562,50 @@ function mixStat(own: number | null | undefined, opponentAllows: number | null |
   return (own + opponentAllows) / 2;
 }
 
+// ---- Nový model a automatické úpravy trhov (21. 10. 2026) ----
+/** Prepínač „tipy vyberá nový model“ (xG, únava, doma/vonku) – v appke jedným klikom. */
+const NEW_MODEL_META = "newModelActive";
+let newModelCache: { value: boolean; at: number } | null = null;
+async function isNewModelActive(): Promise<boolean> {
+  if (newModelCache && Date.now() - newModelCache.at < 60 * 1000) return newModelCache.value;
+  const value = (await getMeta(NEW_MODEL_META).catch(() => null)) === "1";
+  newModelCache = { value, at: Date.now() };
+  return value;
+}
+
+/**
+ * Vypnuté trhy a oprava presnosti podľa ostrých výsledkov (marketHealth.ts). Prepočíta sa
+ * najviac raz za 30 minút; pri zmene oproti minulému stavu príde Michalovi správa na Telegram.
+ */
+const MARKET_STATE_META = "marketAdjustments";
+let adjustCache: { value: MarketAdjustments; at: number } | null = null;
+let adjustRefresh: Promise<MarketAdjustments> | null = null;
+async function getMarketAdjustments(force = false): Promise<MarketAdjustments> {
+  if (!force && adjustCache && Date.now() - adjustCache.at < 30 * 60 * 1000) return adjustCache.value;
+  if (adjustRefresh) return adjustRefresh;
+  adjustRefresh = (async () => {
+    try {
+      const health = computeMarketHealth(await listTips(), await listShadow().catch(() => []));
+      const next = health.adjustments;
+      let prev: MarketAdjustments | null = null;
+      try { prev = JSON.parse((await getMeta(MARKET_STATE_META)) ?? "null"); } catch { prev = null; }
+      const text = marketChangesText(prev, next, health.rows);
+      if (text) {
+        await setMeta(MARKET_STATE_META, JSON.stringify(next));
+        void notifyAdmin(text);
+      }
+      adjustCache = { value: next, at: Date.now() };
+      return next;
+    } catch {
+      // pri chybe ostane posledný známy stav (alebo žiadna úprava)
+      return adjustCache?.value ?? {};
+    } finally {
+      adjustRefresh = null;
+    }
+  })();
+  return adjustRefresh;
+}
+
 app.post("/api/analyze", async (req, res) => {
   try {
     const { fixture, leagueId, season } = req.body ?? {};
@@ -615,7 +662,28 @@ app.post("/api/analyze", async (req, res) => {
       ]);
       if (h != null && a != null) seasonGamesAny = Math.min(h, a);
     }
-    const result = predictMatch(
+    // Nový model (21. 10. 2026): oddych tímov – pri chybe sa únava jednoducho nepoužije.
+    const [restHome, restAway, adjust, useNewModel] = await Promise.all([
+      getRestInfo(fixture.homeTeam.id, season, fixture.date).catch(() => null),
+      getRestInfo(fixture.awayTeam.id, season, fixture.date).catch(() => null),
+      getMarketAdjustments(),
+      isNewModelActive(),
+    ]);
+    const nm = newModelInputs(homeExtStats, awayExtStats, restHome, restAway);
+    const extraNow = {
+      homeShotsOnGoal: mixStat(homeExtStats.shotsOnGoal, awayExtStats.shotsOnGoalAgainst),
+      awayShotsOnGoal: mixStat(awayExtStats.shotsOnGoal, homeExtStats.shotsOnGoalAgainst),
+      homeFouls: mixStat(homeExtStats.fouls, awayExtStats.foulsAgainst),
+      awayFouls: mixStat(awayExtStats.fouls, homeExtStats.foulsAgainst),
+      homeOffsides: mixStat(homeExtStats.offsides, awayExtStats.offsidesAgainst),
+      awayOffsides: mixStat(awayExtStats.offsides, homeExtStats.offsidesAgainst),
+      homePossession: homeExtStats.possession,
+      awayPossession: awayExtStats.possession,
+      homeCards: mixStat(homeExtStats.cards, awayExtStats.cardsAgainst),
+      awayCards: mixStat(awayExtStats.cards, homeExtStats.cardsAgainst),
+    };
+    // Súčasný a nový model z tých istých údajov; tipy vyberá ten, ktorý je zapnutý.
+    const run = (isNew: boolean) => predictMatch(
       fixture,
       homeStats,
       awayStats,
@@ -624,24 +692,13 @@ app.post("/api/analyze", async (req, res) => {
       DEFAULT_WEIGHTS,
       homePriors,
       awayPriors,
-      mixStat(homeExtStats.corners, awayExtStats.cornersAgainst),
-      mixStat(awayExtStats.corners, homeExtStats.cornersAgainst),
+      isNew ? nm.homeCorners : mixStat(homeExtStats.corners, awayExtStats.cornersAgainst),
+      isNew ? nm.awayCorners : mixStat(awayExtStats.corners, homeExtStats.cornersAgainst),
       homePlayers,
       awayPlayers,
       lineup.homeIds,
       lineup.awayIds,
-      {
-        homeShotsOnGoal: mixStat(homeExtStats.shotsOnGoal, awayExtStats.shotsOnGoalAgainst),
-        awayShotsOnGoal: mixStat(awayExtStats.shotsOnGoal, homeExtStats.shotsOnGoalAgainst),
-        homeFouls: mixStat(homeExtStats.fouls, awayExtStats.foulsAgainst),
-        awayFouls: mixStat(awayExtStats.fouls, homeExtStats.foulsAgainst),
-        homeOffsides: mixStat(homeExtStats.offsides, awayExtStats.offsidesAgainst),
-        awayOffsides: mixStat(awayExtStats.offsides, homeExtStats.offsidesAgainst),
-        homePossession: homeExtStats.possession,
-        awayPossession: awayExtStats.possession,
-        homeCards: mixStat(homeExtStats.cards, awayExtStats.cardsAgainst),
-        awayCards: mixStat(awayExtStats.cards, homeExtStats.cardsAgainst),
-      },
+      isNew ? nm.extra : extraNow,
       marketOdds,
       h2hStats,
       { home: { goalsFor: homeExtStats.goalsFor ?? null, goalsAgainst: homeExtStats.goalsAgainst ?? null, games: homeExtStats.goalsGames ?? 0 }, away: { goalsFor: awayExtStats.goalsFor ?? null, goalsAgainst: awayExtStats.goalsAgainst ?? null, games: awayExtStats.goalsGames ?? 0 } },
@@ -649,8 +706,18 @@ app.post("/api/analyze", async (req, res) => {
       missingPlayers,
       seasonGamesAny,
       referee,
-      lineup
+      lineup,
+      isNew ? nm.variant : null,
+      adjust
     );
+    const current = run(false);
+    let novy: ReturnType<typeof predictMatch> | null = null;
+    try {
+      novy = run(true);
+    } catch {
+      novy = null; // nový model nesmie zablokovať analýzu
+    }
+    const result = useNewModel && novy ? novy : current;
 
     // Meranie (20. 10. 2026): pravdepodobnosť stávkoviek (bez marže, ak sú kurzy oboch strán)
     // pre odporúčané aj vyradené tipy – appka ju pri uložení tipu zapíše k nemu.
@@ -667,11 +734,12 @@ app.post("/api/analyze", async (req, res) => {
       shadowEntriesFrom(fixture, (result as any).allCandidates ?? [], {
         bestBets: (result as any).bestBets ?? [],
         marketDetail,
-        modelVersion: MODEL_VERSION,
+        modelVersion: (result as any).modelVersion ?? MODEL_VERSION,
       })
     ).catch(() => {});
     // Tiché sledovanie miešania modelu so stávkovkami (na tipy nemá vplyv).
-    void recordBlend(blendEntryFrom(fixture, (result as any).allCandidates ?? [])).catch(() => {});
+    // Od 21. 10. 2026 aj odhad nového modelu (xG, únava, doma/vonku) – porovnanie v reporte.
+    void recordBlend(blendEntryFrom(fixture, (current as any).allCandidates ?? [], (novy as any)?.allCandidates ?? null)).catch(() => {});
     // Tiché sledovanie tiketu dňa: kandidáti z odporúčaných aj vyradených tipov (na pozadí).
     void recordLegs(
       legCandidatesFrom(fixture, [...((result as any).bestBets ?? []), ...((result as any).lowValueBets ?? [])])
@@ -749,6 +817,12 @@ function clvOpen(t: SavedTip): number | null | undefined {
 async function addMeasurement(tip: SavedTip): Promise<void> {
   try {
     if (!tip.modelVersion) tip.modelVersion = MODEL_VERSION;
+    // Oprava presnosti trhu, ktorá platila pri analýze – aby sa ďalšia oprava počítala z pôvodných percent.
+    if (tip.marketCalibration === undefined && !(tip.legs && tip.legs.length)) {
+      const cat = marketCategory(tip.market);
+      const k = cat ? (await getMarketAdjustments()).calibration?.[cat] : undefined;
+      if (typeof k === "number" && k !== 1) tip.marketCalibration = k;
+    }
     const kickoff = new Date(tip.matchDate).getTime();
     if (tip.hoursBeforeKickoff === undefined && isFinite(kickoff) && kickoff > Date.now())
       tip.hoursBeforeKickoff = Math.round(((kickoff - Date.now()) / 3600000) * 10) / 10;
@@ -1476,15 +1550,24 @@ function buildMonthlyReport(tips: SavedTip[], month: string) {
   const roi = withOdds.length > 0 ? (profit / withOdds.length) * 100 : null;
   const avgOdds = withOdds.length > 0 ? withOdds.reduce((s, t) => s + t.odds!, 0) / withOdds.length : null;
 
-  const byMarketMap: Record<string, { won: number; total: number }> = {};
+  // Pri každom trhu aj to, koľko model v priemere sľuboval (len tipy so známou dôverou) –
+  // „model sľuboval / naozaj vyšlo“ (21. 10. 2026, len v appke, do Telegramu nejde).
+  const byMarketMap: Record<string, { won: number; total: number; probSum: number; probN: number }> = {};
   for (const t of resolved) {
     const key = t.legs && t.legs.length > 1 ? "Tikety" : t.market;
-    if (!byMarketMap[key]) byMarketMap[key] = { won: 0, total: 0 };
+    if (!byMarketMap[key]) byMarketMap[key] = { won: 0, total: 0, probSum: 0, probN: 0 };
     byMarketMap[key].total++;
     if (t.status === "won") byMarketMap[key].won++;
+    if (!(t.legs && t.legs.length > 1) && typeof t.probability === "number" && !t.probabilityEstimated && !t.restoredFromDaily) {
+      byMarketMap[key].probSum += t.probability;
+      byMarketMap[key].probN++;
+    }
   }
   const byMarket = Object.entries(byMarketMap)
-    .map(([market, v]) => ({ market, won: v.won, total: v.total, rate: (v.won / v.total) * 100 }))
+    .map(([market, v]) => ({
+      market, won: v.won, total: v.total, rate: (v.won / v.total) * 100,
+      promised: v.probN ? v.probSum / v.probN : null, promisedCount: v.probN,
+    }))
     .sort((a, b) => b.total - a.total || b.rate - a.rate);
 
   // Najlepší a najhorší deň (podľa zisku v jednotkách).
@@ -1837,6 +1920,30 @@ app.post("/api/shadow/record", async (req, res) => {
   }
 });
 
+// ---- Model: zdravie trhov, porovnanie nového modelu a prepínač (21. 10. 2026) ----
+app.get("/api/model/health", async (_req, res) => {
+  try {
+    const health = computeMarketHealth(await listTips(), await listShadow().catch(() => []));
+    res.json({
+      ...health,
+      newModel: { active: await isNewModelActive(), ...newModelSummary(await listBlend()) },
+    });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
+app.post("/api/model/new-model", async (req, res) => {
+  try {
+    const active = req.body?.active === true;
+    await setMeta(NEW_MODEL_META, active ? "1" : "0");
+    newModelCache = { value: active, at: Date.now() };
+    res.json({ ok: true, active });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
 app.get("/api/blend/summary", async (_req, res) => {
   try {
     res.json(blendSummary(await listBlend()));
@@ -1848,7 +1955,7 @@ app.get("/api/blend/summary", async (_req, res) => {
 // Poradie dôvodov vyradenia v prehľade (podľa poradia filtrov v predictor.ts).
 const SHADOW_REASON_ORDER = [
   "conflict", "ev_high", "ev_high_few_games", "ev_low", "min_odds", "one_bookmaker", "band_low", "band_high",
-  "category_lower_ev", "match_lower_ev", "market_excluded", "few_games", "no_market_odds", "no_odds", "unknown",
+  "category_lower_ev", "match_lower_ev", "market_disabled", "market_excluded", "few_games", "no_market_odds", "no_odds", "unknown",
 ];
 const SHADOW_GAP_ORDER = ["< 0", "0 – 5", "5 – 10", "10 – 15", "15+", "unknown"];
 
@@ -2038,36 +2145,11 @@ async function captureClosingOdds(): Promise<void> {
 }
 
 setInterval(() => void captureClosingOdds(), 10 * 60 * 1000); // kontrola každých 10 minút
+// Stav trhov (vypnutie / oprava presnosti) sa prepočíta aj bez analýzy – správa príde včas.
+setInterval(() => void getMarketAdjustments(true).catch(() => {}), 60 * 60 * 1000);
+setTimeout(() => void getMarketAdjustments(true).catch(() => {}), 2 * 60 * 1000);
 void captureClosingOdds();
 
-/**
- * CLV jedného tipu v % (20. 10. 2026). Ak sú pri uložení aj pred výkopom kurzy oboch
- * strán, porovnávajú sa pravdepodobnosti bez marže (zmena marže sa neráta ako pohyb
- * trhu): (pravdepodobnosť pred výkopom / pri uložení − 1) × 100. Inak ako doteraz kurzy:
- * (kurz pri uložení / kurz pred výkopom − 1) × 100. Kladné = trh sa posunul k nášmu tipu.
- */
-const CLV_TIE = 0.5; // |CLV| pod 0,5 % = bez zmeny
-function clvOf(x: {
-  open: number | null | undefined;
-  closingOdds?: number | null;
-  marketProb?: number | null;
-  marketProbDevig?: boolean;
-  closingMarketProb?: number | null;
-  closingDevig?: boolean;
-}): { clv: number; method: "prob" | "price" } | null {
-  if (
-    x.marketProbDevig &&
-    x.closingDevig &&
-    typeof x.marketProb === "number" &&
-    x.marketProb > 0 &&
-    typeof x.closingMarketProb === "number" &&
-    x.closingMarketProb > 0
-  )
-    return { clv: (x.closingMarketProb / x.marketProb - 1) * 100, method: "prob" };
-  if (typeof x.open === "number" && x.open > 1 && typeof x.closingOdds === "number" && x.closingOdds > 1)
-    return { clv: (x.open / x.closingOdds - 1) * 100, method: "price" };
-  return null;
-}
 function clvStats(list: { clv: number; method: "prob" | "price" }[]) {
   const avg = list.length ? list.reduce((a, b) => a + b.clv, 0) / list.length : null;
   return {
