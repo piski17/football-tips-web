@@ -1056,13 +1056,13 @@ export async function getFixtureOdds(fixtureId: number, fresh = false): Promise<
  * Štatistiky posledných vzájomných zápasov (rohy, karty, strely, fauly, ofsajdy,
  * držanie lopty) – na spresnenie odhadu. Odohrané zápasy sa už nemenia, preto
  * sa ukladajú na 7 dní a pri ďalšom otvorení zápasu nestoja nič.
- * Berie len zápasy za posledných 10 rokov, najviac 5 najnovších.
+ * Berie len zápasy za posledných 5 rokov (5 sezón), najviac 5 najnovších.
  */
 export async function getHeadToHeadStats(
   h2h: HeadToHeadMatch[],
   currentHomeTeamName: string
 ): Promise<H2HStats[]> {
-  const since = Date.now() - 10 * 365 * 24 * 60 * 60 * 1000;
+  const since = Date.now() - 5 * 365 * 24 * 60 * 60 * 1000;
   const recent = h2h
     .filter((m) => m.homeGoals !== null && m.awayGoals !== null && new Date(m.date).getTime() >= since)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())

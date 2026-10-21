@@ -553,7 +553,7 @@ function normalCdf(z: number): number {
 
 
 // ---- Vzájomné zápasy: doplnok k odhadu z dlhodobých priemerov ----
-// Váha rastie s počtom zápasov (za posledných 10 rokov, najviac 5 najnovších):
+// Váha rastie s počtom zápasov (za posledných 5 rokov, najviac 5 najnovších):
 // 3 zápasy = 15 %, 4 = 20 %, 5 = 25 %; menej ako 3 = nepoužijú sa.
 // Novšie zápasy majú väčšiu váhu (každý starší × 0,85).
 const H2H_MIN = 3;
@@ -570,8 +570,8 @@ function recencyAverage(values: (number | null)[]): { avg: number; n: number } |
   return n >= H2H_MIN ? { avg: sum / wsum, n } : null;
 }
 interface H2HGoals { n: number; weight: number; home: number; away: number; total: number }
-/** Vzájomné zápasy sa berú za posledných 10 rokov (reprezentácie sa stretávajú zriedka). */
-const H2H_YEARS = 10;
+/** Vzájomné zápasy sa berú za posledných 5 rokov (5 sezón) – staršie už pre dnešné tímy veľa nehovoria (21. 10. 2026, Michalovo rozhodnutie). */
+const H2H_YEARS = 5;
 function h2hRecent(h2h: HeadToHeadMatch[]): HeadToHeadMatch[] {
   const since = Date.now() - H2H_YEARS * 365 * 24 * 60 * 60 * 1000;
   return h2h

@@ -1298,8 +1298,8 @@ function h2hPanelHtml(r, f) {
       ${matches.length > 5 ? `<button type="button" class="btn ghost xs" data-h2h-toggle data-more="${matches.length - 5}">+ Zobraziť ďalšie (${matches.length - 5})</button>` : ""}
       <p class="faint small">${
         h.usedInModel
-          ? `Model započítal ${h.usedInModel} ${h.usedInModel >= 5 ? "najnovších zápasov" : "najnovšie zápasy"} za posledných 10 rokov (sivé nie).`
-          : "Menej ako 3 vzájomné zápasy za posledných 10 rokov – do odhadu sa nezapočítali."
+          ? `Model započítal ${h.usedInModel} ${h.usedInModel >= 5 ? "najnovších zápasov" : "najnovšie zápasy"} za posledných 5 rokov (sivé nie).`
+          : "Menej ako 3 vzájomné zápasy za posledných 5 rokov – do odhadu sa nezapočítali."
       }</p>` : ""}
   </div>`;
 }
