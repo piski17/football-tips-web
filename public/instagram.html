@@ -7,8 +7,7 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;0,700;1,500;1,600&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg: #eee6d4; --panel: #faf6ec; --line: #d9cdb3; --text: #0C0B0A; --muted: #5a5244;
@@ -174,6 +173,25 @@ body, body * { font-variant-numeric: lining-nums tabular-nums !important; }
   .seg button + button { border-left: 0; border-top: 1px solid var(--line); }
 }
 .top .tag, .top-right .tag { border-radius: 999px; border-color: var(--line); }
+
+/* ===== Luxusný futbalový klub (21. 10. 2026): rovnaký vzhľad ako tipradar.eu ===== */
+:root, html, body {
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif; --body: "Barlow", "Helvetica Neue", Arial, sans-serif;
+  --lx-display: "Barlow Condensed", "Arial Narrow", sans-serif; --lx-body: "Barlow", "Helvetica Neue", Arial, sans-serif;
+}
+html, body { background: repeating-linear-gradient(90deg, rgba(217,192,138,.03) 0 1px, transparent 1px 64px), #120E0A !important; color: #F4EEE2 !important; }
+body, input, textarea, button, select { font-family: "Barlow", "Helvetica Neue", Arial, sans-serif !important; }
+body { font-weight: 500; }
+h1, h2, h3, .brand, .top .brand { font-family: "Barlow Condensed", "Arial Narrow", sans-serif !important; font-weight: 800 !important; letter-spacing: .01em !important; text-transform: uppercase; font-style: normal !important; }
+.brand, .top .brand { color: #D9C08A !important; }
+h1 { font-size: clamp(40px, 5vw, 60px) !important; line-height: .98 !important; }
+.card, .panel, .box { border-radius: 20px !important; background: #1D1711 !important; border: 1px solid rgba(217,192,138,.22) !important; }
+.btn, .back-link { border-radius: 999px !important; text-transform: uppercase; letter-spacing: .06em; font-weight: 700 !important; font-size: 12.5px !important; }
+.btn.primary { background: #D9C08A !important; color: #17120D !important; border-color: #D9C08A !important; }
+input, textarea, select { border-radius: 12px !important; }
+canvas { border-radius: 20px !important; }
+.seg button[aria-pressed="true"], [aria-pressed="true"].tab { background: #D9C08A !important; color: #17120D !important; }
+.seg { border-radius: 999px !important; overflow: hidden; }
 </style>
 </head>
 <body>
@@ -254,9 +272,10 @@ body, body * { font-variant-numeric: lining-nums tabular-nums !important; }
   const $ = (id) => document.getElementById(id);
   const cv = $('cv'), ctx = cv.getContext('2d');
   const W = 1080, H = 1920, L = 90, R = W - 90;
-  const C = { bg: '#0C0B0A', bgDeep: '#080706', surface: '#161412', line: '#2E2A24', gold: '#d9c08a', hi: '#F3E6C4', green: '#7FBF9A', red: '#C0707C', text: '#F4EEE2', muted: '#BFB6A6' };
-  const F = (w, s) => w + ' ' + s + 'px "Plus Jakarta Sans", "Segoe UI", Arial, sans-serif';
-  const S = (w, s) => w + ' ' + s + 'px "Playfair Display", Georgia, serif';
+  const C = { bg: '#120E0A', bgDeep: '#0D0A07', surface: '#1D1711', line: 'rgba(217,192,138,0.28)', gold: '#D9C08A', hi: '#F3E6C4', green: '#7FBF9A', red: '#E07F70', text: '#F4EEE2', muted: '#CFC6B6' };
+  const F = (w, s) => (w < 500 ? 500 : w) + ' ' + s + 'px "Barlow", "Helvetica Neue", Arial, sans-serif';
+  // Nadpisy a čísla: Barlow Condensed ako na tipradar.eu (luxusný klub).
+  const S = (w, s) => '800 ' + Math.round(s * 1.04) + 'px "Barlow Condensed", "Arial Narrow", sans-serif';
   const HASHTAGS = '#futbal #fotbal #futbalovastatistika #europskyfutbal #tipradar';
   const DUR = 15;
   let mode = 'reel', tips = [], playing = false, recording = false, freeUrl = '';
@@ -315,9 +334,9 @@ body, body * { font-variant-numeric: lining-nums tabular-nums !important; }
   function background() {
     ctx.globalAlpha = 1;
     ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, H);
-    const g = ctx.createRadialGradient(W * 0.8, H * 0.05, 0, W * 0.8, H * 0.05, H * 0.75);
-    g.addColorStop(0, 'rgba(64,50,22,0.9)'); g.addColorStop(1, 'rgba(64,50,22,0)');
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    // jemné prúžky ako na klubovom drese (ako na tipradar.eu)
+    ctx.fillStyle = 'rgba(217,192,138,0.045)';
+    for (let x = 0; x < W; x += 72) ctx.fillRect(x, 0, 1.5, H);
     const lg = ctx.createLinearGradient(0, 0, W, 0);
     lg.addColorStop(0, 'rgba(217,192,138,0)'); lg.addColorStop(0.5, 'rgba(217,192,138,0.55)'); lg.addColorStop(1, 'rgba(217,192,138,0)');
     ctx.fillStyle = lg; ctx.fillRect(0, H - 3, W, 1.5);
@@ -325,7 +344,7 @@ body, body * { font-variant-numeric: lining-nums tabular-nums !important; }
   }
   function brand(y) {
     mark(L + 30, y - 11, 30);
-    ctx.textAlign = 'left'; ctx.fillStyle = C.text; ctx.font = S(600, 40); ctx.fillText('TipRadar', L + 78, y);
+    ctx.textAlign = 'left'; ctx.fillStyle = C.gold; ctx.font = S(600, 44); ctx.fillText('TIPRADAR', L + 78, y + 3);
   }
   function eyebrow(text, y, color) {
     ctx.textAlign = 'left'; ctx.font = F(700, 26); ctx.fillStyle = color || C.gold;
@@ -441,7 +460,7 @@ body, body * { font-variant-numeric: lining-nums tabular-nums !important; }
     background();
     brand(300);
     eyebrow('Bezplatný tip týždňa', 420);
-    ctx.fillStyle = C.text; ctx.font = S(500, 96); ctx.fillText('Piatkový tip', L, 530);
+    ctx.fillStyle = C.text; ctx.font = S(500, 96); ctx.fillText('PIATKOVÝ TIP', L, 530);
     ctx.fillStyle = C.muted; ctx.font = F(400, 32); ctx.fillText('zadarmo pre všetkých', L, 590);
 
     const cy = 680, chh = 600;

@@ -569,3 +569,71 @@ tr.bt-best { background: rgba(134, 199, 161, .08); }
 .gar-run.g { color: var(--win); } .gar-run.l { color: var(--loss); }
 .tag.free { color: var(--win); border-color: rgba(134, 199, 161, .4); }
 @media (max-width: 560px) { .gar-row { flex-direction: column; align-items: stretch; } .gar-row .btn { width: 100%; } }
+
+/* =====================================================================
+   Luxusný futbalový klub (21. 10. 2026) – rovnaký vzhľad ako tipradar.eu:
+   tmavé teplé pozadie, zlatá, písmo Barlow, nadpisy veľkými písmenami,
+   zaoblené karty, tlačidlá ako pilulky, klubová hviezdička.
+   ===================================================================== */
+:root {
+  --bg: #120E0A;
+  --bg2: #18130E;
+  --panel: #1D1711;
+  --panel2: #241C15;
+  --line: rgba(217, 192, 138, .18);
+  --line2: rgba(217, 192, 138, .36);
+  --gold: #D9C08A;
+  --gold-hi: #F3E6C4;
+  --gold-lo: #B8995E;
+  --text: #F4EEE2;
+  --muted: #CFC6B6;
+  --faint: #9C927F;
+  --win: #7FBF9A;
+  --loss: #E07F70;
+  --sans: "Barlow", "Helvetica Neue", Arial, sans-serif;
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --radius: 20px;
+}
+body { font-weight: 500; font-size: 15.5px; }
+/* jemné prúžky ako na klubovom drese */
+.main { background: repeating-linear-gradient(90deg, rgba(217, 192, 138, .03) 0 1px, transparent 1px 64px), var(--bg); }
+.splash { background: repeating-linear-gradient(90deg, rgba(217, 192, 138, .035) 0 1px, transparent 1px 64px), #120E0A; }
+.splash-word, .logo { font-weight: 800; text-transform: uppercase; letter-spacing: .02em; color: var(--gold); }
+.logo { font-size: 26px; }
+.side { background: #120E0A; border-right-color: rgba(217, 192, 138, .3); }
+.top { background: rgba(18, 14, 10, .94); border-bottom-color: rgba(217, 192, 138, .35); }
+.top h2, h3.sh, .modal h3 { font-weight: 800; text-transform: uppercase; letter-spacing: .01em; line-height: 1; }
+.top h2 { font-size: 32px; }
+h3.sh { font-size: 28px; padding-top: 22px; border-top: 1px solid rgba(217, 192, 138, .35); }
+.modal h4, .mh .team, .mh .mid b, .tip .s, .dtip .rank, .dtip .s b, .tool b { font-weight: 700; letter-spacing: .005em; }
+.mh .team { text-transform: uppercase; }
+/* menu vľavo: čísla a veľké písmená ako na webe */
+.nav a { font: 700 13px/1.2 var(--sans); letter-spacing: .12em; text-transform: uppercase; border-radius: 999px; padding: 12px 14px; }
+.nav a.on { background: rgba(217, 192, 138, .1); box-shadow: inset 0 0 0 1px rgba(217, 192, 138, .45); color: var(--gold); }
+.nav a .cnt { letter-spacing: 0; }
+/* štítky nad kartami ako klubový odznak s hviezdičkou */
+.ct { letter-spacing: .2em; font-weight: 700; }
+.ct::before { content: "★"; margin-right: 8px; font-size: 10px; letter-spacing: 0; }
+.seats small::before { content: "★ "; }
+/* karty */
+.card, .tip, .dtip, .tool, .seats { background: #1D1711; border-color: rgba(217, 192, 138, .22); box-shadow: inset 0 1px 0 rgba(244, 238, 226, .06), 0 18px 40px -24px rgba(0, 0, 0, .8); }
+.tool:hover, .tip:hover, .dtip:hover { border-color: rgba(217, 192, 138, .5); }
+.seats { border-radius: var(--radius); }
+/* tlačidlá: zlatá pilulka, veľké písmená */
+.btn { background: var(--gold); color: #17120D; box-shadow: none; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; font-size: 13px; padding: 11px 22px; border: 1px solid var(--gold); }
+.btn:hover:not(:disabled) { background: var(--gold-hi); border-color: var(--gold-hi); filter: none; }
+.btn.sm { font-size: 12px; padding: 9px 16px; }
+.btn.xs { font-size: 11.5px; padding: 7px 12px; }
+.btn.ghost { background: transparent; color: var(--gold); border: 1px solid var(--gold); }
+.btn.ghost:hover:not(:disabled) { background: var(--gold); color: #17120D; border-color: var(--gold); }
+.btn.danger { background: transparent; }
+.chip { font-weight: 600; }
+.chip.on { background: var(--gold); color: #17120D; }
+.ib { border-radius: 50%; }
+input[type=text], input[type=search], input[type=number], input[type=date], input[type=time], select, textarea { border-radius: 12px; background: #18130E; }
+.bar i { background: var(--gold); }
+@media (max-width: 900px) {
+  .top h2 { font-size: 28px; }
+  h3.sh { font-size: 24px; }
+}
+h3.sh small { text-transform: none; letter-spacing: 0; }

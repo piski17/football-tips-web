@@ -7,8 +7,7 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;0,700;1,500;1,600&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
   box-sizing: border-box;
@@ -295,6 +294,37 @@ body, body * { font-variant-numeric: lining-nums tabular-nums !important; }
   .seg button + button { border-left: 0; border-top: 1px solid var(--line); }
 }
 .top .tag, .top-right .tag { border-radius: 999px; border-color: var(--line); }
+
+/* ===== Luxusný futbalový klub (21. 10. 2026): rovnaký vzhľad ako tipradar.eu ===== */
+:root, html, body {
+  --bg: #120E0A; --panel: #1D1711; --line: rgba(217, 192, 138, 0.22); --line-2: rgba(217, 192, 138, 0.4);
+  --text: #F4EEE2; --muted: #CFC6B6; --faint: #9C927F;
+  --accent: #D9C08A; --accent-ink: #17120D; --good: #7FBF9A; --bad: #E07F70; --input: #18130E;
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --body: "Barlow", "Helvetica Neue", Arial, sans-serif;
+  --lx-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --gold-grad: linear-gradient(#D9C08A, #D9C08A);
+  --panel-grad: linear-gradient(#1D1711, #1D1711);
+}
+html, body { background: repeating-linear-gradient(90deg, rgba(217,192,138,.03) 0 1px, transparent 1px 64px), #120E0A !important; color: #F4EEE2 !important; }
+body, input, textarea, button, select { font-family: "Barlow", "Helvetica Neue", Arial, sans-serif !important; }
+body { font-weight: 500; }
+h1, h2, .day-title, .stat b, .top .brand { font-family: "Barlow Condensed", "Arial Narrow", sans-serif !important; font-weight: 800 !important; letter-spacing: .01em !important; text-transform: uppercase; font-style: normal !important; }
+.day-title small { text-transform: none; font-family: "Barlow", sans-serif !important; font-weight: 500 !important; }
+.top .brand { color: #D9C08A !important; }
+h1 { font-size: clamp(40px, 5vw, 60px) !important; line-height: .98 !important; }
+h1 em, h2 em { color: #D9C08A !important; -webkit-text-fill-color: #D9C08A !important; background: none !important; font-style: normal !important; }
+.card, .panel, section.box, .box { border-radius: 20px !important; background: #1D1711 !important; border: 1px solid rgba(217,192,138,.22) !important; box-shadow: inset 0 1px 0 rgba(244,238,226,.06), 0 18px 40px -24px rgba(0,0,0,.8) !important; }
+.btn, .back-link, .top .tag, .daynav .today { border-radius: 999px !important; text-transform: uppercase; letter-spacing: .06em; font-weight: 700 !important; font-size: 12.5px !important; border-color: #D9C08A !important; color: #D9C08A !important; background: transparent !important; }
+.btn.primary, .btn.gold, #download, .dl { background: #D9C08A !important; color: #17120D !important; box-shadow: none !important; }
+.btn:hover, .back-link:hover { background: #D9C08A !important; color: #17120D !important; }
+.daynav .arrow, .week-nav .arrow { border-radius: 50% !important; }
+input[type=text], input[type=date], input[type=time], textarea { border-radius: 12px !important; background: #18130E !important; border-color: rgba(217,192,138,.3) !important; }
+.seg { border-radius: 999px !important; overflow: hidden; }
+.seg button[aria-pressed="true"], .pages button[aria-pressed="true"] { background: #D9C08A !important; color: #17120D !important; }
+.res { border-radius: 999px !important; }
+.pages button { border-radius: 12px !important; }
+canvas { border-radius: 20px !important; border-color: rgba(217,192,138,.3) !important; }
 </style>
 </head>
 <body>
@@ -827,9 +857,10 @@ body, body * { font-variant-numeric: lining-nums tabular-nums !important; }
   // ---------- kreslenie ----------
   const cv = $('cv'), ctx = cv.getContext('2d');
   // Farby a písma ako na tipradar.eu: závodná zelená, šampanské zlato, slonovinová.
-  const C = { bg: '#0C0B0A', bgDeep: '#080706', surface: '#161412', line: '#2E2A24', gold: '#d9c08a', goldDim: '#B8995E', green: '#7FBF9A', red: '#C0707C', text: '#F4EEE2', muted: '#BFB6A6' };
-  const F = (w, s) => w + ' ' + s + 'px "Plus Jakarta Sans", "Segoe UI", Arial, sans-serif';
-  const S = (w, s) => (w >= 600 ? 600 : 500) + ' ' + Math.round(s * 1.0) + 'px "Playfair Display", Georgia, serif';
+  const C = { bg: '#120E0A', bgDeep: '#0D0A07', surface: '#1D1711', line: 'rgba(217,192,138,0.28)', gold: '#D9C08A', goldDim: '#B8995E', green: '#7FBF9A', red: '#E07F70', text: '#F4EEE2', muted: '#CFC6B6' };
+  const F = (w, s) => (w < 500 ? 500 : w) + ' ' + s + 'px "Barlow", "Helvetica Neue", Arial, sans-serif';
+  // Nadpisy a čísla: Barlow Condensed, hrubé, ako na tipradar.eu (luxusný klub).
+  const S = (w, s) => '800 ' + Math.round(s * 1.04) + 'px "Barlow Condensed", "Arial Narrow", sans-serif';
   function fit(text, max, font) {
     ctx.font = font;
     if (ctx.measureText(text).width <= max) return text;
@@ -866,9 +897,9 @@ body, body * { font-variant-numeric: lining-nums tabular-nums !important; }
     ctx.clearRect(0, 0, W, H);
     ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, H);
     // jemné svetlo vpravo hore ako na webe
-    const g = ctx.createRadialGradient(W * 0.8, H * 0.05, 0, W * 0.8, H * 0.05, H * 0.75);
-    g.addColorStop(0, 'rgba(64,50,22,0.9)'); g.addColorStop(1, 'rgba(64,50,22,0)');
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    // jemné prúžky ako na klubovom drese (ako na tipradar.eu)
+    ctx.fillStyle = 'rgba(217,192,138,0.045)';
+    for (let x = 0; x < W; x += 72) ctx.fillRect(x, 0, 1.5, H);
     // zlatá linka pri spodnom okraji
     const lg = ctx.createLinearGradient(0, 0, W, 0);
     lg.addColorStop(0, 'rgba(217,192,138,0)'); lg.addColorStop(0.5, 'rgba(217,192,138,0.55)'); lg.addColorStop(1, 'rgba(217,192,138,0)');
@@ -967,23 +998,23 @@ body, body * { font-variant-numeric: lining-nums tabular-nums !important; }
     const W = 1080, H = 1920, L = 90, R = W - 90, s = stats(), list = pages[i] || [], total = pages.length;
     background(W, H, 700);
     mark(L + 22, 290, 22);
-    ctx.fillStyle = C.text; ctx.font = S(600, 40); ctx.textAlign = 'left'; ctx.fillText('TipRadar', L + 60, 302);
+    ctx.fillStyle = C.text; ctx.font = S(600, 44); ctx.textAlign = 'left'; ctx.fillStyle = C.gold; ctx.fillText('TIPRADAR', L + 60, 305);
     pageTag(R, 302, i, total, 'right');
-    ctx.fillStyle = C.gold; ctx.font = F(500, 32); ctx.textAlign = 'left';
-    ctx.fillText('Výsledky dňa · ' + fmtDay(day), L, 392);
+    ctx.fillStyle = C.gold; ctx.font = F(700, 30); ctx.textAlign = 'left'; if ('letterSpacing' in ctx) ctx.letterSpacing = '4px';
+    ctx.fillText('★  VÝSLEDKY DŇA · ' + fmtDay(day), L, 392); if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
     // Tipy sa vždy zmestia do pevného priestoru (končí na 1270 px), aby výzva, šípka
     // a „18+" boli na každom obrázku na rovnakom mieste a pod šípkou ostalo miesto na nálepku.
     // Vyhodnotenie dňa (koľko vyšlo, úspešnosť, zisk) je na poslednom obrázku – v príbehu ho ľudia uvidia na konci.
     let top;
     if (i === total - 1) {
       ctx.fillStyle = C.text; ctx.font = S(600, 112);
-      ctx.fillText(fit(headline(s), R - L, S(600, 112)), L, 500);
+      ctx.fillText(fit(headline(s).toUpperCase(), R - L, S(600, 112)), L, 500);
       if (s.pending) { ctx.fillStyle = C.muted; ctx.font = F(400, 28); ctx.fillText('⏳ Ešte sa hrá: ' + s.pending, L, 552); }
       statBoxes(s, L, R, 590, 150, 26, 58);
       top = 790;
     } else {
       ctx.fillStyle = C.text; ctx.font = S(600, 84);
-      ctx.fillText(i === 0 ? 'Tipy dňa' : 'Ďalšie tipy', L, 488);
+      ctx.fillText(i === 0 ? 'TIPY DŇA' : 'ĎALŠIE TIPY', L, 488);
       top = 540;
     }
     const bottom = 1270 - (i < total - 1 ? 50 : 0);
@@ -997,17 +1028,17 @@ body, body * { font-variant-numeric: lining-nums tabular-nums !important; }
   function drawPost(i, pages) {
     const W = 1080, H = 1350, L = 110, R = W - 110, s = stats(), list = pages[i] || [], total = pages.length;
     background(W, H, 380);
-    ctx.textAlign = 'left'; ctx.fillStyle = C.gold; ctx.font = F(500, 28);
-    ctx.fillText('Výsledky dňa · ' + fmtDay(day), L, 150);
+    ctx.textAlign = 'left'; ctx.fillStyle = C.gold; ctx.font = F(700, 26); if ('letterSpacing' in ctx) ctx.letterSpacing = '4px';
+    ctx.fillText('★  VÝSLEDKY DŇA · ' + fmtDay(day), L, 150); if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
     let top;
     if (i === total - 1) {
       ctx.fillStyle = C.text; ctx.font = S(600, 88);
-      ctx.fillText(fit(headline(s), R - L, S(600, 88)), L, 240);
+      ctx.fillText(fit(headline(s).toUpperCase(), R - L, S(600, 88)), L, 240);
       statBoxes(s, L, R, 300, 150, 23, 54);
       top = 510;
     } else {
       ctx.fillStyle = C.text; ctx.font = S(600, 72);
-      ctx.fillText(i === 0 ? 'Tipy dňa' : 'Ďalšie tipy', L, 232);
+      ctx.fillText(i === 0 ? 'TIPY DŇA' : 'ĎALŠIE TIPY', L, 232);
       top = 290;
     }
     const bottom = 1210 - (i < total - 1 ? 40 : 0);
@@ -1215,7 +1246,7 @@ body, body * { font-variant-numeric: lining-nums tabular-nums !important; }
   }
   function drawWeek(i, pages) {
     const W = 1080, H = 1350, L = 100, R = 980, s = weekStats(weekTips), list = pages[i] || [], total = pages.length;
-    w.clearRect(0, 0, W, H); w.fillStyle = C.bg; w.fillRect(0, 0, W, H);
+    w.clearRect(0, 0, W, H); w.fillStyle = C.bg; w.fillRect(0, 0, W, H); w.fillStyle = 'rgba(217,192,138,0.045)'; for (let x = 0; x < W; x += 72) w.fillRect(x, 0, 1.5, H);
     w.strokeStyle = 'rgba(217,192,138,0.35)'; w.lineWidth = 1.5; w.strokeRect(36.5, 36.5, W - 73, H - 73);
     w.textBaseline = 'alphabetic';
     // Hlavička: zlatá linka + TÝŽDEŇ 41 · 6. – 12. 10.
@@ -1226,9 +1257,9 @@ body, body * { font-variant-numeric: lining-nums tabular-nums !important; }
     let top;
     if (i === total - 1) {
       w.textAlign = 'left'; w.fillStyle = C.text; w.font = S(600, 92);
-      const a = 'Týždeň v '; w.fillText(a, L, 254);
+      const a = 'TÝŽDEŇ V '; w.fillText(a, L, 254);
       const aw = w.measureText(a).width;
-      w.font = 'italic 500 98px "Playfair Display", Georgia, serif'; w.fillStyle = goldGrad(L + aw, L + aw + 260); w.fillText('číslach', L + aw, 254);
+      w.fillStyle = C.gold; w.fillText('ČÍSLACH', L + aw, 254);
       // Štatistika: TIPY · ZISK · ROI
       hline(L, R, 298); hline(L, R, 449);
       const colW = (R - L) / 3;
@@ -1245,7 +1276,7 @@ body, body * { font-variant-numeric: lining-nums tabular-nums !important; }
       });
       top = 474;
     } else {
-      w.textAlign = 'left'; w.fillStyle = C.text; w.font = S(600, 64); w.fillText(i === 0 ? 'Tipy týždňa' : 'Ďalšie tipy týždňa', L, 230);
+      w.textAlign = 'left'; w.fillStyle = C.text; w.font = S(600, 64); w.fillText(i === 0 ? 'TIPY TÝŽDŇA' : 'ĎALŠIE TIPY TÝŽDŇA', L, 230);
       top = 280;
     }
     // Tipy: deň · zápas a tip · kurz · zisk
@@ -1276,7 +1307,7 @@ body, body * { font-variant-numeric: lining-nums tabular-nums !important; }
     if (i < total - 1) { w.textAlign = 'right'; w.fillStyle = C.gold; w.font = F(500, 22); w.fillText(i === total - 2 ? 'Ďalšie tipy a vyhodnotenie na ďalšej snímke  →' : 'Ďalšie tipy na ďalšej snímke  →', R, top + list.length * rowH + 40); }
     // Päta: logo, TipRadar, tipradar.eu · 1 j. = 1 % bankrollu · 18+
     wMark(L + 28, 1226, 28);
-    w.textAlign = 'left'; w.fillStyle = C.text; w.font = S(600, 36); w.fillText('TipRadar', L + 74, 1226);
+    w.textAlign = 'left'; w.fillStyle = C.text; w.font = S(600, 38); w.fillStyle = C.gold; w.fillText('TIPRADAR', L + 74, 1228);
     w.fillStyle = C.gold; w.font = F(500, 19); spaced('TIPRADAR.EU', L + 75, 1257, 5, 'left');
     w.fillStyle = C.muted; w.font = F(500, 19); spaced('1 J. = 1 % BANKROLLU · 18+', R, 1233, 5, 'right');
   }
@@ -1347,8 +1378,8 @@ body, body * { font-variant-numeric: lining-nums tabular-nums !important; }
   initCloud();
   if (document.fonts && document.fonts.load) {
     Promise.all([
-      ...['700', '600', '500', '400'].map(w => document.fonts.load(w + ' 20px "Plus Jakarta Sans"')),
-      document.fonts.load('500 20px "Playfair Display"'), document.fonts.load('600 20px "Playfair Display"'),
+      ...['700', '600', '500'].map(w => document.fonts.load(w + ' 20px "Barlow"')),
+      document.fonts.load('800 20px "Barlow Condensed"'),
     ]).then(draw).catch(() => {});
     document.fonts.ready.then(draw);
   }
