@@ -1,5 +1,5 @@
 import { SEATS_M1, SEATS_M3, SEATS_SEASON } from "./seatLimits";
-import { MIN_ODDS, findOdds, marketProbabilityDetail, STRONG_TIP_MIN_PROBABILITY, WATCH_BELOW_PROBABILITY } from "./oddsMatcher";
+import { MIN_ODDS, MAX_PROBABILITY, findOdds, marketProbabilityDetail, STRONG_TIP_MIN_PROBABILITY, WATCH_BELOW_PROBABILITY } from "./oddsMatcher";
 import { listLeads, deleteLead, recordLead } from "./leadsStore";
 import { getMeta, setMeta } from "./metaStore";
 import * as crypto from "crypto";
@@ -870,6 +870,14 @@ app.post("/api/tips", async (req, res) => {
     if (!(tip.legs && tip.legs.length) && !tip.manualEntry && typeof tip.probability === "number" && tip.probability < WATCH_BELOW_PROBABILITY) {
       tip.watchOnly = true;
       tip.strongOfDay = undefined;
+    }
+    // Ručne doplnený tip prejde rovnakou kontrolou ako tipy z modelu (dôvera, kurz, hodnota) –
+    // ak by ho model nepustil, uloží sa len medzi sledované.
+    if (tip.manualEntry && !(tip.legs && tip.legs.length) && !tip.probabilityEstimated && typeof tip.probability === "number" && typeof tip.odds === "number") {
+      const ev = (tip.probability / 100) * tip.odds;
+      if (tip.probability < WATCH_BELOW_PROBABILITY || tip.probability > MAX_PROBABILITY || tip.odds < MIN_ODDS || ev < 1.05 || ev > 1.25) {
+        tip.watchOnly = true;
+      }
     }
     await saveTip(tip);
     res.json({ ok: true, telegramAvailable: isTelegramEnabled(), watchOnly: tip.watchOnly === true });

@@ -2216,6 +2216,18 @@ function openEditTip(tip) {
 const MANUAL_MARKETS = ["Góly", "Góly domácich", "Góly hostí", "Rohy", "Rohy domácich", "Rohy hostí", "Karty", "Karty domácich", "Karty hostí", "Strely na bránu", "Strely na bránu domácich", "Strely na bránu hostí", "Fauly", "Vyššie držanie lopty"];
 let manualLastDate = "";
 
+/** Pravidlá odporúčaného tipu pre ručne doplnený tip – vráti dôvod zamietnutia alebo "". */
+function manualTipProblem(p, odds) {
+  if (!(p > 0) || !(odds > 1)) return "";
+  if (p < WATCH_BELOW) return `dôvera ${fmtNum(p, 0)}${NB}% je pod ${WATCH_BELOW}${NB}%`;
+  if (p > 80) return `dôvera ${fmtNum(p, 0)}${NB}% je nad 80${NB}%`;
+  if (odds < MIN_ODDS) return `kurz ${fmtOdds(odds)} je pod ${fmtOdds(MIN_ODDS)}`;
+  const ev = (p / 100) * odds;
+  if (ev < 1.05) return `pri dôvere ${fmtNum(p, 0)}${NB}% treba kurz aspoň ${fmtOdds(minOddsFor({ probability: p }))}`;
+  if (ev > 1.25) return "podozrivo vysoká hodnota (nad +25 %)";
+  return "";
+}
+
 function openManualTip() {
   const y = new Date();
   y.setDate(y.getDate() - 1);
@@ -2230,10 +2242,11 @@ function openManualTip() {
       <label class="fld">Trh<select data-mt="market">${MANUAL_MARKETS.map((x) => `<option>${x}</option>`).join("")}</select></label>
       <label class="fld">Tip<input type="text" data-mt="selection" placeholder="napr. Nad 2,5" /></label>
       <label class="fld">Kurz<input type="text" data-mt="odds" inputmode="decimal" placeholder="napr. 1,67" /></label>
-      <label class="fld">Dôvera %<input type="text" data-mt="prob" inputmode="decimal" placeholder="voliteľné" /></label>
+      <label class="fld">Dôvera %<input type="text" data-mt="prob" inputmode="decimal" placeholder="napr. 70" /></label>
       <label class="fld">Výsledok<select data-mt="result"><option value="won">✓ Vyšiel</option><option value="lost">✗ Nevyšiel</option><option value="void">↩ Vrátený</option></select></label>
     </div>
-    <label class="small"><input type="checkbox" data-mt="watch" /> Len sledovať <span class="faint">(nerátá sa do štatistík ani na web; zaškrtne sa samo pri dôvere pod 68${NB}%)</span></label>
+    <p class="small" data-mt="check"></p>
+    <label class="small"><input type="checkbox" data-mt="watch" /> Len sledovať <span class="faint">(nerátá sa do štatistík ani na web)</span></label>
     <p class="small form-msg" data-mt="msg"></p>
     <div class="modal-actions">
       <button type="button" class="btn ghost" data-close>Zavrieť</button>
@@ -2241,11 +2254,20 @@ function openManualTip() {
     </div>`, { wide: true, onClose: () => openTipsHistory() });
   const q = (k) => m.el.querySelector(`[data-mt="${k}"]`);
   q("date").value = manualLastDate || isoDay(y);
-  // Dôvera pod 68 % = skúšobné pásmo, políčko sa zaškrtne samo; dá sa zrušiť ručne.
-  q("prob").addEventListener("input", () => {
+  // Rovnaká kontrola ako pri tipoch z modelu – tip, ktorý by model nepustil, ide len medzi sledované.
+  const checkNow = () => {
+    const odds = parseFloat(String(q("odds").value).replace(",", "."));
     const p = parseFloat(String(q("prob").value).replace(",", ".").replace("%", ""));
-    q("watch").checked = p > 0 && p < WATCH_BELOW;
-  });
+    const why = manualTipProblem(p, odds);
+    const box = q("watch");
+    if (!(odds > 1) || !(p > 0)) { q("check").textContent = ""; box.disabled = false; return; }
+    q("check").textContent = why ? `✗ Model by tip nepustil: ${why}. Uloží sa len medzi sledované.` : "✓ Tip prešiel kontrolou modelu.";
+    q("check").className = `small ${why ? "loss" : "win"}`;
+    box.checked = !!why;
+    box.disabled = !!why;
+  };
+  q("prob").addEventListener("input", checkNow);
+  q("odds").addEventListener("input", checkNow);
   const msg = (t, ok) => { q("msg").textContent = t; q("msg").className = `small form-msg ${ok ? "win" : "loss"}`; };
   q("save").onclick = async () => {
     const date = q("date").value;
@@ -2256,6 +2278,7 @@ function openManualTip() {
     const probInput = parseFloat(String(q("prob").value).replace(",", ".").replace("%", ""));
     if (!date || !home || !away || !selection) { msg("Vyplň dátum, oba tímy a tip."); return; }
     if (!(odds > 1)) { msg("Zadaj kurz väčší ako 1 (napr. 1,67)."); return; }
+    if (!(probInput > 0 && probInput <= 100)) { msg("Zadaj dôveru modelu v % (napr. 70), aby sa dal tip skontrolovať."); return; }
     const kickoff = new Date(`${date}T${q("time").value || "12:00"}:00`);
     if (kickoff.getTime() > Date.now()) { msg("Tento formulár je len pre odohrané zápasy. Tipy pred zápasom ukladaj z analýzy zápasu."); return; }
     const probability = probInput > 0 && probInput <= 100 ? probInput : Math.round(10000 / odds) / 100;
@@ -2277,7 +2300,7 @@ function openManualTip() {
       status: q("result").value,
     };
     // Dôvera pod 68 % patrí do skúšobného pásma – aj zabudnutý tip ide len medzi sledované.
-    if (q("watch").checked) tip.watchOnly = true;
+    if (q("watch").checked || manualTipProblem(probInput, odds)) tip.watchOnly = true;
     if (!(probInput > 0 && probInput <= 100)) tip.probabilityEstimated = true;
     q("save").disabled = true;
     try {
@@ -2286,6 +2309,8 @@ function openManualTip() {
       msg(`✓ Uložené${tip.watchOnly ? " medzi sledované" : " do štatistík"}: ${home} – ${away}, ${tip.market}: ${selection}. Môžeš pridať ďalší tip.`, true);
       ["home", "away", "selection", "odds", "prob"].forEach((k) => { q(k).value = ""; });
       q("watch").checked = false;
+      q("watch").disabled = false;
+      q("check").textContent = "";
       q("home").focus();
     } catch (err) {
       msg(`Uloženie zlyhalo: ${err?.message ?? String(err)}`);
