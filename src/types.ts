@@ -200,7 +200,7 @@ export interface PredictionResult {
   fouls?: OverUnderMarket;
   offsides?: OverUnderMarket;
   bestBets: MarketPick[];
-  /** Tipy v pásme dôvery (68–80 %), ktoré vypadli pre príliš nízky skutočný kurz. */
+  /** Tipy v pásme dôvery (65–80 %), ktoré vypadli pre príliš nízky skutočný kurz. */
   lowValueBets?: MarketPick[];
   /** Všetci kandidáti (najpravdepodobnejšia voľba pre každý trh) – pre spätný test. */
   allCandidates?: MarketPick[];

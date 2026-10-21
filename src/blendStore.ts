@@ -173,7 +173,7 @@ export const BLEND_WEIGHTS = [0, 0.1, 0.2, 0.3, 0.4, 0.5];
 export interface BlendRow {
   weight: number; // podiel stávkoviek v %
   brier: number | null; // čím nižšie, tým presnejšie percentá
-  tips: number; // koľko tipov by sa odporučilo (pásmo 68 – 80 %, kurz ≥ minimum, hodnota +5 až +25 %)
+  tips: number; // koľko tipov by sa odporučilo (pásmo dôvery, kurz ≥ minimum, hodnota +5 až +25 %)
   won: number;
   hitRate: number | null;
   profit: number; // jednotky pri stávke 1 j. na tip

@@ -57,7 +57,10 @@ export const MIN_GAMES_TO_RECOMMEND = 3;
  * a mar. – máj 2025, po 300 zápasov) tipy 68 – 80 % na 73 – 74 %, kým
  * 65 – 75 % len na 69 – 71 %.
  */
-export const MIN_PROBABILITY = 68;
+// 21. 10. 2026 (Michalovo rozhodnutie): spodná hranica 65 % namiesto 68 %, aby bolo viac tipov
+// aj cez týždeň. Minimálny kurz ostáva 1,55; tip s dôverou 65 % prejde len pri kurze aspoň
+// ~1,62 (hodnota +5 %). Po 2 – 3 týždňoch overiť, ako vychádzajú tipy 65 – 68 %.
+export const MIN_PROBABILITY = 65;
 export const MAX_PROBABILITY = 80;
 /**
  * Od tejto dôvery je odporúčaný tip označený „★ Silný tip“. V troch spätných
