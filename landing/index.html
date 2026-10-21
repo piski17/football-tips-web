@@ -1626,9 +1626,170 @@ html.menu-open .nav { background: transparent !important; border-bottom-color: t
   .hm-tier.plat { overflow: visible !important; }
   .hm-tier .flag { top: -13px !important; right: auto !important; left: 30px; padding: 8px 14px; box-shadow: 0 6px 20px -6px rgba(217,192,138,.6), 0 0 0 4px var(--bg); z-index: 2; }
 }
+
+
+
+
+
+
+/* ===== DENNÍK: štýl športových novín (začiatok) ===== */
+:root {
+  --bg: #F3F0E8; --bg-2: #ECE8DE; --card: #FFFFFF; --rule: #141414;
+  --line: rgba(20,20,20,.14); --line-2: rgba(20,20,20,.28); --rule-gold: rgba(20,20,20,.2);
+  --gold: #C8102E; --gold-hi: #141414; --gold-lo: #8A0B20;
+  --text: #141414; --muted: #3F3F3F; --faint: #6E6E6E;
+  --win: #157A3C; --loss: #C8102E;
+  --sans: "Barlow", "Helvetica Neue", Arial, sans-serif;
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --r: 4px; --r-sm: 3px;
+  --gold-grad: linear-gradient(#141414, #141414);
+  --panel: #FFFFFF;
+  --red: #C8102E;
+}
+html, body { background: var(--bg) !important; color: var(--text) !important; }
+body, p, li, .lead, .intro, .btn, input, select, textarea, label, .small, .note, td, th, dd, dt, summary, details { font-family: "Barlow", "Helvetica Neue", Arial, sans-serif !important; }
+body { font-weight: 500; }
+/* nadpisy ako v novinách */
+h1, h2, h3, .page-head h1, .hero.hx h1, .sec-head h2, .finale h2 { font-family: "Barlow Condensed", "Arial Narrow", sans-serif !important; font-weight: 800 !important; text-transform: uppercase; letter-spacing: -.005em !important; color: var(--text) !important; line-height: .95 !important; }
+h3 { text-transform: none; font-weight: 700 !important; line-height: 1.1 !important; letter-spacing: 0 !important; }
+h1 em, h2 em, h3 em, .hero h1 em, .shine, .gold-text, .silver-text, .plat-text { font-style: normal !important; background: none !important; -webkit-text-fill-color: currentColor !important; color: var(--red) !important; animation: none !important; text-shadow: none !important; }
+.hero.hx h1 { font-size: clamp(64px, 9vw, 132px) !important; max-width: 14ch; }
+h2 { font-size: clamp(40px, 4.8vw, 68px) !important; }
+/* nič nežiari, nič sa nerozmazáva */
+*, *::before, *::after { text-shadow: none !important; }
+.hx-bg, .hx-radar, .hero-rings, .scroll-cue, .finale .rings { display: none !important; }
+.hero, .hero.hx, .sec, .sec.alt, .finale, .page-head, #kto, .om2-hero, footer { background: var(--bg) !important; }
+.sec.alt { background: var(--bg-2) !important; }
+.sec::before, .sec::after, .finale::before, .finale::after, .page-head::before, .page-head::after, #kto::before, .om2-hero::before { display: none !important; }
+/* kicker namiesto žiariacich štítkov */
+.eyebrow, .hx-pill { display: inline-flex !important; align-items: center; gap: 8px; padding: 0 !important; border: 0 !important; border-radius: 0 !important; background: none !important; color: var(--red) !important; font: 700 13px/1 "Barlow", sans-serif !important; letter-spacing: .14em !important; text-transform: uppercase; box-shadow: none !important; }
+.eyebrow::before, .hx-pill i { content: ""; width: 10px !important; height: 10px !important; border-radius: 0 !important; background: var(--red) !important; box-shadow: none !important; display: inline-block; }
+/* karty ako stĺpce novín */
+.card, .hm-card, .hm-tier, .lux, .sc, .calc, .ledger-wrap, .faq details, .om2-paper, .steps li, .funnel li, .duel, .yday-card, .stake, .verdict, .calib-sec, .calc-sec, .showcase, .hm-kurz .wrap > *, .skola { background: var(--card) !important; border: 1px solid rgba(20,20,20,.16) !important; border-radius: 4px !important; box-shadow: none !important; color: var(--text) !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+.card::before, .card::after, .hm-card::before, .hm-card::after, .hm-tier::before, .hm-tier::after, .om2-paper::after { display: none !important; }
+/* tlačidlá */
+.btn { background: #141414 !important; color: #fff !important; border: 2px solid #141414 !important; border-radius: 2px !important; box-shadow: none !important; font-weight: 700 !important; text-transform: uppercase; letter-spacing: .06em; font-size: 14px !important; }
+.btn:hover { background: var(--red) !important; border-color: var(--red) !important; }
+.btn-ghost, .btn.btn-ghost { background: transparent !important; color: #141414 !important; }
+.btn-ghost:hover { background: #141414 !important; color: #fff !important; border-color: #141414 !important; }
+.btn::before, .btn::after { display: none !important; }
+a { color: inherit; }
+/* čísla */
+.num, b.num, .sc-total, .figures b, .hm-tier b, .hx-live b, .funnel .c, .steps .n, #ako .steps .n, .stake .big, .lux-price b { font-family: "Barlow Condensed", "Arial Narrow", sans-serif !important; font-weight: 800 !important; background: none !important; -webkit-text-fill-color: currentColor !important; color: var(--text) !important; letter-spacing: 0 !important; }
+.pos, .win, .w { color: var(--win) !important; -webkit-text-fill-color: var(--win) !important; }
+.neg, .loss, .l { color: var(--loss) !important; -webkit-text-fill-color: var(--loss) !important; }
+/* horná lišta ako hlavička novín */
+.nav, html.scrolled .nav, html[data-page] .nav, html[data-page="home"] .nav, html[data-page]:not([data-page="home"]) .nav { background: #FFFFFF !important; border-bottom: 3px solid #141414 !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+.brand { color: #141414 !important; font-family: "Barlow Condensed", sans-serif !important; font-weight: 800 !important; text-transform: uppercase; letter-spacing: .02em; font-size: 26px !important; }
+.brand svg { color: var(--red) !important; }
+.nav-social a { color: #141414 !important; }
+.nav-social a:hover { background: rgba(20,20,20,.08) !important; color: var(--red) !important; }
+.nq2-plaque { background: none !important; box-shadow: none !important; padding: 0 !important; gap: 10px !important; }
+.nq2-plaque::before, .nq2-star { display: none !important; }
+.nq2-t, .nq2-t em { font: italic 600 17px/1.2 "Barlow", sans-serif !important; color: #3F3F3F !important; background: none !important; -webkit-text-fill-color: currentColor !important; animation: none !important; }
+.nq2-t em { color: var(--red) !important; font-style: italic !important; }
+/* rozdeľovacie čiary sekcií */
+.sec-head { border-top: 3px solid #141414; padding-top: 18px; }
+.sec-head.center { border-top: 0; }
+.sec-head.center > div { border-top: 3px solid #141414; padding-top: 18px; }
+footer { border-top: 3px solid #141414; color: var(--muted) !important; }
+/* menu vľavo (počítač) */
+@media (min-width: 961px) {
+  .dock::before { background: #141414 !important; width: 2px !important; }
+  .dock a, .dock button { color: #3F3F3F !important; font: 700 13px/50px "Barlow", sans-serif !important; letter-spacing: .12em !important; }
+  .dock a::before { font: 700 14px/50px "Barlow Condensed", sans-serif !important; color: #9A9A9A !important; }
+  .dock a:hover { color: var(--red) !important; }
+  .dock a.active { color: #141414 !important; }
+  .dock a.active::before { color: var(--red) !important; }
+  .dock-pill { background: var(--red) !important; box-shadow: none !important; border-radius: 0 !important; width: 4px !important; left: -2px !important; }
+  .dock a.active::after { background: rgba(200,16,46,.07) !important; }
+}
+/* menu dole (mobil) */
+@media (max-width: 960px) {
+  .dock { background: #FFFFFF !important; border: 2px solid #141414 !important; border-radius: 6px !important; box-shadow: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+  .dock a, .dock button { color: #141414 !important; border-radius: 3px !important; }
+  .dock a.active { color: #fff !important; }
+  .dock-pill { background: var(--red) !important; box-shadow: none !important; border-radius: 3px !important; }
+}
+.jump { background: #141414 !important; color: #fff !important; border-radius: 2px !important; box-shadow: none !important; }
+.jump:hover { background: var(--red) !important; }
+/* tabuľka výsledkov na úvode */
+.hx-live { background: #FFFFFF !important; border: 0 !important; border-top: 4px solid #141414 !important; border-bottom: 1px solid #141414 !important; border-radius: 0 !important; box-shadow: none !important; }
+.hx-live > div { border-color: rgba(20,20,20,.15) !important; }
+.hx-live small { color: var(--red) !important; font-weight: 700 !important; letter-spacing: .12em !important; }
+.hx-live span { color: #555 !important; }
+.hx-spark { border-top: 1px solid rgba(20,20,20,.15) !important; }
+.hx-spark path, .hx-spark .ln { stroke: #141414 !important; }
+.hx-spark .area, .hx-spark path[fill^="url"] { fill: rgba(200,16,46,.08) !important; }
+.more { color: #141414 !important; border-bottom: 2px solid var(--red) !important; font-weight: 700 !important; }
+/* ikony v kartách */
+.ic, .steps .ic, .hm-card .ic, .step-ic { background: #141414 !important; border: 0 !important; border-radius: 2px !important; color: #fff !important; box-shadow: none !important; }
+.ic svg, .hm-card .ic svg { stroke: #fff !important; color: #fff !important; }
+.steps li small, .steps .k { color: var(--red) !important; }
+/* členstvá */
+.hm-tier .tn, .hm-tier.silver .tn, .hm-tier.gold .tn, .hm-tier.plat .tn { background: none !important; -webkit-text-fill-color: currentColor !important; color: #141414 !important; font-family: "Barlow Condensed", sans-serif !important; font-weight: 800 !important; text-transform: uppercase; font-size: 30px !important; }
+.hm-tier.plat { border: 2px solid #141414 !important; }
+.hm-tier .flag { background: var(--red) !important; color: #fff !important; border-radius: 0 !important; box-shadow: none !important; }
+.hm-tier .tl, .hm-tier .pm { color: #555 !important; }
+.hm-tier .go, .hm-tier [class*="go"] { color: #141414 !important; }
+/* kurz a záver */
+.finale { border-top: 1px solid rgba(20,20,20,.15); }
+.finale p, .sec .lead, .page-head p { color: #3F3F3F !important; }
+footer a { color: #141414 !important; }
+footer .nav-social a, footer a[aria-label] { border-color: #141414 !important; }
+/* ukážka Telegramu ostáva tmavá ako skutočná aplikácia */
+.phone { --text: #F4EEE2; --muted: #CFC6B6; --faint: #A39A8B; --gold: #D9C08A; --gold-hi: #F3E6C4; --line: rgba(217,192,138,.16); --line-2: rgba(217,192,138,.32); --win: #7FBF9A; --loss: #C0707C; color: #F4EEE2; }
+.phone .num, .phone b { color: inherit !important; -webkit-text-fill-color: currentColor !important; }
+.phone .card, .phone [class*="msg"], .phone [class*="bub"] { background: #2B2520 !important; border-color: rgba(255,255,255,.08) !important; color: #F4EEE2 !important; }
+/* hranaté rohy všade */
+#ako .steps .ic, #clenstvo .lux, #clenstvo .lux-guarantee, #clenstvo .lux-r .term-switch, #clenstvo .lux-r .term-switch button, #clenstvo .payback, .calc, .calib, .calib-tip, .card, .duel, .duel-band, .duel-verdict, .faq details, .field input, .field textarea, .select select, .figures > div, .form, .growth-tip, .hm-kurz-img, .hm-m, .hx-live, .last7, .ledger li, .lux, .mon, .mon-list li, .nstat, .om-card, .om2-paper, .payback, .payback-row.on, .showcase, .term-switch, .term-switch button, .tab, .back, .seg, .seg button, .payback-chips button, .chip, .tabs, .filter, .lux-pill, .pill, .tag, .res, .badge, .lux-guarantee, .yday-card, .calc-sec, .calib-sec { border-radius: 3px !important; }
+.glow::before { display: none !important; }
+/* aktívne prepínače: čierne s bielym písmom */
+[aria-pressed="true"], [aria-selected="true"], .tab[aria-pressed="true"], .term-switch button[aria-selected="true"], #clenstvo .lux-r .term-switch [aria-selected="true"], #kalkulacka .calc .seg button[aria-pressed="true"], .payback-chips button.on, .payback-chips button[aria-pressed="true"], .menu a.active { background: #141414 !important; color: #FFFFFF !important; -webkit-text-fill-color: #FFFFFF !important; box-shadow: none !important; border-color: #141414 !important; }
+[aria-pressed="true"] *, [aria-selected="true"] *, .payback-chips button.on * { color: #FFFFFF !important; -webkit-text-fill-color: #FFFFFF !important; }
+.term-switch, .tabs, .seg { background: #FFFFFF !important; border: 1px solid #141414 !important; box-shadow: none !important; }
+.term-switch button, .tab, .seg button, .payback-chips button { color: #141414 !important; background: transparent; }
+.back { background: #FFFFFF !important; border: 1px solid #141414 !important; color: #141414 !important; }
+/* štatistiky na stránke Výsledky */
+.figures > div, .nstat, .mon, .last7, .calc, .payback, .lux, .lux-guarantee, .duel, .calib { background: #FFFFFF !important; border: 1px solid rgba(20,20,20,.16) !important; box-shadow: none !important; }
+.figures > div { border-top: 4px solid #141414 !important; }
+.figures > div::before, .figures > div::after, .nstat::before, .lux::before, .lux::after, .calc::before { display: none !important; }
+.figures small, .figures span, .nstat small { color: #555 !important; }
+.lux-guarantee i, .lux-guarantee .ic, .lux-guarantee svg { background: var(--red) !important; color: #fff !important; }
+/* posuvník */
+input[type="range"] { accent-color: var(--red); }
+/* štítky Vyšiel / Nevyšiel */
+.res.won, .won .res, [class*="won"] .tagres { color: var(--win) !important; }
+/* formulár */
+.field input, .field textarea, .select select, input[type="text"], input[type="email"], input[type="number"], textarea, select { background: #FFFFFF !important; border: 1px solid #141414 !important; color: #141414 !important; -webkit-text-fill-color: #141414 !important; box-shadow: none !important; }
+.field input:focus, .field textarea:focus, select:focus, input:focus, textarea:focus { outline: 2px solid var(--red) !important; outline-offset: 1px; }
+input[type="checkbox"] { accent-color: var(--red); }
+/* kurz */
+.skola h2, .skola-txt h2, .kurz-head h1, .kurz h1 { text-transform: uppercase; }
+/* O mne */
+.om2-seal { filter: none !important; }
+.om2-seal-svg circle:first-of-type { stroke: #141414 !important; stroke-width: 3 !important; }
+.om2-seal-svg circle + circle { fill: #141414 !important; stroke: none !important; }
+.om2-seal .om2-mp { background: none !important; -webkit-text-fill-color: #FFFFFF !important; color: #FFFFFF !important; filter: none !important; }
+.om2-sign .sig { color: #141414 !important; -webkit-text-fill-color: #141414 !important; }
+.om2-swash path { stroke: var(--red) !important; }
+.om2-paper h2 em, #kto h2 em { color: var(--red) !important; -webkit-text-fill-color: var(--red) !important; }
+.om2-quote { border-left-color: var(--red) !important; color: #141414 !important; font-family: "Barlow Condensed", sans-serif !important; font-style: italic; font-weight: 700 !important; }
+.om2-paper .om2-lead::first-letter { color: var(--red) !important; font-family: "Barlow Condensed", sans-serif !important; font-weight: 800; }
+.om2-list { border-top: 3px solid #141414 !important; }
+.om2-list li { border-color: rgba(20,20,20,.15) !important; }
+.om2-list li::before { background: var(--red) !important; box-shadow: none !important; }
+.om2-n { background: none !important; -webkit-text-fill-color: var(--red) !important; color: var(--red) !important; font: 800 48px/1 "Barlow Condensed", sans-serif !important; font-style: normal !important; }
+.om2-list p, .om2-paper p { color: #3F3F3F !important; }
+.om2-paper .om2-lead { color: #141414 !important; }
+.om2-paper p a { color: #141414 !important; }
+.payback-input { border-radius: 3px !important; border: 1px solid #141414 !important; background: #FFFFFF !important; }
+.payback-input input { border: 0 !important; outline: none !important; }
+/* ===== DENNÍK koniec ===== */
 </style>
 
 <link href="https://fonts.googleapis.com/css2?family=Herr+Von+Muellerhoff&amp;family=Great+Vibes&amp;display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;0,700;1,500;1,600&amp;family=Barlow+Condensed:wght@600;700;800&amp;display=swap" rel="stylesheet" id="dennik-font" />
 </head>
 <body>
 
