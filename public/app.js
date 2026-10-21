@@ -2160,6 +2160,7 @@ function openEditTip(tip) {
       ? `<div class="edit-legs">${legsHtml}</div><p class="small">Výsledok tiketu: <b data-ticket-status></b> <span class="faint">(vypočíta sa zo zápasov)</span></p>`
       : `<label class="fld">Výsledok ${statusSelect("data-status", tip.status)}</label>`}
     <label class="fld">Kurz <input type="text" data-odds inputmode="decimal" value="${typeof tip.odds === "number" && tip.odds > 1 ? String(tip.odds).replace(".", ",") : ""}" placeholder="napr. 1,75" /></label>
+    ${isTicket ? "" : `<label class="small"><input type="checkbox" data-watch${tip.watchOnly ? " checked" : ""} /> Len sledovať <span class="faint">(nerátá sa do štatistík ani na web)</span></label>`}
     <p class="faint small form-msg" data-msg></p>
     <div class="modal-actions">
       <button type="button" class="btn ghost" data-close>Zrušiť</button>
@@ -2182,7 +2183,10 @@ function openEditTip(tip) {
     }
     const edit = { odds };
     if (isTicket) edit.legs = legStatuses().map((status) => ({ status }));
-    else edit.status = el.querySelector("[data-status]").value;
+    else {
+      edit.status = el.querySelector("[data-status]").value;
+      edit.watchOnly = el.querySelector("[data-watch]").checked;
+    }
     saveBtn.disabled = true;
     try {
       await postJson(`/api/tips/${encodeURIComponent(tip.id)}/edit`, edit);
@@ -2254,11 +2258,14 @@ function openManualTip() {
       savedAt: new Date().toISOString(),
       status: q("result").value,
     };
+    // Dôvera pod 68 % patrí do skúšobného pásma – aj zabudnutý tip ide len medzi sledované.
+    if (probInput > 0 && probInput < WATCH_BELOW) tip.watchOnly = true;
+    if (!(probInput > 0 && probInput <= 100)) tip.probabilityEstimated = true;
     q("save").disabled = true;
     try {
       await postJson("/api/tips", tip);
       manualLastDate = date;
-      msg(`✓ Uložené: ${home} – ${away}, ${tip.market}: ${selection}. Môžeš pridať ďalší tip.`, true);
+      msg(`✓ Uložené${tip.watchOnly ? " medzi sledované (dôvera pod 68 %)" : ""}: ${home} – ${away}, ${tip.market}: ${selection}. Môžeš pridať ďalší tip.`, true);
       ["home", "away", "selection", "odds", "prob"].forEach((k) => { q(k).value = ""; });
       q("home").focus();
     } catch (err) {
