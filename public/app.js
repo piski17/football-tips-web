@@ -168,7 +168,7 @@ function evPct(ev) {
 }
 function strongTipBadge(p) {
   if (typeof p === "number" && p < 68)
-    return ` <span class="badge-strong" style="opacity:.75" title="Skúšobné pásmo 65 – 68 %: tip sa uloží len na sledovanie – vyhodnotí sa, ale neposiela sa členom a nerátá sa do štatistík.">len sledovať</span>`;
+    return ` <span class="badge-strong" style="opacity:.75" title="Skúšobné pásmo 65 – 67 %: tip sa uloží len na sledovanie – vyhodnotí sa, ale neposiela sa členom a nerátá sa do štatistík.">len sledovať</span>`;
   return typeof p === "number" && p >= STRONG_TIP_MIN_PROBABILITY
     ? ` <span class="badge-strong" title="Dôvera 70 % a viac.">★ 70${NB}%+</span>`
     : "";
@@ -1794,12 +1794,12 @@ function renderBankrollSimulation(tips) {
 const CALIBRATION_FROM = 65;
 const CALIBRATION_TO = 82.5;
 const CALIBRATION_STEP = 2.5;
-/** Sledované tipy (21. 10. 2026): skúšobné pásmo 65 – 68 % a ďalšie tipy „len sledovať“. */
+/** Sledované tipy (21. 10. 2026): skúšobné pásmo 65 – 67 % a ďalšie tipy „len sledovať“. */
 function renderWatchReport(list) {
   const el = document.getElementById("watchResult");
   if (!el) return;
   if (!list.length) {
-    el.innerHTML = `<p class="faint small">Zatiaľ žiadne. Tipy s dôverou 65 – 68${NB}% sa po uložení automaticky zaradia sem.</p>`;
+    el.innerHTML = `<p class="faint small">Zatiaľ žiadne. Tipy s dôverou 65 – 67${NB}% sa po uložení automaticky zaradia sem.</p>`;
     return;
   }
   const resolved = list.filter((t) => t.status === "won" || t.status === "lost");
@@ -1812,14 +1812,21 @@ function renderWatchReport(list) {
   const rows = [...list]
     .sort((a, b) => new Date(b.matchDate).getTime() - new Date(a.matchDate).getTime())
     .slice(0, 40)
-    .map((t) => `<tr><td style="white-space:nowrap">${escapeHtml(new Date(t.matchDate).toLocaleDateString("sk-SK", { day: "numeric", month: "numeric" }))}</td><td>${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))}<br><span class="faint">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}</span></td><td class="num">${Number(t.probability).toFixed(0)}${NB}%</td><td class="num">${typeof t.odds === "number" ? fmtOdds(t.odds) : "–"}</td><td>${res[t.status] || t.status}</td></tr>`)
+    .map((t) => `<tr><td style="white-space:nowrap">${escapeHtml(new Date(t.matchDate).toLocaleDateString("sk-SK", { day: "numeric", month: "numeric" }))}</td><td>${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))}<br><span class="faint">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}</span></td><td class="num">${Number(t.probability).toFixed(0)}${NB}%</td><td class="num">${typeof t.odds === "number" ? fmtOdds(t.odds) : "–"}</td><td>${res[t.status] || t.status}</td><td><button type="button" class="ib" data-watch-edit="${escapeHtml(t.id)}" title="Upraviť kurz alebo výsledok" aria-label="Upraviť kurz alebo výsledok">${ICON.edit}</button></td></tr>`)
     .join("");
   el.innerHTML = `<p class="small">${resolved.length
       ? `<b>Vyšlo ${won} z ${resolved.length}</b> (${fmtNum((won / resolved.length) * 100, 0)}${NB}%, model sľuboval ${fmtNum(avgProb, 0)}${NB}%)${withOdds.length ? `, zisk <b class="${profit >= 0 ? "g" : "l"}">${signed(profit, 1)}${NB}j.</b>` : "."}`
       : "Zatiaľ žiadny vyhodnotený."}${pending ? ` Čaká: ${pending}.` : ""}</p>
-    <div class="table-wrap"><table class="bt-table"><thead><tr><th>Deň</th><th>Zápas a tip</th><th class="num">Dôvera</th><th class="num">Kurz</th><th>Výsledok</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="table-wrap"><table class="bt-table"><thead><tr><th>Deň</th><th>Zápas a tip</th><th class="num">Dôvera</th><th class="num">Kurz</th><th>Výsledok</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
     <p class="faint small">Tieto tipy sa vyhodnocujú, ale neposielajú sa členom, nie sú na webe a nerátajú sa do úspešnosti. Keď budú mať aspoň 30 vyhodnotených tipov v zisku, oplatí sa ich začať posielať.</p>`;
 }
+
+document.getElementById("watchResult")?.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-watch-edit]");
+  if (!btn) return;
+  const tip = currentHistoryTips.find((x) => x.id === btn.dataset.watchEdit);
+  if (tip) openEditTip(tip);
+});
 
 function renderCalibrationReport(tips) {
   const el = document.getElementById("calibrationResult");
