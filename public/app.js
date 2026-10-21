@@ -1812,7 +1812,7 @@ function renderWatchReport(list) {
   const rows = [...list]
     .sort((a, b) => new Date(b.matchDate).getTime() - new Date(a.matchDate).getTime())
     .slice(0, 40)
-    .map((t) => `<tr><td style="white-space:nowrap">${escapeHtml(new Date(t.matchDate).toLocaleDateString("sk-SK", { day: "numeric", month: "numeric" }))}</td><td>${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))}<br><span class="faint">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}</span></td><td class="num">${Number(t.probability).toFixed(0)}${NB}%</td><td class="num">${typeof t.odds === "number" ? fmtOdds(t.odds) : "–"}</td><td>${res[t.status] || t.status}</td><td><button type="button" class="ib" data-watch-edit="${escapeHtml(t.id)}" title="Upraviť kurz alebo výsledok" aria-label="Upraviť kurz alebo výsledok">${ICON.edit}</button></td></tr>`)
+    .map((t) => `<tr><td style="white-space:nowrap">${escapeHtml(new Date(t.matchDate).toLocaleDateString("sk-SK", { day: "numeric", month: "numeric" }))}</td><td>${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))}<br><span class="faint">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}</span></td><td class="num">${Number(t.probability).toFixed(0)}${NB}%</td><td class="num">${typeof t.odds === "number" ? fmtOdds(t.odds) : "–"}</td><td>${res[t.status] || t.status}</td><td><button type="button" class="ib" data-watch-edit="${escapeHtml(t.id)}" title="Upraviť kurz alebo výsledok" aria-label="Upraviť kurz alebo výsledok">${ICON.edit}</button> <button type="button" class="ib danger" data-watch-del="${escapeHtml(t.id)}" title="Odstrániť tip" aria-label="Odstrániť tip">${ICON.trash}</button></td></tr>`)
     .join("");
   el.innerHTML = `<p class="small">${resolved.length
       ? `<b>Vyšlo ${won} z ${resolved.length}</b> (${fmtNum((won / resolved.length) * 100, 0)}${NB}%, model sľuboval ${fmtNum(avgProb, 0)}${NB}%)${withOdds.length ? `, zisk <b class="${profit >= 0 ? "g" : "l"}">${signed(profit, 1)}${NB}j.</b>` : "."}`
@@ -1821,7 +1821,19 @@ function renderWatchReport(list) {
     <p class="faint small">Tieto tipy sa vyhodnocujú, ale neposielajú sa členom, nie sú na webe a nerátajú sa do úspešnosti. Keď budú mať aspoň 30 vyhodnotených tipov v zisku, oplatí sa ich začať posielať.</p>`;
 }
 
-document.getElementById("watchResult")?.addEventListener("click", (e) => {
+document.getElementById("watchResult")?.addEventListener("click", async (e) => {
+  const del = e.target.closest("[data-watch-del]");
+  if (del) {
+    if (!window.confirm("Naozaj chceš tento sledovaný tip odstrániť? Táto akcia sa nedá vrátiť späť.")) return;
+    try {
+      await fetchJson(`/api/tips/${encodeURIComponent(del.dataset.watchDel)}`, { method: "DELETE" });
+      showToast("Tip odstránený.");
+    } catch (err) {
+      showToast(`Zmazanie zlyhalo: ${err?.message ?? String(err)}`);
+    }
+    openTipsHistory();
+    return;
+  }
   const btn = e.target.closest("[data-watch-edit]");
   if (!btn) return;
   const tip = currentHistoryTips.find((x) => x.id === btn.dataset.watchEdit);
@@ -2221,6 +2233,7 @@ function openManualTip() {
       <label class="fld">Dôvera %<input type="text" data-mt="prob" inputmode="decimal" placeholder="voliteľné" /></label>
       <label class="fld">Výsledok<select data-mt="result"><option value="won">✓ Vyšiel</option><option value="lost">✗ Nevyšiel</option><option value="void">↩ Vrátený</option></select></label>
     </div>
+    <label class="small"><input type="checkbox" data-mt="watch" /> Len sledovať <span class="faint">(nerátá sa do štatistík ani na web; zaškrtne sa samo pri dôvere pod 68${NB}%)</span></label>
     <p class="small form-msg" data-mt="msg"></p>
     <div class="modal-actions">
       <button type="button" class="btn ghost" data-close>Zavrieť</button>
@@ -2228,6 +2241,11 @@ function openManualTip() {
     </div>`, { wide: true, onClose: () => openTipsHistory() });
   const q = (k) => m.el.querySelector(`[data-mt="${k}"]`);
   q("date").value = manualLastDate || isoDay(y);
+  // Dôvera pod 68 % = skúšobné pásmo, políčko sa zaškrtne samo; dá sa zrušiť ručne.
+  q("prob").addEventListener("input", () => {
+    const p = parseFloat(String(q("prob").value).replace(",", ".").replace("%", ""));
+    q("watch").checked = p > 0 && p < WATCH_BELOW;
+  });
   const msg = (t, ok) => { q("msg").textContent = t; q("msg").className = `small form-msg ${ok ? "win" : "loss"}`; };
   q("save").onclick = async () => {
     const date = q("date").value;
@@ -2259,14 +2277,15 @@ function openManualTip() {
       status: q("result").value,
     };
     // Dôvera pod 68 % patrí do skúšobného pásma – aj zabudnutý tip ide len medzi sledované.
-    if (probInput > 0 && probInput < WATCH_BELOW) tip.watchOnly = true;
+    if (q("watch").checked) tip.watchOnly = true;
     if (!(probInput > 0 && probInput <= 100)) tip.probabilityEstimated = true;
     q("save").disabled = true;
     try {
       await postJson("/api/tips", tip);
       manualLastDate = date;
-      msg(`✓ Uložené${tip.watchOnly ? " medzi sledované (dôvera pod 68 %)" : ""}: ${home} – ${away}, ${tip.market}: ${selection}. Môžeš pridať ďalší tip.`, true);
+      msg(`✓ Uložené${tip.watchOnly ? " medzi sledované" : " do štatistík"}: ${home} – ${away}, ${tip.market}: ${selection}. Môžeš pridať ďalší tip.`, true);
       ["home", "away", "selection", "odds", "prob"].forEach((k) => { q(k).value = ""; });
+      q("watch").checked = false;
       q("home").focus();
     } catch (err) {
       msg(`Uloženie zlyhalo: ${err?.message ?? String(err)}`);
