@@ -134,7 +134,7 @@ function monthlyResults(tips: SavedTip[]) {
 }
 
 /** Pohárové súťaže: tímy v nich hrajú málo zápasov, ale v domácej lige majú dosť dát. */
-const CUP_LEAGUE_IDS = [2];
+const CUP_LEAGUE_IDS = [2, 3]; // Liga majstrov, Európska liga
 
 const LEAGUE_PRESETS: LeaguePreset[] = [
   { id: 39, name: "Premier League", country: "Anglicko" },
@@ -143,6 +143,11 @@ const LEAGUE_PRESETS: LeaguePreset[] = [
   { id: 78, name: "Bundesliga", country: "Nemecko" },
   { id: 61, name: "Ligue 1", country: "Francúzsko" },
   { id: 2, name: "UEFA Champions League", country: "Európa" },
+  // 21. 10. 2026 (Michalovo rozhodnutie): viac zápasov aj cez týždeň.
+  { id: 3, name: "UEFA Europa League", country: "Európa" },
+  { id: 88, name: "Eredivisie", country: "Holandsko" },
+  { id: 94, name: "Primeira Liga", country: "Portugalsko" },
+  { id: 203, name: "Süper Lig", country: "Turecko" },
   // Liga národov (id 5) odstránená 6. 10. 2026 - reprezentácie majú málo zápasov, tipy nespoľahlivé.
 ];
 
