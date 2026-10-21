@@ -1844,6 +1844,11 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
 /* Zisk a ROI: kladné zelenou, záporné bordovou (prebíja jednotnú farbu čísel vyššie). */
 .num.pos, b.num.pos, .sc-total.pos, .figures b.pos, .hx-live b.pos { color: var(--win) !important; -webkit-text-fill-color: var(--win) !important; }
 .num.neg, b.num.neg, .sc-total.neg, .figures b.neg, .hx-live b.neg { color: var(--loss) !important; -webkit-text-fill-color: var(--loss) !important; }
+/* Zoznam tipov vo výsledkoch: vyšiel = celý riadok zelenou, nevyšiel = celý riadok červenou. */
+.ledger li.won { border-color: rgba(127,191,154,.45) !important; background: rgba(127,191,154,.07) !important; }
+.ledger li.lost { border-color: rgba(192,112,124,.45) !important; background: rgba(192,112,124,.07) !important; }
+.ledger li.won, .ledger li.won .d, .ledger li.won .tm, .ledger li.won .m, .ledger li.won .b, .ledger li.won .o { color: var(--win) !important; -webkit-text-fill-color: var(--win) !important; }
+.ledger li.lost, .ledger li.lost .d, .ledger li.lost .tm, .ledger li.lost .m, .ledger li.lost .b, .ledger li.lost .o { color: var(--loss) !important; -webkit-text-fill-color: var(--loss) !important; }
 </style>
 
 <link href="https://fonts.googleapis.com/css2?family=Herr+Von+Muellerhoff&amp;family=Great+Vibes&amp;display=swap" rel="stylesheet" />
@@ -2484,7 +2489,7 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
   const MONTHS = ["január", "február", "marec", "apríl", "máj", "jún", "júl", "august", "september", "október", "november", "december"];
   const cls = (v) => (v > 0 ? "pos" : v < 0 ? "neg" : "");
   const mqPhone = window.matchMedia("(max-width: 700px)");
-  const row = (r) => `<li><span class="d num">${dayLabel(r.day)}${r.time ? `<small class="tm">${esc(r.time)}</small>` : ""}</span><span class="m">${esc(r.match)}<span class="b">${esc(r.bet)}</span></span><span class="o num">${r.odds ? fmt(r.odds, 2) : ""}</span><span class="r ${esc(r.status)}">${RES[r.status] || ""}</span></li>`;
+  const row = (r) => `<li class="${esc(r.status)}"><span class="d num">${dayLabel(r.day)}${r.time ? `<small class="tm">${esc(r.time)}</small>` : ""}</span><span class="m">${esc(r.match)}<span class="b">${esc(r.bet)}</span></span><span class="o num">${r.odds ? fmt(r.odds, 2) : ""}</span><span class="r ${esc(r.status)}">${RES[r.status] || ""}</span></li>`;
   const paintRange = (el) => el.style.setProperty("--fill", ((el.value - el.min) / (el.max - el.min)) * 100 + "%");
 
 
