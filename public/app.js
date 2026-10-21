@@ -167,6 +167,8 @@ function evPct(ev) {
   return `${p >= 0 ? "+" : "−"}${Math.abs(p)}${NB}%`;
 }
 function strongTipBadge(p) {
+  if (typeof p === "number" && p < 68)
+    return ` <span class="badge-strong" style="opacity:.75" title="Skúšobné pásmo 65 – 68 %: tip sa uloží len na sledovanie – vyhodnotí sa, ale neposiela sa členom a nerátá sa do štatistík.">len sledovať</span>`;
   return typeof p === "number" && p >= STRONG_TIP_MIN_PROBABILITY
     ? ` <span class="badge-strong" title="Dôvera 70 % a viac.">★ 70${NB}%+</span>`
     : "";
@@ -341,7 +343,15 @@ function askTelegramTarget() {
   });
 }
 
-async function maybeOfferTelegram(tipId) {
+/** Skúšobné pásmo (21. 10. 2026): tipy pod 68 % sa ukladajú len na sledovanie (rovnako ako server). */
+const WATCH_BELOW = 68;
+const isWatchTip = (tip) => !(tip.legs && tip.legs.length) && !tip.manualEntry && typeof tip.probability === "number" && tip.probability < WATCH_BELOW;
+
+async function maybeOfferTelegram(tipId, tip) {
+  if (tip && isWatchTip(tip)) {
+    showToast(`Tip s dôverou pod ${WATCH_BELOW}${NB}% je uložený len na sledovanie – neposiela sa a nerátá do štatistík.`);
+    return;
+  }
   const target = await askTelegramTarget();
   if (!target) return;
   try {
@@ -966,7 +976,7 @@ function wireSaveTipButtons(r, root) {
         await postJson("/api/tips", tip);
         btn.textContent = "✓ Uložené";
         msgEl.innerHTML = `✓ Tip uložený (${escapeHtml(bet.market)}: ${escapeHtml(translateNamesInText(bet.selection, r.fixture.homeTeam.name, r.fixture.awayTeam.name))})`;
-        await maybeOfferTelegram(tip.id);
+        await maybeOfferTelegram(tip.id, tip);
       } catch (err) {
         msgEl.innerHTML = `<span class="loss">Uloženie zlyhalo: ${escapeHtml(err.message)}</span>`;
       } finally {
@@ -1197,7 +1207,7 @@ function renderCalcRows(out, r, market, rows) {
       try {
         await postJson("/api/tips", tip);
         b.textContent = "✓ Uložené";
-        await maybeOfferTelegram(tip.id);
+        await maybeOfferTelegram(tip.id, tip);
       } catch (err) {
         showToast(`Uloženie zlyhalo: ${err?.message ?? String(err)}`);
         b.disabled = false;
@@ -1536,7 +1546,7 @@ function renderDayTipsView() {
         btn.textContent = "✓ Uložené";
         const inp = dayTipsPaneEl.querySelector(`[data-odds="${idx}"]`); if (inp) inp.disabled = true;
         refreshOdds();
-        await maybeOfferTelegram(tip.id);
+        await maybeOfferTelegram(tip.id, tip);
       } catch (err) {
         showToast(`Uloženie zlyhalo: ${err?.message ?? String(err)}`);
         btn.disabled = false;
@@ -1555,7 +1565,7 @@ function renderDayTipsView() {
       try {
         const tip = await saveOne(i, Math.round(oddsState(i).odd * 100) / 100);
         saved++;
-        if (target) { try { await postJson(`/api/tips/${tip.id}/telegram`, { target }); sent++; } catch { errs++; } }
+        if (target && !isWatchTip(tip)) { try { await postJson(`/api/tips/${tip.id}/telegram`, { target }); sent++; } catch { errs++; } }
       } catch { errs++; }
     }
     showToast(`Uložené: ${saved}${target ? ` · do Telegramu: ${sent}` : ""}${errs ? ` · chyby: ${errs}` : ""}`);
@@ -1665,6 +1675,7 @@ function renderTipsList(allTips) {
   renderMarketBreakdown(statTips);
   renderBankrollSimulation(statTips);
   renderCalibrationReport(statTips);
+  renderWatchReport(allTips.filter((t) => t.watchOnly && !(t.legs && t.legs.length)));
   renderTipRows(tips);
 }
 
@@ -1783,6 +1794,33 @@ function renderBankrollSimulation(tips) {
 const CALIBRATION_FROM = 65;
 const CALIBRATION_TO = 82.5;
 const CALIBRATION_STEP = 2.5;
+/** Sledované tipy (21. 10. 2026): skúšobné pásmo 65 – 68 % a ďalšie tipy „len sledovať“. */
+function renderWatchReport(list) {
+  const el = document.getElementById("watchResult");
+  if (!el) return;
+  if (!list.length) {
+    el.innerHTML = `<p class="faint small">Zatiaľ žiadne. Tipy s dôverou 65 – 68${NB}% sa po uložení automaticky zaradia sem.</p>`;
+    return;
+  }
+  const resolved = list.filter((t) => t.status === "won" || t.status === "lost");
+  const won = resolved.filter((t) => t.status === "won").length;
+  const withOdds = resolved.filter((t) => typeof t.odds === "number" && t.odds > 1);
+  const profit = withOdds.reduce((a, t) => a + (t.status === "won" ? t.odds - 1 : -1), 0);
+  const avgProb = resolved.length ? resolved.reduce((a, t) => a + Number(t.probability || 0), 0) / resolved.length : null;
+  const pending = list.filter((t) => t.status === "pending").length;
+  const res = { won: `<b class="g">vyšiel</b>`, lost: `<b class="l">nevyšiel</b>`, void: "vrátený", pending: `<span class="faint">čaká</span>` };
+  const rows = [...list]
+    .sort((a, b) => new Date(b.matchDate).getTime() - new Date(a.matchDate).getTime())
+    .slice(0, 40)
+    .map((t) => `<tr><td style="white-space:nowrap">${escapeHtml(new Date(t.matchDate).toLocaleDateString("sk-SK", { day: "numeric", month: "numeric" }))}</td><td>${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))}<br><span class="faint">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}</span></td><td class="num">${Number(t.probability).toFixed(0)}${NB}%</td><td class="num">${typeof t.odds === "number" ? fmtOdds(t.odds) : "–"}</td><td>${res[t.status] || t.status}</td></tr>`)
+    .join("");
+  el.innerHTML = `<p class="small">${resolved.length
+      ? `<b>Vyšlo ${won} z ${resolved.length}</b> (${fmtNum((won / resolved.length) * 100, 0)}${NB}%, model sľuboval ${fmtNum(avgProb, 0)}${NB}%)${withOdds.length ? `, zisk <b class="${profit >= 0 ? "g" : "l"}">${signed(profit, 1)}${NB}j.</b>` : "."}`
+      : "Zatiaľ žiadny vyhodnotený."}${pending ? ` Čaká: ${pending}.` : ""}</p>
+    <div class="table-wrap"><table class="bt-table"><thead><tr><th>Deň</th><th>Zápas a tip</th><th class="num">Dôvera</th><th class="num">Kurz</th><th>Výsledok</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="faint small">Tieto tipy sa vyhodnocujú, ale neposielajú sa členom, nie sú na webe a nerátajú sa do úspešnosti. Keď budú mať aspoň 30 vyhodnotených tipov v zisku, oplatí sa ich začať posielať.</p>`;
+}
+
 function renderCalibrationReport(tips) {
   const el = document.getElementById("calibrationResult");
   // Tikety vynechávame (kombinovaná pravdepodobnosť), aj obnovené tipy s odhadnutou dôverou.

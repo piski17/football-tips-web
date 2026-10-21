@@ -1,5 +1,5 @@
 import { SEATS_M1, SEATS_M3, SEATS_SEASON } from "./seatLimits";
-import { MIN_ODDS, findOdds, marketProbabilityDetail, STRONG_TIP_MIN_PROBABILITY } from "./oddsMatcher";
+import { MIN_ODDS, findOdds, marketProbabilityDetail, STRONG_TIP_MIN_PROBABILITY, WATCH_BELOW_PROBABILITY } from "./oddsMatcher";
 import { listLeads, deleteLead, recordLead } from "./leadsStore";
 import { getMeta, setMeta } from "./metaStore";
 import * as crypto from "crypto";
@@ -866,8 +866,13 @@ app.post("/api/tips", async (req, res) => {
       tip.strongOfDay = taken ? undefined : true;
     }
     if (!isManualResult) await addMeasurement(tip);
+    // Skúšobné pásmo 65 – 68 %: tip sa automaticky uloží len na sledovanie (bez Telegramu a štatistík).
+    if (!(tip.legs && tip.legs.length) && !tip.manualEntry && typeof tip.probability === "number" && tip.probability < WATCH_BELOW_PROBABILITY) {
+      tip.watchOnly = true;
+      tip.strongOfDay = undefined;
+    }
     await saveTip(tip);
-    res.json({ ok: true, telegramAvailable: isTelegramEnabled() });
+    res.json({ ok: true, telegramAvailable: isTelegramEnabled(), watchOnly: tip.watchOnly === true });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }

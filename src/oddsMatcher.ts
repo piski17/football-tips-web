@@ -61,6 +61,12 @@ export const MIN_GAMES_TO_RECOMMEND = 3;
 // aj cez týždeň. Minimálny kurz ostáva 1,55; tip s dôverou 65 % prejde len pri kurze aspoň
 // ~1,62 (hodnota +5 %). Po 2 – 3 týždňoch overiť, ako vychádzajú tipy 65 – 68 %.
 export const MIN_PROBABILITY = 65;
+/**
+ * Skúšobné pásmo (21. 10. 2026, Michalovo rozhodnutie): tipy s dôverou pod touto hranicou
+ * (65 – 68 %) sa ukladajú len na sledovanie – vyhodnotia sa, ale neposielajú sa členom
+ * a nerátajú sa do štatistík. Keď sa ukážu ako dobré, stačí hranicu znížiť na MIN_PROBABILITY.
+ */
+export const WATCH_BELOW_PROBABILITY = 68;
 export const MAX_PROBABILITY = 80;
 /**
  * Od tejto dôvery je odporúčaný tip označený „★ Silný tip“. V troch spätných
