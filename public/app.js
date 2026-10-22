@@ -1057,7 +1057,8 @@ function lineMarketLabel(r, market) {
 
 function lineCalcHtml(r) {
   const models = r.lineModels || [];
-  const poss = r.possession;
+  // V Lige majstrov a Európskej lige stávkovky držanie lopty neponúkajú – kalkulačka ho neukáže.
+  const poss = [2, 3].includes(Number(r.fixture?.league?.id)) ? null : r.possession;
   if (!models.length && !poss) return "";
   const h = translateTeamName(r.fixture.homeTeam.name), a = translateTeamName(r.fixture.awayTeam.name);
   const possOpts = poss

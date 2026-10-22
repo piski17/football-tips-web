@@ -660,6 +660,9 @@ function marketConflictLimit(h2hMatchesUsed: number): number {
   return h2hMatchesUsed >= 5 ? 25 : h2hMatchesUsed >= 3 ? 20 : 15;
 }
 
+/** Súťaže, v ktorých stávkovky neponúkajú držanie lopty: Liga majstrov (2), Európska liga (3). */
+export const NO_POSSESSION_LEAGUE_IDS = [2, 3];
+
 export function predictMatch(
   fixture: Fixture,
   homeStats: TeamStatistics,
@@ -1043,7 +1046,10 @@ export function predictMatch(
     ];
     // Len pri zápase, kde jeden tím jasne dominuje (odhad aspoň 58 %), inak by držanie
     // lopty vyšlo takmer pri každom zápase a zaplavilo Tipy dňa.
-    const possDominant = Math.abs(expectedHome - 50) >= 8;
+    // Liga majstrov a Európska liga (22. 10. 2026, Michalovo rozhodnutie): stávkovky tam
+    // držanie lopty neponúkajú, preto sa v týchto súťažiach tipy na držanie lopty neponúkajú.
+    const possOffered = !NO_POSSESSION_LEAGUE_IDS.includes(Number(fixture.league?.id));
+    const possDominant = possOffered && Math.abs(expectedHome - 50) >= 8;
     for (const [market, team, exp] of possDominant ? possTeams : []) {
       for (const line of POSSESSION_LINES) {
         const over = (1 - normalCdf((line - exp) / POSSESSION_SD)) * 100;
