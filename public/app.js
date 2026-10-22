@@ -838,7 +838,7 @@ function renderAnalysis(r, root, opts = {}) {
     ? `<div class="tips">${topBets
         .map(
           (bet, idx) => `
-        <div class="tip${idx === 0 ? " top" : ""}">
+        <div class="tip${idx === 0 ? " first" : ""}">
           ${ring(bet.probability)}
           <div class="tip-body">
             <div class="k">${idx === 0 ? "Najsilnejší tip · " : ""}${escapeHtml(bet.market)}</div>
@@ -1482,7 +1482,7 @@ function renderDayTipsView() {
     .map(({ r, bet }, i) => {
       const f = r.fixture;
       return `
-      <div class="dtip${i === 0 ? " top" : ""}">
+      <div class="dtip${i === 0 ? " first" : ""}">
         <div class="rank">${i + 1}.</div>
         ${ring(bet.probability, 54)}
         <div class="dtip-body">

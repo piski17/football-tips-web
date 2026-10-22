@@ -223,7 +223,7 @@ span.crest { background: radial-gradient(circle at 35% 35%, #5a4a35, #2a2219); b
 .locked { margin-top: 12px; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(224, 138, 122, .35); background: rgba(224, 138, 122, .08); color: var(--loss); font-size: 14px; }
 .tips { display: grid; gap: 12px; }
 .tip { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 18px; align-items: center; padding: 20px 22px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line); }
-.tip.top { background: radial-gradient(120% 140% at 0% 0%, rgba(217, 192, 138, .14), transparent 60%), var(--panel); border-color: var(--line2); }
+.tip.first { background: radial-gradient(120% 140% at 0% 0%, rgba(217, 192, 138, .14), transparent 60%), var(--panel); border-color: var(--line2); }
 .ring { position: relative; flex: none; }
 .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); display: block; }
 .ring b { position: absolute; inset: 0; display: grid; place-items: center; font: 600 19px var(--sans); color: var(--gold-hi); }
@@ -298,7 +298,7 @@ span.crest { background: radial-gradient(circle at 35% 35%, #5a4a35, #2a2219); b
 .dt-meta { margin-bottom: 14px; }
 .dtips { display: grid; gap: 10px; }
 .dtip { display: grid; grid-template-columns: 26px auto minmax(0, 1fr) auto; gap: 16px; align-items: center; padding: 16px 20px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line); }
-.dtip.top { background: radial-gradient(120% 140% at 0% 0%, rgba(217, 192, 138, .12), transparent 60%), var(--panel); border-color: var(--line2); }
+.dtip.first { background: radial-gradient(120% 140% at 0% 0%, rgba(217, 192, 138, .12), transparent 60%), var(--panel); border-color: var(--line2); }
 .dtip .rank { font: 600 20px var(--display); color: var(--faint); font-variant-numeric: lining-nums !important; }
 .dtip .ring b { font-size: 16px; }
 .dtip-match { text-align: left; font-size: 14px; color: var(--muted); padding: 0; }
