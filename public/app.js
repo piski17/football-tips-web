@@ -168,7 +168,7 @@ function evPct(ev) {
 }
 function strongTipBadge(p) {
   if (typeof p === "number" && p < 68)
-    return ` <span class="badge-strong" style="opacity:.75" title="Skúšobné pásmo 65 – 67 %: tip sa uloží len na sledovanie – vyhodnotí sa, ale neposiela sa členom a nerátá sa do štatistík.">len sledovať</span>`;
+    return ` <span class="badge-strong" style="opacity:.75" title="Dôvera pod 68 %: tip je len na sledovanie – vyhodnotí sa, ale neposiela sa členom a nerátá sa do štatistík.">len sledovať</span>`;
   return typeof p === "number" && p >= STRONG_TIP_MIN_PROBABILITY
     ? ` <span class="badge-strong" title="Dôvera 70 % a viac.">★ 70${NB}%+</span>`
     : "";
@@ -1849,12 +1849,12 @@ function renderBankrollSimulation(tips) {
 const CALIBRATION_FROM = 65;
 const CALIBRATION_TO = 82.5;
 const CALIBRATION_STEP = 2.5;
-/** Sledované tipy (21. 10. 2026): skúšobné pásmo 65 – 67 % a ďalšie tipy „len sledovať“. */
+/** Sledované tipy (21. 10. 2026): tipy „len sledovať“ (od 22. 10. 2026 už bez pásma 65 – 67 %). */
 function renderWatchReport(list) {
   const el = document.getElementById("watchResult");
   if (!el) return;
   if (!list.length) {
-    el.innerHTML = `<p class="faint small">Zatiaľ žiadne. Tipy s dôverou 65 – 67${NB}% sa po uložení automaticky zaradia sem.</p>`;
+    el.innerHTML = `<p class="faint small">Zatiaľ žiadne. Tipy označené „len sledovať“ sa po uložení zaradia sem.</p>`;
     return;
   }
   const resolved = list.filter((t) => t.status === "won" || t.status === "lost");
@@ -2315,13 +2315,13 @@ function openManualTip() {
     const why = manualTipProblem(p, odds);
     const box = q("watch");
     if (!(odds > 1) || !(p > 0)) { q("check").textContent = ""; box.disabled = false; return; }
-    // Skúšobné pásmo 65 – 67 %: kurz sa kontroluje rovnako, ale tip ide aj tak len medzi sledované.
+    // Poistka: tip pod WATCH_BELOW ide len medzi sledované (dnes to pokrýva už manualTipProblem).
     const trial = !why && p < WATCH_BELOW;
     const need = `pri ${fmtNum(p, 0)}${NB}% treba kurz aspoň ${fmtOdds(minOddsFor({ probability: p }))}`;
     q("check").textContent = why
       ? `✗ Model by tip nepustil: ${why}. Uloží sa len medzi sledované.`
       : trial
-        ? `✓ Kurz je v poriadku (${need}). Dôvera je v skúšobnom pásme 65 – 67${NB}%, tip sa uloží medzi sledované.`
+        ? `✓ Kurz je v poriadku (${need}). Dôvera je pod 68${NB}%, tip sa uloží medzi sledované.`
         : `✓ Tip prešiel kontrolou modelu (${need}).`;
     q("check").className = `small ${why ? "loss" : "win"}`;
     box.checked = !!why || trial;
