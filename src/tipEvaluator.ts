@@ -1,5 +1,14 @@
 import { TicketLeg, SavedTip } from "./types";
-import { getFixtureResult, getFixtureCornersAndCards, getFixtureGoalscorerIds } from "./apiClient";
+import { getFixtureResult, getFixtureCornersAndCards, getFixtureGoalscorerIds, getFixtureYellowCardHalves } from "./apiClient";
+
+/** Ďalšie údaje pre vyhodnotenie: štatistiky tímov a polčasy (22. 10. 2026 fauly tímu a polčasy). */
+interface ExtraActuals {
+  cards?: { team: string; value: number }[] | null;
+  shots?: { team: string; value: number }[] | null;
+  fouls?: { team: string; value: number }[] | null;
+  halftime?: { home: number; away: number } | null;
+  cardHalves?: { first: number; second: number } | null;
+}
 
 /** Spoločný tvar, ktorý potrebuje vyhodnotenie - vyhovuje mu SavedTip aj TicketLeg. */
 interface EvaluatableBet {
@@ -28,7 +37,7 @@ export function evaluateTip(
   actualOffsides: number | null = null,
   actualPossession: { team: string; value: number }[] | null = null,
   actualCornersByTeam: { team: string; value: number }[] | null = null,
-  actualTeamStats: { cards?: { team: string; value: number }[] | null; shots?: { team: string; value: number }[] | null } | null = null
+  actualTeamStats: ExtraActuals | null = null
 ): "won" | "lost" | "void" {
   const overUnder = (actual: number | null): "won" | "lost" | "void" => {
     if (actual === null) return "void";
@@ -62,6 +71,22 @@ export function evaluateTip(
       return overUnder(teamValue(actualTeamStats?.shots, "home"));
     case "Strely na bránu hostí":
       return overUnder(teamValue(actualTeamStats?.shots, "away"));
+    case "Fauly domácich":
+      return overUnder(teamValue(actualTeamStats?.fouls, "home"));
+    case "Fauly hostí":
+      return overUnder(teamValue(actualTeamStats?.fouls, "away"));
+    case "Góly v 1. polčase": {
+      const ht = actualTeamStats?.halftime;
+      return overUnder(ht ? ht.home + ht.away : null);
+    }
+    case "Góly v 2. polčase": {
+      const ht = actualTeamStats?.halftime;
+      return overUnder(ht ? homeGoals + awayGoals - ht.home - ht.away : null);
+    }
+    case "Karty v 1. polčase":
+      return overUnder(actualTeamStats?.cardHalves ? actualTeamStats.cardHalves.first : null);
+    case "Karty v 2. polčase":
+      return overUnder(actualTeamStats?.cardHalves ? actualTeamStats.cardHalves.second : null);
     // Držanie lopty tímu v % proti hranici zo stávkovky (napr. Over 55.5).
     case "Držanie lopty domácich":
       return overUnder(teamValue(actualPossession, "home"));
@@ -198,7 +223,11 @@ const VOID_STATUSES = ["CANC", "ABD", "AWD", "WO"];
 /** Odložený / prerušený zápas - ak sa neodohrá do 3 dní, stávka sa vracia. */
 const DELAYED_STATUSES = ["PST", "TBD", "SUSP", "INT"];
 const DELAYED_VOID_AFTER_MS = 3 * 24 * 60 * 60 * 1000;
-export const STATS_MARKETS = ["Rohy", "Rohy domácich", "Rohy hostí", "Karty", "Karty domácich", "Karty hostí", "Strely na bránu domácich", "Strely na bránu hostí", "Strely na bránu", "Fauly", "Ofsajdy", "Vyššie držanie lopty", "Držanie lopty domácich", "Držanie lopty hostí"];
+export const STATS_MARKETS = ["Rohy", "Rohy domácich", "Rohy hostí", "Karty", "Karty domácich", "Karty hostí", "Strely na bránu domácich", "Strely na bránu hostí", "Strely na bránu", "Fauly", "Ofsajdy", "Vyššie držanie lopty", "Držanie lopty domácich", "Držanie lopty hostí", "Fauly domácich", "Fauly hostí"];
+/** Karty v polčasoch – vyhodnotia sa z udalostí zápasu (pri predĺžení sa vracajú). */
+const CARD_HALF_MARKETS = ["Karty v 1. polčase", "Karty v 2. polčase"];
+const halftimeOf = (r: { htHome?: number | null; htAway?: number | null }) =>
+  r.htHome != null && r.htAway != null ? { home: r.htHome, away: r.htAway } : null;
 
 export interface SettledBet {
   status: "won" | "lost" | "void";
@@ -242,7 +271,7 @@ export async function settleBet(
   let offsides: number | null = null;
   let possession: { team: string; value: number }[] | null = null;
   let cornersByTeam: { team: string; value: number }[] | null = null;
-  let teamStats: { cards?: { team: string; value: number }[] | null; shots?: { team: string; value: number }[] | null } | null = null;
+  let teamStats: ExtraActuals | null = { halftime: halftimeOf(result) };
   // Štatistiky z API zahŕňajú aj predĺženie - pri takom zápase sa nedá určiť
   // stav po 90 minútach, preto takýto tip vraciame (void).
   if (STATS_MARKETS.includes(bet.market) && !wentToExtraTime) {
@@ -254,7 +283,10 @@ export async function settleBet(
     offsides = stats.offsides;
     possession = stats.possession;
     cornersByTeam = stats.cornersByTeam ?? null;
-    teamStats = { cards: stats.cardsByTeam ?? null, shots: stats.shotsByTeam ?? null };
+    teamStats = { ...teamStats, cards: stats.cardsByTeam ?? null, shots: stats.shotsByTeam ?? null, fouls: stats.foulsByTeam ?? null };
+  }
+  if (CARD_HALF_MARKETS.includes(bet.market) && !wentToExtraTime) {
+    teamStats = { ...teamStats, cardHalves: await getFixtureYellowCardHalves(bet.fixtureId) };
   }
 
   let scorerIds: number[] | null = null;
@@ -339,6 +371,8 @@ export async function settleFixtureBets(
   const wentToExtraTime = result.status !== "FT";
   const needStats = !wentToExtraTime && bets.some((b) => STATS_MARKETS.includes(b.market));
   const stats = needStats ? await getFixtureCornersAndCards(fixture.fixtureId) : null;
+  const cardHalves = !wentToExtraTime && bets.some((b) => CARD_HALF_MARKETS.includes(b.market)) ? await getFixtureYellowCardHalves(fixture.fixtureId) : null;
+  const halftime = halftimeOf(result);
   return bets.map((b) => {
     const s = STATS_MARKETS.includes(b.market) ? stats : null;
     return evaluateTip(
@@ -353,7 +387,7 @@ export async function settleFixtureBets(
       s?.offsides ?? null,
       s?.possession ?? null,
       s?.cornersByTeam ?? null,
-      s ? { cards: s.cardsByTeam ?? null, shots: s.shotsByTeam ?? null } : null
+      { cards: s?.cardsByTeam ?? null, shots: s?.shotsByTeam ?? null, fouls: s?.foulsByTeam ?? null, halftime, cardHalves }
     );
   });
 }

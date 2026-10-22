@@ -32,6 +32,11 @@ export const CATEGORY_LABEL: Record<string, string> = {
   strely: "Strely na bránu",
   strely_timu: "Strely na bránu tímu",
   fauly: "Fauly",
+  fauly_timu: "Fauly tímu",
+  goly_1p: "Góly v 1. polčase",
+  goly_2p: "Góly v 2. polčase",
+  karty_1p: "Karty v 1. polčase",
+  karty_2p: "Karty v 2. polčase",
   drzanie_lopty: "Držanie lopty",
 };
 

@@ -2226,7 +2226,7 @@ function openEditTip(tip) {
 }
 
 // ---- Doplnenie odohraného tipu (tip poslaný klientom, ktorý v TipRadare chýba) ----
-const MANUAL_MARKETS = ["Góly", "Góly domácich", "Góly hostí", "Rohy", "Rohy domácich", "Rohy hostí", "Karty", "Karty domácich", "Karty hostí", "Strely na bránu", "Strely na bránu domácich", "Strely na bránu hostí", "Fauly", "Vyššie držanie lopty"];
+const MANUAL_MARKETS = ["Góly", "Góly domácich", "Góly hostí", "Rohy", "Rohy domácich", "Rohy hostí", "Karty", "Karty domácich", "Karty hostí", "Strely na bránu", "Strely na bránu domácich", "Strely na bránu hostí", "Fauly", "Fauly domácich", "Fauly hostí", "Góly v 1. polčase", "Góly v 2. polčase", "Karty v 1. polčase", "Karty v 2. polčase", "Vyššie držanie lopty"];
 let manualLastDate = "";
 
 /** Pravidlá odporúčaného tipu pre ručne doplnený tip – vráti dôvod zamietnutia alebo "". */

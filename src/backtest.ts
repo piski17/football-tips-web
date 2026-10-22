@@ -245,7 +245,12 @@ async function outcomes(fixture: Fixture, pickSets: MarketPick[][]): Promise<Sam
         stats.offsides,
         stats.possession,
         stats.cornersByTeam ?? null,
-        { cards: stats.cardsByTeam ?? null, shots: stats.shotsByTeam ?? null }
+        {
+          cards: stats.cardsByTeam ?? null,
+          shots: stats.shotsByTeam ?? null,
+          fouls: stats.foulsByTeam ?? null,
+          halftime: result.htHome != null && result.htAway != null ? { home: result.htHome, away: result.htAway } : null,
+        }
       );
       if (status === "won" || status === "lost")
         out.push({

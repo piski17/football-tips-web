@@ -70,6 +70,11 @@ export function marketCategory(market: string): string | null {
   if (m === "Strely na bránu") return "strely";
   if (m === "Strely na bránu domácich" || m === "Strely na bránu hostí") return "strely_timu";
   if (m === "Fauly") return "fauly";
+  if (m === "Fauly domácich" || m === "Fauly hostí") return "fauly_timu";
+  if (m === "Góly v 1. polčase") return "goly_1p";
+  if (m === "Góly v 2. polčase") return "goly_2p";
+  if (m === "Karty v 1. polčase") return "karty_1p";
+  if (m === "Karty v 2. polčase") return "karty_2p";
   if (m.startsWith("Držanie lopty")) return "drzanie_lopty";
   return null;
 }
@@ -134,7 +139,17 @@ const MARKET_CALIBRATION: Record<string, number> = {
   karty: 0.9,
   karty_timu: 0.9,
   strely_timu: 0.95,
+  // Nové trhy (22. 10. 2026) – zatiaľ bez spätného testu, preto rovnako ako príbuzný trh.
+  fauly_timu: 0.9,
+  karty_1p: 0.9,
+  karty_2p: 0.9,
 };
+/**
+ * Podiel gólov a žltých kariet v 1. polčase (22. 10. 2026). V európskych ligách padá
+ * v 1. polčase približne 45 % gólov a 38 % žltých kariet (zvyšok v 2. polčase).
+ */
+const FIRST_HALF_GOAL_SHARE = 0.45;
+const FIRST_HALF_CARD_SHARE = 0.38;
 // Góly „pod“ (zápas aj tím) – 20. 10. 2026 podľa rozboru 35 ostrých tipov: model sľuboval
 // ~70 %, vyšlo 7 z 13 (54 %), kým tipy „nad“ vyšli 10 z 10. Šanca „pod“ sa preto zmenší
 // k 50 % (navyše k ostatnej kalibrácii) a rozpor so stávkovkami sa toleruje najviac 12 bodov.
@@ -147,7 +162,7 @@ const GOALS_UNDER_CALIBRATION = 0.85;
 const MARKET_BLEND = 0.3;
 const GOALS_UNDER_CONFLICT_LIMIT = 12;
 const isGoalsUnder = (c: { category: string; selection: string }) =>
-  (c.category === "goly" || c.category === "goly_timu") && c.selection.startsWith("Under");
+  (c.category === "goly" || c.category === "goly_timu" || c.category === "goly_1p" || c.category === "goly_2p") && c.selection.startsWith("Under");
 /**
  * Poradie tipov pri výbere hranice a tipu zápasu (20. 10. 2026): hodnota sa počíta zo
  * šance napoly modelu a napoly stávkoviek. Model tak nevyberá automaticky hranicu,
@@ -161,6 +176,8 @@ function rankValue(b: MarketPick): number {
 const EARLY_SEASON_CALIBRATION: Record<string, number> = {
   goly: 0.9,
   goly_timu: 0.9,
+  goly_1p: 0.9,
+  goly_2p: 0.9,
   btts: 0.5,
 };
 /** Koeficient kalibrácie pre trh pri danom počte odohraných zápasov v sezóne. */
@@ -217,6 +234,12 @@ const DEFAULT_LINES: Record<string, number[]> = {
   "Strely na bránu domácich": [2.5, 3.5, 4.5, 5.5],
   "Strely na bránu hostí": [2.5, 3.5, 4.5, 5.5],
   "Fauly": [20.5, 21.5, 22.5],
+  "Fauly domácich": [9.5, 10.5, 11.5, 12.5],
+  "Fauly hostí": [9.5, 10.5, 11.5, 12.5],
+  "Góly v 1. polčase": [0.5, 1.5],
+  "Góly v 2. polčase": [0.5, 1.5, 2.5],
+  "Karty v 1. polčase": [0.5, 1.5, 2.5],
+  "Karty v 2. polčase": [1.5, 2.5, 3.5],
 };
 
 // Koľko "váhy" má ligový priemer oproti tímovým dátam na začiatku sezóny.
@@ -980,8 +1003,32 @@ export function predictMatch(
     );
   }
 
+  // Góly v polčasoch (22. 10. 2026): rovnaké očakávané góly, rozdelené na 1. a 2. polčas.
+  {
+    const total = xg.home + xg.away;
+    const g1 = total * FIRST_HALF_GOAL_SHARE, g2 = total * (1 - FIRST_HALF_GOAL_SHARE);
+    addOverUnder("Góly v 1. polčase", "goly_1p", (line) => poissonOverUnder(g1, line), (line) =>
+      `Očakávané góly v 1. polčase: ${fmt1(g1)} (z ${fmt1(total)} v celom zápase), hranica ${line}.`,
+      { mean: g1 }
+    );
+    addOverUnder("Góly v 2. polčase", "goly_2p", (line) => poissonOverUnder(g2, line), (line) =>
+      `Očakávané góly v 2. polčase: ${fmt1(g2)} (z ${fmt1(total)} v celom zápase), hranica ${line}.`,
+      { mean: g2 }
+    );
+  }
+
   if (cards) {
     const exp = cards.expected;
+    // Žlté karty v polčasoch (22. 10. 2026): v 1. polčase ich padá menej (asi 38 %).
+    const c1 = exp * FIRST_HALF_CARD_SHARE, c2 = exp * (1 - FIRST_HALF_CARD_SHARE);
+    addOverUnder("Karty v 1. polčase", "karty_1p", (line) => overdispersedOverUnder(c1, line, VAR_RATIO.cards), (line) =>
+      `Očakávané žlté karty v 1. polčase: ${fmt1(c1)} (z ${fmt1(exp)} v celom zápase), hranica ${line}.${refereeNote("cards")}`,
+      { mean: c1, varRatio: VAR_RATIO.cards }
+    );
+    addOverUnder("Karty v 2. polčase", "karty_2p", (line) => overdispersedOverUnder(c2, line, VAR_RATIO.cards), (line) =>
+      `Očakávané žlté karty v 2. polčase: ${fmt1(c2)} (z ${fmt1(exp)} v celom zápase), hranica ${line}.${refereeNote("cards")}`,
+      { mean: c2, varRatio: VAR_RATIO.cards }
+    );
     addOverUnder("Karty", "karty", (line) => overdispersedOverUnder(exp, line, VAR_RATIO.cards), (line) =>
       `Očakávané žlté karty oboch tímov spolu: ${fmt1(exp)}, hranica ${line}.${refereeNote("cards")}`,
       { mean: exp, varRatio: VAR_RATIO.cards }
@@ -1022,6 +1069,18 @@ export function predictMatch(
   if (fouls) {
     const exp = fouls.expected;
     addOverUnder("Fauly", "fauly", (line) => overdispersedOverUnder(exp, line, VAR_RATIO.fouls), (line) => statExplanation(exp, line) + refereeNote("fouls"), { mean: exp, varRatio: VAR_RATIO.fouls });
+    // Fauly jedného tímu (22. 10. 2026): vlastný priemer zmiešaný s tým, koľko faulov
+    // súper vynúti (ako pri rohoch a kartách tímu), aj s vplyvom rozhodcu.
+    const rf = referee?.foulsFactor ?? 1;
+    const hf = extraStatsAvg!.homeFouls! * rf, af = extraStatsAvg!.awayFouls! * rf;
+    addOverUnder("Fauly domácich", "fauly_timu", (line) => overdispersedOverUnder(hf, line, VAR_RATIO.fouls), (line) =>
+      `${fixture.homeTeam.name}: očakávané fauly ${fmt1(hf)} (aj s ohľadom na súpera), hranica ${line}.${refereeNote("fouls")}`,
+      { mean: hf, varRatio: VAR_RATIO.fouls }
+    );
+    addOverUnder("Fauly hostí", "fauly_timu", (line) => overdispersedOverUnder(af, line, VAR_RATIO.fouls), (line) =>
+      `${fixture.awayTeam.name}: očakávané fauly ${fmt1(af)} (aj s ohľadom na súpera), hranica ${line}.${refereeNote("fouls")}`,
+      { mean: af, varRatio: VAR_RATIO.fouls }
+    );
   }
 
   // Očakávané držanie lopty domácich (v %) a rozptyl – appka z nich počíta šancu

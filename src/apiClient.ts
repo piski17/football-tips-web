@@ -963,7 +963,7 @@ export async function getTeamPlayersWithStats(
 /** Načíta aktuálny stav a skóre konkrétneho zápasu (na overenie uložených tipov). */
 export async function getFixtureResult(
   fixtureId: number
-): Promise<{ status: string; homeGoals: number | null; awayGoals: number | null } | null> {
+): Promise<{ status: string; homeGoals: number | null; awayGoals: number | null; htHome?: number | null; htAway?: number | null } | null> {
   try {
     const res = await client().get("/fixtures", { params: { id: fixtureId } });
     checkApiErrors(res.data);
@@ -977,6 +977,9 @@ export async function getFixtureResult(
       status: item.fixture?.status?.short ?? "NS",
       homeGoals: item.score?.fulltime?.home ?? item.goals?.home ?? null,
       awayGoals: item.score?.fulltime?.away ?? item.goals?.away ?? null,
+      // Stav po 1. polčase – pre tipy na góly v polčasoch (22. 10. 2026).
+      htHome: item.score?.halftime?.home ?? null,
+      htAway: item.score?.halftime?.away ?? null,
     };
   } catch {
     return null;
@@ -999,6 +1002,8 @@ export async function getFixtureCornersAndCards(
   /** Žlté karty a strely na bránu jednotlivých tímov (domáci, hostia). */
   cardsByTeam?: { team: string; value: number }[] | null;
   shotsByTeam?: { team: string; value: number }[] | null;
+  /** Fauly jednotlivých tímov (domáci, hostia). */
+  foulsByTeam?: { team: string; value: number }[] | null;
 }> {
   try {
     const res = await client().get("/fixtures/statistics", { params: { fixture: fixtureId } });
@@ -1057,6 +1062,7 @@ export async function getFixtureCornersAndCards(
     return {
       cardsByTeam: byTeam("Yellow Cards", true),
       shotsByTeam: byTeam("Shots on Goal", false),
+      foulsByTeam: byTeam("Fouls", false),
       corners: found.corners ? totals.corners : null,
       // Karty = len žlté (od 17. 10. 2026); bez žltých, no s červenou = 0 žltých.
       cards: found.cardsYellow || found.cardsRed ? totals.cardsYellow ?? 0 : null,
@@ -1067,7 +1073,32 @@ export async function getFixtureCornersAndCards(
       cornersByTeam: found.corners && cornersByTeam.length === 2 ? cornersByTeam : null,
     };
   } catch {
-    return { corners: null, cards: null, shotsOnGoal: null, fouls: null, offsides: null, possession: null, cornersByTeam: null, cardsByTeam: null, shotsByTeam: null };
+    return { corners: null, cards: null, shotsOnGoal: null, fouls: null, offsides: null, possession: null, cornersByTeam: null, cardsByTeam: null, shotsByTeam: null, foulsByTeam: null };
+  }
+}
+
+/**
+ * Žlté karty v 1. a 2. polčase (22. 10. 2026) z udalostí zápasu. Nadstavený čas 1. polčasu
+ * (45+2) patrí do 1. polčasu, karty v predĺžení (po 90. minúte bez nadstavenia) sa nerátajú.
+ * Vráti null, ak API udalosti nemá.
+ */
+export async function getFixtureYellowCardHalves(fixtureId: number): Promise<{ first: number; second: number } | null> {
+  try {
+    const res = await client().get("/fixtures/events", { params: { fixture: fixtureId } });
+    checkApiErrors(res.data);
+    const events: any[] = res.data?.response ?? [];
+    if (!events.length) return null;
+    let first = 0, second = 0;
+    for (const e of events) {
+      if (String(e?.type).toLowerCase() !== "card" || !/^yellow card$/i.test(String(e?.detail ?? "").trim())) continue;
+      const min = Number(e?.time?.elapsed);
+      if (!isFinite(min)) continue;
+      if (min <= 45) first++;
+      else if (min <= 90) second++;
+    }
+    return { first, second };
+  } catch {
+    return null;
   }
 }
 

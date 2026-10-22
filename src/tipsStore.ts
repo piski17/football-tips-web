@@ -120,6 +120,7 @@ export async function saveTip(tip: SavedTip): Promise<void> {
 
 // Trhy, podľa ktorých sa z voľného textu („Góly hostí pod 1,5“) oddelí trh a výber.
 const KNOWN_MARKETS = [
+  "Góly v 1. polčase", "Góly v 2. polčase", "Karty v 1. polčase", "Karty v 2. polčase", "Fauly domácich", "Fauly hostí",
   "Strely na bránu domácich", "Strely na bránu hostí", "Strely na bránu", "Držanie lopty domácich", "Držanie lopty hostí",
   "Vyššie držanie lopty", "Góly domácich", "Góly hostí", "Góly", "Rohy domácich", "Rohy hostí", "Rohy",
   "Karty domácich", "Karty hostí", "Karty", "Fauly", "Ofsajdy", "Oba tímy skórujú", "Výsledok zápasu",

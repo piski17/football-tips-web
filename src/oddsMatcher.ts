@@ -89,7 +89,7 @@ const OU_PATTERNS: Record<string, RegExp> = {
 };
 
 /** Trhy na jeden tím: názov trhu v TipRadare -> strana a druh štatistiky. */
-type TeamKind = "goals" | "corners" | "cards" | "shots";
+type TeamKind = "goals" | "corners" | "cards" | "shots" | "fouls";
 export const TEAM_OU_MARKETS: Record<string, { side: "home" | "away"; kind: TeamKind }> = {
   "Góly domácich": { side: "home", kind: "goals" },
   "Góly hostí": { side: "away", kind: "goals" },
@@ -99,7 +99,33 @@ export const TEAM_OU_MARKETS: Record<string, { side: "home" | "away"; kind: Team
   "Karty hostí": { side: "away", kind: "cards" },
   "Strely na bránu domácich": { side: "home", kind: "shots" },
   "Strely na bránu hostí": { side: "away", kind: "shots" },
+  "Fauly domácich": { side: "home", kind: "fouls" },
+  "Fauly hostí": { side: "away", kind: "fouls" },
 };
+
+/** Trhy na polčas (22. 10. 2026): názov v TipRadare -> polčas a druh štatistiky. */
+export const HALF_OU_MARKETS: Record<string, { half: 1 | 2; kind: "goals" | "cards" }> = {
+  "Góly v 1. polčase": { half: 1, kind: "goals" },
+  "Góly v 2. polčase": { half: 2, kind: "goals" },
+  "Karty v 1. polčase": { half: 1, kind: "cards" },
+  "Karty v 2. polčase": { half: 2, kind: "cards" },
+};
+
+/**
+ * Stávka na polčas, napr. „Goals Over/Under First Half“, „Goals Over/Under - Second Half“,
+ * „Cards Over/Under 1st Half“. Názvy sa u API-Football líšia, preto voľnejšie porovnanie:
+ * správny polčas, žiadny tím a pri góloch žiadna iná štatistika.
+ */
+function isHalfBet(bet: string, half: 1 | 2, kind: "goals" | "cards"): boolean {
+  const b = bet.trim().toLowerCase();
+  const first = /(1st|first)\s*half/.test(b);
+  const second = /(2nd|second)\s*half/.test(b);
+  if (half === 1 ? !first || second : !second || first) return false;
+  if (/(home|away|team|player|asian|handicap|exact|odd\/even|european|race|interval|minute|both|result|winner|draw|&)/.test(b)) return false;
+  if (kind === "cards") return /(card|yellow)/.test(b) && !/(red|point|booking)/.test(b);
+  if (/(corner|card|booking|shot|foul|offside|throw|goal ?kick|tackle|save|possession)/.test(b)) return false;
+  return /(goal|total|over)/.test(b);
+}
 
 // Pri trhoch jedného tímu nechceme polčasy, handicapy, preteky a kombinácie.
 const TEAM_EXCLUDED = /(1st|2nd|first|second|half|asian|handicap|exact|odd\/even|european|race|interval|minute|min\b|player|&|both|result|winner|draw)/i;
@@ -117,6 +143,7 @@ function isTeamBet(bet: string, side: "home" | "away", kind: TeamKind): boolean 
   // Karty tímu: len žlté alebo všeobecné karty, nie červené ani body za karty.
   if (kind === "cards") return /(card|yellow)/.test(b) && !/(red|point|booking)/.test(b);
   if (kind === "shots") return /shot/.test(b) && /(target|goal)/.test(b);
+  if (kind === "fouls") return /foul/.test(b);
   if (/(corner|card|booking|shot|foul|offside|throw|goal ?kick|tackle|save|possession)/.test(b)) return false;
   return /^total\s*-\s*(home|away)$/.test(b) || /(goal|total|over)/.test(b);
 }
@@ -135,6 +162,8 @@ function cardOdds(odds: MarketOdds[]): MarketOdds[] {
 function isOverUnderBet(bet: string, market: string): boolean {
   const team = TEAM_OU_MARKETS[market];
   if (team) return isTeamBet(bet, team.side, team.kind);
+  const half = HALF_OU_MARKETS[market];
+  if (half) return isHalfBet(bet, half.half, half.kind);
   const pattern = OU_PATTERNS[market];
   if (!pattern || !pattern.test(bet) || EXCLUDED.test(bet)) return false;
   if (market === "Góly" && !/^goals? over\s*\/?\s*under$/i.test(bet.trim())) return false;
@@ -197,7 +226,7 @@ export function findOdds(
     );
   }
 
-  if (OU_PATTERNS[pick.market] || TEAM_OU_MARKETS[pick.market]) {
+  if (OU_PATTERNS[pick.market] || TEAM_OU_MARKETS[pick.market] || HALF_OU_MARKETS[pick.market]) {
     const target = parseOverUnder(pick.selection);
     if (!target) return null;
     const pool = pick.market === "Karty" ? cardOdds(odds) : odds;
