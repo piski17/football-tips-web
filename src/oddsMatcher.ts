@@ -77,7 +77,9 @@ export const STRONG_TIP_MIN_PROBABILITY = 70;
 export const MIN_BOOKMAKERS = 2;
 
 // Stávky na polčasy, jednotlivé tímy, handicapy a pod. - tie nechceme.
-const EXCLUDED = /(1st|2nd|first|second|half|home|away|team|exact|asian|handicap|odd\/even|european|double|draw no|interval|minute|min\b|1x2|race|highest|player|&|\/ ?both|result\/)/i;
+// „Multicorners“ = rohy v 1. polčase × rohy v 2. polčase (22. 10. 2026: appka ho brala ako rohy
+// v zápase, odtiaľ falošné „Rohy pod 19,5“ s kurzom 1,83); „range“ = pásma, „between“ = časové úseky.
+const EXCLUDED = /(1st|2nd|first|second|half|home|away|team|exact|asian|handicap|odd\/even|european|double|draw no|interval|minute|min\b|1x2|race|highest|player|&|\/ ?both|result\/|multi|range|between|3 way)/i;
 
 const OU_PATTERNS: Record<string, RegExp> = {
   "Góly": /^goals? over\s*\/?\s*under$/i,
