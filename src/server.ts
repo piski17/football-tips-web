@@ -662,8 +662,16 @@ app.post("/api/analyze", async (req, res) => {
           },
         };
       };
-      if (hg) { homeStats = withGoals(homeStats, hg); homePriors = null; }
-      if (ag) { awayStats = withGoals(awayStats, ag); awayPriors = null; }
+      // Forma podľa gólov sa v pohároch berie z tých istých 10 zápasov – inak by ju dvíhali
+      // gólové pohárové zápasy (aj zo starých sezón) a odhad gólov by bol zase privysoký.
+      const formFrom = (ext: typeof homeExtStats, g: NonNullable<typeof hg>): typeof homeExtStats => ({
+        ...ext,
+        goalsFor: g.for.total / g.played.total,
+        goalsAgainst: g.against.total / g.played.total,
+        goalsGames: g.played.total,
+      });
+      if (hg) { homeStats = withGoals(homeStats, hg); homePriors = null; homeExtStats = formFrom(homeExtStats, hg); }
+      if (ag) { awayStats = withGoals(awayStats, ag); awayPriors = null; awayExtStats = formFrom(awayExtStats, ag); }
     }
 
     // Druhá vlna - súpisky hráčov + potvrdená zostava (ak je k dispozícii),
