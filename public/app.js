@@ -850,7 +850,7 @@ function renderAnalysis(r, root, opts = {}) {
         </div>`
         )
         .join("")}</div>`
-    : `<div class="empty-card">Pri tomto zápase nie je žiadny tip v pásme 65 – 80${NB}%${(r.lowValueBets || []).length > 0 ? ", ktorý by prešiel kontrolou kurzu" : ""}.</div>`;
+    : `<div class="empty-card">Pri tomto zápase nie je žiadny tip v pásme 65 – 80${NB}%${(r.lowValueBets || []).length > 0 ? ", ktorý by prešiel kontrolou kurzu" : ""}.</div>${rejectedBetsHtml(r)}`;
 
   // --- výsledok zápasu + forma ---
   const pr = r.probabilities || { homeWin: 0, draw: 0, awayWin: 0 };
@@ -1053,6 +1053,18 @@ function lineMarketLabel(r, market) {
   if (market.endsWith(" domácich")) return `${market.replace(/ domácich$/, "")} – ${h}`;
   if (market.endsWith(" hostí")) return `${market.replace(/ hostí$/, "")} – ${a}`;
   return market;
+}
+
+/** Tipy v pásme 65 – 80 %, ktoré neprešli kontrolou – s dôvodom (aby bolo vidno, prečo je deň bez tipu). */
+function rejectedBetsHtml(r) {
+  const list = (r.lowValueBets || []).filter((b) => b.rejectReason);
+  if (!list.length) return "";
+  const rows = [...list]
+    .sort((a, b) => b.probability - a.probability)
+    .map((b) => `<tr><td>${escapeHtml(b.market)}: ${escapeHtml(translateNamesInText(b.selection, r.fixture.homeTeam.name, r.fixture.awayTeam.name))}</td><td class="num">${b.probability.toFixed(0)}${NB}%</td><td class="num">${typeof b.odds === "number" ? fmtOdds(b.odds) : "–"}</td><td>${escapeHtml(b.rejectReason)}</td></tr>`)
+    .join("");
+  return `<details class="card" style="margin-top:12px"><summary class="small">Prečo tipy neprešli (${list.length})</summary>
+    <div class="table-wrap"><table class="bt-table"><thead><tr><th>Tip</th><th class="num">Dôvera</th><th class="num">Kurz</th><th>Dôvod</th></tr></thead><tbody>${rows}</tbody></table></div></details>`;
 }
 
 function lineCalcHtml(r) {
