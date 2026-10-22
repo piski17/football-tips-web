@@ -632,6 +632,42 @@ export async function getSeasonGamesAnyCompetition(teamId: number, season: numbe
   }
 }
 
+/**
+ * Góly tímu z posledných `count` odohraných zápasov vo VŠETKÝCH súťažiach (hlavne domáca liga),
+ * zvlášť doma a vonku – pre Ligu majstrov a Európsku ligu, kde má tím v súťaži len pár zápasov
+ * (22. 10. 2026, Michalovo rozhodnutie). Vráti null pri chybe alebo menej ako 6 zápasoch.
+ */
+export async function getRecentGoalsAnyCompetition(
+  teamId: number,
+  count: number = 10
+): Promise<{ played: { home: number; away: number; total: number }; for: { home: number; away: number; total: number }; against: { home: number; away: number; total: number } } | null> {
+  const cacheKey = `recentGoalsAny:${teamId}:${count}`;
+  const cached = getCached<any>(cacheKey);
+  if (cached !== undefined) return cached;
+  try {
+    const res = await client().get("/fixtures", { params: { team: teamId, last: count, status: "FT-AET-PEN" } });
+    checkApiErrors(res.data);
+    const played = { home: 0, away: 0, total: 0 };
+    const gf = { home: 0, away: 0, total: 0 };
+    const ga = { home: 0, away: 0, total: 0 };
+    for (const f of res.data?.response ?? []) {
+      const isHome = f?.teams?.home?.id === teamId;
+      const scored = isHome ? f?.goals?.home : f?.goals?.away;
+      const conceded = isHome ? f?.goals?.away : f?.goals?.home;
+      if (scored == null || conceded == null) continue;
+      const side = isHome ? "home" : "away";
+      played[side]++; played.total++;
+      gf[side] += scored; gf.total += scored;
+      ga[side] += conceded; ga.total += conceded;
+    }
+    const result = played.total >= 6 ? { played, for: gf, against: ga } : null;
+    setCached(cacheKey, result, TTL_CORNERS_AVERAGE);
+    return result;
+  } catch {
+    return null;
+  }
+}
+
 export async function getRecentFormAnyCompetition(teamId: number, count: number = 5, asOf?: string): Promise<string> {
   const cacheKey = `recentForm:${teamId}:${count}:${asOf ?? ""}`;
   const cached = getCached<string>(cacheKey);

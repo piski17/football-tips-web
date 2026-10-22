@@ -29,6 +29,7 @@ import {
   getFixtureMissingPlayers,
   getFixtureOdds,
   getRecentFormAnyCompetition,
+  getRecentGoalsAnyCompetition,
   getSeasonGamesAnyCompetition,
   getHeadToHeadStats,
   getRestInfo,
@@ -640,6 +641,29 @@ app.post("/api/analyze", async (req, res) => {
     if (!awayStats.form) {
       const form = await getRecentFormAnyCompetition(fixture.awayTeam.id);
       if (form) awayStats = { ...awayStats, form };
+    }
+
+    // Liga majstrov a Európska liga (22. 10. 2026, Michalovo rozhodnutie): góly sa počítajú
+    // ako v ostatných ligách – z posledných 10 zápasov tímu vo všetkých súťažiach (hlavne
+    // domáca liga), nie z 2 – 3 pohárových zápasov. Staré pohárové sezóny sa vtedy nepoužijú.
+    if (CUP_LEAGUE_IDS.includes(Number(leagueId))) {
+      const [hg, ag] = await Promise.all([
+        getRecentGoalsAnyCompetition(fixture.homeTeam.id),
+        getRecentGoalsAnyCompetition(fixture.awayTeam.id),
+      ]);
+      const withGoals = (st: typeof homeStats, g: NonNullable<typeof hg>): typeof homeStats => {
+        const avg = (sum: number, n: number) => (n > 0 ? sum / n : 0);
+        return {
+          ...st,
+          fixtures: { ...st.fixtures, played: g.played },
+          goals: {
+            for: { total: g.for, average: { home: avg(g.for.home, g.played.home), away: avg(g.for.away, g.played.away), total: avg(g.for.total, g.played.total) } },
+            against: { total: g.against, average: { home: avg(g.against.home, g.played.home), away: avg(g.against.away, g.played.away), total: avg(g.against.total, g.played.total) } },
+          },
+        };
+      };
+      if (hg) { homeStats = withGoals(homeStats, hg); homePriors = null; }
+      if (ag) { awayStats = withGoals(awayStats, ag); awayPriors = null; }
     }
 
     // Druhá vlna - súpisky hráčov + potvrdená zostava (ak je k dispozícii),
