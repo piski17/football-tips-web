@@ -816,9 +816,10 @@ function renderAnalysis(r, root, opts = {}) {
   const bk = bookmakersCount(r);
   if (bk > 0) chips.push(`<span class="st">Kurzy z <b>${bk}</b> ${bk === 1 ? "stávkovky" : "stávkoviek"}</span>`);
   else if (r.oddsAvailable === false) chips.push(`<span class="st">Bez kurzov stávkoviek</span>`);
+  const oddsBtn = `<button type="button" class="btn ghost xs" data-odds-check title="Ukáže, aké stávky na rohy posiela API stávkoviek">Kurzy rohov z API</button>`;
   const lineupBtns = started
-    ? ""
-    : `${both ? "" : `<button type="button" class="btn ghost xs" data-lineup-check title="Ukáže, čo k zostave vracia API">Skontrolovať API</button>`}
+    ? oddsBtn
+    : `${oddsBtn}${both ? "" : `<button type="button" class="btn ghost xs" data-lineup-check title="Ukáže, čo k zostave vracia API">Skontrolovať API</button>`}
        <button type="button" class="btn ghost xs" data-lineup-recalc>↻ Prepočítať</button>`;
   const lineupNote = started
     ? ""
@@ -937,6 +938,28 @@ function renderAnalysis(r, root, opts = {}) {
 function wireLineupBar(r, root, onRecalc) {
   const btn = root.querySelector("[data-lineup-recalc]");
   if (btn) btn.onclick = () => (onRecalc ? onRecalc() : null);
+  // Diagnostika kurzov rohov (22. 10. 2026): názvy stávok a hranice, ako ich vracia API.
+  const oddsBtn = root.querySelector("[data-odds-check]");
+  if (oddsBtn) oddsBtn.onclick = async () => {
+    oddsBtn.disabled = true;
+    try {
+      const d = await fetchJson(`/api/debug/odds/${r.fixture.fixtureId}`);
+      const corner = (d.odds || []).filter((o) => /corner/i.test(o.bet));
+      const byBet = new Map();
+      for (const o of corner) {
+        if (!byBet.has(o.bet)) byBet.set(o.bet, []);
+        byBet.get(o.bet).push(`${o.value} @ ${fmtOdds(o.odd)} (${o.bookmakers})`);
+      }
+      const text = byBet.size
+        ? Array.from(byBet.entries()).map(([bet, vals]) => `${bet}:\n  ${vals.join("\n  ")}`).join("\n\n")
+        : "API k tomuto zápasu nemá žiadne stávky na rohy.";
+      openModal(`<h3>Kurzy rohov z API</h3><p class="muted small">Označ text, skopíruj ho a pošli ho.</p><pre style="white-space:pre-wrap;max-height:60vh;overflow:auto;font-size:12px">${escapeHtml(text)}</pre><div class="modal-actions"><button type="button" class="btn" data-close>Zavrieť</button></div>`, { wide: true });
+    } catch (err) {
+      showToast(`Kurzy sa nepodarilo načítať: ${err.message}`);
+    } finally {
+      oddsBtn.disabled = false;
+    }
+  };
   const check = root.querySelector("[data-lineup-check]");
   const out = root.querySelector("[data-lineup-out]");
   if (!check || !out) return;
