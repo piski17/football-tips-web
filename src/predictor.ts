@@ -180,11 +180,21 @@ const EARLY_SEASON_CALIBRATION: Record<string, number> = {
   goly_2p: 0.9,
   btts: 0.5,
 };
+/**
+ * Góly v Lige majstrov a Európskej lige (22. 10. 2026): dva spätné testy len z LM a EL
+ * (sept. 2024 – jan. 2025 a sept. 2025 – jan. 2026, po 100 zápasov, už so silou líg) –
+ * model preceňoval góly (zápas 72 → 66 % a 71 → 67 %, góly domácich 75 → 70 %,
+ * 1. polčas 69 → 61 %). Najlepšie k v oboch testoch 0,80 a menej – preto navyše × 0,85.
+ * Góly v 2. polčase sedeli, tie ostávajú.
+ */
+const CUP_GOAL_CALIBRATION: Record<string, number> = { goly: 0.85, goly_timu: 0.85, goly_1p: 0.85 };
+const CUP_LEAGUE_IDS = [2, 3];
 /** Koeficient kalibrácie pre trh pri danom počte odohraných zápasov v sezóne. */
-function calibrationFactor(category: string, gamesPlayed: number): number {
+function calibrationFactor(category: string, gamesPlayed: number, leagueId?: number): number {
   const early = clamp((15 - gamesPlayed) / 10, 0, 1);
   const ke = EARLY_SEASON_CALIBRATION[category] ?? 1;
-  return (MARKET_CALIBRATION[category] ?? 1) * (1 - (1 - ke) * early);
+  const cup = leagueId != null && CUP_LEAGUE_IDS.includes(leagueId) ? CUP_GOAL_CALIBRATION[category] ?? 1 : 1;
+  return (MARKET_CALIBRATION[category] ?? 1) * (1 - (1 - ke) * early) * cup;
 }
 
 /** Forma podľa gólov v posledných zápasoch (vážený priemer, novšie zápasy viac). */
@@ -1130,11 +1140,11 @@ export function predictMatch(
   }
   if (!legacy) {
     for (const c of candidates) {
-      const k = calibrationFactor(c.category, minGamesPlayed);
+      const k = calibrationFactor(c.category, minGamesPlayed, Number(fixture.league?.id));
       if (k < 1) c.probability = 50 + k * (c.probability - 50);
       if (isGoalsUnder(c)) c.probability = 50 + GOALS_UNDER_CALIBRATION * (c.probability - 50);
     }
-    for (const m of lineModels) m.calibration = Math.min(1, calibrationFactor(m.category, minGamesPlayed));
+    for (const m of lineModels) m.calibration = Math.min(1, calibrationFactor(m.category, minGamesPlayed, Number(fixture.league?.id)));
   }
 
   const sortedBets = candidates.sort((a, b) => b.probability - a.probability);
