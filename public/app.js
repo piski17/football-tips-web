@@ -345,9 +345,13 @@ function askTelegramTarget() {
 
 /** Skúšobné pásmo (21. 10. 2026): tipy pod 68 % sa ukladajú len na sledovanie (rovnako ako server). */
 const WATCH_BELOW = 68;
-const isWatchTip = (tip) => !(tip.legs && tip.legs.length) && !tip.manualEntry && typeof tip.probability === "number" && tip.probability < WATCH_BELOW;
+const isWatchTip = (tip) => !(tip.legs && tip.legs.length) && (tip.softConflict || (!tip.manualEntry && typeof tip.probability === "number" && tip.probability < WATCH_BELOW));
 
 async function maybeOfferTelegram(tipId, tip) {
+  if (tip && tip.softConflict) {
+    showToast("Tip s rozporom so stávkovkami je uložený len na sledovanie – neposiela sa a nerátá do štatistík.");
+    return;
+  }
   if (tip && isWatchTip(tip)) {
     showToast(`Tip s dôverou pod ${WATCH_BELOW}${NB}% je uložený len na sledovanie – neposiela sa a nerátá do štatistík.`);
     return;
@@ -1019,6 +1023,18 @@ function measurementFields(r, bet) {
   };
 }
 
+/**
+ * Tip s rozporom so stávkovkami, ktorý prešiel len vďaka zmierneniu filtra (22. 10. 2026):
+ * s Michalovým kurzom sa rozpor prepočíta (šanca stávkovky = 1 / kurz bez ~5 % marže).
+ * Ak je pod pôvodnou hranicou, tip prejde normálne, inak sa uloží len do sledovaných.
+ */
+function softConflictCheck(bet, odd) {
+  if (!bet.softConflict || typeof bet.conflictModel !== "number" || !(odd > 1)) return { pass: !bet.softConflict, gap: null };
+  const bookie = 100 / (odd * 1.05);
+  const gap = Math.abs(bet.conflictModel - bookie);
+  return { pass: gap < (bet.conflictLimit ?? 15), gap };
+}
+
 function buildTip(r, bet, realOdds, extra = {}) {
   return {
     id: `${r.fixture.fixtureId}-${Date.now()}`,
@@ -1037,6 +1053,7 @@ function buildTip(r, bet, realOdds, extra = {}) {
     odds: realOdds,
     ...(typeof bet.odds === "number" ? { apiOdds: bet.odds } : {}),
     ...measurementFields(r, bet),
+    ...(bet.softConflict && !softConflictCheck(bet, realOdds).pass ? { softConflict: true, watchOnly: true } : {}),
     ...extra,
     savedAt: new Date().toISOString(),
     status: "pending",
@@ -1541,8 +1558,9 @@ function renderDayTipsView() {
       const i = Number(el.dataset.oddsSt);
       if (dayTipSaved.has(i)) { el.textContent = ""; el.className = "odds-st"; return; }
       const st = oddsState(i);
-      el.className = "odds-st" + (st.odd == null ? "" : st.ok ? " ok" : " bad");
-      el.textContent = st.odd == null ? "" : st.ok ? "✓ má hodnotu" : st.odd > 20 ? "✗ preklep?" : `✗ pod ${fmtOdds(st.min)}`;
+      const sc = st.ok && dayTips.items[i].bet.softConflict ? softConflictCheck(dayTips.items[i].bet, st.odd) : null;
+      el.className = "odds-st" + (st.odd == null ? "" : sc && !sc.pass ? " bad" : st.ok ? " ok" : " bad");
+      el.textContent = st.odd == null ? "" : sc ? (sc.pass ? `✓ rozpor ${Math.round(sc.gap)} b. – prejde` : `✗ rozpor ${Math.round(sc.gap)} b. – len sledovať`) : st.ok ? "✓ má hodnotu" : st.odd > 20 ? "✗ preklep?" : `✗ pod ${fmtOdds(st.min)}`;
       if (st.ok && !matchHasStarted(dayTips.items[i].r.fixture)) n++;
     });
     const b = document.getElementById("dtBulkSave");

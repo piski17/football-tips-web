@@ -886,6 +886,12 @@ app.post("/api/tips", async (req, res) => {
       tip.watchOnly = true;
       tip.strongOfDay = undefined;
     }
+    // Rozpor so stávkovkami, ktorý prešiel len vďaka zmierneniu filtra (22. 10. 2026, Michalovo
+    // rozhodnutie): tip sa uloží len na sledovanie, klientom nejde.
+    if (tip.softConflict && !(tip.legs && tip.legs.length)) {
+      tip.watchOnly = true;
+      tip.strongOfDay = undefined;
+    }
     // Ručne doplnený tip prejde rovnakou kontrolou ako tipy z modelu (dôvera, kurz, hodnota) –
     // ak by ho model nepustil, uloží sa len medzi sledované.
     if (tip.manualEntry && !(tip.legs && tip.legs.length) && !tip.probabilityEstimated && typeof tip.probability === "number" && typeof tip.odds === "number") {

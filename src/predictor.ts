@@ -1210,7 +1210,10 @@ export function predictMatch(
           c.marketProbability = pMarket * 100;
         } else if (!isGoalsUnder(c) && Math.abs(modelPct - pMarket * 100) >= conflictLimit - 5) {
           // Prešiel len vďaka zmierneniu filtra (22. 10. 2026) – Michal ho dáva len do sledovaných.
-          c.valueWarning = `Rozpor so stávkovkami ${Math.abs(modelPct - pMarket * 100).toFixed(0)} bodov (model ${modelPct.toFixed(0)} %, stávkovky ${(pMarket * 100).toFixed(0)} %) – pred zmiernením filtra by neprešiel, ulož ho len do sledovaných.`;
+          c.valueWarning = `Rozpor so stávkovkami ${Math.abs(modelPct - pMarket * 100).toFixed(0)} bodov (model ${modelPct.toFixed(0)} %, stávkovky ${(pMarket * 100).toFixed(0)} %) – pred zmiernením filtra by neprešiel. Po zadaní kurzu appka rozhodne, či prejde, inak sa uloží len do sledovaných.`;
+          c.softConflict = true;
+          c.conflictModel = modelPct;
+          c.conflictLimit = conflictLimit - 5;
         }
         const blendW = legacy ? marketWeight : Math.max(marketWeight, MARKET_BLEND);
         if (blendW > 0) {

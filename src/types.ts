@@ -75,6 +75,11 @@ export interface MarketPick {
   expectedValue?: number | null;
   /** Upozornenie pri tipe, ktorý ostal v odporúčaniach (napr. podozrivo vysoká hodnota). */
   valueWarning?: string;
+  /** Prešiel len vďaka zmierneniu filtra rozporu (22. 10. 2026) – ukladá sa len do sledovaných. */
+  softConflict?: boolean;
+  /** Pri softConflict: šanca modelu pred spojením so stávkovkami a pôvodná hranica rozporu. */
+  conflictModel?: number;
+  conflictLimit?: number;
   /** Dôvod, prečo bol tip vyradený (len pri lowValueBets). */
   rejectReason?: string;
   /**
@@ -304,6 +309,8 @@ export interface SavedTip {
   probabilityEstimated?: boolean;
   /** Len sledovať: tip sa vyhodnotí, ale neráta sa do štatistík, nie je na webe a neposiela sa členom. */
   watchOnly?: boolean;
+  /** Tip s rozporom so stávkovkami, ktorý prešiel len vďaka zmierneniu filtra. */
+  softConflict?: boolean;
   /** Tip skrytý z histórie tipov - naďalej sa ráta do štatistík a zobrazuje na prezentačnej stránke. */
   archived?: boolean;
   /** Výsledok alebo kurz bol ručne opravený v histórii. */
