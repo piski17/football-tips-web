@@ -689,8 +689,10 @@ const H2H_STAT_KEY: Record<string, keyof H2HStats> = {
   ofsajdy: "offsides",
   drzanie_lopty: "homePossession",
 };
+// 22. 10. 2026 (Michalovo rozhodnutie): zmiernené o 5 bodov (predtým 15 / 20 / 25) – tiché
+// sledovanie: tipy vyradené pre rozpor vyšli 38 z 51 (75 %, stávkovky čakali 63 %, +7,1 j.).
 function marketConflictLimit(h2hMatchesUsed: number): number {
-  return h2hMatchesUsed >= 5 ? 25 : h2hMatchesUsed >= 3 ? 20 : 15;
+  return h2hMatchesUsed >= 5 ? 30 : h2hMatchesUsed >= 3 ? 25 : 20;
 }
 
 /** Súťaže, v ktorých stávkovky neponúkajú držanie lopty: Liga majstrov (2), Európska liga (3). */
@@ -1206,6 +1208,9 @@ export function predictMatch(
           c.marketConflict = `model a stávkovky sa výrazne rozchádzajú (model ${modelPct.toFixed(0)} %, stávkovky ${(pMarket * 100).toFixed(0)} %)`;
           c.modelProbability = modelPct;
           c.marketProbability = pMarket * 100;
+        } else if (!isGoalsUnder(c) && Math.abs(modelPct - pMarket * 100) >= conflictLimit - 5) {
+          // Prešiel len vďaka zmierneniu filtra (22. 10. 2026) – Michal ho dáva len do sledovaných.
+          c.valueWarning = `Rozpor so stávkovkami ${Math.abs(modelPct - pMarket * 100).toFixed(0)} bodov (model ${modelPct.toFixed(0)} %, stávkovky ${(pMarket * 100).toFixed(0)} %) – pred zmiernením filtra by neprešiel, ulož ho len do sledovaných.`;
         }
         const blendW = legacy ? marketWeight : Math.max(marketWeight, MARKET_BLEND);
         if (blendW > 0) {
