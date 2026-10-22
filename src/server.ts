@@ -7,6 +7,7 @@ import { recordShadow, listShadow, updateShadow, shadowEntriesFrom, shadowReason
 import { recordBlend, listBlend, updateBlend, blendEntryFrom, blendSummary, newModelSummary } from "./blendStore";
 import { recordLegs, listLegs, updateLeg, legCandidatesFrom, legQualifies, buildTickets, TicketLegCandidate, TICKET_RULES } from "./ticketWatchStore";
 import { startBacktest, getBacktest } from "./backtest";
+import { applyCupGoals } from "./cupAdjust";
 import { getDay, getAllDays, setDay } from "./dailyStore";
 import { saveSlip, deleteSlip, listSlipIds, getSlipImage, MAX_SLIP_CHARS } from "./slipStore";
 import "dotenv/config";
@@ -29,7 +30,6 @@ import {
   getFixtureMissingPlayers,
   getFixtureOdds,
   getRecentFormAnyCompetition,
-  getRecentGoalsAnyCompetition,
   getSeasonGamesAnyCompetition,
   getHeadToHeadStats,
   getRestInfo,
@@ -645,33 +645,16 @@ app.post("/api/analyze", async (req, res) => {
 
     // Liga majstrov a Európska liga (22. 10. 2026, Michalovo rozhodnutie): góly sa počítajú
     // ako v ostatných ligách – z posledných 10 zápasov tímu vo všetkých súťažiach (hlavne
-    // domáca liga), nie z 2 – 3 pohárových zápasov. Staré pohárové sezóny sa vtedy nepoužijú.
+    // domáca liga), prepočítané podľa sily domácich líg. Staré pohárové sezóny sa nepoužijú.
+    let cupNote: string | null = null;
     if (CUP_LEAGUE_IDS.includes(Number(leagueId))) {
-      const [hg, ag] = await Promise.all([
-        getRecentGoalsAnyCompetition(fixture.homeTeam.id),
-        getRecentGoalsAnyCompetition(fixture.awayTeam.id),
-      ]);
-      const withGoals = (st: typeof homeStats, g: NonNullable<typeof hg>): typeof homeStats => {
-        const avg = (sum: number, n: number) => (n > 0 ? sum / n : 0);
-        return {
-          ...st,
-          fixtures: { ...st.fixtures, played: g.played },
-          goals: {
-            for: { total: g.for, average: { home: avg(g.for.home, g.played.home), away: avg(g.for.away, g.played.away), total: avg(g.for.total, g.played.total) } },
-            against: { total: g.against, average: { home: avg(g.against.home, g.played.home), away: avg(g.against.away, g.played.away), total: avg(g.against.total, g.played.total) } },
-          },
-        };
-      };
-      // Forma podľa gólov sa v pohároch berie z tých istých 10 zápasov – inak by ju dvíhali
-      // gólové pohárové zápasy (aj zo starých sezón) a odhad gólov by bol zase privysoký.
-      const formFrom = (ext: typeof homeExtStats, g: NonNullable<typeof hg>): typeof homeExtStats => ({
-        ...ext,
-        goalsFor: g.for.total / g.played.total,
-        goalsAgainst: g.against.total / g.played.total,
-        goalsGames: g.played.total,
-      });
-      if (hg) { homeStats = withGoals(homeStats, hg); homePriors = null; homeExtStats = formFrom(homeExtStats, hg); }
-      if (ag) { awayStats = withGoals(awayStats, ag); awayPriors = null; awayExtStats = formFrom(awayExtStats, ag); }
+      const cup = await applyCupGoals(fixture.homeTeam.id, fixture.awayTeam.id, Number(season), leagueAvg, homeStats, awayStats, homeExtStats, awayExtStats);
+      ({ homeStats, awayStats } = cup);
+      homeExtStats = cup.homeExt;
+      awayExtStats = cup.awayExt;
+      if (cup.homeOk) homePriors = null;
+      if (cup.awayOk) awayPriors = null;
+      cupNote = cup.note;
     }
 
     // Druhá vlna - súpisky hráčov + potvrdená zostava (ak je k dispozícii),
@@ -780,7 +763,7 @@ app.post("/api/analyze", async (req, res) => {
     void recordLegs(
       legCandidatesFrom(fixture, [...((result as any).bestBets ?? []), ...((result as any).lowValueBets ?? [])])
     ).catch(() => {});
-    res.json({ ...result, marketProbs });
+    res.json({ ...result, marketProbs, cupNote });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }

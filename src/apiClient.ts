@@ -632,25 +632,41 @@ export async function getSeasonGamesAnyCompetition(teamId: number, season: numbe
   }
 }
 
+/** Góly tímu z posledných zápasov vo všetkých súťažiach + jeho domáca liga (pre LM a EL). */
+export interface RecentGoalsAny {
+  played: { home: number; away: number; total: number };
+  for: { home: number; away: number; total: number };
+  against: { home: number; away: number; total: number };
+  /** Najčastejšia súťaž v týchto zápasoch okrem európskych pohárov = domáca liga tímu. */
+  domesticLeagueId: number | null;
+}
+/** Európske poháre a superpoháre – do domácej ligy tímu sa nerátajú. */
+const EURO_CUP_IDS = [2, 3, 848, 531, 15];
+
 /**
  * Góly tímu z posledných `count` odohraných zápasov vo VŠETKÝCH súťažiach (hlavne domáca liga),
  * zvlášť doma a vonku – pre Ligu majstrov a Európsku ligu, kde má tím v súťaži len pár zápasov
  * (22. 10. 2026, Michalovo rozhodnutie). Vráti null pri chybe alebo menej ako 6 zápasoch.
+ * S `asOf` (spätný test) len zápasy spred výkopu.
  */
-export async function getRecentGoalsAnyCompetition(
-  teamId: number,
-  count: number = 10
-): Promise<{ played: { home: number; away: number; total: number }; for: { home: number; away: number; total: number }; against: { home: number; away: number; total: number } } | null> {
-  const cacheKey = `recentGoalsAny:${teamId}:${count}`;
-  const cached = getCached<any>(cacheKey);
+export async function getRecentGoalsAnyCompetition(teamId: number, count: number = 10, asOf?: string): Promise<RecentGoalsAny | null> {
+  const cacheKey = `recentGoalsAny2:${teamId}:${count}:${asOf ?? ""}`;
+  const cached = getCached<RecentGoalsAny | null>(cacheKey);
   if (cached !== undefined) return cached;
   try {
-    const res = await client().get("/fixtures", { params: { team: teamId, last: count, status: "FT-AET-PEN" } });
+    const res = await client().get("/fixtures", {
+      params: asOf
+        ? { team: teamId, season: new Date(asOf).getUTCMonth() >= 6 ? new Date(asOf).getUTCFullYear() : new Date(asOf).getUTCFullYear() - 1, status: "FT-AET-PEN" }
+        : { team: teamId, last: count, status: "FT-AET-PEN" },
+    });
     checkApiErrors(res.data);
+    let fixtures: any[] = beforeDate(res.data?.response ?? [], asOf);
+    if (asOf) fixtures = newestFirst(fixtures).slice(0, count);
     const played = { home: 0, away: 0, total: 0 };
     const gf = { home: 0, away: 0, total: 0 };
     const ga = { home: 0, away: 0, total: 0 };
-    for (const f of res.data?.response ?? []) {
+    const leagues = new Map<number, number>();
+    for (const f of fixtures) {
       const isHome = f?.teams?.home?.id === teamId;
       const scored = isHome ? f?.goals?.home : f?.goals?.away;
       const conceded = isHome ? f?.goals?.away : f?.goals?.home;
@@ -659,8 +675,11 @@ export async function getRecentGoalsAnyCompetition(
       played[side]++; played.total++;
       gf[side] += scored; gf.total += scored;
       ga[side] += conceded; ga.total += conceded;
+      const lid = Number(f?.league?.id);
+      if (lid && !EURO_CUP_IDS.includes(lid)) leagues.set(lid, (leagues.get(lid) ?? 0) + 1);
     }
-    const result = played.total >= 6 ? { played, for: gf, against: ga } : null;
+    const domesticLeagueId = Array.from(leagues.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+    const result = played.total >= 6 ? { played, for: gf, against: ga, domesticLeagueId } : null;
     setCached(cacheKey, result, TTL_CORNERS_AVERAGE);
     return result;
   } catch {

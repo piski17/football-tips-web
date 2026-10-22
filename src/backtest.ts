@@ -23,6 +23,7 @@ import {
   getRestInfo,
 } from "./apiClient";
 import { newModelInputs } from "./newModel";
+import { applyCupGoals, CUP_LEAGUE_IDS } from "./cupAdjust";
 import { predictMatch, DEFAULT_WEIGHTS, LEGACY_WEIGHTS } from "./predictor";
 import { MIN_PROBABILITY, MAX_PROBABILITY, MIN_GAMES_TO_RECOMMEND } from "./oddsMatcher";
 import { evaluateTip, STATS_MARKETS } from "./tipEvaluator";
@@ -161,6 +162,15 @@ async function predictAsOf(fixture: Fixture, leagueId: number, season: number): 
   if (!awayStats.form) {
     const form = await getRecentFormAnyCompetition(fixture.awayTeam.id, 5, asOf);
     if (form) awayStats = { ...awayStats, form };
+  }
+  // LM a EL: góly z posledných 10 zápasov vo všetkých súťažiach + sila líg (ako v analýze).
+  if (CUP_LEAGUE_IDS.includes(Number(leagueId))) {
+    const cup = await applyCupGoals(fixture.homeTeam.id, fixture.awayTeam.id, season, leagueAvg, homeStats, awayStats, homeExt, awayExt, asOf);
+    ({ homeStats, awayStats } = cup);
+    homeExt = cup.homeExt;
+    awayExt = cup.awayExt;
+    if (cup.homeOk) homePriors = null;
+    if (cup.awayOk) awayPriors = null;
   }
   const h2hStats = await getHeadToHeadStats(h2h, fixture.homeTeam.name).catch(() => []);
   // Chýbajúci hráči (zranenia, tresty) – len pre nový model. Štatistiky hráčov sú

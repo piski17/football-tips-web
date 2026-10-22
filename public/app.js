@@ -897,6 +897,7 @@ function renderAnalysis(r, root, opts = {}) {
     ${statusHtml}
     <h3 class="sh">Odporúčané tipy <small>pásmo 65 – 80${NB}%, len s hodnotou</small></h3>
     ${tipsHtml}
+    ${r.cupNote ? `<p class="faint small" data-cup-note>${escapeHtml(r.cupNote)}</p>` : ""}
     <div class="save-msg" data-save-msg></div>
     ${gridHtml}
     ${tabsHtml}
