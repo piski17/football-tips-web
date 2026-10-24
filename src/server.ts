@@ -2405,8 +2405,75 @@ app.delete("/api/tips", async (_req, res) => {
   }
 });
 
-/** Vyhodnotí všetky čakajúce tipy a tikety, ktorých zápasy sa už skončili. */
+/**
+ * Vyhodnotí všetky čakajúce tipy a tikety, ktorých zápasy sa už skončili.
+ * 24. 10. 2026: skutočné tipy sa vyhodnotia PRVÉ (predtým až po tichej evidencii
+ * a sledovaní, ktoré minuli veľa požiadaviek na API a appka medzitým prestala čakať),
+ * chyba pri jednom tipe nezastaví ostatné a dva behy naraz sa nespustia.
+ */
+let pendingCheck: Promise<void> | null = null;
+let backgroundCheck: Promise<void> | null = null;
 async function checkPendingResults(): Promise<void> {
+  if (!pendingCheck) {
+    pendingCheck = settlePendingTips().finally(() => {
+      pendingCheck = null;
+    });
+  }
+  await pendingCheck;
+  // Tichá evidencia, sledovanie miešania a tikety dňa bežia až potom, na pozadí.
+  if (!backgroundCheck) {
+    backgroundCheck = settleBackgroundRecords()
+      .catch((err) => console.error("Vyhodnotenie evidencie zlyhalo:", err))
+      .finally(() => {
+        backgroundCheck = null;
+      });
+  }
+}
+
+/** Skutočné tipy a tikety (to, čo vidia členovia a štatistiky). */
+async function settlePendingTips(): Promise<void> {
+  const tips = await listTips();
+  // Len zápasy, ktoré už začali – budúce sa na API zbytočne nepýtame.
+  const pending = tips.filter((t) => t.status === "pending" && tipHasStartedMatch(t));
+
+  for (const tip of pending) {
+    try {
+      if (tip.legs && tip.legs.length > 0) {
+        // Tiket - vyhodnotíme každú "nohu" zvlášť (každá môže patriť inému zápasu).
+        let anyLegChanged = false;
+        for (const leg of tip.legs) {
+          if (leg.status !== "pending") continue;
+          if (new Date(leg.matchDate).getTime() > Date.now()) continue; // zápas ešte nezačal
+          const settled = await settleBet(leg);
+          if (!settled) continue; // zápas sa ešte neskončil
+          leg.status = settled.status;
+          leg.actualHomeGoals = settled.homeGoals;
+          leg.actualAwayGoals = settled.awayGoals;
+          anyLegChanged = true;
+        }
+        if (anyLegChanged) {
+          const overallStatus = computeTicketStatus(tip.legs);
+          await updateTip(tip.id, { status: overallStatus, legs: tip.legs });
+        }
+        continue;
+      }
+
+      const settled = await settleBet(tip);
+      if (!settled) continue; // zápas sa ešte neskončil
+      await updateTip(tip.id, {
+        status: settled.status,
+        actualHomeGoals: settled.homeGoals,
+        actualAwayGoals: settled.awayGoals,
+      });
+    } catch (err) {
+      // jeden tip nesmie zastaviť vyhodnotenie ostatných
+      console.error(`Tip ${tip.id} sa nepodarilo vyhodnotiť:`, err);
+    }
+  }
+}
+
+/** Tichá evidencia, sledovanie miešania a tiché sledovanie tiketu dňa. */
+async function settleBackgroundRecords(): Promise<void> {
   // Ak server pred výkopom spal, uzatvárací kurz sa doplní aspoň teraz.
   await captureClosingOdds();
   // vyradené tipy z tichej evidencie vyhodnotíme rovnako ako bežné tipy
@@ -2417,52 +2484,35 @@ async function checkPendingResults(): Promise<void> {
     for (const e of (await listShadow()).filter((x) => x.status === "pending" && new Date(x.matchDate).getTime() <= Date.now()))
       byFixture.set(e.fixtureId, [...(byFixture.get(e.fixtureId) ?? []), e]);
     for (const entries of byFixture.values()) {
-      const outcomes = await settleFixtureBets(entries[0], entries);
-      if (!outcomes) continue;
-      for (let i = 0; i < entries.length; i++) await updateShadow({ ...entries[i], status: outcomes[i] } as ShadowEntry);
+      try {
+        const outcomes = await settleFixtureBets(entries[0], entries);
+        if (!outcomes) {
+          // Zápas, ktorý sa ani po 3 dňoch nedá vyhodnotiť, sa v evidencii ráta ako vrátený,
+          // aby sa naň API nepýtalo pri každej kontrole donekonečna.
+          if (Date.now() > new Date(entries[0].matchDate).getTime() + 3 * 24 * 3600 * 1000)
+            for (const e of entries) await updateShadow({ ...e, status: "void" } as ShadowEntry);
+          continue;
+        }
+        for (let i = 0; i < entries.length; i++) await updateShadow({ ...entries[i], status: outcomes[i] } as ShadowEntry);
+      } catch {
+        // jeden zápas nesmie zastaviť ostatné
+      }
     }
   } catch {
-    // evidencia nesmie zastaviť vyhodnotenie skutočných tipov
+    // evidencia nesmie zastaviť ďalšie sledovanie
   }
   try {
     for (const f of (await listBlend()).filter((x) => x.status === "pending")) {
       if (new Date(f.matchDate).getTime() > Date.now()) continue;
-      const outcomes = await settleFixtureBets(f, f.picks);
-      if (outcomes) await updateBlend({ ...f, status: "settled", picks: f.picks.map((p, i) => ({ ...p, outcome: outcomes[i] })) });
+      try {
+        const outcomes = await settleFixtureBets(f, f.picks);
+        if (outcomes) await updateBlend({ ...f, status: "settled", picks: f.picks.map((p, i) => ({ ...p, outcome: outcomes[i] })) });
+      } catch {
+        // jeden zápas nesmie zastaviť ostatné
+      }
     }
   } catch {
-    // sledovanie miešania nesmie zastaviť vyhodnotenie skutočných tipov
-  }
-  const tips = await listTips();
-  const pending = tips.filter((t) => t.status === "pending");
-
-  for (const tip of pending) {
-    if (tip.legs && tip.legs.length > 0) {
-      // Tiket - vyhodnotíme každú "nohu" zvlášť (každá môže patriť inému zápasu).
-      let anyLegChanged = false;
-      for (const leg of tip.legs) {
-        if (leg.status !== "pending") continue;
-        const settled = await settleBet(leg);
-        if (!settled) continue; // zápas sa ešte neskončil
-        leg.status = settled.status;
-        leg.actualHomeGoals = settled.homeGoals;
-        leg.actualAwayGoals = settled.awayGoals;
-        anyLegChanged = true;
-      }
-      if (anyLegChanged) {
-        const overallStatus = computeTicketStatus(tip.legs);
-        await updateTip(tip.id, { status: overallStatus, legs: tip.legs });
-      }
-      continue;
-    }
-
-    const settled = await settleBet(tip);
-    if (!settled) continue; // zápas sa ešte neskončil
-    await updateTip(tip.id, {
-      status: settled.status,
-      actualHomeGoals: settled.homeGoals,
-      actualAwayGoals: settled.awayGoals,
-    });
+    // sledovanie miešania nesmie zastaviť ďalšie sledovanie
   }
 
   // Tiché sledovanie tiketu dňa – vyhodnotíme len tipy, ktoré sú na niektorom tikete
@@ -2480,9 +2530,12 @@ async function checkPendingResults(): Promise<void> {
       else if (Date.now() > new Date(leg.matchDate).getTime() + 3 * 24 * 3600 * 1000) await updateLeg({ ...leg, status: "void" });
     }
   } catch {
-    // sledovanie nesmie zastaviť vyhodnotenie skutočných tipov
+    // sledovanie nesmie zastaviť ďalšie kontroly
   }
 }
+
+// Výsledky sa kontrolujú aj samy, každých 15 minút – netreba čakať na tlačidlo.
+setInterval(() => void checkPendingResults().catch((err) => console.error("Automatická kontrola výsledkov zlyhala:", err)), 15 * 60 * 1000);
 
 app.post("/api/tips/check-results", async (_req, res) => {
   try {

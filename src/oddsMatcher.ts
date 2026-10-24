@@ -61,8 +61,9 @@ export const MIN_GAMES_TO_RECOMMEND = 3;
 // aj cez týždeň. Minimálny kurz ostáva 1,55; tip s dôverou 65 % prejde len pri kurze aspoň
 // ~1,62 (hodnota +5 %). Po 2 – 3 týždňoch overiť, ako vychádzajú tipy 65 – 68 %.
 // (22. 10. 2026 nakrátko späť na 68 %, 23. 10. 2026 Michalovo rozhodnutie: opäť 65 – 80 %.)
-// 24. 10. 2026 (Michalovo rozhodnutie): späť na 68 – 80 %, skúšobné pásmo 65 – 67 % sa ruší.
-export const MIN_PROBABILITY = 68;
+// 24. 10. 2026 ráno späť na 68 – 80 %; v ten deň (Michalovo rozhodnutie) opäť 65 – 80 %,
+// tipy 65 – 67 % idú len do sledovaných (WATCH_BELOW_PROBABILITY), kým sa neoveria.
+export const MIN_PROBABILITY = 65;
 /**
  * Skúšobné pásmo (21. 10. 2026, Michalovo rozhodnutie): tipy s dôverou pod touto hranicou
  * (65 – 68 %) sa ukladajú len na sledovanie – vyhodnotia sa, ale neposielajú sa členom
