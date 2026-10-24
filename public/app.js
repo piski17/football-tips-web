@@ -1728,6 +1728,7 @@ function renderTipsList(allTips) {
   renderMarketBreakdown(statTips);
   renderBankrollSimulation(statTips);
   renderCalibrationReport(statTips);
+  renderValueReport(statTips);
   renderWatchReport(allTips.filter((t) => t.watchOnly && !(t.legs && t.legs.length)));
   renderTipRows(tips);
 }
@@ -1930,6 +1931,49 @@ function renderCalibrationReport(tips) {
   el.innerHTML = `<p class="small"><b>Model sľúbil ${pct(promised)}, vyšlo ${pct(delivered)}</b> (${plural(resolved.length, "tip", "tipy", "tipov")}, rozdiel <b class="${diff >= 0 ? "g" : "l"}">${signed(diff, 1)}${NB}b.</b> – ${verdict}).</p>
     <div class="table-wrap"><table class="bt-table"><thead><tr><th>Dôvera</th><th class="num">Tipy</th><th class="num">Model sľúbil</th><th class="num">Vyšlo</th><th class="num">Rozdiel</th></tr></thead><tbody>${body}</tbody></table></div>
     <p class="faint small">Pri pásme s menej ako 30 tipmi je rozdiel ešte prevažne náhoda.${outside ? ` Mimo pásiem ${CALIBRATION_FROM} – ${fmtNum(CALIBRATION_TO, 1)}${NB}%: ${plural(outside, "tip", "tipy", "tipov")} (započítané v celkovom riadku).` : ""}</p>`;
+}
+// Úspešnosť podľa hodnoty (25. 10. 2026): či viac zarábajú tipy s malou (+5 – 10 %) alebo
+// veľkou hodnotou (+15 – 25 %). Podľa toho sa dá posunúť spodná hranica hodnoty (teraz +5 %).
+const VALUE_BUCKETS = [
+  { label: "pod +5 %", min: -Infinity, max: 5 },
+  { label: "+5 – 10 %", min: 5, max: 10 },
+  { label: "+10 – 15 %", min: 10, max: 15 },
+  { label: "+15 – 20 %", min: 15, max: 20 },
+  { label: "+20 – 25 %", min: 20, max: 25 },
+  { label: "nad +25 %", min: 25, max: Infinity },
+];
+function renderValueReport(tips) {
+  const el = document.getElementById("valueResult");
+  if (!el) return;
+  // Len jednotlivé tipy so skutočnou dôverou a kurzom (bez tiketov a odhadnutej dôvery).
+  const resolved = tips.filter(
+    (t) => !t.legs && !t.probabilityEstimated && (t.status === "won" || t.status === "lost") && typeof t.odds === "number" && t.odds > 1 && typeof t.probability === "number"
+  );
+  if (!resolved.length) {
+    el.innerHTML = `<p class="faint small">Zatiaľ nemáš vyhodnotené tipy s kurzom.</p>`;
+    return;
+  }
+  const valueOf = (t) => ((t.probability / 100) * t.odds - 1) * 100;
+  const rows = VALUE_BUCKETS.map((b) => {
+    const list = resolved.filter((t) => {
+      const v = valueOf(t);
+      return v >= b.min && v < b.max;
+    });
+    const won = list.filter((t) => t.status === "won").length;
+    const profit = list.reduce((a, t) => a + (t.status === "won" ? t.odds - 1 : -1), 0);
+    const avgOdds = list.length ? list.reduce((a, t) => a + t.odds, 0) / list.length : null;
+    // Porovnanie s uzatváracím kurzom: kladné číslo = dostali sme lepší kurz, než bol pred výkopom.
+    const clvList = list.filter((t) => typeof t.closingOdds === "number" && t.closingOdds > 1);
+    const clv = clvList.length ? (clvList.reduce((a, t) => a + (t.odds / t.closingOdds - 1), 0) / clvList.length) * 100 : null;
+    return { label: b.label, count: list.length, won, profit, roi: list.length ? (profit / list.length) * 100 : null, avgOdds, clv, clvCount: clvList.length };
+  }).filter((r) => r.count > 0);
+  const body = rows
+    .map(
+      (r) => `<tr><td style="white-space:nowrap">${r.label}</td><td class="num">${r.count}</td><td class="num">${fmtNum((r.won / r.count) * 100, 0)}${NB}% <span class="faint">(${r.won}/${r.count})</span></td><td class="num">${fmtOdds(r.avgOdds)}</td><td class="num ${r.profit >= 0 ? "g" : "l"}">${signed(r.profit, 1)}${NB}j.</td><td class="num ${r.roi >= 0 ? "g" : "l"}">${signed(r.roi, 1)}${NB}%</td><td class="num ${r.clv == null ? "" : r.clv >= 0 ? "g" : "l"}">${r.clv == null ? "–" : `${signed(r.clv, 1)}${NB}%`}</td></tr>`
+    )
+    .join("");
+  el.innerHTML = `<div class="table-wrap"><table class="bt-table"><thead><tr><th>Hodnota</th><th class="num">Tipy</th><th class="num">Vyšlo</th><th class="num">Priem. kurz</th><th class="num">Zisk</th><th class="num">Návratnosť</th><th class="num">Kurz vs. pred výkopom</th></tr></thead><tbody>${body}</tbody></table></div>
+    <p class="faint small">Zisk pri vklade 1 jednotka na tip. „Kurz vs. pred výkopom“ ukazuje, o koľko bol náš kurz lepší (+) alebo horší (−) ako uzatvárací kurz – dlhodobo kladné číslo znamená, že model naozaj nachádza hodnotu. Pri skupine s menej ako 30 tipmi je výsledok ešte prevažne náhoda.</p>`;
 }
 bankrollStartInput.addEventListener("input", () => renderBankrollSimulation(lastStatTips));
 document.getElementById("bankrollPct").addEventListener("click", (e) => {
