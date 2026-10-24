@@ -104,7 +104,7 @@ td.no b { color: var(--bad); font-size: 13px; }
 <div class="wrap">
   <a class="back noprint" href="/#nastroje">← Späť do appky</a>
   <h1>Návratnosť členstva <span>– vlastný bank</span></h1>
-  <p class="lead">Zadajte svoj bank a hneď uvidíte, akú priemernú mesačnú úspešnosť treba, aby sa vrátili vklady aj cena členstva. Pod percentom je, koľko tipov musí vyjsť za mesiac (napr. 22 z 30) a koľko zo 100 tipov celkovo (nie mesačne, ale za dlhšie obdobie).</p>
+  <p class="lead">Zadajte svoj bank a počet tipov mesačne a hneď uvidíte, akú priemernú mesačnú úspešnosť treba, aby sa vrátili vklady aj cena členstva. Pod percentom je, koľko tipov musí vyjsť za mesiac (napr. 22 z 30) a koľko zo 100 tipov celkovo (nie mesačne, ale za dlhšie obdobie).</p>
 
   <div class="panel inputs-panel">
     <div class="inputs">
@@ -116,7 +116,8 @@ td.no b { color: var(--bad); font-size: 13px; }
       <div>
         <label class="f" for="tips">Tipov mesačne</label>
         <div class="field"><input id="tips" type="text" inputmode="numeric" value="30" autocomplete="off"><span class="unit">ks</span></div>
-        <div class="hint">Priemerne 1 tip denne.</div>
+        <div class="chips" id="tipChips"></div>
+        <div class="hint" id="tipsHint">Priemerne 1 tip denne.</div>
       </div>
       <div>
         <label class="f" for="target">Model mieri na</label>
@@ -185,6 +186,14 @@ td.no b { color: var(--bad); font-size: 13px; }
     chips.appendChild(c);
   });
 
+  var tipChips = $("tipChips");
+  [30, 45, 60, 90].forEach(function (t) {
+    var c = document.createElement("button");
+    c.type = "button"; c.className = "chip"; c.textContent = t; c.dataset.v = t;
+    c.onclick = function () { $("tips").value = t; render(); };
+    tipChips.appendChild(c);
+  });
+
   function load() {
     try {
       var s = JSON.parse(localStorage.getItem("tr-navratnost") || "null");
@@ -206,6 +215,11 @@ td.no b { color: var(--bad); font-size: 13px; }
     var bank = num($("bank").value), tips = Math.round(num($("tips").value)), target = num($("target").value) / 100;
     var odds = DEFAULT.odds.map(function (_, i) { return num($("odd" + i).value); });
     [].forEach.call(chips.children, function (c) { c.classList.toggle("on", Number(c.dataset.v) === bank); });
+    [].forEach.call(tipChips.children, function (c) { c.classList.toggle("on", Number(c.dataset.v) === tips); });
+    if (tips > 0) {
+      var d = Math.round(tips / 30 * 10) / 10, whole = d % 1 === 0;
+      $("tipsHint").textContent = "Priemerne " + fmt(d, whole ? 0 : 1) + " " + (!whole ? "tipu" : d === 1 ? "tip" : d < 5 ? "tipy" : "tipov") + " denne.";
+    }
     var box = $("plans");
     if (!(bank > 0) || !(tips > 0) || odds.some(function (o) { return !(o > 1); })) {
       box.innerHTML = '<div class="plan"><p class="note" style="padding-bottom:10px">Zadajte bank, počet tipov a kurzy väčšie ako 1.</p></div>';
