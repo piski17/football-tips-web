@@ -61,6 +61,8 @@ td:first-child span { color: var(--muted); font-weight: 400; font-size: 12.5px; 
 td.c { border-radius: 8px; }
 td.c b { display: block; font: 700 16px var(--display); }
 td.c i { display: block; font-style: normal; font-size: 11.5px; color: var(--muted); }
+td.c em { display: block; font-style: normal; font-weight: 600; font-size: 12px; margin-top: 2px; }
+td.c em.plus { color: var(--gold-hi); } td.c em.minus { color: var(--bad); }
 td.good { background: var(--good-bg); } td.good b { color: var(--good); }
 td.warn { background: var(--warn-bg); } td.warn b { color: var(--warn); }
 td.bad { background: var(--bad-bg); } td.bad b { color: var(--bad); }
@@ -68,7 +70,7 @@ td.no b { color: var(--bad); font-size: 13px; }
 
 .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: var(--muted); margin: 4px 0 14px; }
 .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
-.legend .g::before { background: var(--good); } .legend .w::before { background: var(--warn); } .legend .b::before { background: var(--bad); }
+.legend .g::before { background: var(--good); } .legend .w::before { background: var(--warn); } .legend .b::before { background: var(--bad); } .legend .z::before { display: none; } .legend .z { color: var(--gold-hi); }
 .note { color: var(--muted); font-size: 12.5px; }
 .actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 6px 0 18px; }
 .btn { font: 600 14px var(--body); color: #17130A; background: linear-gradient(135deg, var(--gold-hi), var(--gold-lo)); border: 0; border-radius: 999px; padding: 10px 18px; cursor: pointer; text-decoration: none; }
@@ -90,6 +92,7 @@ td.no b { color: var(--bad); font-size: 13px; }
   td { padding: 3px 4px; }
   td.c b { font-size: 13px; }
   td.c i { font-size: 8.5px; white-space: nowrap; }
+  td.c em { font-size: 9px; margin-top: 0; }
   th { font-size: 8.5px; }
   h1 { font-size: 22px; margin-top: 0; }
   .how { padding: 10px 12px; margin-bottom: 0; }
@@ -140,6 +143,7 @@ td.no b { color: var(--bad); font-size: 13px; }
     <span class="g">pohodlne pod cieľom modelu</span>
     <span class="w">tesne pod cieľom</span>
     <span class="b">nad cieľom – náročné</span>
+    <span class="z" id="profitLegend"></span>
   </div>
 
   <div id="plans"></div>
@@ -148,6 +152,7 @@ td.no b { color: var(--bad); font-size: 13px; }
     <h3 style="font-size:18px;margin-bottom:8px">Ako to čítať</h3>
     <p class="note" id="example"></p>
     <p class="note">Pod percentom: koľko tipov musí vyjsť za jeden mesiac (napr. „22 z 30“) a koľko zo 100 tipov celkovo – teda za celé obdobie, nie za mesiac. Počty sú zaokrúhlené nahor.</p>
+    <p class="note">Zisk pod číslami: koľko by klient za mesiac zarobil po zaplatení členstva, keby vyšlo toľko tipov, koľko je nastavené v „Model mieri na“. Pri inej úspešnosti prepíšte toto políčko.</p>
     <p class="note" id="basis"></p>
     <p class="note">Vzorec: potrebná úspešnosť = (1 + mesačná cena ÷ (počet tipov × vklad)) ÷ kurz.<br>
     Výpočet ukazuje len hranicu návratnosti, výhru nezaručuje. Hrajte zodpovedne. 18+</p>
@@ -226,6 +231,7 @@ td.no b { color: var(--bad); font-size: 13px; }
       return;
     }
     save();
+    $("profitLegend").textContent = "Zisk/strata = čistý zisk za mesiac po zaplatení členstva, ak vyjde " + fmt(target * 100, 0) + " % tipov";
     $("printInfo").textContent = "Bank " + eur(bank) + " · " + tips + " tipov mesačne · model mieri na " + fmt(target * 100, 0) + " %";
     var html = "";
     PLANS.forEach(function (p) {
@@ -240,10 +246,12 @@ td.no b { color: var(--bad); font-size: 13px; }
         html += "<tr><td>" + pct + " % <span>(" + eur(stake) + ")</span></td>";
         odds.forEach(function (o) {
           var need = (1 + monthly / (tips * stake)) / o;
-          if (need > 1) { html += '<td class="c no"><b>nedá sa</b><i>ani 100 % nestačí</i></td>'; return; }
+          var profit = Math.round(tips * stake * (target * o - 1) - monthly);
+          var pr = '<em class="' + (profit >= 0 ? "plus" : "minus") + '">' + (profit >= 0 ? "zisk +" : "strata −") + fmt(Math.abs(profit), 0) + " €</em>";
+          if (need > 1) { html += '<td class="c no"><b>nedá sa</b><i>ani 100 % nestačí</i>' + pr + '</td>'; return; }
           var cls = need <= target - 0.03 ? "good" : need <= target ? "warn" : "bad";
           html += '<td class="c ' + cls + '"><b>' + fmt(need * 100, 1) + " %</b><i>" +
-            Math.ceil(need * tips - 1e-9) + " z " + tips + " · " + Math.ceil(need * 100 - 1e-9) + " zo 100 celkovo</i></td>";
+            Math.ceil(need * tips - 1e-9) + " z " + tips + " · " + Math.ceil(need * 100 - 1e-9) + " zo 100 celkovo</i>" + pr + "</td>";
         });
         html += "</tr>";
       });
