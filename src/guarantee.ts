@@ -1,7 +1,7 @@
 import { addActiveMonths, PAY_TERMS, Term, isTerm } from "./payments";
 import { MemberPeriod, Subscriber } from "./types";
 
-// Garancia: ak obdobie členstva (Silver 1, Gold 3, Platinum 6 mesiacov) skončí v strate,
+// Garancia: ak obdobie členstva (Gold 1, Platinum 3 mesiace; staršie 6 mesiacov) skončí v strate,
 // člen dostane 1 mesiac zadarmo. Mesiac zadarmo sa už do garancie nepočíta.
 
 /** Koľko predošlých období si pri členovi pamätáme (stačí na vyhodnotenie za posledných 60 dní). */

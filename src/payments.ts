@@ -4,7 +4,7 @@ import * as crypto from "crypto";
 import axios from "axios";
 import { ibanValid } from "./payBySquare";
 
-// Platby za členstvo TipRadar (Silver, Gold, Platinum): bankový prevod cez QR kód (PAY by square), bez poplatkov.
+// Platby za členstvo TipRadar (Gold 1 mesiac, Platinum 3 mesiace): bankový prevod cez QR kód (PAY by square), bez poplatkov.
 // Zapne sa, keď sú na Renderi nastavené SALES_OPEN=true, PAY_IBAN a PAY_NAME.
 // Platbu potvrdíš jedným klikom v appke alebo v Telegrame, bot potom pošle pozvánku.
 
@@ -47,24 +47,29 @@ export function addActiveMonths(from: Date, months: number): Date {
   return calEnd;
 }
 
-// Kód "season" ostáva kvôli uloženým členom, od 18. 10. 2026 znamená 6 mesiacov (30 miest).
+// Kód "season" ostáva len kvôli starším záznamom (6 mesiacov). Od 24. 10. 2026 sa predáva len
+// m1 = Gold (1 mesiac) a m3 = Platinum (3 mesiace, s výhodami bývalého Platinum na 6 mesiacov).
 export type Term = "m1" | "m3" | "season";
 export const PAY_TERMS: Record<Term, { price: number; name: string; months?: number }> = {
   m1: { price: 49, name: "1 mesiac", months: 1 },
   m3: { price: 119, name: "3 mesiace", months: 3 },
   season: { price: 219, name: "6 mesiacov", months: 6 },
 };
-/** Názov členstva podľa dĺžky: 1 mesiac = Silver, 3 mesiace = Gold, 6 mesiacov = Platinum. */
-export const TIER_NAMES: Record<Term, string> = { m1: "Silver", m3: "Gold", season: "Platinum" };
+/** Názov členstva podľa dĺžky: 1 mesiac = Gold, 3 mesiace = Platinum (6 mesiacov sa už nepredáva). */
+export const TIER_NAMES: Record<Term, string> = { m1: "Gold", m3: "Platinum", season: "Platinum (6 mesiacov)" };
 export function tierName(term: Term): string {
   return TIER_NAMES[term] ?? TIER_NAMES.m1;
 }
-/** Názov členstva s dĺžkou, napríklad „Silver · 1 mesiac“. */
+/** Názov členstva s dĺžkou, napríklad „Gold · 1 mesiac“. */
 export function termLabel(term: Term): string {
   return `${tierName(term)} · ${PAY_TERMS[term].name}`;
 }
 export function isTerm(v: unknown): v is Term {
   return v === "m1" || v === "m3" || v === "season";
+}
+/** Dĺžky, ktoré sa dajú kúpiť (6 mesiacov zrušené 24. 10. 2026). */
+export function isSellableTerm(v: unknown): v is "m1" | "m3" {
+  return v === "m1" || v === "m3";
 }
 
 export function bankEnabled(): boolean {

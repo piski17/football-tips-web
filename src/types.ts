@@ -417,7 +417,7 @@ export interface Subscriber {
   name: string;
   contact?: string;
   telegramChatId?: string; // voliteľné - ak vyplnené, appka mu vie poslať osobnú pripomienku pred obnovením
-  tier: "individual" | "group"; // individual = Silver/Gold (1 alebo 3 mesiace), group = Platinum (6 mesiacov, obmedzený počet miest)
+  tier: "individual" | "group"; // individual = Gold/Platinum (1 alebo 3 mesiace), group = staršie členstvo na 6 mesiacov (zrušené 24. 10. 2026)
   priceEur: number;
   nextPaymentDue: string; // ISO dátum – do kedy má členstvo zaplatené
   length?: "m1" | "m3" | "season"; // dĺžka členstva (staršie záznamy ju nemajú = 1 mesiac)

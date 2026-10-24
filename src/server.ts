@@ -53,7 +53,7 @@ import {
   sendCustomMessage,
   sendRenewalReminder,
   sendTipResultToTelegram, notifyAdmin, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite, sendMemberMessage } from "./telegram";
-import { paymentsEnabled, isTerm, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, deletePayment, Payment, termLabel, tierName, addActiveMonths, SUMMER_PAUSE } from "./payments";
+import { paymentsEnabled, isTerm, isSellableTerm, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, deletePayment, Payment, termLabel, tierName, addActiveMonths, SUMMER_PAUSE } from "./payments";
 import { payBySquareString } from "./payBySquare";
 import QRCode from "qrcode";
 import { sendAdminEmail } from "./mailer";
@@ -287,34 +287,29 @@ async function termSeats(): Promise<TermSeats> {
 async function freeSeatsLine(): Promise<string | undefined> {
   try {
     const t = await termSeats();
-    const s = t.season;
+    const s = t.m3;
+    // Od 24. 10. 2026 je Platinum (3 mesiace) bez obmedzenia miest – riadok sa zobrazí, len ak by sa obmedzenie zaplo.
     if (s.total == null || s.left == null) return undefined;
     return s.left > 0
-      ? `🔥 Platinum na 6 mesiacov: voľných <b>${s.left} z ${s.total}</b> miest`
-      : `🔥 Platinum na 6 mesiacov: všetkých ${s.total} miest je obsadených`;
+      ? `🔥 Platinum na 3 mesiace: voľných <b>${s.left} z ${s.total}</b> miest`
+      : `🔥 Platinum na 3 mesiace: všetkých ${s.total} miest je obsadených`;
   } catch {
     return undefined;
   }
 }
 const BOT_USERNAME = process.env.TELEGRAM_BOT_USERNAME || "TipRadarAiBot";
 
-// tipradar.eu/zaplatit?term=m1|m3|season (&c=Telegram ID z bota) → založí platbu a presmeruje na stránku s QR kódom.
+// tipradar.eu/zaplatit?term=m1|m3 (&c=Telegram ID z bota; starý odkaz term=season vedie na 3 mesiace) → založí platbu a presmeruje na stránku s QR kódom.
 app.get("/zaplatit", async (req, res) => {
-  const term = String(req.query.term ?? "");
+  const rawTerm = String(req.query.term ?? "");
+  const term = rawTerm === "season" ? "m3" : rawTerm;
   const c = String(req.query.c ?? "");
-  if (!paymentsEnabled() || !isTerm(term)) {
+  if (!paymentsEnabled() || !isSellableTerm(term)) {
     res.redirect(302, "/clenstvo");
     return;
   }
   try {
-    if (term === "season") {
-      const { taken, total } = await seasonSeats();
-      if (taken >= total) {
-        res.redirect(302, `https://t.me/${BOT_USERNAME}?start=sampion_waitlist`);
-        return;
-      }
-    }
-    if (term === "m3" || term === "m1") {
+    {
       const { taken, total } = await shortSeats(term);
       if (total != null && taken >= total) {
         res.redirect(302, `https://t.me/${BOT_USERNAME}?start=${term === "m3" ? "seria" : "start"}_waitlist`);
@@ -413,7 +408,7 @@ ${row("Správa", bankNote(p.term), bankNote(p.term))}
 <p>Po zaplatení kliknite nižšie. Otvorí sa Telegram a hneď ako platba príde na účet, pošlem vám tam osobnú pozvánku do kanála.</p>
 <a class="btn" href="${esc(tg)}">Zaplatil som · pokračovať v Telegrame</a>
 <p class="small" style="margin-top:14px">Okamžitá platba príde do pár minút, bežný prevod zvyčajne do jedného pracovného dňa. Členstvo sa samo nepredlžuje.</p>
-<p class="gar"><b>Garancia</b>Ak vaše členstvo (Silver, Gold alebo Platinum) skončí v strate, ďalší mesiac máte zadarmo.</p>
+<p class="gar"><b>Garancia</b>Ak vaše členstvo (Gold alebo Platinum) skončí v strate, ďalší mesiac máte zadarmo.</p>
 <a class="back" href="/clenstvo">Späť na členstvo</a>
 </div>
 <script>document.querySelectorAll(".cp").forEach(function(b){b.addEventListener("click",function(){var t=b.getAttribute("data-copy");var done=function(){b.textContent="Skopírované";b.classList.add("ok");setTimeout(function(){b.textContent="Kopírovať";b.classList.remove("ok")},1800)};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,function(){prompt("Skopírujte:",t)})}else{prompt("Skopírujte:",t)}})});</script>
@@ -2569,7 +2564,7 @@ app.delete("/api/subscribers/:id", async (req, res) => {
   }
 });
 
-// ---- Garancia: ak obdobie členstva (Silver 1, Gold 3, Platinum 6 mesiacov) skončí v strate, člen dostane 1 mesiac zadarmo ----
+// ---- Garancia: ak obdobie členstva (Gold 1, Platinum 3 mesiace; staršie 6 mesiacov) skončí v strate, člen dostane 1 mesiac zadarmo ----
 
 function fmtDaySk(day: string): string {
   return `${Number(day.slice(8, 10))}. ${Number(day.slice(5, 7))}. ${day.slice(0, 4)}`;

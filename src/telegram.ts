@@ -1,4 +1,3 @@
-import { SEATS_SEASON } from "./seatLimits";
 import { recordLead, listLeads, updateLead, Lead } from "./leadsStore";
 import { addSubscriber, listSubscribers, updateSubscriber } from "./subscribersStore";
 import { paymentsEnabled, savePayment, getPayment, confirmBankPayment, cancelPayment, paidUntil, PAY_TERMS, PUBLIC_URL, Payment, Term, tierName, termLabel, isTerm } from "./payments";
@@ -23,7 +22,7 @@ function plural(n: number, one: string, few: string, many: string): string {
 }
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-// Súkromný (členský) kanál TipRadar pre všetkých členov – Silver, Gold aj Platinum
+// Súkromný (členský) kanál TipRadar pre všetkých členov – Gold aj Platinum
 // (starší názov premennej TELEGRAM_CHAT_ID_PREMIUM stále funguje).
 const TELEGRAM_CHAT_ID_PREMIUM = process.env.TELEGRAM_CHAT_ID_PLATINUM || process.env.TELEGRAM_CHAT_ID_PREMIUM;
 const TELEGRAM_CHAT_ID_VIP = process.env.TELEGRAM_CHAT_ID_VIP;
@@ -385,23 +384,23 @@ export async function deleteTelegramMessages(messages: { chatId: string; message
 
 const TELEGRAM_CONTACT_USERNAME = process.env.TELEGRAM_CONTACT_USERNAME || "im_mishko";
 
-// ---- Členstvo TipRadar: Silver (1 mesiac), Gold (3 mesiace), Platinum (6 mesiacov) – rovnaké texty ako na tipradar.eu ----
+// ---- Členstvo TipRadar: Gold (1 mesiac), Platinum (3 mesiace) – rovnaké texty ako na tipradar.eu ----
+// 24. 10. 2026 (Michalovo rozhodnutie): 6 mesiacov zrušené, jeho výhody má Platinum na 3 mesiace.
 const BENEFITS_BASE =
   `• <b>Denné tipy na Telegrame</b> v súkromnom kanáli, 1 – 2 hodiny pred výkopom\n` +
   `• <b>Pri každom tipe</b> kurz, šanca podľa modelu, dôvod a odporúčaná sadzba\n` +
   `• <b>Večerné vyhodnotenie</b> a týždenný prehľad úspešnosti, zisku a ROI`;
 const BENEFIT_CHAT = `• <b>💬 Súkromný VIP chat</b> – na vaše otázky odpisujem priamo ja`;
-const BENEFIT_MENTOR = `• <b>🤝 Mentoring 1 na 1 počas celých 6 mesiacov</b> – osobné stretnutia alebo videohovory priamo so mnou`;
+const BENEFIT_MENTOR = `• <b>🤝 Mentoring 1 na 1 počas celých 3 mesiacov</b> – osobné stretnutia alebo videohovory priamo so mnou`;
 /** Garancia: ak obdobie členstva skončí v strate, člen dostane 1 mesiac zadarmo. */
-const GUARANTEE_LINE = `🛡 <b>Garancia:</b> ak vaše členstvo (Silver, Gold alebo Platinum) skončí v strate, ďalší mesiac máte zadarmo.`;
-const PLAN_START = `🥈 <b>Silver · 1 mesiac</b> – 49 €\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
-const PLAN_SERIA = `🥇 <b>Gold · 3 mesiace</b> – 119 € (namiesto 147 €, ušetríte 28 €)\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
-const PLAN_SAMPION = `💎 <b>Platinum · 6 mesiacov</b> – 219 € (namiesto 294 €, ušetríte 75 €) · <b>len ${SEATS_SEASON} miest</b>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_MENTOR}`;
+const GUARANTEE_LINE = `🛡 <b>Garancia:</b> ak vaše členstvo (Gold alebo Platinum) skončí v strate, ďalší mesiac máte zadarmo.`;
+const PLAN_START = `🥇 <b>Gold · 1 mesiac</b> – 49 €\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
+const PLAN_SERIA = `💎 <b>Platinum · 3 mesiace</b> – 119 € (namiesto 147 €, ušetríte 28 €)\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_MENTOR}`;
 
 const FAQ_ANSWERS: Record<string, string> = {
   faq_price:
-    `💰 <b>Členstvo TipRadar</b>\n\nTri dĺžky členstva: Silver, Gold a Platinum. Všetci členovia dostávajú rovnaké tipy aj súkromný VIP chat.\n\n` +
-    `${PLAN_START}\n\n${PLAN_SERIA}\n\n${PLAN_SAMPION}\n\n${GUARANTEE_LINE}\n\n` +
+    `💰 <b>Členstvo TipRadar</b>\n\nDve dĺžky členstva: Gold na 1 mesiac a Platinum na 3 mesiace. Všetci členovia dostávajú rovnaké tipy aj súkromný VIP chat, Platinum navyše mentoring 1 na 1.\n\n` +
+    `${PLAN_START}\n\n${PLAN_SERIA}\n\n${GUARANTEE_LINE}\n\n` +
     `Členstvo sa samo nepredlžuje, žiadna viazanosť. Cez letnú prestávku (jún – júl) sa pozastaví a o tento čas sa vám predĺži.` +
     (process.env.SALES_OPEN === "true" ? "" : `\n\n🗓 <b>Predaj členstiev spúšťame čoskoro.</b> Napíšte sem „Mám záujem“ a ozveme sa vám ako prvým.`),
   faq_how:
@@ -438,7 +437,7 @@ async function callTelegramApi(method: string, body: Record<string, unknown>): P
 /** Spracuje jednu prichádzajúcu udalosť z Telegram webhooku (nová správa alebo stlačenie tlačidla). */
 // ---- Záujemcovia o členstvo z tipradar.eu ----
 const NEXT_STEP =
-  `<b>Ako pokračovať:</b> napíšte sem krátku správu (napríklad „Mám záujem o Gold na 3 mesiace“). Pošleme vám platobné údaje a po platbe vás pridáme do súkromného kanála TipRadar.\n\n` +
+  `<b>Ako pokračovať:</b> napíšte sem krátku správu (napríklad „Mám záujem o Platinum na 3 mesiace“). Pošleme vám platobné údaje a po platbe vás pridáme do súkromného kanála TipRadar.\n\n` +
   `Ozveme sa vám zvyčajne do 24 hodín. Bez viazanosti, členstvo sa samo nepredlžuje.`;
 const PAY_STEP =
   `Zaplatíte bankovým prevodom cez QR kód v appke vašej banky, bez poplatkov. Hneď ako platba príde na účet, pošlem vám sem pozvánku do súkromného kanála TipRadar.\n\n` +
@@ -446,32 +445,30 @@ const PAY_STEP =
 const JOIN_MESSAGES: Record<string, string> = {
   start: `✨ <b>Členstvo TipRadar</b>\n\n${PLAN_START}\n\n${GUARANTEE_LINE}\n\n${NEXT_STEP}`,
   seria: `✨ <b>Členstvo TipRadar</b>\n\n${PLAN_SERIA}\n\n${GUARANTEE_LINE}\n\n${NEXT_STEP}`,
-  sampion: `✨ <b>Členstvo TipRadar</b>\n\n${PLAN_SAMPION}\n\n${GUARANTEE_LINE}\n\n${NEXT_STEP}`,
-  clenstvo: `✨ <b>Členstvo TipRadar</b>\n\n${PLAN_START}\n\n${PLAN_SERIA}\n\n${PLAN_SAMPION}\n\n${GUARANTEE_LINE}\n\n${NEXT_STEP}`,
-  sampion_waitlist:
-    `💎 <b>Platinum na 6 mesiacov – poradovník</b>\n\nVšetkých ${SEATS_SEASON} miest je momentálne obsadených. Váš záujem sme si zapísali – keď sa miesto uvoľní, ozveme sa vám ako prvým.\n\n` +
-    `Dovtedy môžete začať s členstvom <b>Silver na 1 mesiac</b> (49 €) alebo <b>Gold na 3 mesiace</b> (119 €) – stačí sem napísať, ktoré chcete.`,
+  clenstvo: `✨ <b>Členstvo TipRadar</b>\n\n${PLAN_START}\n\n${PLAN_SERIA}\n\n${GUARANTEE_LINE}\n\n${NEXT_STEP}`,
 };
 // Staré odkazy (t.me/TipRadarAiBot?start=premium / vip) ešte môžu kolovať – ukážu celé členstvo.
 JOIN_MESSAGES.premium = JOIN_MESSAGES.clenstvo;
-JOIN_MESSAGES.vip = JOIN_MESSAGES.sampion;
-JOIN_MESSAGES.vip_waitlist = JOIN_MESSAGES.sampion_waitlist;
+// 6 mesiacov (sampion, vip) zrušené 24. 10. 2026 – staré odkazy ukážu Platinum na 3 mesiace.
+JOIN_MESSAGES.sampion = JOIN_MESSAGES.seria;
+JOIN_MESSAGES.vip = JOIN_MESSAGES.seria;
 JOIN_MESSAGES.seria_waitlist =
-  `🥇 <b>Gold na 3 mesiace – poradovník</b>\n\nMomentálne nie je voľné miesto. Váš záujem sme si zapísali – keď sa miesto uvoľní, ozveme sa vám ako prvým.\n\n` +
-  `Dovtedy môžete začať s členstvom <b>Silver na 1 mesiac</b> (49 €) – stačí sem napísať.`;
+  `💎 <b>Platinum na 3 mesiace – poradovník</b>\n\nMomentálne nie je voľné miesto. Váš záujem sme si zapísali – keď sa miesto uvoľní, ozveme sa vám ako prvým.\n\n` +
+  `Dovtedy môžete začať s členstvom <b>Gold na 1 mesiac</b> (49 €) – stačí sem napísať.`;
+JOIN_MESSAGES.sampion_waitlist = JOIN_MESSAGES.seria_waitlist;
+JOIN_MESSAGES.vip_waitlist = JOIN_MESSAGES.seria_waitlist;
 JOIN_MESSAGES.start_waitlist =
-  `🥈 <b>Silver na 1 mesiac – poradovník</b>\n\nMomentálne nie je voľné miesto. Váš záujem sme si zapísali – keď sa miesto uvoľní, ozveme sa vám ako prvým.`;
+  `🥇 <b>Gold na 1 mesiac – poradovník</b>\n\nMomentálne nie je voľné miesto. Váš záujem sme si zapísali – keď sa miesto uvoľní, ozveme sa vám ako prvým.`;
 /** Tlačidlá na zaplatenie (vedú na tipradar.eu/zaplatit → stránka s QR kódom). */
 function payKeyboard(chatId: number | string, only?: Term) {
   const row = (t: Term, label: string) => [{ text: label, url: `${PUBLIC_URL}/zaplatit?term=${t}&c=${chatId}` }];
   const all: [Term, string][] = [
-    ["m1", "Silver · 1 mesiac · 49 €"],
-    ["m3", "Gold · 3 mesiace · 119 €"],
-    ["season", "◆ Platinum · 6 mesiacov · 219 €"],
+    ["m1", "Gold · 1 mesiac · 49 €"],
+    ["m3", "◆ Platinum · 3 mesiace · 119 €"],
   ];
   return { inline_keyboard: all.filter(([t]) => !only || t === only).map(([t, l]) => row(t, only ? `Zaplatiť ${PAY_TERMS[t].price} €` : l)) };
 }
-const PLAN_TERM: Record<string, Term> = { start: "m1", seria: "m3", sampion: "season", vip: "season" };
+const PLAN_TERM: Record<string, Term> = { start: "m1", seria: "m3", sampion: "m3", vip: "m3" };
 /** Predaj členstiev je spustený (premenná SALES_OPEN=true na Renderi). Dovtedy len poradovník. */
 function salesOpen(): boolean {
   return process.env.SALES_OPEN === "true";
@@ -481,8 +478,8 @@ function PRELAUNCH_MESSAGE(plan: string): string {
   const benefits =
     plan === "start" ? PLAN_START
       : plan === "seria" ? PLAN_SERIA
-        : plan === "sampion" || plan === "vip" ? PLAN_SAMPION
-          : `${PLAN_START}\n\n${PLAN_SERIA}\n\n${PLAN_SAMPION}`;
+        : plan === "sampion" || plan === "vip" ? PLAN_SERIA
+          : `${PLAN_START}\n\n${PLAN_SERIA}`;
   return (
     `✨ <b>Ďakujeme za záujem o TipRadar!</b>\n\n${benefits}\n\n${GUARANTEE_LINE}\n\n` +
     `🗓 <b>Predaj členstiev spúšťame čoskoro.</b> Váš záujem sme si zapísali – keď začneme, ozveme sa vám <b>ako prvým</b>.\n\n` +
@@ -491,15 +488,15 @@ function PRELAUNCH_MESSAGE(plan: string): string {
 }
 
 const LEAD_LABEL: Record<string, string> = {
-  start: "Silver 1 mesiac",
-  seria: "Gold 3 mesiace",
-  sampion: "Platinum 6 mesiacov",
-  sampion_waitlist: "Platinum 6 mesiacov – náhradník",
-  seria_waitlist: "Gold 3 mesiace – náhradník",
-  start_waitlist: "Silver 1 mesiac – náhradník",
+  start: "Gold 1 mesiac",
+  seria: "Platinum 3 mesiace",
+  sampion: "Platinum 3 mesiace (starý odkaz na 6 mesiacov)",
+  sampion_waitlist: "Platinum 3 mesiace – náhradník (starý odkaz)",
+  seria_waitlist: "Platinum 3 mesiace – náhradník",
+  start_waitlist: "Gold 1 mesiac – náhradník",
   premium: "členstvo (starý odkaz Premium)",
-  vip: "Platinum 6 mesiacov (starý odkaz VIP)",
-  vip_waitlist: "Platinum 6 mesiacov – náhradník",
+  vip: "Platinum 3 mesiace (starý odkaz VIP)",
+  vip_waitlist: "Platinum 3 mesiace – náhradník (starý odkaz VIP)",
   clenstvo: "členstvo (zatiaľ nevybral)",
   otazka: "všeobecná otázka",
 };
@@ -1024,7 +1021,7 @@ export async function sendSalesOpenToWaitlist(): Promise<{ sent: number; skipped
       `Zapísal si sa do poradovníka na <b>členstvo TipRadar</b>. Predaj je práve otvorený a ty máš prednosť.\n\n` +
       `◆ denné tipy 1 – 2 hodiny pred výkopom\n◆ pri každom tipe kurz, šanca a sadzba\n◆ večerné vyhodnotenie\n◆ súkromný VIP chat\n\n` +
       `${GUARANTEE_LINE}\n\n` +
-      `Silver (1 mesiac) a Gold (3 mesiace) sú bez obmedzenia miest, na Platinum (6 mesiacov) je len <b>${SEATS_SEASON}</b> miest. Vyber si 👇`;
+      `Gold (1 mesiac) aj Platinum (3 mesiace, navyše mentoring 1 na 1) sú bez obmedzenia miest. Vyber si 👇`;
     try {
       await axios.post(
         `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,

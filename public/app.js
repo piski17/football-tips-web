@@ -403,7 +403,7 @@ function goTo(id) {
   else location.hash = id;
 }
 
-// ---- Miesta podľa dĺžky členstva: Silver, Gold, Platinum (rovnaké čísla ako na tipradar.eu) ----
+// ---- Miesta podľa dĺžky členstva: Gold, Platinum (rovnaké čísla ako na tipradar.eu) ----
 function seatsHtml(t) {
   const row = (key, label) => {
     const r = t && t[key];
@@ -413,12 +413,10 @@ function seatsHtml(t) {
       val = r.total == null ? `${r.occupied} čl.` : `${r.occupied} / ${r.total}`;
       full = r.total != null && r.left <= 0;
       if (r.total) bar = `<div class="bar"><i style="width:${Math.min(100, Math.round((r.occupied / r.total) * 100))}%"></i></div>`;
-    } else if (key === "season") {
-      bar = `<div class="bar"><i style="width:0"></i></div>`;
     }
     return `<div class="r${full ? " full" : ""}">${label}<b>${val}</b></div>${bar}`;
   };
-  return `<small>Členstvo</small>${row("m1", "Silver · 1 m.")}${row("m3", "Gold · 3 m.")}${row("season", "Platinum · 6 m.")}`;
+  return `<small>Členstvo</small>${row("m1", "Gold · 1 m.")}${row("m3", "Platinum · 3 m.")}`;
 }
 function renderSeats(terms) {
   document.getElementById("seatBox").innerHTML = seatsHtml(terms);
@@ -2764,10 +2762,10 @@ async function renderBlendSummary() {
 // ČLENOVIA (platba beží mimo appky, napr. bankovým prevodom)
 // =====================================================================
 // Ceny musia sedieť s PRICES na tipradar.eu (landing/index.html).
-// Členstvo podľa dĺžky: Silver = 1 mesiac, Gold = 3 mesiace (bez obmedzenia miest), Platinum = 6 mesiacov (30 miest).
-// 6 mesiacov má kvôli uloženým dátam kód "season" a ukladá sa ako tier "group" – počíta sa do miest.
+// Členstvo podľa dĺžky: Gold = 1 mesiac, Platinum = 3 mesiace (obe bez obmedzenia miest).
+// 6 mesiacov (kód "season", tier "group") sa od 24. 10. 2026 nepredáva, ostáva len pre staršie záznamy.
 const MEMBER_PRICES = { m1: 49, m3: 119, season: 219 };
-const MEMBER_NAME = { m1: "Silver", m3: "Gold", season: "Platinum" };
+const MEMBER_NAME = { m1: "Gold", m3: "Platinum", season: "Platinum (6 m.)" };
 const MEMBER_LENGTH_LABEL = { m1: "1 mesiac", m3: "3 mesiace", season: "6 mesiacov" };
 const MEMBER_MONTHS = { m1: 1, m3: 3, season: 6 };
 // Letná prestávka: jún a júl sa do členstva nepočítajú (rovnako ako src/payments.ts).
@@ -2826,7 +2824,7 @@ function subscriberStatus(sub) {
   return { label: "Aktívny", cls: "w" };
 }
 
-// ---- Garancia: ak obdobie členstva (Silver 1, Gold 3, Platinum 6 mesiacov) skončí v strate, člen dostane mesiac zadarmo ----
+// ---- Garancia: ak obdobie členstva (Gold 1, Platinum 3 mesiace) skončí v strate, člen dostane mesiac zadarmo ----
 let lastGuarantee = [];
 const fmtDay = (iso) => new Date(iso).toLocaleDateString("sk-SK");
 async function loadGuarantee() {
@@ -2904,14 +2902,12 @@ async function openSubscribers() {
 function renderSubscribersList(subs) {
   lastSubs = subs;
   const active = subs.filter((s) => daysUntil(s.nextPaymentDue) >= 0);
-  const vip = active.filter((s) => s.tier === "group").length;
   const income = active.reduce((sum, s) => sum + (Number(s.priceEur) || 0), 0);
   const ending = active.filter((s) => daysUntil(s.nextPaymentDue) <= 7).length;
-  const vipPct = Math.min(100, Math.round((vip / 30) * 100));
   document.getElementById("subscribersSummary").innerHTML = `
     <div class="kpi"><small>Aktívni</small><b>${active.length}</b></div>
-    <div class="kpi"><small>Silver a Gold</small><b>${active.length - vip}</b></div>
-    <div class="kpi"><small>Platinum</small><b>${vip}<span class="faint"> / 30</span></b><div class="bar"><i style="width:${vipPct}%"></i></div></div>
+    <div class="kpi"><small>Gold · 1 mesiac</small><b>${active.filter((s) => (s.length || "m1") === "m1" && s.tier !== "group").length}</b></div>
+    <div class="kpi"><small>Platinum · 3 mesiace</small><b>${active.filter((s) => s.length === "m3" || s.tier === "group").length}</b></div>
     <div class="kpi"><small>Zaplatené</small><b>${income}${NB}€</b><span>aktívni členovia</span></div>
     <div class="kpi${ending ? " warn" : ""}"><small>Končí do 7 dní</small><b>${ending}</b></div>`;
   document.querySelectorAll("#memberFilter [data-f]").forEach((b) => b.classList.toggle("on", b.dataset.f === memberFilter));
@@ -3145,7 +3141,7 @@ document.getElementById("salesOpenBtn").addEventListener("click", async (e) => {
   btn.disabled = false;
   renderLeads();
 });
-const LEAD_PLAN_LABEL = { start: "Silver 1 mesiac", seria: "Gold 3 mesiace", sampion: "Platinum 6 mesiacov", sampion_waitlist: "Platinum 6 mesiacov (náhradník)", seria_waitlist: "Gold 3 mesiace (náhradník)", start_waitlist: "Silver 1 mesiac (náhradník)", premium: "starý odkaz Premium", vip: "Platinum 6 mesiacov (starý odkaz VIP)", vip_waitlist: "Platinum 6 mesiacov (náhradník)", clenstvo: "nevybral", otazka: "otázka z webu" };
+const LEAD_PLAN_LABEL = { start: "Gold 1 mesiac", seria: "Platinum 3 mesiace", sampion: "Platinum 3 mesiace (starý odkaz)", sampion_waitlist: "Platinum 3 mesiace (náhradník)", seria_waitlist: "Platinum 3 mesiace (náhradník)", start_waitlist: "Gold 1 mesiac (náhradník)", premium: "starý odkaz Premium", vip: "Platinum 3 mesiace (starý odkaz VIP)", vip_waitlist: "Platinum 3 mesiace (náhradník)", clenstvo: "nevybral", otazka: "otázka z webu" };
 async function renderLeads() {
   const el = document.getElementById("leadsList");
   try {
@@ -3176,7 +3172,7 @@ async function renderLeads() {
         document.getElementById("subName").value = l.name || "";
         document.getElementById("subContact").value = l.email || (l.username ? "@" + l.username : "");
         document.getElementById("subTelegramChatId").value = l.email ? "" : l.chatId;
-        subLengthSelect.value = ["sampion", "sampion_waitlist", "vip", "vip_waitlist"].includes(l.plan) ? "season" : l.plan === "seria" || l.plan === "seria_waitlist" ? "m3" : "m1";
+        subLengthSelect.value = ["sampion", "sampion_waitlist", "vip", "vip_waitlist", "seria", "seria_waitlist"].includes(l.plan) ? "m3" : "m1";
         syncMemberPrice();
         document.getElementById("subName").scrollIntoView({ behavior: "smooth", block: "center" });
         showToast("Údaje sú vyplnené – skontroluj ich a klikni na „Pridať člena“.");
