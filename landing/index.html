@@ -501,6 +501,15 @@
   #kalkulacka .calc .rows b { display: block; font: 800 24px/1.1 var(--sans); }
   #kalkulacka .calc .rows span { font-size: 12.5px; color: var(--faint); }
   #kalkulacka .calc .note { margin-top: 12px; font-size: 12.5px; }
+  #kalkulacka .calc .mem { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
+  #kalkulacka .calc .mem[hidden] { display: none; }
+  #kalkulacka .calc .mem small { font: 700 12px/1.4 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+  #kalkulacka .calc .mem-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--line); }
+  #kalkulacka .calc .mem-row:last-child { border-bottom: 0; }
+  #kalkulacka .calc .mem-row span { font-size: 14px; color: var(--text); }
+  #kalkulacka .calc .mem-row span i { display: block; font-style: normal; font-size: 12px; color: var(--faint); }
+  #kalkulacka .calc .mem-row b { font: 800 20px/1 var(--display); color: var(--win); white-space: nowrap; }
+  #kalkulacka .calc .mem-row b.neg { color: var(--loss); }
   @media (max-width: 760px) { #kalkulacka .calc { grid-template-columns: 1fr; } #kalkulacka .calc > div { padding: 24px 18px; } #kalkulacka .calc > div + div { border-left: 0; border-top: 1px solid var(--line); } }
 
   /* ---------- členstvo ---------- */
@@ -2070,7 +2079,7 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
         <ol class="funnel">
           <li class="card"><div class="c num">120</div><div><h3>zápasov v bežný deň</h3><p>Pri každom zápase model zoberie góly, rohy, karty, strely, fauly a držanie lopty z posledných stretnutí oboch tímov, vlastné aj tie, ktoré tím dovolí súperovi. Keď je dát málo, pomôžu tri minulé sezóny.</p></div></li>
           <li class="card"><div class="c num">1 200</div><div><h3>vypočítaných trhov</h3><p>Model počíta osem trhov: góly v zápase aj góly každého tímu, rohy v zápase aj rohy každého tímu, karty, strely na bránu, fauly a držanie lopty. Pri kartách a strelách počíta s väčším rozptylom, lebo kolíšu viac.</p></div></li>
-          <li class="card"><div class="c num">140</div><div><h3>s dôverou 65 – 80&nbsp;%</h3><p>Veľmi isté tipy mávajú nízky kurz a veľmi neisté často nevychádzajú. Ďalej idú len tipy v tomto pásme.</p></div></li>
+          <li class="card"><div class="c num">140</div><div><h3>s dôverou 68 – 80&nbsp;%</h3><p>Veľmi isté tipy mávajú nízky kurz a veľmi neisté často nevychádzajú. Ďalej idú len tipy v tomto pásme.</p></div></li>
           <li class="card"><div class="c num">15</div><div><h3>s hodnotou a kurzom</h3><p>Model vyskúša všetky hranice, ktoré stávkové kancelárie ponúkajú (napríklad rohy 8,5 / 9,5 / 10,5) a vyberie tú s najväčšou hodnotou. Tip musí mať hodnotu aspoň +5&nbsp;% a kurz aspoň <span class="minOdds">1,55</span>.</p></div></li>
           <li class="card"><div class="c num">7</div><div><h3>bez veľkého rozporu s trhom</h3><p>Keď model vidí šancu o 20 – 30 bodov inak ako stávkové kancelárie, tip vyradíme. Taký rozdiel často znamená niečo, čo štatistika nevidí, napríklad zranenie. Vyradené tipy si zapisujeme a raz za mesiac kontrolujeme, kto mal pravdu.</p></div></li>
           <li class="card"><div class="c num">2 – 3</div><div><h3>tipy pre členov</h3><p>Najviac jeden tip zo zápasu, 1 – 2 hodiny pred výkopom. Večer ich vyhodnotíme podľa skutočného výsledku.</p></div></li>
@@ -2180,6 +2189,7 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
             <div class="big num" id="calcEnd">–</div>
             <svg viewBox="0 0 400 120" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="calcGrad" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#D9C08A" stop-opacity=".35"/><stop offset="1" stop-color="#D9C08A" stop-opacity="0"/></linearGradient></defs><path id="calcArea" fill="url(#calcGrad)"/><path id="calcLine" fill="none" stroke="#F3E6C4" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>
             <div class="rows"><div><b class="num" id="calcN">–</b><span>tipov</span></div><div><b class="num" id="calcW">–</b><span>vyšlo</span></div><div><b class="num" id="calcP">–</b><span>zisk</span></div></div>
+            <div class="mem" id="calcMem" hidden><small id="calcMemHead">Po zaplatení členstva</small><div id="calcMemRows"></div></div>
             <p class="note">Počíta sa zo všetkých skutočných vyhodnotených tipov vrátane prehier. Minulé výsledky nie sú zárukou budúcich.</p>
           </div>
         </div>
@@ -2503,8 +2513,8 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
     $("vVal").textContent = `${value > 0 ? "+" : value < 0 ? "−" : ""}${Math.abs(value)} %`;
     $("vVal").className = "v num " + cls(value);
     $("vMath").textContent = `${fmt(p / 100, 2)} × ${fmt(o, 2)} = ${fmt(ret, 2)}`;
-    const band = p >= 65 && p <= 80, val = value >= 5, odd = o >= MIN_ODDS - 1e-9;
-    $("vChecks").innerHTML = `<li class="${band ? "ok" : "no"}">šanca v pásme 65 – 80 %</li><li class="${val ? "ok" : "no"}">hodnota aspoň +5 %</li><li class="${odd ? "ok" : "no"}">kurz aspoň ${fmt(MIN_ODDS, 2)}</li>`;
+    const band = p >= 68 && p <= 80, val = value >= 5, odd = o >= MIN_ODDS - 1e-9;
+    $("vChecks").innerHTML = `<li class="${band ? "ok" : "no"}">šanca v pásme 68 – 80 %</li><li class="${val ? "ok" : "no"}">hodnota aspoň +5 %</li><li class="${odd ? "ok" : "no"}">kurz aspoň ${fmt(MIN_ODDS, 2)}</li>`;
     $("vOut").innerHTML = band && val && odd ? `<span class="pos">Taký tip by sme poslali.</span>` : `<span class="neg">Taký tip by sme neposlali.</span>`;
   }
   $("pRange").addEventListener("input", drawValue); $("oRange").addEventListener("input", drawValue);
@@ -2965,7 +2975,7 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
   ];
   const judge = (sc) => {
     const ev = Math.round((sc.p / 100 * sc.odds - 1) * 100);
-    if (sc.p < 65 || sc.p > 80) return { ok: false, t: "Tip nepošleme", w: "Dôvera modelu je mimo pásma 65–80\u00a0%.", v: "—" };
+    if (sc.p < 68 || sc.p > 80) return { ok: false, t: "Tip nepošleme", w: "Dôvera modelu je mimo pásma 68–80\u00a0%.", v: "—" };
     if (sc.odds < 1.55 || ev < 5) return { ok: false, t: "Tip nepošleme", w: "Kurz je príliš nízky, hodnota tu nie je.", v: (ev > 0 ? "+" : "\u2212") + Math.abs(ev) + "\u00a0%" };
     return { ok: true, t: "Tip odošleme", w: "Model vidí vyššiu šancu, než naznačuje kurz.", v: "+" + ev + "\u00a0%" };
   };
@@ -3162,6 +3172,19 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
       document.getElementById("calcN").textContent = data.length;
       document.getElementById("calcW").textContent = won;
       document.getElementById("calcP").textContent = (diff >= 0 ? "+" : "−") + eur(Math.abs(diff));
+      // zisk po zaplatení členstva: mesačná cena (Gold a Platinum prepočítané na mesiac) × každý začatý mesiac od prvého tipu
+      var d0 = new Date((data[0].day || "") + "T00:00:00"), mem = document.getElementById("calcMem");
+      if (!isNaN(d0)) {
+        var months = Math.max(1, Math.ceil((Date.now() - d0) / 864e5 / 30.44));
+        var plans = [["Silver", 49, 1], ["Gold", 119, 3], ["Platinum", 219, 6]];
+        document.getElementById("calcMemHead").textContent = "Po zaplatení členstva za " + months + " " + (months === 1 ? "mesiac" : months < 5 ? "mesiace" : "mesiacov");
+        document.getElementById("calcMemRows").innerHTML = plans.map(function (p) {
+          var pm = p[1] / p[2], cost = pm * months, net = diff - cost;
+          var pmTxt = pm.toLocaleString("sk-SK", { minimumFractionDigits: pm % 1 ? 2 : 0, maximumFractionDigits: 2 }) + " €";
+          return '<div class="mem-row"><span>' + p[0] + '<i>' + pmTxt + " mesačne" + (months > 1 ? " × " + months : "") + '</i></span><b class="num' + (net < 0 ? " neg" : "") + '">' + (net >= 0 ? "+" : "−") + eur(Math.abs(net)) + '</b></div>';
+        }).join("");
+        mem.hidden = false;
+      }
       var f = (data[0].day || "").split("-");
       if (f.length === 3) document.getElementById("calcFrom").textContent = "Keby ste s nami tipovali od " + Number(f[2]) + ". " + MES[Number(f[1]) - 1];
       var lo = Math.min.apply(null, pts), hi = Math.max.apply(null, pts), span = (hi - lo) || 1;

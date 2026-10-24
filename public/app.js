@@ -321,7 +321,7 @@ async function askRealOdds(bet) {
   if (raw == null) return null;
   const odd = parseFloat(String(raw).replace(",", "."));
   if (!(odd > 1)) { showToast("Neplatný kurz – tip sa neuložil."); return null; }
-  // Poistka: kurz nad 20 pri tipe s dôverou 65 – 80 % je takmer iste preklep (napr. hranica namiesto kurzu).
+  // Poistka: kurz nad 20 pri tipe s dôverou 68 – 80 % je takmer iste preklep (napr. hranica namiesto kurzu).
   if (odd > 20) { showToast(`${fmtOdds(odd)} nevyzerá ako kurz – tip sa neuložil. Zadaj kurz, napr. 1,85.`); return null; }
   if (odd < min) { showToast(`Kurz ${fmtOdds(odd)} je pod minimom ${fmtOdds(min)} – tip sa neuložil, radšej ho vynechaj.`); return null; }
   return Math.round(odd * 100) / 100;
@@ -837,7 +837,7 @@ function renderAnalysis(r, root, opts = {}) {
     ${r.sampleSizeWarning ? `<div class="warn-box">⚠️ ${escapeHtml(tr(r.sampleSizeWarning))}</div>` : ""}
     ${started ? `<div class="locked">⏱ ${MATCH_STARTED_TEXT}</div>` : ""}`;
 
-  // --- odporúčané tipy (server vracia pásmo 65 – 80 %, max. 1 na trh) ---
+  // --- odporúčané tipy (server vracia pásmo 68 – 80 %, max. 1 na trh) ---
   const tipsHtml = topBets.length
     ? `<div class="tips">${topBets
         .map(
@@ -855,7 +855,7 @@ function renderAnalysis(r, root, opts = {}) {
         </div>`
         )
         .join("")}</div>`
-    : `<div class="empty-card">Pri tomto zápase nie je žiadny tip v pásme 65 – 80${NB}%${(r.lowValueBets || []).length > 0 ? ", ktorý by prešiel kontrolou kurzu" : ""}.</div>${rejectedBetsHtml(r)}`;
+    : `<div class="empty-card">Pri tomto zápase nie je žiadny tip v pásme 68 – 80${NB}%${(r.lowValueBets || []).length > 0 ? ", ktorý by prešiel kontrolou kurzu" : ""}.</div>${rejectedBetsHtml(r)}`;
 
   // --- výsledok zápasu + forma ---
   const pr = r.probabilities || { homeWin: 0, draw: 0, awayWin: 0 };
@@ -899,7 +899,7 @@ function renderAnalysis(r, root, opts = {}) {
   root.innerHTML = `
     ${header}
     ${statusHtml}
-    <h3 class="sh">Odporúčané tipy <small>pásmo 65 – 80${NB}%, len s hodnotou</small></h3>
+    <h3 class="sh">Odporúčané tipy <small>pásmo 68 – 80${NB}%, len s hodnotou</small></h3>
     ${tipsHtml}
     ${r.cupNote ? `<p class="faint small" data-cup-note>${escapeHtml(r.cupNote)}</p>` : ""}
     <div class="save-msg" data-save-msg></div>
@@ -1096,7 +1096,7 @@ function lineMarketLabel(r, market) {
   return market;
 }
 
-/** Tipy v pásme 65 – 80 %, ktoré neprešli kontrolou – s dôvodom (aby bolo vidno, prečo je deň bez tipu). */
+/** Tipy v pásme 68 – 80 %, ktoré neprešli kontrolou – s dôvodom (aby bolo vidno, prečo je deň bez tipu). */
 function rejectedBetsHtml(r) {
   const list = (r.lowValueBets || []).filter((b) => b.rejectReason);
   if (!list.length) return "";
@@ -1192,7 +1192,7 @@ function wireLineCalc(r, root) {
 }
 
 /**
- * Spoločné vyhodnotenie kalkulačky: šanca 65 – 80 %, a ak je zadaný kurz, tak aspoň
+ * Spoločné vyhodnotenie kalkulačky: šanca 68 – 80 %, a ak je zadaný kurz, tak aspoň
  * MIN_ODDS (1,55) a výhodnosť (šanca × kurz) 1,05 – 1,25. Ak vyhovujú obe strany
  * a obe majú kurz, odporučí sa len tá výhodnejšia. rows: [{ label, selection, probability, odds }].
  */
@@ -1200,9 +1200,9 @@ function renderCalcRows(out, r, market, rows) {
   rows.forEach((x) => {
     if (x.odds != null) {
       x.ev = (x.probability / 100) * x.odds;
-      x.ok = x.probability >= 65 && x.probability <= 80 && x.odds >= MIN_ODDS && x.ev >= 1.05 && x.ev <= 1.25;
+      x.ok = x.probability >= 68 && x.probability <= 80 && x.odds >= MIN_ODDS && x.ev >= 1.05 && x.ev <= 1.25;
     } else {
-      x.ok = x.probability >= 65 && x.probability <= 80;
+      x.ok = x.probability >= 68 && x.probability <= 80;
     }
   });
   const good = rows.filter((x) => x.ok);
@@ -1211,7 +1211,7 @@ function renderCalcRows(out, r, market, rows) {
     rows.forEach((x) => { x.ok = x === best; });
   }
   const whyNot = (x) => {
-    if (x.probability < 65 || x.probability > 80) return `Mimo pásma 65 – 80${NB}% – neodporúčame.`;
+    if (x.probability < 68 || x.probability > 80) return `Mimo pásma 68 – 80${NB}% – neodporúčame.`;
     if (x.odds < MIN_ODDS) return `Kurz pod ${fmtOdds(MIN_ODDS)} – neodporúčame.`;
     if (x.ev < 1.05) return `Kurz je na túto šancu nízky (výhodnosť ${evPct(x.ev)}) – neodporúčame.`;
     if (x.ev > 1.25) return `Podozrivo vysoká výhodnosť (${evPct(x.ev)}), model sa asi mýli – neodporúčame.`;
@@ -1484,7 +1484,7 @@ function renderDayTipsView() {
     const n = currentFixtures.filter((f) => !matchHasStarted(f)).length;
     dayTipsPaneEl.innerHTML = `<div class="card intro-card">
       <h3 class="sh" style="margin-top:0">Všetky odporúčané tipy dňa naraz</h3>
-      <p class="muted">Appka prejde všetky zápasy vybraného dňa pred výkopom${fixturesLoading ? "" : ` (${plural(n, "zápas", "zápasy", "zápasov")})`} a ukáže všetky tipy, ktoré prešli pravidlami (65 – 80${NB}% a kontrola kurzu), zoradené od najvyššej dôvery.</p>
+      <p class="muted">Appka prejde všetky zápasy vybraného dňa pred výkopom${fixturesLoading ? "" : ` (${plural(n, "zápas", "zápasy", "zápasov")})`} a ukáže všetky tipy, ktoré prešli pravidlami (68 – 80${NB}% a kontrola kurzu), zoradené od najvyššej dôvery.</p>
       <button type="button" class="btn" data-dt-start>Spustiť analýzu</button>
     </div>`;
     dayTipsPaneEl.querySelector("[data-dt-start]").onclick = () => showDayTips();
@@ -1532,7 +1532,7 @@ function renderDayTipsView() {
         <label class="small">Telegram <select id="dtBulkTg"><option value="premium">◆ Členský kanál</option><option value="free">★ FREE kanál</option><option value="">Neposielať</option></select></label>
         <button type="button" class="btn" id="dtBulkSave" disabled>Uložiť všetky s kurzom</button>
       </div>
-    </div><div class="dtips">${rows}</div>` : `<div class="empty-card">V tento deň nie je žiadny tip, ktorý by prešiel pravidlami (65 – 80${NB}% a kontrola kurzu).</div>`}`;
+    </div><div class="dtips">${rows}</div>` : `<div class="empty-card">V tento deň nie je žiadny tip, ktorý by prešiel pravidlami (68 – 80${NB}% a kontrola kurzu).</div>`}`;
 
   dayTipsPaneEl.querySelectorAll("[data-open]").forEach((btn) => {
     btn.onclick = () => {
@@ -1849,12 +1849,12 @@ function renderBankrollSimulation(tips) {
 const CALIBRATION_FROM = 65;
 const CALIBRATION_TO = 82.5;
 const CALIBRATION_STEP = 2.5;
-/** Sledované tipy (21. 10. 2026): skúšobné pásmo 65 – 67 % a ďalšie tipy „len sledovať“. */
+/** Sledované tipy: tipy „len sledovať“ (skúšobné pásmo 65 – 67 % zrušené 24. 10. 2026). */
 function renderWatchReport(list) {
   const el = document.getElementById("watchResult");
   if (!el) return;
   if (!list.length) {
-    el.innerHTML = `<p class="faint small">Zatiaľ žiadne. Tipy s dôverou 65 – 67${NB}% sa po uložení automaticky zaradia sem.</p>`;
+    el.innerHTML = `<p class="faint small">Zatiaľ žiadne. Sem patria tipy označené „Len sledovať“.</p>`;
     return;
   }
   const resolved = list.filter((t) => t.status === "won" || t.status === "lost");
@@ -2274,7 +2274,7 @@ let manualLastDate = "";
 /** Pravidlá odporúčaného tipu pre ručne doplnený tip – vráti dôvod zamietnutia alebo "". */
 function manualTipProblem(p, odds) {
   if (!(p > 0) || !(odds > 1)) return "";
-  if (p < 65) return `dôvera ${fmtNum(p, 0)}${NB}% je pod 65${NB}%`;
+  if (p < 68) return `dôvera ${fmtNum(p, 0)}${NB}% je pod 68${NB}%`;
   if (p > 80) return `dôvera ${fmtNum(p, 0)}${NB}% je nad 80${NB}%`;
   const need = minOddsFor({ probability: p });
   if (odds < need) return `pri dôvere ${fmtNum(p, 0)}${NB}% treba kurz aspoň ${fmtOdds(need)}, zadaný je ${fmtOdds(odds)}`;
@@ -2677,7 +2677,7 @@ const SHADOW_REASON_LABEL = {
   ev_low: "nízka hodnota (pod +5 %)",
   min_odds: `kurz pod ${fmtNum(1.55, 2)}`,
   one_bookmaker: "kurz len od jednej stávkovky",
-  band_low: "dôvera pod pásmom (do 21. 10. a 22. 10. pod 68 %, inak pod 65 %)",
+  band_low: "dôvera pod pásmom (pod 68 %, 21. 10. a 23. – 24. 10. pod 65 %)",
   band_high: "dôvera nad 80 %",
   category_lower_ev: "iná hranica trhu mala vyššiu hodnotu",
   match_lower_ev: "iný tip zápasu mal vyššiu hodnotu",
@@ -3324,7 +3324,7 @@ function renderBacktest(job) {
   }
   const b = r.bandOverall || {};
   const summary = b.count
-    ? `<div class="bt-summary">Tipy v pásme 65 – 80${NB}% (tie, ktoré by appka odporučila): <strong>${b.count}</strong>, model v priemere <strong>${pct(b.avgPredicted)}</strong>, reálne vyšlo <strong class="${b.hitRate < b.avgPredicted - 5 ? "bt-bad" : "bt-good"}">${pct(b.hitRate)}</strong>.</div>`
+    ? `<div class="bt-summary">Tipy v pásme 68 – 80${NB}% (tie, ktoré by appka odporučila): <strong>${b.count}</strong>, model v priemere <strong>${pct(b.avgPredicted)}</strong>, reálne vyšlo <strong class="${b.hitRate < b.avgPredicted - 5 ? "bt-bad" : "bt-good"}">${pct(b.hitRate)}</strong>.</div>`
     : "";
   const buckets = (r.buckets || []).filter((x) => x.count > 0).map((x) =>
     `<tr><td>${escapeHtml(x.label)}</td><td class="num">${x.count}</td><td class="num">${pct(x.avgPredicted)}</td><td class="num">${pct(x.hitRate)}</td>${diffCell(x.avgPredicted, x.hitRate)}</tr>`).join("");
@@ -3408,7 +3408,7 @@ function renderBacktestComparison(r, old, newModel = false) {
   const ob = old.bandOverall, nb = r.bandOverall;
   return `
     <h4>${newModel ? "Nový model (xG, únava, doma / vonku) oproti súčasnému" : "Nový model oproti pôvodnému"} (tie isté zápasy)</h4>
-    <div class="bt-summary">Pásmo 65 – 80${NB}%: ${names[0]} model <strong>${ob.count}</strong> tipov, vyšlo <strong>${pct(ob.hitRate)}</strong> · ${names[1]} model <strong>${nb.count}</strong> tipov, vyšlo <strong>${pct(nb.hitRate)}</strong>.</div>
+    <div class="bt-summary">Pásmo 68 – 80${NB}%: ${names[0]} model <strong>${ob.count}</strong> tipov, vyšlo <strong>${pct(ob.hitRate)}</strong> · ${names[1]} model <strong>${nb.count}</strong> tipov, vyšlo <strong>${pct(nb.hitRate)}</strong>.</div>
     <div class="table-wrap"><table class="bt-table"><thead><tr><th>Trh</th><th class="num">Model → realita – ${names[0]}</th><th class="num">Model → realita – ${names[1]}</th><th class="num">Chyba – ${names[0]}</th><th class="num">Chyba – ${names[1]}</th><th class="num">V pásme – ${names[0]}</th><th class="num">V pásme – ${names[1]}</th></tr></thead><tbody>${rows}</tbody></table></div>
     <p class="muted small">Chyba = ako ďaleko boli percentá modelu od skutočnosti (Brierovo skóre × 100). <strong>Nižšia je lepšia.</strong> Zelená: ${names[1]} model je presnejší, červená: horší. ${newModel
       ? "Nový model (21. 10. 2026) = súčasný model + xG (kvalita šancí), únava a rotácia (dni voľna, zápasy za 14 dní) a rohy, karty, strely a fauly zvlášť doma a vonku. Spätný test je bez kurzov stávkoviek."
