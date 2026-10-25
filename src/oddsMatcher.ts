@@ -27,14 +27,14 @@ const BTTS_MARKETS = ["Oba tímy skórujú", "Obaja tímy skórujú"];
 export const MIN_EXPECTED_VALUE = 1.05;
 
 /**
- * Minimálny kurz odporúčaného tipu. Od 25. 10. 2026 (Michalovo rozhodnutie) ŽIADNY – predtým 1,55.
+ * Minimálny kurz odporúčaného tipu: 1,50 (25. 10. 2026, Michalovo rozhodnutie; predtým 1,55, ráno 25. 10. nakrátko žiadny).
  * Príliš nízky kurz aj tak vyradí kontrola hodnoty (+5 %): pri dôvere 80 % treba kurz aspoň 1,31,
  * pri 68 % aspoň 1,54.
  * Na webe sa dá zmeniť premennou MIN_ODDS v Renderi (napr. 1.70 alebo 1,70).
  */
 function parseMinOdds(raw: string | undefined): number {
   const n = Number(String(raw ?? "").trim().replace(",", "."));
-  return raw && Number.isFinite(n) && n >= 1.01 && n <= 10 ? n : 1.01;
+  return raw && Number.isFinite(n) && n >= 1.01 && n <= 10 ? n : 1.5;
 }
 export const MIN_ODDS = parseMinOdds(typeof process !== "undefined" ? process.env.MIN_ODDS : undefined);
 
@@ -64,7 +64,7 @@ export const MIN_GAMES_TO_RECOMMEND = 3;
 // (22. 10. 2026 nakrátko späť na 68 %, 23. 10. 2026 Michalovo rozhodnutie: opäť 65 – 80 %.)
 // 24. 10. 2026 ráno späť na 68 – 80 %; v ten deň opäť 65 – 80 % (65 – 67 % len sledovať).
 // 25. 10. 2026 (Michalovo rozhodnutie): tipy 65 – 67 % vyšli 1 z 5 – definitívne 68 – 80 %
-// a zároveň bez minimálneho kurzu (MIN_ODDS).
+// a minimálny kurz 1,50 (MIN_ODDS).
 export const MIN_PROBABILITY = 68;
 /**
  * Skúšobné pásmo (21. 10. 2026, Michalovo rozhodnutie): tipy s dôverou pod touto hranicou

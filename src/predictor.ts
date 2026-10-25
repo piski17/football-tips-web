@@ -31,7 +31,7 @@ import {
  * evidencie, aby sa výsledky dali porovnávať len v rámci jednej verzie. Pri každej
  * zmene modelu, kalibrácie alebo filtrov ju zmeň (napr. na dátum zmeny).
  */
-export const MODEL_VERSION = "2026-10-25"; // pásmo 68 – 80 %, bez minimálneho kurzu
+export const MODEL_VERSION = "2026-10-25b"; // pásmo 68 – 80 %, minimálny kurz 1,50
 /** Verzia, ktorá sa zapíše, keď tipy vyberá nový model (xG, únava, doma/vonku). */
 export const NEW_MODEL_VERSION = `${MODEL_VERSION}-novy`;
 

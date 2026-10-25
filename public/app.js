@@ -140,7 +140,7 @@ const MONTH_NAMES = ["Január", "Február", "Marec", "Apríl", "Máj", "Jún", "
 
 // ---- Pravidlá tipov ----
 const STRONG_TIP_MIN_PROBABILITY = 70; // STRONG_TIP_MIN_PROBABILITY v oddsMatcher.ts
-let MIN_ODDS = 1.01; // predvolené: bez minimálneho kurzu (od 25. 10. 2026, predtým 1,55); ak server pošle MIN_ODDS (/api/public/vip-seats), použije sa ten
+let MIN_ODDS = 1.5; // predvolené: 1,50 (od 25. 10. 2026, predtým 1,55); ak server pošle MIN_ODDS (/api/public/vip-seats), použije sa ten
 const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté konto"];
 const MATCH_STARTED_TEXT = "Zápas už začal – tip z neho sa nedá pridať.";
 const LIVE_STATUSES = ["1H", "HT", "2H", "ET", "BT", "P", "SUSP", "INT"];
@@ -1191,7 +1191,7 @@ function wireLineCalc(r, root) {
 
 /**
  * Spoločné vyhodnotenie kalkulačky: šanca 68 – 80 %, a ak je zadaný kurz, tak aspoň
- * MIN_ODDS (od 25. 10. 2026 žiadny) a výhodnosť (šanca × kurz) 1,05 – 1,25. Ak vyhovujú obe strany
+ * MIN_ODDS (od 25. 10. 2026 1,50) a výhodnosť (šanca × kurz) 1,05 – 1,25. Ak vyhovujú obe strany
  * a obe majú kurz, odporučí sa len tá výhodnejšia. rows: [{ label, selection, probability, odds }].
  */
 function renderCalcRows(out, r, market, rows) {
