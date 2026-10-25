@@ -1394,6 +1394,7 @@ let dayTipSaved = new Set();
 let dayTipsRun = { running: false, done: 0, total: 0, id: 0 };
 let dayTipsDetail = null; // otvorený zápas z Tipov dňa
 let dayTipsViewId = 0;
+let dayTipsCollapsed = new Set(); // zbalené skupiny v Tipoch dňa („klienti“, „sledovane“)
 let strongIdx = -1;
 
 function kickoffTime(fixture) {
@@ -1493,12 +1494,12 @@ function renderDayTipsView() {
     return;
   }
   const otherDate = dayTips.date !== (matchDateInput.value || localToday());
-  const rows = dayTips.items
-    .map(({ r, bet }, i) => {
+  const rowHtml = (i, n) => {
+      const { r, bet } = dayTips.items[i];
       const f = r.fixture;
       return `
       <div class="dtip${i === 0 ? " first" : ""}">
-        <div class="rank">${i + 1}.</div>
+        <div class="rank">${n}.</div>
         ${ring(bet.probability, 54)}
         <div class="dtip-body">
           <button type="button" class="dtip-match" data-open="${i}" title="Otvoriť detail zápasu">
@@ -1515,6 +1516,27 @@ function renderDayTipsView() {
           <button type="button" class="btn sm${i === 0 ? "" : " ghost"}" data-save="${i}"${dayTipSaved.has(i) ? " disabled" : ""}>${dayTipSaved.has(i) ? "✓ Uložené" : "Uložiť"}</button>
         </div>
       </div>`;
+  };
+  // Skupiny (25. 10. 2026, Michal): tipy pre klientov a tipy do sledovaných (šedá zóna),
+  // každá sa dá zbaliť a rozbaliť tlačidlom − / +. Poradie a čísla tipov ostávajú.
+  const groups = [
+    { key: "klienti", title: "Pre klientov", note: "", idx: [] },
+    { key: "sledovane", title: "Do sledovaných", note: "šedá zóna – slabší rozpor so stávkovkami; s dobrým kurzom môže tip prejsť aj ku klientom", idx: [] },
+  ];
+  dayTips.items.forEach(({ bet }, i) => groups[bet.softConflict ? 1 : 0].idx.push(i));
+  let shown = 0;
+  const rows = groups
+    .filter((g) => g.idx.length)
+    .map((g) => {
+      const open = !dayTipsCollapsed.has(g.key);
+      return `<div class="dt-group" data-dt-group="${g.key}">
+        <button type="button" class="dt-group-head" data-dt-toggle="${g.key}" aria-expanded="${open}">
+          <span class="dt-sign" aria-hidden="true">${open ? "−" : "+"}</span>
+          <span class="dt-group-title">${g.title} <b>${g.idx.length}</b></span>
+          ${g.note ? `<span class="faint small">${g.note}</span>` : ""}
+        </button>
+        <div class="dtips"${open ? "" : " hidden"}>${g.idx.map((i) => rowHtml(i, ++shown)).join("")}</div>
+      </div>`;
     })
     .join("");
   dayTipsPaneEl.innerHTML = `
@@ -1530,8 +1552,19 @@ function renderDayTipsView() {
         <label class="small">Telegram <select id="dtBulkTg"><option value="premium">◆ Členský kanál</option><option value="free">★ FREE kanál</option><option value="">Neposielať</option></select></label>
         <button type="button" class="btn" id="dtBulkSave" disabled>Uložiť všetky s kurzom</button>
       </div>
-    </div><div class="dtips">${rows}</div>` : `<div class="empty-card">V tento deň nie je žiadny tip, ktorý by prešiel pravidlami (68 – 80${NB}% a kontrola kurzu).</div>`}`;
+    </div>${rows}` : `<div class="empty-card">V tento deň nie je žiadny tip, ktorý by prešiel pravidlami (68 – 80${NB}% a kontrola kurzu).</div>`}`;
 
+  dayTipsPaneEl.querySelectorAll("[data-dt-toggle]").forEach((btn) => {
+    btn.onclick = () => {
+      const key = btn.dataset.dtToggle;
+      const list = btn.nextElementSibling;
+      const open = list.hidden;
+      list.hidden = !open;
+      btn.setAttribute("aria-expanded", String(open));
+      btn.querySelector(".dt-sign").textContent = open ? "−" : "+";
+      if (open) dayTipsCollapsed.delete(key); else dayTipsCollapsed.add(key);
+    };
+  });
   dayTipsPaneEl.querySelectorAll("[data-open]").forEach((btn) => {
     btn.onclick = () => {
       const item = dayTips.items[Number(btn.dataset.open)];
@@ -1570,7 +1603,7 @@ function renderDayTipsView() {
     inp.onkeydown = (e) => {
       if (e.key !== "Enter") return;
       e.preventDefault();
-      const next = inputs.slice(k + 1).find((x) => !x.disabled);
+      const next = inputs.slice(k + 1).find((x) => !x.disabled && !x.closest("[hidden]"));
       if (next) next.focus(); else document.getElementById("dtBulkSave")?.focus();
     };
   });
@@ -1730,7 +1763,9 @@ function renderTipsList(allTips) {
   renderCalibrationReport(statTips);
   renderValueReport(statTips);
   renderLeagueReport(statTips);
-  renderWatchReport(allTips.filter((t) => t.watchOnly && !(t.legs && t.legs.length)));
+  const watchTips = allTips.filter((t) => t.watchOnly && !(t.legs && t.legs.length));
+  renderWatchReport(watchTips);
+  void renderWatchOverview(watchTips);
   renderTipRows(tips);
 }
 
@@ -1874,6 +1909,69 @@ function renderWatchReport(list) {
       : "Zatiaľ žiadny vyhodnotený."}${pending ? ` Čaká: ${pending}.` : ""}</p>
     <div class="table-wrap"><table class="bt-table"><thead><tr><th>Deň</th><th>Zápas a tip</th><th class="num">Dôvera</th><th class="num">Kurz</th><th>Výsledok</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
     <p class="faint small">Tieto tipy sa vyhodnocujú, ale neposielajú sa členom, nie sú na webe a nerátajú sa do úspešnosti. Keď budú mať aspoň 30 vyhodnotených tipov v zisku, oplatí sa ich začať posielať.</p>`;
+}
+
+// Sledované tipy – úspešnosť (25. 10. 2026): jedna interná tabuľka pre všetko, čo sa vyhodnocuje
+// potichu (sledované tipy podľa druhu, vyradené tipy z tichej evidencie, skúšobný tiket dňa).
+// Do štatistík, na web ani členom sa nič z toho nedostane.
+function watchGroupRow(label, list) {
+  const settled = list.filter((t) => t.status === "won" || t.status === "lost");
+  const won = settled.filter((t) => t.status === "won").length;
+  const withOdds = settled.filter((t) => typeof t.odds === "number" && t.odds > 1);
+  const profit = withOdds.reduce((a, t) => a + (t.status === "won" ? t.odds - 1 : -1), 0);
+  const probs = settled.filter((t) => typeof t.probability === "number");
+  return {
+    label,
+    count: list.length,
+    settled: settled.length,
+    won,
+    avgModel: probs.length ? probs.reduce((a, t) => a + t.probability, 0) / probs.length : null,
+    withOdds: withOdds.length,
+    profit,
+  };
+}
+async function renderWatchOverview(watchTips) {
+  const el = document.getElementById("watchOverview");
+  if (!el) return;
+  const soft = watchTips.filter((t) => t.softConflict);
+  const manual = watchTips.filter((t) => !t.softConflict && t.manualEntry);
+  const marked = watchTips.filter((t) => !t.softConflict && !t.manualEntry);
+  const rows = [
+    watchGroupRow("Šedá zóna – slabší rozpor so stávkovkami", soft),
+    watchGroupRow("Ručne pridané mimo pravidiel", manual),
+    watchGroupRow("Označené „Len sledovať“", marked),
+  ];
+  const [shadow, ticket] = await Promise.all([
+    fetchJson("/api/shadow/summary").catch(() => null),
+    fetchJson("/api/ticket-watch/summary").catch(() => null),
+  ]);
+  if (shadow && (shadow.byReason || []).length) {
+    const r = shadow.byReason.reduce(
+      (a, x) => {
+        a.count += x.count;
+        a.settled += x.settled;
+        a.won += x.won;
+        a.withOdds += x.withOdds;
+        a.profit += x.profit;
+        if (x.avgModel != null && x.settled) { a.modelSum += x.avgModel * x.settled; a.modelN += x.settled; }
+        return a;
+      },
+      { count: 0, settled: 0, won: 0, withOdds: 0, profit: 0, modelSum: 0, modelN: 0 }
+    );
+    rows.push({ label: "Vyradené tipy (tichá evidencia, všetky dôvody)", count: r.count, settled: r.settled, won: r.won, avgModel: r.modelN ? r.modelSum / r.modelN : null, withOdds: r.withOdds, profit: r.profit });
+  }
+  if (ticket && ticket.total) {
+    rows.push({ label: "Tiket dňa – skúška (2 zápasy)", count: ticket.total, settled: ticket.settled, won: ticket.won, avgModel: null, withOdds: ticket.settled, profit: ticket.profit });
+  }
+  const p = (v) => (v == null ? "–" : `${fmtNum(v, 0)}${NB}%`);
+  const body = rows
+    .map((r) => {
+      const roi = r.withOdds ? (r.profit / r.withOdds) * 100 : null;
+      return `<tr><td>${escapeHtml(r.label)}</td><td class="num">${r.count || "–"}</td><td class="num">${r.settled ? `${p((r.won / r.settled) * 100)} <span class="faint">(${r.won}/${r.settled})</span>` : "–"}</td><td class="num">${p(r.avgModel)}</td><td class="num ${r.withOdds ? (r.profit >= 0 ? "g" : "l") : ""}">${r.withOdds ? `${signed(r.profit, 1)}${NB}j.` : "–"}</td><td class="num ${roi == null ? "" : roi >= 0 ? "g" : "l"}">${roi == null ? "–" : `${signed(roi, 1)}${NB}%`}</td></tr>`;
+    })
+    .join("");
+  el.innerHTML = `<div class="table-wrap"><table class="bt-table"><thead><tr><th>Čo sa sleduje</th><th class="num">Spolu</th><th class="num">Vyšlo</th><th class="num">Model sľuboval</th><th class="num">Zisk</th><th class="num">Návratnosť</th></tr></thead><tbody>${body}</tbody></table></div>
+    <p class="faint small">Zisk pri vklade 1 jednotka na tip (tiket) za zaznamenaný kurz. Skupina sa oplatí zapnúť naostro, až keď má aspoň 30 vyhodnotených tipov v zisku – pri menšom počte je výsledok ešte prevažne náhoda. Nový model sa porovnáva zvlášť, v mesačnom reporte a spätným testom.</p>`;
 }
 
 document.getElementById("watchResult")?.addEventListener("click", async (e) => {

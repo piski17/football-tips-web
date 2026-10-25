@@ -297,6 +297,12 @@ span.crest { background: radial-gradient(circle at 35% 35%, #5a4a35, #2a2219); b
 /* ---------- Tipy dňa ---------- */
 .dt-meta { margin-bottom: 14px; }
 .dtips { display: grid; gap: 10px; }
+.dt-group + .dt-group { margin-top: 22px; }
+.dt-group-head { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; width: 100%; text-align: left; padding: 8px 0; margin-bottom: 8px; color: var(--text); }
+.dt-group-head:hover .dt-sign { border-color: var(--gold); color: var(--gold-hi); }
+.dt-sign { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line2); color: var(--gold); font-size: 18px; font-weight: 600; line-height: 1; flex: none; }
+.dt-group-title { font: 600 18px var(--display); letter-spacing: -0.02em; }
+.dt-group-title b { color: var(--gold); margin-left: 4px; }
 .dtip { display: grid; grid-template-columns: 26px auto minmax(0, 1fr) auto; gap: 16px; align-items: center; padding: 16px 20px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line); }
 .dtip.first { background: radial-gradient(120% 140% at 0% 0%, rgba(217, 192, 138, .12), transparent 60%), var(--panel); border-color: var(--line2); }
 .dtip .rank { font: 600 20px var(--display); color: var(--faint); font-variant-numeric: lining-nums !important; }
