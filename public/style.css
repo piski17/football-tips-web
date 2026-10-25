@@ -312,6 +312,14 @@ span.crest { background: radial-gradient(circle at 35% 35%, #5a4a35, #2a2219); b
 .dtip .s { font-size: 16px; margin-top: 3px; }
 .dtip .s b { font: 600 20px/1.2 var(--display); color: var(--gold-hi); font-variant-numeric: lining-nums !important; }
 .dtip-odds { display: flex; align-items: center; gap: 10px; }
+.dtip { position: relative; padding-right: 48px; }
+.dtip-tg { position: absolute; top: 10px; right: 10px; }
+.dtip-tg:hover { border-color: var(--gold); color: var(--gold-hi); }
+.dtip .mini-prob { display: none; color: var(--muted); }
+.dtip.mini { padding-top: 10px; padding-bottom: 10px; grid-template-columns: 26px minmax(0, 1fr); }
+.dtip.mini .ring, .dtip.mini .m, .dtip.mini .why, .dtip.mini .dtip-odds, .dtip.mini .badge-strong { display: none; }
+.dtip.mini .mini-prob { display: inline; }
+.dtip.mini .s b { font-size: 17px; }
 .odds-in { display: flex; flex-direction: column; gap: 4px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
 .odds-in input { width: 104px; height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line2); background: rgba(0,0,0,.25); color: var(--text); font: 600 17px var(--sans); letter-spacing: 0; text-transform: none; }
 .odds-in input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(217,192,138,.18); }
@@ -519,6 +527,8 @@ tr.bt-best { background: rgba(134, 199, 161, .08); }
 
   .dtip { grid-template-columns: auto minmax(0, 1fr); padding: 14px; gap: 12px; }
   .dtip .rank { display: none; }
+  .dtip { padding-right: 46px; }
+  .dtip.mini { grid-template-columns: minmax(0, 1fr); }
   .dtip > .btn, .dtip > .dtip-odds { grid-column: 1 / -1; }
   .dtip-odds { flex-wrap: wrap; } .dtip-odds .btn { margin-left: auto; }
   .dt-bulk-row, .dt-bulk-row .btn { width: 100%; }

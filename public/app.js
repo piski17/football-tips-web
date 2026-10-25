@@ -1395,6 +1395,7 @@ let dayTipsRun = { running: false, done: 0, total: 0, id: 0 };
 let dayTipsDetail = null; // otvorený zápas z Tipov dňa
 let dayTipsViewId = 0;
 let dayTipsCollapsed = new Set(); // zbalené skupiny v Tipoch dňa („klienti“, „sledovane“)
+let dayTipsMini = new Set(); // zbalené jednotlivé tipy (poradie v zozname); nová analýza ich vynuluje
 let strongIdx = -1;
 
 function kickoffTime(fixture) {
@@ -1437,7 +1438,7 @@ async function showDayTips() {
   }
   items.sort((a, b) => b.bet.probability - a.bet.probability);
   dayTips = { items, analyzed: fixtures.length, failed, failedList, date, ran: true };
-  dayTipOdds = {}; dayTipSaved = new Set();
+  dayTipOdds = {}; dayTipSaved = new Set(); dayTipsMini = new Set();
   dayTipsRun.running = false;
   computeStrongIdx();
   if (!dayTipsDetail) renderDayTipsView();
@@ -1497,8 +1498,10 @@ function renderDayTipsView() {
   const rowHtml = (i, n) => {
       const { r, bet } = dayTips.items[i];
       const f = r.fixture;
+      const mini = dayTipsMini.has(i);
       return `
-      <div class="dtip${i === 0 ? " first" : ""}">
+      <div class="dtip${i === 0 ? " first" : ""}${mini ? " mini" : ""}">
+        <button type="button" class="dt-sign dtip-tg" data-tip-toggle="${i}" aria-expanded="${!mini}" title="${mini ? "Rozbaliť tip" : "Zbaliť tip"}">${mini ? "+" : "−"}</button>
         <div class="rank">${n}.</div>
         ${ring(bet.probability, 54)}
         <div class="dtip-body">
@@ -1506,7 +1509,7 @@ function renderDayTipsView() {
             <span class="faint">${escapeHtml(kickoffTime(f))}</span> ${escapeHtml(translateTeamName(f.homeTeam.name))} – ${escapeHtml(translateTeamName(f.awayTeam.name))}
             <span class="faint small">· ${escapeHtml(translateLeagueName(f.league.name))}</span>
           </button>
-          <div class="s">${escapeHtml(bet.market)}: <b>${escapeHtml(translateNamesInText(bet.selection, f.homeTeam.name, f.awayTeam.name))}</b>${strongTipBadge(bet.probability)}</div>
+          <div class="s">${escapeHtml(bet.market)}: <b>${escapeHtml(translateNamesInText(bet.selection, f.homeTeam.name, f.awayTeam.name))}</b><span class="mini-prob"> · ${bet.probability.toFixed(0)}${NB}%${dayTipSaved.has(i) ? " · ✓ uložené" : ""}</span>${strongTipBadge(bet.probability)}</div>
           <div class="m"><span>Dôvera <b>${bet.probability.toFixed(0)}${NB}%</b></span>${betOddsHtml(bet)}</div>
           ${bet.valueWarning ? `<div class="why warn">⚠️ ${escapeHtml(bet.valueWarning)}</div>` : ""}
         </div>
@@ -1554,6 +1557,18 @@ function renderDayTipsView() {
       </div>
     </div>${rows}` : `<div class="empty-card">V tento deň nie je žiadny tip, ktorý by prešiel pravidlami (68 – 80${NB}% a kontrola kurzu).</div>`}`;
 
+  // − / + pri každom tipe: zbalený tip ukáže len zápas, tip a dôveru.
+  dayTipsPaneEl.querySelectorAll("[data-tip-toggle]").forEach((btn) => {
+    btn.onclick = () => {
+      const i = Number(btn.dataset.tipToggle);
+      const mini = !dayTipsMini.has(i);
+      if (mini) dayTipsMini.add(i); else dayTipsMini.delete(i);
+      btn.closest(".dtip").classList.toggle("mini", mini);
+      btn.textContent = mini ? "+" : "−";
+      btn.title = mini ? "Rozbaliť tip" : "Zbaliť tip";
+      btn.setAttribute("aria-expanded", String(!mini));
+    };
+  });
   dayTipsPaneEl.querySelectorAll("[data-dt-toggle]").forEach((btn) => {
     btn.onclick = () => {
       const key = btn.dataset.dtToggle;
@@ -1603,7 +1618,7 @@ function renderDayTipsView() {
     inp.onkeydown = (e) => {
       if (e.key !== "Enter") return;
       e.preventDefault();
-      const next = inputs.slice(k + 1).find((x) => !x.disabled && !x.closest("[hidden]"));
+      const next = inputs.slice(k + 1).find((x) => !x.disabled && !x.closest("[hidden], .mini"));
       if (next) next.focus(); else document.getElementById("dtBulkSave")?.focus();
     };
   });
