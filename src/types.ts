@@ -315,6 +315,11 @@ export interface SavedTip {
   archived?: boolean;
   /** Výsledok alebo kurz bol ručne opravený v histórii. */
   edited?: boolean;
+  /**
+   * Kontrola po zverejnení zostáv (25. 10. 2026): tip sa ~60 min pred výkopom prepočíta
+   * s potvrdenými zostavami. ok = tip stále spĺňa pravidlá (dôvera, hodnota, rozpor).
+   */
+  lineupCheck?: { at: string; probability: number | null; ok: boolean; reason?: string };
   savedAt: string; // ISO
   status: "pending" | "won" | "lost" | "void";
   actualHomeGoals?: number | null;

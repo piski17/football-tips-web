@@ -14,6 +14,22 @@ export function mixStat(own: number | null | undefined, opponentAllows: number |
 }
 
 /**
+ * Nový model (25. 10. 2026): štatistika zápasu voči priemeru (ako pri góloch: sila × slabosť súpera),
+ * nie len priemer dvoch čísel. Silný tím proti slabému tak dostane viac, slabší proti silnému menej.
+ * Priemer „ligy" sa odhadne zo štyroch čísel oboch tímov; pomery sú ohraničené (0,6 – 1,6).
+ */
+function pairRel(
+  homeOwn: number | null, awayAllows: number | null, awayOwn: number | null, homeAllows: number | null
+): [number | null, number | null] {
+  if (homeOwn == null || awayAllows == null || awayOwn == null || homeAllows == null)
+    return [mixStat(homeOwn, awayAllows), mixStat(awayOwn, homeAllows)];
+  const avg = (homeOwn + awayAllows + awayOwn + homeAllows) / 4;
+  if (!(avg > 0)) return [mixStat(homeOwn, awayAllows), mixStat(awayOwn, homeAllows)];
+  const r = (x: number) => Math.min(1.6, Math.max(0.6, x / avg));
+  return [avg * r(homeOwn) * r(awayAllows), avg * r(awayOwn) * r(homeAllows)];
+}
+
+/**
  * Priemer len z domácich (alebo vonkajších) zápasov, vyrovnaný s celkovým priemerom –
  * z 10 zápasov je doma zvyčajne len ~5, celkový priemer preto váži ako 3 zápasy.
  */
@@ -53,20 +69,24 @@ export function newModelInputs(
   const h = homeExt.venueHome, a = awayExt.venueAway;
   const hv = (key: keyof Omit<VenueStats, "games">) => venueAvg(h, key, (homeExt as any)[key]);
   const av = (key: keyof Omit<VenueStats, "games">) => venueAvg(a, key, (awayExt as any)[key]);
+  const [homeCorners, awayCorners] = pairRel(hv("corners"), av("cornersAgainst"), av("corners"), hv("cornersAgainst"));
+  const [homeShots, awayShots] = pairRel(hv("shotsOnGoal"), av("shotsOnGoalAgainst"), av("shotsOnGoal"), hv("shotsOnGoalAgainst"));
+  const [homeFouls, awayFouls] = pairRel(hv("fouls"), av("foulsAgainst"), av("fouls"), hv("foulsAgainst"));
+  const [homeCards, awayCards] = pairRel(hv("cards"), av("cardsAgainst"), av("cards"), hv("cardsAgainst"));
   return {
-    homeCorners: mixStat(hv("corners"), av("cornersAgainst")),
-    awayCorners: mixStat(av("corners"), hv("cornersAgainst")),
+    homeCorners,
+    awayCorners,
     extra: {
-      homeShotsOnGoal: mixStat(hv("shotsOnGoal"), av("shotsOnGoalAgainst")),
-      awayShotsOnGoal: mixStat(av("shotsOnGoal"), hv("shotsOnGoalAgainst")),
-      homeFouls: mixStat(hv("fouls"), av("foulsAgainst")),
-      awayFouls: mixStat(av("fouls"), hv("foulsAgainst")),
+      homeShotsOnGoal: homeShots,
+      awayShotsOnGoal: awayShots,
+      homeFouls,
+      awayFouls,
       homeOffsides: mixStat(homeExt.offsides, awayExt.offsidesAgainst),
       awayOffsides: mixStat(awayExt.offsides, homeExt.offsidesAgainst),
       homePossession: homeExt.possession,
       awayPossession: awayExt.possession,
-      homeCards: mixStat(hv("cards"), av("cardsAgainst")),
-      awayCards: mixStat(av("cards"), hv("cardsAgainst")),
+      homeCards,
+      awayCards,
     },
     variant: {
       xg: {

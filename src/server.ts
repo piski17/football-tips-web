@@ -1,5 +1,5 @@
 import { SEATS_M1, SEATS_M3, SEATS_SEASON } from "./seatLimits";
-import { MIN_ODDS, MAX_PROBABILITY, findOdds, marketProbabilityDetail, STRONG_TIP_MIN_PROBABILITY, WATCH_BELOW_PROBABILITY } from "./oddsMatcher";
+import { MIN_ODDS, MAX_PROBABILITY, MIN_PROBABILITY, MIN_EXPECTED_VALUE, SUSPICIOUS_EXPECTED_VALUE, findOdds, marketProbabilityDetail, STRONG_TIP_MIN_PROBABILITY, WATCH_BELOW_PROBABILITY } from "./oddsMatcher";
 import { listLeads, deleteLead, recordLead } from "./leadsStore";
 import { getMeta, setMeta } from "./metaStore";
 import * as crypto from "crypto";
@@ -26,6 +26,7 @@ import {
   getPlayerSeasonStats,
   getTeamPlayersWithStats,
   getFixtureLineupPlayerIds,
+  getFixtureById,
   getFixtureLineupsDebug,
   getFixtureMissingPlayers,
   getFixtureOdds,
@@ -148,6 +149,10 @@ const LEAGUE_PRESETS: LeaguePreset[] = [
   { id: 3, name: "UEFA Europa League", country: "Európa" },
   { id: 88, name: "Eredivisie", country: "Holandsko" },
   { id: 94, name: "Primeira Liga", country: "Portugalsko" },
+  // 25. 10. 2026 (Michalovo rozhodnutie): viac líg.
+  { id: 144, name: "Jupiler Pro League", country: "Belgicko" },
+  { id: 203, name: "Süper Lig", country: "Turecko" },
+  { id: 106, name: "Ekstraklasa", country: "Poľsko" },
   // Liga národov (id 5) odstránená 6. 10. 2026 - reprezentácie majú málo zápasov, tipy nespoľahlivé.
 ];
 
@@ -606,142 +611,141 @@ async function getMarketAdjustments(force = false): Promise<MarketAdjustments> {
   return adjustRefresh;
 }
 
-app.post("/api/analyze", async (req, res) => {
+/**
+ * Analýza jedného zápasu (rovnaká pre tlačidlo v appke aj kontrolu po zostavách).
+ * record = false: nič sa nezapisuje do tichej evidencie ani sledovania (kontrola pred výkopom).
+ */
+async function analyzeFixture(fixture: any, leagueId: any, season: any, record = true) {
+
+  // Prvá vlna - rovnaké volania, ktoré boli predtým otestované ako stabilné.
+  let [homeStats, awayStats, h2h, leagueAvg, homePriors, awayPriors, homeExtStats, awayExtStats] =
+    await Promise.all([
+      getTeamStatistics(leagueId, season, fixture.homeTeam.id),
+      getTeamStatistics(leagueId, season, fixture.awayTeam.id),
+      getHeadToHead(fixture.homeTeam.id, fixture.awayTeam.id, 10),
+      getLeagueAverages(leagueId, season),
+      getHistoricalGoalPriors(leagueId, season, fixture.homeTeam.id),
+      getHistoricalGoalPriors(leagueId, season, fixture.awayTeam.id),
+      getTeamExtendedStatsAverages(leagueId, season, fixture.homeTeam.id),
+      getTeamExtendedStatsAverages(leagueId, season, fixture.awayTeam.id),
+    ]);
+
+  // Tím v tejto sezóne súťaže ešte nehral (typicky reprezentácie na začiatku
+  // Ligy národov) -> forma z posledných zápasov vo všetkých súťažiach.
+  if (!homeStats.form) {
+    const form = await getRecentFormAnyCompetition(fixture.homeTeam.id);
+    if (form) homeStats = { ...homeStats, form };
+  }
+  if (!awayStats.form) {
+    const form = await getRecentFormAnyCompetition(fixture.awayTeam.id);
+    if (form) awayStats = { ...awayStats, form };
+  }
+
+  // Liga majstrov a Európska liga (22. 10. 2026, Michalovo rozhodnutie): góly sa počítajú
+  // ako v ostatných ligách – z posledných 10 zápasov tímu vo všetkých súťažiach (hlavne
+  // domáca liga), prepočítané podľa sily domácich líg. Staré pohárové sezóny sa nepoužijú.
+  let cupNote: string | null = null;
+  if (CUP_LEAGUE_IDS.includes(Number(leagueId))) {
+    const cup = await applyCupGoals(fixture.homeTeam.id, fixture.awayTeam.id, Number(season), leagueAvg, homeStats, awayStats, homeExtStats, awayExtStats);
+    ({ homeStats, awayStats } = cup);
+    homeExtStats = cup.homeExt;
+    awayExtStats = cup.awayExt;
+    if (cup.homeOk) homePriors = null;
+    if (cup.awayOk) awayPriors = null;
+    cupNote = cup.note;
+  }
+
+  // Druhá vlna - súpisky hráčov + potvrdená zostava (ak je k dispozícii),
+  // spustené AŽ PO prvej vlne.
+  const [homePlayers, awayPlayers, lineup, marketOdds] = await Promise.all([
+    getTeamPlayersWithStats(fixture.homeTeam.id, season, leagueId),
+    getTeamPlayersWithStats(fixture.awayTeam.id, season, leagueId),
+    getFixtureLineupPlayerIds(fixture.fixtureId),
+    getFixtureOdds(fixture.fixtureId),
+  ]);
+  const missingPlayers = await getFixtureMissingPlayers(fixture.fixtureId);
+  // Rozhodca: z údajov zápasu, inak ho dočítame z API (pri chybe sa jednoducho nepoužije).
+  const refereeName = fixture.referee ?? (await getFixtureReferee(fixture.fixtureId).catch(() => null));
+  const referee = await getRefereeProfile(Number(leagueId), Number(season), refereeName).catch(() => null);
+
+  // Štatistiky posledných vzájomných zápasov (rohy, karty…) – pri chybe sa jednoducho nepoužijú.
+  const h2hStats = await getHeadToHeadStats(h2h, fixture.homeTeam.name).catch(() => []);
+  // Liga majstrov: pravidlo „aspoň 3 zápasy v sezóne" podľa všetkých súťaží tímu.
+  let seasonGamesAny: number | null = null;
+  if (CUP_LEAGUE_IDS.includes(Number(leagueId))) {
+    const [h, a] = await Promise.all([
+      getSeasonGamesAnyCompetition(fixture.homeTeam.id, season),
+      getSeasonGamesAnyCompetition(fixture.awayTeam.id, season),
+    ]);
+    if (h != null && a != null) seasonGamesAny = Math.min(h, a);
+  }
+  // Nový model (21. 10. 2026): oddych tímov – pri chybe sa únava jednoducho nepoužije.
+  const [restHome, restAway, adjust, useNewModel] = await Promise.all([
+    getRestInfo(fixture.homeTeam.id, season, fixture.date).catch(() => null),
+    getRestInfo(fixture.awayTeam.id, season, fixture.date).catch(() => null),
+    getMarketAdjustments(),
+    isNewModelActive(),
+  ]);
+  const nm = newModelInputs(homeExtStats, awayExtStats, restHome, restAway);
+  const extraNow = {
+    homeShotsOnGoal: mixStat(homeExtStats.shotsOnGoal, awayExtStats.shotsOnGoalAgainst),
+    awayShotsOnGoal: mixStat(awayExtStats.shotsOnGoal, homeExtStats.shotsOnGoalAgainst),
+    homeFouls: mixStat(homeExtStats.fouls, awayExtStats.foulsAgainst),
+    awayFouls: mixStat(awayExtStats.fouls, homeExtStats.foulsAgainst),
+    homeOffsides: mixStat(homeExtStats.offsides, awayExtStats.offsidesAgainst),
+    awayOffsides: mixStat(awayExtStats.offsides, homeExtStats.offsidesAgainst),
+    homePossession: homeExtStats.possession,
+    awayPossession: awayExtStats.possession,
+    homeCards: mixStat(homeExtStats.cards, awayExtStats.cardsAgainst),
+    awayCards: mixStat(awayExtStats.cards, homeExtStats.cardsAgainst),
+  };
+  // Súčasný a nový model z tých istých údajov; tipy vyberá ten, ktorý je zapnutý.
+  const run = (isNew: boolean) => predictMatch(
+    fixture,
+    homeStats,
+    awayStats,
+    h2h,
+    leagueAvg,
+    DEFAULT_WEIGHTS,
+    homePriors,
+    awayPriors,
+    isNew ? nm.homeCorners : mixStat(homeExtStats.corners, awayExtStats.cornersAgainst),
+    isNew ? nm.awayCorners : mixStat(awayExtStats.corners, homeExtStats.cornersAgainst),
+    homePlayers,
+    awayPlayers,
+    lineup.homeIds,
+    lineup.awayIds,
+    isNew ? nm.extra : extraNow,
+    marketOdds,
+    h2hStats,
+    { home: { goalsFor: homeExtStats.goalsFor ?? null, goalsAgainst: homeExtStats.goalsAgainst ?? null, games: homeExtStats.goalsGames ?? 0 }, away: { goalsFor: awayExtStats.goalsFor ?? null, goalsAgainst: awayExtStats.goalsAgainst ?? null, games: awayExtStats.goalsGames ?? 0 } },
+    false,
+    missingPlayers,
+    seasonGamesAny,
+    referee,
+    lineup,
+    isNew ? nm.variant : null,
+    adjust
+  );
+  const current = run(false);
+  let novy: ReturnType<typeof predictMatch> | null = null;
   try {
-    const { fixture, leagueId, season } = req.body ?? {};
-    if (!fixture || !leagueId || !season) {
-      res.status(400).json({ error: "Chýbajú údaje zápasu, ligy alebo sezóny." });
-      return;
-    }
+    novy = run(true);
+  } catch {
+    novy = null; // nový model nesmie zablokovať analýzu
+  }
+  const result = useNewModel && novy ? novy : current;
 
-    // Prvá vlna - rovnaké volania, ktoré boli predtým otestované ako stabilné.
-    let [homeStats, awayStats, h2h, leagueAvg, homePriors, awayPriors, homeExtStats, awayExtStats] =
-      await Promise.all([
-        getTeamStatistics(leagueId, season, fixture.homeTeam.id),
-        getTeamStatistics(leagueId, season, fixture.awayTeam.id),
-        getHeadToHead(fixture.homeTeam.id, fixture.awayTeam.id, 10),
-        getLeagueAverages(leagueId, season),
-        getHistoricalGoalPriors(leagueId, season, fixture.homeTeam.id),
-        getHistoricalGoalPriors(leagueId, season, fixture.awayTeam.id),
-        getTeamExtendedStatsAverages(leagueId, season, fixture.homeTeam.id),
-        getTeamExtendedStatsAverages(leagueId, season, fixture.awayTeam.id),
-      ]);
-
-    // Tím v tejto sezóne súťaže ešte nehral (typicky reprezentácie na začiatku
-    // Ligy národov) -> forma z posledných zápasov vo všetkých súťažiach.
-    if (!homeStats.form) {
-      const form = await getRecentFormAnyCompetition(fixture.homeTeam.id);
-      if (form) homeStats = { ...homeStats, form };
-    }
-    if (!awayStats.form) {
-      const form = await getRecentFormAnyCompetition(fixture.awayTeam.id);
-      if (form) awayStats = { ...awayStats, form };
-    }
-
-    // Liga majstrov a Európska liga (22. 10. 2026, Michalovo rozhodnutie): góly sa počítajú
-    // ako v ostatných ligách – z posledných 10 zápasov tímu vo všetkých súťažiach (hlavne
-    // domáca liga), prepočítané podľa sily domácich líg. Staré pohárové sezóny sa nepoužijú.
-    let cupNote: string | null = null;
-    if (CUP_LEAGUE_IDS.includes(Number(leagueId))) {
-      const cup = await applyCupGoals(fixture.homeTeam.id, fixture.awayTeam.id, Number(season), leagueAvg, homeStats, awayStats, homeExtStats, awayExtStats);
-      ({ homeStats, awayStats } = cup);
-      homeExtStats = cup.homeExt;
-      awayExtStats = cup.awayExt;
-      if (cup.homeOk) homePriors = null;
-      if (cup.awayOk) awayPriors = null;
-      cupNote = cup.note;
-    }
-
-    // Druhá vlna - súpisky hráčov + potvrdená zostava (ak je k dispozícii),
-    // spustené AŽ PO prvej vlne.
-    const [homePlayers, awayPlayers, lineup, marketOdds] = await Promise.all([
-      getTeamPlayersWithStats(fixture.homeTeam.id, season, leagueId),
-      getTeamPlayersWithStats(fixture.awayTeam.id, season, leagueId),
-      getFixtureLineupPlayerIds(fixture.fixtureId),
-      getFixtureOdds(fixture.fixtureId),
-    ]);
-    const missingPlayers = await getFixtureMissingPlayers(fixture.fixtureId);
-    // Rozhodca: z údajov zápasu, inak ho dočítame z API (pri chybe sa jednoducho nepoužije).
-    const refereeName = fixture.referee ?? (await getFixtureReferee(fixture.fixtureId).catch(() => null));
-    const referee = await getRefereeProfile(Number(leagueId), Number(season), refereeName).catch(() => null);
-
-    // Štatistiky posledných vzájomných zápasov (rohy, karty…) – pri chybe sa jednoducho nepoužijú.
-    const h2hStats = await getHeadToHeadStats(h2h, fixture.homeTeam.name).catch(() => []);
-    // Liga majstrov: pravidlo „aspoň 3 zápasy v sezóne" podľa všetkých súťaží tímu.
-    let seasonGamesAny: number | null = null;
-    if (CUP_LEAGUE_IDS.includes(Number(leagueId))) {
-      const [h, a] = await Promise.all([
-        getSeasonGamesAnyCompetition(fixture.homeTeam.id, season),
-        getSeasonGamesAnyCompetition(fixture.awayTeam.id, season),
-      ]);
-      if (h != null && a != null) seasonGamesAny = Math.min(h, a);
-    }
-    // Nový model (21. 10. 2026): oddych tímov – pri chybe sa únava jednoducho nepoužije.
-    const [restHome, restAway, adjust, useNewModel] = await Promise.all([
-      getRestInfo(fixture.homeTeam.id, season, fixture.date).catch(() => null),
-      getRestInfo(fixture.awayTeam.id, season, fixture.date).catch(() => null),
-      getMarketAdjustments(),
-      isNewModelActive(),
-    ]);
-    const nm = newModelInputs(homeExtStats, awayExtStats, restHome, restAway);
-    const extraNow = {
-      homeShotsOnGoal: mixStat(homeExtStats.shotsOnGoal, awayExtStats.shotsOnGoalAgainst),
-      awayShotsOnGoal: mixStat(awayExtStats.shotsOnGoal, homeExtStats.shotsOnGoalAgainst),
-      homeFouls: mixStat(homeExtStats.fouls, awayExtStats.foulsAgainst),
-      awayFouls: mixStat(awayExtStats.fouls, homeExtStats.foulsAgainst),
-      homeOffsides: mixStat(homeExtStats.offsides, awayExtStats.offsidesAgainst),
-      awayOffsides: mixStat(awayExtStats.offsides, homeExtStats.offsidesAgainst),
-      homePossession: homeExtStats.possession,
-      awayPossession: awayExtStats.possession,
-      homeCards: mixStat(homeExtStats.cards, awayExtStats.cardsAgainst),
-      awayCards: mixStat(awayExtStats.cards, homeExtStats.cardsAgainst),
-    };
-    // Súčasný a nový model z tých istých údajov; tipy vyberá ten, ktorý je zapnutý.
-    const run = (isNew: boolean) => predictMatch(
-      fixture,
-      homeStats,
-      awayStats,
-      h2h,
-      leagueAvg,
-      DEFAULT_WEIGHTS,
-      homePriors,
-      awayPriors,
-      isNew ? nm.homeCorners : mixStat(homeExtStats.corners, awayExtStats.cornersAgainst),
-      isNew ? nm.awayCorners : mixStat(awayExtStats.corners, homeExtStats.cornersAgainst),
-      homePlayers,
-      awayPlayers,
-      lineup.homeIds,
-      lineup.awayIds,
-      isNew ? nm.extra : extraNow,
-      marketOdds,
-      h2hStats,
-      { home: { goalsFor: homeExtStats.goalsFor ?? null, goalsAgainst: homeExtStats.goalsAgainst ?? null, games: homeExtStats.goalsGames ?? 0 }, away: { goalsFor: awayExtStats.goalsFor ?? null, goalsAgainst: awayExtStats.goalsAgainst ?? null, games: awayExtStats.goalsGames ?? 0 } },
-      false,
-      missingPlayers,
-      seasonGamesAny,
-      referee,
-      lineup,
-      isNew ? nm.variant : null,
-      adjust
-    );
-    const current = run(false);
-    let novy: ReturnType<typeof predictMatch> | null = null;
-    try {
-      novy = run(true);
-    } catch {
-      novy = null; // nový model nesmie zablokovať analýzu
-    }
-    const result = useNewModel && novy ? novy : current;
-
-    // Meranie (20. 10. 2026): pravdepodobnosť stávkoviek (bez marže, ak sú kurzy oboch strán)
-    // pre odporúčané aj vyradené tipy – appka ju pri uložení tipu zapíše k nemu.
-    const marketDetail = (p: { market: string; selection: string }) =>
-      marketOdds && marketOdds.length ? marketProbabilityDetail(marketOdds, p, fixture.homeTeam.name, fixture.awayTeam.name) : null;
-    const marketProbs: Record<string, { prob: number; devig: boolean }> = {};
-    for (const p of [...((result as any).bestBets ?? []), ...((result as any).lowValueBets ?? [])]) {
-      const d = marketDetail(p);
-      if (d) marketProbs[`${p.market}|${p.selection}`] = { prob: Math.round(d.prob * 10) / 10, devig: d.devig };
-    }
+  // Meranie (20. 10. 2026): pravdepodobnosť stávkoviek (bez marže, ak sú kurzy oboch strán)
+  // pre odporúčané aj vyradené tipy – appka ju pri uložení tipu zapíše k nemu.
+  const marketDetail = (p: { market: string; selection: string }) =>
+    marketOdds && marketOdds.length ? marketProbabilityDetail(marketOdds, p, fixture.homeTeam.name, fixture.awayTeam.name) : null;
+  const marketProbs: Record<string, { prob: number; devig: boolean }> = {};
+  for (const p of [...((result as any).bestBets ?? []), ...((result as any).lowValueBets ?? [])]) {
+    const d = marketDetail(p);
+    if (d) marketProbs[`${p.market}|${p.selection}`] = { prob: Math.round(d.prob * 10) / 10, devig: d.devig };
+  }
+  if (record) {
     // Tichá evidencia vyradených tipov (na pozadí, nič neblokuje): od 20. 10. 2026 všetky
     // dôvody vyradenia (pásmo, hodnota, kurz, rozpor…) pre kandidátov 60 – 85 % s kurzom.
     void recordShadow(
@@ -758,6 +762,18 @@ app.post("/api/analyze", async (req, res) => {
     void recordLegs(
       legCandidatesFrom(fixture, [...((result as any).bestBets ?? []), ...((result as any).lowValueBets ?? [])])
     ).catch(() => {});
+  }
+  return { result, marketProbs, cupNote, lineup };
+}
+
+app.post("/api/analyze", async (req, res) => {
+  try {
+    const { fixture, leagueId, season } = req.body ?? {};
+    if (!fixture || !leagueId || !season) {
+      res.status(400).json({ error: "Chýbajú údaje zápasu, ligy alebo sezóny." });
+      return;
+    }
+    const { result, marketProbs, cupNote } = await analyzeFixture(fixture, leagueId, season);
     res.json({ ...result, marketProbs, cupNote });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
@@ -2533,6 +2549,66 @@ async function settleBackgroundRecords(): Promise<void> {
     // sledovanie nesmie zastaviť ďalšie kontroly
   }
 }
+
+/**
+ * Kontrola po zostavách (25. 10. 2026): keď sú ~60 min pred výkopom zverejnené zostavy,
+ * čakajúci tip sa prepočíta s nimi (zranenia, rotácia, náhradníci). Výsledok sa uloží k tipu
+ * a appka ho ukáže v histórii tipov (bez správy na Telegram – Michalovo rozhodnutie).
+ */
+const LINEUP_CHECK_FROM_MIN = 75; // najskôr 75 min pred výkopom (zostavy bývajú zverejnené ~60 min pred)
+let lineupCheckRunning = false;
+async function checkLineups(): Promise<void> {
+  if (lineupCheckRunning) return;
+  lineupCheckRunning = true;
+  try {
+    const now = Date.now();
+    const due = (await listTips()).filter((t) => {
+      if (t.status !== "pending" || t.lineupCheck || (t.legs && t.legs.length) || !(t.fixtureId > 0)) return false;
+      const kick = new Date(t.matchDate).getTime();
+      return isFinite(kick) && kick > now && kick - now <= LINEUP_CHECK_FROM_MIN * 60 * 1000;
+    });
+    for (const tip of due) {
+      try {
+        const lineup = await getFixtureLineupPlayerIds(tip.fixtureId);
+        if (!lineup.homeStartIds || !lineup.awayStartIds) continue; // zostavy ešte nie sú – skúsi sa o 10 minút
+        const fixture = await getFixtureById(tip.fixtureId);
+        if (!fixture) continue;
+        const { result } = await analyzeFixture(fixture, tip.leagueId, tip.season, false);
+        const all: any[] = (result as any).allCandidates ?? [];
+        const c = all.find((x) => x.market === tip.market && x.selection === tip.selection);
+        let ok = true;
+        let reason: string | undefined;
+        const prob: number | null = c ? Math.round(c.probability * 10) / 10 : null;
+        const odds = typeof tip.odds === "number" && tip.odds > 1 ? tip.odds : c?.odds ?? null;
+        if (!c) {
+          ok = false;
+          reason = "model tento tip po zostavách už neponúka";
+        } else if (c.probability < MIN_PROBABILITY || c.probability > MAX_PROBABILITY) {
+          ok = false;
+          reason = `dôvera ${c.probability.toFixed(0)} % je mimo pásma ${MIN_PROBABILITY} – ${MAX_PROBABILITY} %`;
+        } else if (c.marketConflict) {
+          ok = false;
+          reason = c.marketConflict;
+        } else if (odds != null) {
+          const ev = (c.probability / 100) * odds;
+          if (ev < MIN_EXPECTED_VALUE) {
+            ok = false;
+            reason = `hodnota klesla na ${((ev - 1) * 100).toFixed(0)} %`;
+          } else if (ev > SUSPICIOUS_EXPECTED_VALUE) {
+            ok = false;
+            reason = `podozrivo vysoká hodnota (+${((ev - 1) * 100).toFixed(0)} %)`;
+          }
+        }
+        await updateTip(tip.id, { lineupCheck: { at: new Date().toISOString(), probability: prob, ok, ...(reason ? { reason } : {}) } });
+      } catch (err) {
+        console.error(`Kontrola zostáv pre tip ${tip.id} zlyhala:`, err);
+      }
+    }
+  } finally {
+    lineupCheckRunning = false;
+  }
+}
+setInterval(() => void checkLineups().catch(() => {}), 10 * 60 * 1000);
 
 // Výsledky sa kontrolujú aj samy, každých 15 minút – netreba čakať na tlačidlo.
 setInterval(() => void checkPendingResults().catch((err) => console.error("Automatická kontrola výsledkov zlyhala:", err)), 15 * 60 * 1000);

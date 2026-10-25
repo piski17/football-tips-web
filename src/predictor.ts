@@ -308,6 +308,64 @@ function overdispersedOverUnder(mean: number, line: number, varRatio: number): {
 // preto aj pri nich počítame s väčším rozptylom – inak model tipy nadhodnocuje.
 const VAR_RATIO = { cards: 1.4, shotsOnGoal: 1.35, offsides: 1.3, fouls: 1.3, corners: 1.2 };
 
+/** Počet zápasov, z ktorých sa počítajú priemery štatistík (rohy, karty, strely, fauly). */
+const STAT_WINDOW_GAMES = 10;
+function scaleVarRatio(v: typeof VAR_RATIO, k: number): typeof VAR_RATIO {
+  return { cards: v.cards * k, shotsOnGoal: v.shotsOnGoal * k, offsides: v.offsides * k, fouls: v.fouls * k, corners: v.corners * k };
+}
+
+/**
+ * Nový model – rozdelenie gólov (25. 10. 2026):
+ *  - Dixon–Coles: výsledky 0:0 a 1:1 padajú častejšie a 1:0 / 0:1 menej, než hovorí
+ *    nezávislý Poisson (DC_RHO je bežná hodnota z európskych líg),
+ *  - neistota: očakávané góly z mála zápasov nie sú presné – počítame s tým, že môžu byť
+ *    o ±d vyššie alebo nižšie (d klesá s počtom odohraných zápasov).
+ * Vráti rozdelenie súčtu gólov a gólov domácich a hostí (index = počet gólov).
+ */
+const DC_RHO = -0.08;
+function goalsJoint(lh: number, la: number, gamesPlayed: number): { total: number[]; home: number[]; away: number[] } {
+  const n = Math.max(3, Math.min(gamesPlayed || 0, 30));
+  const d = Math.min(0.45, Math.sqrt(1.5 / (n * Math.max(lh + la, 0.5))) * Math.SQRT2);
+  const scales: [number, number][] = [[1 - d, 0.25], [1, 0.5], [1 + d, 0.25]];
+  const max = MAX_GOALS + 3;
+  const total = new Array(2 * max + 1).fill(0), home = new Array(max + 1).fill(0), away = new Array(max + 1).fill(0);
+  for (const [sh, wh] of scales) {
+    for (const [sa, wa] of scales) {
+      const h0 = lh * sh, a0 = la * sa;
+      let sum = 0;
+      const grid: number[][] = [];
+      for (let h = 0; h <= max; h++) {
+        grid[h] = [];
+        for (let a = 0; a <= max; a++) {
+          let tau = 1;
+          if (h === 0 && a === 0) tau = 1 - h0 * a0 * DC_RHO;
+          else if (h === 0 && a === 1) tau = 1 + h0 * DC_RHO;
+          else if (h === 1 && a === 0) tau = 1 + a0 * DC_RHO;
+          else if (h === 1 && a === 1) tau = 1 - DC_RHO;
+          const p = Math.max(0, poissonPmf(h, h0) * poissonPmf(a, a0) * tau);
+          grid[h][a] = p;
+          sum += p;
+        }
+      }
+      for (let h = 0; h <= max; h++)
+        for (let a = 0; a <= max; a++) {
+          const p = (grid[h][a] / (sum || 1)) * wh * wa;
+          total[h + a] += p;
+          home[h] += p;
+          away[a] += p;
+        }
+    }
+  }
+  return { total, home, away };
+}
+/** Nad/pod z rozdelenia počtov (pmf[k] = pravdepodobnosť k). */
+function overUnderFromPmf(pmf: number[], line: number): { over: number; under: number } {
+  let under = 0;
+  for (let k = 0; k <= Math.floor(line) && k < pmf.length; k++) under += pmf[k];
+  under = Math.min(1, Math.max(0, under)) * 100;
+  return { over: 100 - under, under };
+}
+
 // Vplyv chýbajúcich hráčov (6. 10. 2026). Útok: podiel chýbajúcich na góloch
 // a asistenciách tímu (asistencia = pol gólu) × ATTACK_WEIGHT, najviac −15 %.
 // Obrana: podiel chýbajúcich obrancov a brankára na ich odohraných minútach
@@ -747,6 +805,9 @@ export function predictMatch(
   /** Vypnuté trhy a oprava percent podľa ostrých výsledkov. */
   adjust?: MarketAdjustments | null
 ): PredictionResult {
+  // Nový model – neistota priemeru (25. 10. 2026): priemer z posledných 10 zápasov nie je presný,
+  // preto sa rozptyl štatistík zväčší o 1/10 (menej zápasov = opatrnejšie percentá).
+  const VR = variant ? scaleVarRatio(VAR_RATIO, 1 + 1 / STAT_WINDOW_GAMES) : VAR_RATIO;
   // Nový model – únava: menej rohov a striel unaveného tímu (zvyšok nižšie pri góloch).
   const tiredHome = fatigueFactor(variant?.rest?.home);
   const tiredAway = fatigueFactor(variant?.rest?.away);
@@ -846,7 +907,7 @@ export function predictMatch(
     const b = blendH2H(homeCornersAvg + awayCornersAvg, "corners");
     const expected = b.value;
     if (b.h2h) h2hNotes.rohy = `Vo vzájomných zápasoch (${b.h2h.n}) padlo v priemere ${fmt1(b.h2h.avg)} rohu.`;
-    const { over, under } = overdispersedOverUnder(expected, CORNERS_LINE, VAR_RATIO.corners);
+    const { over, under } = overdispersedOverUnder(expected, CORNERS_LINE, VR.corners);
     corners = { expected, line: CORNERS_LINE, over, under };
   }
 
@@ -865,7 +926,7 @@ export function predictMatch(
     const cardsBlend = blendH2H(baseCards, "cards");
     const expectedCards = cardsBlend.value * (referee?.cardsFactor ?? 1);
     if (cardsBlend.h2h) h2hNotes.karty = `Vo vzájomných zápasoch (${cardsBlend.h2h.n}) padlo v priemere ${fmt1(cardsBlend.h2h.avg)} karty.`;
-    const cardsOU = overdispersedOverUnder(expectedCards, CARDS_LINE, VAR_RATIO.cards);
+    const cardsOU = overdispersedOverUnder(expectedCards, CARDS_LINE, VR.cards);
     cards = { expected: expectedCards, line: CARDS_LINE, ...cardsOU };
   }
 
@@ -875,7 +936,7 @@ export function predictMatch(
     const b = blendH2H(extraStatsAvg.homeShotsOnGoal + extraStatsAvg.awayShotsOnGoal, "shotsOnGoal");
     const expected = b.value;
     if (b.h2h) h2hNotes.strely = `Vo vzájomných zápasoch (${b.h2h.n}) v priemere ${fmt1(b.h2h.avg)} striel na bránu.`;
-    const { over, under } = overdispersedOverUnder(expected, SHOTS_ON_GOAL_LINE, VAR_RATIO.shotsOnGoal);
+    const { over, under } = overdispersedOverUnder(expected, SHOTS_ON_GOAL_LINE, VR.shotsOnGoal);
     shotsOnGoal = { expected, line: SHOTS_ON_GOAL_LINE, over, under };
   }
 
@@ -885,7 +946,7 @@ export function predictMatch(
     const b = blendH2H(extraStatsAvg.homeFouls + extraStatsAvg.awayFouls, "fouls");
     const expected = b.value * (referee?.foulsFactor ?? 1);
     if (b.h2h) h2hNotes.fauly = `Vo vzájomných zápasoch (${b.h2h.n}) v priemere ${fmt1(b.h2h.avg)} faulov.`;
-    const { over, under } = overdispersedOverUnder(expected, FOULS_LINE, VAR_RATIO.fouls);
+    const { over, under } = overdispersedOverUnder(expected, FOULS_LINE, VR.fouls);
     fouls = { expected, line: FOULS_LINE, over, under };
   }
 
@@ -895,7 +956,7 @@ export function predictMatch(
     const b = blendH2H(extraStatsAvg.homeOffsides + extraStatsAvg.awayOffsides, "offsides");
     const expected = b.value;
     if (b.h2h) h2hNotes.ofsajdy = `Vo vzájomných zápasoch (${b.h2h.n}) v priemere ${fmt1(b.h2h.avg)} ofsajdov.`;
-    const { over, under } = overdispersedOverUnder(expected, OFFSIDES_LINE, VAR_RATIO.offsides);
+    const { over, under } = overdispersedOverUnder(expected, OFFSIDES_LINE, VR.offsides);
     offsides = { expected, line: OFFSIDES_LINE, over, under };
   }
 
@@ -986,32 +1047,37 @@ export function predictMatch(
     }
   };
 
-  addOverUnder("Góly", "goly", (line) => poissonOverUnder(xg.home + xg.away, line), () => golyExplanation, { mean: xg.home + xg.away });
+  // Nový model (25. 10. 2026): góly z rozdelenia s opravou nízkych skóre (Dixon–Coles)
+  // a s neistotou očakávaných gólov podľa počtu odohraných zápasov. Súčasný model: čistý Poisson.
+  const gj = variant ? goalsJoint(xg.home, xg.away, minGamesPlayed) : null;
+  const goalsOU = (kind: "total" | "home" | "away", line: number) =>
+    gj ? overUnderFromPmf(gj[kind], line) : poissonOverUnder(kind === "total" ? xg.home + xg.away : kind === "home" ? xg.home : xg.away, line);
+  addOverUnder("Góly", "goly", (line) => goalsOU("total", line), () => golyExplanation, { mean: xg.home + xg.away });
   // Góly jedného tímu: Poissonovo rozdelenie z očakávaných gólov tímu.
   // Z oboch tímov spolu najviac jeden tip (kategória „goly_timu“).
-  addOverUnder("Góly domácich", "goly_timu", (line) => poissonOverUnder(xg.home, line), () =>
+  addOverUnder("Góly domácich", "goly_timu", (line) => goalsOU("home", line), () =>
     `Očakávané góly ${fixture.homeTeam.name}: ${xg.home.toFixed(1)} (súper ${fixture.awayTeam.name} ${xg.away.toFixed(1)}).${absences?.text ? ` ${absences.text}` : ""}`,
     { mean: xg.home }
   );
-  addOverUnder("Góly hostí", "goly_timu", (line) => poissonOverUnder(xg.away, line), () =>
+  addOverUnder("Góly hostí", "goly_timu", (line) => goalsOU("away", line), () =>
     `Očakávané góly ${fixture.awayTeam.name}: ${xg.away.toFixed(1)} (súper ${fixture.homeTeam.name} ${xg.home.toFixed(1)}).${absences?.text ? ` ${absences.text}` : ""}`,
     { mean: xg.away }
   );
 
   if (corners) {
     const exp = corners.expected;
-    addOverUnder("Rohy", "rohy", (line) => overdispersedOverUnder(exp, line, VAR_RATIO.corners), (line) => statExplanation(exp, line), { mean: exp, varRatio: VAR_RATIO.corners });
+    addOverUnder("Rohy", "rohy", (line) => overdispersedOverUnder(exp, line, VR.corners), (line) => statExplanation(exp, line), { mean: exp, varRatio: VR.corners });
   }
   // Rohy jedného tímu: vlastné rohy tímu zmiešané s tým, koľko rohov dovolí súper.
   if (homeCornersAvg != null && awayCornersAvg != null) {
     const hc = homeCornersAvg, ac = awayCornersAvg;
-    addOverUnder("Rohy domácich", "rohy_timu", (line) => overdispersedOverUnder(hc, line, VAR_RATIO.corners), (line) =>
+    addOverUnder("Rohy domácich", "rohy_timu", (line) => overdispersedOverUnder(hc, line, VR.corners), (line) =>
       `${fixture.homeTeam.name} má v priemere ${fmt1(hc)} rohu na zápas (aj s ohľadom na súpera), hranica ${line}.`,
-      { mean: hc, varRatio: VAR_RATIO.corners }
+      { mean: hc, varRatio: VR.corners }
     );
-    addOverUnder("Rohy hostí", "rohy_timu", (line) => overdispersedOverUnder(ac, line, VAR_RATIO.corners), (line) =>
+    addOverUnder("Rohy hostí", "rohy_timu", (line) => overdispersedOverUnder(ac, line, VR.corners), (line) =>
       `${fixture.awayTeam.name} má v priemere ${fmt1(ac)} rohu na zápas (aj s ohľadom na súpera), hranica ${line}.`,
-      { mean: ac, varRatio: VAR_RATIO.corners }
+      { mean: ac, varRatio: VR.corners }
     );
   }
 
@@ -1033,23 +1099,23 @@ export function predictMatch(
     const exp = cards.expected;
     // Žlté karty v polčasoch (22. 10. 2026): v 1. polčase ich padá menej (asi 38 %).
     const c1 = exp * FIRST_HALF_CARD_SHARE, c2 = exp * (1 - FIRST_HALF_CARD_SHARE);
-    addOverUnder("Karty v 1. polčase", "karty_1p", (line) => overdispersedOverUnder(c1, line, VAR_RATIO.cards), (line) =>
+    addOverUnder("Karty v 1. polčase", "karty_1p", (line) => overdispersedOverUnder(c1, line, VR.cards), (line) =>
       `Očakávané žlté karty v 1. polčase: ${fmt1(c1)} (z ${fmt1(exp)} v celom zápase), hranica ${line}.${refereeNote("cards")}`,
-      { mean: c1, varRatio: VAR_RATIO.cards }
+      { mean: c1, varRatio: VR.cards }
     );
-    addOverUnder("Karty v 2. polčase", "karty_2p", (line) => overdispersedOverUnder(c2, line, VAR_RATIO.cards), (line) =>
+    addOverUnder("Karty v 2. polčase", "karty_2p", (line) => overdispersedOverUnder(c2, line, VR.cards), (line) =>
       `Očakávané žlté karty v 2. polčase: ${fmt1(c2)} (z ${fmt1(exp)} v celom zápase), hranica ${line}.${refereeNote("cards")}`,
-      { mean: c2, varRatio: VAR_RATIO.cards }
+      { mean: c2, varRatio: VR.cards }
     );
-    addOverUnder("Karty", "karty", (line) => overdispersedOverUnder(exp, line, VAR_RATIO.cards), (line) =>
+    addOverUnder("Karty", "karty", (line) => overdispersedOverUnder(exp, line, VR.cards), (line) =>
       `Očakávané žlté karty oboch tímov spolu: ${fmt1(exp)}, hranica ${line}.${refereeNote("cards")}`,
-      { mean: exp, varRatio: VAR_RATIO.cards }
+      { mean: exp, varRatio: VR.cards }
     );
   }
 
   if (shotsOnGoal) {
     const exp = shotsOnGoal.expected;
-    addOverUnder("Strely na bránu", "strely", (line) => overdispersedOverUnder(exp, line, VAR_RATIO.shotsOnGoal), (line) => statExplanation(exp, line), { mean: exp, varRatio: VAR_RATIO.shotsOnGoal });
+    addOverUnder("Strely na bránu", "strely", (line) => overdispersedOverUnder(exp, line, VR.shotsOnGoal), (line) => statExplanation(exp, line), { mean: exp, varRatio: VR.shotsOnGoal });
   }
 
   // Žlté karty a strely na bránu jedného tímu (17. 10. 2026): vlastný priemer tímu
@@ -1057,41 +1123,41 @@ export function predictMatch(
   if (extraStatsAvg?.homeCards != null && extraStatsAvg?.awayCards != null && cards) {
     const rf = referee?.cardsFactor ?? 1;
     const hk = extraStatsAvg.homeCards * rf, ak = extraStatsAvg.awayCards * rf;
-    addOverUnder("Karty domácich", "karty_timu", (line) => overdispersedOverUnder(hk, line, VAR_RATIO.cards), (line) =>
+    addOverUnder("Karty domácich", "karty_timu", (line) => overdispersedOverUnder(hk, line, VR.cards), (line) =>
       `${fixture.homeTeam.name}: očakávané žlté karty ${fmt1(hk)} (aj s ohľadom na súpera), hranica ${line}.${refereeNote("cards")}`,
-      { mean: hk, varRatio: VAR_RATIO.cards }
+      { mean: hk, varRatio: VR.cards }
     );
-    addOverUnder("Karty hostí", "karty_timu", (line) => overdispersedOverUnder(ak, line, VAR_RATIO.cards), (line) =>
+    addOverUnder("Karty hostí", "karty_timu", (line) => overdispersedOverUnder(ak, line, VR.cards), (line) =>
       `${fixture.awayTeam.name}: očakávané žlté karty ${fmt1(ak)} (aj s ohľadom na súpera), hranica ${line}.${refereeNote("cards")}`,
-      { mean: ak, varRatio: VAR_RATIO.cards }
+      { mean: ak, varRatio: VR.cards }
     );
   }
   if (extraStatsAvg?.homeShotsOnGoal != null && extraStatsAvg?.awayShotsOnGoal != null) {
     const hs = extraStatsAvg.homeShotsOnGoal, as = extraStatsAvg.awayShotsOnGoal;
-    addOverUnder("Strely na bránu domácich", "strely_timu", (line) => overdispersedOverUnder(hs, line, VAR_RATIO.shotsOnGoal), (line) =>
+    addOverUnder("Strely na bránu domácich", "strely_timu", (line) => overdispersedOverUnder(hs, line, VR.shotsOnGoal), (line) =>
       `${fixture.homeTeam.name} má v priemere ${fmt1(hs)} striel na bránu (aj s ohľadom na súpera), hranica ${line}.`,
-      { mean: hs, varRatio: VAR_RATIO.shotsOnGoal }
+      { mean: hs, varRatio: VR.shotsOnGoal }
     );
-    addOverUnder("Strely na bránu hostí", "strely_timu", (line) => overdispersedOverUnder(as, line, VAR_RATIO.shotsOnGoal), (line) =>
+    addOverUnder("Strely na bránu hostí", "strely_timu", (line) => overdispersedOverUnder(as, line, VR.shotsOnGoal), (line) =>
       `${fixture.awayTeam.name} má v priemere ${fmt1(as)} striel na bránu (aj s ohľadom na súpera), hranica ${line}.`,
-      { mean: as, varRatio: VAR_RATIO.shotsOnGoal }
+      { mean: as, varRatio: VR.shotsOnGoal }
     );
   }
 
   if (fouls) {
     const exp = fouls.expected;
-    addOverUnder("Fauly", "fauly", (line) => overdispersedOverUnder(exp, line, VAR_RATIO.fouls), (line) => statExplanation(exp, line) + refereeNote("fouls"), { mean: exp, varRatio: VAR_RATIO.fouls });
+    addOverUnder("Fauly", "fauly", (line) => overdispersedOverUnder(exp, line, VR.fouls), (line) => statExplanation(exp, line) + refereeNote("fouls"), { mean: exp, varRatio: VR.fouls });
     // Fauly jedného tímu (22. 10. 2026): vlastný priemer zmiešaný s tým, koľko faulov
     // súper vynúti (ako pri rohoch a kartách tímu), aj s vplyvom rozhodcu.
     const rf = referee?.foulsFactor ?? 1;
     const hf = extraStatsAvg!.homeFouls! * rf, af = extraStatsAvg!.awayFouls! * rf;
-    addOverUnder("Fauly domácich", "fauly_timu", (line) => overdispersedOverUnder(hf, line, VAR_RATIO.fouls), (line) =>
+    addOverUnder("Fauly domácich", "fauly_timu", (line) => overdispersedOverUnder(hf, line, VR.fouls), (line) =>
       `${fixture.homeTeam.name}: očakávané fauly ${fmt1(hf)} (aj s ohľadom na súpera), hranica ${line}.${refereeNote("fouls")}`,
-      { mean: hf, varRatio: VAR_RATIO.fouls }
+      { mean: hf, varRatio: VR.fouls }
     );
-    addOverUnder("Fauly hostí", "fauly_timu", (line) => overdispersedOverUnder(af, line, VAR_RATIO.fouls), (line) =>
+    addOverUnder("Fauly hostí", "fauly_timu", (line) => overdispersedOverUnder(af, line, VR.fouls), (line) =>
       `${fixture.awayTeam.name}: očakávané fauly ${fmt1(af)} (aj s ohľadom na súpera), hranica ${line}.${refereeNote("fouls")}`,
-      { mean: af, varRatio: VAR_RATIO.fouls }
+      { mean: af, varRatio: VR.fouls }
     );
   }
 
@@ -1256,6 +1322,20 @@ export function predictMatch(
   // Liga majstrov: tímy majú v ligovej fáze 1 – 2 zápasy, ale v domácej lige ich
   // odohrali dosť a forma aj štatistiky sa doplnia zo všetkých súťaží (apiClient).
   const gamesForRecommend = Math.max(minGamesPlayed, seasonGamesAnyCompetition ?? 0);
+  const ouParts = (sel: string): { dir: string; line: number } | null => {
+    const m = sel.match(/^(Over|Under) (\d+(?:\.\d+)?)$/);
+    return m ? { dir: m[1], line: parseFloat(m[2]) } : null;
+  };
+  const neighborLacksValue = (b: MarketPick): boolean => {
+    const me = ouParts(b.selection);
+    if (!me) return false;
+    const near = candidates.filter((c) => {
+      if (c === b || c.market !== b.market || c.expectedValue == null) return false;
+      const x = ouParts(c.selection);
+      return !!x && x.dir === me.dir && Math.abs(Math.abs(x.line - me.line) - 1) < 0.01;
+    });
+    return near.length > 0 && near.every((c) => (c.expectedValue ?? 0) < 0.98);
+  };
   const pickPool: MarketPick[] = [];
   const lowValueBets: MarketPick[] = [];
   for (const b of inBand) {
@@ -1334,6 +1414,12 @@ export function predictMatch(
       // tie sa zapisujú do tichej evidencie a keď sa trhu znova darí, zapne sa sám.
       b.rejectReason = `trh je dočasne vypnutý (${adjust.disabled[b.category]})`;
       b.rejectCode = "market_disabled";
+      lowValueBets.push(b);
+    } else if (variant && neighborLacksValue(b)) {
+      // Nový model (25. 10. 2026): hodnota len na jednej hranici, kým susedná hranica toho istého
+      // smeru (napr. rohy nad 9,5 a nad 10,5) je jasne bez hodnoty – skôr chyba odhadu než príležitosť.
+      b.rejectReason = "hodnota len na jednej hranici, susedná je bez hodnoty";
+      b.rejectCode = "neighbor_no_value";
       lowValueBets.push(b);
     } else {
       pickPool.push(b);

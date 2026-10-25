@@ -1729,6 +1729,7 @@ function renderTipsList(allTips) {
   renderBankrollSimulation(statTips);
   renderCalibrationReport(statTips);
   renderValueReport(statTips);
+  renderLeagueReport(statTips);
   renderWatchReport(allTips.filter((t) => t.watchOnly && !(t.legs && t.legs.length)));
   renderTipRows(tips);
 }
@@ -1975,6 +1976,35 @@ function renderValueReport(tips) {
   el.innerHTML = `<div class="table-wrap"><table class="bt-table"><thead><tr><th>Hodnota</th><th class="num">Tipy</th><th class="num">Vyšlo</th><th class="num">Priem. kurz</th><th class="num">Zisk</th><th class="num">Návratnosť</th><th class="num">Kurz vs. pred výkopom</th></tr></thead><tbody>${body}</tbody></table></div>
     <p class="faint small">Zisk pri vklade 1 jednotka na tip. „Kurz vs. pred výkopom“ ukazuje, o koľko bol náš kurz lepší (+) alebo horší (−) ako uzatvárací kurz – dlhodobo kladné číslo znamená, že model naozaj nachádza hodnotu. Pri skupine s menej ako 30 tipmi je výsledok ešte prevažne náhoda.</p>`;
 }
+// Úspešnosť podľa líg (25. 10. 2026): liga, kde model po 30+ tipoch prerába, sa oplatí vypnúť.
+const LEAGUE_WARN_MIN_TIPS = 30;
+function renderLeagueReport(tips) {
+  const el = document.getElementById("leagueResult");
+  if (!el) return;
+  const resolved = tips.filter((t) => !t.legs && (t.status === "won" || t.status === "lost") && typeof t.odds === "number" && t.odds > 1);
+  if (!resolved.length) {
+    el.innerHTML = `<p class="faint small">Zatiaľ nemáš vyhodnotené tipy s kurzom.</p>`;
+    return;
+  }
+  const byLeague = {};
+  for (const t of resolved) (byLeague[t.leagueName || "Iná súťaž"] ??= []).push(t);
+  const rows = Object.entries(byLeague)
+    .map(([league, list]) => {
+      const won = list.filter((t) => t.status === "won").length;
+      const profit = list.reduce((a, t) => a + (t.status === "won" ? t.odds - 1 : -1), 0);
+      const avgProb = list.reduce((a, t) => a + Number(t.probability || 0), 0) / list.length;
+      return { league, count: list.length, won, profit, roi: (profit / list.length) * 100, avgProb };
+    })
+    .sort((a, b) => b.count - a.count);
+  const body = rows
+    .map((r) => {
+      const warn = r.count >= LEAGUE_WARN_MIN_TIPS && r.roi < -5;
+      return `<tr><td>${escapeHtml(r.league)}${warn ? ` <span class="l small">– zvážiť vypnutie</span>` : ""}</td><td class="num">${r.count}</td><td class="num">${fmtNum((r.won / r.count) * 100, 0)}${NB}% <span class="faint">(model ${fmtNum(r.avgProb, 0)}${NB}%)</span></td><td class="num ${r.profit >= 0 ? "g" : "l"}">${signed(r.profit, 1)}${NB}j.</td><td class="num ${r.roi >= 0 ? "g" : "l"}">${signed(r.roi, 1)}${NB}%</td></tr>`;
+    })
+    .join("");
+  el.innerHTML = `<div class="table-wrap"><table class="bt-table"><thead><tr><th>Súťaž</th><th class="num">Tipy</th><th class="num">Vyšlo</th><th class="num">Zisk</th><th class="num">Návratnosť</th></tr></thead><tbody>${body}</tbody></table></div>
+    <p class="faint small">Liga s ${LEAGUE_WARN_MIN_TIPS}+ tipmi a návratnosťou pod −5${NB}% je označená. Pri menšom počte tipov je výsledok ešte prevažne náhoda.</p>`;
+}
 bankrollStartInput.addEventListener("input", () => renderBankrollSimulation(lastStatTips));
 document.getElementById("bankrollPct").addEventListener("click", (e) => {
   const b = e.target.closest("[data-pct]");
@@ -2022,6 +2052,13 @@ function historyRowHtml(t) {
     : `<b>${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))}</b>
        <span>${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}${tipBadges(t)}</span>`;
   const conf = isTicket ? `${fmtNum(t.probability, 1)}${NB}% · ${tipOddsLabel(t)}` : `Dôvera ${Number(t.probability).toFixed(0)}${NB}% · ${tipOddsLabel(t)}`;
+  // Kontrola po zostavách (25. 10. 2026): výsledok prepočtu ~60 min pred výkopom.
+  const lc = t.lineupCheck;
+  const lineupLine = lc
+    ? lc.ok
+      ? `<br><small class="g" title="Prepočítané s potvrdenými zostavami">✓ Po zostavách${typeof lc.probability === "number" ? ` ${fmtNum(lc.probability, 0)}${NB}%` : ""} – tip platí</small>`
+      : `<br><small class="l" title="Prepočítané s potvrdenými zostavami">⚠ Po zostavách${typeof lc.probability === "number" ? ` ${fmtNum(lc.probability, 0)}${NB}%` : ""}: ${escapeHtml(lc.reason || "tip už nespĺňa pravidlá")}</small>`
+    : "";
   const btn = (attr, icon, title, extra = "") => `<button type="button" class="ib${extra}" ${attr}="${escapeHtml(t.id)}" title="${title}" aria-label="${title}">${icon}</button>`;
   const buttons = [btn("data-edit-id", ICON.edit, "Upraviť výsledok alebo kurz")];
   if (t.status === "pending") {
@@ -2035,7 +2072,7 @@ function historyRowHtml(t) {
   return `<div class="hrow${cls}" data-row-id="${escapeHtml(t.id)}">
     <span class="d" title="${valid ? escapeHtml(d.toLocaleString("sk-SK")) : ""}">${dateTxt}${yearTxt}</span>
     <span class="mt">${main}</span>
-    <span class="conf">${conf}</span>
+    <span class="conf">${conf}${lineupLine}</span>
     ${STATUS_PILL[t.status] || STATUS_PILL.pending}
     <span class="ic">${buttons.join("")}</span>
   </div>`;
@@ -2722,6 +2759,7 @@ const SHADOW_REASON_LABEL = {
   band_low: "dôvera pod pásmom (pod 68 %, 21. 10. a 23. – 24. 10. pod 65 %)",
   band_high: "dôvera nad 80 %",
   category_lower_ev: "iná hranica trhu mala vyššiu hodnotu",
+  neighbor_no_value: "hodnota len na jednej hranici, susedná bez hodnoty",
   match_lower_ev: "iný tip zápasu mal vyššiu hodnotu",
   market_disabled: "trh dočasne vypnutý (slabé výsledky)",
   market_excluded: "trh neodporúčame",

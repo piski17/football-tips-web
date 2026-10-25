@@ -169,6 +169,14 @@ function mapFixture(item: any): Fixture {
   };
 }
 
+/** Jeden zápas podľa ID (kontrola tipu po zostavách). */
+export async function getFixtureById(fixtureId: number): Promise<Fixture | null> {
+  const res = await client().get("/fixtures", { params: { id: fixtureId } });
+  checkApiErrors(res.data);
+  const item = res.data?.response?.[0];
+  return item ? mapFixture(item) : null;
+}
+
 /** Načíta zápasy danej ligy/sezóny na konkrétny deň (alebo všetky, ak deň nie je zadaný). */
 // Stavy zápasu, ktoré považujeme za "skončené" - takéto zápasy sa v zozname
 // dnešných zápasov už nezobrazujú (FT = koniec, AET = po predĺžení, PEN = po penaltách).
