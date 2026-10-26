@@ -47,6 +47,9 @@ const LEAGUE_NAME_SK = {
   "Euro Championship": "Majstrovstvá Európy",
   "Euro Championship - Qualification": "Kvalifikácia ME",
   "Friendlies": "Prípravné zápasy",
+  // Názvy z API pre české a slovenské ligy (26. 10. 2026).
+  "Czech Liga": "Chance Liga",
+  "Super Liga": "Niké liga",
 };
 
 function translateLeagueName(name) {
@@ -1108,8 +1111,8 @@ function rejectedBetsHtml(r) {
 
 function lineCalcHtml(r) {
   const models = r.lineModels || [];
-  // V Lige majstrov a Európskej lige stávkovky držanie lopty neponúkajú – kalkulačka ho neukáže.
-  const poss = [2, 3].includes(Number(r.fixture?.league?.id)) ? null : r.possession;
+  // Držanie lopty len v Premier League, Bundeslige, La Lige a Serie A (26. 10. 2026).
+  const poss = [39, 78, 140, 135].includes(Number(r.fixture?.league?.id)) ? r.possession : null;
   if (!models.length && !poss) return "";
   const h = translateTeamName(r.fixture.homeTeam.name), a = translateTeamName(r.fixture.awayTeam.name);
   const possOpts = poss

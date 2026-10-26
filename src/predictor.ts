@@ -753,8 +753,12 @@ function marketConflictLimit(h2hMatchesUsed: number): number {
   return h2hMatchesUsed >= 5 ? 30 : h2hMatchesUsed >= 3 ? 25 : 20;
 }
 
-/** Súťaže, v ktorých stávkovky neponúkajú držanie lopty: Liga majstrov (2), Európska liga (3). */
-export const NO_POSSESSION_LEAGUE_IDS = [2, 3];
+/**
+ * Držanie lopty sa ponúka len v týchto ligách (26. 10. 2026, Michalovo rozhodnutie):
+ * Premier League (39), Bundesliga (78), La Liga (140), Serie A (135). Inde sa tipy
+ * na držanie lopty nepočítajú (predtým len bez Ligy majstrov a Európskej ligy).
+ */
+export const POSSESSION_LEAGUE_IDS = [39, 78, 140, 135];
 
 export function predictMatch(
   fixture: Fixture,
@@ -1183,9 +1187,8 @@ export function predictMatch(
     ];
     // Len pri zápase, kde jeden tím jasne dominuje (odhad aspoň 58 %), inak by držanie
     // lopty vyšlo takmer pri každom zápase a zaplavilo Tipy dňa.
-    // Liga majstrov a Európska liga (22. 10. 2026, Michalovo rozhodnutie): stávkovky tam
-    // držanie lopty neponúkajú, preto sa v týchto súťažiach tipy na držanie lopty neponúkajú.
-    const possOffered = !NO_POSSESSION_LEAGUE_IDS.includes(Number(fixture.league?.id));
+    // Len Premier League, Bundesliga, La Liga a Serie A (26. 10. 2026, Michalovo rozhodnutie).
+    const possOffered = POSSESSION_LEAGUE_IDS.includes(Number(fixture.league?.id));
     const possDominant = possOffered && Math.abs(expectedHome - 50) >= 8;
     for (const [market, team, exp] of possDominant ? possTeams : []) {
       for (const line of POSSESSION_LINES) {

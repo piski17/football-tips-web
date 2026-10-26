@@ -153,6 +153,11 @@ const LEAGUE_PRESETS: LeaguePreset[] = [
   { id: 144, name: "Jupiler Pro League", country: "Belgicko" },
   { id: 203, name: "Süper Lig", country: "Turecko" },
   { id: 106, name: "Ekstraklasa", country: "Poľsko" },
+  // 26. 10. 2026 (Michalovo rozhodnutie): ďalšie ligy.
+  { id: 40, name: "Championship", country: "Anglicko" },
+  { id: 79, name: "2. Bundesliga", country: "Nemecko" },
+  { id: 345, name: "Chance Liga", country: "Česko" },
+  { id: 332, name: "Niké liga", country: "Slovensko" },
   // Liga národov (id 5) odstránená 6. 10. 2026 - reprezentácie majú málo zápasov, tipy nespoľahlivé.
 ];
 
