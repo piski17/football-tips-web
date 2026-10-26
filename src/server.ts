@@ -2060,6 +2060,49 @@ function shadowBreakdown(all: ShadowEntry[], keyOf: (e: ShadowEntry) => string, 
     });
 }
 
+/**
+ * Rozbor tipov vyradených pre rozpor so stávkovkami (26. 10. 2026): podľa trhu, podľa obdobia
+ * (pred / po oprave priradenia kurzov rohov 22. 10. – „Multicorners“), len tipy, ktoré by inak
+ * prešli všetkými pravidlami, a zoznam najväčších rozporov na ručnú kontrolu kurzov.
+ */
+const ODDS_FIX_DATE = "2026-10-22";
+function conflictDetail(all: ShadowEntry[]) {
+  const conflict = all.filter((e) => shadowReasonCode(e) === "conflict");
+  const marketPct = (e: ShadowEntry) => (typeof e.marketProb === "number" ? e.marketProb : e.marketProbability);
+  const modelPct = (e: ShadowEntry) => (typeof e.modelProbability === "number" ? e.modelProbability : e.probability);
+  // Tip, ktorý by bez rozporu prešiel: dôvera 68 – 80 %, kurz aspoň 1,50, hodnota +5 až +25 %.
+  const passesRules = (e: ShadowEntry) => {
+    if (typeof e.odds !== "number" || !(e.odds > 1)) return false;
+    const ev = (e.probability / 100) * e.odds;
+    return e.probability >= MIN_PROBABILITY && e.probability <= MAX_PROBABILITY && e.odds >= MIN_ODDS && ev >= MIN_EXPECTED_VALUE && ev <= SUSPICIOUS_EXPECTED_VALUE;
+  };
+  const period = (e: ShadowEntry) => (String(e.matchDate).slice(0, 10) < ODDS_FIX_DATE ? "before" : "after");
+  const biggest = conflict
+    .filter((e) => (e.status === "won" || e.status === "lost") && marketPct(e) != null && modelPct(e) != null)
+    .map((e) => ({ e, gap: (modelPct(e) as number) - (marketPct(e) as number) }))
+    .sort((a, b) => b.gap - a.gap)
+    .slice(0, 30)
+    .map(({ e, gap }) => ({
+      matchDate: e.matchDate,
+      homeTeam: e.homeTeam,
+      awayTeam: e.awayTeam,
+      market: e.market,
+      selection: e.selection,
+      model: modelPct(e),
+      bookmakers: marketPct(e),
+      gap,
+      odds: e.odds,
+      status: e.status,
+    }));
+  return {
+    byMarket: shadowBreakdown(conflict, (e) => e.market, []),
+    byPeriod: shadowBreakdown(conflict, period, ["before", "after"]),
+    passing: shadowBreakdown(conflict.filter(passesRules), () => "passing", []),
+    passingByPeriod: shadowBreakdown(conflict.filter(passesRules), period, ["before", "after"]),
+    biggest,
+  };
+}
+
 app.get("/api/shadow/summary", async (_req, res) => {
   try {
     const all = await listShadow();
@@ -2092,6 +2135,7 @@ app.get("/api/shadow/summary", async (_req, res) => {
       },
       byReason: shadowBreakdown(all, shadowReasonCode, SHADOW_REASON_ORDER),
       byGap: shadowBreakdown(all, shadowGapBucket, SHADOW_GAP_ORDER),
+      conflictDetail: conflictDetail(all),
     });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });

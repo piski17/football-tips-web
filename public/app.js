@@ -2896,6 +2896,27 @@ function shadowTableHtml(rows, firstCol, labelOf) {
   return `<div class="table-wrap"><table class="bt-table"><thead><tr><th>${firstCol}</th><th class="num">Spolu</th><th class="num" title="vyšlo / vyhodnotené">Vyšlo</th><th class="num">Úspešnosť</th><th class="num">Model</th><th class="num">Stávkovky</th><th class="num" title="Zisk pri vklade 1 jednotky za zaznamenaný kurz">Zisk</th></tr></thead><tbody>${body}</tbody></table></div>`;
 }
 
+// Rozbor tipov vyradených pre rozpor (26. 10. 2026): podľa trhu, obdobia, len tipy, ktoré by inak
+// prešli pravidlami, a najväčšie rozpory na ručnú kontrolu kurzov.
+const CONFLICT_PERIOD_LABEL = { before: "zápasy do 21. 10. (pred opravou kurzov rohov)", after: "zápasy od 22. 10." };
+function conflictDetailHtml(c) {
+  if (!c || !(c.byMarket || []).length) return "";
+  const passing = (c.passing || [])[0];
+  const res = { won: `<b class="g">vyšiel</b>`, lost: `<b class="l">nevyšiel</b>` };
+  const p = (v) => (v == null ? "–" : `${Math.round(v)}${NB}%`);
+  const biggest = (c.biggest || [])
+    .map((x) => `<tr><td style="white-space:nowrap">${escapeHtml(new Date(x.matchDate).toLocaleDateString("sk-SK", { day: "numeric", month: "numeric" }))}</td><td>${escapeHtml(translateTeamName(x.homeTeam))} – ${escapeHtml(translateTeamName(x.awayTeam))}<br><span class="faint">${escapeHtml(x.market)}: ${escapeHtml(translateNamesInText(x.selection, x.homeTeam, x.awayTeam))}</span></td><td class="num">${p(x.model)}</td><td class="num">${p(x.bookmakers)}</td><td class="num">${typeof x.odds === "number" ? fmtOdds(x.odds) : "–"}</td><td>${res[x.status] || x.status}</td></tr>`)
+    .join("");
+  return `<details class="inner-details"><summary>Rozpor so stávkovkami – rozbor (kontrola pred zmenou filtra)</summary>
+    ${passing ? `<p class="small"><b>Tipy, ktoré by bez rozporu prešli všetkými pravidlami</b> (68 – 80${NB}%, kurz aspoň ${fmtNum(1.5, 2)}, hodnota +5 až +25${NB}%): ${passing.settled ? `vyšlo <b>${passing.won} z ${passing.settled}</b> (${p(passing.hitRate)}), zisk <b class="${passing.profit >= 0 ? "g" : "l"}">${signed(passing.profit, 1)}${NB}j.</b>` : "zatiaľ žiadny vyhodnotený"}${passing.count > passing.settled ? `, čaká ${passing.count - passing.settled}` : ""}.</p>` : `<p class="small">Žiadny tip s rozporom by inak neprešiel pravidlami.</p>`}
+    ${(c.passingByPeriod || []).length ? shadowTableHtml(c.passingByPeriod, "Prešli by – obdobie", (k) => CONFLICT_PERIOD_LABEL[k] || k) : ""}
+    ${shadowTableHtml(c.byPeriod || [], "Všetky – obdobie", (k) => CONFLICT_PERIOD_LABEL[k] || k)}
+    ${shadowTableHtml(c.byMarket || [], "Trh", (k) => k)}
+    ${biggest ? `<p class="small" style="margin-top:12px"><b>30 najväčších rozporov</b> – over v stávkovke, či kurz naozaj patril k tomuto tipu:</p>
+    <div class="table-wrap"><table class="bt-table"><thead><tr><th>Deň</th><th>Zápas a tip</th><th class="num">Model</th><th class="num">Stávkovky</th><th class="num">Kurz</th><th>Výsledok</th></tr></thead><tbody>${biggest}</tbody></table></div>` : ""}
+    <div>Rozpor = model a stávkovky sa líšia o viac, ako dovoľuje filter. Ak by zisk pochádzal najmä zo zápasov do 21. 10. alebo z jedného trhu, ide skôr o chybne priradený kurz ako o skutočnú výhodu.</div></details>`;
+}
+
 async function renderShadowSummary() {
   const el = document.getElementById("shadowSummary");
   try {
@@ -2918,6 +2939,7 @@ async function renderShadowSummary() {
         ${shadowTableHtml(d.byGap || [], "Model − stávkovky", (k) => (k === "unknown" ? "neznámy" : `${k} b.`))}
         <div>Model a stávkovky = priemer pri vyhodnotených tipoch. Stávkovky bez marže, ak boli kurzy oboch strán (staršie záznamy s odhadom marže 5 %). Zisk = vklad 1 jednotky za zaznamenaný kurz. Z každého trhu zápasu sa zapisuje len hranica s najväčšou hodnotou; tipy s rozporom všetky.</div></details>`;
     }
+    t += conflictDetailHtml(d.conflictDetail);
     el.innerHTML = t;
   } catch {
     el.textContent = "";
