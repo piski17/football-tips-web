@@ -2876,7 +2876,7 @@ const SHADOW_REASON_LABEL = {
   band_high: "dôvera nad 80 %",
   category_lower_ev: "iná hranica trhu mala vyššiu hodnotu",
   neighbor_no_value: "hodnota len na jednej hranici, susedná bez hodnoty",
-  match_lower_ev: "iný tip zápasu mal vyššiu hodnotu",
+  match_lower_ev: "iný tip rovnakého typu zo zápasu mal vyššiu dôveru",
   market_disabled: "trh dočasne vypnutý (slabé výsledky)",
   market_excluded: "trh neodporúčame",
   few_games: "málo odohraných zápasov",

@@ -1446,21 +1446,24 @@ export function predictMatch(
   // pre tichú evidenciu (medzi neodporúčané sa nepresúvajú, výber sa nemení).
   for (const bet of pickPool) if (bestInCategory.get(bet.category) !== bet) bet.rejectCode = "category_lower_ev";
 
-  // Najviac 1 odporúčaný tip na zápas (18. 10. 2026): tipy z jedného zápasu spolu súvisia
-  // (napr. „menej gólov“ a „menej gólov domácich“ prehrajú naraz), preto ostane len ten
-  // s najväčšou hodnotou. Ostatné sa presunú medzi neodporúčané s dôvodom.
-  const topPick = diversifiedPicks.reduce<MarketPick | null>((best, b) => {
-    if (!best) return b;
-    const ev = rankValue(b), bestEv = rankValue(best);
-    return ev > bestEv || (ev === bestEv && b.probability > best.probability) ? b : best;
-  }, null);
+  // Viac tipov na zápas (26. 10. 2026, Michalovo rozhodnutie): z jedného zápasu môže ísť
+  // viac odporúčaných tipov, ale najviac jeden z každého typu (góly, rohy, karty, strely,
+  // fauly, držanie lopty). Góly zápasu, góly tímu aj góly v polčase sú jeden typ „góly“ –
+  // ostane ten, ktorému model najviac dôveruje. Ostatné idú medzi neodporúčané s dôvodom.
+  const marketType = (category: string) => category.split("_")[0];
+  const bestInType = new Map<string, MarketPick>();
   for (const b of diversifiedPicks) {
-    if (b === topPick) continue;
-    b.rejectReason = "iný tip z tohto zápasu má vyššiu hodnotu";
+    const t = marketType(b.category);
+    const cur = bestInType.get(t);
+    if (!cur || b.probability > cur.probability || (b.probability === cur.probability && rankValue(b) > rankValue(cur))) bestInType.set(t, b);
+  }
+  for (const b of diversifiedPicks) {
+    if (bestInType.get(marketType(b.category)) === b) continue;
+    b.rejectReason = "iný tip rovnakého typu z tohto zápasu má vyššiu dôveru";
     b.rejectCode = "match_lower_ev";
     lowValueBets.push(b);
   }
-  const bestBets = topPick ? [topPick] : [];
+  const bestBets = diversifiedPicks.filter((b) => bestInType.get(marketType(b.category)) === b);
 
   const homeTopScorer = homePlayers
     ? predictTopScorer(filterByLineup(homePlayers, homeLineupIds), xg.home, homeStats.goals.for.average.total, homeLineupIds)
