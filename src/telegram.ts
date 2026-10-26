@@ -394,17 +394,17 @@ const BENEFIT_CHAT = `• <b>💬 Súkromný VIP chat</b> – na vaše otázky o
   `• <b>📞 Úvodný hovor 1 na 1</b> (30 min) – nastavenie banku, vkladu a ako tipy hrať`;
 const BENEFIT_REPORT_GOLD = `• <b>📊 Osobný report na 50. deň</b> – koľko by ste zarobili s vaším bankom`;
 const BENEFIT_MENTOR =
-  `• <b>🤝 Mentoring 1 na 1 každý mesiac, celých 6 mesiacov</b> – osobné stretnutia alebo videohovory priamo so mnou\n` +
+  `• <b>🤝 Mentoring 1 na 1 počas celých 6 mesiacov</b> – osobné stretnutia alebo videohovory priamo so mnou\n` +
   `• <b>📊 Osobný report každé 2 mesiace</b> – koľko by ste zarobili s vaším bankom\n` +
   `• <b>⚡ Prednostné odpovede v chate</b>`;
 /** Garancia: ak obdobie členstva skončí v strate, člen dostane 1 mesiac zadarmo. */
 const GUARANTEE_LINE = `🛡 <b>Garancia:</b> ak vaše členstvo (Gold alebo Onyx) skončí v strate, ďalší mesiac máte zadarmo.`;
-const PLAN_START = `🥇 <b>Gold · 50 dní</b> – 69 € (150+ tipov)\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_REPORT_GOLD}`;
-const PLAN_SERIA = `💎 <b>Onyx · 6 mesiacov</b> – 199 € (33 € mesačne namiesto 41 €, ušetríte asi 50 €)\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_MENTOR}`;
+const PLAN_START = `🥇 <b>Gold · 50 dní</b> – 69 € (100+ tipov, asi 41 € mesačne namiesto 49 €)\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_REPORT_GOLD}`;
+const PLAN_SERIA = `💎 <b>Onyx · 6 mesiacov</b> – 199 € (500+ tipov, 33 € mesačne namiesto 49 €, ušetríte 95 €)\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_MENTOR}`;
 
 const FAQ_ANSWERS: Record<string, string> = {
   faq_price:
-    `💰 <b>Členstvo TipRadar</b>\n\nDve členstvá: Gold na 50 dní a Onyx na 6 mesiacov. Všetci členovia dostávajú rovnaké tipy, súkromný VIP chat a úvodný hovor 1 na 1, Onyx navyše mentoring každý mesiac.\n\n` +
+    `💰 <b>Členstvo TipRadar</b>\n\nDve členstvá: Gold na 50 dní a Onyx na 6 mesiacov. Všetci členovia dostávajú rovnaké tipy, súkromný VIP chat a úvodný hovor 1 na 1, Onyx navyše mentoring 1 na 1.\n\n` +
     `${PLAN_START}\n\n${PLAN_SERIA}\n\n${GUARANTEE_LINE}\n\n` +
     `Členstvo sa samo nepredlžuje, žiadna viazanosť. Cez letnú prestávku (jún – júl) sa pozastaví a o tento čas sa vám predĺži.` +
     (process.env.SALES_OPEN === "true" ? "" : `\n\n🗓 <b>Predaj členstiev spúšťame čoskoro.</b> Napíšte sem „Mám záujem“ a ozveme sa vám ako prvým.`),
@@ -1026,7 +1026,7 @@ export async function sendSalesOpenToWaitlist(): Promise<{ sent: number; skipped
       `Zapísal si sa do poradovníka na <b>členstvo TipRadar</b>. Predaj je práve otvorený a ty máš prednosť.\n\n` +
       `◆ denné tipy 1 – 2 hodiny pred výkopom\n◆ pri každom tipe kurz, šanca a sadzba\n◆ večerné vyhodnotenie\n◆ súkromný VIP chat\n\n` +
       `${GUARANTEE_LINE}\n\n` +
-      `Gold (50 dní) aj Onyx (6 mesiacov, navyše mentoring každý mesiac) sú bez obmedzenia miest. Vyber si 👇`;
+      `Gold (50 dní) aj Onyx (6 mesiacov, navyše mentoring 1 na 1) sú bez obmedzenia miest. Vyber si 👇`;
     try {
       await axios.post(
         `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
