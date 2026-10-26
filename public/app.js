@@ -406,20 +406,20 @@ function goTo(id) {
   else location.hash = id;
 }
 
-// ---- Miesta podľa dĺžky členstva: Gold, Platinum (rovnaké čísla ako na tipradar.eu) ----
+// ---- Miesta podľa dĺžky členstva: Gold, Onyx (rovnaké čísla ako na tipradar.eu) ----
 function seatsHtml(t) {
   const row = (key, label) => {
     const r = t && t[key];
     let val = "–", full = false, bar = "";
     if (r) {
-      // 1 a 3 mesiace sú bez obmedzenia miest (total = null)
+      // Gold aj Onyx sú bez obmedzenia miest (total = null)
       val = r.total == null ? `${r.occupied} čl.` : `${r.occupied} / ${r.total}`;
       full = r.total != null && r.left <= 0;
       if (r.total) bar = `<div class="bar"><i style="width:${Math.min(100, Math.round((r.occupied / r.total) * 100))}%"></i></div>`;
     }
     return `<div class="r${full ? " full" : ""}">${label}<b>${val}</b></div>${bar}`;
   };
-  return `<small>Členstvo</small>${row("m1", "Gold · 1 m.")}${row("m3", "Platinum · 3 m.")}`;
+  return `<small>Členstvo</small>${row("m1", "Gold · 50 d.")}${row("m3", "Onyx · 6 m.")}`;
 }
 function renderSeats(terms) {
   document.getElementById("seatBox").innerHTML = seatsHtml(terms);
@@ -2983,12 +2983,13 @@ async function renderBlendSummary() {
 // ČLENOVIA (platba beží mimo appky, napr. bankovým prevodom)
 // =====================================================================
 // Ceny musia sedieť s PRICES na tipradar.eu (landing/index.html).
-// Členstvo podľa dĺžky: Gold = 1 mesiac, Platinum = 3 mesiace (obe bez obmedzenia miest).
-// 6 mesiacov (kód "season", tier "group") sa od 24. 10. 2026 nepredáva, ostáva len pre staršie záznamy.
-const MEMBER_PRICES = { m1: 49, m3: 119, season: 219 };
-const MEMBER_NAME = { m1: "Gold", m3: "Platinum", season: "Platinum (6 m.)" };
-const MEMBER_LENGTH_LABEL = { m1: "1 mesiac", m3: "3 mesiace", season: "6 mesiacov" };
-const MEMBER_MONTHS = { m1: 1, m3: 3, season: 6 };
+// Členstvo podľa dĺžky (od 26. 10. 2026): m1 = Gold 50 dní, m3 = Onyx 6 mesiacov (obe bez obmedzenia miest).
+// Kód "season" (tier "group") sa nepredáva, ostáva len pre staršie záznamy.
+const MEMBER_PRICES = { m1: 69, m3: 199, season: 219 };
+const MEMBER_NAME = { m1: "Gold", m3: "Onyx", season: "Platinum (6 m., staré)" };
+const MEMBER_LENGTH_LABEL = { m1: "50 dní", m3: "6 mesiacov", season: "6 mesiacov" };
+const MEMBER_MONTHS = { m1: 1, m3: 6, season: 6 };
+const MEMBER_DAYS = { m1: 50 }; // dĺžka v dňoch (Gold); ostatné v mesiacoch
 // Letná prestávka: jún a júl sa do členstva nepočítajú (rovnako ako src/payments.ts).
 const SUMMER_PAUSE = { fromMonth: 6, toMonth: 7 };
 let memberFilter = "active";
@@ -3007,9 +3008,13 @@ function daysUntil(dateStr) {
 function memberEnd(from, length) {
   const start = new Date(`${String(from).slice(0, 10)}T23:59:00`);
   const calEnd = new Date(start);
-  const day = calEnd.getDate();
-  calEnd.setMonth(calEnd.getMonth() + (MEMBER_MONTHS[length] || 1));
-  if (calEnd.getDate() < day) calEnd.setDate(0); // napr. 31. 1. + 1 mesiac = 28./29. 2.
+  if (MEMBER_DAYS[length]) {
+    calEnd.setDate(calEnd.getDate() + MEMBER_DAYS[length]);
+  } else {
+    const day = calEnd.getDate();
+    calEnd.setMonth(calEnd.getMonth() + (MEMBER_MONTHS[length] || 1));
+    if (calEnd.getDate() < day) calEnd.setDate(0); // napr. 31. 1. + 1 mesiac = 28./29. 2.
+  }
   let remaining = calEnd.getTime() - start.getTime();
   let cursor = start;
   for (let guard = 0; guard < 20; guard++) {
@@ -3045,7 +3050,7 @@ function subscriberStatus(sub) {
   return { label: "Aktívny", cls: "w" };
 }
 
-// ---- Garancia: ak obdobie členstva (Gold 1, Platinum 3 mesiace) skončí v strate, člen dostane mesiac zadarmo ----
+// ---- Garancia: ak obdobie členstva (Gold 50 dní, Onyx 6 mesiacov) skončí v strate, člen dostane mesiac zadarmo ----
 let lastGuarantee = [];
 const fmtDay = (iso) => new Date(iso).toLocaleDateString("sk-SK");
 async function loadGuarantee() {
@@ -3127,8 +3132,8 @@ function renderSubscribersList(subs) {
   const ending = active.filter((s) => daysUntil(s.nextPaymentDue) <= 7).length;
   document.getElementById("subscribersSummary").innerHTML = `
     <div class="kpi"><small>Aktívni</small><b>${active.length}</b></div>
-    <div class="kpi"><small>Gold · 1 mesiac</small><b>${active.filter((s) => (s.length || "m1") === "m1" && s.tier !== "group").length}</b></div>
-    <div class="kpi"><small>Platinum · 3 mesiace</small><b>${active.filter((s) => s.length === "m3" || s.tier === "group").length}</b></div>
+    <div class="kpi"><small>Gold · 50 dní</small><b>${active.filter((s) => (s.length || "m1") === "m1" && s.tier !== "group").length}</b></div>
+    <div class="kpi"><small>Onyx · 6 mesiacov</small><b>${active.filter((s) => s.length === "m3" || s.tier === "group").length}</b></div>
     <div class="kpi"><small>Zaplatené</small><b>${income}${NB}€</b><span>aktívni členovia</span></div>
     <div class="kpi${ending ? " warn" : ""}"><small>Končí do 7 dní</small><b>${ending}</b></div>`;
   document.querySelectorAll("#memberFilter [data-f]").forEach((b) => b.classList.toggle("on", b.dataset.f === memberFilter));
@@ -3362,7 +3367,7 @@ document.getElementById("salesOpenBtn").addEventListener("click", async (e) => {
   btn.disabled = false;
   renderLeads();
 });
-const LEAD_PLAN_LABEL = { start: "Gold 1 mesiac", seria: "Platinum 3 mesiace", sampion: "Platinum 3 mesiace (starý odkaz)", sampion_waitlist: "Platinum 3 mesiace (náhradník)", seria_waitlist: "Platinum 3 mesiace (náhradník)", start_waitlist: "Gold 1 mesiac (náhradník)", premium: "starý odkaz Premium", vip: "Platinum 3 mesiace (starý odkaz VIP)", vip_waitlist: "Platinum 3 mesiace (náhradník)", clenstvo: "nevybral", otazka: "otázka z webu" };
+const LEAD_PLAN_LABEL = { start: "Gold 50 dní", seria: "Onyx 6 mesiacov", sampion: "Onyx 6 mesiacov (starý odkaz)", sampion_waitlist: "Onyx 6 mesiacov (náhradník)", seria_waitlist: "Onyx 6 mesiacov (náhradník)", start_waitlist: "Gold 50 dní (náhradník)", premium: "starý odkaz Premium", vip: "Onyx 6 mesiacov (starý odkaz VIP)", vip_waitlist: "Onyx 6 mesiacov (náhradník)", clenstvo: "nevybral", otazka: "otázka z webu" };
 async function renderLeads() {
   const el = document.getElementById("leadsList");
   try {

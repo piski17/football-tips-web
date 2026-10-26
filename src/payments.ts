@@ -4,7 +4,7 @@ import * as crypto from "crypto";
 import axios from "axios";
 import { ibanValid } from "./payBySquare";
 
-// Platby za členstvo TipRadar (Gold 1 mesiac, Platinum 3 mesiace): bankový prevod cez QR kód (PAY by square), bez poplatkov.
+// Platby za členstvo TipRadar (Gold 50 dní, Onyx 6 mesiacov): bankový prevod cez QR kód (PAY by square), bez poplatkov.
 // Zapne sa, keď sú na Renderi nastavené SALES_OPEN=true, PAY_IBAN a PAY_NAME.
 // Platbu potvrdíš jedným klikom v appke alebo v Telegrame, bot potom pošle pozvánku.
 
@@ -23,14 +23,18 @@ export const PUBLIC_URL = (process.env.PUBLIC_URL || "https://tipradar.eu").repl
 export const SUMMER_PAUSE = { fromMonth: 6, toMonth: 7 }; // jún a júl
 
 /**
- * Koniec členstva na `months` mesiacov od `from`, bez letnej prestávky.
+ * Koniec členstva na `months` mesiacov (alebo `days` dní, ak sú zadané) od `from`, bez letnej prestávky.
  * Rovnaký výpočet je v appke (public/app.js, memberEnd).
  */
-export function addActiveMonths(from: Date, months: number): Date {
+export function addActiveMonths(from: Date, months: number, days?: number): Date {
   const calEnd = new Date(from);
-  const day = calEnd.getUTCDate();
-  calEnd.setUTCMonth(calEnd.getUTCMonth() + months);
-  if (calEnd.getUTCDate() < day) calEnd.setUTCDate(0); // 31. 1. + 1 mesiac = 28./29. 2.
+  if (days) {
+    calEnd.setTime(calEnd.getTime() + days * 24 * 3600 * 1000);
+  } else {
+    const day = calEnd.getUTCDate();
+    calEnd.setUTCMonth(calEnd.getUTCMonth() + months);
+    if (calEnd.getUTCDate() < day) calEnd.setUTCDate(0); // 31. 1. + 1 mesiac = 28./29. 2.
+  }
   let remaining = calEnd.getTime() - from.getTime();
   let cursor = new Date(from);
   for (let guard = 0; guard < 20; guard++) {
@@ -47,16 +51,16 @@ export function addActiveMonths(from: Date, months: number): Date {
   return calEnd;
 }
 
-// Kód "season" ostáva len kvôli starším záznamom (6 mesiacov). Od 24. 10. 2026 sa predáva len
-// m1 = Gold (1 mesiac) a m3 = Platinum (3 mesiace, s výhodami bývalého Platinum na 6 mesiacov).
+// Kód "season" ostáva len kvôli starším záznamom (6 mesiacov). Od 26. 10. 2026 sa predáva len
+// m1 = Gold (50 dní, 69 €) a m3 = Onyx (6 mesiacov, 199 €). Kódy m1 / m3 ostali kvôli odkazom a záznamom.
 export type Term = "m1" | "m3" | "season";
-export const PAY_TERMS: Record<Term, { price: number; name: string; months?: number }> = {
-  m1: { price: 49, name: "1 mesiac", months: 1 },
-  m3: { price: 119, name: "3 mesiace", months: 3 },
+export const PAY_TERMS: Record<Term, { price: number; name: string; months?: number; days?: number }> = {
+  m1: { price: 69, name: "50 dní", days: 50 },
+  m3: { price: 199, name: "6 mesiacov", months: 6 },
   season: { price: 219, name: "6 mesiacov", months: 6 },
 };
-/** Názov členstva podľa dĺžky: 1 mesiac = Gold, 3 mesiace = Platinum (6 mesiacov sa už nepredáva). */
-export const TIER_NAMES: Record<Term, string> = { m1: "Gold", m3: "Platinum", season: "Platinum (6 mesiacov)" };
+/** Názov členstva podľa dĺžky: 50 dní = Gold, 6 mesiacov = Onyx (staré „season“ sa už nepredáva). */
+export const TIER_NAMES: Record<Term, string> = { m1: "Gold", m3: "Onyx", season: "Platinum (6 mesiacov, staré)" };
 export function tierName(term: Term): string {
   return TIER_NAMES[term] ?? TIER_NAMES.m1;
 }
@@ -67,7 +71,7 @@ export function termLabel(term: Term): string {
 export function isTerm(v: unknown): v is Term {
   return v === "m1" || v === "m3" || v === "season";
 }
-/** Dĺžky, ktoré sa dajú kúpiť (6 mesiacov zrušené 24. 10. 2026). */
+/** Dĺžky, ktoré sa dajú kúpiť (Gold a Onyx; staré „season“ nie). */
 export function isSellableTerm(v: unknown): v is "m1" | "m3" {
   return v === "m1" || v === "m3";
 }
@@ -82,7 +86,7 @@ export function paymentsEnabled(): boolean {
 
 /** Do kedy platí členstvo zaplatené dnes (jún a júl sa nepočítajú). */
 export function paidUntil(term: Term, from = new Date()): string {
-  return addActiveMonths(new Date(from), PAY_TERMS[term].months ?? 1).toISOString();
+  return addActiveMonths(new Date(from), PAY_TERMS[term].months ?? 1, PAY_TERMS[term].days).toISOString();
 }
 
 // ---- Evidencia platieb (Upstash, lokálne súbor) ----

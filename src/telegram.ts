@@ -22,7 +22,7 @@ function plural(n: number, one: string, few: string, many: string): string {
 }
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-// Súkromný (členský) kanál TipRadar pre všetkých členov – Gold aj Platinum
+// Súkromný (členský) kanál TipRadar pre všetkých členov – Gold aj Onyx
 // (starší názov premennej TELEGRAM_CHAT_ID_PREMIUM stále funguje).
 const TELEGRAM_CHAT_ID_PREMIUM = process.env.TELEGRAM_CHAT_ID_PLATINUM || process.env.TELEGRAM_CHAT_ID_PREMIUM;
 const TELEGRAM_CHAT_ID_VIP = process.env.TELEGRAM_CHAT_ID_VIP;
@@ -384,22 +384,27 @@ export async function deleteTelegramMessages(messages: { chatId: string; message
 
 const TELEGRAM_CONTACT_USERNAME = process.env.TELEGRAM_CONTACT_USERNAME || "im_mishko";
 
-// ---- Členstvo TipRadar: Gold (1 mesiac), Platinum (3 mesiace) – rovnaké texty ako na tipradar.eu ----
-// 24. 10. 2026 (Michalovo rozhodnutie): 6 mesiacov zrušené, jeho výhody má Platinum na 3 mesiace.
+// ---- Členstvo TipRadar: Gold (50 dní, 69 €), Onyx (6 mesiacov, 199 €) – rovnaké texty ako na tipradar.eu ----
+// 26. 10. 2026 (Michalovo rozhodnutie): Platinum na 3 mesiace nahradil Onyx na 6 mesiacov, Gold je na 50 dní.
 const BENEFITS_BASE =
   `• <b>Denné tipy na Telegrame</b> v súkromnom kanáli, 1 – 2 hodiny pred výkopom\n` +
   `• <b>Pri každom tipe</b> kurz, šanca podľa modelu, dôvod a odporúčaná sadzba\n` +
   `• <b>Večerné vyhodnotenie</b> a týždenný prehľad úspešnosti, zisku a ROI`;
-const BENEFIT_CHAT = `• <b>💬 Súkromný VIP chat</b> – na vaše otázky odpisujem priamo ja`;
-const BENEFIT_MENTOR = `• <b>🤝 Mentoring 1 na 1 počas celých 3 mesiacov</b> – osobné stretnutia alebo videohovory priamo so mnou`;
+const BENEFIT_CHAT = `• <b>💬 Súkromný VIP chat</b> – na vaše otázky odpisujem priamo ja\n` +
+  `• <b>📞 Úvodný hovor 1 na 1</b> (30 min) – nastavenie banku, vkladu a ako tipy hrať`;
+const BENEFIT_REPORT_GOLD = `• <b>📊 Osobný report na 50. deň</b> – koľko by ste zarobili s vaším bankom`;
+const BENEFIT_MENTOR =
+  `• <b>🤝 Mentoring 1 na 1 každý mesiac, celých 6 mesiacov</b> – osobné stretnutia alebo videohovory priamo so mnou\n` +
+  `• <b>📊 Osobný report každé 2 mesiace</b> – koľko by ste zarobili s vaším bankom\n` +
+  `• <b>⚡ Prednostné odpovede v chate</b>`;
 /** Garancia: ak obdobie členstva skončí v strate, člen dostane 1 mesiac zadarmo. */
-const GUARANTEE_LINE = `🛡 <b>Garancia:</b> ak vaše členstvo (Gold alebo Platinum) skončí v strate, ďalší mesiac máte zadarmo.`;
-const PLAN_START = `🥇 <b>Gold · 1 mesiac</b> – 49 €\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
-const PLAN_SERIA = `💎 <b>Platinum · 3 mesiace</b> – 119 € (namiesto 147 €, ušetríte 28 €)\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_MENTOR}`;
+const GUARANTEE_LINE = `🛡 <b>Garancia:</b> ak vaše členstvo (Gold alebo Onyx) skončí v strate, ďalší mesiac máte zadarmo.`;
+const PLAN_START = `🥇 <b>Gold · 50 dní</b> – 69 € (150+ tipov)\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_REPORT_GOLD}`;
+const PLAN_SERIA = `💎 <b>Onyx · 6 mesiacov</b> – 199 € (33 € mesačne namiesto 41 €, ušetríte asi 50 €)\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_MENTOR}`;
 
 const FAQ_ANSWERS: Record<string, string> = {
   faq_price:
-    `💰 <b>Členstvo TipRadar</b>\n\nDve dĺžky členstva: Gold na 1 mesiac a Platinum na 3 mesiace. Všetci členovia dostávajú rovnaké tipy aj súkromný VIP chat, Platinum navyše mentoring 1 na 1.\n\n` +
+    `💰 <b>Členstvo TipRadar</b>\n\nDve členstvá: Gold na 50 dní a Onyx na 6 mesiacov. Všetci členovia dostávajú rovnaké tipy, súkromný VIP chat a úvodný hovor 1 na 1, Onyx navyše mentoring každý mesiac.\n\n` +
     `${PLAN_START}\n\n${PLAN_SERIA}\n\n${GUARANTEE_LINE}\n\n` +
     `Členstvo sa samo nepredlžuje, žiadna viazanosť. Cez letnú prestávku (jún – júl) sa pozastaví a o tento čas sa vám predĺži.` +
     (process.env.SALES_OPEN === "true" ? "" : `\n\n🗓 <b>Predaj členstiev spúšťame čoskoro.</b> Napíšte sem „Mám záujem“ a ozveme sa vám ako prvým.`),
@@ -437,7 +442,7 @@ async function callTelegramApi(method: string, body: Record<string, unknown>): P
 /** Spracuje jednu prichádzajúcu udalosť z Telegram webhooku (nová správa alebo stlačenie tlačidla). */
 // ---- Záujemcovia o členstvo z tipradar.eu ----
 const NEXT_STEP =
-  `<b>Ako pokračovať:</b> napíšte sem krátku správu (napríklad „Mám záujem o Platinum na 3 mesiace“). Pošleme vám platobné údaje a po platbe vás pridáme do súkromného kanála TipRadar.\n\n` +
+  `<b>Ako pokračovať:</b> napíšte sem krátku správu (napríklad „Mám záujem o Onyx na 6 mesiacov“). Pošleme vám platobné údaje a po platbe vás pridáme do súkromného kanála TipRadar.\n\n` +
   `Ozveme sa vám zvyčajne do 24 hodín. Bez viazanosti, členstvo sa samo nepredlžuje.`;
 const PAY_STEP =
   `Zaplatíte bankovým prevodom cez QR kód v appke vašej banky, bez poplatkov. Hneď ako platba príde na účet, pošlem vám sem pozvánku do súkromného kanála TipRadar.\n\n` +
@@ -449,22 +454,22 @@ const JOIN_MESSAGES: Record<string, string> = {
 };
 // Staré odkazy (t.me/TipRadarAiBot?start=premium / vip) ešte môžu kolovať – ukážu celé členstvo.
 JOIN_MESSAGES.premium = JOIN_MESSAGES.clenstvo;
-// 6 mesiacov (sampion, vip) zrušené 24. 10. 2026 – staré odkazy ukážu Platinum na 3 mesiace.
+// Staré odkazy (sampion, vip, seria = Platinum) ukážu Onyx na 6 mesiacov.
 JOIN_MESSAGES.sampion = JOIN_MESSAGES.seria;
 JOIN_MESSAGES.vip = JOIN_MESSAGES.seria;
 JOIN_MESSAGES.seria_waitlist =
-  `💎 <b>Platinum na 3 mesiace – poradovník</b>\n\nMomentálne nie je voľné miesto. Váš záujem sme si zapísali – keď sa miesto uvoľní, ozveme sa vám ako prvým.\n\n` +
-  `Dovtedy môžete začať s členstvom <b>Gold na 1 mesiac</b> (49 €) – stačí sem napísať.`;
+  `💎 <b>Onyx na 6 mesiacov – poradovník</b>\n\nMomentálne nie je voľné miesto. Váš záujem sme si zapísali – keď sa miesto uvoľní, ozveme sa vám ako prvým.\n\n` +
+  `Dovtedy môžete začať s členstvom <b>Gold na 50 dní</b> (69 €) – stačí sem napísať.`;
 JOIN_MESSAGES.sampion_waitlist = JOIN_MESSAGES.seria_waitlist;
 JOIN_MESSAGES.vip_waitlist = JOIN_MESSAGES.seria_waitlist;
 JOIN_MESSAGES.start_waitlist =
-  `🥇 <b>Gold na 1 mesiac – poradovník</b>\n\nMomentálne nie je voľné miesto. Váš záujem sme si zapísali – keď sa miesto uvoľní, ozveme sa vám ako prvým.`;
+  `🥇 <b>Gold na 50 dní – poradovník</b>\n\nMomentálne nie je voľné miesto. Váš záujem sme si zapísali – keď sa miesto uvoľní, ozveme sa vám ako prvým.`;
 /** Tlačidlá na zaplatenie (vedú na tipradar.eu/zaplatit → stránka s QR kódom). */
 function payKeyboard(chatId: number | string, only?: Term) {
   const row = (t: Term, label: string) => [{ text: label, url: `${PUBLIC_URL}/zaplatit?term=${t}&c=${chatId}` }];
   const all: [Term, string][] = [
-    ["m1", "Gold · 1 mesiac · 49 €"],
-    ["m3", "◆ Platinum · 3 mesiace · 119 €"],
+    ["m1", "Gold · 50 dní · 69 €"],
+    ["m3", "◆ Onyx · 6 mesiacov · 199 €"],
   ];
   return { inline_keyboard: all.filter(([t]) => !only || t === only).map(([t, l]) => row(t, only ? `Zaplatiť ${PAY_TERMS[t].price} €` : l)) };
 }
@@ -488,15 +493,15 @@ function PRELAUNCH_MESSAGE(plan: string): string {
 }
 
 const LEAD_LABEL: Record<string, string> = {
-  start: "Gold 1 mesiac",
-  seria: "Platinum 3 mesiace",
-  sampion: "Platinum 3 mesiace (starý odkaz na 6 mesiacov)",
-  sampion_waitlist: "Platinum 3 mesiace – náhradník (starý odkaz)",
-  seria_waitlist: "Platinum 3 mesiace – náhradník",
-  start_waitlist: "Gold 1 mesiac – náhradník",
+  start: "Gold 50 dní",
+  seria: "Onyx 6 mesiacov",
+  sampion: "Onyx 6 mesiacov (starý odkaz)",
+  sampion_waitlist: "Onyx 6 mesiacov – náhradník (starý odkaz)",
+  seria_waitlist: "Onyx 6 mesiacov – náhradník",
+  start_waitlist: "Gold 50 dní – náhradník",
   premium: "členstvo (starý odkaz Premium)",
-  vip: "Platinum 3 mesiace (starý odkaz VIP)",
-  vip_waitlist: "Platinum 3 mesiace – náhradník (starý odkaz VIP)",
+  vip: "Onyx 6 mesiacov (starý odkaz VIP)",
+  vip_waitlist: "Onyx 6 mesiacov – náhradník (starý odkaz VIP)",
   clenstvo: "členstvo (zatiaľ nevybral)",
   otazka: "všeobecná otázka",
 };
@@ -1021,7 +1026,7 @@ export async function sendSalesOpenToWaitlist(): Promise<{ sent: number; skipped
       `Zapísal si sa do poradovníka na <b>členstvo TipRadar</b>. Predaj je práve otvorený a ty máš prednosť.\n\n` +
       `◆ denné tipy 1 – 2 hodiny pred výkopom\n◆ pri každom tipe kurz, šanca a sadzba\n◆ večerné vyhodnotenie\n◆ súkromný VIP chat\n\n` +
       `${GUARANTEE_LINE}\n\n` +
-      `Gold (1 mesiac) aj Platinum (3 mesiace, navyše mentoring 1 na 1) sú bez obmedzenia miest. Vyber si 👇`;
+      `Gold (50 dní) aj Onyx (6 mesiacov, navyše mentoring každý mesiac) sú bez obmedzenia miest. Vyber si 👇`;
     try {
       await axios.post(
         `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,

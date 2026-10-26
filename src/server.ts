@@ -262,7 +262,7 @@ async function seasonSeats(): Promise<{ taken: number; total: number; activeVip:
   );
   return { taken: activeVip.length, total, activeVip };
 }
-/** Aktívni členovia na 1 alebo 3 mesiace (7 dní tolerancia po splatnosti). Staršie záznamy bez dĺžky = 1 mesiac. */
+/** Aktívni členovia Gold (50 dní) alebo Onyx (6 mesiacov) (7 dní tolerancia po splatnosti). Staršie záznamy bez dĺžky = 1 mesiac. */
 async function shortSeats(length: "m1" | "m3"): Promise<{ taken: number; total: number | null; active: Subscriber[] }> {
   const graceMs = 7 * 24 * 60 * 60 * 1000;
   const active = (await listSubscribers()).filter(
@@ -298,18 +298,18 @@ async function freeSeatsLine(): Promise<string | undefined> {
   try {
     const t = await termSeats();
     const s = t.m3;
-    // Od 24. 10. 2026 je Platinum (3 mesiace) bez obmedzenia miest – riadok sa zobrazí, len ak by sa obmedzenie zaplo.
+    // Onyx (6 mesiacov) je bez obmedzenia miest – riadok sa zobrazí, len ak by sa obmedzenie zaplo.
     if (s.total == null || s.left == null) return undefined;
     return s.left > 0
-      ? `🔥 Platinum na 3 mesiace: voľných <b>${s.left} z ${s.total}</b> miest`
-      : `🔥 Platinum na 3 mesiace: všetkých ${s.total} miest je obsadených`;
+      ? `🔥 Onyx na 6 mesiacov: voľných <b>${s.left} z ${s.total}</b> miest`
+      : `🔥 Onyx na 6 mesiacov: všetkých ${s.total} miest je obsadených`;
   } catch {
     return undefined;
   }
 }
 const BOT_USERNAME = process.env.TELEGRAM_BOT_USERNAME || "TipRadarAiBot";
 
-// tipradar.eu/zaplatit?term=m1|m3 (&c=Telegram ID z bota; starý odkaz term=season vedie na 3 mesiace) → založí platbu a presmeruje na stránku s QR kódom.
+// tipradar.eu/zaplatit?term=m1|m3 (&c=Telegram ID z bota; starý odkaz term=season vedie na Onyx) → založí platbu a presmeruje na stránku s QR kódom.
 app.get("/zaplatit", async (req, res) => {
   const rawTerm = String(req.query.term ?? "");
   const term = rawTerm === "season" ? "m3" : rawTerm;
@@ -418,7 +418,7 @@ ${row("Správa", bankNote(p.term), bankNote(p.term))}
 <p>Po zaplatení kliknite nižšie. Otvorí sa Telegram a hneď ako platba príde na účet, pošlem vám tam osobnú pozvánku do kanála.</p>
 <a class="btn" href="${esc(tg)}">Zaplatil som · pokračovať v Telegrame</a>
 <p class="small" style="margin-top:14px">Okamžitá platba príde do pár minút, bežný prevod zvyčajne do jedného pracovného dňa. Členstvo sa samo nepredlžuje.</p>
-<p class="gar"><b>Garancia</b>Ak vaše členstvo (Gold alebo Platinum) skončí v strate, ďalší mesiac máte zadarmo.</p>
+<p class="gar"><b>Garancia</b>Ak vaše členstvo (Gold alebo Onyx) skončí v strate, ďalší mesiac máte zadarmo.</p>
 <a class="back" href="/clenstvo">Späť na členstvo</a>
 </div>
 <script>document.querySelectorAll(".cp").forEach(function(b){b.addEventListener("click",function(){var t=b.getAttribute("data-copy");var done=function(){b.textContent="Skopírované";b.classList.add("ok");setTimeout(function(){b.textContent="Kopírovať";b.classList.remove("ok")},1800)};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,function(){prompt("Skopírujte:",t)})}else{prompt("Skopírujte:",t)}})});</script>
@@ -1326,7 +1326,7 @@ app.delete("/api/tips/:id/slip", async (req, res) => {
 });
 
 // Verejné počítadlo VIP miest (len čísla, žiadne mená). Aktívny VIP = typ „group"
-// s platbou nie viac ako 7 dní po splatnosti. Počet miest: 1 a 3 mesiace bez obmedzenia, 6 mesiacov SEATS_SEASON (30).
+// s platbou nie viac ako 7 dní po splatnosti. Počet miest: Gold a Onyx bez obmedzenia, 6 mesiacov SEATS_SEASON (30).
 app.get("/api/public/vip-seats", async (_req, res) => {
   res.set("Access-Control-Allow-Origin", "*");
   try {
@@ -2751,7 +2751,7 @@ app.delete("/api/subscribers/:id", async (req, res) => {
   }
 });
 
-// ---- Garancia: ak obdobie členstva (Gold 1, Platinum 3 mesiace; staršie 6 mesiacov) skončí v strate, člen dostane 1 mesiac zadarmo ----
+// ---- Garancia: ak obdobie členstva (Gold 50 dní, Onyx 6 mesiacov) skončí v strate, člen dostane 1 mesiac zadarmo ----
 
 function fmtDaySk(day: string): string {
   return `${Number(day.slice(8, 10))}. ${Number(day.slice(5, 7))}. ${day.slice(0, 4)}`;

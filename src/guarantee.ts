@@ -1,7 +1,7 @@
 import { addActiveMonths, PAY_TERMS, Term, isTerm } from "./payments";
 import { MemberPeriod, Subscriber } from "./types";
 
-// Garancia: ak obdobie členstva (Gold 1, Platinum 3 mesiace; staršie 6 mesiacov) skončí v strate,
+// Garancia: ak obdobie členstva (Gold 50 dní, Onyx 6 mesiacov; staršie záznamy aj iné dĺžky) skončí v strate,
 // člen dostane 1 mesiac zadarmo. Mesiac zadarmo sa už do garancie nepočíta.
 
 /** Koľko predošlých období si pri členovi pamätáme (stačí na vyhodnotenie za posledných 60 dní). */
@@ -17,12 +17,12 @@ export function memberTerm(s: Subscriber): Term {
  * Začiatok obdobia, ktoré končí `end` a trvá `months` aktívnych mesiacov (opak addActiveMonths,
  * jún a júl sa nepočítajú). Hľadá najneskorší deň, od ktorého obdobie siaha aspoň po `end`.
  */
-export function periodStartBefore(end: Date, months: number): Date {
+export function periodStartBefore(end: Date, months: number, days?: number): Date {
   const DAY = 24 * 3600 * 1000;
-  let cand = new Date(end.getTime() - (months * 31 + 62) * DAY);
+  let cand = new Date(end.getTime() - ((days ?? months * 31) + 62) * DAY);
   for (let guard = 0; guard < 400; guard++) {
     const next = new Date(cand.getTime() + DAY);
-    if (addActiveMonths(next, months).getTime() > end.getTime()) break;
+    if (addActiveMonths(next, months, days).getTime() > end.getTime()) break;
     cand = next;
   }
   return cand;
@@ -32,12 +32,13 @@ export function periodStartBefore(end: Date, months: number): Date {
 export function currentPeriodStart(s: Subscriber): string {
   if (s.periodStart) return s.periodStart;
   const months = PAY_TERMS[memberTerm(s)].months ?? 1;
+  const days = PAY_TERMS[memberTerm(s)].days;
   const end = new Date(s.nextPaymentDue);
   if (s.startDate) {
-    const fromStart = addActiveMonths(new Date(s.startDate), months);
+    const fromStart = addActiveMonths(new Date(s.startDate), months, days);
     if (Math.abs(fromStart.getTime() - end.getTime()) <= 2 * 24 * 3600 * 1000) return s.startDate;
   }
-  return periodStartBefore(end, months).toISOString();
+  return periodStartBefore(end, months, days).toISOString();
 }
 
 /** Všetky známe obdobia člena (predošlé aj aktuálne), najstaršie prvé. */

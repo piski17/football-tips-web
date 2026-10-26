@@ -1,5 +1,5 @@
-// Počet miest v členstve TipRadar podľa dĺžky (Gold 1, Platinum 3 mesiace; staršie 6 mesiacov).
-// Od 17. 10. 2026 je členstvo na 1 a 3 mesiace bez obmedzenia (null = neobmedzene),
+// Počet miest v členstve TipRadar podľa dĺžky (Gold 50 dní, Onyx 6 mesiacov; staré „season“).
+// Od 17. 10. 2026 sú Gold aj Onyx bez obmedzenia (null = neobmedzene),
 // obmedzených je len 6 mesiacov (kód "season"). Dá sa zmeniť na Renderi premennou SEATS_SEASON.
 function envSeats(name: string, fallback: number): number {
   const n = Number(typeof process !== "undefined" ? process.env[name] : undefined);

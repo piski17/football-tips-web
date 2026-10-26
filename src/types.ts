@@ -422,10 +422,10 @@ export interface Subscriber {
   name: string;
   contact?: string;
   telegramChatId?: string; // voliteľné - ak vyplnené, appka mu vie poslať osobnú pripomienku pred obnovením
-  tier: "individual" | "group"; // individual = Gold/Platinum (1 alebo 3 mesiace), group = staršie členstvo na 6 mesiacov (zrušené 24. 10. 2026)
+  tier: "individual" | "group"; // individual = Gold (50 dní) / Onyx (6 mesiacov), group = staršie členstvo na 6 mesiacov (zrušené 24. 10. 2026)
   priceEur: number;
   nextPaymentDue: string; // ISO dátum – do kedy má členstvo zaplatené
-  length?: "m1" | "m3" | "season"; // dĺžka členstva (staršie záznamy ju nemajú = 1 mesiac)
+  length?: "m1" | "m3" | "season"; // dĺžka členstva: m1 = Gold 50 dní, m3 = Onyx 6 mesiacov (staršie záznamy bez dĺžky = m1)
   startDate?: string; // ISO dátum začiatku členstva
   periodStart?: string; // ISO začiatok aktuálneho obdobia (zaplateného alebo mesiaca zadarmo), koniec = nextPaymentDue
   freePeriod?: boolean; // aktuálne obdobie je mesiac zadarmo podľa garancie (garancia sa naň nevzťahuje)
