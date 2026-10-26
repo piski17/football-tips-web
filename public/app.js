@@ -2940,6 +2940,7 @@ async function renderShadowSummary() {
         <div>Model a stávkovky = priemer pri vyhodnotených tipoch. Stávkovky bez marže, ak boli kurzy oboch strán (staršie záznamy s odhadom marže 5 %). Zisk = vklad 1 jednotky za zaznamenaný kurz. Z každého trhu zápasu sa zapisuje len hranica s najväčšou hodnotou; tipy s rozporom všetky.</div></details>`;
     }
     t += conflictDetailHtml(d.conflictDetail);
+    if (d.invalidExcluded) t += `<div class="faint">Nezapočítané: ${d.invalidExcluded} záznamov s chybne priradeným kurzom rohov (napr. „pod 19,5“ z Multicorners).</div>`;
     el.innerHTML = t;
   } catch {
     el.textContent = "";

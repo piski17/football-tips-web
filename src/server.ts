@@ -1,5 +1,5 @@
 import { SEATS_M1, SEATS_M3, SEATS_SEASON } from "./seatLimits";
-import { MIN_ODDS, MAX_PROBABILITY, MIN_PROBABILITY, MIN_EXPECTED_VALUE, SUSPICIOUS_EXPECTED_VALUE, findOdds, marketProbabilityDetail, STRONG_TIP_MIN_PROBABILITY, WATCH_BELOW_PROBABILITY } from "./oddsMatcher";
+import { plausibleLine, MIN_ODDS, MAX_PROBABILITY, MIN_PROBABILITY, MIN_EXPECTED_VALUE, SUSPICIOUS_EXPECTED_VALUE, findOdds, marketProbabilityDetail, STRONG_TIP_MIN_PROBABILITY, WATCH_BELOW_PROBABILITY } from "./oddsMatcher";
 import { listLeads, deleteLead, recordLead } from "./leadsStore";
 import { getMeta, setMeta } from "./metaStore";
 import * as crypto from "crypto";
@@ -2103,9 +2103,17 @@ function conflictDetail(all: ShadowEntry[]) {
   };
 }
 
+/** Záznam s nezmyselnou hranicou rohov (kurz z inej stávky, napr. Multicorners) – do prehľadov nepatrí. */
+function invalidShadowLine(e: ShadowEntry): boolean {
+  const m = String(e.selection || "").match(/(\d+(?:[.,]\d+)?)/);
+  return !!m && !plausibleLine(e.market, parseFloat(m[1].replace(",", ".")));
+}
+
 app.get("/api/shadow/summary", async (_req, res) => {
   try {
-    const all = await listShadow();
+    const raw = await listShadow();
+    // 26. 10. 2026: záznamy s chybne priradeným kurzom rohov (napr. „pod 19,5“) sa nerátajú.
+    const all = raw.filter((e) => !invalidShadowLine(e));
     // Hlavný riadok ostáva len pre tipy s rozporom so stávkovkami (porovnateľný so staršími číslami);
     // ostatné dôvody vyradenia (od 20. 10. 2026) sú v byReason a byGap.
     const conflict = all.filter((e) => !e.reasonCode || e.conflict);
@@ -2136,6 +2144,7 @@ app.get("/api/shadow/summary", async (_req, res) => {
       byReason: shadowBreakdown(all, shadowReasonCode, SHADOW_REASON_ORDER),
       byGap: shadowBreakdown(all, shadowGapBucket, SHADOW_GAP_ORDER),
       conflictDetail: conflictDetail(all),
+      invalidExcluded: raw.length - all.length,
     });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });

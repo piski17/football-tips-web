@@ -178,6 +178,17 @@ function isOverUnderBet(bet: string, market: string): boolean {
 }
 
 /**
+ * Poistka (26. 10. 2026): rozumné hranice rohov. Rohy v zápase najviac 15,5, rohy jedného
+ * tímu najviac 9,5. Vyššie hranice (napr. „pod 19,5“ s kurzom 1,91) patria k iným stávkam,
+ * napríklad Multicorners (rohy v 1. polčase × rohy v 2. polčase), a nesmú sa brať ako rohy.
+ */
+const MAX_LINE: Record<string, number> = { "Rohy": 15.5, "Rohy domácich": 9.5, "Rohy hostí": 9.5 };
+export function plausibleLine(market: string, line: number): boolean {
+  const max = MAX_LINE[market];
+  return max == null || line <= max;
+}
+
+/**
  * Hranice (napr. 8,5 / 9,5 / 10,5), ktoré stávkovky pre daný trh nad/pod ponúkajú.
  * Model potom vyhodnotí každú z nich a vyberie tú s najväčšou hodnotou.
  */
@@ -189,7 +200,7 @@ export function offeredLines(odds: MarketOdds[] | undefined, market: string): nu
     if (market !== "Karty" && !isOverUnderBet(o.bet, market)) continue;
     const v = parseOverUnder(o.value);
     // len polovičné hranice (x,5) – pri celých číslach (napr. 10) sa stávka môže vracať
-    if (v && Math.abs((v.line % 1) - 0.5) < 0.001) lines.add(v.line);
+    if (v && Math.abs((v.line % 1) - 0.5) < 0.001 && plausibleLine(market, v.line)) lines.add(v.line);
   }
   return Array.from(lines).sort((a, b) => a - b);
 }
@@ -241,7 +252,7 @@ export function findOdds(
       pool.filter((o) => {
         if (pick.market !== "Karty" && !isOverUnderBet(o.bet, pick.market)) return false;
         const v = parseOverUnder(o.value);
-        return !!v && v.dir === target.dir && Math.abs(v.line - target.line) < 0.001;
+        return !!v && v.dir === target.dir && Math.abs(v.line - target.line) < 0.001 && plausibleLine(pick.market, v.line);
       })
     );
   }
