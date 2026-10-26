@@ -1943,7 +1943,7 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
     <div class="wrap">
       <a class="back" href="/">← Úvod</a><div class="eyebrow">Členstvo</div>
       <h1>Vstúpte do <em>klubu</em></h1>
-      <p>Gold na 50 dní a Onyx na 6 mesiacov. Všetci členovia dostávajú rovnaké tipy, súkromný VIP chat, úvodný hovor 1 na 1 a osobný report, Onyx navyše mentoring 1 na 1 a nižšiu cenu za mesiac.</p>
+      <p>Gold na 50 dní a Onyx na 6 mesiacov. Všetci členovia dostávajú rovnaké tipy, súkromný VIP chat a úvodný hovor 1 na 1, Onyx navyše mentoring 1 na 1 a nižšiu cenu za mesiac.</p>
     </div>
   </header>
   <header class="page-head" data-pages="formular">
@@ -2210,10 +2210,8 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
           <h3 class="lux-name plat-text" data-tier-name>Onyx</h3>
           <ul class="lux-list">
           <li><strong>Denné tipy na Telegrame</strong><span>1&nbsp;–&nbsp;2&nbsp;hodiny pred výkopom, s&nbsp;kurzom a&nbsp;dôvodom</span></li>
-          <li><strong>Večerné vyhodnotenie</strong><span>každý deň</span></li>
           <li><strong>Súkromný VIP chat</strong><span>odpisujem priamo ja</span></li>
-          <li><strong>Úvodný hovor 1 na 1</strong><span>nastavenie banku a&nbsp;vkladu</span></li>
-          <li><strong>Osobný report</strong><span>koľko by ste zarobili s&nbsp;vaším bankom</span></li>
+          <li><strong>Úvodný hovor 1 na 1</strong><span>30 minút: nastavenie banku, vkladu a&nbsp;ako tipy hrať</span></li>
           <li class="plus" data-min-term="m3"><strong>Mentoring 1 na 1 počas celých 6 mesiacov</strong><span>a&nbsp;prednostné odpovede v&nbsp;chate</span></li>
         </ul>
           <a class="lux-guarantee" href="#garancia"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.4 7.5 9.5 4.3-1.1 7.5-4.9 7.5-9.5V6L12 3Z"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></svg><span><strong>Garancia</strong>Ak vaše členstvo (Gold alebo Onyx) skončí v&nbsp;strate, ďalší mesiac máte zadarmo.</span></a>
@@ -2239,6 +2237,26 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
         </div>
         </div>
       </article>
+      <div class="payback glow" id="payback">
+        <div class="payback-head">
+          <div class="eyebrow">Kalkulačka</div>
+          <h3>Kedy sa vám členstvo <em>vráti</em></h3>
+          <p>Zadajte svoj bank a koľko percent z neho vsádzate na jeden tip (odporúčame bank aspoň 500 € a vklad 3 %, ideálne 1 000 € a vklad 2 %). Uvidíte, koľko jednotiek zisku treba, aby sa vám cena členstva vrátila.</p>
+        </div>
+        <label class="payback-stake">
+          <span>Váš bank (suma na stávkovanie)</span>
+          <span class="payback-input"><input type="text" inputmode="decimal" id="paybackBank" value="1000" aria-label="Bank v eurách" /><b>€</b></span>
+        </label>
+        <div class="payback-pct">
+          <span>Vklad na jeden tip</span>
+          <div class="payback-chips" role="group" aria-label="Vklad na tip v percentách banku">
+            <button type="button" data-pct="1">1 %</button><button type="button" data-pct="2">2 %</button><button type="button" data-pct="3">3 %</button><button type="button" data-pct="5" title="Pre skúsenejších – najvyšší odporúčaný vklad">5 %</button>
+          </div>
+        </div>
+        <p class="payback-stake-out" id="paybackStakeOut"></p>
+        <div class="payback-rows" id="paybackRows"></div>
+        <p class="payback-note">Jednotka = suma, ktorú vsádzate na jeden tip (bank × percento). Výpočet ukazuje len návratnosť ceny, výhru nezaručuje.</p>
+      </div>
     </div>
   </section>
 

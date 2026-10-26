@@ -388,18 +388,15 @@ const TELEGRAM_CONTACT_USERNAME = process.env.TELEGRAM_CONTACT_USERNAME || "im_m
 // 26. 10. 2026 (Michalovo rozhodnutie): Platinum na 3 mesiace nahradil Onyx na 6 mesiacov, Gold je na 50 dní.
 const BENEFITS_BASE =
   `• <b>Denné tipy na Telegrame</b> v súkromnom kanáli, 1 – 2 hodiny pred výkopom\n` +
-  `• <b>Pri každom tipe</b> kurz, šanca podľa modelu, dôvod a odporúčaná sadzba\n` +
-  `• <b>Večerné vyhodnotenie</b> a týždenný prehľad úspešnosti, zisku a ROI`;
+  `• <b>Pri každom tipe</b> kurz, šanca podľa modelu, dôvod a odporúčaná sadzba`;
 const BENEFIT_CHAT = `• <b>💬 Súkromný VIP chat</b> – na vaše otázky odpisujem priamo ja\n` +
   `• <b>📞 Úvodný hovor 1 na 1</b> (30 min) – nastavenie banku, vkladu a ako tipy hrať`;
-const BENEFIT_REPORT_GOLD = `• <b>📊 Osobný report na 50. deň</b> – koľko by ste zarobili s vaším bankom`;
 const BENEFIT_MENTOR =
   `• <b>🤝 Mentoring 1 na 1 počas celých 6 mesiacov</b> – osobné stretnutia alebo videohovory priamo so mnou\n` +
-  `• <b>📊 Osobný report každé 2 mesiace</b> – koľko by ste zarobili s vaším bankom\n` +
   `• <b>⚡ Prednostné odpovede v chate</b>`;
 /** Garancia: ak obdobie členstva skončí v strate, člen dostane 1 mesiac zadarmo. */
 const GUARANTEE_LINE = `🛡 <b>Garancia:</b> ak vaše členstvo (Gold alebo Onyx) skončí v strate, ďalší mesiac máte zadarmo.`;
-const PLAN_START = `🥇 <b>Gold · 50 dní</b> – 69 € (100+ tipov, bez viazanosti)\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_REPORT_GOLD}`;
+const PLAN_START = `🥇 <b>Gold · 50 dní</b> – 69 € (100+ tipov, bez viazanosti)\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
 const PLAN_SERIA = `💎 <b>Onyx · 6 mesiacov</b> – 199 € (300+ zápasov, pri mesačnej cene 49 € ušetríte 95 €)\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_MENTOR}`;
 
 const FAQ_ANSWERS: Record<string, string> = {
