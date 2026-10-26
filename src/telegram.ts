@@ -405,7 +405,7 @@ const FAQ_ANSWERS: Record<string, string> = {
     (process.env.SALES_OPEN === "true" ? "" : `\n\n🗓 <b>Predaj členstiev spúšťame čoskoro.</b> Napíšte sem „Mám záujem“ a ozveme sa vám ako prvým.`),
   faq_how:
     `❓ <b>Ako to funguje</b>\n\n` +
-    `TipRadar denne prepočíta desiatky zápasov cez vlastný štatistický model (Poissonovo rozdelenie gólov, vážená forma, vzájomné zápasy, historické dáta) a vyberie tipy s reálnou hodnotou naprieč 8 trhmi (góly v zápase, góly tímu, rohy v zápase, rohy tímu, karty, strely na bránu, fauly, držanie lopty) – s vysvetlením, prečo. Pri každom trhu vyskúša všetky hranice, ktoré stávkové kancelárie ponúkajú, a vyberie tú s najväčšou hodnotou.`,
+    `TipRadar denne prepočíta desiatky zápasov cez vlastný štatistický model (Poissonovo rozdelenie gólov, vážená forma, vzájomné zápasy, historické dáta) a vyberie tipy s reálnou hodnotou naprieč trhmi góly, rohy, karty, strely na bránu, fauly a držanie lopty (v zápase aj pre každý tím) – s vysvetlením, prečo. Pri každom trhu vyskúša všetky hranice, ktoré stávkové kancelárie ponúkajú, a vyberie tú s najväčšou hodnotou.`,
   faq_time:
     `🕒 <b>Kedy prídu tipy</b>\n\n` +
     `Tipy posielame v deň zápasu, <b>1 – 2 hodiny pred výkopom</b> – vtedy sú kurzy aj dáta najpresnejšie a zostane dosť času na stávku.\n\n` +
@@ -632,7 +632,7 @@ export async function notifyAdminExpiringSubscribers(
 
   const lines = expiring
     .map((s) => {
-      const tierLabel = isTerm(s.length) ? termLabel(s.length).toUpperCase() : s.tier === "group" ? "PLATINUM · 6 MESIACOV" : "SILVER · 1 MESIAC";
+      const tierLabel = isTerm(s.length) ? termLabel(s.length).toUpperCase() : s.tier === "group" ? "PLATINUM · 6 MESIACOV" : "GOLD · 1 MESIAC";
       const when = s.daysLeft < 0 ? "už skončilo" : s.daysLeft === 0 ? "končí dnes" : `končí o ${s.daysLeft} d.`;
       return `• ${s.name} (${tierLabel}) – ${when}`;
     })
