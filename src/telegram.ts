@@ -400,7 +400,7 @@ const BENEFIT_MENTOR =
 /** Garancia: ak obdobie členstva skončí v strate, člen dostane 1 mesiac zadarmo. */
 const GUARANTEE_LINE = `🛡 <b>Garancia:</b> ak vaše členstvo (Gold alebo Onyx) skončí v strate, ďalší mesiac máte zadarmo.`;
 const PLAN_START = `🥇 <b>Gold · 50 dní</b> – 69 € (100+ tipov, bez viazanosti)\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_REPORT_GOLD}`;
-const PLAN_SERIA = `💎 <b>Onyx · 6 mesiacov</b> – 199 € (300+ zápasov, 33 € mesačne namiesto 49 €, ušetríte 95 €)\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_MENTOR}`;
+const PLAN_SERIA = `💎 <b>Onyx · 6 mesiacov</b> – 199 € (300+ zápasov, pri mesačnej cene 49 € ušetríte 95 €)\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_MENTOR}`;
 
 const FAQ_ANSWERS: Record<string, string> = {
   faq_price:
