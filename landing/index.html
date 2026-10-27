@@ -2244,7 +2244,7 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
             <small id="calcFrom">Posledných 250 tipov, po zaplatení balíčka</small>
             <div class="big num" id="calcEnd">–</div>
             <svg viewBox="0 0 400 120" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="calcGrad" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#D9C08A" stop-opacity=".35"/><stop offset="1" stop-color="#D9C08A" stop-opacity="0"/></linearGradient></defs><path id="calcArea" fill="url(#calcGrad)" d=""/><path id="simCost" d="" fill="none" stroke="#C0707C" stroke-width="1.2" stroke-dasharray="5 5" vector-effect="non-scaling-stroke"/><path id="calcLine" d="" fill="none" stroke="#D9C08A" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>
-            <div class="rows"><div><b class="num" id="calcN">–</b><span>tipov</span></div><div><b class="num" id="calcW">–</b><span>vyšlo</span></div><div><b class="num" id="calcP">–</b><span>j. zisk z tipov</span></div></div>
+            <div class="rows"><div><b class="num" id="calcN">–</b><span>tipov</span></div><div><b class="num" id="calcW">–</b><span>vyšlo</span></div><div><b class="num" id="calcP">–</b><span id="calcPp">zisk z tipov</span></div></div>
             <div class="mem" id="calcMem" hidden><small id="calcMemHead">Celá história po úsekoch</small><div id="calcMemRows"></div></div>
             <p class="note">Červená čiarkovaná čiara je cena balíčka. Keď je zlatá krivka nad ňou, balíček sa už zaplatil. Počíta sa zo skutočných vyhodnotených tipov vrátane prehier. Minulé výsledky nie sú zárukou budúcich.</p>
           </div>
@@ -2851,8 +2851,8 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
       pI.setAttribute("aria-valuetext", pct + " %");
       o("stake").textContent = f(stake, stake % 1 ? 2 : 0) + " €";
       const units = t.price / stake, perMonth = units / (t.tips / TIPS_PER_MONTH);
-      o("roi").textContent = "+" + f(units, 1) + " j.";
-      o("roiSub").textContent = "To je v priemere asi +" + f(perMonth, 1) + " j. mesačne (pri asi " + TIPS_PER_MONTH + " tipoch). 1 jednotka = vklad na tip (" + f(stake, stake % 1 ? 2 : 0) + " €), spolu " + f(t.price, 0) + " € = cena balíčka.";
+      o("roi").textContent = "+" + f(units, 1) + " j. · " + f(roi, 1) + " %";
+      o("roiSub").textContent = f(roi, 1) + " % zo všetkých vkladov, v priemere asi +" + f(perMonth, 1) + " j. mesačne (pri asi " + TIPS_PER_MONTH + " tipoch). 1 jednotka = vklad na tip (" + f(stake, stake % 1 ? 2 : 0) + " €), spolu " + f(t.price, 0) + " € = cena balíčka.";
       const v = o("verdict");
       if (pct > 5) { v.className = "pk-verdict bad"; v.textContent = "Príliš riskantné – vklad nad 5 % banku neodporúčame, séria prehier ho rýchlo minie."; return; }
       v.className = "pk-verdict " + (roi <= 4.2 ? "ok" : roi <= 6 ? "mid" : "bad");
@@ -3182,10 +3182,11 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
       document.getElementById("calcBankVal").textContent = eur(bank);
       range.style.setProperty("--fill", ((bank - range.min) / (range.max - range.min)) * 100 + "%");
       document.getElementById("calcFrom").textContent = (n < p.tips ? "Všetkých " + n + " doterajších " + tipWord(n) + " (balíček má " + p.tips + ")" : "Posledných " + n + " tipov") + ", po zaplatení balíčka";
-      document.getElementById("calcEnd").innerHTML = sign(net) + eur(Math.abs(net)) + '<em class="' + (net < 0 ? "neg" : "") + '">' + sign(net) + num(Math.abs(net) / stake, 1) + " j.</em>";
+      document.getElementById("calcEnd").innerHTML = sign(net) + eur(Math.abs(net)) + '<em class="' + (net < 0 ? "neg" : "") + '">' + sign(net) + num(Math.abs(net) / stake, 1) + " j. · " + sign(net) + num(Math.abs(net) / stake / n * 100, 1) + " %</em>";
       document.getElementById("calcN").textContent = n;
       document.getElementById("calcW").textContent = Math.round(won / n * 100) + " %";
-      document.getElementById("calcP").textContent = sign(u) + num(Math.abs(u), 1);
+      document.getElementById("calcP").textContent = sign(u) + num(Math.abs(u), 1) + " j.";
+      document.getElementById("calcPp").textContent = "zisk z tipov · " + sign(u) + num(Math.abs(u) / n * 100, 1) + " %";
       // celá história rozdelená na úseky veľkosti balíčka: v koľkých by sa balíček zaplatil
       var mem = document.getElementById("calcMem");
       if (all.length >= p.tips * 2) {
