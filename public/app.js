@@ -1050,6 +1050,15 @@ function strictCheck(bet, odd) {
   return { pass: p >= 68 && p <= 80 && (p / 100) * odd >= 1.05, p };
 }
 
+/** Text pri tipe do sledovaných kvôli 60 / 40: aký kurz treba, aby prešiel ku klientom. */
+function strictHint(bet) {
+  const p = bet.strictProbability;
+  if (typeof p !== "number") return "Pri kurze zo stávkoviek neprejde kontrolou 60 / 40.";
+  if (p < 68 || p > 80) return `Pri 60 / 40 má dôveru ${fmtNum(p, 0)}${NB}% – mimo pásma 68 – 80${NB}%, ku klientom nepôjde pri žiadnom kurze.`;
+  const need = Math.ceil((1.05 / (p / 100)) * 100) / 100;
+  return `Pri 60 / 40 má dôveru ${fmtNum(p, 0)}${NB}% – ku klientom prejde pri kurze aspoň ${fmtOdds(need)}, inak len sledovať.`;
+}
+
 function buildTip(r, bet, realOdds, extra = {}) {
   return {
     id: `${r.fixture.fixtureId}-${Date.now()}`,
@@ -1531,6 +1540,7 @@ function renderDayTipsView() {
           <div class="s">${escapeHtml(bet.market)}: <b>${escapeHtml(translateNamesInText(bet.selection, f.homeTeam.name, f.awayTeam.name))}</b><span class="mini-prob"> · ${bet.probability.toFixed(0)}${NB}%${dayTipSaved.has(i) ? " · ✓ uložené" : ""}</span>${strongTipBadge(bet.probability)}</div>
           <div class="m"><span>Dôvera <b>${bet.probability.toFixed(0)}${NB}%</b></span>${betOddsHtml(bet)}</div>
           ${bet.valueWarning ? `<div class="why warn">⚠️ ${escapeHtml(bet.valueWarning)}</div>` : ""}
+          ${bet.strictFail ? `<div class="why warn">⚠️ ${escapeHtml(strictHint(bet))}</div>` : ""}
         </div>
         <div class="dtip-odds">
           <label class="odds-in"><span>Kurz v stávkovke</span><input type="text" inputmode="decimal" autocomplete="off" data-odds="${i}" placeholder="min ${fmtOdds(minOddsFor(bet))}" value="${escapeHtml(dayTipOdds[i] ?? "")}"${dayTipSaved.has(i) ? " disabled" : ""} /></label>
