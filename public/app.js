@@ -1927,6 +1927,17 @@ function renderWatchReport(list) {
     el.innerHTML = `<p class="faint small">Zatiaľ žiadne. Sem patria tipy označené „Len sledovať“.</p>`;
     return;
   }
+  // Michal 27. 10. 2026: tipy, ktoré neprejdú ani pri 60 / 40, sú v samostatnej tabuľke (nič sa nemaže).
+  const fails60 = (t) => t.strictFail || t.retroStrict || (retroStrictProbability(t) != null && typeof t.odds === "number" && t.odds > 1 && !strictCheck({ strictProbability: retroStrictProbability(t) }, t.odds).pass);
+  const other = list.filter((t) => !fails60(t));
+  const failed = list.filter(fails60);
+  el.innerHTML =
+    watchListHtml(other, "Zatiaľ žiadne.") +
+    (failed.length ? `<h4 class="ct">Neprešli ani pri 60 / 40</h4><p class="muted small">Tipy, ktoré neprejdú ani prísnejšou kontrolou (60 % model / 40 % stávkovky). Neposielajú sa a nie sú na webe – vyhodnocujú sa len kvôli kontrole pravidla 1. 12.</p>${watchListHtml(failed, "")}` : "") +
+    `<p class="faint small">Tieto tipy sa vyhodnocujú, ale neposielajú sa členom, nie sú na webe a nerátajú sa do úspešnosti. Keď budú mať aspoň 30 vyhodnotených tipov v zisku, oplatí sa ich začať posielať.</p>`;
+}
+function watchListHtml(list, empty) {
+  if (!list.length) return empty ? `<p class="faint small">${empty}</p>` : "";
   const resolved = list.filter((t) => t.status === "won" || t.status === "lost");
   const won = resolved.filter((t) => t.status === "won").length;
   const withOdds = resolved.filter((t) => typeof t.odds === "number" && t.odds > 1);
@@ -1939,11 +1950,10 @@ function renderWatchReport(list) {
     .slice(0, 40)
     .map((t) => `<tr><td style="white-space:nowrap">${escapeHtml(new Date(t.matchDate).toLocaleDateString("sk-SK", { day: "numeric", month: "numeric" }))}</td><td>${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))}<br><span class="faint">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}</span></td><td class="num">${Number(t.probability).toFixed(0)}${NB}%</td><td class="num">${typeof t.odds === "number" ? fmtOdds(t.odds) : "–"}</td><td>${res[t.status] || t.status}</td><td><button type="button" class="ib" data-watch-edit="${escapeHtml(t.id)}" title="Upraviť kurz alebo výsledok" aria-label="Upraviť kurz alebo výsledok">${ICON.edit}</button> <button type="button" class="ib danger" data-watch-del="${escapeHtml(t.id)}" title="Odstrániť tip" aria-label="Odstrániť tip">${ICON.trash}</button></td></tr>`)
     .join("");
-  el.innerHTML = `<p class="small">${resolved.length
+  return `<p class="small">${resolved.length
       ? `<b>Vyšlo ${won} z ${resolved.length}</b> (${fmtNum((won / resolved.length) * 100, 0)}${NB}%, model sľuboval ${fmtNum(avgProb, 0)}${NB}%)${withOdds.length ? `, zisk <b class="${profit >= 0 ? "g" : "l"}">${signed(profit, 1)}${NB}j.</b>` : "."}`
       : "Zatiaľ žiadny vyhodnotený."}${pending ? ` Čaká: ${pending}.` : ""}</p>
-    <div class="table-wrap"><table class="bt-table"><thead><tr><th>Deň</th><th>Zápas a tip</th><th class="num">Dôvera</th><th class="num">Kurz</th><th>Výsledok</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
-    <p class="faint small">Tieto tipy sa vyhodnocujú, ale neposielajú sa členom, nie sú na webe a nerátajú sa do úspešnosti. Keď budú mať aspoň 30 vyhodnotených tipov v zisku, oplatí sa ich začať posielať.</p>`;
+    <div class="table-wrap"><table class="bt-table"><thead><tr><th>Deň</th><th>Zápas a tip</th><th class="num">Dôvera</th><th class="num">Kurz</th><th>Výsledok</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 // Sledované tipy – úspešnosť (25. 10. 2026): jedna interná tabuľka pre všetko, čo sa vyhodnocuje
