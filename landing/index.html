@@ -925,27 +925,55 @@ h2 { font-size: clamp(28px, 3.1vw, 44px) !important; }
 
 /* prehľad po mesiacoch (stránka Výsledky) */
 .mon { position: relative; }
-.cal-wrap { display: flex; gap: 8px; }
-.cal-days { display: grid; grid-template-rows: repeat(7, 1fr); gap: 4px; padding-top: 22px; font-size: 11px; color: var(--faint); }
-.cal-days span { line-height: 1; display: flex; align-items: center; }
-.cal-main { flex: 1; min-width: 0; }
-.cal-months { position: relative; height: 22px; font-size: 12px; color: var(--faint); text-transform: none; }
-.cal-months span { position: absolute; top: 0; white-space: nowrap; }
-.cal-grid { display: grid; grid-auto-flow: column; grid-template-rows: repeat(7, 1fr); gap: 4px; }
-.cal-grid i { aspect-ratio: 1; border-radius: 4px; background: rgba(255,255,255,.05); cursor: default; transition: transform .15s; }
-.cal-grid i.x { background: transparent; }
-.cal-grid i.t { box-shadow: inset 0 0 0 1.5px var(--gold-hi); }
-.cal-grid i[data-d]:hover { transform: scale(1.25); }
-.cal-grid .w1, .cal-legend .w1 { background: rgba(127,191,154,.35); } .cal-grid .w2 { background: rgba(127,191,154,.6); } .cal-grid .w3, .cal-legend .w3 { background: #86C7A1; }
-.cal-grid .l1, .cal-legend .l1 { background: rgba(208,124,136,.35); } .cal-grid .l2 { background: rgba(208,124,136,.6); } .cal-grid .l3, .cal-legend .l3 { background: #D07C88; }
-.cal-grid .z { background: rgba(217,192,138,.35); }
-.cal-foot { margin-top: 18px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 24px; }
-.cal-legend { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--faint); }
-.cal-legend span { margin: 0 4px; }
-.cal-legend i { width: 13px; height: 13px; border-radius: 3px; background: rgba(255,255,255,.05); }
-.cal-sum { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 14px; color: var(--muted); }
-.cal-sum b { font-family: var(--display); font-size: 17px; color: var(--text); }
-.cal-sum b.pos { color: var(--win); } .cal-sum b.neg { color: var(--loss); }
+.cal { overflow: visible; background: radial-gradient(90% 60% at 100% 0%, rgba(217,192,138,.08), transparent 60%), var(--panel); }
+.cal-top { display: grid; gap: 26px; }
+.cal .note { margin-bottom: 0; }
+.cal-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.cal-stat { position: relative; padding: 20px 22px 18px; border-radius: var(--r-sm); border: 1px solid var(--line); background: rgba(0,0,0,.18); overflow: hidden; }
+.cal-stat::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--gold), transparent); opacity: .7; }
+.cal-stat small { display: block; font: 700 11px/1.2 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+.cal-stat b { display: block; margin-top: 10px; font: 800 32px/1 var(--display); letter-spacing: -0.02em; color: var(--gold-hi); }
+.cal-stat b.pos { color: var(--win); }
+.cal-stat span { display: block; margin-top: 6px; font-size: 12.5px; color: var(--muted); }
+.cal-stat .ring { position: absolute; right: 18px; top: 50%; width: 58px; height: 58px; margin-top: -29px; transform: rotate(-90deg); }
+.cal-stat .ring circle { fill: none; stroke-width: 5; }
+.cal-stat .ring .bg { stroke: rgba(255,255,255,.07); } .cal-stat .ring .fg { stroke: var(--win); stroke-linecap: round; }
+.cal-bar { margin: 30px 0 16px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px 24px; }
+.cal-legend { display: flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--faint); }
+.cal-legend span { margin: 0 10px 0 3px; }
+.cal-legend i { width: 14px; height: 14px; border-radius: 4px; background: rgba(255,255,255,.05); }
+.cal-legend .w1 { background: rgba(127,191,154,.35); } .cal-legend .w3 { background: #86C7A1; } .cal-legend .l1 { background: rgba(208,124,136,.35); } .cal-legend .l3 { background: #D07C88; }
+.cal-nav { display: flex; align-items: center; gap: 10px; }
+.cal-nav span { min-width: 150px; text-align: center; font-size: 14px; font-weight: 700; color: var(--muted); text-transform: capitalize; }
+.cal-nav button { width: 38px; height: 38px; border-radius: 50%; border: 0; box-shadow: inset 0 0 0 1px var(--line-2); background: transparent; color: var(--gold-hi); font-size: 20px; line-height: 1; cursor: pointer; transition: background .2s; }
+.cal-nav button:hover:not(:disabled) { background: rgba(217,192,138,.12); }
+.cal-nav button:disabled { opacity: .3; cursor: default; }
+.cal-months { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.cal-m { padding: 18px 18px 16px; border-radius: var(--r-sm); border: 1px solid var(--line); background: rgba(0,0,0,.14); }
+.cal-mh { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.cal-mh h4 { margin: 0; font: 700 19px/1.2 var(--display); text-transform: capitalize; color: var(--text); }
+.cal-mh b { font: 700 15px/1 var(--display); padding: 5px 10px; border-radius: 999px; background: rgba(255,255,255,.05); color: var(--muted); white-space: nowrap; }
+.cal-mh b.pos { color: var(--win); background: rgba(127,191,154,.12); } .cal-mh b.neg { color: var(--loss); background: rgba(208,124,136,.12); }
+.cal-ms { margin-top: 4px; font-size: 12.5px; color: var(--faint); }
+.cal-wd, .cal-g { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+.cal-wd { margin: 14px 0 6px; font: 700 10.5px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--faint); text-align: center; }
+.cal-g i { position: relative; aspect-ratio: 1; border-radius: 7px; display: grid; place-items: center; font: 600 12.5px/1 var(--sans); font-style: normal; color: rgba(244,238,226,.28); background: rgba(255,255,255,.025); transition: transform .15s, box-shadow .15s; }
+.cal-g i.x { background: transparent; }
+.cal-g i[data-d] { color: #17120D; font-weight: 800; cursor: pointer; }
+.cal-g i[data-d]:hover { transform: scale(1.14); z-index: 2; box-shadow: 0 6px 16px rgba(0,0,0,.4); }
+.cal-g i.t { box-shadow: inset 0 0 0 2px var(--gold-hi); color: var(--gold-hi); }
+.cal-g i u { position: absolute; bottom: 3px; left: 0; right: 0; display: flex; justify-content: center; gap: 2px; }
+.cal-g i u::before { content: ""; }
+.cal-g i u s { width: 3px; height: 3px; border-radius: 50%; background: currentColor; opacity: .55; }
+.cal-g .w1 { background: rgba(127,191,154,.45); } .cal-g .w2 { background: rgba(134,199,161,.72); } .cal-g .w3 { background: linear-gradient(160deg, #A6DDBC, #6FB28C); }
+.cal-g .l1 { background: rgba(208,124,136,.45); } .cal-g .l2 { background: rgba(208,124,136,.72); } .cal-g .l3 { background: linear-gradient(160deg, #E39AA4, #C0707C); }
+.cal-g .z { background: rgba(217,192,138,.5); }
+@media (max-width: 760px) {
+  .cal-months { grid-template-columns: 1fr; }
+  .cal-stats { gap: 8px; } .cal-stat { padding: 14px 12px 12px; } .cal-stat b { font-size: 24px; } .cal-stat small { letter-spacing: .06em; } .cal-stat span { font-size: 12px; line-height: 1.35; } .cal-stat .ring { display: none; }
+  .cal-bar { flex-direction: column-reverse; align-items: stretch; margin-top: 22px; } .cal-nav { justify-content: space-between; } .cal-legend { justify-content: center; flex-wrap: wrap; }
+  .cal-g { gap: 6px; } .cal-g i { font-size: 14px; border-radius: 9px; }
+}
 .cal-tip { position: absolute; z-index: 5; pointer-events: none; transform: translate(-50%, calc(-100% - 10px)); width: max-content; max-width: min(340px, calc(100% - 16px)); padding: 10px 14px; border-radius: 12px; background: #1B1510; border: 1px solid var(--line-2); box-shadow: 0 12px 30px rgba(0,0,0,.45); font-size: 13px; line-height: 1.35; color: var(--text); }
 .cal-tip .ct-head { display: flex; justify-content: space-between; gap: 16px; padding-bottom: 7px; margin-bottom: 4px; border-bottom: 1px solid var(--line); color: var(--faint); }
 .cal-tip .ct-head b { font-family: var(--display); font-size: 15px; }
@@ -2230,12 +2258,20 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
         </div>
       </div>
       <div class="mon-sec" id="kalendar" data-pages="vysledky" hidden>
-        <div class="mon">
-          <div class="eyebrow">Kalendár tipov</div>
-          <h3>Deň po dni <em>bez prikrášľovania</em></h3>
-          <p class="note">Každý štvorček je jeden deň. Zelený = deň v pluse, červený = deň v mínuse, čím sýtejší, tým väčší rozdiel. Prázdne dni boli bez tipu.</p>
-          <div class="cal-wrap"><div class="cal-days" aria-hidden="true"><span>Po</span><span></span><span>St</span><span></span><span>Pi</span><span></span><span>Ne</span></div><div class="cal-main"><div class="cal-months" id="calMonths"></div><div class="cal-grid" id="calGrid"></div></div></div>
-          <div class="cal-foot"><div class="cal-legend"><span>mínus</span><i class="l3"></i><i class="l1"></i><i class="e"></i><i class="w1"></i><i class="w3"></i><span>plus</span></div><div class="cal-sum" id="calSum"></div></div>
+        <div class="mon cal">
+          <div class="cal-top">
+            <div class="cal-intro">
+              <div class="eyebrow">Kalendár tipov</div>
+              <h3>Deň po dni <em>bez prikrášľovania</em></h3>
+              <p class="note">Každý deň s tipmi má farbu: zelená = deň v pluse, červená = deň v mínuse. Prejdite myšou na deň (na mobile ťuknite) a uvidíte jeho tipy.</p>
+            </div>
+            <div class="cal-stats" id="calStats"></div>
+          </div>
+          <div class="cal-bar">
+            <div class="cal-legend"><i class="l3"></i><i class="l1"></i><span>mínus</span><i class="e"></i><span>bez tipu</span><i class="w1"></i><i class="w3"></i><span>plus</span></div>
+            <div class="cal-nav"><button type="button" id="calPrev" aria-label="Staršie mesiace">‹</button><span id="calRange"></span><button type="button" id="calNext" aria-label="Novšie mesiace">›</button></div>
+          </div>
+          <div class="cal-months" id="calMonths"></div>
           <div class="cal-tip" id="calTip" hidden></div>
         </div>
       </div>
@@ -2631,38 +2667,60 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
     }).join("");
     $("mesiace").hidden = false;
   }
-  // kalendár tipov: posledných 26 týždňov (na mobile 15), stĺpec = týždeň Po – Ne
+  // kalendár tipov: mesiace vedľa seba (na mobile jeden), deň s tipmi zafarbený podľa zisku
   function drawCalendar(list) {
     const ds = (list || []).filter((d) => d.total > 0);
     if (ds.length < 3 || !$("kalendar")) return;
     const map = new Map(ds.map((d) => [d.day, d]));
-    const key = (dt) => dt.toLocaleDateString("sv-SE", { timeZone: "UTC" });
-    const today = new Date(new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Bratislava" }) + "T00:00:00Z");
-    const weeks = window.innerWidth < 640 ? 15 : 26;
-    const start = new Date(today); start.setUTCDate(start.getUTCDate() - ((today.getUTCDay() + 6) % 7) - (weeks - 1) * 7);
+    const tKey = new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Bratislava" });
     const maxAbs = Math.max(1, ...ds.map((d) => Math.abs(d.profit)));
     const lvl = (p) => { const r = Math.abs(p) / maxAbs; return r > 0.6 ? 3 : r > 0.25 ? 2 : 1; };
-    const tKey = key(today);
-    let cells = "", months = "", lastM = -1;
-    for (let w = 0; w < weeks; w++) {
-      for (let i = 0; i < 7; i++) {
-        const dt = new Date(start); dt.setUTCDate(start.getUTCDate() + w * 7 + i);
-        const k = key(dt), d = map.get(k);
-        if (i === 0 && dt.getUTCMonth() !== lastM) { lastM = dt.getUTCMonth(); if (w < weeks - 1) months += `<span style="left:${(w / weeks * 100).toFixed(2)}%">${MONTHS[lastM].slice(0, 3)}</span>`; }
-        if (dt > today) { cells += `<i class="x"></i>`; continue; }
-        const c = d ? (d.profit > 0 ? "w" + lvl(d.profit) : d.profit < 0 ? "l" + lvl(d.profit) : "z") : "";
-        cells += `<i class="${c}${k === tKey ? " t" : ""}"${d ? ` data-d="${k}"` : ""}></i>`;
-      }
-    }
-    $("calGrid").style.gridTemplateColumns = `repeat(${weeks}, 1fr)`;
-    $("calGrid").innerHTML = cells;
-    $("calMonths").innerHTML = months;
+    const dName = (k) => { const [, m, d] = k.split("-").map(Number); return `${d}. ${m}.`; };
+    const tipsWord = (n) => (n === 1 ? "tip" : n < 5 ? "tipy" : "tipov");
+    // súhrn hore
     const plus = ds.filter((d) => d.profit > 0).length, best = ds.reduce((a, b) => (b.profit > a.profit ? b : a));
     let run = 0, streak = 0; ds.forEach((d) => { run = d.profit > 0 ? run + 1 : 0; streak = Math.max(streak, run); });
-    const dName = (k) => { const [, m, d] = k.split("-").map(Number); return `${d}. ${m}.`; };
-    $("calSum").innerHTML = `<span>Dni v pluse <b class="pos">${plus} z ${ds.length}</b></span><span>Najlepší deň <b class="pos">${signed(best.profit, 1)} j.</b> (${dName(best.day)})</span><span>Najdlhšia séria <b>${streak} ${streak === 1 ? "deň" : streak < 5 ? "dni" : "dní"}</b> v pluse</span>`;
-    const tip = $("calTip"), box = $("kalendar").querySelector(".mon");
+    const share = plus / ds.length, C = 2 * Math.PI * 18;
+    $("calStats").innerHTML =
+      `<div class="cal-stat"><svg class="ring" viewBox="0 0 44 44" aria-hidden="true"><circle class="bg" cx="22" cy="22" r="18"/><circle class="fg" cx="22" cy="22" r="18" stroke-dasharray="${(share * C).toFixed(1)} ${C.toFixed(1)}"/></svg><small>Dni v pluse</small><b class="pos">${Math.round(share * 100)} %</b><span>${plus} z ${ds.length} dní</span></div>` +
+      `<div class="cal-stat"><small>Najlepší deň</small><b class="pos">${signed(best.profit, 1)} j.</b><span>${dName(best.day)} · ${best.won} z ${best.total} vyšlo</span></div>` +
+      `<div class="cal-stat"><small>Najdlhšia séria</small><b>${streak} ${streak === 1 ? "deň" : streak < 5 ? "dni" : "dní"}</b><span>v pluse</span></div>`;
+    // mesiace
+    const firstM = ds[0].day.slice(0, 7), lastM = tKey.slice(0, 7);
+    const mAdd = (m, n) => { const [y, mo] = m.split("-").map(Number); const d = new Date(Date.UTC(y, mo - 1 + n, 1)); return d.toISOString().slice(0, 7); };
+    const per = () => (window.innerWidth < 760 ? 1 : 3);
+    let end = lastM;
+    const render = () => {
+      const n = per(), months = [];
+      for (let i = n - 1; i >= 0; i--) months.push(mAdd(end, -i));
+      $("calMonths").innerHTML = months.map((m) => {
+        const [y, mo] = m.split("-").map(Number), days = new Date(Date.UTC(y, mo, 0)).getUTCDate();
+        const lead = (new Date(Date.UTC(y, mo - 1, 1)).getUTCDay() + 6) % 7;
+        const inM = ds.filter((d) => d.day.startsWith(m)), pr = Math.round(inM.reduce((s, d) => s + d.profit, 0) * 100) / 100;
+        const won = inM.reduce((s, d) => s + d.won, 0), tot = inM.reduce((s, d) => s + d.total, 0);
+        let cells = "";
+        for (let i = 0; i < lead; i++) cells += `<i class="x"></i>`;
+        for (let d = 1; d <= days; d++) {
+          const k = `${m}-${String(d).padStart(2, "0")}`, x = map.get(k);
+          const c = x ? (x.profit > 0 ? "w" + lvl(x.profit) : x.profit < 0 ? "l" + lvl(x.profit) : "z") : "";
+          cells += `<i class="${c}${k === tKey ? " t" : ""}"${x ? ` data-d="${k}"` : ""}>${d}${x ? `<u>${"<s></s>".repeat(Math.min(x.total, 4))}</u>` : ""}</i>`;
+        }
+        return `<div class="cal-m"><div class="cal-mh"><h4>${MONTHS[mo - 1]} ${y}</h4>${tot ? `<b class="${cls(pr)}">${signed(pr, 1)} j.</b>` : ""}</div>` +
+          `<div class="cal-ms">${tot ? `${inM.length} ${inM.length === 1 ? "deň" : inM.length < 5 ? "dni" : "dní"} s tipmi · ${won} z ${tot} ${tipsWord(tot)} vyšlo` : "bez tipov"}</div>` +
+          `<div class="cal-wd"><span>Po</span><span>Ut</span><span>St</span><span>Št</span><span>Pi</span><span>So</span><span>Ne</span></div><div class="cal-g">${cells}</div></div>`;
+      }).join("");
+      const [y0, m0] = months[0].split("-").map(Number), [y1, m1] = months[months.length - 1].split("-").map(Number);
+      $("calRange").textContent = n === 1 ? `${MONTHS[m1 - 1]} ${y1}` : `${MONTHS[m0 - 1].slice(0, 3)} – ${MONTHS[m1 - 1].slice(0, 3)} ${y1}`;
+      $("calPrev").disabled = months[0] <= firstM;
+      $("calNext").disabled = end >= lastM;
+    };
+    $("calPrev").onclick = () => { end = mAdd(end, -per()); render(); };
+    $("calNext").onclick = () => { end = mAdd(end, per()); if (end > lastM) end = lastM; render(); };
+    let lastPer = per();
+    window.addEventListener("resize", () => { if (per() !== lastPer) { lastPer = per(); render(); } });
+    render();
     // okienko s tipmi dňa (myš na počítači, ťuknutie na mobile)
+    const tip = $("calTip"), box = $("kalendar").querySelector(".mon");
     const show = (e) => {
       const el = e.target.closest("[data-d]"); if (!el) { tip.hidden = true; return; }
       const d = map.get(el.dataset.d), r = el.getBoundingClientRect(), b = box.getBoundingClientRect();
@@ -2672,9 +2730,9 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
       const half = tip.offsetWidth / 2, x = r.left - b.left + r.width / 2;
       tip.style.left = `${Math.max(half + 8, Math.min(b.width - half - 8, x))}px`; tip.style.top = `${r.top - b.top}px`;
     };
-    $("calGrid").onmouseover = show;
-    $("calGrid").onclick = show;
-    $("calGrid").onmouseleave = () => { tip.hidden = true; };
+    $("calMonths").onmouseover = show;
+    $("calMonths").onclick = show;
+    $("calMonths").onmouseleave = () => { tip.hidden = true; };
     $("kalendar").hidden = false;
   }
   // posledných 10 tipov ako krúžky (zľava najstarší)
