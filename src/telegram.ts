@@ -394,7 +394,7 @@ export async function deleteTelegramMessages(messages: { chatId: string; message
 const TELEGRAM_CONTACT_USERNAME = process.env.TELEGRAM_CONTACT_USERNAME || "im_mishko";
 
 // ---- Balíčky tipov TipRadar (od 27. 10. 2026) – rovnaké texty ako na tipradar.eu ----
-// Štart 100 tipov 89 €, Gold 225 tipov 165 €, Onyx 450 tipov 269 €. Bez časovej platnosti – balíček platí, kým sa neminú tipy.
+// Štart 100 tipov 89 €, Gold 250 tipov 179 €, Onyx 500 tipov 299 €. Bez časovej platnosti – balíček platí, kým sa neminú tipy.
 // Platí sa za počet tipov: každému členovi sa rátajú tipy od nákupu. Najviac 3 najsilnejšie tipy denne.
 const BENEFITS_BASE =
   `• <b>Denné tipy na Telegrame</b> v súkromnom kanáli, 1 – 2 hodiny pred výkopom – najviac 3 najsilnejšie denne\n` +
@@ -408,8 +408,8 @@ const BENEFIT_MENTOR =
 const GUARANTEE_LINE = `🛡 <b>Garancia:</b> ak váš balíček skončí v strate, ďalších ${FREE_TIPS} tipov dostanete zadarmo.`;
 const BANK_LINE = `💼 Odporúčame bank 1 000 € a vklad 2 – 3 % na tip, nikdy nad 5 %.`;
 const PLAN_STAT = `🎯 <b>Štart · 100 tipov</b> – 89 € (0,89 € za tip)\n<i>Odporúčaný bank aspoň 750 € pri vklade 3 %</i>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
-const PLAN_START = `🥇 <b>Gold · 225 tipov</b> – 165 € (0,73 € za tip, ušetríte 35 €)\n<i>Odporúčaný bank aspoň 600 € pri vklade 3 %</i>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
-const PLAN_SERIA = `💎 <b>Onyx · 450 tipov</b> – 269 € (0,60 € za tip, ušetríte 131 €)\n<i>Odporúčaný bank aspoň 500 € pri vklade 3 %</i>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_MENTOR}`;
+const PLAN_START = `🥇 <b>Gold · 250 tipov</b> – 179 € (0,72 € za tip, ušetríte 43 €)\n<i>Odporúčaný bank aspoň 600 € pri vklade 3 %</i>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
+const PLAN_SERIA = `💎 <b>Onyx · 500 tipov</b> – 299 € (0,60 € za tip, ušetríte 146 €)\n<i>Odporúčaný bank aspoň 500 € pri vklade 3 %</i>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_MENTOR}`;
 const ALL_PLANS = `${PLAN_STAT}\n\n${PLAN_START}\n\n${PLAN_SERIA}`;
 
 const FAQ_ANSWERS: Record<string, string> = {
@@ -452,7 +452,7 @@ async function callTelegramApi(method: string, body: Record<string, unknown>): P
 /** Spracuje jednu prichádzajúcu udalosť z Telegram webhooku (nová správa alebo stlačenie tlačidla). */
 // ---- Záujemcovia o členstvo z tipradar.eu ----
 const NEXT_STEP =
-  `<b>Ako pokračovať:</b> napíšte sem krátku správu (napríklad „Mám záujem o Gold – 225 tipov“). Pošleme vám platobné údaje a po platbe vás pridáme do súkromného kanála TipRadar.\n\n` +
+  `<b>Ako pokračovať:</b> napíšte sem krátku správu (napríklad „Mám záujem o Gold – 250 tipov“). Pošleme vám platobné údaje a po platbe vás pridáme do súkromného kanála TipRadar.\n\n` +
   `Ozveme sa vám zvyčajne do 24 hodín. Bez viazanosti, balíček sa sám nepredlžuje.`;
 const PAY_STEP =
   `Zaplatíte bankovým prevodom cez QR kód v appke vašej banky, bez poplatkov. Hneď ako platba príde na účet, pošlem vám sem pozvánku do súkromného kanála TipRadar.\n\n` +
@@ -476,8 +476,8 @@ function payKeyboard(chatId: number | string, only?: SellableTerm) {
   const row = (t: SellableTerm, label: string) => [{ text: label, url: `${PUBLIC_URL}/zaplatit?term=${t}&c=${chatId}` }];
   const all: [SellableTerm, string][] = [
     ["t75", "Štart · 100 tipov · 89 €"],
-    ["t150", "Gold · 225 tipov · 165 €"],
-    ["t300", "◆ Onyx · 450 tipov · 269 €"],
+    ["t150", "Gold · 250 tipov · 179 €"],
+    ["t300", "◆ Onyx · 500 tipov · 299 €"],
   ];
   return { inline_keyboard: all.filter(([t]) => !only || t === only).map(([t, l]) => row(t, only ? `Zaplatiť ${PAY_TERMS[t].price} €` : l)) };
 }
@@ -499,12 +499,12 @@ function PRELAUNCH_MESSAGE(plan: string): string {
 
 const LEAD_LABEL: Record<string, string> = {
   stat: "Štart 100 tipov",
-  gold: "Gold 225 tipov",
-  onyx: "Onyx 450 tipov",
-  start: "Gold 225 tipov (starý odkaz)",
-  seria: "Onyx 450 tipov (starý odkaz)",
-  sampion: "Onyx 450 tipov (starý odkaz)",
-  vip: "Onyx 450 tipov (starý odkaz VIP)",
+  gold: "Gold 250 tipov",
+  onyx: "Onyx 500 tipov",
+  start: "Gold 250 tipov (starý odkaz)",
+  seria: "Onyx 500 tipov (starý odkaz)",
+  sampion: "Onyx 500 tipov (starý odkaz)",
+  vip: "Onyx 500 tipov (starý odkaz VIP)",
   premium: "balíčky (starý odkaz Premium)",
   clenstvo: "balíčky (zatiaľ nevybral)",
   otazka: "všeobecná otázka",
@@ -1034,7 +1034,7 @@ export async function sendSalesOpenToWaitlist(): Promise<{ sent: number; skipped
       `Ahoj${first ? " " + first : ""} 👋\n\n` +
       `Zapísal si sa do poradovníka na <b>TipRadar</b>. Predaj balíčkov je práve otvorený a ty máš prednosť.\n\n` +
       `◆ najviac 3 najsilnejšie tipy denne, 1 – 2 hodiny pred výkopom\n◆ pri každom tipe kurz, šanca a sadzba\n◆ súkromný VIP chat a úvodný hovor 1 na 1\n\n` +
-      `🎯 Štart · 100 tipov · 89 €\n🥇 Gold · 225 tipov · 165 €\n💎 Onyx · 450 tipov · 269 € (navyše mentoring 1 na 1)\n\n` +
+      `🎯 Štart · 100 tipov · 89 €\n🥇 Gold · 250 tipov · 179 €\n💎 Onyx · 500 tipov · 299 € (navyše mentoring 1 na 1)\n\n` +
       `${GUARANTEE_LINE}\n\nVyber si 👇`;
     try {
       await axios.post(
