@@ -1976,7 +1976,7 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
 #clenstvo .pk-mini { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
 #clenstvo .pk-mini > div { padding: 11px 12px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255,255,255,.02); }
 #clenstvo .pk-mini small { display: block; font: 600 10px/1.2 var(--sans); letter-spacing: .05em; text-transform: uppercase; color: var(--faint); }
-#clenstvo .pk-mini b { display: block; margin-top: 5px; font: 700 22px/1 "Barlow Condensed", "Arial Narrow", sans-serif; color: var(--text); }
+#clenstvo .pk-mini b { display: block; margin-top: 5px; font: 700 21px/1 "Barlow Condensed", "Arial Narrow", sans-serif; color: var(--text); white-space: nowrap; }
 #clenstvo .lux-r .pk-sub { margin: 12px 0 0; font-size: 12.5px; line-height: 1.45; color: var(--faint); }
 #clenstvo .lux-r .pk-verdict { display: flex; gap: 9px; align-items: flex-start; margin-top: 12px; padding: 11px 13px; border-radius: 12px; font-size: 13.5px; }
 #clenstvo .lux-r .pk-verdict::before { content: ""; flex: none; width: 8px; height: 8px; margin-top: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 22%, transparent); }
@@ -2356,7 +2356,7 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
               <div class="pk-res"><small>Za celé členstvo v pluse aspoň</small><b data-o="roi"></b></div>
               <div class="pk-mini">
                 <div><small>Vklad na tip</small><b data-o="stake"></b></div>
-                <div><small>Návratnosť</small><b data-o="pctroi"></b></div>
+                <div><small>Zisk na tip</small><b data-o="pctroi"></b></div>
                 <div><small>Mesačne</small><b data-o="month"></b></div>
               </div>
               <p class="pk-sub" data-o="roiSub"></p>
@@ -2997,9 +2997,9 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
       o("stake").textContent = f(stake, stake % 1 ? 2 : 0) + " €";
       const units = t.price / stake, perMonth = units / (t.tips / TIPS_PER_MONTH);
       o("roi").innerHTML = "+" + f(units, 1) + " <span>jednotky</span>";
-      o("pctroi").textContent = f(roi, 1) + " %";
+      o("pctroi").textContent = "+" + f(t.price / t.tips, 2) + " €";
       o("month").textContent = "+" + f(perMonth, 1) + " j.";
-      o("roiSub").textContent = "1 jednotka = vklad na tip (" + f(stake, stake % 1 ? 2 : 0) + " €). " + f(units, 1) + " j. × " + f(stake, stake % 1 ? 2 : 0) + " € = " + f(t.price, 0) + " €, teda cena balíčka. Mesačne pri asi " + TIPS_PER_MONTH + " tipoch.";
+      o("roiSub").textContent = "Aby sa vám balíček zaplatil, stačí, keď každý tip zarobí v priemere aspoň " + f(t.price / t.tips, 2) + " € (pri vklade " + f(stake, stake % 1 ? 2 : 0) + " €). Za " + t.tips + " tipov je to spolu " + f(t.price, 0) + " € = cena balíčka. 1 jednotka = vklad na jeden tip.";
       const v = o("verdict");
       if (pct > 5) { v.className = "pk-verdict bad"; v.textContent = "Príliš riskantné – vklad nad 5 % banku neodporúčame, séria prehier ho rýchlo minie."; return; }
       v.className = "pk-verdict " + (roi <= 4.2 ? "ok" : roi <= 6 ? "mid" : "bad");
