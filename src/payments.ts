@@ -4,7 +4,7 @@ import * as crypto from "crypto";
 import axios from "axios";
 import { ibanValid } from "./payBySquare";
 
-// Platby za balíčky tipov TipRadar (Štart 75, Gold 150, Onyx 300 tipov): bankový prevod cez QR kód (PAY by square), bez poplatkov.
+// Platby za balíčky tipov TipRadar (Štart 100, Gold 225, Onyx 450 tipov): bankový prevod cez QR kód (PAY by square), bez poplatkov.
 // Zapne sa, keď sú na Renderi nastavené SALES_OPEN=true, PAY_IBAN a PAY_NAME.
 // Platbu potvrdíš jedným klikom v appke alebo v Telegrame, bot potom pošle pozvánku.
 
@@ -52,16 +52,17 @@ export function addActiveMonths(from: Date, months: number, days?: number): Date
 }
 
 // Od 27. 10. 2026 sa predávajú balíčky podľa počtu tipov (Michalovo rozhodnutie):
-// t75 = Štart (75 tipov, 67 €), t150 = Gold (150 tipov, 109 €), t300 = Onyx (300 tipov, 179 €).
+// Kódy t75 / t150 / t300 ostali z prvej verzie (75 / 150 / 300 tipov), od 27. 10. 2026 ráno znamenajú 100 / 225 / 450 tipov.
+// t75 = Štart (100 tipov, 89 €), t150 = Gold (225 tipov, 165 €), t300 = Onyx (450 tipov, 269 €).
 // Bez časovej platnosti (Michal, 27. 10. 2026): balíček platí, kým sa neminú tipy. NO_EXPIRY_MONTHS je len
 // technický dátum ďaleko v budúcnosti (nikde sa neukazuje).
 // Staré časové členstvá m1 (Gold 50 dní), m3 (Onyx 6 mesiacov) a season ostávajú len kvôli starším záznamom.
 export const NO_EXPIRY_MONTHS = 1200;
 export type Term = "t75" | "t150" | "t300" | "m1" | "m3" | "season";
 export const PAY_TERMS: Record<Term, { price: number; name: string; months?: number; days?: number; tips?: number }> = {
-  t75: { price: 67, name: "75 tipov", tips: 75, months: NO_EXPIRY_MONTHS },
-  t150: { price: 109, name: "150 tipov", tips: 150, months: NO_EXPIRY_MONTHS },
-  t300: { price: 179, name: "300 tipov", tips: 300, months: NO_EXPIRY_MONTHS },
+  t75: { price: 89, name: "100 tipov", tips: 100, months: NO_EXPIRY_MONTHS },
+  t150: { price: 165, name: "225 tipov", tips: 225, months: NO_EXPIRY_MONTHS },
+  t300: { price: 269, name: "450 tipov", tips: 450, months: NO_EXPIRY_MONTHS },
   m1: { price: 69, name: "50 dní", days: 50 },
   m3: { price: 199, name: "6 mesiacov", months: 6 },
   season: { price: 219, name: "6 mesiacov", months: 6 },
@@ -81,7 +82,7 @@ export const TIER_NAMES: Record<Term, string> = {
 export function tierName(term: Term): string {
   return TIER_NAMES[term] ?? TIER_NAMES.t150;
 }
-/** Názov balíčka s počtom tipov, napríklad „Gold · 150 tipov“. */
+/** Názov balíčka s počtom tipov, napríklad „Gold · 225 tipov“. */
 export function termLabel(term: Term): string {
   return `${tierName(term)} · ${PAY_TERMS[term].name}`;
 }

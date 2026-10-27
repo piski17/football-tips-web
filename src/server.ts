@@ -281,7 +281,7 @@ async function termSeats(): Promise<TermSeats> {
 }
 /** Riadok pod tipom v bezplatnom kanáli (balíčky sú bez obmedzenia miest). */
 async function freeSeatsLine(): Promise<string | undefined> {
-  return `🎯 Balíčky tipov: Štart 75 tipov · Gold 150 · Onyx 300`;
+  return `🎯 Balíčky tipov: Štart 100 tipov · Gold 225 · Onyx 450`;
 }
 const BOT_USERNAME = process.env.TELEGRAM_BOT_USERNAME || "TipRadarAiBot";
 
