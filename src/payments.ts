@@ -52,21 +52,23 @@ export function addActiveMonths(from: Date, months: number, days?: number): Date
 }
 
 // Od 27. 10. 2026 sa predávajú balíčky podľa počtu tipov (Michalovo rozhodnutie):
-// t75 = Štart (75 tipov, 67 €, platí najviac 3 mesiace), t150 = Gold (150 tipov, 109 €, najviac 6 mesiacov),
-// t300 = Onyx (300 tipov, 179 €, najviac 12 mesiacov). Balíček skončí po poslednom tipe alebo po uplynutí platnosti.
+// t75 = Štart (75 tipov, 67 €), t150 = Gold (150 tipov, 109 €), t300 = Onyx (300 tipov, 179 €).
+// Bez časovej platnosti (Michal, 27. 10. 2026): balíček platí, kým sa neminú tipy. NO_EXPIRY_MONTHS je len
+// technický dátum ďaleko v budúcnosti (nikde sa neukazuje).
 // Staré časové členstvá m1 (Gold 50 dní), m3 (Onyx 6 mesiacov) a season ostávajú len kvôli starším záznamom.
+export const NO_EXPIRY_MONTHS = 1200;
 export type Term = "t75" | "t150" | "t300" | "m1" | "m3" | "season";
 export const PAY_TERMS: Record<Term, { price: number; name: string; months?: number; days?: number; tips?: number }> = {
-  t75: { price: 67, name: "75 tipov", tips: 75, months: 3 },
-  t150: { price: 109, name: "150 tipov", tips: 150, months: 6 },
-  t300: { price: 179, name: "300 tipov", tips: 300, months: 12 },
+  t75: { price: 67, name: "75 tipov", tips: 75, months: NO_EXPIRY_MONTHS },
+  t150: { price: 109, name: "150 tipov", tips: 150, months: NO_EXPIRY_MONTHS },
+  t300: { price: 179, name: "300 tipov", tips: 300, months: NO_EXPIRY_MONTHS },
   m1: { price: 69, name: "50 dní", days: 50 },
   m3: { price: 199, name: "6 mesiacov", months: 6 },
   season: { price: 219, name: "6 mesiacov", months: 6 },
 };
-/** Garancia: ak balíček skončí v strate, člen dostane ďalších 30 tipov zadarmo (platia najviac 3 mesiace). */
+/** Garancia: ak balíček skončí v strate, člen dostane ďalších 30 tipov zadarmo (tiež bez časovej platnosti). */
 export const FREE_TIPS = 30;
-export const FREE_TIPS_MONTHS = 3;
+export const FREE_TIPS_MONTHS = NO_EXPIRY_MONTHS;
 /** Názov balíčka: Štart / Gold / Onyx (staré časové členstvá majú v názve „staré“). */
 export const TIER_NAMES: Record<Term, string> = {
   t75: "Štart",

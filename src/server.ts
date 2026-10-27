@@ -2876,7 +2876,7 @@ app.post("/api/guarantee/apply", async (req, res) => {
     let freeUntil: string;
     let updates: Partial<Subscriber>;
     if (isPackage) {
-      // Balíček: ďalších 30 tipov zadarmo od dnes, platia najviac 3 mesiace. Ak má člen už nový balíček,
+      // Balíček: ďalších 30 tipov zadarmo od dnes (bez časovej platnosti). Ak má člen už nový balíček,
       // tipy zadarmo sa mu pridajú k nemu (rátajú sa ako ďalšie obdobie po ňom).
       const st = (await memberStatuses([sub])).get(sub.id)!;
       freeStart = now;
@@ -2905,7 +2905,7 @@ app.post("/api/guarantee/apply", async (req, res) => {
     if (req.body?.notify === true && sub.telegramChatId) {
       const text = isPackage
         ? `🛡 <b>Garancia TipRadar</b>\n\nTvoj balíček ${row.tier} skončil v strate (${signed(row.profit, 1)} j.), preto máš podľa garancie <b>ďalších ${FREE_TIPS} tipov zadarmo</b>. ` +
-          `Prídu ti do toho istého kanála, platia najneskôr do <b>${fmtDaySk(dayKeySk(new Date(freeUntil)))}</b>.`
+          `Prídu ti do toho istého kanála.`
         : `🛡 <b>Garancia TipRadar</b>\n\nTvoje členstvo ${row.tier} skončilo v strate (${signed(row.profit, 1)} j.), preto máš podľa garancie mesiac zadarmo. ` +
           `Platí do <b>${fmtDaySk(dayKeySk(new Date(freeUntil)))}</b>.`;
       notified = await sendMemberMessage(String(sub.telegramChatId), text).catch(() => false);

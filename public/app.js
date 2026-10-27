@@ -2984,13 +2984,13 @@ async function renderBlendSummary() {
 // =====================================================================
 // Ceny musia sedieť s balíčkami na tipradar.eu (landing/index.html) a PAY_TERMS v src/payments.ts.
 // Balíčky tipov (od 27. 10. 2026): t75 = Štart 75 tipov, t150 = Gold 150 tipov, t300 = Onyx 300 tipov.
-// Platnosť (najviac): 3 / 6 / 12 mesiacov. Tipy každému členovi počíta server (pole pkg pri členovi).
+// Bez časovej platnosti (platí, kým sa neminú tipy; 1200 mesiacov = technicky „navždy“). Tipy počíta server (pole pkg).
 // Staré časové členstvá m1 (Gold 50 dní), m3 (Onyx 6 mesiacov) a season sa nepredávajú, ostávajú pre staršie záznamy.
 const MEMBER_PRICES = { t75: 67, t150: 109, t300: 179, m1: 69, m3: 199, season: 219 };
 const MEMBER_NAME = { t75: "Štart", t150: "Gold", t300: "Onyx", m1: "Gold (staré)", m3: "Onyx (staré)", season: "Platinum (staré)" };
 const MEMBER_LENGTH_LABEL = { t75: "75 tipov", t150: "150 tipov", t300: "300 tipov", m1: "50 dní", m3: "6 mesiacov", season: "6 mesiacov" };
 const MEMBER_TIPS = { t75: 75, t150: 150, t300: 300 };
-const MEMBER_MONTHS = { t75: 3, t150: 6, t300: 12, m1: 1, m3: 6, season: 6 };
+const MEMBER_MONTHS = { t75: 1200, t150: 1200, t300: 1200, m1: 1, m3: 6, season: 6 };
 const MEMBER_DAYS = { m1: 50 }; // dĺžka v dňoch (staré Gold); ostatné v mesiacoch
 // Letná prestávka: jún a júl sa do členstva nepočítajú (rovnako ako src/payments.ts).
 const SUMMER_PAUSE = { fromMonth: 6, toMonth: 7 };
@@ -3046,7 +3046,7 @@ function updateSubEndPreview() {
   const end = memberEnd(start, subLengthSelect.value);
   const tips = MEMBER_TIPS[subLengthSelect.value];
   document.getElementById("subEndPreview").textContent = tips
-    ? `${tips} tipov od ${new Date(start).toLocaleDateString("sk-SK")}, platí najneskôr do ${end.toLocaleDateString("sk-SK")} (jún a júl sa nepočítajú).`
+    ? `${tips} tipov od ${new Date(start).toLocaleDateString("sk-SK")}, bez časového limitu.`
     : `Členstvo potrvá do ${end.toLocaleDateString("sk-SK")} (jún a júl sa nepočítajú).`;
 }
 subLengthSelect.addEventListener("change", syncMemberPrice);
@@ -3062,7 +3062,6 @@ function subscriberStatus(sub) {
     if (!k.active) return { label: k.left === 0 ? "Tipy minuté" : "Skončil", cls: "l" };
     const days = daysUntil(k.validUntil);
     if (k.left <= 5) return { label: k.left === 1 ? "Posledný tip" : `Ostáva ${k.left} tipov`, cls: "p" };
-    if (days <= 3) return { label: days <= 0 ? "Platnosť končí dnes" : `Platnosť končí o ${days} d.`, cls: "p" };
     return { label: "Aktívny", cls: "w" };
   }
   const days = daysUntil(sub.nextPaymentDue);
@@ -3122,7 +3121,7 @@ document.getElementById("guaranteeCard")?.addEventListener("click", async (e) =>
   b.disabled = true;
   try {
     const r = await postJson("/api/guarantee/apply", { id: row.id, periodStart: row.periodStart, notify });
-    showToast((r.freeTips ? `${r.freeTips} tipov zadarmo pridaných, platia najneskôr do ${fmtDay(r.freeUntil)}.` : `Mesiac zadarmo pridaný, platí do ${fmtDay(r.freeUntil)}.`) + (notify ? (r.notified ? " Správa odišla." : " Správa neodišla.") : ""));
+    showToast((r.freeTips ? `${r.freeTips} tipov zadarmo pridaných.` : `Mesiac zadarmo pridaný, platí do ${fmtDay(r.freeUntil)}.`) + (notify ? (r.notified ? " Správa odišla." : " Správa neodišla.") : ""));
     openSubscribers();
   } catch (err) {
     showToast(`Garanciu sa nepodarilo pridať: ${err.message}`);
@@ -3151,7 +3150,7 @@ function renderSubscribersList(subs) {
   lastSubs = subs;
   const active = subs.filter(memberActive);
   const income = active.reduce((sum, s) => sum + (Number(s.priceEur) || 0), 0);
-  // Končí čoskoro: ostáva ≤ 10 tipov alebo platnosť do 7 dní.
+  // Končí čoskoro: ostáva ≤ 10 tipov (staré časové členstvá: do 7 dní).
   const ending = active.filter((s) => (s.pkg && s.pkg.left != null && s.pkg.left <= 10) || daysUntil((s.pkg && s.pkg.validUntil) || s.nextPaymentDue) <= 7).length;
   const byTerm = (t) => active.filter((s) => s.length === t).length;
   document.getElementById("subscribersSummary").innerHTML = `
@@ -3160,7 +3159,7 @@ function renderSubscribersList(subs) {
     <div class="kpi"><small>Gold · 150</small><b>${byTerm("t150")}</b></div>
     <div class="kpi"><small>Onyx · 300</small><b>${byTerm("t300")}</b></div>
     <div class="kpi"><small>Zaplatené</small><b>${income}${NB}€</b><span>aktívni členovia</span></div>
-    <div class="kpi${ending ? " warn" : ""}"><small>Čoskoro končí</small><b>${ending}</b><span>≤ 10 tipov alebo 7 dní</span></div>`;
+    <div class="kpi${ending ? " warn" : ""}"><small>Čoskoro končí</small><b>${ending}</b><span>ostáva ≤ 10 tipov</span></div>`;
   document.querySelectorAll("#memberFilter [data-f]").forEach((b) => b.classList.toggle("on", b.dataset.f === memberFilter));
 
   const shown = subs
@@ -3188,7 +3187,7 @@ function renderSubscribersList(subs) {
         escapeHtml(s.contact || ""),
         tipsInfo,
         `${MEMBER_LENGTH_LABEL[length] || length} · ${Number(s.priceEur) || 0}${NB}€`,
-        k && k.total != null ? `${startDate ? startDate + " – " : ""}platí najneskôr do ${endDate}` : startDate ? `${startDate} – ${endDate}` : `do ${endDate}`,
+        k && k.total != null ? (startDate ? `od ${startDate}` : "") : startDate ? `${startDate} – ${endDate}` : `do ${endDate}`,
         s.note ? escapeHtml(s.note) : "",
       ].filter(Boolean).join(" · ");
       const g = currentGuaranteeRow(s.id);
@@ -3224,7 +3223,7 @@ subscribersListEl.addEventListener("click", async (e) => {
     const term = { "75": "t75", "150": "t150", "300": "t300" }[pick.trim()];
     if (!term) { showToast("Zadaj 75, 150 alebo 300."); return; }
     const end = memberEnd(todayIso(), term);
-    if (!window.confirm(`Zapísať ${sub.name} balíček ${MEMBER_NAME[term]} · ${MEMBER_LENGTH_LABEL[term]} (${MEMBER_PRICES[term]} €), platí najneskôr do ${end.toLocaleDateString("sk-SK")}?`)) return;
+    if (!window.confirm(`Zapísať ${sub.name} balíček ${MEMBER_NAME[term]} · ${MEMBER_LENGTH_LABEL[term]} (${MEMBER_PRICES[term]} €)?`)) return;
     try {
       await fetchJson(`/api/subscribers/${sub.id}`, {
         method: "PATCH",

@@ -394,7 +394,7 @@ export async function deleteTelegramMessages(messages: { chatId: string; message
 const TELEGRAM_CONTACT_USERNAME = process.env.TELEGRAM_CONTACT_USERNAME || "im_mishko";
 
 // ---- Balíčky tipov TipRadar (od 27. 10. 2026) – rovnaké texty ako na tipradar.eu ----
-// Štart 75 tipov 67 € (platí najviac 3 mesiace), Gold 150 tipov 109 € (6 mesiacov), Onyx 300 tipov 179 € (12 mesiacov).
+// Štart 75 tipov 67 €, Gold 150 tipov 109 €, Onyx 300 tipov 179 €. Bez časovej platnosti – balíček platí, kým sa neminú tipy.
 // Platí sa za počet tipov: každému členovi sa rátajú tipy od nákupu. Najviac 3 najsilnejšie tipy denne.
 const BENEFITS_BASE =
   `• <b>Denné tipy na Telegrame</b> v súkromnom kanáli, 1 – 2 hodiny pred výkopom – najviac 3 najsilnejšie denne\n` +
@@ -407,16 +407,16 @@ const BENEFIT_MENTOR =
 /** Garancia: ak balíček skončí v strate, člen dostane ďalších 30 tipov zadarmo. */
 const GUARANTEE_LINE = `🛡 <b>Garancia:</b> ak váš balíček skončí v strate, ďalších ${FREE_TIPS} tipov dostanete zadarmo.`;
 const BANK_LINE = `💼 Odporúčame bank 1 000 € a vklad 2 – 3 % na tip, nikdy nad 5 %.`;
-const PLAN_STAT = `🎯 <b>Štart · 75 tipov</b> – 67 € (0,89 € za tip, platí najviac 3 mesiace)\n<i>Odporúčaný bank aspoň 750 € pri vklade 3 %</i>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
-const PLAN_START = `🥇 <b>Gold · 150 tipov</b> – 109 € (0,73 € za tip, ušetríte 25 €, platí najviac 6 mesiacov)\n<i>Odporúčaný bank aspoň 600 € pri vklade 3 %</i>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
-const PLAN_SERIA = `💎 <b>Onyx · 300 tipov</b> – 179 € (0,60 € za tip, ušetríte 89 €, platí najviac 12 mesiacov)\n<i>Odporúčaný bank aspoň 500 € pri vklade 3 %</i>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_MENTOR}`;
+const PLAN_STAT = `🎯 <b>Štart · 75 tipov</b> – 67 € (0,89 € za tip)\n<i>Odporúčaný bank aspoň 750 € pri vklade 3 %</i>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
+const PLAN_START = `🥇 <b>Gold · 150 tipov</b> – 109 € (0,73 € za tip, ušetríte 25 €)\n<i>Odporúčaný bank aspoň 600 € pri vklade 3 %</i>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
+const PLAN_SERIA = `💎 <b>Onyx · 300 tipov</b> – 179 € (0,60 € za tip, ušetríte 89 €)\n<i>Odporúčaný bank aspoň 500 € pri vklade 3 %</i>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_MENTOR}`;
 const ALL_PLANS = `${PLAN_STAT}\n\n${PLAN_START}\n\n${PLAN_SERIA}`;
 
 const FAQ_ANSWERS: Record<string, string> = {
   faq_price:
     `💰 <b>Balíčky tipov TipRadar</b>\n\nPlatíte za počet tipov, ktoré naozaj dostanete. Posielam najviac 3 najsilnejšie tipy denne, niektoré dni žiadny – kvalita pred kvantitou. Všetci členovia dostávajú rovnaké tipy, súkromný VIP chat a úvodný hovor 1 na 1, Onyx navyše mentoring 1 na 1.\n\n` +
     `${ALL_PLANS}\n\n${GUARANTEE_LINE}\n${BANK_LINE}\n\n` +
-    `Tipy sa vám rátajú odo dňa nákupu. Balíček skončí po poslednom tipe alebo po uplynutí platnosti, sám sa nepredlžuje. Cez letnú prestávku (jún – júl) sa platnosť nepočíta.` +
+    `Tipy sa vám rátajú odo dňa nákupu. Balíček nemá časový limit – skončí až po poslednom tipe a sám sa nepredlžuje.` +
     (process.env.SALES_OPEN === "true" ? "" : `\n\n🗓 <b>Predaj balíčkov spúšťame čoskoro.</b> Napíšte sem „Mám záujem“ a ozveme sa vám ako prvým.`),
   faq_how:
     `❓ <b>Ako to funguje</b>\n\n` +
@@ -676,7 +676,7 @@ export async function sendPackageLowReminder(
       ? `🔔 <b>V balíčku ${escapeTg(st.tier)} ti ${st.left === 1 ? "ostáva posledný tip" : `ostávajú ${st.left} ${plural(st.left, "tip", "tipy", "tipov")}`}</b> (z ${st.total})`
       : `🔔 <b>Tvoje členstvo ${escapeTg(st.tier)} čoskoro končí</b>`;
   const text =
-    `${head}\n\nPlatí najneskôr do <b>${fmtDateSk(st.validUntil)}</b>. Zatiaľ je výsledok balíčka <b>${signed(st.profit, 1)} j.</b>` +
+    `${head}\n\nZatiaľ je výsledok balíčka <b>${signed(st.profit, 1)} j.</b>` +
     (paymentsEnabled()
       ? `\n\nAk chceš pokračovať, vyber si ďalší balíček 👇 Nové tipy sa začnú rátať, až keď sa minú tie súčasné. 🙌`
       : `\n\nAk chceš pokračovať, napíš nám a pripravíme ti ďalší balíček. 🙌`);
@@ -863,7 +863,7 @@ export async function redeemPayment(token: string, chatId: number | string, from
   ];
   await say(
     `✅ <b>Platba prijatá, vitajte v TipRadar ${tierName(term)}!</b>\n\n` +
-      `Balíček: <b>${termLabel(term)}</b>\nPlatí najneskôr do: <b>${fmtDateSk(until)}</b>\n` +
+      `Balíček: <b>${termLabel(term)}</b>\n` +
       (tips ? `Tipy sa vám rátajú od dnes${current ? " (najprv sa minú tie, ktoré vám ostali)" : ""}. Keď vám budú dochádzať, dám vám vedieť.\n\n` : `\n`) +
       (buttons.length
         ? `Tu je vaša osobná pozvánka${chat ? " do súkromného kanála a do VIP chatu" : " do súkromného kanála"} 👇 Platí 7 dní a len pre vás.`
@@ -910,7 +910,7 @@ export async function redeemPayment(token: string, chatId: number | string, from
         `Meno: <b>${escapeTg(name)}</b>\n` +
         (from?.username ? `Telegram: @${escapeTg(from.username)}\n` : "") +
         (p.vs ? `Variabilný symbol: ${p.vs}\n` : "") +
-        `Platí najneskôr do: ${fmtDateSk(until)}\n\nČlen je zapísaný v appke, tipy sa mu rátajú od dnes.${missing}`,
+        `\nČlen je zapísaný v appke, tipy sa mu rátajú od dnes.${missing}`,
       parse_mode: "HTML",
     });
   }
@@ -918,7 +918,6 @@ export async function redeemPayment(token: string, chatId: number | string, from
     ["Meno", name],
     ["Variabilný symbol", p.vs],
     ["Telegram ID", tg],
-    ["Platí najneskôr do", fmtDateSk(until)],
   ]).catch(() => {});
   return "ok";
 }
