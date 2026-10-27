@@ -2963,7 +2963,8 @@ async function renderBlendSummary() {
     const best = (d.rows || []).reduce((a, r) => (r.brier != null && (a == null || r.brier < a.brier) ? r : a), null);
     const enough = d.settledPicks >= 300;
     const rows = (d.rows || []).map((r) => {
-      const label = r.weight === 0 ? "len model (dnes)" : `${100 - r.weight} % model / ${r.weight} % stávkovky`;
+      // Ostré tipy od 20. 10. 2026 = 70 % model / 30 % stávkovky (MARKET_BLEND v predictor.ts).
+      const label = r.weight === 0 ? "len model (bez stávkoviek)" : `${100 - r.weight} % model / ${r.weight} % stávkovky${r.weight === 30 ? " (dnes)" : ""}`;
       const tipsTxt = r.tips ? `${r.won} z ${r.tips} (${Math.round(r.hitRate)}${NB}%), ${sign(r.profit)}${NB}j.` : "žiadny tip";
       const mark = best && r.weight === best.weight ? " ★" : "";
       return `<tr><td>${label}${mark}</td><td class="num">${r.brier == null ? "–" : num(r.brier * 100)}</td><td class="num">${tipsTxt}</td></tr>`;
