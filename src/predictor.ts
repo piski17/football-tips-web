@@ -160,6 +160,17 @@ const GOALS_UNDER_CALIBRATION = 0.85;
  * zostavy a motiváciu, ktoré model nevidí. Pri málo dátach v sezóne platí väčšia váha trhu.
  */
 const MARKET_BLEND = 0.3;
+/**
+ * Dvojitá kontrola (27. 10. 2026, Michalovo rozhodnutie): tip, ktorý prejde pri 70 / 30, sa overí aj pri
+ * 60 % model / 40 % stávkovky (sledovanie ukázalo presnejšie percentá). Kto neprejde, ide do sledovaných.
+ */
+const STRICT_BLEND = 0.4;
+/** Prejde tip aj pri 60 / 40? Rovnaké pravidlá: pásmo dôvery a hodnota aspoň +5 % pri danom kurze. */
+export function passesStrict(t: { strictProbability?: number }, odds: number | null | undefined): boolean {
+  if (typeof t.strictProbability !== "number" || typeof odds !== "number" || !(odds > 1)) return true;
+  const p = t.strictProbability;
+  return p >= MIN_PROBABILITY && p <= MAX_PROBABILITY && (p / 100) * odds >= MIN_EXPECTED_VALUE;
+}
 const GOALS_UNDER_CONFLICT_LIMIT = 12;
 const isGoalsUnder = (c: { category: string; selection: string }) =>
   (c.category === "goly" || c.category === "goly_timu" || c.category === "goly_1p" || c.category === "goly_2p") && c.selection.startsWith("Under");
@@ -1285,6 +1296,10 @@ export function predictMatch(
           c.conflictLimit = conflictLimit - 5;
         }
         const blendW = legacy ? marketWeight : Math.max(marketWeight, MARKET_BLEND);
+        if (!legacy) {
+          const strictW = Math.max(marketWeight, STRICT_BLEND);
+          c.strictProbability = (1 - strictW) * modelPct + strictW * pMarket * 100;
+        }
         if (blendW > 0) {
           c.probability = (1 - blendW) * modelPct + blendW * pMarket * 100;
           const lead = blendW > MARKET_BLEND ? "Málo dát v sezóne – odhad upravený podľa kurzov stávkoviek" : "Šanca spojená so stávkovkami";
@@ -1298,6 +1313,7 @@ export function predictMatch(
     const k = adjust?.calibration?.[c.category];
     if (typeof k === "number" && isFinite(k) && k !== 1) {
       c.probability = 50 + k * (c.probability - 50);
+      if (c.strictProbability != null) c.strictProbability = 50 + k * (c.strictProbability - 50);
       c.marketCalibration = k;
     }
     c.expectedValue = match ? (c.probability / 100) * match.odd : null;
@@ -1425,6 +1441,8 @@ export function predictMatch(
       b.rejectCode = "neighbor_no_value";
       lowValueBets.push(b);
     } else {
+      // Dvojitá kontrola 60 / 40: tip ostáva vo výbere, ale ak neprejde, uloží sa len do sledovaných.
+      if (!passesStrict(b, b.odds)) b.strictFail = true;
       pickPool.push(b);
     }
   }
@@ -1439,6 +1457,8 @@ export function predictMatch(
     // Držanie lopty (bez kurzu): hranica s dôverou najbližšie k spodku pásma má najväčšiu
     // šancu, že kurz v stávkovke dosiahne minimum.
     const better = bet.category === "drzanie_lopty" && ev === curEv ? bet.probability < (cur?.probability ?? 101) : bet.probability > (cur?.probability ?? -1);
+    // Tip, ktorý prejde aj pri 60 / 40, má prednosť pred tipom len pre sledované.
+    if (cur && !!bet.strictFail !== !!cur.strictFail) { if (cur.strictFail) bestInCategory.set(bet.category, bet); continue; }
     if (!cur || ev > curEv || (ev === curEv && better)) bestInCategory.set(bet.category, bet);
   }
   const diversifiedPicks = Array.from(bestInCategory.values()).sort((a, b) => b.probability - a.probability);
@@ -1455,6 +1475,7 @@ export function predictMatch(
   for (const b of diversifiedPicks) {
     const t = marketType(b.category);
     const cur = bestInType.get(t);
+    if (cur && !!b.strictFail !== !!cur.strictFail) { if (cur.strictFail) bestInType.set(t, b); continue; }
     if (!cur || b.probability > cur.probability || (b.probability === cur.probability && rankValue(b) > rankValue(cur))) bestInType.set(t, b);
   }
   for (const b of diversifiedPicks) {

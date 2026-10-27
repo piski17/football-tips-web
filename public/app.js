@@ -348,11 +348,15 @@ function askTelegramTarget() {
 
 /** Skúšobné pásmo (21. 10. 2026): tipy pod 68 % sa ukladajú len na sledovanie (rovnako ako server). */
 const WATCH_BELOW = 68;
-const isWatchTip = (tip) => !(tip.legs && tip.legs.length) && (tip.softConflict || (!tip.manualEntry && typeof tip.probability === "number" && tip.probability < WATCH_BELOW));
+const isWatchTip = (tip) => !(tip.legs && tip.legs.length) && (tip.softConflict || tip.strictFail || (!tip.manualEntry && typeof tip.probability === "number" && tip.probability < WATCH_BELOW));
 
 async function maybeOfferTelegram(tipId, tip) {
   if (tip && tip.softConflict) {
     showToast("Tip s rozporom so stávkovkami je uložený len na sledovanie – neposiela sa a nerátá do štatistík.");
+    return;
+  }
+  if (tip && tip.strictFail) {
+    showToast("Tip neprešiel kontrolou 60 / 40 – je uložený len na sledovanie, neposiela sa a nerátá do štatistík.");
     return;
   }
   if (tip && isWatchTip(tip)) {
@@ -1036,6 +1040,16 @@ function softConflictCheck(bet, odd) {
   return { pass: gap < (bet.conflictLimit ?? 15), gap };
 }
 
+/**
+ * Dvojitá kontrola (27. 10. 2026): tip musí prejsť aj pri 60 % model / 40 % stávkovky
+ * (pásmo dôvery a hodnota +5 % s Michalovým kurzom). Rovnaké pravidlo ako passesStrict na serveri.
+ */
+function strictCheck(bet, odd) {
+  const p = bet.strictProbability;
+  if (typeof p !== "number" || !(odd > 1)) return { pass: true, p: null };
+  return { pass: p >= 68 && p <= 80 && (p / 100) * odd >= 1.05, p };
+}
+
 function buildTip(r, bet, realOdds, extra = {}) {
   return {
     id: `${r.fixture.fixtureId}-${Date.now()}`,
@@ -1055,6 +1069,8 @@ function buildTip(r, bet, realOdds, extra = {}) {
     ...(typeof bet.odds === "number" ? { apiOdds: bet.odds } : {}),
     ...measurementFields(r, bet),
     ...(bet.softConflict && !softConflictCheck(bet, realOdds).pass ? { softConflict: true, watchOnly: true } : {}),
+    ...(typeof bet.strictProbability === "number" ? { strictProbability: bet.strictProbability } : {}),
+    ...(!strictCheck(bet, realOdds).pass ? { strictFail: true, watchOnly: true } : {}),
     ...extra,
     savedAt: new Date().toISOString(),
     status: "pending",
@@ -1527,9 +1543,9 @@ function renderDayTipsView() {
   // každá sa dá zbaliť a rozbaliť tlačidlom − / +. Poradie a čísla tipov ostávajú.
   const groups = [
     { key: "klienti", title: "Pre klientov", note: "", idx: [] },
-    { key: "sledovane", title: "Do sledovaných", note: "šedá zóna – slabší rozpor so stávkovkami; s dobrým kurzom môže tip prejsť aj ku klientom", idx: [] },
+    { key: "sledovane", title: "Do sledovaných", note: "šedá zóna – slabší rozpor so stávkovkami alebo neprešli pri 60 / 40; s dobrým kurzom môže tip prejsť aj ku klientom", idx: [] },
   ];
-  dayTips.items.forEach(({ bet }, i) => groups[bet.softConflict ? 1 : 0].idx.push(i));
+  dayTips.items.forEach(({ bet }, i) => groups[bet.softConflict || bet.strictFail ? 1 : 0].idx.push(i));
   let shown = 0;
   const rows = groups
     .filter((g) => g.idx.length)
@@ -1608,8 +1624,9 @@ function renderDayTipsView() {
       if (dayTipSaved.has(i)) { el.textContent = ""; el.className = "odds-st"; return; }
       const st = oddsState(i);
       const sc = st.ok && dayTips.items[i].bet.softConflict ? softConflictCheck(dayTips.items[i].bet, st.odd) : null;
-      el.className = "odds-st" + (st.odd == null ? "" : sc && !sc.pass ? " bad" : st.ok ? " ok" : " bad");
-      el.textContent = st.odd == null ? "" : sc ? (sc.pass ? `✓ rozpor ${Math.round(sc.gap)} b. – prejde` : `✗ rozpor ${Math.round(sc.gap)} b. – len sledovať`) : st.ok ? "✓ má hodnotu" : st.odd > 20 ? "✗ preklep?" : `✗ pod ${fmtOdds(st.min)}`;
+      const sx = st.ok && (!sc || sc.pass) ? strictCheck(dayTips.items[i].bet, st.odd) : null;
+      el.className = "odds-st" + (st.odd == null ? "" : (sc && !sc.pass) || (sx && !sx.pass) ? " bad" : st.ok ? " ok" : " bad");
+      el.textContent = st.odd == null ? "" : sc && !sc.pass ? `✗ rozpor ${Math.round(sc.gap)} b. – len sledovať` : sx && !sx.pass ? "✗ neprejde pri 60 / 40 – len sledovať" : sc ? `✓ rozpor ${Math.round(sc.gap)} b. – prejde` : st.ok ? "✓ má hodnotu" : st.odd > 20 ? "✗ preklep?" : `✗ pod ${fmtOdds(st.min)}`;
       if (st.ok && !matchHasStarted(dayTips.items[i].r.fixture)) n++;
     });
     const b = document.getElementById("dtBulkSave");
@@ -1783,7 +1800,7 @@ function renderTipsList(allTips) {
   renderLeagueReport(statTips);
   const watchTips = allTips.filter((t) => t.watchOnly && !(t.legs && t.legs.length));
   renderWatchReport(watchTips);
-  void renderWatchOverview(watchTips);
+  void renderWatchOverview(watchTips, statTips);
   renderTipRows(tips);
 }
 
@@ -1948,17 +1965,46 @@ function watchGroupRow(label, list) {
     profit,
   };
 }
-async function renderWatchOverview(watchTips) {
+/**
+ * Spätný rozbor 60 / 40 (27. 10. 2026): šanca zverejneného tipu prepočítaná na 60 % model / 40 % stávkovky.
+ * Model sa dopočíta z uloženej dôvery a šance stávkoviek (marketProb): od 20. 10. 2026 je dôvera 70 / 30,
+ * predtým čistý model. Oprava trhu (k) sa zanedbáva, takže ide o odhad. Tipy sa nikam nepresúvajú.
+ */
+function retroStrictProbability(t) {
+  if (typeof t.strictProbability === "number") return t.strictProbability;
+  const b = t.marketProb;
+  if (typeof b !== "number" || typeof t.probability !== "number") return null;
+  const blended = (t.savedAt || "") >= "2026-10-20";
+  const model = blended ? (t.probability - 0.3 * b) / 0.7 : t.probability;
+  return 0.6 * model + 0.4 * b;
+}
+function retroStrictSplit(statTips) {
+  const pool = statTips.filter((t) => !(t.legs && t.legs.length) && !t.manualEntry && typeof t.odds === "number" && t.odds > 1 && retroStrictProbability(t) != null);
+  const pass = [], fail = [];
+  for (const t of pool) (strictCheck({ strictProbability: retroStrictProbability(t) }, t.odds).pass ? pass : fail).push(t);
+  return { pass, fail };
+}
+let retroStrictFail = [], retroStrictMoved = [];
+async function renderWatchOverview(watchTips, statTips = []) {
   const el = document.getElementById("watchOverview");
   if (!el) return;
   const soft = watchTips.filter((t) => t.softConflict);
-  const manual = watchTips.filter((t) => !t.softConflict && t.manualEntry);
-  const marked = watchTips.filter((t) => !t.softConflict && !t.manualEntry);
+  const strict = watchTips.filter((t) => !t.softConflict && t.strictFail);
+  const manual = watchTips.filter((t) => !t.softConflict && !t.strictFail && t.manualEntry);
+  const marked = watchTips.filter((t) => !t.softConflict && !t.strictFail && !t.manualEntry);
   const rows = [
     watchGroupRow("Šedá zóna – slabší rozpor so stávkovkami", soft),
+    watchGroupRow("Prešli pri 70 / 30, nie pri 60 / 40", strict),
     watchGroupRow("Ručne pridané mimo pravidiel", manual),
     watchGroupRow("Označené „Len sledovať“", marked),
   ];
+  const split = retroStrictSplit(statTips);
+  retroStrictFail = split.fail;
+  retroStrictMoved = watchTips.filter((t) => t.retroStrict);
+  if (split.pass.length || split.fail.length) {
+    rows.push(watchGroupRow("Zverejnené – prešli by aj pri 60 / 40 (spätne)", split.pass));
+    rows.push(watchGroupRow("Zverejnené – NEprešli by pri 60 / 40 (spätne)", split.fail));
+  }
   const [shadow, ticket] = await Promise.all([
     fetchJson("/api/shadow/summary").catch(() => null),
     fetchJson("/api/ticket-watch/summary").catch(() => null),
@@ -1989,7 +2035,25 @@ async function renderWatchOverview(watchTips) {
     })
     .join("");
   el.innerHTML = `<div class="table-wrap"><table class="bt-table"><thead><tr><th>Čo sa sleduje</th><th class="num">Spolu</th><th class="num">Vyšlo</th><th class="num">Model sľuboval</th><th class="num">Zisk</th><th class="num">Návratnosť</th></tr></thead><tbody>${body}</tbody></table></div>
-    <p class="faint small">Zisk pri vklade 1 jednotka na tip (tiket) za zaznamenaný kurz. Skupina sa oplatí zapnúť naostro, až keď má aspoň 30 vyhodnotených tipov v zisku – pri menšom počte je výsledok ešte prevažne náhoda. Nový model sa porovnáva zvlášť, v mesačnom reporte a spätným testom.</p>`;
+    <p class="faint small">Zisk pri vklade 1 jednotka na tip (tiket) za zaznamenaný kurz. Skupina sa oplatí zapnúť naostro, až keď má aspoň 30 vyhodnotených tipov v zisku – pri menšom počte je výsledok ešte prevažne náhoda. Nový model sa porovnáva zvlášť, v mesačnom reporte a spätným testom.</p>
+    <p class="faint small">Spätná kontrola 60 / 40 je odhad: šanca sa dopočíta z uloženej dôvery a šance stávkoviek v čase tipu.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+      ${retroStrictFail.length ? `<button type="button" class="btn sm ghost" id="retroStrictMove">Presunúť ${retroStrictFail.length} zverejnených tipov, ktoré neprejdú 60 / 40, do sledovaných</button>` : ""}
+      ${retroStrictMoved.length ? `<button type="button" class="btn sm ghost" id="retroStrictUndo">Vrátiť spätne presunuté tipy (${retroStrictMoved.length})</button>` : ""}
+    </div>`;
+  const setWatch = async (list, on) => {
+    for (const t of list) await postJson(`/api/tips/${encodeURIComponent(t.id)}/edit`, { watchOnly: on, retroStrict: on });
+  };
+  el.querySelector("#retroStrictMove")?.addEventListener("click", async () => {
+    if (!window.confirm(`Presunúť ${retroStrictFail.length} zverejnených tipov do sledovaných? Zmiznú zo štatistík na webe; na stránke Výsledky pribudne poznámka o spätnom prepočte. Dá sa to vrátiť.`)) return;
+    try { await setWatch(retroStrictFail, true); showToast("Tipy presunuté do sledovaných."); } catch (err) { showToast(`Presun zlyhal: ${err.message}`); }
+    openTipsHistory();
+  });
+  el.querySelector("#retroStrictUndo")?.addEventListener("click", async () => {
+    if (!window.confirm(`Vrátiť ${retroStrictMoved.length} spätne presunutých tipov medzi zverejnené?`)) return;
+    try { await setWatch(retroStrictMoved, false); showToast("Tipy vrátené medzi zverejnené."); } catch (err) { showToast(`Vrátenie zlyhalo: ${err.message}`); }
+    openTipsHistory();
+  });
 }
 
 document.getElementById("watchResult")?.addEventListener("click", async (e) => {

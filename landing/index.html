@@ -2185,6 +2185,7 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
         <div><b class="num" id="fRoi">–</b><span>ROI</span></div>
       </div>
       <p class="month-line" id="month">Načítavam…</p>
+      <p class="note" id="retroNote" data-pages="vysledky" hidden></p>
       <div class="showcase" data-pages="nikde">
         <div class="sc-chart">
           <div class="sc-head"><h3 id="chTitle">Ako rástol zisk</h3><span class="sc-total num" id="chTotal"></span></div>
@@ -2923,6 +2924,12 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
       }
       drawNavStats(d); drawHero(d);
       window.__bankData = d.bank || []; window.__calc && window.__calc();
+      // Spätná kontrola 60 / 40 (27. 10. 2026): ak boli staršie tipy presunuté mimo štatistiky, web to priamo povie.
+      const rn = $("retroNote"), rx = Number(d.retroStrictExcluded) || 0;
+      if (rn && rx > 0) {
+        rn.textContent = "Od 27. 10. 2026 prechádza každý tip aj prísnejšou kontrolou (šanca 60 % model / 40 % stávkovky). " + rx + " " + (rx === 1 ? "starší tip, ktorý by ňou neprešiel, sme" : rx <= 4 ? "staršie tipy, ktoré by ňou neprešli, sme" : "starších tipov, ktoré by ňou neprešli, sme") + " v skúšobnom období (bez platiacich členov) spätne vyradili zo štatistík.";
+        rn.hidden = false;
+      }
       if ($("presnost")) drawCalib(d.calibration);
       recentAll = d.recent || [];
       drawList(); drawChart(d.timeline); drawMonths(d.months);

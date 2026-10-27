@@ -34,7 +34,7 @@ import {
   getHeadToHeadStats,
   getRestInfo,
 } from "./apiClient";
-import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, MarketAdjustments, marketCategory } from "./predictor";
+import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, MarketAdjustments, marketCategory, passesStrict } from "./predictor";
 import { newModelInputs } from "./newModel";
 import { computeMarketHealth, marketChangesText, clvOf, CLV_TIE } from "./marketHealth";
 import { LeaguePreset, SavedTip } from "./types";
@@ -876,6 +876,15 @@ app.post("/api/tips", async (req, res) => {
       tip.watchOnly = true;
       tip.strongOfDay = undefined;
     }
+    // Dvojitá kontrola (27. 10. 2026, Michalovo rozhodnutie): tip musí prejsť aj pri 60 % model / 40 % stávkovky
+    // s kurzom, ktorý Michal zadal. Ak neprejde, uloží sa len na sledovanie.
+    if (!(tip.legs && tip.legs.length) && !tip.manualEntry && !tip.overrideFilter && !passesStrict(tip, tip.odds)) {
+      tip.watchOnly = true;
+      tip.strictFail = true;
+      tip.strongOfDay = undefined;
+    } else if (tip.strictFail) {
+      tip.strictFail = undefined;
+    }
     // Ručne doplnený tip prejde rovnakou kontrolou ako tipy z modelu (dôvera, kurz, hodnota) –
     // ak by ho model nepustil, uloží sa len medzi sledované.
     if (tip.manualEntry && !(tip.legs && tip.legs.length) && !tip.probabilityEstimated && typeof tip.probability === "number" && typeof tip.odds === "number") {
@@ -1196,6 +1205,8 @@ app.get("/api/public/track-record", async (_req, res) => {
     };
     res.json({
       ...summarize(all),
+      // Koľko zverejnených tipov bolo spätne presunutých do sledovaných (kontrola 60 / 40) – web to priznáva.
+      retroStrictExcluded: tips.filter((t) => t.retroStrict && t.watchOnly).length,
       calibration,
       month: { key: monthKey, ...summarize(inMonth) },
       last7: summarize(inLast7),
@@ -1707,6 +1718,11 @@ app.post("/api/tips/:id/edit", async (req, res) => {
     if (typeof req.body?.watchOnly === "boolean") {
       if (req.body.watchOnly) patch.watchOnly = true;
       else patch.watchOnly = undefined;
+      // Spätná kontrola 60 / 40 (27. 10. 2026): značka, aby sa presun dal vrátiť a na webe priznať.
+      if (typeof req.body?.retroStrict === "boolean") {
+        patch.retroStrict = req.body.retroStrict && req.body.watchOnly ? true : undefined;
+        patch.strictFail = req.body.retroStrict && req.body.watchOnly ? true : undefined;
+      }
       // Samotné presunutie medzi sledované nie je oprava výsledku – bez značky „upravené“.
       const sameStatus = patch.status === undefined || patch.status === tip.status;
       const sameOdds = patch.odds === undefined || patch.odds === (tip.odds ?? null);

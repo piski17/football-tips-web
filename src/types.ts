@@ -80,6 +80,10 @@ export interface MarketPick {
   /** Pri softConflict: šanca modelu pred spojením so stávkovkami a pôvodná hranica rozporu. */
   conflictModel?: number;
   conflictLimit?: number;
+  /** Dvojitá kontrola (27. 10. 2026): šanca pri 60 % model / 40 % stávkovky. Tip musí prejsť aj s ňou, inak ide do sledovaných. */
+  strictProbability?: number;
+  /** Neprešiel pri 60 / 40 (s kurzom zo stávkovky). */
+  strictFail?: boolean;
   /** Dôvod, prečo bol tip vyradený (len pri lowValueBets). */
   rejectReason?: string;
   /**
@@ -311,6 +315,12 @@ export interface SavedTip {
   watchOnly?: boolean;
   /** Tip s rozporom so stávkovkami, ktorý prešiel len vďaka zmierneniu filtra. */
   softConflict?: boolean;
+  /** Šanca pri 60 % model / 40 % stávkovky (dvojitá kontrola, 27. 10. 2026). */
+  strictProbability?: number;
+  /** Prešiel pri 70 / 30, ale nie pri 60 / 40 – len sledovať. */
+  strictFail?: boolean;
+  /** Zverejnený tip spätne presunutý do sledovaných podľa kontroly 60 / 40 (27. 10. 2026, skúšobné obdobie). */
+  retroStrict?: boolean;
   /** Tip skrytý z histórie tipov - naďalej sa ráta do štatistík a zobrazuje na prezentačnej stránke. */
   archived?: boolean;
   /** Výsledok alebo kurz bol ručne opravený v histórii. */
