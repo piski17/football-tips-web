@@ -1,4 +1,3 @@
-import { SEATS_M1, SEATS_M3, SEATS_SEASON } from "./seatLimits";
 import { plausibleLine, MIN_ODDS, MAX_PROBABILITY, MIN_PROBABILITY, MIN_EXPECTED_VALUE, SUSPICIOUS_EXPECTED_VALUE, findOdds, marketProbabilityDetail, STRONG_TIP_MIN_PROBABILITY, WATCH_BELOW_PROBABILITY } from "./oddsMatcher";
 import { listLeads, deleteLead, recordLead } from "./leadsStore";
 import { getMeta, setMeta } from "./metaStore";
@@ -52,16 +51,15 @@ import {
   setTelegramWebhook,
   notifyAdminExpiringSubscribers,
   sendCustomMessage,
-  sendRenewalReminder,
-  sendTipResultToTelegram, notifyAdmin, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite, sendMemberMessage } from "./telegram";
-import { paymentsEnabled, isTerm, isSellableTerm, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, deletePayment, Payment, termLabel, tierName, addActiveMonths, SUMMER_PAUSE } from "./payments";
+  sendTipResultToTelegram, notifyAdmin, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite, sendMemberMessage, isMemberChannel, memberChannelConfigured, sendPackageLowReminder } from "./telegram";
+import { paymentsEnabled, isTerm, sellableTerm, SellableTerm, FREE_TIPS, FREE_TIPS_MONTHS, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, deletePayment, Payment, termLabel, tierName, addActiveMonths, SUMMER_PAUSE } from "./payments";
 import { payBySquareString } from "./payBySquare";
 import QRCode from "qrcode";
 import { sendAdminEmail } from "./mailer";
 import { listSubscribers, addSubscriber, updateSubscriber, deleteSubscriber } from "./subscribersStore";
 import { recordHit, readStats, sourceFrom } from "./statsStore";
 import { Subscriber } from "./types";
-import { memberPeriods, memberTerm, newPeriodUpdates, currentPeriodStart } from "./guarantee";
+import { memberTerm, memberTips, newPeriodUpdates, currentPeriodStart, periodUsage, PeriodUsage } from "./guarantee";
 
 /** Slovenský tvar podľa počtu: plural(3, "tip", "tipy", "tipov") -> "3 tipy". */
 /** Číslo so slovenskou desatinnou čiarkou: fmtNum(1.845, 2) -> "1,85". */
@@ -253,79 +251,49 @@ app.get(["/metoda", "/metoda/", "/vysledky", "/vysledky/", "/otazky", "/otazky/"
   res.set("Cache-Control", "no-cache"); res.sendFile(path.join(__dirname, "..", "landing", "index.html"));
 });
 // ---- Platba za členstvo (prevod cez QR kód) – bez hesla ----
-/** Koľko miest na 6 mesiacov je obsadených (aktívne členstvo „group", 7 dní tolerancia po splatnosti). */
-async function seasonSeats(): Promise<{ taken: number; total: number; activeVip: Subscriber[] }> {
-  const total = SEATS_SEASON;
-  const graceMs = 7 * 24 * 60 * 60 * 1000;
-  const activeVip = (await listSubscribers()).filter(
-    (s) => s.tier === "group" && new Date(s.nextPaymentDue).getTime() + graceMs >= Date.now()
-  );
-  return { taken: activeVip.length, total, activeVip };
-}
-/** Aktívni členovia Gold (50 dní) alebo Onyx (6 mesiacov) (7 dní tolerancia po splatnosti). Staršie záznamy bez dĺžky = 1 mesiac. */
-async function shortSeats(length: "m1" | "m3"): Promise<{ taken: number; total: number | null; active: Subscriber[] }> {
-  const graceMs = 7 * 24 * 60 * 60 * 1000;
-  const active = (await listSubscribers()).filter(
-    (s) => s.tier !== "group" && (s.length ?? "m1") === length && new Date(s.nextPaymentDue).getTime() + graceMs >= Date.now()
-  );
-  return { taken: active.length, total: length === "m3" ? SEATS_M3 : SEATS_M1, active };
-}
-/** total a left sú null, ak dĺžka členstva nemá obmedzený počet miest. */
-type TermSeats = Record<"m1" | "m3" | "season", { occupied: number; total: number | null; left: number | null }>;
-/**
- * Obsadené miesta pre každú dĺžku členstva (rovnako ako na webe): pred spustením predaja
- * sa rátajú členovia aj záujemcovia v poradovníku, počas predaja len aktívni členovia.
- */
+/** Balíčky tipov sú bez obmedzenia miest – čísla slúžia len na prehľad (aktívni členovia a poradovník). */
+type TermSeats = Record<SellableTerm, { occupied: number; total: null; left: null }>;
+/** Plán z bota (t.me/…?start=…) → balíček. Staré odkazy: start = Gold, seria / sampion / vip = Onyx. */
+const LEAD_PLAN_TERM: Record<string, SellableTerm> = {
+  stat: "t75", stat_waitlist: "t75",
+  gold: "t150", gold_waitlist: "t150", start: "t150", start_waitlist: "t150",
+  onyx: "t300", onyx_waitlist: "t300", seria: "t300", seria_waitlist: "t300", sampion: "t300", sampion_waitlist: "t300", vip: "t300", vip_waitlist: "t300",
+};
+/** Aktívni členovia (balíček ešte neskončil) podľa balíčka + záujemcovia v poradovníku (pred spustením predaja). */
 async function termSeats(): Promise<TermSeats> {
-  const [season, m3, m1] = await Promise.all([seasonSeats(), shortSeats("m3"), shortSeats("m1")]);
-  let waitSeason = 0, waitM3 = 0, waitM1 = 0;
+  const subs = await listSubscribers();
+  const statuses = await memberStatuses(subs);
+  const active = subs.filter((s) => statuses.get(s.id)?.active);
+  const count: Record<SellableTerm, number> = { t75: 0, t150: 0, t300: 0 };
+  for (const s of active) {
+    const t = sellableTerm(memberTerm(s));
+    if (t) count[t]++;
+  }
   if (process.env.SALES_OPEN !== "true") {
-    const members = new Set([...season.activeVip, ...m3.active, ...m1.active].map((s) => String(s.telegramChatId || "")).filter(Boolean));
-    const leads = (await listLeads().catch(() => [])).filter((l) => !members.has(String(l.chatId)));
-    waitSeason = leads.filter((l) => ["vip", "vip_waitlist", "sampion", "sampion_waitlist"].includes(l.plan)).length;
-    waitM3 = leads.filter((l) => l.plan === "seria").length;
-    waitM1 = leads.filter((l) => l.plan === "start").length;
+    const members = new Set(active.map((s) => String(s.telegramChatId || "")).filter(Boolean));
+    for (const l of await listLeads().catch(() => [])) {
+      const t = LEAD_PLAN_TERM[l.plan];
+      if (t && !members.has(String(l.chatId))) count[t]++;
+    }
   }
-  const row = (taken: number, total: number | null) => {
-    if (total == null) return { occupied: taken, total: null, left: null };
-    const occupied = Math.min(taken, total);
-    return { occupied, total, left: total - occupied };
-  };
-  return { m1: row(m1.taken + waitM1, m1.total), m3: row(m3.taken + waitM3, m3.total), season: row(season.taken + waitSeason, season.total) };
+  const row = (n: number) => ({ occupied: n, total: null, left: null });
+  return { t75: row(count.t75), t150: row(count.t150), t300: row(count.t300) };
 }
-/** Riadok s odpočtom miest pre tipy v bezplatnom kanáli. */
+/** Riadok pod tipom v bezplatnom kanáli (balíčky sú bez obmedzenia miest). */
 async function freeSeatsLine(): Promise<string | undefined> {
-  try {
-    const t = await termSeats();
-    const s = t.m3;
-    // Onyx (6 mesiacov) je bez obmedzenia miest – riadok sa zobrazí, len ak by sa obmedzenie zaplo.
-    if (s.total == null || s.left == null) return undefined;
-    return s.left > 0
-      ? `🔥 Onyx na 6 mesiacov: voľných <b>${s.left} z ${s.total}</b> miest`
-      : `🔥 Onyx na 6 mesiacov: všetkých ${s.total} miest je obsadených`;
-  } catch {
-    return undefined;
-  }
+  return `🎯 Balíčky tipov: Štart 75 tipov · Gold 150 · Onyx 300`;
 }
 const BOT_USERNAME = process.env.TELEGRAM_BOT_USERNAME || "TipRadarAiBot";
 
-// tipradar.eu/zaplatit?term=m1|m3 (&c=Telegram ID z bota; starý odkaz term=season vedie na Onyx) → založí platbu a presmeruje na stránku s QR kódom.
+// tipradar.eu/zaplatit?term=t75|t150|t300 (&c=Telegram ID z bota; staré odkazy m1 → Gold, m3 / season → Onyx) → založí platbu a presmeruje na stránku s QR kódom.
 app.get("/zaplatit", async (req, res) => {
-  const rawTerm = String(req.query.term ?? "");
-  const term = rawTerm === "season" ? "m3" : rawTerm;
+  const term = sellableTerm(String(req.query.term ?? ""));
   const c = String(req.query.c ?? "");
-  if (!paymentsEnabled() || !isSellableTerm(term)) {
+  if (!paymentsEnabled() || !term) {
     res.redirect(302, "/clenstvo");
     return;
   }
   try {
-    {
-      const { taken, total } = await shortSeats(term);
-      if (total != null && taken >= total) {
-        res.redirect(302, `https://t.me/${BOT_USERNAME}?start=${term === "m3" ? "seria" : "start"}_waitlist`);
-        return;
-      }
-    }
     const chatId = /^\d{3,20}$/.test(c) ? c : undefined;
     const p = await createBankPayment(term, chatId);
     res.redirect(303, `/platba?t=${p.token}`);
@@ -341,16 +309,16 @@ app.get("/platba", async (req, res) => {
   try {
     const p = await getPayment(token);
     if (!p || p.method !== "bank") {
-      res.status(404).send(paymentPage("Platbu sme nenašli", "Vyberte si, prosím, členstvo znova.", "/clenstvo", "Späť na členstvo"));
+      res.status(404).send(paymentPage("Platbu sme nenašli", "Vyberte si, prosím, balíček znova.", "/clenstvo", "Späť na balíčky"));
       return;
     }
     if (p.status === "cancelled") {
-      res.send(paymentPage("Platba bola zrušená", "Ak chcete členstvo, vyberte si ho, prosím, znova.", "/clenstvo", "Späť na členstvo"));
+      res.send(paymentPage("Platba bola zrušená", "Ak chcete balíček, vyberte si ho, prosím, znova.", "/clenstvo", "Späť na balíčky"));
       return;
     }
     const tg = `https://t.me/${BOT_USERNAME}?start=paid_${p.token}`;
     if (p.status !== "pending") {
-      res.send(paymentPage("Platba prijatá, ďakujem!", `Členstvo TipRadar ${termLabel(p.term)} je zaplatené. Pozvánku do súkromného kanála nájdete v Telegrame.`, tg, "Otvoriť Telegram"));
+      res.send(paymentPage("Platba prijatá, ďakujem!", `Balíček TipRadar ${termLabel(p.term)} je zaplatený. Pozvánku do súkromného kanála nájdete v Telegrame.`, tg, "Otvoriť Telegram"));
       return;
     }
     if (!BANK.iban || !BANK.name) {
@@ -417,9 +385,9 @@ ${row("Správa", bankNote(p.term), bankNote(p.term))}
 <div class="step">2. Dajte mi vedieť</div>
 <p>Po zaplatení kliknite nižšie. Otvorí sa Telegram a hneď ako platba príde na účet, pošlem vám tam osobnú pozvánku do kanála.</p>
 <a class="btn" href="${esc(tg)}">Zaplatil som · pokračovať v Telegrame</a>
-<p class="small" style="margin-top:14px">Okamžitá platba príde do pár minút, bežný prevod zvyčajne do jedného pracovného dňa. Členstvo sa samo nepredlžuje.</p>
-<p class="gar"><b>Garancia</b>Ak vaše členstvo (Gold alebo Onyx) skončí v strate, ďalší mesiac máte zadarmo.</p>
-<a class="back" href="/clenstvo">Späť na členstvo</a>
+<p class="small" style="margin-top:14px">Okamžitá platba príde do pár minút, bežný prevod zvyčajne do jedného pracovného dňa. Tipy sa vám začnú rátať odo dňa, keď platbu potvrdím. Balíček sa sám nepredlžuje.</p>
+<p class="gar"><b>Garancia</b>Ak váš balíček skončí v strate, ďalších ${FREE_TIPS} tipov dostanete zadarmo.</p>
+<a class="back" href="/clenstvo">Späť na balíčky</a>
 </div>
 <script>document.querySelectorAll(".cp").forEach(function(b){b.addEventListener("click",function(){var t=b.getAttribute("data-copy");var done=function(){b.textContent="Skopírované";b.classList.add("ok");setTimeout(function(){b.textContent="Kopírovať";b.classList.remove("ok")},1800)};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,function(){prompt("Skopírujte:",t)})}else{prompt("Skopírujte:",t)}})});</script>
 </body></html>`;
@@ -437,7 +405,7 @@ h1{font-family:'Barlow Condensed',Arial,sans-serif;font-weight:800;font-size:42p
 p{color:#BFB6A6;font-size:16px;line-height:1.6;margin:0 0 28px}
 a.btn{display:inline-block;border-radius:999px;background:#D9C08A;color:#17130A;text-decoration:none;font-weight:700;font-size:14px;letter-spacing:.14em;text-transform:uppercase;padding:16px 28px}
 a.back{display:block;margin-top:22px;color:#8C8476;font-size:14px}</style></head>
-<body><div class="box"><div class="lab">Členstvo TipRadar</div><h1>${esc(title)}</h1><p>${esc(text)}</p>
+<body><div class="box"><div class="lab">Balíčky tipov TipRadar</div><h1>${esc(title)}</h1><p>${esc(text)}</p>
 ${href ? `<a class="btn" href="${esc(href)}">${esc(button)}</a>` : ""}<a class="back" href="/">Späť na tipradar.eu</a></div></body></html>`;
 }
 
@@ -1325,23 +1293,15 @@ app.delete("/api/tips/:id/slip", async (req, res) => {
   }
 });
 
-// Verejné počítadlo VIP miest (len čísla, žiadne mená). Aktívny VIP = typ „group"
-// s platbou nie viac ako 7 dní po splatnosti. Počet miest: Gold a Onyx bez obmedzenia, 6 mesiacov SEATS_SEASON (30).
+// Verejné údaje pre stránku Členstvo (len čísla, žiadne mená): stav predaja a počty podľa balíčka (bez obmedzenia miest).
 app.get("/api/public/vip-seats", async (_req, res) => {
   res.set("Access-Control-Allow-Origin", "*");
   try {
-    const { taken, total, activeVip } = await seasonSeats();
-    // Predaj členstiev: SALES_OPEN=true na Renderi (kým nie je živnosť, len poradovník).
-    // Pred spustením predaja: koľko ľudí sa zapísalo do poradovníka o VIP (len počet).
-    // Záujemca, ktorý už je VIP členom (rovnaké Telegram ID), sa nepočíta dvakrát.
-    const memberChats = new Set(activeVip.map((s) => String(s.telegramChatId || "")).filter(Boolean));
-    const waitlistVip = (await listLeads().catch(() => [])).filter(
-      (l) => ["vip", "vip_waitlist", "sampion", "sampion_waitlist"].includes(l.plan) && !memberChats.has(String(l.chatId))
-    ).length;
+    // Predaj: SALES_OPEN=true na Renderi (kým nie je živnosť, len poradovník).
     // Odkaz na bezplatný Telegram kanál: premenná TELEGRAM_FREE_CHANNEL_URL na Renderi (napr. https://t.me/tipradar_free).
     const freeChannelUrl = process.env.TELEGRAM_FREE_CHANNEL_URL || "https://t.me/TipRadarAiBot?start=free";
     const terms = await termSeats();
-    res.json({ taken: Math.min(taken, total), total, salesOpen: process.env.SALES_OPEN === "true", payOpen: paymentsEnabled(), waitlistVip, minOdds: MIN_ODDS, freeChannelUrl, terms });
+    res.json({ salesOpen: process.env.SALES_OPEN === "true", payOpen: paymentsEnabled(), minOdds: MIN_ODDS, freeChannelUrl, terms });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
@@ -2682,19 +2642,92 @@ app.post("/api/tips/check-results", async (_req, res) => {
 
 // ---- Predplatitelia (sledovanie platieb, keďže platba beží mimo appky - napr. bankovým prevodom) ----
 
+/**
+ * Tipy, ktoré sa rátajú členom do balíčka: zverejnené tipy (nie „Len sledovať“) poslané do členského kanála.
+ * Ak členský kanál na Renderi nie je nastavený, rátajú sa všetky zverejnené tipy.
+ */
+function memberSentTips(all: SavedTip[]): SavedTip[] {
+  const list = statsTips(all);
+  if (!memberChannelConfigured()) return list;
+  return list.filter((t) => (t.telegramMessages ?? []).some((m) => isMemberChannel(m.chatId)));
+}
+
+/** Staré časové členstvá: tipy podľa dňa zápasu (slovenský čas) v období, bez letnej prestávky (jún – júl). */
+function inLegacyWindow(t: SavedTip, p: { start: string; end: string }): boolean {
+  const d = tipDayKey(t);
+  if (d === null || d < dayKeySk(new Date(p.start)) || d > dayKeySk(new Date(p.end))) return false;
+  const m = Number(d.slice(5, 7));
+  return m < SUMMER_PAUSE.fromMonth || m > SUMMER_PAUSE.toMonth;
+}
+
+/** Stav aktuálneho balíčka člena – posiela sa do appky (web aj Mac) pri každom členovi ako `pkg`. */
+interface MemberStatus {
+  term: string;
+  tier: string;
+  total: number | null; // počet tipov v balíčku (null = staré časové členstvo)
+  used: number;
+  left: number | null;
+  pending: number;
+  validUntil: string;
+  free: boolean;
+  active: boolean; // balíček ešte neskončil
+  endedAt: string | null;
+  profit: number; // zisk v jednotkách z tipov balíčka (priebežne)
+}
+
+async function memberUsage(subs: Subscriber[], tipsAll?: SavedTip[]): Promise<Map<string, PeriodUsage[]>> {
+  const tips = memberSentTips(tipsAll ?? (await listTips()));
+  const map = new Map<string, PeriodUsage[]>();
+  for (const s of subs) map.set(s.id, periodUsage(s, tips, inLegacyWindow));
+  return map;
+}
+
+async function memberStatuses(subs: Subscriber[], tipsAll?: SavedTip[]): Promise<Map<string, MemberStatus>> {
+  const usage = await memberUsage(subs, tipsAll);
+  const out = new Map<string, MemberStatus>();
+  for (const s of subs) {
+    const u = usage.get(s.id)!;
+    const cur = u[u.length - 1];
+    const term = memberTerm(s);
+    out.set(s.id, {
+      term,
+      tier: tierName(term),
+      total: cur.total,
+      used: cur.used,
+      left: cur.left,
+      pending: cur.pending,
+      validUntil: cur.period.end,
+      free: Boolean(cur.period.free),
+      active: !cur.ended && new Date(cur.period.start).getTime() <= Date.now(),
+      endedAt: cur.endedAt,
+      profit: summarizeTips(cur.tips).profit,
+    });
+  }
+  return out;
+}
+
 app.get("/api/subscribers", async (_req, res) => {
   try {
-    res.json(await listSubscribers());
+    const subs = await listSubscribers();
+    const st = await memberStatuses(subs);
+    res.json(subs.map((s) => ({ ...s, pkg: st.get(s.id) })));
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
 });
 
+/** Polia, ktoré počíta server (pkg) alebo ktoré appka nemá meniť, sa pri zápise zahodia. */
+function cleanSubscriberBody(body: any): any {
+  const { pkg, ...rest } = body ?? {};
+  return rest;
+}
+
 app.post("/api/subscribers", async (req, res) => {
   try {
-    const subscriber: Subscriber = req.body;
-    // Prvé obdobie začína dňom začiatku členstva (od neho sa počíta garancia).
+    const subscriber: Subscriber = cleanSubscriberBody(req.body);
+    // Prvé obdobie začína dňom začiatku členstva (od neho sa rátajú tipy aj garancia).
     if (!subscriber.periodStart && subscriber.startDate) subscriber.periodStart = subscriber.startDate;
+    if (!subscriber.tips && isTerm(subscriber.length) && PAY_TERMS[subscriber.length].tips) subscriber.tips = PAY_TERMS[subscriber.length].tips;
     await addSubscriber(subscriber);
     res.json({ ok: true });
   } catch (err: any) {
@@ -2704,12 +2737,14 @@ app.post("/api/subscribers", async (req, res) => {
 
 app.patch("/api/subscribers/:id", async (req, res) => {
   try {
-    const body: Partial<Subscriber> = { ...req.body };
-    // Predĺženie z appky (nové obdobie): doterajšie obdobie sa odloží, aby sa dalo vyhodnotiť pre garanciu.
+    const body: Partial<Subscriber> = cleanSubscriberBody(req.body);
+    // Nový balíček / predĺženie z appky (nové obdobie): doterajšie obdobie sa odloží, aby sa dalo vyhodnotiť pre garanciu.
     if (typeof body.periodStart === "string" && typeof body.nextPaymentDue === "string") {
       const sub = (await listSubscribers()).find((x) => x.id === req.params.id);
       if (sub && currentPeriodStart(sub) !== body.periodStart) {
-        Object.assign(body, newPeriodUpdates(sub, body.periodStart, body.nextPaymentDue));
+        const term = isTerm(body.length) ? body.length : memberTerm(sub);
+        const tips = typeof body.tips === "number" ? body.tips : PAY_TERMS[term].tips;
+        Object.assign(body, newPeriodUpdates(sub, body.periodStart, body.nextPaymentDue, false, tips));
       }
     }
     await updateSubscriber(req.params.id, body);
@@ -2731,11 +2766,8 @@ app.post("/api/subscribers/:id/test-reminder", async (req, res) => {
       res.status(400).json({ error: "Tento predplatiteľ nemá vyplnené Telegram chat ID." });
       return;
     }
-    const tips = await listTips();
-    const resolved = statsTips(tips).filter((t) => t.status === "won" || t.status === "lost");
-    const won = resolved.filter((t) => t.status === "won").length;
-    const winRate = resolved.length > 0 ? Math.round((won / resolved.length) * 100) : null;
-    const ok = await sendRenewalReminder(sub.telegramChatId, { totalResolved: resolved.length, winRate });
+    const st = (await memberStatuses([sub])).get(sub.id)!;
+    const ok = await sendPackageLowReminder(sub.telegramChatId, { tier: st.tier, left: st.left, total: st.total, validUntil: st.validUntil, profit: st.profit });
     res.json({ ok });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
@@ -2751,7 +2783,7 @@ app.delete("/api/subscribers/:id", async (req, res) => {
   }
 });
 
-// ---- Garancia: ak obdobie členstva (Gold 50 dní, Onyx 6 mesiacov) skončí v strate, člen dostane 1 mesiac zadarmo ----
+// ---- Garancia: ak balíček skončí v strate, člen dostane ďalších 30 tipov zadarmo (staré časové členstvá mesiac) ----
 
 function fmtDaySk(day: string): string {
   return `${Number(day.slice(8, 10))}. ${Number(day.slice(5, 7))}. ${day.slice(0, 4)}`;
@@ -2760,30 +2792,21 @@ function fmtDaySk(day: string): string {
 /** Ako dlho po skončení obdobia ho ešte ukazujeme v appke. */
 const GUARANTEE_WINDOW_MS = 60 * 24 * 3600 * 1000;
 
-/** Výsledok všetkých období členov: bežiace (priebežne) a skončené za posledných 60 dní. */
+/** Výsledok všetkých balíčkov členov: bežiace (priebežne) a skončené za posledných 60 dní. */
 async function guaranteeRows() {
-  const tips = statsTips(await listTips());
   const now = Date.now();
+  const subs = await listSubscribers();
+  const usage = await memberUsage(subs);
   const rows = [];
-  for (const s of await listSubscribers()) {
+  for (const s of subs) {
     const term = memberTerm(s);
-    for (const p of memberPeriods(s)) {
+    for (const u of usage.get(s.id) ?? []) {
+      const p = u.period;
       const startMs = new Date(p.start).getTime();
-      const endMs = new Date(p.end).getTime();
-      if (isNaN(startMs) || isNaN(endMs) || startMs > now) continue; // obdobie ešte nezačalo
-      const ended = endMs < now;
-      if (ended && endMs < now - GUARANTEE_WINDOW_MS) continue;
-      // Tipy podľa dňa zápasu (slovenský čas) od prvého po posledný deň obdobia vrátane.
-      // Letná prestávka (jún – júl) sa nepočíta, členstvo je vtedy pozastavené.
-      const from = dayKeySk(new Date(startMs));
-      const to = dayKeySk(new Date(endMs));
-      const inPeriod = tips.filter((t) => {
-        const d = tipDayKey(t);
-        if (d === null || d < from || d > to) return false;
-        const m = Number(d.slice(5, 7));
-        return m < SUMMER_PAUSE.fromMonth || m > SUMMER_PAUSE.toMonth;
-      });
-      const sm = summarizeTips(inPeriod);
+      if (isNaN(startMs) || startMs > now) continue; // obdobie ešte nezačalo
+      const endedMs = u.endedAt ? new Date(u.endedAt).getTime() : NaN;
+      if (u.ended && !isNaN(endedMs) && endedMs < now - GUARANTEE_WINDOW_MS) continue;
+      const sm = summarizeTips(u.tips);
       const free = Boolean(p.free);
       const applied = (s.guarantees ?? []).some((g) => g.periodStart === p.start);
       const inLoss = sm.profit < 0;
@@ -2793,14 +2816,17 @@ async function guaranteeRows() {
         term,
         tier: tierName(term),
         periodStart: p.start,
-        periodEnd: p.end,
+        periodEnd: u.endedAt ?? p.end,
+        validUntil: p.end,
+        tipsTotal: u.total,
+        tipsUsed: u.used,
         profit: sm.profit,
         resolved: sm.totalResolved,
-        pending: inPeriod.filter((t) => t.status === "pending").length,
-        ended,
+        pending: u.pending,
+        ended: u.ended,
         free,
         inLoss,
-        eligible: ended && inLoss && !free && !applied,
+        eligible: u.ended && inLoss && !free && !applied,
         applied,
       });
     }
@@ -2834,8 +2860,8 @@ app.post("/api/guarantee/apply", async (req, res) => {
     const row = rows.find((r) => r.eligible && (!wanted || r.periodStart === wanted));
     if (!row) {
       const done = rows.find((r) => r.applied && (!wanted || r.periodStart === wanted));
-      if (done) res.status(409).json({ error: "Garancia za toto obdobie už bola pridaná." });
-      else res.status(400).json({ error: "Člen teraz nemá nárok na mesiac zadarmo." });
+      if (done) res.status(409).json({ error: "Garancia za tento balíček už bola pridaná." });
+      else res.status(400).json({ error: "Člen teraz nemá nárok na garanciu." });
       return;
     }
     const sub = (await listSubscribers()).find((s) => s.id === id);
@@ -2843,25 +2869,48 @@ app.post("/api/guarantee/apply", async (req, res) => {
       res.status(404).json({ error: "Člen sa nenašiel." });
       return;
     }
-    // Mesiac zadarmo nadväzuje na koniec členstva; ak už skončilo, začína dnes.
     const now = new Date();
-    const oldEnd = new Date(sub.nextPaymentDue);
-    const freeStart = oldEnd.getTime() > now.getTime() ? oldEnd : now;
-    const freeUntil = addActiveMonths(freeStart, 1).toISOString();
     const appliedAt = now.toISOString();
+    const isPackage = row.tipsTotal !== null;
+    let freeStart: Date;
+    let freeUntil: string;
+    let updates: Partial<Subscriber>;
+    if (isPackage) {
+      // Balíček: ďalších 30 tipov zadarmo od dnes, platia najviac 3 mesiace. Ak má člen už nový balíček,
+      // tipy zadarmo sa mu pridajú k nemu (rátajú sa ako ďalšie obdobie po ňom).
+      const st = (await memberStatuses([sub])).get(sub.id)!;
+      freeStart = now;
+      freeUntil = addActiveMonths(freeStart, FREE_TIPS_MONTHS).toISOString();
+      if (st.active && currentPeriodStart(sub) !== row.periodStart) {
+        // Bežiaci nový balíček ostáva aktuálny, tipy zadarmo idú medzi obdobia hneď za neho.
+        const extra = { start: appliedAt, end: freeUntil, free: true, tips: FREE_TIPS };
+        updates = { pastPeriods: [...(sub.pastPeriods ?? []), extra] };
+      } else {
+        updates = newPeriodUpdates(sub, appliedAt, freeUntil, true, FREE_TIPS);
+      }
+    } else {
+      // Staré časové členstvo: mesiac zadarmo nadväzuje na koniec členstva; ak už skončilo, začína dnes.
+      const oldEnd = new Date(sub.nextPaymentDue);
+      freeStart = oldEnd.getTime() > now.getTime() ? oldEnd : now;
+      freeUntil = addActiveMonths(freeStart, 1).toISOString();
+      updates = newPeriodUpdates(sub, freeStart.toISOString(), freeUntil, true);
+    }
+    const what = isPackage ? `${FREE_TIPS} tipov zadarmo` : "mesiac zadarmo";
     await updateSubscriber(id, {
-      ...newPeriodUpdates(sub, freeStart.toISOString(), freeUntil, true),
-      guarantees: [...(sub.guarantees ?? []), { periodStart: row.periodStart, periodEnd: row.periodEnd, profit: row.profit, appliedAt, freeUntil }],
-      note: `${sub.note ? sub.note + " · " : ""}Garancia (${fmtDaySk(dayKeySk(new Date(row.periodStart)))} – ${fmtDaySk(dayKeySk(new Date(row.periodEnd)))}, ${signed(row.profit, 1)} j.): mesiac zadarmo`,
+      ...updates,
+      guarantees: [...(sub.guarantees ?? []), { periodStart: row.periodStart, periodEnd: row.periodEnd, profit: row.profit, appliedAt, freeUntil, ...(isPackage ? { freeTips: FREE_TIPS } : {}) }],
+      note: `${sub.note ? sub.note + " · " : ""}Garancia (${fmtDaySk(dayKeySk(new Date(row.periodStart)))} – ${fmtDaySk(dayKeySk(new Date(row.periodEnd)))}, ${signed(row.profit, 1)} j.): ${what}`,
     });
     let notified = false;
     if (req.body?.notify === true && sub.telegramChatId) {
-      const text =
-        `🛡 <b>Garancia TipRadar</b>\n\nTvoje členstvo ${row.tier} skončilo v strate (${signed(row.profit, 1)} j.), preto máš podľa garancie mesiac zadarmo. ` +
-        `Platí do <b>${fmtDaySk(dayKeySk(new Date(freeUntil)))}</b>.`;
+      const text = isPackage
+        ? `🛡 <b>Garancia TipRadar</b>\n\nTvoj balíček ${row.tier} skončil v strate (${signed(row.profit, 1)} j.), preto máš podľa garancie <b>ďalších ${FREE_TIPS} tipov zadarmo</b>. ` +
+          `Prídu ti do toho istého kanála, platia najneskôr do <b>${fmtDaySk(dayKeySk(new Date(freeUntil)))}</b>.`
+        : `🛡 <b>Garancia TipRadar</b>\n\nTvoje členstvo ${row.tier} skončilo v strate (${signed(row.profit, 1)} j.), preto máš podľa garancie mesiac zadarmo. ` +
+          `Platí do <b>${fmtDaySk(dayKeySk(new Date(freeUntil)))}</b>.`;
       notified = await sendMemberMessage(String(sub.telegramChatId), text).catch(() => false);
     }
-    res.json({ ok: true, id, freeUntil, notified });
+    res.json({ ok: true, id, freeUntil, freeTips: isPackage ? FREE_TIPS : null, notified });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   } finally {
@@ -2869,7 +2918,10 @@ app.post("/api/guarantee/apply", async (req, res) => {
   }
 });
 
-// ---- Pravidelná kontrola blížiacich sa/vypršaných platieb predplatiteľov ----
+// ---- Pravidelná kontrola balíčkov: dochádzajúce tipy, končiaca platnosť ----
+
+/** Upozorniť, keď v balíčku ostáva najviac toľko tipov. */
+const LOW_TIPS = 5;
 
 async function checkExpiringSubscribers(): Promise<void> {
   // Deň podľa slovenského času. Uložené natrvalo, aby reštart servera (nasadenie,
@@ -2883,33 +2935,41 @@ async function checkExpiringSubscribers(): Promise<void> {
 
   try {
     const subs = await listSubscribers();
-    const withDaysLeft = subs.map((s) => ({
-      ...s,
-      daysLeft: Math.ceil((new Date(s.nextPaymentDue).getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
-    }));
+    const st = await memberStatuses(subs);
+    const DAY = 24 * 60 * 60 * 1000;
+    const rows = subs.map((s) => {
+      const k = st.get(s.id)!;
+      const daysLeft = Math.ceil((new Date(k.validUntil).getTime() - Date.now()) / DAY);
+      const endedDaysAgo = k.endedAt ? Math.floor((Date.now() - new Date(k.endedAt).getTime()) / DAY) : null;
+      return { s, k, daysLeft, endedDaysAgo };
+    });
 
-    // Len členstvá, ktoré končia do 3 dní alebo skončili najviac pred 3 dňami (staré skončené už neotravujú).
-    const expiring = withDaysLeft.filter((s) => s.daysLeft <= 3 && s.daysLeft >= -3);
-    if (expiring.length > 0) {
-      await notifyAdminExpiringSubscribers(expiring.map((s) => ({ name: s.name, tier: s.tier, length: s.length, daysLeft: s.daysLeft })));
+    // Tebe: balíčky, v ktorých ostáva ≤ 5 tipov, ktorým o ≤ 3 dni končí platnosť, alebo ktoré skončili najviac pred 3 dňami.
+    const notes: { name: string; length?: string; tier: string; when: string }[] = [];
+    for (const r of rows) {
+      const { s, k } = r;
+      let when = "";
+      if (!k.active && r.endedDaysAgo !== null && r.endedDaysAgo <= 3) when = k.total !== null && k.left === 0 ? "všetky tipy sú minuté – balíček skončil" : "balíček skončil (uplynula platnosť)";
+      else if (k.active && k.left !== null && k.left <= LOW_TIPS) when = `ostáva ${k.left} z ${k.total} tipov`;
+      else if (k.active && r.daysLeft <= 3) when = r.daysLeft <= 0 ? "platnosť končí dnes" : `platnosť končí o ${r.daysLeft} d.`;
+      if (when) notes.push({ name: s.name, length: s.length, tier: s.tier, when });
     }
+    if (notes.length > 0) await notifyAdminExpiringSubscribers(notes);
 
-    // Osobná pripomienka predplatiteľom, ktorým vyprší platnosť presne o 3 dni
-    // (a majú vyplnené svoje Telegram chat ID) - s prehľadom celkovej úspešnosti.
-    const toRemind = withDaysLeft.filter((s) => s.daysLeft === 3 && s.telegramChatId);
-    if (toRemind.length > 0) {
-      const tips = await listTips();
-      const resolved = statsTips(tips).filter((t) => t.status === "won" || t.status === "lost");
-      const won = resolved.filter((t) => t.status === "won").length;
-      const winRate = resolved.length > 0 ? Math.round((won / resolved.length) * 100) : null;
-      for (const sub of toRemind) {
-        await sendRenewalReminder(sub.telegramChatId!, { totalResolved: resolved.length, winRate });
-      }
+    // Členovi: jedna osobná pripomienka na balíček (ostáva ≤ 5 tipov alebo o 3 dni končí platnosť), ak má Telegram chat ID.
+    for (const r of rows) {
+      const { s, k } = r;
+      if (!s.telegramChatId || !k.active || k.free) continue;
+      const low = (k.left !== null && k.left <= LOW_TIPS) || r.daysLeft <= 3;
+      const periodKey = currentPeriodStart(s);
+      if (!low || s.reminderFor === periodKey) continue;
+      const ok = await sendPackageLowReminder(s.telegramChatId, { tier: k.tier, left: k.left, total: k.total, validUntil: k.validUntil, profit: k.profit });
+      if (ok) await updateSubscriber(s.id, { reminderFor: periodKey });
     }
 
     await setMeta("lastExpiryCheckDate", today);
   } catch (err) {
-    console.error("Kontrola vypršania predplatných zlyhala:", err);
+    console.error("Kontrola balíčkov zlyhala:", err);
   }
 }
 

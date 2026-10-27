@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>TipRadar – návratnosť členstva</title>
+<title>TipRadar – návratnosť balíčkov</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -106,8 +106,8 @@ td.no b { color: var(--bad); font-size: 13px; }
 <body>
 <div class="wrap">
   <a class="back noprint" href="/#nastroje">← Späť do appky</a>
-  <h1>Návratnosť členstva <span>– vlastný bank</span></h1>
-  <p class="lead">Zadajte svoj bank a počet tipov mesačne a hneď uvidíte, akú priemernú mesačnú úspešnosť treba, aby sa vrátili vklady aj cena členstva. Pod percentom je, koľko tipov musí vyjsť za mesiac (napr. 22 z 30) a koľko zo 100 tipov celkovo (nie mesačne, ale za dlhšie obdobie).</p>
+  <h1>Návratnosť balíčkov <span>– vlastný bank</span></h1>
+  <p class="lead">Zadajte svoj bank a počet tipov mesačne a hneď uvidíte, akú priemernú mesačnú úspešnosť treba, aby sa vrátili vklady aj cena balíčka (Štart 75, Gold 150, Onyx 300 tipov – platí sa za tip). Pod percentom je, koľko tipov musí vyjsť za mesiac (napr. 22 z 30) a koľko zo 100 tipov celkovo (nie mesačne, ale za dlhšie obdobie).</p>
 
   <div class="panel inputs-panel">
     <div class="inputs">
@@ -120,7 +120,7 @@ td.no b { color: var(--bad); font-size: 13px; }
         <label class="f" for="tips">Tipov mesačne</label>
         <div class="field"><input id="tips" type="text" inputmode="numeric" value="30" autocomplete="off"><span class="unit">ks</span></div>
         <div class="chips" id="tipChips"></div>
-        <div class="hint" id="tipsHint">Priemerne 1 tip denne.</div>
+        <div class="hint" id="tipsHint">Priemerne 2 tipy denne.</div>
       </div>
       <div>
         <label class="f" for="target">Model mieri na</label>
@@ -152,9 +152,9 @@ td.no b { color: var(--bad); font-size: 13px; }
     <h3 style="font-size:18px;margin-bottom:8px">Ako to čítať</h3>
     <p class="note" id="example"></p>
     <p class="note">Pod percentom: koľko tipov musí vyjsť za jeden mesiac (napr. „22 z 30“) a koľko zo 100 tipov celkovo – teda za celé obdobie, nie za mesiac. Počty sú zaokrúhlené nahor.</p>
-    <p class="note">Zisk pod číslami: koľko by klient za mesiac zarobil po zaplatení členstva, keby vyšlo toľko tipov, koľko je nastavené v „Model mieri na“. Pri inej úspešnosti prepíšte toto políčko.</p>
+    <p class="note">Zisk pod číslami: koľko by klient za mesiac zarobil po zaplatení tipov z balíčka, keby vyšlo toľko tipov, koľko je nastavené v „Model mieri na“. Pri inej úspešnosti prepíšte toto políčko.</p>
     <p class="note" id="basis"></p>
-    <p class="note">Vzorec: potrebná úspešnosť = (1 + mesačná cena ÷ (počet tipov × vklad)) ÷ kurz.<br>
+    <p class="note">Vzorec: potrebná úspešnosť = (1 + cena za tip ÷ vklad) ÷ kurz. Pri balíčku nezáleží na počte tipov mesačne – každý tip stojí rovnako.<br>
     Výpočet ukazuje len hranicu návratnosti, výhru nezaručuje. Hrajte zodpovedne. 18+</p>
   </div>
 </div>
@@ -162,11 +162,12 @@ td.no b { color: var(--bad); font-size: 13px; }
 <script>
 (function () {
   var PLANS = [
-    { tag: "Gold", name: "50 dní", price: 69, months: 50 / 30.44 },
-    { tag: "Onyx", name: "6 mesiacov", price: 199, months: 6 }
+    { tag: "Štart", name: "75 tipov", price: 67, tips: 75 },
+    { tag: "Gold", name: "150 tipov", price: 109, tips: 150 },
+    { tag: "Onyx", name: "300 tipov", price: 179, tips: 300 }
   ];
   var STAKES = [1, 2, 3, 5];
-  var DEFAULT = { bank: 1000, tips: 30, target: 73, odds: [1.55, 1.62, 1.69, 1.76, 1.83] };
+  var DEFAULT = { bank: 1000, tips: 60, target: 73, odds: [1.55, 1.62, 1.69, 1.76, 1.83] };
   var BANKS = [100, 200, 300, 500, 1000, 2000];
 
   var $ = function (id) { return document.getElementById(id); };
@@ -230,13 +231,13 @@ td.no b { color: var(--bad); font-size: 13px; }
       return;
     }
     save();
-    $("profitLegend").textContent = "Zisk/strata = čistý zisk za mesiac po zaplatení členstva, ak vyjde " + fmt(target * 100, 0) + " % tipov";
+    $("profitLegend").textContent = "Zisk/strata = čistý zisk za mesiac po zaplatení tipov z balíčka, ak vyjde " + fmt(target * 100, 0) + " % tipov";
     $("printInfo").textContent = "Bank " + eur(bank) + " · " + tips + " tipov mesačne · model mieri na " + fmt(target * 100, 0) + " %";
     var html = "";
     PLANS.forEach(function (p) {
-      var monthly = p.price / p.months;
+      var perTip = p.price / p.tips, monthly = perTip * tips;
       html += '<div class="plan"><div class="plan-head"><div><small>' + p.tag + '</small><h3>' + p.name + '</h3></div>' +
-        '<div class="price"><b>' + eur(p.price) + '</b><span>' + (p.months > 1 ? "teda " + eur(monthly) + " mesačne" : "mesačne") + '</span></div></div>' +
+        '<div class="price"><b>' + eur(p.price) + '</b><span>' + fmt(perTip, 2) + " € za tip · " + tips + " tipov = " + eur(monthly) + " mesačne" + '</span></div></div>' +
         '<div class="tbl"><table><thead><tr><th>Vklad na tip</th>';
       odds.forEach(function (o) { html += "<th>Kurz " + fmt(o, 2) + "</th>"; });
       html += "</tr></thead><tbody>";
@@ -257,10 +258,10 @@ td.no b { color: var(--bad); font-size: 13px; }
       html += "</tbody></table></div></div>";
     });
     box.innerHTML = html;
-    var g = PLANS[1], st = bank * 0.02, o = odds[2], nd = (1 + g.price / g.months / (tips * st)) / o;
+    var g = PLANS[1], st = bank * 0.02, o = odds[2], nd = (1 + g.price / g.tips / st) / o;
     $("example").textContent = "Príklad: bank " + eur(bank) + ", " + tips + " tipov mesačne, " + g.tag + ", vklad 2 % (" + eur(st) + "), kurz " + fmt(o, 2) + " – " +
       (nd > 1 ? "návratnosť sa nedá dosiahnuť ani pri 100 % úspešnosti." : "treba mesačne aspoň " + fmt(nd * 100, 1) + " %, teda " + Math.ceil(nd * tips - 1e-9) + " z " + tips + " tipov, resp. " + Math.ceil(nd * 100 - 1e-9) + " zo 100 tipov celkovo.");
-    $("basis").textContent = "Bez členstva stačí, aby stávky neboli v mínuse: " + odds.map(function (x) { return "kurz " + fmt(x, 2) + " → " + fmt(100 / x, 1) + " %"; }).join(" · ") + ".";
+    $("basis").textContent = "Bez balíčka stačí, aby stávky neboli v mínuse: " + odds.map(function (x) { return "kurz " + fmt(x, 2) + " → " + fmt(100 / x, 1) + " %"; }).join(" · ") + ".";
   }
 
   document.querySelector(".inputs-panel").addEventListener("input", render);

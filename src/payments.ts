@@ -4,7 +4,7 @@ import * as crypto from "crypto";
 import axios from "axios";
 import { ibanValid } from "./payBySquare";
 
-// Platby za členstvo TipRadar (Gold 50 dní, Onyx 6 mesiacov): bankový prevod cez QR kód (PAY by square), bez poplatkov.
+// Platby za balíčky tipov TipRadar (Štart 75, Gold 150, Onyx 300 tipov): bankový prevod cez QR kód (PAY by square), bez poplatkov.
 // Zapne sa, keď sú na Renderi nastavené SALES_OPEN=true, PAY_IBAN a PAY_NAME.
 // Platbu potvrdíš jedným klikom v appke alebo v Telegrame, bot potom pošle pozvánku.
 
@@ -51,29 +51,53 @@ export function addActiveMonths(from: Date, months: number, days?: number): Date
   return calEnd;
 }
 
-// Kód "season" ostáva len kvôli starším záznamom (6 mesiacov). Od 26. 10. 2026 sa predáva len
-// m1 = Gold (50 dní, 69 €) a m3 = Onyx (6 mesiacov, 199 €). Kódy m1 / m3 ostali kvôli odkazom a záznamom.
-export type Term = "m1" | "m3" | "season";
-export const PAY_TERMS: Record<Term, { price: number; name: string; months?: number; days?: number }> = {
+// Od 27. 10. 2026 sa predávajú balíčky podľa počtu tipov (Michalovo rozhodnutie):
+// t75 = Štart (75 tipov, 67 €, platí najviac 3 mesiace), t150 = Gold (150 tipov, 109 €, najviac 6 mesiacov),
+// t300 = Onyx (300 tipov, 179 €, najviac 12 mesiacov). Balíček skončí po poslednom tipe alebo po uplynutí platnosti.
+// Staré časové členstvá m1 (Gold 50 dní), m3 (Onyx 6 mesiacov) a season ostávajú len kvôli starším záznamom.
+export type Term = "t75" | "t150" | "t300" | "m1" | "m3" | "season";
+export const PAY_TERMS: Record<Term, { price: number; name: string; months?: number; days?: number; tips?: number }> = {
+  t75: { price: 67, name: "75 tipov", tips: 75, months: 3 },
+  t150: { price: 109, name: "150 tipov", tips: 150, months: 6 },
+  t300: { price: 179, name: "300 tipov", tips: 300, months: 12 },
   m1: { price: 69, name: "50 dní", days: 50 },
   m3: { price: 199, name: "6 mesiacov", months: 6 },
   season: { price: 219, name: "6 mesiacov", months: 6 },
 };
-/** Názov členstva podľa dĺžky: 50 dní = Gold, 6 mesiacov = Onyx (staré „season“ sa už nepredáva). */
-export const TIER_NAMES: Record<Term, string> = { m1: "Gold", m3: "Onyx", season: "Platinum (6 mesiacov, staré)" };
+/** Garancia: ak balíček skončí v strate, člen dostane ďalších 30 tipov zadarmo (platia najviac 3 mesiace). */
+export const FREE_TIPS = 30;
+export const FREE_TIPS_MONTHS = 3;
+/** Názov balíčka: Štart / Gold / Onyx (staré časové členstvá majú v názve „staré“). */
+export const TIER_NAMES: Record<Term, string> = {
+  t75: "Štart",
+  t150: "Gold",
+  t300: "Onyx",
+  m1: "Gold (50 dní, staré)",
+  m3: "Onyx (6 mesiacov, staré)",
+  season: "Platinum (6 mesiacov, staré)",
+};
 export function tierName(term: Term): string {
-  return TIER_NAMES[term] ?? TIER_NAMES.m1;
+  return TIER_NAMES[term] ?? TIER_NAMES.t150;
 }
-/** Názov členstva s dĺžkou, napríklad „Gold · 1 mesiac“. */
+/** Názov balíčka s počtom tipov, napríklad „Gold · 150 tipov“. */
 export function termLabel(term: Term): string {
   return `${tierName(term)} · ${PAY_TERMS[term].name}`;
 }
 export function isTerm(v: unknown): v is Term {
-  return v === "m1" || v === "m3" || v === "season";
+  return typeof v === "string" && Object.prototype.hasOwnProperty.call(PAY_TERMS, v);
 }
-/** Dĺžky, ktoré sa dajú kúpiť (Gold a Onyx; staré „season“ nie). */
-export function isSellableTerm(v: unknown): v is "m1" | "m3" {
-  return v === "m1" || v === "m3";
+export type SellableTerm = "t75" | "t150" | "t300";
+export const SELLABLE_TERMS: SellableTerm[] = ["t75", "t150", "t300"];
+/** Balíčky, ktoré sa dajú kúpiť (staré časové členstvá nie). */
+export function isSellableTerm(v: unknown): v is SellableTerm {
+  return v === "t75" || v === "t150" || v === "t300";
+}
+/** Staré odkazy (term=m1 / m3 / season) vedú na nové balíčky: Gold 50 dní → Gold, 6 mesiacov → Onyx. */
+export function sellableTerm(v: unknown): SellableTerm | null {
+  if (isSellableTerm(v)) return v;
+  if (v === "m1") return "t150";
+  if (v === "m3" || v === "season") return "t300";
+  return null;
 }
 
 export function bankEnabled(): boolean {
@@ -84,7 +108,7 @@ export function paymentsEnabled(): boolean {
   return process.env.SALES_OPEN === "true" && bankEnabled();
 }
 
-/** Do kedy platí členstvo zaplatené dnes (jún a júl sa nepočítajú). */
+/** Do kedy najneskôr platí balíček (členstvo) zaplatený dnes (jún a júl sa nepočítajú). */
 export function paidUntil(term: Term, from = new Date()): string {
   return addActiveMonths(new Date(from), PAY_TERMS[term].months ?? 1, PAY_TERMS[term].days).toISOString();
 }

@@ -412,8 +412,9 @@ export interface PlayerGoalPrediction {
 /** Jedno obdobie členstva (od – do). free = mesiac zadarmo podľa garancie. */
 export interface MemberPeriod {
   start: string;
-  end: string;
+  end: string; // pri balíčku: platí najneskôr do
   free?: boolean;
+  tips?: number; // počet tipov v balíčku (staré časové členstvá ho nemajú)
 }
 
 /** Predplatiteľ služby (osobný alebo skupina/kanál na ďalší predaj) - používa len web appka. */
@@ -422,15 +423,19 @@ export interface Subscriber {
   name: string;
   contact?: string;
   telegramChatId?: string; // voliteľné - ak vyplnené, appka mu vie poslať osobnú pripomienku pred obnovením
-  tier: "individual" | "group"; // individual = Gold (50 dní) / Onyx (6 mesiacov), group = staršie členstvo na 6 mesiacov (zrušené 24. 10. 2026)
+  tier: "individual" | "group"; // individual = balíček tipov (alebo staré Gold / Onyx), group = staršie členstvo na 6 mesiacov (zrušené 24. 10. 2026)
   priceEur: number;
-  nextPaymentDue: string; // ISO dátum – do kedy má členstvo zaplatené
-  length?: "m1" | "m3" | "season"; // dĺžka členstva: m1 = Gold 50 dní, m3 = Onyx 6 mesiacov (staršie záznamy bez dĺžky = m1)
+  nextPaymentDue: string; // ISO dátum – pri balíčku: platí najneskôr do (balíček skončí skôr, keď sa minú tipy)
+  // Balíček: t75 = Štart (75 tipov), t150 = Gold (150 tipov), t300 = Onyx (300 tipov).
+  // Staré časové členstvá: m1 = Gold 50 dní, m3 = Onyx 6 mesiacov, season (staršie záznamy bez dĺžky = m1).
+  length?: "t75" | "t150" | "t300" | "m1" | "m3" | "season";
+  tips?: number; // počet tipov v aktuálnom balíčku (pri 30 tipoch zadarmo podľa garancie 30)
   startDate?: string; // ISO dátum začiatku členstva
   periodStart?: string; // ISO začiatok aktuálneho obdobia (zaplateného alebo mesiaca zadarmo), koniec = nextPaymentDue
-  freePeriod?: boolean; // aktuálne obdobie je mesiac zadarmo podľa garancie (garancia sa naň nevzťahuje)
+  freePeriod?: boolean; // aktuálne obdobie je zadarmo podľa garancie (30 tipov, staré členstvá mesiac) – garancia sa naň nevzťahuje
   pastPeriods?: MemberPeriod[]; // predošlé obdobia (posledných pár), aby sa dali vyhodnotiť aj po predĺžení
-  guarantees?: { periodStart: string; periodEnd: string; profit: number; appliedAt: string; freeUntil: string }[]; // použité garancie
+  guarantees?: { periodStart: string; periodEnd: string; profit: number; appliedAt: string; freeUntil: string; freeTips?: number }[]; // použité garancie
+  reminderFor?: string; // začiatok balíčka, ku ktorému už odišla pripomienka „dochádzajú tipy“ (posiela sa raz)
   founder?: boolean; // „Prví členovia“ – zamknutá cena
   cardSent?: boolean; // VIP kovová karta odoslaná
   note?: string;

@@ -1,16 +1,24 @@
 import { addActiveMonths, PAY_TERMS, Term, isTerm } from "./payments";
-import { MemberPeriod, Subscriber } from "./types";
+import { MemberPeriod, SavedTip, Subscriber } from "./types";
 
-// Garancia: ak obdobie členstva (Gold 50 dní, Onyx 6 mesiacov; staršie záznamy aj iné dĺžky) skončí v strate,
-// člen dostane 1 mesiac zadarmo. Mesiac zadarmo sa už do garancie nepočíta.
+// Balíčky tipov (od 27. 10. 2026): Štart 75, Gold 150, Onyx 300 tipov. Každému členovi sa počítajú tipy
+// od dňa nákupu; balíček skončí po poslednom tipe alebo po uplynutí platnosti (3 / 6 / 12 mesiacov).
+// Garancia: ak balíček skončí v strate, člen dostane ďalších 30 tipov zadarmo (na tie sa garancia už nevzťahuje).
+// Staršie časové členstvá (Gold 50 dní, Onyx 6 mesiacov) sa vyhodnocujú po dňoch ako predtým.
 
 /** Koľko predošlých období si pri členovi pamätáme (stačí na vyhodnotenie za posledných 60 dní). */
 const KEEP_PAST = 6;
 
-/** Dĺžka členstva člena (staršie záznamy bez dĺžky: group = 6 mesiacov, inak 1 mesiac). */
+/** Balíček / dĺžka členstva člena (staršie záznamy bez dĺžky: group = 6 mesiacov, inak Gold 50 dní). */
 export function memberTerm(s: Subscriber): Term {
   if (isTerm(s.length)) return s.length;
   return s.tier === "group" ? "season" : "m1";
+}
+
+/** Počet tipov v aktuálnom balíčku člena (null = staré časové členstvo bez počtu tipov). */
+export function memberTips(s: Subscriber): number | null {
+  if (typeof s.tips === "number" && s.tips > 0) return s.tips;
+  return PAY_TERMS[memberTerm(s)].tips ?? null;
 }
 
 /**
@@ -43,16 +51,86 @@ export function currentPeriodStart(s: Subscriber): string {
 
 /** Všetky známe obdobia člena (predošlé aj aktuálne), najstaršie prvé. */
 export function memberPeriods(s: Subscriber): MemberPeriod[] {
-  const current: MemberPeriod = { start: currentPeriodStart(s), end: s.nextPaymentDue, ...(s.freePeriod ? { free: true } : {}) };
-  return [...(s.pastPeriods ?? []), current];
+  return [...(s.pastPeriods ?? []), currentPeriod(s)];
+}
+
+function currentPeriod(s: Subscriber): MemberPeriod {
+  const tips = memberTips(s);
+  return { start: currentPeriodStart(s), end: s.nextPaymentDue, ...(s.freePeriod ? { free: true } : {}), ...(tips ? { tips } : {}) };
 }
 
 /**
  * Úpravy člena pri novom období (predĺženie, platba, mesiac zadarmo): doterajšie obdobie sa presunie
  * medzi predošlé, aby sa dalo vyhodnotiť aj neskôr, a začne nové.
  */
-export function newPeriodUpdates(s: Subscriber, periodStart: string, periodEnd: string, free = false): Partial<Subscriber> {
-  const prev: MemberPeriod = { start: currentPeriodStart(s), end: s.nextPaymentDue, ...(s.freePeriod ? { free: true } : {}) };
+export function newPeriodUpdates(s: Subscriber, periodStart: string, periodEnd: string, free = false, tips?: number): Partial<Subscriber> {
+  const prev = currentPeriod(s);
   const past = [...(s.pastPeriods ?? []).filter((p) => p.start !== prev.start), prev].slice(-KEEP_PAST);
-  return { pastPeriods: past, periodStart, nextPaymentDue: periodEnd, freePeriod: free };
+  return { pastPeriods: past, periodStart, nextPaymentDue: periodEnd, freePeriod: free, ...(tips ? { tips } : {}) };
+}
+
+// ---- Počítanie tipov v balíčkoch ----
+
+/** Čas tipu = výkop zápasu (pri tikete posledný zápas). */
+export function tipTime(t: SavedTip): number | null {
+  const dates = t.legs && t.legs.length > 0 ? t.legs.map((l) => l.matchDate) : [t.matchDate];
+  const times = dates.map((d) => new Date(d).getTime()).filter((n) => !isNaN(n));
+  return times.length ? Math.max(...times) : null;
+}
+
+export interface PeriodUsage {
+  period: MemberPeriod;
+  /** Tipy, ktoré patria do tohto obdobia (pri balíčku najviac `period.tips`). */
+  tips: SavedTip[];
+  /** Počet tipov v balíčku (null = staré časové členstvo). */
+  total: number | null;
+  used: number;
+  left: number | null;
+  pending: number;
+  /** Balíček je skončený: všetky tipy použité a vyhodnotené, alebo uplynula platnosť. */
+  ended: boolean;
+  /** Kedy balíček skončil (výkop posledného tipu alebo koniec platnosti). */
+  endedAt: string | null;
+}
+
+/**
+ * Rozdelí zverejnené tipy do období člena. Tip patrí do prvého obdobia, ktoré už začalo,
+ * ešte neskončila jeho platnosť a nie je plné. Zrušené tipy (void) sa nerátajú.
+ * `inLegacyWindow` rozhodne pri starých časových členstvách (bez počtu tipov), či tip patrí do obdobia.
+ */
+export function periodUsage(
+  s: Subscriber,
+  tips: SavedTip[],
+  inLegacyWindow: (t: SavedTip, p: MemberPeriod) => boolean,
+  now = Date.now()
+): PeriodUsage[] {
+  const periods = memberPeriods(s);
+  const buckets: SavedTip[][] = periods.map(() => []);
+  const sorted = tips
+    .filter((t) => t.status !== "void")
+    .map((t) => ({ t, at: tipTime(t) }))
+    .filter((x): x is { t: SavedTip; at: number } => x.at !== null)
+    .sort((a, b) => a.at - b.at);
+  for (const { t, at } of sorted) {
+    for (let i = 0; i < periods.length; i++) {
+      const p = periods[i];
+      if (p.tips) {
+        if (at < new Date(p.start).getTime() || at > new Date(p.end).getTime() || buckets[i].length >= p.tips) continue;
+      } else if (!inLegacyWindow(t, p)) continue;
+      buckets[i].push(t);
+      break;
+    }
+  }
+  return periods.map((p, i) => {
+    const list = buckets[i];
+    const total = p.tips ?? null;
+    const pending = list.filter((t) => t.status === "pending").length;
+    const endMs = new Date(p.end).getTime();
+    const full = total !== null && list.length >= total;
+    const ended = endMs < now || (full && pending === 0);
+    let endedAt: string | null = null;
+    if (full && pending === 0) endedAt = new Date(tipTime(list[list.length - 1]) ?? endMs).toISOString();
+    else if (endMs < now) endedAt = p.end;
+    return { period: p, tips: list, total, used: list.length, left: total === null ? null : Math.max(0, total - list.length), pending, ended, endedAt };
+  });
 }

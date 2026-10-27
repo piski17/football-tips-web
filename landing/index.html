@@ -1858,6 +1858,56 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
 .ledger li.lost { border-color: rgba(192,112,124,.45) !important; background: rgba(192,112,124,.07) !important; }
 .ledger li.won, .ledger li.won .d, .ledger li.won .tm, .ledger li.won .m, .ledger li.won .b, .ledger li.won .o { color: var(--win) !important; -webkit-text-fill-color: var(--win) !important; }
 .ledger li.lost, .ledger li.lost .d, .ledger li.lost .tm, .ledger li.lost .m, .ledger li.lost .b, .ledger li.lost .o { color: var(--loss) !important; -webkit-text-fill-color: var(--loss) !important; }
+/* ===== Balíčky tipov (od 27. 10. 2026): Štart / Gold / Onyx s posuvníkmi banku a vkladu ===== */
+#clenstvo .pk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 262px), 1fr)); gap: 20px; margin-top: 10px; align-items: stretch; }
+#clenstvo .pk-card { position: relative; display: flex; flex-direction: column; min-width: 0; background: var(--card); border: 1px solid var(--line-2); border-radius: 22px; padding: 30px 24px 24px; }
+#clenstvo .pk-card.feat { background: linear-gradient(180deg, #2C241A, var(--card)); border-color: var(--gold); box-shadow: 0 30px 70px -40px rgba(217,188,132,.55); }
+#clenstvo .pk-flag { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); background: var(--gold); color: #1A140D; font: 700 11.5px/1 var(--sans); letter-spacing: .14em; text-transform: uppercase; padding: 7px 14px; border-radius: 999px; white-space: nowrap; }
+#clenstvo .pk-tn { font: 700 40px/1 "Barlow Condensed", "Arial Narrow", sans-serif; color: var(--gold); letter-spacing: .01em; }
+#clenstvo .pk-tips { margin-top: 8px; font: 600 22px/1.1 "Barlow Condensed", "Arial Narrow", sans-serif; letter-spacing: .03em; color: var(--text); }
+#clenstvo .pk-len { margin-top: 5px; min-height: 2.9em; font-size: 13.5px; line-height: 1.45; color: var(--faint); }
+#clenstvo .pk-price { margin-top: 20px; display: flex; align-items: baseline; gap: 4px; }
+#clenstvo .pk-price b { font: 800 64px/1 "Barlow Condensed", "Arial Narrow", sans-serif !important; color: var(--text) !important; }
+#clenstvo .pk-price span { font: 500 24px/1 "Barlow Condensed", "Arial Narrow", sans-serif; color: var(--muted); }
+#clenstvo .pk-pt { margin: 8px 0 0; font-size: 15px; color: var(--muted); }
+#clenstvo .pk-pt b { color: var(--win); font-weight: 600; }
+#clenstvo .pk-calc { margin-top: 20px; background: rgba(0,0,0,.18); border: 1px solid var(--line); border-radius: 16px; padding: 16px 16px 14px; }
+#clenstvo .pk-ttl { font-size: 11.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+#clenstvo .pk-row { margin-top: 12px; }
+#clenstvo .pk-lab { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 13.5px; color: var(--muted); }
+#clenstvo .pk-lab b { font: 700 22px/1 "Barlow Condensed", "Arial Narrow", sans-serif; color: var(--text); white-space: nowrap; }
+#clenstvo .pk-row input[type="range"] { display: block; width: 100%; margin: 12px 0 0; }
+#clenstvo .pk-ticks { display: flex; justify-content: space-between; font-size: 11px; color: var(--faint); margin-top: 6px; }
+#clenstvo .pk-out { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+#clenstvo .pk-out small { display: block; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); font-weight: 600; }
+#clenstvo .pk-out b { display: block; margin-top: 3px; font: 700 21px/1.1 "Barlow Condensed", "Arial Narrow", sans-serif; color: var(--text); }
+#clenstvo .pk-verdict { grid-column: 1 / -1; font-size: 13.5px; padding: 8px 10px; border-radius: 10px; line-height: 1.35; }
+#clenstvo .pk-verdict.ok { background: rgba(127,191,154,.12); color: var(--win); }
+#clenstvo .pk-verdict.mid { background: rgba(217,192,138,.12); color: var(--gold-hi); }
+#clenstvo .pk-verdict.bad { background: rgba(224,127,112,.13); color: #E89A8E; }
+#clenstvo .pk-rec { margin: 10px 0 0; font-size: 12.5px; color: var(--faint); }
+#clenstvo .pk-rec b { color: var(--muted); font-weight: 600; }
+#clenstvo .pk-list { list-style: none; margin: 22px 0 0; padding: 0; display: grid; gap: 12px; flex: 1; align-content: start; }
+#clenstvo .pk-list li { position: relative; padding-left: 30px; font-size: 15px; line-height: 1.4; color: var(--text); }
+#clenstvo .pk-list li::before { content: "✓"; position: absolute; left: 0; top: 0; width: 20px; height: 20px; border: 1.5px solid var(--gold); border-radius: 50%; font-size: 11px; line-height: 1; display: grid; place-items: center; color: var(--gold); }
+#clenstvo .pk-list li.plus::before { background: var(--gold); color: #1A140D; }
+#clenstvo .pk-list li small { display: block; color: var(--muted); font-size: 13.5px; margin-top: 2px; }
+#clenstvo .pk-btn { margin-top: 24px; display: block; text-align: center; padding: 16px 12px; font: 700 14px/1.2 var(--sans); letter-spacing: .14em; text-transform: uppercase; border-radius: 999px; border: 1.5px solid var(--gold); color: var(--gold-hi); text-decoration: none; transition: background .25s, color .25s; }
+#clenstvo .pk-btn:hover, #clenstvo .feat .pk-btn { background: var(--gold); color: #1A140D; }
+#clenstvo .pk-guar { margin-top: 24px; display: flex; gap: 14px; align-items: center; background: var(--card); border: 1px solid var(--line-2); border-radius: 18px; padding: 16px 20px; font-size: 15px; color: var(--muted); text-decoration: none; }
+#clenstvo .pk-guar:hover { border-color: var(--gold); }
+#clenstvo .pk-guar strong { color: var(--gold); letter-spacing: .16em; font-size: 12.5px; text-transform: uppercase; margin-right: 8px; }
+#clenstvo .pk-ic { flex: none; width: 38px; height: 38px; border-radius: 50%; background: var(--gold); display: grid; place-items: center; }
+#clenstvo .pk-ic svg { width: 22px; height: 22px; fill: none; stroke: #1A130A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+#clenstvo .last7 { margin-top: 18px; text-align: center; }
+#clenstvo .pk-foot { text-align: center; margin: 20px auto 0; color: var(--faint); font-size: 13.5px; line-height: 1.6; max-width: 760px; }
+@media (max-width: 760px) {
+  #clenstvo .pk-grid { gap: 30px; }
+  #clenstvo .pk-card { padding: 28px 20px 22px; }
+  #clenstvo .pk-guar { align-items: flex-start; }
+}
+.hm-tiers.three { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 1100px; }
+@media (max-width: 1100px) { .hm-tiers.three { grid-template-columns: minmax(0, 1fr); max-width: 560px; } }
 </style>
 
 <link href="https://fonts.googleapis.com/css2?family=Herr+Von+Muellerhoff&amp;family=Great+Vibes&amp;display=swap" rel="stylesheet" />
@@ -1893,7 +1943,7 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
     <ul class="ov-links">
       <li><a href="/">Úvod</a></li>
       <li><a href="/vysledky">Výsledky<small>všetky tipy</small></a></li>
-      <li><a href="/clenstvo">Členstvo<small>Gold · Onyx</small></a></li>
+      <li><a href="/clenstvo">Členstvo<small>Štart · Gold · Onyx</small></a></li>
       <li><a href="/kurz">Kurz<small>Škola stávkovania</small></a></li>
       <li><a href="/o-mne">O mne</a></li>
       <li><a href="/formular">Kontakt<small>napíšte mi</small></a></li>
@@ -1942,8 +1992,8 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
   <header class="page-head" data-pages="clenstvo">
     <div class="wrap">
       <a class="back" href="/">← Úvod</a><div class="eyebrow">Členstvo</div>
-      <h1>Vstúpte do <em>klubu</em></h1>
-      <p>Gold na 50 dní a Onyx na 6 mesiacov. Všetci členovia dostávajú rovnaké tipy, súkromný VIP chat a úvodný hovor 1 na 1, Onyx navyše mentoring 1 na 1 a nižšiu cenu za mesiac.</p>
+      <h1>Vyberte si <em>počet tipov</em></h1>
+      <p>Tri balíčky podľa počtu tipov: Štart 75, Gold 150 a&nbsp;Onyx 300 tipov. Všetci členovia dostávajú rovnaké tipy, súkromný VIP chat a&nbsp;úvodný hovor 1 na 1, Onyx navyše mentoring 1 na 1 a&nbsp;najnižšiu cenu za tip.</p>
     </div>
   </header>
   <header class="page-head" data-pages="formular">
@@ -2034,8 +2084,8 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
       <div class="hm-grid">
         <article class="card hm-card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M8 10h8M8 14h5"/></svg></span><h3>Nič neskrývame</h3><p>Každý tip sa po zápase vyhodnotí a ostane v histórii. Výhry aj prehry, nič sa nemaže.</p></article>
         <article class="card hm-card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><h3>Dáta, nie pocit</h3><p>Model počíta šance zo štatistík oboch tímov, nie podľa mena klubu alebo dojmu z posledného zápasu.</p></article>
-        <article class="card hm-card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3Z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg></span><h3>Garancia</h3><p>Ak celé vaše členstvo skončí v strate, ďalší mesiac máte zadarmo. Platí pre Gold aj Onyx.</p></article>
-        <article class="card hm-card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4V5Z"/><path d="M8 9h8M8 12h5"/></svg></span><h3>Súkromný VIP chat</h3><p>Vo všetkých členstvách. Pýtajte sa, debatujte o zápasoch a na otázky odpovedám osobne.</p></article>
+        <article class="card hm-card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6l-8-3Z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg></span><h3>Garancia</h3><p>Ak váš balíček skončí v&nbsp;strate, ďalších 30 tipov dostanete zadarmo. Platí pre všetky balíčky.</p></article>
+        <article class="card hm-card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4V5Z"/><path d="M8 9h8M8 12h5"/></svg></span><h3>Súkromný VIP chat</h3><p>Vo všetkých balíčkoch. Pýtajte sa, debatujte o zápasoch a na otázky odpovedám osobne.</p></article>
       </div>
     </div>
   </section>
@@ -2043,12 +2093,13 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
   <section class="sec hm-plans" id="clenstva" data-pages="home">
     <div class="wrap">
       <div class="sec-head center">
-        <div><div class="eyebrow">Členstvo</div><h2>Vyberte si <em>dĺžku</em></h2><p class="lead">Rovnaké tipy pre všetkých. Onyx má navyše mentoring a&nbsp;nižšiu cenu.</p></div>
+        <div><div class="eyebrow">Členstvo</div><h2>Vyberte si <em>počet tipov</em></h2><p class="lead">Platíte len za tipy, ktoré naozaj dostanete. Najviac 3 najsilnejšie denne, rovnaké pre všetkých.</p></div>
         <div class="idx" aria-hidden="true">03</div>
       </div>
-      <div class="hm-tiers">
-        <a class="card hm-tier gold" href="/clenstvo#gold"><span class="tn">Gold</span><span class="tl">50 dní</span><b class="num">69&nbsp;€</b><span class="pm">100+ tipov · bez viazanosti</span><span class="go">Vybrať Gold <i aria-hidden="true">→</i></span></a>
-        <a class="card hm-tier plat" href="/clenstvo#onyx"><span class="flag">Najvýhodnejšie</span><span class="tn">Onyx</span><span class="tl">6 mesiacov</span><b class="num">199&nbsp;€</b><span class="pm">300+ zápasov · pri mesačnej cene 49&nbsp;€ ušetríte 95&nbsp;€</span><span class="go">Vybrať Onyx <i aria-hidden="true">→</i></span></a>
+      <div class="hm-tiers three">
+        <a class="card hm-tier silver" href="/clenstvo#start"><span class="tn">Štart</span><span class="tl">75 tipov</span><b class="num">67&nbsp;€</b><span class="pm">0,89&nbsp;€ za tip · bank od 750&nbsp;€ pri vklade 3&nbsp;%</span><span class="go">Vybrať Štart <i aria-hidden="true">→</i></span></a>
+        <a class="card hm-tier gold" href="/clenstvo#gold"><span class="tn">Gold</span><span class="tl">150 tipov</span><b class="num">109&nbsp;€</b><span class="pm">0,73&nbsp;€ za tip · bank od 600&nbsp;€ pri vklade 3&nbsp;%</span><span class="go">Vybrať Gold <i aria-hidden="true">→</i></span></a>
+        <a class="card hm-tier plat" href="/clenstvo#onyx"><span class="flag">Najvýhodnejšie</span><span class="tn">Onyx</span><span class="tl">300 tipov</span><b class="num">179&nbsp;€</b><span class="pm">0,60&nbsp;€ za tip · mentoring 1 na 1 · bank od 500&nbsp;€</span><span class="go">Vybrať Onyx <i aria-hidden="true">→</i></span></a>
       </div>
     </div>
   </section>
@@ -2201,62 +2252,87 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
   <section class="sec" id="clenstvo" data-pages="clenstvo">
     <div class="wrap">
       <div class="sec-head center">
-        <div><div class="eyebrow">Členstvo</div><h2>Vstúpte do <em>klubu</em></h2>
-        <p class="lead" style="margin-inline:auto">Rovnaké tipy pre všetkých. Onyx má navyše mentoring a&nbsp;nižšiu cenu.</p></div>
+        <div><div class="eyebrow">Členstvo</div><h2>Vyberte si <em>počet tipov</em></h2>
+        <p class="lead" style="margin-inline:auto">Platíte len za tipy, ktoré naozaj dostanete. Najviac 3 najsilnejšie tipy denne, niektoré dni žiadny – kvalita pred kvantitou.</p></div>
       </div>
-      <article class="lux glow">
-        <div class="lux-l">
-          <div class="lux-top"><svg class="lux-crest" aria-hidden="true"><use href="#logo"/></svg><div class="lux-brand">TipRadar</div></div>
-          <h3 class="lux-name plat-text" data-tier-name>Onyx</h3>
-          <ul class="lux-list">
-          <li><strong>Denné tipy na Telegrame</strong><span>1&nbsp;–&nbsp;2&nbsp;hodiny pred výkopom, s&nbsp;kurzom a&nbsp;dôvodom</span></li>
-          <li><strong>Súkromný VIP chat</strong><span>odpisujem priamo ja</span></li>
-          <li><strong>Úvodný hovor 1 na 1</strong><span>30 minút: nastavenie banku, vkladu a&nbsp;ako tipy hrať</span></li>
-          <li class="plus" data-min-term="m3"><strong>Mentoring 1 na 1 počas celých 6 mesiacov</strong><span>a&nbsp;prednostné odpovede v&nbsp;chate</span></li>
-        </ul>
-          <a class="lux-guarantee" href="#garancia"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.4 7.5 9.5 4.3-1.1 7.5-4.9 7.5-9.5V6L12 3Z"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></svg><span><strong>Garancia</strong>Ak vaše členstvo (Gold alebo Onyx) skončí v&nbsp;strate, ďalší mesiac máte zadarmo.</span></a>
-        </div>
-        <div class="lux-r">
-      <div class="term-switch" role="tablist" aria-label="Dĺžka členstva">
-        <button type="button" role="tab" data-term="m1" aria-selected="false"><b>Gold</b> 50 dní</button>
-        <button type="button" role="tab" data-term="m3" aria-selected="true"><b>Onyx</b> 6 mesiacov <em>−32&nbsp;%</em></button>
-      </div>
-          <div class="lux-term" data-term-name>členstvo na 6 mesiacov</div>
-          <div class="lux-price"><b class="num" data-price>199 €</b></div>
-          <p class="per-month" data-permonth>300+ zápasov · pri mesačnej cene 49 € ušetríte 95 €</p>
-          <span class="limit-tag" data-limit-tag hidden>len 50 miest</span>
-          <p class="last7" id="last7" hidden></p>
-          <div class="plan-foot">
-          <div class="seats" id="vipSeats" hidden>
-            <div id="vipSeatsText"></div>
-            <div class="seat-grid" id="seatGrid" aria-hidden="true" hidden></div>
+      <div class="pk-grid">
+        <article class="pk-card" id="start" data-term="t75" data-price="67" data-tips="75" data-bank="750">
+          <div class="pk-tn">Štart</div>
+          <div class="pk-tips">75 tipov</div>
+          <div class="pk-len">vydrží asi 4 týždne · platí najviac 3 mesiace</div>
+          <div class="pk-price"><b class="num">67</b><span>€</span></div>
+          <p class="pk-pt">0,89&nbsp;€ za tip</p>
+          <div class="pk-calc">
+            <div class="pk-ttl">Prepočítajte si to</div>
+            <div class="pk-row"><div class="pk-lab">Váš bank <b data-o="bank"></b></div><input type="range" min="200" max="5000" step="50" value="750" data-in="bank" aria-label="Bank v eurách"><div class="pk-ticks"><span>200&nbsp;€</span><span>5&nbsp;000&nbsp;€</span></div></div>
+            <div class="pk-row"><div class="pk-lab">Vklad na jeden tip <b data-o="pct"></b></div><input type="range" min="1" max="5" step="0.5" value="3" data-in="pct" aria-label="Vklad na jeden tip v percentách banku"><div class="pk-ticks"><span>1&nbsp;%</span><span>5&nbsp;%</span></div></div>
+            <div class="pk-out">
+              <div><small>Vklad na tip</small><b data-o="stake"></b></div>
+              <div><small>Návratnosť pri</small><b data-o="roi"></b></div>
+              <div class="pk-verdict" data-o="verdict"></div>
+            </div>
+            <p class="pk-rec">Odporúčaný bank aspoň <b>750&nbsp;€</b> pri vklade <b>3&nbsp;%</b>.</p>
           </div>
-          <a class="btn" id="memberCta" href="https://t.me/TipRadarAiBot?start=seria" target="_blank" rel="noopener">Zapísať sa do poradovníka</a>
-          <p class="pay-note" id="payNote" hidden>Bankovým prevodom cez QR kód · bez poplatkov</p>
-          <p class="small">Bez automatického predlžovania.</p>
-        </div>
-        </div>
-      </article>
-      <div class="payback glow" id="payback">
-        <div class="payback-head">
-          <div class="eyebrow">Kalkulačka</div>
-          <h3>Kedy sa vám členstvo <em>vráti</em></h3>
-          <p>Zadajte svoj bank a koľko percent z neho vsádzate na jeden tip (odporúčame bank aspoň 500 € a vklad 3 %, ideálne 1 000 € a vklad 2 %). Uvidíte, koľko jednotiek zisku treba, aby sa vám cena členstva vrátila.</p>
-        </div>
-        <label class="payback-stake">
-          <span>Váš bank (suma na stávkovanie)</span>
-          <span class="payback-input"><input type="text" inputmode="decimal" id="paybackBank" value="1000" aria-label="Bank v eurách" /><b>€</b></span>
-        </label>
-        <div class="payback-pct">
-          <span>Vklad na jeden tip</span>
-          <div class="payback-chips" role="group" aria-label="Vklad na tip v percentách banku">
-            <button type="button" data-pct="1">1 %</button><button type="button" data-pct="2">2 %</button><button type="button" data-pct="3">3 %</button><button type="button" data-pct="5" title="Pre skúsenejších – najvyšší odporúčaný vklad">5 %</button>
+          <ul class="pk-list">
+            <li>Denné tipy na Telegrame<small>1&nbsp;–&nbsp;2 hodiny pred výkopom, s&nbsp;kurzom a&nbsp;dôvodom</small></li>
+            <li>Súkromný VIP chat<small>odpisujem priamo ja</small></li>
+            <li>Úvodný hovor 1 na 1<small>30 minút: nastavenie banku, vkladu a&nbsp;ako tipy hrať</small></li>
+          </ul>
+          <a class="pk-btn" data-cta href="https://t.me/TipRadarAiBot?start=stat" target="_blank" rel="noopener">Vybrať Štart</a>
+        </article>
+        <article class="pk-card" id="gold" data-term="t150" data-price="109" data-tips="150" data-bank="600">
+          <div class="pk-tn">Gold</div>
+          <div class="pk-tips">150 tipov</div>
+          <div class="pk-len">vydrží asi 2 mesiace · platí najviac 6 mesiacov</div>
+          <div class="pk-price"><b class="num">109</b><span>€</span></div>
+          <p class="pk-pt">0,73&nbsp;€ za tip · <b>ušetríte 25&nbsp;€</b></p>
+          <div class="pk-calc">
+            <div class="pk-ttl">Prepočítajte si to</div>
+            <div class="pk-row"><div class="pk-lab">Váš bank <b data-o="bank"></b></div><input type="range" min="200" max="5000" step="50" value="600" data-in="bank" aria-label="Bank v eurách"><div class="pk-ticks"><span>200&nbsp;€</span><span>5&nbsp;000&nbsp;€</span></div></div>
+            <div class="pk-row"><div class="pk-lab">Vklad na jeden tip <b data-o="pct"></b></div><input type="range" min="1" max="5" step="0.5" value="3" data-in="pct" aria-label="Vklad na jeden tip v percentách banku"><div class="pk-ticks"><span>1&nbsp;%</span><span>5&nbsp;%</span></div></div>
+            <div class="pk-out">
+              <div><small>Vklad na tip</small><b data-o="stake"></b></div>
+              <div><small>Návratnosť pri</small><b data-o="roi"></b></div>
+              <div class="pk-verdict" data-o="verdict"></div>
+            </div>
+            <p class="pk-rec">Odporúčaný bank aspoň <b>600&nbsp;€</b> pri vklade <b>3&nbsp;%</b>.</p>
           </div>
-        </div>
-        <p class="payback-stake-out" id="paybackStakeOut"></p>
-        <div class="payback-rows" id="paybackRows"></div>
-        <p class="payback-note">Jednotka = suma, ktorú vsádzate na jeden tip (bank × percento). Výpočet ukazuje len návratnosť ceny, výhru nezaručuje.</p>
+          <ul class="pk-list">
+            <li>Všetko zo Štartu<small>denné tipy, VIP chat, úvodný hovor 1 na 1</small></li>
+            <li>Dvakrát viac tipov<small>a&nbsp;nižšia cena za tip</small></li>
+          </ul>
+          <a class="pk-btn" data-cta href="https://t.me/TipRadarAiBot?start=gold" target="_blank" rel="noopener">Vybrať Gold</a>
+        </article>
+        <article class="pk-card feat" id="onyx" data-term="t300" data-price="179" data-tips="300" data-bank="500">
+          <span class="pk-flag">Najvýhodnejšie</span>
+          <div class="pk-tn">Onyx</div>
+          <div class="pk-tips">300 tipov</div>
+          <div class="pk-len">vydrží asi 4 mesiace · platí najviac 12 mesiacov</div>
+          <div class="pk-price"><b class="num">179</b><span>€</span></div>
+          <p class="pk-pt">0,60&nbsp;€ za tip · <b>ušetríte 89&nbsp;€</b></p>
+          <div class="pk-calc">
+            <div class="pk-ttl">Prepočítajte si to</div>
+            <div class="pk-row"><div class="pk-lab">Váš bank <b data-o="bank"></b></div><input type="range" min="200" max="5000" step="50" value="500" data-in="bank" aria-label="Bank v eurách"><div class="pk-ticks"><span>200&nbsp;€</span><span>5&nbsp;000&nbsp;€</span></div></div>
+            <div class="pk-row"><div class="pk-lab">Vklad na jeden tip <b data-o="pct"></b></div><input type="range" min="1" max="5" step="0.5" value="3" data-in="pct" aria-label="Vklad na jeden tip v percentách banku"><div class="pk-ticks"><span>1&nbsp;%</span><span>5&nbsp;%</span></div></div>
+            <div class="pk-out">
+              <div><small>Vklad na tip</small><b data-o="stake"></b></div>
+              <div><small>Návratnosť pri</small><b data-o="roi"></b></div>
+              <div class="pk-verdict" data-o="verdict"></div>
+            </div>
+            <p class="pk-rec">Odporúčaný bank aspoň <b>500&nbsp;€</b> pri vklade <b>3&nbsp;%</b>.</p>
+          </div>
+          <ul class="pk-list">
+            <li>Všetko z&nbsp;Goldu</li>
+            <li class="plus">Mentoring 1 na 1<small>počas celého balíčka</small></li>
+            <li class="plus">Prednostné odpovede v&nbsp;chate</li>
+          </ul>
+          <a class="pk-btn" data-cta href="https://t.me/TipRadarAiBot?start=onyx" target="_blank" rel="noopener">Vybrať Onyx</a>
+        </article>
       </div>
+      <a class="pk-guar" href="#garancia"><span class="pk-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.4 7.5 9.5 4.3-1.1 7.5-4.9 7.5-9.5V6L12 3Z"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></svg></span><span><strong>Garancia</strong>Ak váš balíček skončí v&nbsp;strate, ďalších 30 tipov dostanete zadarmo.</span></a>
+      <p class="last7" id="last7" hidden></p>
+      <p class="pay-note" id="payNote" hidden>Platba bankovým prevodom cez QR kód · bez poplatkov</p>
+      <p class="pk-foot">Návratnosť = zisk na tip, pri ktorom sa vám cena balíčka vráti. Ideálne je bank 1&nbsp;000&nbsp;€ a&nbsp;vklad 2&nbsp;–&nbsp;3&nbsp;%. Vklad nikdy nad 5&nbsp;% banku a&nbsp;vždy z&nbsp;aktuálneho banku. Tipy sa rátajú odo dňa nákupu, balíček sa sám nepredlžuje. Stávkovanie je pre osoby staršie ako 18 rokov a&nbsp;nesie riziko straty.</p>
     </div>
   </section>
 
@@ -2317,13 +2393,14 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
       <div><div class="eyebrow">Otázky</div><h2>Čo sa ľudia <em>pýtajú</em></h2></div>
       <div class="faq">
         <details><summary>Kedy a kam tipy prídu?</summary><p>Do súkromného kanála na Telegrame, 1 – 2 hodiny pred výkopom zápasu. Večer, keď sa zápasy dohrajú, príde vyhodnotenie dňa.</p></details>
-        <details><summary>Koľko tipov denne dostanem?</summary><p>Podľa dennej ponuky – posielame tie s najvyššou dôverou, ktoré prejdú všetkými pravidlami. Niekedy jeden, inokedy viac. Keď neprejde žiadny, nepošleme nič a dáme vám vedieť.</p></details>
+        <details><summary>Koľko tipov denne dostanem?</summary><p>Najviac 3 – tie s najvyššou dôverou, ktoré prejdú všetkými pravidlami. Niektoré dni žiadny: keď neprejde nič, nepošleme nič a dáme vám vedieť. Kvalita pred kvantitou.</p></details>
         <details><summary>Čo je zisk v jednotkách a ROI?</summary><p>Jednotka je rovnaká suma na každý tip, napríklad 10 €. Zisk +5 jednotiek pri 10 € na tip je +50 €. ROI hovorí, koľko percent z vložených peňazí sa vrátilo navyše.</p></details>
-        <details><summary>Zaručujete výhru?</summary><p>Nie. Žiadny model nevie zaručiť výsledok zápasu. TipRadar vyberá stávky, pri ktorých je šanca podľa štatistík vyššia, než naznačuje kurz. Rozhoduje dlhodobý výsledok, preto zverejňujeme aj prehraté tipy. Ak však vaše členstvo skončí v strate, ďalší mesiac máte zadarmo (pozrite garanciu nižšie).</p></details>
-        <details id="garancia"><summary>Ako funguje garancia?</summary><p>Ak vaše členstvo (Gold alebo Onyx) skončí v strate, ďalší mesiac máte zadarmo – členstvo vám predĺžime o mesiac a dáme vám vedieť na Telegrame. Počíta sa za celé obdobie, ktoré ste zaplatili, od prvého po posledný deň: zo všetkých zverejnených tipov s výsledkom v tom čase, pri rovnakom vklade na každý tip (1 jednotka). Ak je súčet záporný, členstvo skončilo v strate. Na samotný mesiac zadarmo sa garancia už nevzťahuje, na ďalšie zaplatené členstvo áno. Letná prestávka (jún – júl) sa nemení: členstvo sa pozastaví a o tento čas predĺži.</p></details>
+        <details><summary>Zaručujete výhru?</summary><p>Nie. Žiadny model nevie zaručiť výsledok zápasu. TipRadar vyberá stávky, pri ktorých je šanca podľa štatistík vyššia, než naznačuje kurz. Rozhoduje dlhodobý výsledok, preto zverejňujeme aj prehraté tipy. Ak však váš balíček skončí v strate, ďalších 30 tipov dostanete zadarmo (pozrite garanciu nižšie).</p></details>
+        <details id="garancia"><summary>Ako funguje garancia?</summary><p>Ak váš balíček (Štart, Gold alebo Onyx) skončí v&nbsp;strate, ďalších 30 tipov dostanete zadarmo – prídu vám do toho istého kanála a&nbsp;dáme vám vedieť na Telegrame. Počíta sa zo všetkých tipov vášho balíčka s&nbsp;výsledkom, pri rovnakom vklade na každý tip (1 jednotka). Ak je súčet záporný, balíček skončil v&nbsp;strate. Na samotných 30 tipov zadarmo sa garancia už nevzťahuje, na ďalší zaplatený balíček áno.</p></details>
         <details><summary>Ako overujete, že model funguje?</summary><p>Spätným testom na odohraných zápasoch a mesačnou kontrolou, či tipy s dôverou 70&nbsp;% naozaj vychádzajú zhruba v 70&nbsp;% prípadov. Tipy vyradené pre veľký rozpor s kurzami si zapisujeme a porovnávame, kto mal pravdu.</p></details>
-        <details><summary>Aké dlhé je členstvo?</summary><p>Gold na 50 dní a Onyx na 6 mesiacov, vždy odo dňa, keď sa pridáte. Dlhšie členstvo vychádza lacnejšie na mesiac. Cez letnú prestávku (jún – júl), keď sa takmer nehrá, sa členstvo pozastaví a 1. augusta pokračuje, takže o žiadne zápasy neprídete. Žiadne sa samo nepredlžuje. Pred koncom vám pripomenieme, že končí.</p></details>
-        <details><summary>Ako členstvo zruším?</summary><p>Stačí napísať. Členstvo platí do konca zaplateného obdobia a samo sa nepredlžuje.</p></details>
+        <details><summary>Ako fungujú balíčky tipov?</summary><p>Platíte za počet tipov: Štart 75, Gold 150, Onyx 300. Tipy sa vám rátajú odo dňa nákupu, každý poslaný tip sa odpočíta (zrušený zápas sa neráta). Balíček skončí, keď dostanete posledný tip, najneskôr však po 3 (Štart), 6 (Gold) alebo 12 mesiacoch (Onyx). Cez letnú prestávku (jún – júl) sa platnosť nepočíta. Keď vám budú tipy dochádzať, dáme vám vedieť. Žiadny balíček sa sám nepredlžuje.</p></details>
+        <details><summary>Aký bank a vklad odporúčate?</summary><p>Ideálne bank 1&nbsp;000&nbsp;€ a&nbsp;vklad 2&nbsp;–&nbsp;3&nbsp;% na tip. Pri vklade 3&nbsp;% aspoň 750&nbsp;€ pri Štarte, 600&nbsp;€ pri Golde a&nbsp;500&nbsp;€ pri Onyxe – vtedy sa cena balíčka vráti pri bežnom zisku modelu. Vklad nikdy nad 5&nbsp;% banku a&nbsp;vždy z&nbsp;aktuálneho banku. Pri každom balíčku si to môžete prepočítať posuvníkmi.</p></details>
+        <details><summary>Musím balíček rušiť?</summary><p>Nie. Balíček sa sám nepredlžuje – skončí po poslednom tipe alebo po uplynutí platnosti. Ak chcete pokračovať, jednoducho si kúpite ďalší.</p></details>
       </div>
     </div>
   </section>
@@ -2361,8 +2438,8 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
     <div class="wrap">
       <div class="eyebrow">Začnite ešte dnes</div>
       <h2>Tipujte s <em>rozumom</em>, nie s pocitom.</h2>
-      <p>Pridajte sa do bezplatného kanála na Telegrame alebo si vyberte členstvo Gold či Onyx. Na otázky odpovedám osobne.</p>
-      <div class="actions"><a class="btn" href="/clenstvo">Pozrieť členstvo <span class="arr" aria-hidden="true">→</span></a><a class="btn btn-ghost" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener">Telegram komunita</a></div>
+      <p>Pridajte sa do bezplatného kanála na Telegrame alebo si vyberte balíček tipov Štart, Gold či Onyx. Na otázky odpovedám osobne.</p>
+      <div class="actions"><a class="btn" href="/clenstvo">Pozrieť balíčky <span class="arr" aria-hidden="true">→</span></a><a class="btn btn-ghost" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener">Telegram komunita</a></div>
     </div>
   </section>
   <section class="finale" data-pages="metoda vysledky otazky formular o-mne">
@@ -2778,98 +2855,50 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
   });
 
 
-  // ---------- kalkulačka návratnosti členstva ----------
+  // ---------- Balíčky tipov (od 27. 10. 2026): Štart 75 / Gold 150 / Onyx 300 tipov, posuvníky banku a vkladu ----------
   (function () {
-    const PLANS = [
-      { term: "m1", name: "Gold · 50 dní", price: 69, months: 50 / 30.44 },
-      { term: "m3", name: "Onyx · 6 mesiacov", price: 199, months: 6 },
-    ];
-    const bankEl = document.getElementById("paybackBank");
-    const rows = document.getElementById("paybackRows");
-    const stakeOut = document.getElementById("paybackStakeOut");
-    if (!bankEl || !rows) return;
-    let pct = 2;
     const f = (n, d) => n.toLocaleString("sk-SK", { minimumFractionDigits: d, maximumFractionDigits: d });
-    const current = () => (document.querySelector('.term-switch [aria-selected="true"]') || {}).dataset?.term || "m3";
-    function draw() {
-      const bank = parseFloat(String(bankEl.value).replace(/\s/g, "").replace(",", ".").replace(/[^0-9.]/g, ""));
-      document.querySelectorAll(".payback-chips [data-pct]").forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.pct) === pct)));
-      if (!(bank > 0)) { stakeOut.textContent = ""; rows.innerHTML = '<p class="payback-note">Zadajte bank, napríklad 1 000 €.</p>'; return; }
-      const stake = (bank * pct) / 100;
-      stakeOut.textContent = `Vklad na tip: ${f(stake, stake % 1 ? 2 : 0)} € (= 1 jednotka)`;
-      const cur = current();
-      rows.innerHTML = PLANS.map((p) => {
-        const units = p.price / stake;
-        const growth = (p.price / bank) * 100;
-        const m = (p.months > 1 ? `približne +${f(units / p.months, 1)} j za mesiac · ` : "") + `bank musí narásť o ${f(growth, 1)} % (${f(p.price, 0)} €)`;
-        return `<div class="payback-row${p.term === cur ? " on" : ""}"><div class="t">${p.name}<small>${p.price} €</small></div><div class="u num">+${f(units, 1)} j</div><div class="m">${m}</div></div>`;
-      }).join("");
-    }
-    bankEl.addEventListener("input", draw);
-    document.querySelectorAll(".payback-chips [data-pct]").forEach((b) => b.addEventListener("click", () => { pct = Number(b.dataset.pct); draw(); }));
-    document.querySelectorAll(".term-switch [data-term]").forEach((b) => b.addEventListener("click", () => setTimeout(draw, 0)));
-    draw();
-  })();
-  // ---------- Členstvo (od 26. 10. 2026): Gold (50 dní), Onyx (6 mesiacov); kódy m1 / m3 ostávajú ----------
-  (function () {
-    const TERMS = {
-      m1: { tier: "Gold", cls: "gold-text", price: 69, unit: "za 50 dní", name: "členstvo na 50 dní", note: "100+ tipov · bez viazanosti", start: "start", order: 1 },
-      m3: { tier: "Onyx", cls: "plat-text", price: 199, unit: "za 6 mesiacov", name: "členstvo na 6 mesiacov", note: "300+ zápasov · pri mesačnej cene 49 € ušetríte 95 €", start: "seria", order: 2 },
-    };
-    const $$ = (s) => document.querySelectorAll(s);
-    function apply(term) {
-      if (!TERMS[term]) term = "m3";
-      const t = TERMS[term];
-      $$(".term-switch [data-term]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.term === term)));
-      $$("[data-price]").forEach((el) => (el.textContent = t.price + " €"));
-      $$("[data-price-unit]").forEach((el) => (el.textContent = t.unit));
-      $$("[data-term-name]").forEach((el) => (el.textContent = t.name));
-      $$("[data-tier-name]").forEach((el) => { el.textContent = t.tier; el.classList.remove("silver-text", "gold-text", "plat-text"); el.classList.add(t.cls); });
-      $$("[data-permonth]").forEach((el) => (el.innerHTML = t.note || "&nbsp;"));
-      $$("[data-only-season]").forEach((el) => (el.hidden = term !== "season"));
-      $$("[data-min-term]").forEach((li) => (li.hidden = TERMS[li.dataset.minTerm].order > t.order));
-      const cta = document.getElementById("memberCta");
+    const BOT = { t75: "stat", t150: "gold", t300: "onyx" };
+    const NAME = { t75: "Štart", t150: "Gold", t300: "Onyx" };
+    const cards = document.querySelectorAll("#clenstvo .pk-card");
+    cards.forEach((c) => {
+      const price = +c.dataset.price, tips = +c.dataset.tips;
+      const bI = c.querySelector('[data-in="bank"]'), pI = c.querySelector('[data-in="pct"]');
+      const o = (k) => c.querySelector('[data-o="' + k + '"]');
+      const fill = (el) => el.style.setProperty("--fill", ((el.value - el.min) / (el.max - el.min)) * 100 + "%");
+      function draw() {
+        const bank = +bI.value, pct = +pI.value, stake = (bank * pct) / 100, roi = (price / tips / stake) * 100;
+        fill(bI); fill(pI);
+        o("bank").textContent = f(bank, 0) + " €";
+        o("pct").textContent = f(pct, pct % 1 ? 1 : 0) + " %";
+        o("stake").textContent = f(stake, stake % 1 ? 2 : 0) + " €";
+        o("roi").textContent = f(roi, 1) + " % na tip";
+        const v = o("verdict");
+        v.className = "pk-verdict " + (roi <= 4.2 ? "ok" : roi <= 6 ? "mid" : "bad");
+        v.textContent = roi <= 4.2 ? "Reálne – balíček sa vám vráti pri bežnom zisku modelu." : roi <= 6 ? "Náročnejšie – zvážte väčší bank alebo väčší balíček." : "Príliš malý vklad – balíček sa ťažko vráti.";
+      }
+      bI.addEventListener("input", draw); pI.addEventListener("input", draw); draw();
+    });
+    // Tlačidlá podľa stavu predaja: poradovník (bot) alebo platba (QR kód).
+    function applySales() {
       const S = window.__sales || { open: false };
-      const seat = (window.__seats || {})[term];
-      // Gold aj Onyx sú bez obmedzenia miest (total = null)
-      const limited = !!(seat && seat.total != null);
-      $$("[data-limit-tag]").forEach((el) => { el.hidden = !seat; if (seat) el.textContent = limited ? `len ${seat.total} miest` : "bez obmedzenia miest"; });
-      if (cta) {
-        const full = !!(S.open && limited && seat.left <= 0);
-        const pay = S.pay && !full;
-        cta.href = pay ? "/zaplatit?term=" + term : "https://t.me/TipRadarAiBot?start=" + (full ? (term === "m3" ? "seria_waitlist" : "start_waitlist") : t.start);
-        if (pay) cta.removeAttribute("target"); else cta.target = "_blank";
-        const note = document.getElementById("payNote");
-        if (note) note.hidden = !pay;
-        cta.textContent = pay ? "Zaplatiť " + t.price + " €" : !S.open ? "Zapísať sa do poradovníka" : full ? "Zapísať sa ako náhradník" : term === "m3" ? "Pridať sa na 6 mesiacov" : "Pridať sa na 50 dní";
-      }
-      const seats = document.getElementById("vipSeats");
-      if (seats) {
-        seats.hidden = !seat;
-        const grid = $("seatGrid");
-        grid.hidden = !limited;
-        if (limited) {
-          const left = Math.max(0, seat.left);
-          $("vipSeatsText").innerHTML = left > 0
-            ? `Zostáva <b class="num">${left} z ${seat.total}</b> miest${S.open ? "" : " · rezervácie z poradovníka sú započítané"}`
-            : `Všetkých <b class="num">${seat.total}</b> miest je obsadených`;
-          grid.style.setProperty("--cols", seat.total <= 30 ? 15 : 20);
-          grid.innerHTML = Array.from({ length: seat.total }, () => "<i></i>").join("");
-          const cells = grid.querySelectorAll("i");
-          requestAnimationFrame(() => requestAnimationFrame(() => cells.forEach((c, k) => {
-            if (k < seat.occupied) { c.style.transitionDelay = k * 30 + "ms"; c.classList.add("on"); }
-          })));
-        } else if (seat) {
-          $("vipSeatsText").innerHTML = `<div class="open-note">${S.open ? "Pridať sa môžete kedykoľvek, bez čakania na miesto." : "Bez obmedzenia počtu miest, miesto vám nikto nezoberie."}</div>`;
-        }
-      }
-      document.documentElement.dataset.term = term;
+      cards.forEach((c) => {
+        const term = c.dataset.term, a = c.querySelector("[data-cta]");
+        if (!a) return;
+        const pay = !!S.pay;
+        a.href = pay ? "/zaplatit?term=" + term : "https://t.me/TipRadarAiBot?start=" + BOT[term];
+        if (pay) a.removeAttribute("target"); else a.target = "_blank";
+        a.textContent = pay ? "Zaplatiť " + c.dataset.price + " €" : S.open ? "Vybrať " + NAME[term] : "Zapísať sa do poradovníka";
+      });
+      const note = document.getElementById("payNote");
+      if (note) note.hidden = !(window.__sales && window.__sales.pay);
     }
-    $$(".term-switch [data-term]").forEach((b) => b.addEventListener("click", () => apply(b.dataset.term)));
-    window.__applyTerm = apply;
-    // odkaz z úvodu /clenstvo#gold, #onyx rovno vyberie dĺžku (staré #silver, #platinum tiež fungujú)
-    apply({ silver: "m1", gold: "m1", platinum: "m3", onyx: "m3" }[location.hash.slice(1)] || "m3");
-    // Odkaz „Garancia“ na karte rovno otvorí odpoveď v otázkach.
+    window.__applySales = applySales;
+    applySales();
+    // Odkaz z úvodu /clenstvo#start, #gold, #onyx (staré #platinum) zvýrazní balíček.
+    const hash = { start: "start", stat: "start", gold: "gold", silver: "gold", onyx: "onyx", platinum: "onyx" }[location.hash.slice(1)];
+    if (hash) { const el = document.getElementById(hash); if (el) setTimeout(() => el.scrollIntoView({ block: "center" }), 60); }
+    // Odkaz „Garancia“ rovno otvorí odpoveď v otázkach.
     const openGuarantee = () => { const d = document.getElementById("garancia"); if (d) d.open = true; };
     document.querySelectorAll('a[href="#garancia"]').forEach((a) => a.addEventListener("click", openGuarantee));
     if (location.hash === "#garancia") openGuarantee();
@@ -2884,10 +2913,8 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
       if (typeof d.freeChannelUrl === "string" && /^https:\/\/t\.me\//.test(d.freeChannelUrl)) {
         document.querySelectorAll("[data-free]").forEach((a) => { a.href = d.freeChannelUrl; });
       }
-      // Miesta podľa dĺžky členstva
-      if (d.terms && d.terms.m1 && d.terms.m3) window.__seats = { m1: d.terms.m1, m3: d.terms.m3 };
       window.__sales = { open: !!d.salesOpen, pay: d.salesOpen && d.payOpen === true };
-      window.__applyTerm && window.__applyTerm(document.documentElement.dataset.term || "m3");
+      window.__applySales && window.__applySales();
     })
     .catch(() => {});
 
@@ -3162,16 +3189,16 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
       document.getElementById("calcN").textContent = data.length;
       document.getElementById("calcW").textContent = won;
       document.getElementById("calcP").textContent = (diff >= 0 ? "+" : "−") + eur(Math.abs(diff));
-      // zisk po zaplatení členstva: mesačná cena (Gold aj Onyx prepočítané na mesiac) × každý začatý mesiac od prvého tipu
+      // zisk po zaplatení balíčka: cena za tip (Štart, Gold, Onyx) × počet tipov v grafe
       var d0 = new Date((data[0].day || "") + "T00:00:00"), mem = document.getElementById("calcMem");
       if (!isNaN(d0)) {
-        var months = Math.max(1, Math.ceil((Date.now() - d0) / 864e5 / 30.44));
-        var plans = [["Gold", 69, 50 / 30.44], ["Onyx", 199, 6]];
-        document.getElementById("calcMemHead").textContent = "Po zaplatení členstva za " + months + " " + (months === 1 ? "mesiac" : months < 5 ? "mesiace" : "mesiacov");
+        var n = data.length;
+        var plans = [["Štart", 67, 75], ["Gold", 109, 150], ["Onyx", 179, 300]];
+        document.getElementById("calcMemHead").textContent = "Po zaplatení " + n + " " + (n === 1 ? "tipu" : "tipov") + " v balíčku";
         document.getElementById("calcMemRows").innerHTML = plans.map(function (p) {
-          var pm = p[1] / p[2], cost = pm * months, net = diff - cost;
-          var pmTxt = pm.toLocaleString("sk-SK", { minimumFractionDigits: pm % 1 ? 2 : 0, maximumFractionDigits: 2 }) + " €";
-          return '<div class="mem-row"><span>' + p[0] + '<i>' + pmTxt + " mesačne" + (months > 1 ? " × " + months : "") + '</i></span><b class="num' + (net < 0 ? " neg" : "") + '">' + (net >= 0 ? "+" : "−") + eur(Math.abs(net)) + '</b></div>';
+          var pt = p[1] / p[2], cost = pt * n, net = diff - cost;
+          var ptTxt = pt.toLocaleString("sk-SK", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+          return '<div class="mem-row"><span>' + p[0] + '<i>' + ptTxt + " za tip × " + n + '</i></span><b class="num' + (net < 0 ? " neg" : "") + '">' + (net >= 0 ? "+" : "−") + eur(Math.abs(net)) + '</b></div>';
         }).join("");
         mem.hidden = false;
       }
