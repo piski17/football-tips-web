@@ -981,7 +981,7 @@ h2 { font-size: clamp(28px, 3.1vw, 44px) !important; }
 .cal-tip .ct-row { display: flex; gap: 9px; padding: 6px 0; }
 .cal-tip .ct-row + .ct-row { border-top: 1px dashed var(--line); }
 .cal-tip .ct-row i { flex: none; width: 18px; height: 18px; margin-top: 1px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 11px; font-weight: 800; color: #17120D; background: var(--win); }
-.cal-tip .ct-row.lost i { background: var(--loss); }
+.cal-tip .ct-row.lost i { background: var(--loss); } .cal-tip .ct-row.void i { background: var(--faint); }
 .cal-tip .ct-row b { font-weight: 700; }
 .cal-tip .ct-row small { margin-left: 4px; color: var(--gold-hi); font-family: var(--display); font-size: 13px; }
 .cal-tip .ct-row span { display: block; color: var(--muted); font-size: 12.5px; }
@@ -2669,9 +2669,9 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
   }
   // kalendár tipov: mesiace vedľa seba (na mobile jeden), deň s tipmi zafarbený podľa zisku
   function drawCalendar(list) {
-    const ds = (list || []).filter((d) => d.total > 0);
+    const all = (list || []).filter((d) => (d.tips || []).length > 0 || d.total > 0), ds = all.filter((d) => d.total > 0);
     if (ds.length < 3 || !$("kalendar")) return;
-    const map = new Map(ds.map((d) => [d.day, d]));
+    const map = new Map(all.map((d) => [d.day, d]));
     const tKey = new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Bratislava" });
     const maxAbs = Math.max(1, ...ds.map((d) => Math.abs(d.profit)));
     const lvl = (p) => { const r = Math.abs(p) / maxAbs; return r > 0.6 ? 3 : r > 0.25 ? 2 : 1; };
@@ -2686,7 +2686,7 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
       `<div class="cal-stat"><small>Najlepší deň</small><b class="pos">${signed(best.profit, 1)} j.</b><span>${dName(best.day)} · ${best.won} z ${best.total} vyšlo</span></div>` +
       `<div class="cal-stat"><small>Najdlhšia séria</small><b>${streak} ${streak === 1 ? "deň" : streak < 5 ? "dni" : "dní"}</b><span>v pluse</span></div>`;
     // mesiace
-    const firstM = ds[0].day.slice(0, 7), lastM = tKey.slice(0, 7);
+    const firstM = all[0].day.slice(0, 7), lastM = tKey.slice(0, 7);
     const mAdd = (m, n) => { const [y, mo] = m.split("-").map(Number); const d = new Date(Date.UTC(y, mo - 1 + n, 1)); return d.toISOString().slice(0, 7); };
     const per = () => (window.innerWidth < 760 ? 1 : 3);
     let end = lastM;
@@ -2703,7 +2703,7 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
         for (let d = 1; d <= days; d++) {
           const k = `${m}-${String(d).padStart(2, "0")}`, x = map.get(k);
           const c = x ? (x.profit > 0 ? "w" + lvl(x.profit) : x.profit < 0 ? "l" + lvl(x.profit) : "z") : "";
-          cells += `<i class="${c}${k === tKey ? " t" : ""}"${x ? ` data-d="${k}"` : ""}>${d}${x ? `<u>${"<s></s>".repeat(Math.min(x.total, 4))}</u>` : ""}</i>`;
+          cells += `<i class="${c}${k === tKey ? " t" : ""}"${x ? ` data-d="${k}"` : ""}>${d}${x ? `<u>${"<s></s>".repeat(Math.min((x.tips || []).length || x.total, 4))}</u>` : ""}</i>`;
         }
         return `<div class="cal-m"><div class="cal-mh"><h4>${MONTHS[mo - 1]} ${y}</h4>${tot ? `<b class="${cls(pr)}">${signed(pr, 1)} j.</b>` : ""}</div>` +
           `<div class="cal-ms">${tot ? `${inM.length} ${inM.length === 1 ? "deň" : inM.length < 5 ? "dni" : "dní"} s tipmi · ${won} z ${tot} ${tipsWord(tot)} vyšlo` : "bez tipov"}</div>` +
@@ -2725,7 +2725,7 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
       const el = e.target.closest("[data-d]"); if (!el) { tip.hidden = true; return; }
       const d = map.get(el.dataset.d), r = el.getBoundingClientRect(), b = box.getBoundingClientRect();
       tip.innerHTML = `<div class="ct-head"><span>${dName(d.day)} · ${d.won} z ${d.total} vyšlo</span><b class="${cls(d.profit)}">${signed(d.profit, 1)} j.</b></div>` +
-        (d.tips || []).map((t) => `<div class="ct-row ${t.status}"><i>${t.status === "won" ? "✓" : "✕"}</i><div><b>${esc(t.match)}</b>${t.score ? ` <small>${esc(t.score)}</small>` : ""}<span>${esc(t.bet)}${t.odds ? ` · kurz ${fmt(t.odds, 2)}` : ""}</span></div></div>`).join("");
+        (d.tips || []).map((t) => `<div class="ct-row ${t.status}"><i>${t.status === "won" ? "✓" : t.status === "void" ? "↺" : "✕"}</i><div><b>${esc(t.match)}</b>${t.score ? ` <small>${esc(t.score)}</small>` : ""}<span>${esc(t.bet)}${t.odds ? ` · kurz ${fmt(t.odds, 2)}` : ""}${t.status === "void" ? " · vrátené" : ""}</span></div></div>`).join("");
       tip.hidden = false;
       const half = tip.offsetWidth / 2, x = r.left - b.left + r.width / 2;
       tip.style.left = `${Math.max(half + 8, Math.min(b.width - half - 8, x))}px`; tip.style.top = `${r.top - b.top}px`;

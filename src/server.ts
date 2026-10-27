@@ -1197,7 +1197,7 @@ app.get("/api/public/track-record", async (_req, res) => {
     };
     // Kalendár tipov (stránka Výsledky, 27. 10. 2026 namiesto kalkulačky balíčka): každý deň zvlášť.
     const dayGroups = new Map<string, SavedTip[]>();
-    for (const t of resolvedAll) {
+    for (const t of all.filter(settled)) { // aj vrátené (void), nech sú v kalendári všetky tipy z Výsledkov
       const day = tipDayKey(t);
       if (!day) continue;
       if (!dayGroups.has(day)) dayGroups.set(day, []);
