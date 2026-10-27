@@ -1958,6 +1958,29 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
 #clenstvo .lux-r .pk-calc { margin-top: 18px; }
 .hm-tiers.three { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 1100px; }
 @media (max-width: 1100px) { .hm-tiers.three { grid-template-columns: minmax(0, 1fr); max-width: 560px; } }
+
+/* 27. 10. 2026: pravá strana balíčka – cena so štítkami, prehľadnejšia kalkulačka */
+#clenstvo .lux-r .per-month { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+#clenstvo .lux-r .per-month span { padding: 7px 13px; border-radius: 999px; border: 1px solid var(--line-2); font-size: 14px; font-weight: 600; color: var(--gold-hi); background: rgba(217,192,138,.07); }
+#clenstvo .lux-r .per-month span.save { border-color: rgba(127,191,154,.4); color: var(--win); background: rgba(127,191,154,.1); }
+#clenstvo .lux-r .pk-calc { margin-top: 26px; padding: 20px 20px 18px; border-radius: 20px; background: linear-gradient(180deg, rgba(0,0,0,.24), rgba(0,0,0,.12)); }
+#clenstvo .lux-r .pk-ttl { display: flex; align-items: center; gap: 9px; }
+#clenstvo .lux-r .pk-ttl svg { width: 18px; height: 18px; fill: none; stroke: var(--gold); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+#clenstvo .lux-r .pk-row { margin-top: 16px; }
+#clenstvo .lux-r .pk-lab { font-size: 14px; }
+#clenstvo .lux-r .pk-out { display: block; margin-top: 18px; padding-top: 0; border-top: 0; }
+#clenstvo .pk-res { padding: 16px 18px; border-radius: 16px; border: 1px solid rgba(217,192,138,.4); background: radial-gradient(120% 140% at 0% 0%, rgba(217,192,138,.18), rgba(217,192,138,.03) 70%); }
+#clenstvo .pk-res small { display: block; font: 700 11px/1.3 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+#clenstvo .pk-res b { display: block; margin-top: 8px; font: 800 44px/1 "Barlow Condensed", "Arial Narrow", sans-serif; color: var(--gold-hi); letter-spacing: -0.01em; }
+#clenstvo .pk-res b span { font: 600 18px/1 var(--sans); letter-spacing: 0; color: var(--muted); margin-left: 4px; }
+#clenstvo .pk-mini { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+#clenstvo .pk-mini > div { padding: 11px 12px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255,255,255,.02); }
+#clenstvo .pk-mini small { display: block; font: 600 10px/1.2 var(--sans); letter-spacing: .05em; text-transform: uppercase; color: var(--faint); }
+#clenstvo .pk-mini b { display: block; margin-top: 5px; font: 700 22px/1 "Barlow Condensed", "Arial Narrow", sans-serif; color: var(--text); }
+#clenstvo .lux-r .pk-sub { margin: 12px 0 0; font-size: 12.5px; line-height: 1.45; color: var(--faint); }
+#clenstvo .lux-r .pk-verdict { display: flex; gap: 9px; align-items: flex-start; margin-top: 12px; padding: 11px 13px; border-radius: 12px; font-size: 13.5px; }
+#clenstvo .lux-r .pk-verdict::before { content: ""; flex: none; width: 8px; height: 8px; margin-top: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 22%, transparent); }
+@media (max-width: 400px) { #clenstvo .pk-mini b { font-size: 19px; } #clenstvo .pk-res b { font-size: 38px; } }
 </style>
 
 <link href="https://fonts.googleapis.com/css2?family=Herr+Von+Muellerhoff&amp;family=Great+Vibes&amp;display=swap" rel="stylesheet" />
@@ -2324,14 +2347,18 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
           </div>
           <div class="lux-term" data-term-name>balíček 500 tipov</div>
           <div class="lux-price"><b class="num" data-price>299 €</b></div>
-          <p class="per-month" data-permonth>0,60 € za tip · ušetríte 146 €</p>
+          <p class="per-month" data-permonth><span>0,60 € za tip</span><span class="save">ušetríte 146 €</span></p>
           <div class="pk-calc">
-            <div class="pk-ttl">Prepočítajte si to</div>
+            <div class="pk-ttl"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M8.5 7.5h7M8.5 11.5h1M12 11.5h1M15.5 11.5h0M8.5 15h1M12 15h1M15.5 15v1.5"/></svg>Prepočítajte si to</div>
             <div class="pk-row"><div class="pk-lab">Odporúčaný bank <b data-o="bank"></b></div><input type="range" min="200" max="5000" step="50" value="500" data-in="bank" aria-label="Bank v eurách"><div class="pk-ticks"><span>200&nbsp;€</span><span>5&nbsp;000&nbsp;€</span></div></div>
             <div class="pk-row"><div class="pk-lab">Odporúčaný vklad na jeden tip <b data-o="pct"></b></div><input type="range" min="0" max="4" step="1" value="2" data-in="pct" aria-label="Vklad na jeden tip v percentách banku" aria-valuetext="3 %"><div class="pk-ticks"><span>1&nbsp;%</span><span>2&nbsp;%</span><span>3&nbsp;%</span><span>5&nbsp;%</span><span>10&nbsp;%</span></div></div>
             <div class="pk-out">
-              <div><small>Vklad na tip</small><b data-o="stake"></b></div>
-              <div><small>Za celé členstvo v pluse aspoň</small><b data-o="roi"></b></div>
+              <div class="pk-res"><small>Za celé členstvo v pluse aspoň</small><b data-o="roi"></b></div>
+              <div class="pk-mini">
+                <div><small>Vklad na tip</small><b data-o="stake"></b></div>
+                <div><small>Návratnosť</small><b data-o="pctroi"></b></div>
+                <div><small>Mesačne</small><b data-o="month"></b></div>
+              </div>
               <p class="pk-sub" data-o="roiSub"></p>
               <div class="pk-verdict" data-o="verdict"></div>
             </div>
@@ -2969,8 +2996,10 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
       pI.setAttribute("aria-valuetext", pct + " %");
       o("stake").textContent = f(stake, stake % 1 ? 2 : 0) + " €";
       const units = t.price / stake, perMonth = units / (t.tips / TIPS_PER_MONTH);
-      o("roi").textContent = "+" + f(units, 1) + " j. · " + f(roi, 1) + " %";
-      o("roiSub").textContent = f(roi, 1) + " % zo všetkých vkladov, v priemere asi +" + f(perMonth, 1) + " j. mesačne (pri asi " + TIPS_PER_MONTH + " tipoch). 1 jednotka = vklad na tip (" + f(stake, stake % 1 ? 2 : 0) + " €), spolu " + f(t.price, 0) + " € = cena balíčka.";
+      o("roi").innerHTML = "+" + f(units, 1) + " <span>jednotky</span>";
+      o("pctroi").textContent = f(roi, 1) + " %";
+      o("month").textContent = "+" + f(perMonth, 1) + " j.";
+      o("roiSub").textContent = "1 jednotka = vklad na tip (" + f(stake, stake % 1 ? 2 : 0) + " €). " + f(units, 1) + " j. × " + f(stake, stake % 1 ? 2 : 0) + " € = " + f(t.price, 0) + " €, teda cena balíčka. Mesačne pri asi " + TIPS_PER_MONTH + " tipoch.";
       const v = o("verdict");
       if (pct > 5) { v.className = "pk-verdict bad"; v.textContent = "Príliš riskantné – vklad nad 5 % banku neodporúčame, séria prehier ho rýchlo minie."; return; }
       v.className = "pk-verdict " + (roi <= 4.2 ? "ok" : roi <= 6 ? "mid" : "bad");
@@ -2985,7 +3014,7 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
       $$("[data-term-name]").forEach((el) => (el.textContent = "balíček " + t.tips + " tipov"));
       $$("[data-tier-tips]").forEach((el) => (el.textContent = t.tips + " tipov · " + t.about));
       $$("[data-tier-name]").forEach((el) => { el.textContent = t.tier; el.classList.remove("silver-text", "gold-text", "plat-text"); el.classList.add(t.cls); });
-      $$("[data-permonth]").forEach((el) => (el.textContent = t.note));
+      $$("[data-permonth]").forEach((el) => (el.innerHTML = t.note.split(" · ").map((x, i) => `<span class="${i ? "save" : ""}">${x}</span>`).join("")));
       $$("[data-min-term]").forEach((li) => (li.hidden = TERMS[li.dataset.minTerm].order > t.order));
       if (!keepBank) bI.value = t.bank; // pri prepnutí sa nastaví odporúčaný bank balíčka
       const cta = document.getElementById("memberCta");
