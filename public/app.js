@@ -2005,6 +2005,13 @@ async function renderWatchOverview(watchTips, statTips = []) {
     rows.push(watchGroupRow("Zverejnené – prešli by aj pri 60 / 40 (spätne)", split.pass));
     rows.push(watchGroupRow("Zverejnené – NEprešli by pri 60 / 40 (spätne)", split.fail));
   }
+  // Sledované tipy (bez spätne presunutých a bez tých, čo už neprešli 60 / 40) – len rozbor, nikam sa nepresúvajú:
+  // klientom nikdy nešli, preto nemôžu dodatočne pribudnúť do výsledkov na webe.
+  const wsplit = retroStrictSplit(watchTips.filter((t) => !t.retroStrict && !t.strictFail));
+  if (wsplit.pass.length || wsplit.fail.length) {
+    rows.push(watchGroupRow("Sledované – prešli by pri 60 / 40 (len rozbor)", wsplit.pass));
+    rows.push(watchGroupRow("Sledované – neprešli by ani pri 60 / 40 (len rozbor)", wsplit.fail));
+  }
   const [shadow, ticket] = await Promise.all([
     fetchJson("/api/shadow/summary").catch(() => null),
     fetchJson("/api/ticket-watch/summary").catch(() => null),
@@ -2038,7 +2045,7 @@ async function renderWatchOverview(watchTips, statTips = []) {
     <p class="faint small">Zisk pri vklade 1 jednotka na tip (tiket) za zaznamenaný kurz. Skupina sa oplatí zapnúť naostro, až keď má aspoň 30 vyhodnotených tipov v zisku – pri menšom počte je výsledok ešte prevažne náhoda. Nový model sa porovnáva zvlášť, v mesačnom reporte a spätným testom.</p>
     <p class="faint small">Spätná kontrola 60 / 40 je odhad: šanca sa dopočíta z uloženej dôvery a šance stávkoviek v čase tipu.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-      ${retroStrictFail.length ? `<button type="button" class="btn sm ghost" id="retroStrictMove">Presunúť ${retroStrictFail.length} zverejnených tipov, ktoré neprejdú 60 / 40, do sledovaných</button>` : ""}
+      ${retroStrictFail.length ? `<button type="button" class="btn sm ghost" id="retroStrictMove">Presunúť ${retroStrictFail.length} ${retroStrictFail.length === 1 ? "zverejnený tip, ktorý neprejde" : retroStrictFail.length <= 4 ? "zverejnené tipy, ktoré neprejdú" : "zverejnených tipov, ktoré neprejdú"} 60 / 40, do sledovaných</button>` : ""}
       ${retroStrictMoved.length ? `<button type="button" class="btn sm ghost" id="retroStrictUndo">Vrátiť spätne presunuté tipy (${retroStrictMoved.length})</button>` : ""}
     </div>`;
   const setWatch = async (list, on) => {
