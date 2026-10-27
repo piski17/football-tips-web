@@ -949,6 +949,8 @@ h2 { font-size: clamp(28px, 3.1vw, 44px) !important; }
 .cal-nav button:hover:not(:disabled) { background: rgba(217,192,138,.12); }
 .cal-nav button:disabled { opacity: .3; cursor: default; }
 .cal-months { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.cal-months.few .cal-stats { grid-template-columns: 1fr; align-content: start; }
+.cal-months.few .cal-stat b { font-size: 40px; }
 .cal-m { padding: 18px 18px 16px; border-radius: var(--r-sm); border: 1px solid var(--line); background: rgba(0,0,0,.14); }
 .cal-mh { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
 .cal-mh h4 { margin: 0; font: 700 19px/1.2 var(--display); text-transform: capitalize; color: var(--text); }
@@ -2690,8 +2692,9 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
     const mAdd = (m, n) => { const [y, mo] = m.split("-").map(Number); const d = new Date(Date.UTC(y, mo - 1 + n, 1)); return d.toISOString().slice(0, 7); };
     const per = () => (window.innerWidth < 760 ? 1 : 3);
     let end = lastM;
+    const span = (() => { let k = 1, m = firstM; while (m < lastM) { m = mAdd(m, 1); k++; } return k; })();
     const render = () => {
-      const n = per(), months = [];
+      const n = Math.min(per(), span), months = [];
       for (let i = n - 1; i >= 0; i--) months.push(mAdd(end, -i));
       $("calMonths").innerHTML = months.map((m) => {
         const [y, mo] = m.split("-").map(Number), days = new Date(Date.UTC(y, mo, 0)).getUTCDate();
@@ -2713,8 +2716,15 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
       $("calRange").textContent = n === 1 ? `${MONTHS[m1 - 1]} ${y1}` : `${MONTHS[m0 - 1].slice(0, 3)} – ${MONTHS[m1 - 1].slice(0, 3)} ${y1}`;
       $("calPrev").disabled = months[0] <= firstM;
       $("calNext").disabled = end >= lastM;
+      // len mesiace s tipmi: pri 1 – 2 mesiacoch užšie karty a bez listovania
+      // pri 1 – 2 mesiacoch idú karty so súhrnom vedľa kalendára (na počítači)
+      const few = n < 3 && per() > 1, stats = $("calStats");
+      $("calMonths").classList.toggle("few", few);
+      if (few) $("calMonths").appendChild(stats); else if (stats.parentNode !== $("kalendar").querySelector(".cal-top")) $("kalendar").querySelector(".cal-top").appendChild(stats);
+      $("calMonths").style.gridTemplateColumns = few ? `repeat(${n}, minmax(0, 460px)) minmax(0, 1fr)` : "";
+      $("kalendar").querySelector(".cal-nav").style.display = span <= n ? "none" : "";
     };
-    $("calPrev").onclick = () => { end = mAdd(end, -per()); render(); };
+    $("calPrev").onclick = () => { end = mAdd(end, -per()); if (mAdd(end, 1 - Math.min(per(), span)) < firstM) end = mAdd(firstM, Math.min(per(), span) - 1); render(); };
     $("calNext").onclick = () => { end = mAdd(end, per()); if (end > lastM) end = lastM; render(); };
     let lastPer = per();
     window.addEventListener("resize", () => { if (per() !== lastPer) { lastPer = per(); render(); } });
