@@ -1153,6 +1153,20 @@ html[data-page="home"] #vysledky .figures, html[data-page="home"] #vysledky .mon
 .gold-text { background: linear-gradient(100deg, #A8894F 0%, #F8EDD3 22%, #D9C08A 45%, #B8995E 65%, #F3E6C4 85%, #A8894F 100%); background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shine 8s linear infinite; }
 @media (prefers-reduced-motion: reduce) { .silver-text, .gold-text { animation: none; } }
 /* Garancia na karte členstva */
+#clenstvo .pk-feats { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 26px; text-align: left; }
+#clenstvo .pk-f { display: flex; gap: 13px; align-items: flex-start; padding: 15px 14px; border-radius: 16px; border: 1px solid var(--line); background: linear-gradient(160deg, rgba(217,192,138,.06), rgba(0,0,0,.12)); transition: border-color .2s; }
+#clenstvo .pk-f:hover { border-color: var(--line-2); }
+#clenstvo .pk-f i { flex: none; width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: rgba(217,192,138,.1); box-shadow: inset 0 0 0 1px rgba(217,192,138,.28); }
+#clenstvo .pk-f svg { width: 20px; height: 20px; fill: none; stroke: var(--gold-hi); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+#clenstvo .pk-f small { display: block; font: 700 10.5px/1.2 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+#clenstvo .pk-f b { display: block; margin-top: 4px; font-size: 15.5px; font-weight: 700; line-height: 1.3; color: var(--text); }
+#clenstvo .pk-f span { display: block; margin-top: 3px; font-size: 13px; line-height: 1.4; color: var(--muted); font-weight: 300; }
+#clenstvo .pk-f.plus { grid-column: 1 / -1; border-color: rgba(217,192,138,.5); background: linear-gradient(135deg, rgba(217,192,138,.16), rgba(217,192,138,.04)); }
+#clenstvo .pk-f.plus i { background: var(--gold-grad); box-shadow: none; }
+#clenstvo .pk-f.plus svg { stroke: #1A130A; }
+#clenstvo .pk-f.plus b { color: var(--gold-hi); }
+#clenstvo .pk-f[hidden] { display: none; }
+@media (max-width: 560px) { #clenstvo .pk-feats { grid-template-columns: 1fr; } }
 #clenstvo .lux-guarantee { display: flex; align-items: center; gap: 14px; margin-top: 22px; padding: 16px 18px; border-radius: 18px; border: 1px solid rgba(217,192,138,.45); background: linear-gradient(135deg, rgba(217,192,138,.18), rgba(217,192,138,.04)); color: var(--text, #F5EFE3); text-decoration: none; box-shadow: 0 14px 40px -24px rgba(217,192,138,.8); transition: border-color .25s, background .25s; }
 #clenstvo .lux-guarantee:hover { border-color: var(--gold); }
 #clenstvo .lux-guarantee svg { flex: none; width: 34px; height: 34px; padding: 6px; border-radius: 50%; background: var(--gold-grad); fill: none; stroke: #1A130A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
@@ -2292,13 +2306,14 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
         <div class="lux-l">
           <div class="lux-top"><svg class="lux-crest" aria-hidden="true"><use href="#logo"/></svg><div class="lux-brand">TipRadar</div></div>
           <h3 class="lux-name plat-text" data-tier-name>Onyx</h3>
-          <div class="pk-tips" data-tier-tips>500 tipov · orientačne na 6,5 mesiaca</div>
-          <ul class="lux-list">
-            <li><strong>Denné tipy na Telegrame</strong><span>najviac 3 najsilnejšie denne, 1&nbsp;–&nbsp;2&nbsp;hodiny pred výkopom, s&nbsp;kurzom a&nbsp;dôvodom</span></li>
-            <li><strong>Súkromný VIP chat</strong><span>odpisujem priamo ja</span></li>
-            <li><strong>Úvodný hovor 1 na 1</strong><span>30 minút: nastavenie banku, vkladu a&nbsp;ako tipy hrať</span></li>
-            <li class="plus" data-min-term="t300"><strong>Mentoring 1 na 1 počas celého balíčka</strong><span>a&nbsp;prednostné odpovede v&nbsp;chate</span></li>
-          </ul>
+          <div class="pk-tips" data-tier-tips>500 tipov · priemerne na 6 mesiacov</div>
+          <div class="pk-feats">
+            <div class="pk-f"><i aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12 18 6"/></svg></i><div><small>Výber</small><b>Najviac 3 tipy denne</b><span>len tie najsilnejšie, niektoré dni žiadny</span></div></div>
+            <div class="pk-f"><i aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></i><div><small>Doručenie</small><b>1 – 2 hodiny pred výkopom</b><span>na Telegram, s&nbsp;kurzom a&nbsp;zdôvodnením</span></div></div>
+            <div class="pk-f"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 18.5V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H8.5L5 18.5Z"/><path d="M9 10h6M9 13h3.5"/></svg></i><div><small>Podpora</small><b>Priamy kontakt so mnou</b><span>na otázky odpisujem osobne</span></div></div>
+            <div class="pk-f"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7.5 4.5h-2a1 1 0 0 0-1 1.1C5.1 13 11 18.9 18.4 19.5a1 1 0 0 0 1.1-1v-2l-3.6-1.5-1.7 1.7a11 11 0 0 1-5-5l1.7-1.7L9 4.5Z"/></svg></i><div><small>Na začiatok</small><b>Úvodný hovor 30 minút</b><span>nastavenie banku, vkladu a&nbsp;ako tipy hrať</span></div></div>
+            <div class="pk-f plus" data-min-term="t300"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z"/></svg></i><div><small>Len v Onyxe</small><b>Mentoring 1 na 1 počas celého balíčka</b><span>a&nbsp;prednostné odpovede</span></div></div>
+          </div>
           <a class="lux-guarantee" href="#garancia"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.4 7.5 9.5 4.3-1.1 7.5-4.9 7.5-9.5V6L12 3Z"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></svg><span><strong>Garancia</strong>Ak váš balíček skončí v&nbsp;strate, ďalších 30 tipov dostanete zadarmo.</span></a>
         </div>
         <div class="lux-r">
@@ -2932,9 +2947,9 @@ footer, .om2-list { border-top: 1px solid rgba(217,192,138,.35) !important; }
   (function () {
     const f = (n, d) => n.toLocaleString("sk-SK", { minimumFractionDigits: d, maximumFractionDigits: d });
     const TERMS = {
-      t75: { tier: "Štart", cls: "silver-text", price: 89, tips: 100, about: "orientačne na 1,5 mesiaca", note: "0,89 € za tip", bank: 750, bot: "stat", order: 1 },
-      t150: { tier: "Gold", cls: "gold-text", price: 179, tips: 250, about: "orientačne na 3,5 mesiaca", note: "0,72 € za tip · ušetríte 43 €", bank: 600, bot: "gold", order: 2 },
-      t300: { tier: "Onyx", cls: "plat-text", price: 299, tips: 500, about: "orientačne na 6,5 mesiaca", note: "0,60 € za tip · ušetríte 146 €", bank: 500, bot: "onyx", order: 3 },
+      t75: { tier: "Štart", cls: "silver-text", price: 89, tips: 100, about: "priemerne na 1,5 mesiaca", note: "0,89 € za tip", bank: 750, bot: "stat", order: 1 },
+      t150: { tier: "Gold", cls: "gold-text", price: 179, tips: 250, about: "priemerne na 3 mesiace", note: "0,72 € za tip · ušetríte 43 €", bank: 600, bot: "gold", order: 2 },
+      t300: { tier: "Onyx", cls: "plat-text", price: 299, tips: 500, about: "priemerne na 6 mesiacov", note: "0,60 € za tip · ušetríte 146 €", bank: 500, bot: "onyx", order: 3 },
     };
     const TIPS_PER_MONTH = 75; // 2 – 3 tipy denne
     const PCTS = [1, 2, 3, 5, 10]; // posuvník vkladu skáče len po týchto percentách
