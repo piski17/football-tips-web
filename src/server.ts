@@ -1169,7 +1169,7 @@ app.get("/api/public/track-record", async (_req, res) => {
             : null,
       };
     }
-    // Kalkulačka na webe („Koľko by ste mali dnes?“): všetky vyhodnotené tipy s kurzom
+    // Kalkulačka na webe („Ako by dopadol váš balíček?“): všetky vyhodnotené tipy s kurzom
     // v poradí podľa výkopu – len kurz a výsledok, nič, čo by prezradilo čakajúci tip.
     const kickTime = (t: SavedTip) =>
       Math.max(...(t.legs && t.legs.length > 0 ? t.legs.map((l) => l.matchDate) : [t.matchDate]).map((d) => new Date(d).getTime() || 0));
