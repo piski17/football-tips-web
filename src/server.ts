@@ -1178,14 +1178,6 @@ app.get("/api/public/track-record", async (_req, res) => {
             : null,
       };
     }
-    // Kalkulačka na webe („Ako by dopadol váš balíček?“): všetky vyhodnotené tipy s kurzom
-    // v poradí podľa výkopu – len kurz a výsledok, nič, čo by prezradilo čakajúci tip.
-    const kickTime = (t: SavedTip) =>
-      Math.max(...(t.legs && t.legs.length > 0 ? t.legs.map((l) => l.matchDate) : [t.matchDate]).map((d) => new Date(d).getTime() || 0));
-    const bank = resolvedAll
-      .filter((t) => typeof t.odds === "number" && t.odds > 1)
-      .sort((a, b) => kickTime(a) - kickTime(b))
-      .map((t) => ({ day: tipDayKey(t) ?? "", odds: Math.round(t.odds! * 100) / 100, won: t.status === "won" }));
     // Presnosť modelu: v pásmach dôvery porovná priemernú šancu podľa modelu so skutočnosťou.
     // Len jednotlivé tipy (tiket má kombinovanú šancu), vrátené tipy sa nerátajú.
     const singles = resolvedAll.filter((t) => !(t.legs && t.legs.length > 0) && typeof t.probability === "number");
@@ -1203,11 +1195,41 @@ app.get("/api/public/track-record", async (_req, res) => {
       overall: calibRow(singles),
       bands: bands.map((b) => ({ label: b.label, ...calibRow(singles.filter((t) => b.test(t.probability))) })),
     };
+    // Kalendár tipov (stránka Výsledky, 27. 10. 2026 namiesto kalkulačky balíčka): každý deň zvlášť.
+    const dayGroups = new Map<string, SavedTip[]>();
+    for (const t of resolvedAll) {
+      const day = tipDayKey(t);
+      if (!day) continue;
+      if (!dayGroups.has(day)) dayGroups.set(day, []);
+      dayGroups.get(day)!.push(t);
+    }
+    const calendarDays = Array.from(dayGroups.entries())
+      .sort((a, b) => (a[0] < b[0] ? -1 : 1))
+      .map(([day, list]) => {
+        const sm = summarize(list);
+        // tipy dňa pre okienko pri prechode myšou (len vyhodnotené, nič čakajúce)
+        const dayTips = list.map((t) => {
+          const isTicket = Array.isArray(t.legs) && t.legs.length > 0;
+          return {
+            match: isTicket
+              ? `Tiket (${plural(t.legs!.length, "zápas", "zápasy", "zápasov")})`
+              : `${translateTeamName(t.homeTeam)} – ${translateTeamName(t.awayTeam)}`,
+            bet: isTicket
+              ? t.legs!.map((l) => `${translateTeamName(l.homeTeam)} – ${translateTeamName(l.awayTeam)}`).join(" · ")
+              : `${t.market}: ${translateNamesInText(t.selection, t.homeTeam, t.awayTeam)}`,
+            odds: typeof t.odds === "number" && t.odds > 1 ? Math.round(t.odds * 100) / 100 : null,
+            score: !isTicket && typeof t.actualHomeGoals === "number" && typeof t.actualAwayGoals === "number" ? `${t.actualHomeGoals}:${t.actualAwayGoals}` : null,
+            status: t.status,
+          };
+        });
+        return { day, won: sm.won, total: sm.totalResolved, profit: sm.profit, tips: dayTips };
+      });
     res.json({
       ...summarize(all),
       // Koľko zverejnených tipov bolo spätne presunutých do sledovaných (kontrola 60 / 40) – web to priznáva.
       retroStrictExcluded: tips.filter((t) => t.retroStrict && t.watchOnly).length,
       calibration,
+      calendar: calendarDays,
       month: { key: monthKey, ...summarize(inMonth) },
       last7: summarize(inLast7),
       latest,
@@ -1221,7 +1243,6 @@ app.get("/api/public/track-record", async (_req, res) => {
       slips,
       timeline: { unit: byWeek ? "week" : "day", points: timeline },
       months,
-      bank,
     });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
