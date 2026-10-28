@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="dark" />
-<meta name="theme-color" content="#1B1510" />
+<meta name="theme-color" content="#0B0B0C" />
 <title>Ochrana osobných údajov – TipRadar</title>
 <meta name="robots" content="noindex" />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -13,14 +13,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet" />
 <style>
   /* rovnaké farby a písmo ako tipradar.eu */
-  :root { --bg: #120E0A; --line: rgba(217,192,138,.16); --gold: #D9C08A; --gold-hi: #F3E6C4; --text: #F4EEE2; --muted: #C9BFAE; --faint: #8C8476; --gold-grad: linear-gradient(135deg, #F8EDD3 0%, #E6CF9C 35%, #D9C08A 55%, #B8995E 100%); --panel: linear-gradient(180deg, rgba(48,38,29,.92), rgba(34,27,20,.92)); }
+  :root { --bg: #0B0B0C; --line: rgba(201,165,92,.16); --gold: #C9A55C; --gold-hi: #E8D3A0; --text: #EDE6D6; --muted: #C9BFAE; --faint: #8C8476; --gold-grad: linear-gradient(135deg, #F1DFAE 0%, #E8D3A0 35%, #C9A55C 55%, #A8823E 100%); --panel: linear-gradient(180deg, rgba(40,40,44,.92), rgba(26,26,30,.92)); }
   * { box-sizing: border-box; }
-  body { margin: 0; background: radial-gradient(60% 40% at 88% 0%, rgba(217,192,138,.12), transparent 70%), var(--bg); color: var(--text); font: 400 16px/1.7 "Manrope", "Helvetica Neue", Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+  body { margin: 0; background: radial-gradient(60% 40% at 88% 0%, rgba(201,165,92,.12), transparent 70%), var(--bg); color: var(--text); font: 400 16px/1.7 "Plus Jakarta Sans", "Helvetica Neue", Arial, sans-serif; -webkit-font-smoothing: antialiased; }
   .wrap { width: min(760px, 100% - 48px); margin-inline: auto; padding: 48px 0 80px; }
   @media (max-width: 640px) { .wrap { width: calc(100% - 32px); padding-top: 32px; } }
-  a { color: var(--gold-hi); text-decoration-color: rgba(217,192,138,.4); text-underline-offset: 4px; }
+  a { color: var(--gold-hi); text-decoration-color: rgba(201,165,92,.4); text-underline-offset: 4px; }
   .back { display: inline-block; padding: 7px 14px; border: 1px solid var(--line); border-radius: 999px; font-size: 13px; text-decoration: none; color: var(--muted); }
-  .back:hover { color: var(--gold-hi); border-color: rgba(217,192,138,.4); }
+  .back:hover { color: var(--gold-hi); border-color: rgba(201,165,92,.4); }
   h1, h2 { font-family: "Playfair Display", Georgia, serif; font-weight: 600; text-transform: none; letter-spacing: -0.01em; font-variant-numeric: lining-nums; line-height: 1.1; }
   h1 { font-size: clamp(30px, 3.4vw, 46px); margin: 28px 0 6px; }
   h2 { font-size: 22px; margin: 36px 0 10px; padding-top: 24px; border-top: 1px solid var(--line); color: var(--gold-hi); }
@@ -32,15 +32,24 @@
   .date { font-size: 14px; color: var(--faint); }
 
   /* luxusný futbalový klub (21. 10. 2026) – ako tipradar.eu */
-  :root { --muted: #CFC6B6; --faint: #9C927F; --line: rgba(217,192,138,.3); }
-  body { background: repeating-linear-gradient(90deg, rgba(217,192,138,.035) 0 1px, transparent 1px 64px), #120E0A; font: 500 16.5px/1.7 "Barlow", "Helvetica Neue", Arial, sans-serif; }
+  :root { --muted: #B8B0A2; --faint: #8E877B; --line: rgba(201,165,92,.3); }
+  body { background: repeating-linear-gradient(90deg, rgba(201,165,92,.035) 0 1px, transparent 1px 64px), #0B0B0C; font: 500 16.5px/1.7 "Plus Jakarta Sans", "Helvetica Neue", Arial, sans-serif; }
   h1, h2 { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: .01em; line-height: 1; }
   h1 { font-size: clamp(40px, 5vw, 64px); }
   h2 { font-size: 26px; color: var(--gold); }
   .back { border-color: var(--gold); color: var(--gold); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; font-size: 12px; padding: 9px 18px; }
-  .back:hover { background: var(--gold); color: #17120D; }
+  .back:hover { background: var(--gold); color: #0B0B0C; }
   .date::before { content: "★  "; color: var(--gold); }
+/* ===== KLUB (28. 10. 2026): onyx a zlato, ostré hrany ===== */
+body { background: #08080A !important; font-family: "Plus Jakarta Sans", system-ui, sans-serif !important; }
+h1, h2, h3 { font-family: "Playfair Display", Georgia, serif !important; text-transform: none !important; letter-spacing: -0.02em !important; font-weight: 800 !important; }
+h1 em, h2 em, h3 em { font-style: italic !important; font-weight: 600 !important; background: linear-gradient(135deg, #F1DFAE, #C9A55C 45%, #8E6A2E) !important; -webkit-background-clip: text !important; background-clip: text !important; color: transparent !important; -webkit-text-fill-color: transparent !important; }
+.btn, .btn.btn-ghost, .btn-ghost, .btn.ghost { border-radius: 0 !important; font-family: "Barlow Condensed", "Arial Narrow", sans-serif !important; font-weight: 700 !important; letter-spacing: .24em !important; text-transform: uppercase; }
+.btn { background: linear-gradient(135deg, #F1DFAE, #C9A55C 45%, #8E6A2E) !important; color: #120E06 !important; border: 0 !important; }
+.btn-ghost, .btn.btn-ghost, .btn.ghost { background: transparent !important; color: #EFE8D8 !important; border: 1px solid rgba(201,165,92,.4) !important; }
+
 </style>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&amp;display=swap" rel="stylesheet" />
 </head>
 <body>
 <div class="wrap">
