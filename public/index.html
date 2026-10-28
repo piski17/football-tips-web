@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#120E0A" />
+  <meta name="theme-color" content="#0B0B0C" />
   <meta name="color-scheme" content="dark" />
   <title>TipRadar</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="favicon-256.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;0,700;1,500;1,600&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;0,800;1,600&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -19,11 +19,11 @@
   <div id="splashScreen" class="splash" aria-hidden="true">
     <div class="splash-inner">
       <svg class="splash-radar" viewBox="0 0 200 200">
-        <circle cx="100" cy="100" r="92" fill="#161412"/>
-        <circle cx="100" cy="100" r="58" fill="none" stroke="#d9c08a" stroke-opacity=".35" stroke-width="3"/>
-        <g class="splash-sweep"><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#d9c08a" fill-opacity=".32"/><line x1="100" y1="100" x2="100" y2="12" stroke="#F3E6C4" stroke-width="5" stroke-linecap="round"/></g>
-        <circle cx="100" cy="100" r="92" fill="none" stroke="#D9C08A" stroke-width="7"/>
-        <circle cx="100" cy="100" r="8" fill="#f3e6c4"/>
+        <circle cx="100" cy="100" r="92" fill="#0E0E10"/>
+        <circle cx="100" cy="100" r="58" fill="none" stroke="#C9A55C" stroke-opacity=".35" stroke-width="3"/>
+        <g class="splash-sweep"><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#C9A55C" fill-opacity=".32"/><line x1="100" y1="100" x2="100" y2="12" stroke="#E8D3A0" stroke-width="5" stroke-linecap="round"/></g>
+        <circle cx="100" cy="100" r="92" fill="none" stroke="#C9A55C" stroke-width="7"/>
+        <circle cx="100" cy="100" r="8" fill="#E8D3A0"/>
       </svg>
       <div class="splash-word">TipRadar</div>
     </div>
@@ -32,10 +32,9 @@
   <div class="shell">
     <!-- Ľavý panel (počítač) -->
     <aside class="side">
-      <div class="logo">
-        <svg viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="92" fill="#161412"/><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#d9c08a" fill-opacity=".32"/><line x1="100" y1="100" x2="162.2" y2="37.8" stroke="#D9C08A" stroke-width="7" stroke-linecap="round"/><circle cx="100" cy="100" r="92" fill="none" stroke="#D9C08A" stroke-width="8"/><circle cx="100" cy="100" r="58" fill="none" stroke="#d9c08a" stroke-opacity=".5" stroke-width="4"/><circle cx="100" cy="100" r="9" fill="#f3e6c4"/></svg>
-        <span>TipRadar</span>
-      </div>
+      <div class="logo kb-logo"><svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="kgg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F1DFAE"/><stop offset=".5" stop-color="#C9A55C"/><stop offset="1" stop-color="#8E6A2E"/></linearGradient>
+  </defs><symbol id="crest" viewBox="0 0 200 240"><path d="M100 6 188 34v86c0 58-40 94-88 114C52 214 12 178 12 120V34Z" fill="#0E0E10" stroke="url(#kgg)" stroke-width="5"/><path d="M100 22 172 45v75c0 48-32 79-72 96-40-17-72-48-72-96V45Z" fill="none" stroke="url(#kgg)" stroke-width="1.5" opacity=".7"/><g transform="translate(100 118)" fill="none" stroke="url(#kgg)"><circle r="46" stroke-width="2"/><circle r="30" stroke-width="1.4" opacity=".8"/><circle r="14" stroke-width="1.2" opacity=".7"/><path d="M0 0 32 -33" stroke-width="3"/><circle cx="22" cy="-14" r="4" fill="url(#kgg)"/><path d="M-46 0H46M0 -46V46" stroke-width=".8" opacity=".5"/></g><text x="100" y="62" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-weight="700" font-size="17" letter-spacing="5" fill="url(#kgg)">TIPRADAR</text><text x="100" y="196" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-weight="600" font-size="12" letter-spacing="4" fill="url(#kgg)">EST · 2026</text></symbol>
+</svg><svg class="kb-crest" viewBox="0 0 200 240" aria-hidden="true"><use href="#crest"/></svg><span>TipRadar<small>Futbalový klub dát</small></span></div>
       <nav class="nav" id="sideNav" aria-label="Hlavné menu"></nav>
       <button type="button" class="seats" id="seatBox" title="Balíčky TipRadar: počet aktívnych členov podľa balíčka – Štart (100), Gold (250), Onyx (500 tipov). Kliknutím otvoríš sekciu Členovia."></button>
     </aside>
@@ -75,7 +74,7 @@
             </header>
             <div class="an" id="analysisPane">
               <div class="an-empty">
-                <svg class="empty-radar" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="92" fill="#161412"/><circle cx="100" cy="100" r="58" fill="none" stroke="#d9c08a" stroke-opacity=".3" stroke-width="2"/><g class="splash-sweep"><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#d9c08a" fill-opacity=".25"/></g><circle cx="100" cy="100" r="92" fill="none" stroke="#D9C08A" stroke-width="3"/><circle cx="100" cy="100" r="6" fill="#f3e6c4"/></svg>
+                <svg class="empty-radar" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="92" fill="#0E0E10"/><circle cx="100" cy="100" r="58" fill="none" stroke="#C9A55C" stroke-opacity=".3" stroke-width="2"/><g class="splash-sweep"><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#C9A55C" fill-opacity=".25"/></g><circle cx="100" cy="100" r="92" fill="none" stroke="#C9A55C" stroke-width="3"/><circle cx="100" cy="100" r="6" fill="#E8D3A0"/></svg>
                 <p>Vyber zápas zo zoznamu.</p>
                 <p class="muted small">Zobrazí sa štatistická analýza a odporúčané tipy.</p>
               </div>
