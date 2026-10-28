@@ -52,7 +52,7 @@ import {
   notifyAdminExpiringSubscribers,
   sendCustomMessage,
   sendTipResultToTelegram, notifyAdmin, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite, sendMemberMessage, isMemberChannel, memberChannelConfigured, sendPackageLowReminder } from "./telegram";
-import { paymentsEnabled, isTerm, sellableTerm, SellableTerm, FREE_TIPS, FREE_TIPS_MONTHS, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, deletePayment, Payment, termLabel, tierName, addActiveMonths, SUMMER_PAUSE } from "./payments";
+import { paymentsEnabled, isTerm, sellableTerm, SellableTerm, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, deletePayment, Payment, termLabel, tierName, addActiveMonths, SUMMER_PAUSE } from "./payments";
 import { payBySquareString } from "./payBySquare";
 import QRCode from "qrcode";
 import { sendAdminEmail } from "./mailer";
@@ -251,20 +251,19 @@ app.get(["/metoda", "/metoda/", "/vysledky", "/vysledky/", "/otazky", "/otazky/"
   res.set("Cache-Control", "no-cache"); res.sendFile(path.join(__dirname, "..", "landing", "index.html"));
 });
 // ---- Platba za členstvo (prevod cez QR kód) – bez hesla ----
-/** Balíčky tipov sú bez obmedzenia miest – čísla slúžia len na prehľad (aktívni členovia a poradovník). */
+/** Členstvá sú bez obmedzenia miest – čísla slúžia len na prehľad (aktívni členovia a poradovník). */
 type TermSeats = Record<SellableTerm, { occupied: number; total: null; left: null }>;
-/** Plán z bota (t.me/…?start=…) → balíček. Staré odkazy: start = Gold, seria / sampion / vip = Onyx. */
+/** Plán z bota (t.me/…?start=…) → členstvo: gold = Gold 100 tipov, onyx = Onyx 250 tipov. Staré odkazy: stat / start = Gold, seria / sampion / vip = Onyx. */
 const LEAD_PLAN_TERM: Record<string, SellableTerm> = {
-  stat: "t75", stat_waitlist: "t75",
-  gold: "t150", gold_waitlist: "t150", start: "t150", start_waitlist: "t150",
-  onyx: "t300", onyx_waitlist: "t300", seria: "t300", seria_waitlist: "t300", sampion: "t300", sampion_waitlist: "t300", vip: "t300", vip_waitlist: "t300",
+  gold: "p100", gold_waitlist: "p100", stat: "p100", stat_waitlist: "p100", start: "p100", start_waitlist: "p100",
+  onyx: "p250", onyx_waitlist: "p250", seria: "p250", seria_waitlist: "p250", sampion: "p250", sampion_waitlist: "p250", vip: "p250", vip_waitlist: "p250",
 };
-/** Aktívni členovia (balíček ešte neskončil) podľa balíčka + záujemcovia v poradovníku (pred spustením predaja). */
+/** Aktívni členovia (členstvo ešte neskončilo) podľa členstva + záujemcovia v poradovníku (pred spustením predaja). */
 async function termSeats(): Promise<TermSeats> {
   const subs = await listSubscribers();
   const statuses = await memberStatuses(subs);
   const active = subs.filter((s) => statuses.get(s.id)?.active);
-  const count: Record<SellableTerm, number> = { t75: 0, t150: 0, t300: 0 };
+  const count: Record<SellableTerm, number> = { p100: 0, p250: 0 };
   for (const s of active) {
     const t = sellableTerm(memberTerm(s));
     if (t) count[t]++;
@@ -277,15 +276,15 @@ async function termSeats(): Promise<TermSeats> {
     }
   }
   const row = (n: number) => ({ occupied: n, total: null, left: null });
-  return { t75: row(count.t75), t150: row(count.t150), t300: row(count.t300) };
+  return { p100: row(count.p100), p250: row(count.p250) };
 }
-/** Riadok pod tipom v bezplatnom kanáli (balíčky sú bez obmedzenia miest). */
+/** Riadok pod tipom v bezplatnom kanáli (členstvá sú bez obmedzenia miest). */
 async function freeSeatsLine(): Promise<string | undefined> {
-  return `🎯 Balíčky tipov: Štart 100 tipov · Gold 250 · Onyx 500`;
+  return `🎯 Členstvo: Gold 100 tipov · Onyx 250 tipov · 🛡 členstvo v mínuse = 1 mesiac zadarmo`;
 }
 const BOT_USERNAME = process.env.TELEGRAM_BOT_USERNAME || "TipRadarAiBot";
 
-// tipradar.eu/zaplatit?term=t75|t150|t300 (&c=Telegram ID z bota; staré odkazy m1 → Gold, m3 / season → Onyx) → založí platbu a presmeruje na stránku s QR kódom.
+// tipradar.eu/zaplatit?term=p100|p250 (&c=Telegram ID z bota; staré odkazy t75 / m1 → Gold 100, t150 / t300 / m3 / season → Onyx 250) → založí platbu a presmeruje na stránku s QR kódom.
 app.get("/zaplatit", async (req, res) => {
   const term = sellableTerm(String(req.query.term ?? ""));
   const c = String(req.query.c ?? "");
@@ -309,16 +308,16 @@ app.get("/platba", async (req, res) => {
   try {
     const p = await getPayment(token);
     if (!p || p.method !== "bank") {
-      res.status(404).send(paymentPage("Platbu sme nenašli", "Vyberte si, prosím, balíček znova.", "/clenstvo", "Späť na balíčky"));
+      res.status(404).send(paymentPage("Platbu sme nenašli", "Vyberte si, prosím, členstvo znova.", "/clenstvo", "Späť na členstvo"));
       return;
     }
     if (p.status === "cancelled") {
-      res.send(paymentPage("Platba bola zrušená", "Ak chcete balíček, vyberte si ho, prosím, znova.", "/clenstvo", "Späť na balíčky"));
+      res.send(paymentPage("Platba bola zrušená", "Ak chcete členstvo, vyberte si ho, prosím, znova.", "/clenstvo", "Späť na členstvo"));
       return;
     }
     const tg = `https://t.me/${BOT_USERNAME}?start=paid_${p.token}`;
     if (p.status !== "pending") {
-      res.send(paymentPage("Platba prijatá, ďakujem!", `Balíček TipRadar ${termLabel(p.term)} je zaplatený. Pozvánku do súkromného kanála nájdete v Telegrame.`, tg, "Otvoriť Telegram"));
+      res.send(paymentPage("Platba prijatá, ďakujem!", `${termLabel(p.term)} TipRadar je zaplatené. Pozvánku do súkromného kanála nájdete v Telegrame.`, tg, "Otvoriť Telegram"));
       return;
     }
     if (!BANK.iban || !BANK.name) {
@@ -385,9 +384,9 @@ ${row("Správa", bankNote(p.term), bankNote(p.term))}
 <div class="step">2. Dajte mi vedieť</div>
 <p>Po zaplatení kliknite nižšie. Otvorí sa Telegram a hneď ako platba príde na účet, pošlem vám tam osobnú pozvánku do kanála.</p>
 <a class="btn" href="${esc(tg)}">Zaplatil som · pokračovať v Telegrame</a>
-<p class="small" style="margin-top:14px">Okamžitá platba príde do pár minút, bežný prevod zvyčajne do jedného pracovného dňa. Tipy sa vám začnú rátať odo dňa, keď platbu potvrdím. Balíček sa sám nepredlžuje.</p>
-<p class="gar"><b>Garancia</b>Ak váš balíček skončí v strate, ďalších ${FREE_TIPS} tipov dostanete zadarmo.</p>
-<a class="back" href="/clenstvo">Späť na balíčky</a>
+<p class="small" style="margin-top:14px">Okamžitá platba príde do pár minút, bežný prevod zvyčajne do jedného pracovného dňa. Tipy sa vám začnú rátať odo dňa, keď platbu potvrdím. Členstvo sa samo nepredlžuje.</p>
+<p class="gar"><b>Garancia</b>Ak vaše členstvo skončí v mínuse, dostanete 1 mesiac zadarmo.</p>
+<a class="back" href="/clenstvo">Späť na členstvo</a>
 </div>
 <script>document.querySelectorAll(".cp").forEach(function(b){b.addEventListener("click",function(){var t=b.getAttribute("data-copy");var done=function(){b.textContent="Skopírované";b.classList.add("ok");setTimeout(function(){b.textContent="Kopírovať";b.classList.remove("ok")},1800)};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,function(){prompt("Skopírujte:",t)})}else{prompt("Skopírujte:",t)}})});</script>
 </body></html>`;
@@ -405,7 +404,7 @@ h1{font-family:'Barlow Condensed',Arial,sans-serif;font-weight:800;font-size:42p
 p{color:#BFB6A6;font-size:16px;line-height:1.6;margin:0 0 28px}
 a.btn{display:inline-block;border-radius:999px;background:#D9C08A;color:#17130A;text-decoration:none;font-weight:700;font-size:14px;letter-spacing:.14em;text-transform:uppercase;padding:16px 28px}
 a.back{display:block;margin-top:22px;color:#8C8476;font-size:14px}</style></head>
-<body><div class="box"><div class="lab">Balíčky tipov TipRadar</div><h1>${esc(title)}</h1><p>${esc(text)}</p>
+<body><div class="box"><div class="lab">Členstvo TipRadar</div><h1>${esc(title)}</h1><p>${esc(text)}</p>
 ${href ? `<a class="btn" href="${esc(href)}">${esc(button)}</a>` : ""}<a class="back" href="/">Späť na tipradar.eu</a></div></body></html>`;
 }
 
@@ -1327,7 +1326,7 @@ app.delete("/api/tips/:id/slip", async (req, res) => {
   }
 });
 
-// Verejné údaje pre stránku Členstvo (len čísla, žiadne mená): stav predaja a počty podľa balíčka (bez obmedzenia miest).
+// Verejné údaje pre stránku Členstvo (len čísla, žiadne mená): stav predaja a počty podľa dĺžky členstva (bez obmedzenia miest).
 app.get("/api/public/vip-seats", async (_req, res) => {
   res.set("Access-Control-Allow-Origin", "*");
   try {
@@ -2823,7 +2822,7 @@ app.delete("/api/subscribers/:id", async (req, res) => {
   }
 });
 
-// ---- Garancia: ak balíček skončí v strate, člen dostane ďalších 30 tipov zadarmo (staré časové členstvá mesiac) ----
+// ---- Garancia: ak členstvo skončí v strate, člen dostane 1 mesiac zadarmo ----
 
 function fmtDaySk(day: string): string {
   return `${Number(day.slice(8, 10))}. ${Number(day.slice(5, 7))}. ${day.slice(0, 4)}`;
@@ -2866,7 +2865,7 @@ async function guaranteeRows() {
         ended: u.ended,
         free,
         inLoss,
-        eligible: u.ended && inLoss && !free && !applied,
+        eligible: u.ended && u.pending === 0 && inLoss && !free && !applied,
         applied,
       });
     }
@@ -2900,7 +2899,7 @@ app.post("/api/guarantee/apply", async (req, res) => {
     const row = rows.find((r) => r.eligible && (!wanted || r.periodStart === wanted));
     if (!row) {
       const done = rows.find((r) => r.applied && (!wanted || r.periodStart === wanted));
-      if (done) res.status(409).json({ error: "Garancia za tento balíček už bola pridaná." });
+      if (done) res.status(409).json({ error: "Garancia za toto obdobie už bola pridaná." });
       else res.status(400).json({ error: "Člen teraz nemá nárok na garanciu." });
       return;
     }
@@ -2916,17 +2915,17 @@ app.post("/api/guarantee/apply", async (req, res) => {
     let freeUntil: string;
     let updates: Partial<Subscriber>;
     if (isPackage) {
-      // Balíček: ďalších 30 tipov zadarmo od dnes (bez časovej platnosti). Ak má člen už nový balíček,
-      // tipy zadarmo sa mu pridajú k nemu (rátajú sa ako ďalšie obdobie po ňom).
+      // Členstvo podľa tipov (od 28. 10. 2026): 1 mesiac zadarmo od dnes – všetky tipy počas mesiaca, bez počtu.
+      // Ak má člen už nové zaplatené členstvo, mesiac zadarmo sa vloží medzi obdobia: tipy počas neho idú najprv
+      // do mesiaca zadarmo, takže sa mu z nového členstva neminú.
       const st = (await memberStatuses([sub])).get(sub.id)!;
       freeStart = now;
-      freeUntil = addActiveMonths(freeStart, FREE_TIPS_MONTHS).toISOString();
+      freeUntil = addActiveMonths(freeStart, 1).toISOString();
       if (st.active && currentPeriodStart(sub) !== row.periodStart) {
-        // Bežiaci nový balíček ostáva aktuálny, tipy zadarmo idú medzi obdobia hneď za neho.
-        const extra = { start: appliedAt, end: freeUntil, free: true, tips: FREE_TIPS };
+        const extra = { start: appliedAt, end: freeUntil, free: true };
         updates = { pastPeriods: [...(sub.pastPeriods ?? []), extra] };
       } else {
-        updates = newPeriodUpdates(sub, appliedAt, freeUntil, true, FREE_TIPS);
+        updates = newPeriodUpdates(sub, appliedAt, freeUntil, true);
       }
     } else {
       // Staré časové členstvo: mesiac zadarmo nadväzuje na koniec členstva; ak už skončilo, začína dnes.
@@ -2935,22 +2934,19 @@ app.post("/api/guarantee/apply", async (req, res) => {
       freeUntil = addActiveMonths(freeStart, 1).toISOString();
       updates = newPeriodUpdates(sub, freeStart.toISOString(), freeUntil, true);
     }
-    const what = isPackage ? `${FREE_TIPS} tipov zadarmo` : "mesiac zadarmo";
     await updateSubscriber(id, {
       ...updates,
-      guarantees: [...(sub.guarantees ?? []), { periodStart: row.periodStart, periodEnd: row.periodEnd, profit: row.profit, appliedAt, freeUntil, ...(isPackage ? { freeTips: FREE_TIPS } : {}) }],
-      note: `${sub.note ? sub.note + " · " : ""}Garancia (${fmtDaySk(dayKeySk(new Date(row.periodStart)))} – ${fmtDaySk(dayKeySk(new Date(row.periodEnd)))}, ${signed(row.profit, 1)} j.): ${what}`,
+      guarantees: [...(sub.guarantees ?? []), { periodStart: row.periodStart, periodEnd: row.periodEnd, profit: row.profit, appliedAt, freeUntil }],
+      note: `${sub.note ? sub.note + " · " : ""}Garancia (${fmtDaySk(dayKeySk(new Date(row.periodStart)))} – ${fmtDaySk(dayKeySk(new Date(row.periodEnd)))}, ${signed(row.profit, 1)} j.): mesiac zadarmo`,
     });
     let notified = false;
     if (req.body?.notify === true && sub.telegramChatId) {
-      const text = isPackage
-        ? `🛡 <b>Garancia TipRadar</b>\n\nTvoj balíček ${row.tier} skončil v strate (${signed(row.profit, 1)} j.), preto máš podľa garancie <b>ďalších ${FREE_TIPS} tipov zadarmo</b>. ` +
-          `Prídu ti do toho istého kanála.`
-        : `🛡 <b>Garancia TipRadar</b>\n\nTvoje členstvo ${row.tier} skončilo v strate (${signed(row.profit, 1)} j.), preto máš podľa garancie mesiac zadarmo. ` +
-          `Platí do <b>${fmtDaySk(dayKeySk(new Date(freeUntil)))}</b>.`;
+      const text =
+        `🛡 <b>Garancia TipRadar</b>\n\nTvoje členstvo ${row.tier} skončilo v mínuse (${signed(row.profit, 1)} j.), preto máš podľa garancie <b>1 mesiac zadarmo</b>. ` +
+        `Tipy ti budú chodiť do toho istého kanála do <b>${fmtDaySk(dayKeySk(new Date(freeUntil)))}</b>.`;
       notified = await sendMemberMessage(String(sub.telegramChatId), text).catch(() => false);
     }
-    res.json({ ok: true, id, freeUntil, freeTips: isPackage ? FREE_TIPS : null, notified });
+    res.json({ ok: true, id, freeUntil, freeTips: null, notified });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   } finally {
@@ -2958,7 +2954,7 @@ app.post("/api/guarantee/apply", async (req, res) => {
   }
 });
 
-// ---- Pravidelná kontrola balíčkov: dochádzajúce tipy, končiaca platnosť ----
+// ---- Pravidelná kontrola členstiev: dochádzajúce tipy (staré časové členstvá: končiaca platnosť) ----
 
 /** Upozorniť, keď v balíčku ostáva najviac toľko tipov. */
 const LOW_TIPS = 5;
@@ -2989,7 +2985,7 @@ async function checkExpiringSubscribers(): Promise<void> {
     for (const r of rows) {
       const { s, k } = r;
       let when = "";
-      if (!k.active && r.endedDaysAgo !== null && r.endedDaysAgo <= 3) when = k.total !== null && k.left === 0 ? "všetky tipy sú minuté – balíček skončil" : "balíček skončil (uplynula platnosť)";
+      if (!k.active && r.endedDaysAgo !== null && r.endedDaysAgo <= 3) when = k.total !== null && k.left === 0 ? "všetky tipy sú minuté – členstvo skončilo" : "členstvo skončilo";
       else if (k.active && k.left !== null && k.left <= LOW_TIPS) when = `ostáva ${k.left} z ${k.total} tipov`;
       else if (k.active && r.daysLeft <= 3) when = r.daysLeft <= 0 ? "platnosť končí dnes" : `platnosť končí o ${r.daysLeft} d.`;
       if (when) notes.push({ name: s.name, length: s.length, tier: s.tier, when });

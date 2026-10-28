@@ -4,7 +4,7 @@ import * as crypto from "crypto";
 import axios from "axios";
 import { ibanValid } from "./payBySquare";
 
-// Platby za balíčky tipov TipRadar (Štart 100, Gold 250, Onyx 500 tipov): bankový prevod cez QR kód (PAY by square), bez poplatkov.
+// Platby za členstvo TipRadar (Gold 100 tipov 79 €, Onyx 250 tipov 169 €): bankový prevod cez QR kód (PAY by square), bez poplatkov.
 // Zapne sa, keď sú na Renderi nastavené SALES_OPEN=true, PAY_IBAN a PAY_NAME.
 // Platbu potvrdíš jedným klikom v appke alebo v Telegrame, bot potom pošle pozvánku.
 
@@ -51,15 +51,17 @@ export function addActiveMonths(from: Date, months: number, days?: number): Date
   return calEnd;
 }
 
-// Od 27. 10. 2026 sa predávajú balíčky podľa počtu tipov (Michalovo rozhodnutie):
-// Kódy t75 / t150 / t300 ostali z prvej verzie (75 / 150 / 300 tipov), od 27. 10. 2026 znamenajú 100 / 250 / 500 tipov.
-// t75 = Štart (100 tipov, 89 €), t150 = Gold (250 tipov, 179 €), t300 = Onyx (500 tipov, 299 €).
-// Bez časovej platnosti (Michal, 27. 10. 2026): balíček platí, kým sa neminú tipy. NO_EXPIRY_MONTHS je len
-// technický dátum ďaleko v budúcnosti (nikde sa neukazuje).
-// Staré časové členstvá m1 (Gold 50 dní), m3 (Onyx 6 mesiacov) a season ostávajú len kvôli starším záznamom.
+// Od 28. 10. 2026 sa predávajú dve členstvá podľa počtu tipov (Michalovo rozhodnutie):
+// p100 = Gold · 100 tipov · 79 €, p250 = Onyx · 250 tipov · 169 € (navyše mentoring 1 na 1).
+// Bez časovej platnosti: členstvo platí, kým sa neminú tipy (NO_EXPIRY_MONTHS je len technický dátum, nikde sa neukazuje).
+// Garancia: ak členstvo skončí v strate (v jednotkách), člen dostane 1 mesiac zadarmo (na ten sa garancia nevzťahuje).
+// Staré balíčky t75 / t150 / t300 (Štart 100 / Gold 250 / Onyx 500 tipov, 27. – 28. 10. 2026) a ešte staršie časové
+// členstvá m1 (Gold 50 dní), m3 / season (6 mesiacov) ostávajú len kvôli starším záznamom.
 export const NO_EXPIRY_MONTHS = 1200;
-export type Term = "t75" | "t150" | "t300" | "m1" | "m3" | "season";
+export type Term = "p100" | "p250" | "t75" | "t150" | "t300" | "m1" | "m3" | "season";
 export const PAY_TERMS: Record<Term, { price: number; name: string; months?: number; days?: number; tips?: number }> = {
+  p100: { price: 79, name: "100 tipov", tips: 100, months: NO_EXPIRY_MONTHS },
+  p250: { price: 169, name: "250 tipov", tips: 250, months: NO_EXPIRY_MONTHS },
   t75: { price: 89, name: "100 tipov", tips: 100, months: NO_EXPIRY_MONTHS },
   t150: { price: 179, name: "250 tipov", tips: 250, months: NO_EXPIRY_MONTHS },
   t300: { price: 299, name: "500 tipov", tips: 500, months: NO_EXPIRY_MONTHS },
@@ -67,39 +69,38 @@ export const PAY_TERMS: Record<Term, { price: number; name: string; months?: num
   m3: { price: 199, name: "6 mesiacov", months: 6 },
   season: { price: 219, name: "6 mesiacov", months: 6 },
 };
-/** Garancia: ak balíček skončí v strate, člen dostane ďalších 30 tipov zadarmo (tiež bez časovej platnosti). */
-export const FREE_TIPS = 30;
-export const FREE_TIPS_MONTHS = NO_EXPIRY_MONTHS;
-/** Názov balíčka: Štart / Gold / Onyx (staré časové členstvá majú v názve „staré“). */
+/** Názov členstva: Gold / Onyx (staré balíčky a časové členstvá majú v názve „starý / staré“). */
 export const TIER_NAMES: Record<Term, string> = {
-  t75: "Štart",
-  t150: "Gold",
-  t300: "Onyx",
+  p100: "Gold",
+  p250: "Onyx",
+  t75: "Štart (starý balíček)",
+  t150: "Gold (starý balíček)",
+  t300: "Onyx (starý balíček)",
   m1: "Gold (50 dní, staré)",
   m3: "Onyx (6 mesiacov, staré)",
   season: "Platinum (6 mesiacov, staré)",
 };
 export function tierName(term: Term): string {
-  return TIER_NAMES[term] ?? TIER_NAMES.t150;
+  return TIER_NAMES[term] ?? TIER_NAMES.p100;
 }
-/** Názov balíčka s počtom tipov, napríklad „Gold · 250 tipov“. */
+/** Názov členstva s počtom tipov, napríklad „Onyx · 250 tipov“. */
 export function termLabel(term: Term): string {
   return `${tierName(term)} · ${PAY_TERMS[term].name}`;
 }
 export function isTerm(v: unknown): v is Term {
   return typeof v === "string" && Object.prototype.hasOwnProperty.call(PAY_TERMS, v);
 }
-export type SellableTerm = "t75" | "t150" | "t300";
-export const SELLABLE_TERMS: SellableTerm[] = ["t75", "t150", "t300"];
-/** Balíčky, ktoré sa dajú kúpiť (staré časové členstvá nie). */
+export type SellableTerm = "p100" | "p250";
+export const SELLABLE_TERMS: SellableTerm[] = ["p100", "p250"];
+/** Členstvá, ktoré sa dajú kúpiť (staré balíčky a časové členstvá nie). */
 export function isSellableTerm(v: unknown): v is SellableTerm {
-  return v === "t75" || v === "t150" || v === "t300";
+  return v === "p100" || v === "p250";
 }
-/** Staré odkazy (term=m1 / m3 / season) vedú na nové balíčky: Gold 50 dní → Gold, 6 mesiacov → Onyx. */
+/** Staré odkazy vedú na nové členstvá: Štart / 50 dní → Gold 100, Gold 250 / Onyx / 6 mesiacov → Onyx 250. */
 export function sellableTerm(v: unknown): SellableTerm | null {
   if (isSellableTerm(v)) return v;
-  if (v === "m1") return "t150";
-  if (v === "m3" || v === "season") return "t300";
+  if (v === "t75" || v === "m1") return "p100";
+  if (v === "t150" || v === "t300" || v === "m3" || v === "season") return "p250";
   return null;
 }
 
@@ -111,7 +112,7 @@ export function paymentsEnabled(): boolean {
   return process.env.SALES_OPEN === "true" && bankEnabled();
 }
 
-/** Do kedy najneskôr platí balíček (členstvo) zaplatený dnes (jún a júl sa nepočítajú). */
+/** Do kedy najneskôr platí členstvo zaplatené dnes (jún a júl sa nepočítajú). */
 export function paidUntil(term: Term, from = new Date()): string {
   return addActiveMonths(new Date(from), PAY_TERMS[term].months ?? 1, PAY_TERMS[term].days).toISOString();
 }

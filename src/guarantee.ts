@@ -1,15 +1,17 @@
 import { addActiveMonths, PAY_TERMS, Term, isTerm } from "./payments";
 import { MemberPeriod, SavedTip, Subscriber } from "./types";
 
-// Balíčky tipov (od 27. 10. 2026): Štart 100, Gold 250, Onyx 500 tipov. Každému členovi sa počítajú tipy
-// od dňa nákupu; balíček skončí po poslednom tipe (bez časovej platnosti, od 27. 10. 2026).
-// Garancia: ak balíček skončí v strate, člen dostane ďalších 30 tipov zadarmo (na tie sa garancia už nevzťahuje).
-// Staršie časové členstvá (Gold 50 dní, Onyx 6 mesiacov) sa vyhodnocujú po dňoch ako predtým.
+// Členstvo (od 28. 10. 2026): Gold 100 tipov, Onyx 250 tipov. Každému členovi sa počítajú tipy od dňa nákupu;
+// členstvo skončí po poslednom tipe (bez časovej platnosti).
+// Garancia: ak členstvo skončí v strate, člen dostane 1 mesiac zadarmo – všetky tipy počas mesiaca, bez počtu
+// (na mesiac zadarmo sa garancia už nevzťahuje). Staré balíčky mali 30 tipov zadarmo.
+// Staré balíčky (Štart / Gold / Onyx, 27. – 28. 10. 2026) sa počítajú rovnako, staršie časové členstvá
+// (Gold 50 dní, Onyx 6 mesiacov) po dňoch.
 
 /** Koľko predošlých období si pri členovi pamätáme (stačí na vyhodnotenie za posledných 60 dní). */
 const KEEP_PAST = 6;
 
-/** Balíček / dĺžka členstva člena (staršie záznamy bez dĺžky: group = 6 mesiacov, inak Gold 50 dní). */
+/** Dĺžka členstva / balíček člena (staršie záznamy bez dĺžky: group = 6 mesiacov, inak Gold 50 dní). */
 export function memberTerm(s: Subscriber): Term {
   if (isTerm(s.length)) return s.length;
   return s.tier === "group" ? "season" : "m1";
@@ -55,7 +57,7 @@ export function memberPeriods(s: Subscriber): MemberPeriod[] {
 }
 
 function currentPeriod(s: Subscriber): MemberPeriod {
-  const tips = memberTips(s);
+  const tips = s.freeMonth ? null : memberTips(s);
   return { start: currentPeriodStart(s), end: s.nextPaymentDue, ...(s.freePeriod ? { free: true } : {}), ...(tips ? { tips } : {}) };
 }
 
@@ -66,7 +68,7 @@ function currentPeriod(s: Subscriber): MemberPeriod {
 export function newPeriodUpdates(s: Subscriber, periodStart: string, periodEnd: string, free = false, tips?: number): Partial<Subscriber> {
   const prev = currentPeriod(s);
   const past = [...(s.pastPeriods ?? []).filter((p) => p.start !== prev.start), prev].slice(-KEEP_PAST);
-  return { pastPeriods: past, periodStart, nextPaymentDue: periodEnd, freePeriod: free, ...(tips ? { tips } : {}) };
+  return { pastPeriods: past, periodStart, nextPaymentDue: periodEnd, freePeriod: free, freeMonth: free && !tips, ...(tips ? { tips } : {}) };
 }
 
 // ---- Počítanie tipov v balíčkoch ----

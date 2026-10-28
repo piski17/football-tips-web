@@ -36,7 +36,7 @@
   </defs><symbol id="crest" viewBox="0 0 200 240"><path d="M100 6 188 34v86c0 58-40 94-88 114C52 214 12 178 12 120V34Z" fill="#0E0E10" stroke="url(#kgg)" stroke-width="5"/><path d="M100 22 172 45v75c0 48-32 79-72 96-40-17-72-48-72-96V45Z" fill="none" stroke="url(#kgg)" stroke-width="1.5" opacity=".7"/><g transform="translate(100 118)" fill="none" stroke="url(#kgg)"><circle r="46" stroke-width="2"/><circle r="30" stroke-width="1.4" opacity=".8"/><circle r="14" stroke-width="1.2" opacity=".7"/><path d="M0 0 32 -33" stroke-width="3"/><circle cx="22" cy="-14" r="4" fill="url(#kgg)"/><path d="M-46 0H46M0 -46V46" stroke-width=".8" opacity=".5"/></g><text x="100" y="62" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-weight="700" font-size="17" letter-spacing="5" fill="url(#kgg)">TIPRADAR</text><text x="100" y="196" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-weight="600" font-size="12" letter-spacing="4" fill="url(#kgg)">EST · 2026</text></symbol>
 </svg><svg class="kb-crest" viewBox="0 0 200 240" aria-hidden="true"><use href="#crest"/></svg><span>TipRadar<small>Futbalový klub dát</small></span></div>
       <nav class="nav" id="sideNav" aria-label="Hlavné menu"></nav>
-      <button type="button" class="seats" id="seatBox" title="Balíčky TipRadar: počet aktívnych členov podľa balíčka – Štart (100), Gold (250), Onyx (500 tipov). Kliknutím otvoríš sekciu Členovia."></button>
+      <button type="button" class="seats" id="seatBox" title="Členstvo TipRadar: počet aktívnych členov Gold (100 tipov) a Onyx (250 tipov). Kliknutím otvoríš sekciu Členovia."></button>
     </aside>
 
     <main class="main">
@@ -177,7 +177,7 @@
         <div class="page">
           <div class="card gar-card" id="guaranteeCard" hidden></div>
           <div class="seats seats-inline" id="seatBoxMobile"></div>
-          <p class="muted small">Všetci, ktorí si kúpili balíček tipov (pri platbe cez QR kód sa zapíšu sami). Server každému ráta tipy poslané do členského kanála od nákupu; keď ostane 5 tipov, upozorní teba aj člena.</p>
+          <p class="muted small">Všetci, ktorí si kúpili členstvo Gold alebo Onyx (pri platbe cez QR kód sa zapíšu sami). Server každému ráta tipy poslané do členského kanála od nákupu; keď ostane 5 tipov, upozorní teba aj člena. Ak členstvo skončí v mínuse, v karte Garancia pridáš mesiac zadarmo.</p>
           <div class="kpis kpis-members" id="subscribersSummary"></div>
 
           <div class="card">
@@ -186,11 +186,10 @@
               <label class="fld">Meno<input type="text" id="subName" placeholder="Meno" /></label>
               <label class="fld">Kontakt<input type="text" id="subContact" placeholder="E-mail, Telegram…" /></label>
               <label class="fld">Telegram chat ID<input type="text" id="subTelegramChatId" placeholder="voliteľné" /></label>
-              <label class="fld">Balíček
+              <label class="fld">Členstvo
                 <select id="subLength">
-                  <option value="t75">Štart · 100 tipov (89 €)</option>
-                  <option value="t150" selected>Gold · 250 tipov (179 €)</option>
-                  <option value="t300">Onyx · 500 tipov (299 €)</option>
+                  <option value="p100" selected>Gold · 100 tipov (79 €)</option>
+                  <option value="p250">Onyx · 250 tipov (169 €)</option>
                 </select>
               </label>
               <label class="fld">Od<input type="date" id="subStart" /></label>
