@@ -84,6 +84,8 @@ export interface MarketPick {
   strictProbability?: number;
   /** Neprešiel pri 60 / 40 (s kurzom zo stávkovky). */
   strictFail?: boolean;
+  /** Tip zo skúšobného pásma 65 – 67 % (28. 10. 2026) – len sledovať. */
+  watchBand?: boolean;
   /** Dôvod, prečo bol tip vyradený (len pri lowValueBets). */
   rejectReason?: string;
   /**
@@ -211,6 +213,8 @@ export interface PredictionResult {
   bestBets: MarketPick[];
   /** Tipy v pásme dôvery (68–80 %), ktoré vypadli pre príliš nízky skutočný kurz. */
   lowValueBets?: MarketPick[];
+  /** Skúšobné pásmo 65 – 67 % (28. 10. 2026): tipy, ktoré prešli pravidlami, ale idú len do sledovaných. */
+  watchBandBets?: MarketPick[];
   /** Všetci kandidáti (najpravdepodobnejšia voľba pre každý trh) – pre spätný test. */
   allCandidates?: MarketPick[];
   /** Či boli pre zápas k dispozícii skutočné kurzy stávkoviek. */
@@ -319,6 +323,8 @@ export interface SavedTip {
   strictProbability?: number;
   /** Prešiel pri 70 / 30, ale nie pri 60 / 40 – len sledovať. */
   strictFail?: boolean;
+  /** Tip zo skúšobného pásma 65 – 67 % (28. 10. 2026) – len sledovať, vlastná skupina v Histórii tipov. */
+  watchBand?: boolean;
   /** Zverejnený tip spätne presunutý do sledovaných podľa kontroly 60 / 40 (27. 10. 2026, skúšobné obdobie). */
   retroStrict?: boolean;
   /** Tip skrytý z histórie tipov - naďalej sa ráta do štatistík a zobrazuje na prezentačnej stránke. */

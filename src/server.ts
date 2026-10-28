@@ -1,4 +1,4 @@
-import { plausibleLine, MIN_ODDS, MAX_PROBABILITY, MIN_PROBABILITY, MIN_EXPECTED_VALUE, SUSPICIOUS_EXPECTED_VALUE, findOdds, marketProbabilityDetail, STRONG_TIP_MIN_PROBABILITY, WATCH_BELOW_PROBABILITY } from "./oddsMatcher";
+import { plausibleLine, MIN_ODDS, MAX_PROBABILITY, MIN_PROBABILITY, MIN_EXPECTED_VALUE, SUSPICIOUS_EXPECTED_VALUE, findOdds, marketProbabilityDetail, STRONG_TIP_MIN_PROBABILITY, WATCH_BELOW_PROBABILITY, WATCH_BAND_MIN_PROBABILITY } from "./oddsMatcher";
 import { listLeads, deleteLead, recordLead } from "./leadsStore";
 import { getMeta, setMeta } from "./metaStore";
 import * as crypto from "crypto";
@@ -714,7 +714,7 @@ async function analyzeFixture(fixture: any, leagueId: any, season: any, record =
   const marketDetail = (p: { market: string; selection: string }) =>
     marketOdds && marketOdds.length ? marketProbabilityDetail(marketOdds, p, fixture.homeTeam.name, fixture.awayTeam.name) : null;
   const marketProbs: Record<string, { prob: number; devig: boolean }> = {};
-  for (const p of [...((result as any).bestBets ?? []), ...((result as any).lowValueBets ?? [])]) {
+  for (const p of [...((result as any).bestBets ?? []), ...((result as any).lowValueBets ?? []), ...((result as any).watchBandBets ?? [])]) {
     const d = marketDetail(p);
     if (d) marketProbs[`${p.market}|${p.selection}`] = { prob: Math.round(d.prob * 10) / 10, devig: d.devig };
   }
@@ -865,10 +865,12 @@ app.post("/api/tips", async (req, res) => {
       tip.strongOfDay = taken ? undefined : true;
     }
     if (!isManualResult) await addMeasurement(tip);
-    // Skúšobné pásmo 65 – 68 %: tip sa automaticky uloží len na sledovanie (bez Telegramu a štatistík).
+    // Skúšobné pásmo 65 – 67 %: tip sa automaticky uloží len na sledovanie (bez Telegramu a štatistík).
+    // Od 28. 10. 2026 má v Histórii tipov vlastnú skupinu (watchBand).
     if (!(tip.legs && tip.legs.length) && !tip.manualEntry && typeof tip.probability === "number" && tip.probability < WATCH_BELOW_PROBABILITY) {
       tip.watchOnly = true;
       tip.strongOfDay = undefined;
+      if (tip.probability >= WATCH_BAND_MIN_PROBABILITY) tip.watchBand = true;
     }
     // Rozpor so stávkovkami, ktorý prešiel len vďaka zmierneniu filtra (22. 10. 2026, Michalovo
     // rozhodnutie): tip sa uloží len na sledovanie, klientom nejde.
@@ -878,7 +880,7 @@ app.post("/api/tips", async (req, res) => {
     }
     // Dvojitá kontrola (27. 10. 2026, Michalovo rozhodnutie): tip musí prejsť aj pri 60 % model / 40 % stávkovky
     // s kurzom, ktorý Michal zadal. Ak neprejde, uloží sa len na sledovanie.
-    if (!(tip.legs && tip.legs.length) && !tip.manualEntry && !tip.overrideFilter && !passesStrict(tip, tip.odds)) {
+    if (!(tip.legs && tip.legs.length) && !tip.manualEntry && !tip.overrideFilter && !tip.watchBand && !passesStrict(tip, tip.odds)) {
       tip.watchOnly = true;
       tip.strictFail = true;
       tip.strongOfDay = undefined;
@@ -2638,9 +2640,10 @@ async function checkLineups(): Promise<void> {
         if (!c) {
           ok = false;
           reason = "model tento tip po zostavách už neponúka";
-        } else if (c.probability < MIN_PROBABILITY || c.probability > MAX_PROBABILITY) {
+        } else if (c.probability < (tip.watchBand ? WATCH_BAND_MIN_PROBABILITY : MIN_PROBABILITY) || c.probability > MAX_PROBABILITY) {
           ok = false;
-          reason = `dôvera ${c.probability.toFixed(0)} % je mimo pásma ${MIN_PROBABILITY} – ${MAX_PROBABILITY} %`;
+          const lo = tip.watchBand ? WATCH_BAND_MIN_PROBABILITY : MIN_PROBABILITY;
+          reason = `dôvera ${c.probability.toFixed(0)} % je mimo pásma ${lo} – ${MAX_PROBABILITY} %`;
         } else if (c.marketConflict) {
           ok = false;
           reason = c.marketConflict;

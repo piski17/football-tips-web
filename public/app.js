@@ -1079,7 +1079,7 @@ function buildTip(r, bet, realOdds, extra = {}) {
     ...measurementFields(r, bet),
     ...(bet.softConflict && !softConflictCheck(bet, realOdds).pass ? { softConflict: true, watchOnly: true } : {}),
     ...(typeof bet.strictProbability === "number" ? { strictProbability: bet.strictProbability } : {}),
-    ...(!strictCheck(bet, realOdds).pass ? { strictFail: true, watchOnly: true } : {}),
+    ...(bet.watchBand ? { watchBand: true, watchOnly: true } : !strictCheck(bet, realOdds).pass ? { strictFail: true, watchOnly: true } : {}),
     ...extra,
     savedAt: new Date().toISOString(),
     status: "pending",
@@ -1457,6 +1457,8 @@ async function showDayTips() {
     try {
       const r = await requestAnalysis(f);
       for (const bet of r?.bestBets || []) items.push({ r, bet });
+      // Skúšobné pásmo 65 – 67 % (28. 10. 2026): len do sledovaných, v zozname vlastná skupina.
+      for (const bet of r?.watchBandBets || []) items.push({ r, bet });
     } catch (e) {
       failed++;
       failedList.push({ match: `${translateTeamName(f.homeTeam.name)} – ${translateTeamName(f.awayTeam.name)}`, why: (e && e.message) || "neznáma chyba" });
@@ -1512,7 +1514,7 @@ function renderDayTipsView() {
     const n = currentFixtures.filter((f) => !matchHasStarted(f)).length;
     dayTipsPaneEl.innerHTML = `<div class="card intro-card">
       <h3 class="sh" style="margin-top:0">Všetky odporúčané tipy dňa naraz</h3>
-      <p class="muted">Appka prejde všetky zápasy vybraného dňa pred výkopom${fixturesLoading ? "" : ` (${plural(n, "zápas", "zápasy", "zápasov")})`} a ukáže všetky tipy, ktoré prešli pravidlami (68 – 80${NB}% a kontrola kurzu), zoradené od najvyššej dôvery.</p>
+      <p class="muted">Appka prejde všetky zápasy vybraného dňa pred výkopom${fixturesLoading ? "" : ` (${plural(n, "zápas", "zápasy", "zápasov")})`} a ukáže všetky tipy, ktoré prešli pravidlami (68 – 80${NB}% a kontrola kurzu), zoradené od najvyššej dôvery. Tipy 65 – 67${NB}% ukáže zvlášť – idú len do sledovaných.</p>
       <button type="button" class="btn" data-dt-start>Spustiť analýzu</button>
     </div>`;
     dayTipsPaneEl.querySelector("[data-dt-start]").onclick = () => showDayTips();
@@ -1554,8 +1556,9 @@ function renderDayTipsView() {
   const groups = [
     { key: "klienti", title: "Pre klientov", note: "", idx: [] },
     { key: "sledovane", title: "Do sledovaných", note: "šedá zóna – slabší rozpor so stávkovkami alebo neprešli pri 60 / 40; s dobrým kurzom môže tip prejsť aj ku klientom", idx: [] },
+    { key: "pasmo65", title: `Pásmo 65 – 67${NB}% – len sledovať`, note: "skúška do kontroly 1. 12.: klientom nejdú, len sa vyhodnotia (História tipov → Pásmo 65 – 67 %)", idx: [] },
   ];
-  dayTips.items.forEach(({ bet }, i) => groups[bet.softConflict || bet.strictFail ? 1 : 0].idx.push(i));
+  dayTips.items.forEach(({ bet }, i) => groups[bet.watchBand ? 2 : bet.softConflict || bet.strictFail ? 1 : 0].idx.push(i));
   let shown = 0;
   const rows = groups
     .filter((g) => g.idx.length)
@@ -1634,9 +1637,9 @@ function renderDayTipsView() {
       if (dayTipSaved.has(i)) { el.textContent = ""; el.className = "odds-st"; return; }
       const st = oddsState(i);
       const sc = st.ok && dayTips.items[i].bet.softConflict ? softConflictCheck(dayTips.items[i].bet, st.odd) : null;
-      const sx = st.ok && (!sc || sc.pass) ? strictCheck(dayTips.items[i].bet, st.odd) : null;
+      const sx = st.ok && (!sc || sc.pass) && !dayTips.items[i].bet.watchBand ? strictCheck(dayTips.items[i].bet, st.odd) : null;
       el.className = "odds-st" + (st.odd == null ? "" : (sc && !sc.pass) || (sx && !sx.pass) ? " bad" : st.ok ? " ok" : " bad");
-      el.textContent = st.odd == null ? "" : sc && !sc.pass ? `✗ rozpor ${Math.round(sc.gap)} b. – len sledovať` : sx && !sx.pass ? "✗ neprejde pri 60 / 40 – len sledovať" : sc ? `✓ rozpor ${Math.round(sc.gap)} b. – prejde` : st.ok ? "✓ má hodnotu" : st.odd > 20 ? "✗ preklep?" : `✗ pod ${fmtOdds(st.min)}`;
+      el.textContent = st.odd == null ? "" : sc && !sc.pass ? `✗ rozpor ${Math.round(sc.gap)} b. – len sledovať` : sx && !sx.pass ? "✗ neprejde pri 60 / 40 – len sledovať" : sc ? `✓ rozpor ${Math.round(sc.gap)} b. – prejde` : st.ok && dayTips.items[i].bet.watchBand ? "✓ má hodnotu – len sledovať" : st.ok ? "✓ má hodnotu" : st.odd > 20 ? "✗ preklep?" : `✗ pod ${fmtOdds(st.min)}`;
       if (st.ok && !matchHasStarted(dayTips.items[i].r.fixture)) n++;
     });
     const b = document.getElementById("dtBulkSave");
@@ -1809,7 +1812,8 @@ function renderTipsList(allTips) {
   renderValueReport(statTips);
   renderLeagueReport(statTips);
   const watchTips = allTips.filter((t) => t.watchOnly && !(t.legs && t.legs.length));
-  renderWatchReport(watchTips);
+  renderWatchBand(watchTips.filter(isWatchBandTip));
+  renderWatchReport(watchTips.filter((t) => !isWatchBandTip(t)));
   void renderWatchOverview(watchTips, statTips);
   renderTipRows(tips);
 }
@@ -1929,7 +1933,22 @@ function renderBankrollSimulation(tips) {
 const CALIBRATION_FROM = 65;
 const CALIBRATION_TO = 82.5;
 const CALIBRATION_STEP = 2.5;
-/** Sledované tipy: tipy „len sledovať“ (skúšobné pásmo 65 – 67 % zrušené 24. 10. 2026). */
+/**
+ * Skúšobné pásmo 65 – 67 % (28. 10. 2026, Michal): tipy tesne pod pásmom pre klientov majú v Histórii tipov
+ * vlastnú skupinu. Patria sem aj staršie sledované tipy 65 – 67 % z modelu (skúška 21. – 24. 10. 2026).
+ */
+const WATCH_BAND_FROM = 65;
+const isWatchBandTip = (t) =>
+  !!t.watchBand ||
+  (!t.manualEntry && !t.softConflict && !t.strictFail && !t.retroStrict && typeof t.probability === "number" && t.probability >= WATCH_BAND_FROM && t.probability < WATCH_BELOW);
+function renderWatchBand(list) {
+  const el = document.getElementById("watchBandResult");
+  if (!el) return;
+  el.innerHTML =
+    watchListHtml(list, `Zatiaľ žiadne. Tipy 65 – 67${NB}% sa ukážu v Tipoch dňa v skupine „Pásmo 65 – 67${NB}%“ – keď ich uložíš s kurzom, pribudnú sem.`) +
+    `<p class="faint small">Klientom nejdú, nie sú na webe a nerátajú sa do úspešnosti – len sa vyhodnocujú. Pri kontrole 1. 12. sa podľa nich rozhodne, či pásmo pre klientov rozšíriť na 65 – 80${NB}% (pri dôvere 65${NB}% treba kurz aspoň 1,62).</p>`;
+}
+/** Sledované tipy: tipy „len sledovať“ (pásmo 65 – 67 % má od 28. 10. 2026 vlastnú skupinu – renderWatchBand). */
 function renderWatchReport(list) {
   const el = document.getElementById("watchResult");
   if (!el) return;
@@ -2011,8 +2030,10 @@ async function renderWatchOverview(watchTips, statTips = []) {
   const soft = watchTips.filter((t) => t.softConflict);
   const strict = watchTips.filter((t) => !t.softConflict && t.strictFail);
   const manual = watchTips.filter((t) => !t.softConflict && !t.strictFail && t.manualEntry);
-  const marked = watchTips.filter((t) => !t.softConflict && !t.strictFail && !t.manualEntry);
+  const band = watchTips.filter(isWatchBandTip);
+  const marked = watchTips.filter((t) => !t.softConflict && !t.strictFail && !t.manualEntry && !isWatchBandTip(t));
   const rows = [
+    watchGroupRow(`Pásmo 65 – 67${NB}% (skúška)`, band),
     watchGroupRow("Šedá zóna – slabší rozpor so stávkovkami", soft),
     watchGroupRow("Prešli pri 70 / 30, nie pri 60 / 40", strict),
     watchGroupRow("Ručne pridané mimo pravidiel", manual),
@@ -2027,7 +2048,7 @@ async function renderWatchOverview(watchTips, statTips = []) {
   }
   // Sledované tipy (bez spätne presunutých a bez tých, čo už neprešli 60 / 40) – len rozbor, nikam sa nepresúvajú:
   // klientom nikdy nešli, preto nemôžu dodatočne pribudnúť do výsledkov na webe.
-  const wsplit = retroStrictSplit(watchTips.filter((t) => !t.retroStrict && !t.strictFail));
+  const wsplit = retroStrictSplit(watchTips.filter((t) => !t.retroStrict && !t.strictFail && !isWatchBandTip(t)));
   if (wsplit.pass.length || wsplit.fail.length) {
     rows.push(watchGroupRow("Sledované – prešli by pri 60 / 40 (len rozbor)", wsplit.pass));
     rows.push(watchGroupRow("Sledované – neprešli by ani pri 60 / 40 (len rozbor)", wsplit.fail));
@@ -2083,7 +2104,7 @@ async function renderWatchOverview(watchTips, statTips = []) {
   });
 }
 
-document.getElementById("watchResult")?.addEventListener("click", async (e) => {
+const onWatchListClick = async (e) => {
   const del = e.target.closest("[data-watch-del]");
   if (del) {
     if (!window.confirm("Naozaj chceš tento sledovaný tip odstrániť? Táto akcia sa nedá vrátiť späť.")) return;
@@ -2100,7 +2121,9 @@ document.getElementById("watchResult")?.addEventListener("click", async (e) => {
   if (!btn) return;
   const tip = currentHistoryTips.find((x) => x.id === btn.dataset.watchEdit);
   if (tip) openEditTip(tip);
-});
+};
+document.getElementById("watchResult")?.addEventListener("click", onWatchListClick);
+document.getElementById("watchBandResult")?.addEventListener("click", onWatchListClick);
 
 function renderCalibrationReport(tips) {
   const el = document.getElementById("calibrationResult");

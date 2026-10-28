@@ -72,6 +72,12 @@ export const MIN_PROBABILITY = 68;
  * a nerátajú sa do štatistík. Keď sa ukážu ako dobré, stačí hranicu znížiť na MIN_PROBABILITY.
  */
 export const WATCH_BELOW_PROBABILITY = 68;
+/**
+ * Skúšobné pásmo 65 – 67 % (28. 10. 2026, Michalovo rozhodnutie): tipy od tejto dôvery po MIN_PROBABILITY
+ * appka ukáže zvlášť a ukladajú sa len do sledovaných (vlastná skupina v Histórii tipov). Pri kontrole
+ * 1. 12. sa podľa nich rozhodne, či rozšíriť pásmo pre klientov.
+ */
+export const WATCH_BAND_MIN_PROBABILITY = 65;
 export const MAX_PROBABILITY = 80;
 /**
  * Od tejto dôvery je odporúčaný tip označený „★ Silný tip“. V troch spätných

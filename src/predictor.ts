@@ -10,6 +10,7 @@ import {
   MIN_GAMES_TO_RECOMMEND,
   MIN_PROBABILITY,
   MAX_PROBABILITY,
+  WATCH_BAND_MIN_PROBABILITY,
   MIN_BOOKMAKERS,
 } from "./oddsMatcher";
 import {
@@ -1355,136 +1356,155 @@ export function predictMatch(
     });
     return near.length > 0 && near.every((c) => (c.expectedValue ?? 0) < 0.98);
   };
-  const pickPool: MarketPick[] = [];
   const lowValueBets: MarketPick[] = [];
-  for (const b of inBand) {
-    const ev = b.expectedValue;
-    if (NOT_RECOMMENDED_MARKETS.includes(b.market)) {
-      // Ofsajdy model v spätných testoch preceňoval (čakal 61 %, vyšlo 45 %); výsledok
-      // zápasu a „oba tímy skórujú" nie sú v zozname trhov. V analýze ostávajú viditeľné,
-      // ručne sa dajú uložiť.
-      b.rejectReason = "tento trh neodporúčame";
-      b.rejectCode = "market_excluded";
-      lowValueBets.push(b);
-    } else if (gamesForRecommend < MIN_GAMES_TO_RECOMMEND) {
-      // Príliš málo zápasov v sezóne (napr. začiatok Ligy národov) - odhad stojí
-      // hlavne na minulých sezónach a kurzoch, nie na aktuálnej forme.
-      b.rejectReason = `málo odohraných zápasov v sezóne (${gamesForRecommend}, treba aspoň ${MIN_GAMES_TO_RECOMMEND})`;
-      b.rejectCode = "few_games";
-      lowValueBets.push(b);
-    } else if (b.marketConflict) {
-      b.rejectReason = b.marketConflict;
-      b.rejectCode = "conflict";
-      lowValueBets.push(b);
-    } else if (ev == null && b.category === "drzanie_lopty" && adjust?.disabled?.[b.category]) {
-      b.rejectReason = `trh je dočasne vypnutý (${adjust.disabled[b.category]})`;
-      b.rejectCode = "market_disabled";
-      lowValueBets.push(b);
-    } else if (ev == null && b.category === "drzanie_lopty") {
-      // Držanie lopty: kurz cez API nie je, tip ide do výberu s minimálnym kurzom,
-      // ktorý Michal porovná so stávkovkou (hodnota +5 % a aspoň MIN_ODDS).
-      b.minOdds = Math.max(MIN_ODDS, Math.ceil((MIN_EXPECTED_VALUE / (b.probability / 100)) * 100) / 100);
-      pickPool.push(b);
-    } else if (ev == null && oddsAvailable) {
-      // Stávkovky k zápasu kurzy majú, ale tento trh (alebo túto hranicu) neponúkajú -
-      // na tip sa reálne nedá staviť. Ručne ho stále možno pridať ("Uložiť aj tak").
-      b.rejectReason = "stávkovky tento trh neponúkajú";
-      b.rejectCode = "no_market_odds";
-      lowValueBets.push(b);
-    } else if (ev == null) {
-      // Pre zápas zatiaľ nie sú žiadne kurzy - hodnotu ani minimálny kurz nevieme
-      // overiť, preto tip neodporučíme. Ručne ho stále možno pridať ("Uložiť aj tak").
-      b.rejectReason = "stávkovky zatiaľ neponúkajú kurz";
-      b.rejectCode = "no_odds";
-      lowValueBets.push(b);
-    } else if (ev < MIN_EXPECTED_VALUE) {
-      b.rejectReason = "nízky kurz, bez hodnoty";
-      b.rejectCode = "ev_low";
-      lowValueBets.push(b);
-    } else if (b.odds != null && b.odds < MIN_ODDS) {
-      // Kurz pod minimom (predvolene 1,50) - tip má hodnotu, ale zisk z výhry je malý.
-      b.rejectReason = `kurz pod ${MIN_ODDS.toFixed(2).replace(".", ",")}`;
-      b.rejectCode = "min_odds";
-      lowValueBets.push(b);
-    } else if ((b.oddsBookmakers ?? 0) < MIN_BOOKMAKERS) {
-      // Kurz len od jednej stávkovky býva nespoľahlivý (často hranica, ktorú
-      // naše stávkovky ani neponúkajú) - hodnota sa nedá overiť.
-      b.rejectReason = "kurz len od jednej stávkovky";
-      b.rejectCode = "one_bookmaker";
-      lowValueBets.push(b);
-    } else if (ev > SUSPICIOUS_EXPECTED_VALUE && fewGames) {
-      b.rejectReason = "podozrivo vysoká hodnota pri malom množstve dát v sezóne";
-      b.rejectCode = "ev_high_few_games";
-      lowValueBets.push(b);
-    } else if (ev > SUSPICIOUS_EXPECTED_VALUE) {
-      // Hodnota nad +25 % znamená, že model vidí šancu oveľa vyššie ako stávkovky.
-      // Predtým tip ostal s upozornením „over zostavy a správy"; teraz sa neodporučí
-      // a ide do tichej evidencie ako každý iný rozpor (raz mesačne sa vyhodnotí).
-      b.marketConflict = `podozrivo vysoká hodnota (+${((ev - 1) * 100).toFixed(0)} %) – model a stávkovky sa výrazne rozchádzajú`;
-      b.modelProbability = b.probability;
-      const mp = marketPct.get(b);
-      if (mp != null) b.marketProbability = mp;
-      b.rejectReason = b.marketConflict;
-      b.rejectCode = "ev_high";
-      lowValueBets.push(b);
-    } else if (adjust?.disabled?.[b.category]) {
-      // Trh vypnutý automaticky (21. 10. 2026: po 30+ tipoch bez zisku a bez lepšieho kurzu).
-      // Až tu, aby „market_disabled“ dostali len tipy, ktoré by inak prešli všetkými filtrami –
-      // tie sa zapisujú do tichej evidencie a keď sa trhu znova darí, zapne sa sám.
-      b.rejectReason = `trh je dočasne vypnutý (${adjust.disabled[b.category]})`;
-      b.rejectCode = "market_disabled";
-      lowValueBets.push(b);
-    } else if (variant && neighborLacksValue(b)) {
-      // Nový model (25. 10. 2026): hodnota len na jednej hranici, kým susedná hranica toho istého
-      // smeru (napr. rohy nad 9,5 a nad 10,5) je jasne bez hodnoty – skôr chyba odhadu než príležitosť.
-      b.rejectReason = "hodnota len na jednej hranici, susedná je bez hodnoty";
-      b.rejectCode = "neighbor_no_value";
-      lowValueBets.push(b);
-    } else {
-      // Dvojitá kontrola 60 / 40: tip ostáva vo výbere, ale ak neprejde, uloží sa len do sledovaných.
-      if (!passesStrict(b, b.odds)) b.strictFail = true;
-      pickPool.push(b);
+  // Výber tipov podľa pravidiel (hodnota, kurz, rozpor, najviac 1 tip z trhu a z typu).
+  // Rovnaký postup ide aj pre skúšobné pásmo 65 – 67 % (len sledovať, 28. 10. 2026).
+  const selectPicks = (pool: MarketPick[], lowValueBets: MarketPick[], watchBand: boolean): MarketPick[] => {
+    const pickPool: MarketPick[] = [];
+    for (const b of pool) {
+      const ev = b.expectedValue;
+      if (NOT_RECOMMENDED_MARKETS.includes(b.market)) {
+        // Ofsajdy model v spätných testoch preceňoval (čakal 61 %, vyšlo 45 %); výsledok
+        // zápasu a „oba tímy skórujú" nie sú v zozname trhov. V analýze ostávajú viditeľné,
+        // ručne sa dajú uložiť.
+        b.rejectReason = "tento trh neodporúčame";
+        b.rejectCode = "market_excluded";
+        lowValueBets.push(b);
+      } else if (gamesForRecommend < MIN_GAMES_TO_RECOMMEND) {
+        // Príliš málo zápasov v sezóne (napr. začiatok Ligy národov) - odhad stojí
+        // hlavne na minulých sezónach a kurzoch, nie na aktuálnej forme.
+        b.rejectReason = `málo odohraných zápasov v sezóne (${gamesForRecommend}, treba aspoň ${MIN_GAMES_TO_RECOMMEND})`;
+        b.rejectCode = "few_games";
+        lowValueBets.push(b);
+      } else if (b.marketConflict) {
+        b.rejectReason = b.marketConflict;
+        b.rejectCode = "conflict";
+        lowValueBets.push(b);
+      } else if (ev == null && b.category === "drzanie_lopty" && adjust?.disabled?.[b.category]) {
+        b.rejectReason = `trh je dočasne vypnutý (${adjust.disabled[b.category]})`;
+        b.rejectCode = "market_disabled";
+        lowValueBets.push(b);
+      } else if (ev == null && b.category === "drzanie_lopty") {
+        // Držanie lopty: kurz cez API nie je, tip ide do výberu s minimálnym kurzom,
+        // ktorý Michal porovná so stávkovkou (hodnota +5 % a aspoň MIN_ODDS).
+        b.minOdds = Math.max(MIN_ODDS, Math.ceil((MIN_EXPECTED_VALUE / (b.probability / 100)) * 100) / 100);
+        pickPool.push(b);
+      } else if (ev == null && oddsAvailable) {
+        // Stávkovky k zápasu kurzy majú, ale tento trh (alebo túto hranicu) neponúkajú -
+        // na tip sa reálne nedá staviť. Ručne ho stále možno pridať ("Uložiť aj tak").
+        b.rejectReason = "stávkovky tento trh neponúkajú";
+        b.rejectCode = "no_market_odds";
+        lowValueBets.push(b);
+      } else if (ev == null) {
+        // Pre zápas zatiaľ nie sú žiadne kurzy - hodnotu ani minimálny kurz nevieme
+        // overiť, preto tip neodporučíme. Ručne ho stále možno pridať ("Uložiť aj tak").
+        b.rejectReason = "stávkovky zatiaľ neponúkajú kurz";
+        b.rejectCode = "no_odds";
+        lowValueBets.push(b);
+      } else if (ev < MIN_EXPECTED_VALUE) {
+        b.rejectReason = "nízky kurz, bez hodnoty";
+        b.rejectCode = "ev_low";
+        lowValueBets.push(b);
+      } else if (b.odds != null && b.odds < MIN_ODDS) {
+        // Kurz pod minimom (predvolene 1,50) - tip má hodnotu, ale zisk z výhry je malý.
+        b.rejectReason = `kurz pod ${MIN_ODDS.toFixed(2).replace(".", ",")}`;
+        b.rejectCode = "min_odds";
+        lowValueBets.push(b);
+      } else if ((b.oddsBookmakers ?? 0) < MIN_BOOKMAKERS) {
+        // Kurz len od jednej stávkovky býva nespoľahlivý (často hranica, ktorú
+        // naše stávkovky ani neponúkajú) - hodnota sa nedá overiť.
+        b.rejectReason = "kurz len od jednej stávkovky";
+        b.rejectCode = "one_bookmaker";
+        lowValueBets.push(b);
+      } else if (ev > SUSPICIOUS_EXPECTED_VALUE && fewGames) {
+        b.rejectReason = "podozrivo vysoká hodnota pri malom množstve dát v sezóne";
+        b.rejectCode = "ev_high_few_games";
+        lowValueBets.push(b);
+      } else if (ev > SUSPICIOUS_EXPECTED_VALUE) {
+        // Hodnota nad +25 % znamená, že model vidí šancu oveľa vyššie ako stávkovky.
+        // Predtým tip ostal s upozornením „over zostavy a správy"; teraz sa neodporučí
+        // a ide do tichej evidencie ako každý iný rozpor (raz mesačne sa vyhodnotí).
+        b.marketConflict = `podozrivo vysoká hodnota (+${((ev - 1) * 100).toFixed(0)} %) – model a stávkovky sa výrazne rozchádzajú`;
+        b.modelProbability = b.probability;
+        const mp = marketPct.get(b);
+        if (mp != null) b.marketProbability = mp;
+        b.rejectReason = b.marketConflict;
+        b.rejectCode = "ev_high";
+        lowValueBets.push(b);
+      } else if (adjust?.disabled?.[b.category]) {
+        // Trh vypnutý automaticky (21. 10. 2026: po 30+ tipoch bez zisku a bez lepšieho kurzu).
+        // Až tu, aby „market_disabled“ dostali len tipy, ktoré by inak prešli všetkými filtrami –
+        // tie sa zapisujú do tichej evidencie a keď sa trhu znova darí, zapne sa sám.
+        b.rejectReason = `trh je dočasne vypnutý (${adjust.disabled[b.category]})`;
+        b.rejectCode = "market_disabled";
+        lowValueBets.push(b);
+      } else if (variant && neighborLacksValue(b)) {
+        // Nový model (25. 10. 2026): hodnota len na jednej hranici, kým susedná hranica toho istého
+        // smeru (napr. rohy nad 9,5 a nad 10,5) je jasne bez hodnoty – skôr chyba odhadu než príležitosť.
+        b.rejectReason = "hodnota len na jednej hranici, susedná je bez hodnoty";
+        b.rejectCode = "neighbor_no_value";
+        lowValueBets.push(b);
+      } else {
+        // Dvojitá kontrola 60 / 40: tip ostáva vo výbere, ale ak neprejde, uloží sa len do sledovaných.
+        // (Pásmo 65 – 67 % ide celé len do sledovaných, kontrola 60 / 40 sa pri ňom nerobí.)
+        if (!watchBand && !passesStrict(b, b.odds)) b.strictFail = true;
+        pickPool.push(b);
+      }
     }
-  }
 
-  // Appka ukáže VŠETKY tipy zápasu, ktoré spadajú do pásma - najviac jeden
-  // z každej kategórie (trhu). Z viacerých hraníc toho istého trhu (napr. rohy
-  // 8,5 / 9,5 / 10,5) vyberie tú s najväčšou hodnotou. Zoradené od najvyššej pravdepodobnosti.
-  const bestInCategory = new Map<string, MarketPick>();
-  for (const bet of pickPool) {
-    const cur = bestInCategory.get(bet.category);
-    const ev = rankValue(bet), curEv = cur ? rankValue(cur) : 0;
-    // Držanie lopty (bez kurzu): hranica s dôverou najbližšie k spodku pásma má najväčšiu
-    // šancu, že kurz v stávkovke dosiahne minimum.
-    const better = bet.category === "drzanie_lopty" && ev === curEv ? bet.probability < (cur?.probability ?? 101) : bet.probability > (cur?.probability ?? -1);
-    // Tip, ktorý prejde aj pri 60 / 40, má prednosť pred tipom len pre sledované.
-    if (cur && !!bet.strictFail !== !!cur.strictFail) { if (cur.strictFail) bestInCategory.set(bet.category, bet); continue; }
-    if (!cur || ev > curEv || (ev === curEv && better)) bestInCategory.set(bet.category, bet);
-  }
-  const diversifiedPicks = Array.from(bestInCategory.values()).sort((a, b) => b.probability - a.probability);
-  // Meranie (20. 10. 2026): ostatné hranice toho istého trhu dostanú len kód dôvodu
-  // pre tichú evidenciu (medzi neodporúčané sa nepresúvajú, výber sa nemení).
-  for (const bet of pickPool) if (bestInCategory.get(bet.category) !== bet) bet.rejectCode = "category_lower_ev";
+    // Appka ukáže VŠETKY tipy zápasu, ktoré spadajú do pásma - najviac jeden
+    // z každej kategórie (trhu). Z viacerých hraníc toho istého trhu (napr. rohy
+    // 8,5 / 9,5 / 10,5) vyberie tú s najväčšou hodnotou. Zoradené od najvyššej pravdepodobnosti.
+    const bestInCategory = new Map<string, MarketPick>();
+    for (const bet of pickPool) {
+      const cur = bestInCategory.get(bet.category);
+      const ev = rankValue(bet), curEv = cur ? rankValue(cur) : 0;
+      // Držanie lopty (bez kurzu): hranica s dôverou najbližšie k spodku pásma má najväčšiu
+      // šancu, že kurz v stávkovke dosiahne minimum.
+      const better = bet.category === "drzanie_lopty" && ev === curEv ? bet.probability < (cur?.probability ?? 101) : bet.probability > (cur?.probability ?? -1);
+      // Tip, ktorý prejde aj pri 60 / 40, má prednosť pred tipom len pre sledované.
+      if (cur && !!bet.strictFail !== !!cur.strictFail) { if (cur.strictFail) bestInCategory.set(bet.category, bet); continue; }
+      if (!cur || ev > curEv || (ev === curEv && better)) bestInCategory.set(bet.category, bet);
+    }
+    const diversifiedPicks = Array.from(bestInCategory.values()).sort((a, b) => b.probability - a.probability);
+    // Meranie (20. 10. 2026): ostatné hranice toho istého trhu dostanú len kód dôvodu
+    // pre tichú evidenciu (medzi neodporúčané sa nepresúvajú, výber sa nemení).
+    for (const bet of pickPool) if (bestInCategory.get(bet.category) !== bet) bet.rejectCode = "category_lower_ev";
 
-  // Viac tipov na zápas (26. 10. 2026, Michalovo rozhodnutie): z jedného zápasu môže ísť
-  // viac odporúčaných tipov, ale najviac jeden z každého typu (góly, rohy, karty, strely,
-  // fauly, držanie lopty). Góly zápasu, góly tímu aj góly v polčase sú jeden typ „góly“ –
-  // ostane ten, ktorému model najviac dôveruje. Ostatné idú medzi neodporúčané s dôvodom.
+    // Viac tipov na zápas (26. 10. 2026, Michalovo rozhodnutie): z jedného zápasu môže ísť
+    // viac odporúčaných tipov, ale najviac jeden z každého typu (góly, rohy, karty, strely,
+    // fauly, držanie lopty). Góly zápasu, góly tímu aj góly v polčase sú jeden typ „góly“ –
+    // ostane ten, ktorému model najviac dôveruje. Ostatné idú medzi neodporúčané s dôvodom.
+    const bestInType = new Map<string, MarketPick>();
+    for (const b of diversifiedPicks) {
+      const t = marketType(b.category);
+      const cur = bestInType.get(t);
+      if (cur && !!b.strictFail !== !!cur.strictFail) { if (cur.strictFail) bestInType.set(t, b); continue; }
+      if (!cur || b.probability > cur.probability || (b.probability === cur.probability && rankValue(b) > rankValue(cur))) bestInType.set(t, b);
+    }
+    for (const b of diversifiedPicks) {
+      if (bestInType.get(marketType(b.category)) === b) continue;
+      b.rejectReason = "iný tip rovnakého typu z tohto zápasu má vyššiu dôveru";
+      b.rejectCode = "match_lower_ev";
+      lowValueBets.push(b);
+    }
+    return diversifiedPicks.filter((b) => bestInType.get(marketType(b.category)) === b);
+  };
   const marketType = (category: string) => category.split("_")[0];
-  const bestInType = new Map<string, MarketPick>();
-  for (const b of diversifiedPicks) {
-    const t = marketType(b.category);
-    const cur = bestInType.get(t);
-    if (cur && !!b.strictFail !== !!cur.strictFail) { if (cur.strictFail) bestInType.set(t, b); continue; }
-    if (!cur || b.probability > cur.probability || (b.probability === cur.probability && rankValue(b) > rankValue(cur))) bestInType.set(t, b);
-  }
-  for (const b of diversifiedPicks) {
-    if (bestInType.get(marketType(b.category)) === b) continue;
-    b.rejectReason = "iný tip rovnakého typu z tohto zápasu má vyššiu dôveru";
-    b.rejectCode = "match_lower_ev";
-    lowValueBets.push(b);
-  }
-  const bestBets = diversifiedPicks.filter((b) => bestInType.get(marketType(b.category)) === b);
+  const bestBets = selectPicks(inBand, lowValueBets, false);
+
+  // Skúšobné pásmo 65 – 67 % (28. 10. 2026, Michalovo rozhodnutie): tipy tesne pod pásmom prejdú
+  // rovnakými pravidlami, ale klientom nejdú – appka ich ukáže zvlášť a uložia sa len do sledovaných
+  // (vlastná skupina v Histórii tipov). Kópie, aby sa nezmenili dôvody v tichej evidencii.
+  // Typ, z ktorého už zápas má tip v pásme 68 – 80 %, sa nepridáva (najviac 1 tip z typu).
+  const bandTypes = new Set(bestBets.map((b) => marketType(b.category)));
+  const watchBandBets = selectPicks(
+    sortedBets.filter((b) => b.probability >= WATCH_BAND_MIN_PROBABILITY && b.probability < MIN_PROBABILITY).map((b) => ({ ...b })),
+    [],
+    true
+  )
+    .filter((b) => !bandTypes.has(marketType(b.category)))
+    .map((b) => ({ ...b, watchBand: true }));
 
   const homeTopScorer = homePlayers
     ? predictTopScorer(filterByLineup(homePlayers, homeLineupIds), xg.home, homeStats.goals.for.average.total, homeLineupIds)
@@ -1546,6 +1566,7 @@ export function predictMatch(
     offsides,
     bestBets,
     lowValueBets,
+    watchBandBets,
     oddsAvailable,
     modelVersion: variant ? NEW_MODEL_VERSION : MODEL_VERSION,
     allCandidates: candidates,
