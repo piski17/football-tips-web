@@ -2496,6 +2496,79 @@ html body .om2-quote { border-left-color: var(--gold) !important; font-family: v
 html body .ledger-wrap h3, html body .mon h3, html body .cal h3, html body .calc h3, html body .sc-head h3 { font: 500 26px/1.25 var(--display) !important; letter-spacing: .02em !important; }
 @media (max-width: 520px) { .pz-foot-grid { grid-template-columns: 1fr 1fr; gap: 34px 20px; } .pz-foot-col:last-child { grid-column: 1 / -1; } html body .pz-hero .eyebrow { letter-spacing: .2em !important; gap: 12px; } html body .pz-hero .eyebrow::before { width: 26px !important; } }
 
+/* ===== menu v2: plávajúca sklenená lišta so zlatým rámom ===== */
+html body .nav, html.scrolled body .nav { top: 18px !important; left: 0; right: 0; background: transparent !important; border: 0 !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; transition: top .35s !important; }
+html.scrolled body .nav.nav { top: 10px !important; background: transparent !important; border: 0 !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+html body .pz-nav .wrap { position: relative; width: min(1320px, 100% - 36px) !important; height: 74px !important; grid-template-columns: auto 1fr auto !important; gap: 20px !important; padding: 0 12px 0 22px;
+  background: rgba(12,12,13,.62); -webkit-backdrop-filter: blur(18px) saturate(1.3); backdrop-filter: blur(18px) saturate(1.3);
+  border: 1px solid rgba(200,169,106,.28); box-shadow: 0 24px 60px -30px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.05); }
+html.scrolled body .pz-nav .wrap { height: 66px !important; background: rgba(10,10,11,.86); }
+html body .pz-nav .wrap::after { content: ""; position: absolute; left: 22%; right: 22%; bottom: -1px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold-hi), transparent); opacity: .7; pointer-events: none; }
+html.menu-open body .pz-nav .wrap { background: transparent; border-color: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+html.menu-open body .pz-nav .wrap::after { display: none; }
+.pz-brand svg { width: 38px; height: 38px; }
+.pz-brand span { font-size: 21px !important; letter-spacing: .16em !important; }
+html body .pz-links { gap: 2px !important; }
+html body .pz-nav .nav-links a { font-size: 11px !important; letter-spacing: .22em !important; padding: 12px 13px !important; }
+html body .pz-nav .nav-links a::after { left: 50%; right: auto; width: 5px; height: 5px; bottom: 2px; transform: translateX(-50%) rotate(45deg) scale(0); background: var(--gold); transition: transform .3s; }
+html body .pz-nav .nav-links a:hover::after, html body .pz-nav .nav-links a.active::after { transform: translateX(-50%) rotate(45deg) scale(1); }
+.pz-nav-right { display: flex; align-items: center; gap: 10px; justify-self: end; }
+.pz-live-pill { display: inline-flex; align-items: center; gap: 10px; height: 44px; padding: 0 18px; border: 1px solid rgba(200,169,106,.35); color: var(--muted) !important; text-decoration: none; font: 500 12px/1 var(--sans); letter-spacing: .04em; white-space: nowrap; transition: border-color .25s; }
+.pz-live-pill:hover { border-color: var(--gold); }
+.pz-live-pill b { color: var(--gold-hi); font: 500 15px/1 var(--display); }
+.pz-live-pill i, .pz-live-head i { width: 7px; height: 7px; border-radius: 50%; background: var(--win); box-shadow: 0 0 0 0 rgba(140,199,161,.6); animation: pz-pulse 2s infinite; }
+@keyframes pz-pulse { 70% { box-shadow: 0 0 0 8px rgba(140,199,161,0); } 100% { box-shadow: 0 0 0 0 rgba(140,199,161,0); } }
+.pz-tg { display: grid; place-items: center; width: 44px; height: 44px; background: var(--gold-grad); color: #0A0A0B !important; transition: filter .25s; }
+.pz-tg:hover { filter: brightness(1.1); }
+.pz-tg svg { width: 18px; height: 18px; }
+.pz-member { display: none !important; }
+html body .lx-burger, html body .nav-toggle.lx-burger { width: 44px; height: 44px; border: 1px solid rgba(200,169,106,.35) !important; position: relative; }
+html body .lx-burger span { position: absolute; left: 13px; right: 13px; width: auto !important; margin: 0 !important; transition: transform .3s, top .3s !important; }
+html body .lx-burger span:first-child { top: 18px; } html body .lx-burger span:last-child { top: 25px; }
+html.menu-open body .lx-burger span:first-child { top: 21px; transform: rotate(45deg); } html.menu-open body .lx-burger span:last-child { top: 21px; transform: rotate(-45deg); }
+@media (max-width: 1240px) { .pz-live-pill { display: none !important; } }
+@media (max-width: 1100px) { html body .pz-nav .wrap { grid-template-columns: 1fr auto !important; height: 64px !important; padding: 0 10px 0 16px; } }
+@media (max-width: 520px) { html body .nav { top: 10px !important; } html body .pz-nav .wrap { width: calc(100% - 20px) !important; } .pz-brand span { font-size: 17px !important; } .pz-brand svg { width: 32px; height: 32px; } .pz-tg, html body .lx-burger { width: 40px; height: 40px; } html body .lx-burger span:first-child { top: 16px; } html body .lx-burger span:last-child { top: 23px; } html.menu-open body .lx-burger span { top: 19px !important; } }
+
+/* celoplošné menu: veľké odkazy s číslami vľavo, kontakt vpravo */
+html body .pz-ov { background: radial-gradient(ellipse 60% 50% at 85% 15%, rgba(200,169,106,.14), transparent 65%), #0A0A0B !important; }
+html body .pz-ov .pz-ov-grid { display: grid !important; grid-template-columns: 1.4fr 1fr; gap: 60px; align-items: end; padding-top: 120px; padding-bottom: 50px; min-height: 100%; }
+html body .pz-ov .ov-links { counter-reset: pzov; margin: 0 !important; padding: 0 !important; }
+html body .pz-ov .ov-links li { counter-increment: pzov; border-bottom: 1px solid var(--line) !important; }
+html body .pz-ov .ov-links a { display: flex !important; align-items: baseline; gap: 22px; justify-content: flex-start !important; padding: 8px 0 !important; font: 500 clamp(24px, 3.4vw, 40px)/1.25 var(--display) !important; }
+html body .pz-ov .ov-links li a::before { content: counter(pzov, decimal-leading-zero) !important; display: inline-block !important; position: static !important; width: auto !important; height: auto !important; background: none !important; transform: none !important; opacity: 1 !important; font: 500 12px/1 var(--sans) !important; letter-spacing: .2em; color: var(--gold) !important; min-width: 26px; }
+html body .pz-ov .ov-links a small { margin-left: auto; }
+html body .pz-ov .ov-foot { display: flex !important; flex-direction: column; align-items: flex-start; gap: 26px; border-left: 1px solid var(--line-2); padding-left: 40px; }
+html body .pz-ov .ov-contacts { display: flex; flex-direction: column; gap: 8px; }
+@media (max-width: 900px) { html body .pz-ov .pz-ov-grid { grid-template-columns: 1fr; gap: 34px; padding-top: 100px; align-items: start; } html body .pz-ov .ov-foot { border-left: 0; padding-left: 0; } html body .pz-ov .ov-links a small { display: none !important; } }
+
+/* úvod: panel so živými výsledkami namiesto kartičiek */
+.pz-live { position: relative; padding: 34px 34px 30px; background: linear-gradient(160deg, rgba(28,27,29,.92), rgba(12,12,13,.92)); border: 1px solid rgba(200,169,106,.35); box-shadow: 0 60px 100px -50px rgba(0,0,0,.95), 0 30px 90px -60px rgba(200,169,106,.45); }
+.pz-live::before { content: ""; position: absolute; inset: 8px; border: 1px solid rgba(200,169,106,.12); pointer-events: none; }
+.pz-live-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 20px; border-bottom: 1px solid var(--line-2); }
+.pz-live-head span { display: inline-flex; align-items: center; gap: 12px; font: 600 11px/1 var(--sans); letter-spacing: .3em; text-transform: uppercase; color: var(--gold); }
+.pz-live-head small { font-size: 12px; color: var(--faint); }
+html body .pz-live .hx-live { display: grid !important; grid-template-columns: 1fr 1fr; gap: 0 !important; margin: 0 !important; padding: 0 !important; border: 0 !important; background: none !important; box-shadow: none !important; text-decoration: none; color: inherit; }
+html body .pz-live .hx-live[hidden] { display: none !important; }
+html body .pz-live .hx-live > div { border: 0 !important; padding: 22px 0 0 !important; background: none !important; }
+html body .pz-live .hx-live .pz-big { grid-column: 1 / -1; padding-top: 26px !important; }
+html body .pz-live .hx-live .pz-big b { font-size: clamp(48px, 5vw, 68px) !important; line-height: 1 !important; }
+html body .pz-live .hx-live b { display: block; margin: 10px 0 6px; font-size: 30px !important; color: var(--text); }
+html body .pz-live .hx-live span { font-size: 12.5px; color: var(--faint); }
+html body .pz-live .hx-live .pz-roi { display: none !important; }
+html body .pz-live .hx-spark { grid-column: 1 / -1; height: 70px; margin-top: 18px; padding: 0 !important; }
+html body .pz-live .hx-spark svg { width: 100%; height: 100%; display: block; }
+.pz-live-wait { margin: 26px 0 0; font: 400 15px/1.7 var(--sans); color: var(--muted); }
+.hx-live:not([hidden]) + .pz-live-wait { display: none; }
+.pz-live-rules { list-style: none; margin: 26px 0 0; padding: 22px 0 0; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line-2); }
+.pz-live-rules li + li { border-left: 1px solid var(--line); padding-left: 16px; }
+.pz-live-rules b { display: block; font: 500 20px/1.1 var(--display); color: var(--gold-hi); white-space: nowrap; }
+.pz-live-rules span { display: block; margin-top: 6px; font-size: 11.5px; color: var(--faint); }
+.pz-live-more { display: inline-block; margin-top: 24px; font: 600 11px/1 var(--sans); letter-spacing: .26em; text-transform: uppercase; color: var(--gold) !important; text-decoration: none; border-bottom: 1px solid var(--gold); padding-bottom: 6px; }
+@media (max-width: 760px) { .pz-live { padding: 26px 20px 24px; } .pz-live-head small { display: none; } .pz-live-rules b { font-size: 16px; } .pz-live-rules li + li { padding-left: 10px; } }
+.pz-live-pill[hidden] { display: none !important; }
+html body .pz-live .hx-spark .ln, html body .pz-live .hx-spark path:last-child { stroke: var(--gold) !important; stroke-width: 2 !important; }
+
 </style>
 
 <link href="https://fonts.googleapis.com/css2?family=Herr+Von+Muellerhoff&amp;family=Great+Vibes&amp;display=swap" rel="stylesheet" />
@@ -2523,18 +2596,22 @@ html body .ledger-wrap h3, html body .mon h3, html body .cal h3, html body .calc
 
 <nav class="nav pz-nav" aria-label="Hlavná navigácia">
   <div class="wrap">
-    <a class="brand pz-brand" href="/" aria-label="TipRadar – úvod"><svg aria-hidden="true"><use href="#pz-emblem"/></svg><span>TipRadar<small>Futbalová analytika</small></span></a>
-    <div class="nav-links pz-links"><a href="/vysledky">Výsledky</a><a href="/metoda">Metóda</a><a href="/kurz">Kurz</a><a href="/o-mne">O mne</a><a href="/otazky">Otázky</a><a href="/formular">Kontakt</a></div>
-    <a class="pz-member" href="/clenstvo">Členstvo</a>
-    <button class="nav-toggle lx-burger" type="button" aria-expanded="false" aria-controls="overlay" aria-label="Menu"><span></span><span></span></button>
+    <a class="brand pz-brand" href="/" aria-label="TipRadar – úvod"><svg aria-hidden="true"><use href="#pz-emblem"/></svg><span>TipRadar</span></a>
+    <div class="nav-links pz-links"><a href="/vysledky">Výsledky</a><a href="/clenstvo">Členstvo</a><a href="/metoda">Metóda</a><a href="/kurz">Kurz</a><a href="/o-mne">O mne</a><a href="/otazky">Otázky</a><a href="/formular">Kontakt</a></div>
+    <div class="pz-nav-right">
+      <a class="pz-live-pill" id="pzNavLive" href="/vysledky" hidden><i></i><span></span></a>
+      <a class="pz-tg" href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener" aria-label="Telegram komunita" data-free><svg aria-hidden="true"><use href="#i-tg"/></svg></a>
+      <button class="nav-toggle lx-burger" type="button" aria-expanded="false" aria-controls="overlay" aria-label="Menu"><span></span><span></span></button>
+    </div>
   </div>
 </nav>
-<div class="overlay" id="overlay" aria-label="Menu">
-  <div class="wrap">
+<div class="overlay pz-ov" id="overlay" aria-label="Menu">
+  <div class="wrap pz-ov-grid">
     <ul class="ov-links">
       <li><a href="/">Úvod</a></li>
       <li><a href="/vysledky">Výsledky<small>všetky tipy</small></a></li>
       <li><a href="/clenstvo">Členstvo<small>Štart · Gold · Onyx</small></a></li>
+      <li><a href="/metoda">Metóda<small>ako vzniká tip</small></a></li>
       <li><a href="/kurz">Kurz<small>Škola stávkovania</small></a></li>
       <li><a href="/o-mne">O mne</a></li>
       <li><a href="/otazky">Otázky</a></li>
@@ -2542,7 +2619,6 @@ html body .ledger-wrap h3, html body .mon h3, html body .cal h3, html body .calc
     </ul>
     <div class="ov-foot">
       <a class="btn" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener"><svg width="18" height="18" aria-hidden="true"><use href="#i-tg"/></svg>Telegram komunita</a>
-      <a class="btn btn-ghost" href="/kurz"><svg width="18" height="18" aria-hidden="true"><use href="#i-book"/></svg>Kurz Škola stávkovania</a>
       <div class="ov-contacts"><a href="mailto:info@tipradar.eu">info@tipradar.eu</a><a href="https://www.instagram.com/tipradar.eu/" target="_blank" rel="noopener">Instagram @tipradar.eu</a></div>
     </div>
   </div>
@@ -2597,16 +2673,23 @@ html body .ledger-wrap h3, html body .mon h3, html body .cal h3, html body .calc
           <a class="btn btn-ghost" href="/vysledky">Overené výsledky</a>
         </div>
       </div>
-      <div class="pz-card-stage" aria-label="Členská karta TipRadar">
-        <div class="pz-card">
-          <div class="pz-card-top"><svg aria-hidden="true"><use href="#pz-emblem"/></svg><b>TipRadar</b></div>
-          <div class="pz-chip" aria-hidden="true"></div>
-          <div class="pz-card-no" aria-hidden="true">Futbal · Dáta · Hodnota</div>
-          <div class="pz-card-foot"><div><small>Členstvo</small><b>Gold</b></div><div><small>Tipov</small><b>150</b></div><div class="r"><small>Est.</small><b>2026</b></div></div>
-        </div>
-        <div class="pz-card pz-card-back" aria-hidden="true"></div>
-        <p class="pz-card-cap">Štart · Gold · Onyx</p>
-      </div>
+      <aside class="pz-live" aria-label="Výsledky TipRadaru">
+        <div class="pz-live-head"><span><i></i>Výsledky naživo</span><small>všetky tipy od začiatku</small></div>
+        <a class="hx-live" id="hxLive" href="/vysledky" aria-label="Výsledky TipRadaru" hidden>
+          <div class="pz-big"><small>Zisk od začiatku</small><b class="num" id="hxProfit">–</b><span>pri rovnakom vklade na každý tip</span></div>
+          <div><small>Vyšlo</small><b class="num" id="hxRate">–</b><span id="hxRateSub"></span></div>
+          <div><small>Tento mesiac</small><b class="num" id="hxMonth">–</b><span id="hxMonthSub"></span></div>
+          <div class="pz-roi"><small>ROI</small><b class="num" id="hxRoi">–</b></div>
+          <div class="hx-spark" id="hxSpark"></div>
+        </a>
+        <p class="pz-live-wait">Výsledky sa načítavajú priamo z TipRadaru – každý tip, výhry aj prehry.</p>
+        <ul class="pz-live-rules">
+          <li><b>68 – 80&nbsp;%</b><span>dôvera modelu</span></li>
+          <li><b>1,50</b><span>minimálny kurz</span></li>
+          <li><b>16</b><span>súťaží</span></li>
+        </ul>
+        <a class="pz-live-more" href="/vysledky">Celá história tipov <span aria-hidden="true">→</span></a>
+      </aside>
     </div>
     <a class="pz-scroll" href="#filozofia" aria-label="Posunúť nižšie"><span></span></a>
   </section>
@@ -2618,21 +2701,7 @@ html body .ledger-wrap h3, html body .mon h3, html body .cal h3, html body .calc
 
 
 
-  <section class="sec alt hm-res" id="vysledky-uvod" data-pages="home" hidden>
-    <div class="wrap">
-      <div class="sec-head center">
-        <div><div class="eyebrow">Overené výsledky</div><h2>Čísla od <em>začiatku</em></h2><p class="lead">Všetky tipy pri rovnakom vklade na každý tip. Každý tip sa vyhodnotí podľa skutočného výsledku zápasu, výhry aj prehry.</p></div>
-      </div>
-        <a class="hx-live" id="hxLive" href="/vysledky" aria-label="Výsledky TipRadaru" hidden>
-          <div><small>Zisk od začiatku</small><b class="num" id="hxProfit">–</b><span>pri rovnakom vklade na tip</span></div>
-          <div><small>Vyšlo</small><b class="num" id="hxRate">–</b><span id="hxRateSub"></span></div>
-          <div><small>ROI</small><b class="num" id="hxRoi">–</b><span>na každý vsadený tip</span></div>
-          <div><small>Tento mesiac</small><b class="num" id="hxMonth">–</b><span id="hxMonthSub"></span></div>
-          <div class="hx-spark" id="hxSpark"></div>
-        </a>
-      <div class="hm-res-more"><a class="more" href="/vysledky">Všetky výsledky a história tipov <span aria-hidden="true">→</span></a></div>
-    </div>
-  </section>
+  
 
   <section class="sec" id="ako" data-pages="home">
     <div class="wrap">
@@ -3807,6 +3876,17 @@ html body .ledger-wrap h3, html body .mon h3, html body .cal h3, html body .calc
     function check() { var v = window.scrollY > 320; if (v !== on) { on = v; root.classList.toggle("mcta-on", v); } }
     window.addEventListener("scroll", check, { passive: true }); check();
   })();
+</script>
+<script>
+/* PRESTÍŽ: v menu malý ukazovateľ úspešnosti zo živých výsledkov */
+(function () {
+  var el = document.getElementById("pzNavLive"); if (!el || !window.fetch) return;
+  fetch("/api/public/track-record", { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : Promise.reject(); }).then(function (d) {
+    var n = Number(d.totalResolved) || 0; if (n < 1 || d.winRate == null) return;
+    el.querySelector("span").innerHTML = "<b>" + Math.round(d.winRate) + "&nbsp;%</b> vyšlo · " + n + "&nbsp;" + (n === 1 ? "tip" : n < 5 ? "tipy" : "tipov");
+    el.hidden = false;
+  }).catch(function () {});
+})();
 </script>
 </body>
 </html>
