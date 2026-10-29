@@ -3211,6 +3211,22 @@ html.rx-js .rx-rv.in { opacity: 1; transform: none; }
 }
 @media (prefers-reduced-motion: reduce) { .rx-p3, .p3-svg, .p3-passes .ps, .p3-shots .sh, .p3-scanbar, .p3-heat, .p3-card, .p3-pos div i, .p3-head i { animation: none !important; } .p3-passes .ps { stroke-dashoffset: 0; opacity: .8; } }
 
+
+.p3-cards { display: contents; }
+.p3-card, .p3-head, .p3-pos { transition: opacity .35s, transform .35s; }
+.rx-p3.sw .p3-card, .rx-p3.sw .p3-head b, .rx-p3.sw .p3-head span, .rx-p3.sw .p3-pos { opacity: 0; }
+.rx-p3.live .p3-card { max-width: 230px; }
+.p3-card b.p3-txt { font-size: 22px; line-height: 1.15; white-space: normal; }
+.p3-card b.p3-won, .p3-pos b.p3-won { background: none; color: var(--rx-win); -webkit-text-fill-color: var(--rx-win); }
+.p3-card b.p3-lost, .p3-pos b.p3-lost { background: none; color: #E2A9B1; -webkit-text-fill-color: #E2A9B1; }
+.rx-p3.live .p3-card b { font-size: 26px; }
+.rx-p3.live .p3-card b.p3-txt { font-size: 20px; }
+.rx-p3.live .p3-pos div { background: rgba(255,255,255,.1); }
+.rx-p3.live .p3-pos div i { animation: none; transition: width .6s ease; }
+.p3-head b { font-weight: 500; }
+.p3-svg.mir .p3-heat, .p3-svg.mir .p3-passes, .p3-svg.mir .p3-shots { transform: scaleX(-1); transform-origin: 340px 220px; }
+@media (max-width: 640px) { .rx-p3.live .p3-card { max-width: 46%; } .rx-p3.live .p3-card b { font-size: 20px; } .rx-p3.live .p3-card b.p3-txt { font-size: 16px; } .p3-head { max-width: 92%; overflow: hidden; } .p3-head b { overflow: hidden; text-overflow: ellipsis; } }
+
 /* podstránky: hlavička v štýle nového úvodu */
 html body main .page-head { position: relative; overflow: hidden; isolation: isolate; border-bottom: 0 !important; padding-top: 180px !important; padding-bottom: 84px !important; }
 html body main .page-head::before { content: ""; position: absolute; inset: 0; z-index: -1; background-image: linear-gradient(rgba(214,190,140,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(214,190,140,.05) 1px, transparent 1px); background-size: 64px 64px; -webkit-mask-image: radial-gradient(ellipse 70% 80% at 50% 30%, #000 10%, transparent 70%); mask-image: radial-gradient(ellipse 70% 80% at 50% 30%, #000 10%, transparent 70%); }
@@ -3371,7 +3387,7 @@ html body main .page-head p { font-size: clamp(16px, 1.3vw, 18px) !important; li
 
       <figure class="rx-p3" id="rxP3" aria-label="Ilustrácia: model rozloží zápas na čísla">
         <div class="p3-stage">
-          <div class="p3-head"><i aria-hidden="true"></i>Arsenal – Chelsea<span>model počíta</span></div>
+          <div class="p3-head" id="p3Head"><i aria-hidden="true"></i><b>Arsenal – Chelsea</b><span>model počíta</span></div>
           <div class="p3-tilt" aria-hidden="true">
             <svg class="p3-svg" viewBox="0 0 680 440">
               <defs>
@@ -3407,13 +3423,15 @@ html body main .page-head p { font-size: clamp(16px, 1.3vw, 18px) !important; li
               <rect class="p3-scanbar" x="-120" y="0" width="120" height="440" fill="url(#p3scan)"/>
             </svg>
           </div>
-          <div class="p3-card c1"><small>Góly v zápase</small><b class="num" data-n="2.9">0</b><span>⌀ podľa modelu</span></div>
-          <div class="p3-card c2"><small>Rohy</small><b class="num" data-n="10.4">0</b><span>⌀ podľa modelu</span></div>
-          <div class="p3-card c3"><small>Strely na bránu</small><b class="num" data-n="8.7">0</b><span>⌀ podľa modelu</span></div>
-          <div class="p3-card c4"><small>Karty</small><b class="num" data-n="4.1">0</b><span>⌀ podľa modelu</span></div>
-          <div class="p3-pos"><span>Arsenal <b>58&nbsp;%</b></span><div><i></i></div><span><b>42&nbsp;%</b> Chelsea</span></div>
+          <div class="p3-cards" id="p3Cards">
+            <div class="p3-card c1"><small>Góly v zápase</small><b class="num" data-n="2.9">0</b><span>⌀ podľa modelu</span></div>
+            <div class="p3-card c2"><small>Rohy</small><b class="num" data-n="10.4">0</b><span>⌀ podľa modelu</span></div>
+            <div class="p3-card c3"><small>Strely na bránu</small><b class="num" data-n="8.7">0</b><span>⌀ podľa modelu</span></div>
+            <div class="p3-card c4"><small>Karty</small><b class="num" data-n="4.1">0</b><span>⌀ podľa modelu</span></div>
+          </div>
+          <div class="p3-pos" id="p3Pos"><span>Arsenal <b>58&nbsp;%</b></span><div><i></i></div><span><b>42&nbsp;%</b> Chelsea</span></div>
         </div>
-        <figcaption>Ilustrácia – model rozloží každý zápas na čísla</figcaption>
+        <figcaption id="p3Cap">Ilustrácia – model rozloží každý zápas na čísla</figcaption>
       </figure>
     </div>
 
@@ -4709,7 +4727,8 @@ html body main .page-head p { font-size: clamp(16px, 1.3vw, 18px) !important; li
   }
 
   // ---------- živé čísla + posledné tipy ----------
-  fetch("/api/public/track-record", { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+  var trackP = fetch("/api/public/track-record", { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+  trackP.then(function (d) {
     if (!d || !d.totalResolved) return;
     var box = $("rxStats"); box.hidden = false;
     count($("rxCount"), d.totalResolved, 0, function (v) { return fmt(Math.round(v), 0); });
@@ -4814,12 +4833,43 @@ html body main .page-head p { font-size: clamp(16px, 1.3vw, 18px) !important; li
   })();
 
 
-  // ---------- 3D ihrisko: čísla sa napočítajú ----------
+  // ---------- 3D ihrisko: skutočné vyhodnotené tipy, každých 5 s ďalší ----------
   (function () {
     var box = $("rxP3"); if (!box) return;
-    box.querySelectorAll(".p3-card b").forEach(function (b, i) {
-      var to = Number(b.dataset.n);
-      setTimeout(function () { count(b, to, 1, function (v) { return fmt(v, 1); }); }, 500 + i * 180);
+    var cards = box.querySelectorAll(".p3-card");
+    cards.forEach(function (b, i) {
+      var el = b.querySelector("b"), to = Number(el.dataset.n);
+      setTimeout(function () { if (!box.classList.contains("live")) count(el, to, 1, function (v) { return fmt(v, 1); }); }, 500 + i * 180);
+    });
+    trackP.then(function (d) {
+      var list = ((d && d.recent) || []).filter(function (r) { return (r.status === "won" || r.status === "lost") && !/^Tiket/.test(r.match || ""); });
+      if (list.length < 3) return; // pri pár tipoch ostane ilustrácia
+      list = list.slice(0, 50);
+      box.classList.add("live");
+      $("p3Cap").textContent = "Skutočné vyhodnotené tipy TipRadaru – výhry aj prehry";
+      var svg = box.querySelector(".p3-svg"), k = 0;
+      var day = function (s) { var p = String(s || "").split("-"); return p.length === 3 ? Number(p[2]) + ". " + Number(p[1]) + ". " + p[0] : ""; };
+      var set = function (card, lab, val, sub, cls) { card.querySelector("small").textContent = lab; var b = card.querySelector("b"); b.textContent = val; b.className = "num" + (cls ? " " + cls : ""); card.querySelector("span").textContent = sub || ""; };
+      function show(r, first) {
+        var bet = String(r.bet || ""), i = bet.indexOf(": ");
+        var mk = i > 0 ? bet.slice(0, i) : "Tip", sel = i > 0 ? bet.slice(i + 2) : bet;
+        var won = r.status === "won";
+        var apply = function () {
+          $("p3Head").innerHTML = '<i aria-hidden="true"></i><b>' + esc(r.match) + "</b><span>" + esc(day(r.day)) + "</span>";
+          set(cards[0], "Tip · " + mk, sel, r.league || "", "p3-txt");
+          set(cards[1], "Kurz", r.odds ? fmt(r.odds, 2) : "–", "pri odoslaní tipu");
+          set(cards[2], "Dôvera modelu", r.probability ? r.probability + "\u00a0%" : "–", "šanca podľa modelu");
+          set(cards[3], "Výsledok", won ? "✓ Vyšlo" : "✕ Nevyšlo", r.score ? "skóre " + r.score : "", won ? "p3-won" : "p3-lost");
+          $("p3Pos").innerHTML = "<span>Tip <b>" + (k + 1) + "</b> z " + list.length + '</span><div><i style="width:' + ((k + 1) / list.length * 100) + '%"></i></div><span>' + (won ? '<b class="p3-won">vyšlo</b>' : '<b class="p3-lost">nevyšlo</b>') + "</span>";
+          svg.classList.toggle("mir", k % 2 === 1);
+          box.classList.remove("sw");
+        };
+        if (first) { apply(); return; }
+        box.classList.add("sw"); setTimeout(apply, 350);
+      }
+      show(list[0], true);
+      if (reduce) return;
+      setInterval(function () { if (document.hidden) return; k = (k + 1) % list.length; show(list[k]); }, 5000);
     });
   })();
 

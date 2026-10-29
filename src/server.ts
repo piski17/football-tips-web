@@ -1071,6 +1071,10 @@ app.get("/api/public/track-record", async (_req, res) => {
           odds: typeof t.odds === "number" && t.odds > 1 ? Math.round(t.odds * 100) / 100 : null,
           status: t.status,
           slip: slipIds.has(t.id) ? t.id : null,
+          // úvod (3D ihrisko): súťaž, dôvera a skóre vyhodnoteného tipu
+          league: isTicket ? null : t.leagueName ?? null,
+          probability: typeof t.probability === "number" ? Math.round(t.probability) : null,
+          score: !isTicket && typeof t.actualHomeGoals === "number" && typeof t.actualAwayGoals === "number" ? `${t.actualHomeGoals}:${t.actualAwayGoals}` : null,
         };
       });
     const slips = tips
