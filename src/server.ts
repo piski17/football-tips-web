@@ -9,6 +9,7 @@ import { startBacktest, getBacktest } from "./backtest";
 import { applyCupGoals } from "./cupAdjust";
 import { getDay, getAllDays, setDay } from "./dailyStore";
 import { saveSlip, deleteSlip, listSlipIds, getSlipImage, MAX_SLIP_CHARS } from "./slipStore";
+import { recordAutoFixture, listAuto, listAutoFixtures, autoFixtureDone, updateAuto, pruneAuto, AutoEntry } from "./autoStore";
 import "dotenv/config";
 import express, { NextFunction, Request, Response } from "express";
 import path from "path";
@@ -2590,6 +2591,13 @@ async function settleBackgroundRecords(): Promise<void> {
     // sledovanie miešania nesmie zastaviť ďalšie sledovanie
   }
 
+  // Automatické vyhodnocovanie všetkých zápasov (29. 10. 2026).
+  try {
+    await settleAutoEntries();
+  } catch {
+    // nesmie zastaviť ďalšie sledovanie
+  }
+
   // Tiché sledovanie tiketu dňa – vyhodnotíme len tipy, ktoré sú na niektorom tikete
   // (šetrí to požiadavky na API). Uložené tipy sa vyhodnotili už vyššie.
   try {
@@ -2669,6 +2677,122 @@ async function checkLineups(): Promise<void> {
   }
 }
 setInterval(() => void checkLineups().catch(() => {}), 10 * 60 * 1000);
+
+/**
+ * Automatické vyhodnocovanie všetkých zápasov (29. 10. 2026, Michalovo želanie – ako na začiatku,
+ * keď sa vyhodnocovalo veľa zápasov denne). Každých 15 minút server pozrie zápasy všetkých súťaží
+ * a každý zápas, ktorý začína do hodiny (zostavy už bývajú zverejnené), raz prejde modelom.
+ * Zapíšu sa všetky tipy, ktoré by model odporučil, s kurzom stávkoviek. Klientom nejdú, nie sú na webe
+ * a nerátajú sa do štatistík – len časť „Všetky zápasy“ v Histórii tipov.
+ */
+const AUTO_BEFORE_KICKOFF_MIN = 65;
+const AUTO_FIXTURES_REFRESH_MS = 2 * 60 * 60 * 1000;
+const autoFixtureCache = new Map<string, { at: number; fixtures: any[] }>();
+let autoRunning = false;
+let autoPrunedDay = "";
+function seasonOfDate(day: string): number {
+  const [y, m] = day.split("-").map(Number);
+  return m >= 7 ? y : y - 1;
+}
+async function autoFixturesFor(day: string): Promise<any[]> {
+  const out: any[] = [];
+  for (const league of LEAGUE_PRESETS) {
+    const key = `${league.id}|${day}`;
+    const cached = autoFixtureCache.get(key);
+    if (cached && Date.now() - cached.at < AUTO_FIXTURES_REFRESH_MS) {
+      out.push(...cached.fixtures);
+      continue;
+    }
+    try {
+      const fixtures = await getFixturesByLeague(league.id, seasonOfDate(day), 50, day);
+      autoFixtureCache.set(key, { at: Date.now(), fixtures });
+      out.push(...fixtures);
+    } catch {
+      if (cached) out.push(...cached.fixtures); // pri chybe API aspoň starší zoznam
+    }
+  }
+  return out;
+}
+async function runAutoAnalysis(): Promise<void> {
+  if (autoRunning) return;
+  autoRunning = true;
+  try {
+    const now = Date.now();
+    const days = Array.from(new Set([new Date(now).toISOString().slice(0, 10), new Date(now + 3 * 3600 * 1000).toISOString().slice(0, 10)]));
+    for (const k of autoFixtureCache.keys()) if (!days.includes(k.split("|")[1])) autoFixtureCache.delete(k);
+    const fixtures = (await Promise.all(days.map(autoFixturesFor))).flat();
+    const due = fixtures.filter((f) => {
+      const kick = new Date(f.date).getTime();
+      return f.status === "NS" && isFinite(kick) && kick > now && kick - now <= AUTO_BEFORE_KICKOFF_MIN * 60 * 1000;
+    });
+    for (const fixture of due) {
+      try {
+        if (await autoFixtureDone(fixture.fixtureId)) continue;
+        const { result } = await analyzeFixture(fixture, fixture.league.id, fixture.league.season, false);
+        const recordedAt = new Date().toISOString();
+        const entries: AutoEntry[] = ((result as any).bestBets ?? []).map((b: any) => ({
+          id: `${fixture.fixtureId}|${b.market}|${b.selection}`,
+          fixtureId: fixture.fixtureId,
+          leagueId: Number(fixture.league.id),
+          league: String(fixture.league.name ?? ""),
+          matchDate: fixture.date,
+          homeTeam: fixture.homeTeam.name,
+          awayTeam: fixture.awayTeam.name,
+          market: String(b.market),
+          selection: String(b.selection),
+          probability: Math.round(Number(b.probability) * 10) / 10,
+          odds: typeof b.odds === "number" && b.odds > 1 ? b.odds : null,
+          ...(b.strictFail ? { strictFail: true } : {}),
+          recordedAt,
+          status: "pending" as const,
+        }));
+        await recordAutoFixture({ fixtureId: fixture.fixtureId, matchDate: fixture.date, tips: entries.length }, entries);
+      } catch (err) {
+        // jeden zápas nesmie zastaviť ostatné – skúsi sa znova o 15 minút
+        console.error(`Automatická analýza zápasu ${fixture.fixtureId} zlyhala:`, err);
+      }
+    }
+    const today = new Date(now).toISOString().slice(0, 10);
+    if (autoPrunedDay !== today) {
+      autoPrunedDay = today;
+      await pruneAuto().catch(() => {});
+    }
+  } finally {
+    autoRunning = false;
+  }
+}
+setInterval(() => void runAutoAnalysis().catch((err) => console.error("Automatická analýza zlyhala:", err)), 15 * 60 * 1000);
+setTimeout(() => void runAutoAnalysis().catch(() => {}), 60 * 1000);
+
+/** Vyhodnotenie automaticky zapísaných tipov – výsledok zápasu sa načíta raz pre všetky jeho tipy. */
+async function settleAutoEntries(): Promise<void> {
+  const byFixture = new Map<number, AutoEntry[]>();
+  for (const e of (await listAuto()).filter((x) => x.status === "pending" && Date.now() >= new Date(x.matchDate).getTime() + 100 * 60 * 1000))
+    byFixture.set(e.fixtureId, [...(byFixture.get(e.fixtureId) ?? []), e]);
+  for (const entries of byFixture.values()) {
+    try {
+      const outcomes = await settleFixtureBets(entries[0], entries);
+      if (!outcomes) {
+        // Zápas, ktorý sa ani po 3 dňoch nedá vyhodnotiť, sa ráta ako vrátený.
+        if (Date.now() > new Date(entries[0].matchDate).getTime() + 3 * 24 * 3600 * 1000)
+          for (const e of entries) await updateAuto({ ...e, status: "void" });
+        continue;
+      }
+      for (let i = 0; i < entries.length; i++) await updateAuto({ ...entries[i], status: outcomes[i] });
+    } catch {
+      // jeden zápas nesmie zastaviť ostatné
+    }
+  }
+}
+
+app.get("/api/auto-tips", async (_req, res) => {
+  try {
+    const [entries, fixtures] = await Promise.all([listAuto(), listAutoFixtures()]);
+    res.json({ entries, fixtures: fixtures.map((f) => ({ matchDate: f.matchDate, tips: f.tips })) });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
 
 // Výsledky sa kontrolujú aj samy, každých 15 minút – netreba čakať na tlačidlo.
 setInterval(() => void checkPendingResults().catch((err) => console.error("Automatická kontrola výsledkov zlyhala:", err)), 15 * 60 * 1000);

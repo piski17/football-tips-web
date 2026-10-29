@@ -798,3 +798,17 @@ h3.sh { font-weight: 500 !important; letter-spacing: .03em !important; }
 .splash-word { font-size: 40px !important; color: var(--gold-hi) !important; }
 .skeleton { border-radius: 0 !important; }
 ::-webkit-scrollbar-thumb { background: rgba(200,169,106,.25) !important; border-radius: 0 !important; }
+
+/* Všetky zápasy – automaticky (29. 10. 2026) */
+.auto-day { border-top: 1px solid var(--line); }
+.auto-day summary { display: grid; grid-template-columns: 1.1fr 1.6fr 1fr .7fr; gap: 10px; padding: 10px 2px; cursor: pointer; list-style: none; font-size: 13.5px; color: var(--muted); }
+.auto-day summary::-webkit-details-marker { display: none; }
+.auto-day summary .auto-d { color: var(--gold-hi); font-weight: 600; }
+.auto-day summary .auto-d::before { content: "▸ "; color: var(--gold); }
+.auto-day[open] summary .auto-d::before { content: "▾ "; }
+.auto-day summary .g { color: var(--win); font-weight: 600; text-align: right; }
+.auto-day summary .l { color: var(--loss); font-weight: 600; text-align: right; }
+.auto-day summary span:last-child { text-align: right; }
+@media (max-width: 599px) {
+  .auto-day summary { grid-template-columns: 1fr 1fr; row-gap: 2px; font-size: 13px; }
+}

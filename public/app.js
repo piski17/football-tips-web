@@ -1763,6 +1763,7 @@ const bankrollStartInput = document.getElementById("bankrollStartInput");
 const checkResultsBtn = document.getElementById("checkResultsBtn");
 
 async function openTipsHistory() {
+  void renderAutoTips();
   void renderShadowSummary();
   void renderBlendSummary();
   void renderClvSummary();
@@ -1932,6 +1933,111 @@ function renderBankrollSimulation(tips) {
 // vidno, či vyššia dôvera modelu naozaj vychádza častejšie (alebo model preceňuje).
 const CALIBRATION_FROM = 65;
 const CALIBRATION_TO = 82.5;
+// =====================================================================
+// VŠETKY ZÁPASY – AUTOMATICKY (29. 10. 2026, Michal: „ako na začiatku, keď sa vyhodnocovalo veľa zápasov denne“)
+// Server sám prejde každý zápas asi hodinu pred výkopom a zapíše všetky tipy, ktoré by model odporučil.
+// Klientom nejdú, nie sú na webe a nerátajú sa do štatistík – vidí ich len Michal tu.
+// =====================================================================
+let autoData = null;
+let autoStrictOnly = false;
+async function renderAutoTips() {
+  const el = document.getElementById("autoResult");
+  if (!el) return;
+  try {
+    autoData = await fetchJson("/api/auto-tips");
+  } catch (err) {
+    el.innerHTML = `<p class="empty">Nepodarilo sa načítať: ${escapeHtml(err.message)}</p>`;
+    return;
+  }
+  drawAutoTips();
+}
+function autoStats(list) {
+  const settled = list.filter((t) => t.status === "won" || t.status === "lost");
+  const won = settled.filter((t) => t.status === "won").length;
+  const withOdds = settled.filter((t) => typeof t.odds === "number" && t.odds > 1);
+  const profit = withOdds.reduce((a, t) => a + (t.status === "won" ? t.odds - 1 : -1), 0);
+  return {
+    total: list.length,
+    settled: settled.length,
+    won,
+    pct: settled.length ? (won / settled.length) * 100 : null,
+    model: settled.length ? settled.reduce((a, t) => a + Number(t.probability || 0), 0) / settled.length : null,
+    profit,
+    withOdds: withOdds.length,
+    pending: list.filter((t) => t.status === "pending").length,
+  };
+}
+function drawAutoTips() {
+  const el = document.getElementById("autoResult");
+  if (!el || !autoData) return;
+  const fixtures = autoData.fixtures || [];
+  const list = (autoData.entries || []).filter((t) => !autoStrictOnly || !t.strictFail);
+  const cls = (v) => (v > 0 ? "g" : v < 0 ? "l" : "");
+  if (!fixtures.length) {
+    el.innerHTML = `<p class="faint small">Zatiaľ nič. Server prejde každý zápas zo všetkých súťaží sám, asi hodinu pred výkopom (keď už bývajú zostavy). Prvé tipy sa tu ukážu pri najbližších zápasoch, vyhodnotia sa samy po skončení zápasu.</p>`;
+    return;
+  }
+  const st = autoStats(list);
+  const dayOf = (d) => isoDay(new Date(d));
+  const today = localToday();
+  const first = fixtures.reduce((m, f) => (!m || f.matchDate < m ? f.matchDate : m), "");
+  const todayFx = fixtures.filter((f) => dayOf(f.matchDate) === today).length;
+  const todayTips = list.filter((t) => dayOf(t.matchDate) === today).length;
+  const kpis = `<div class="kpis">
+    <div class="kpi"><small>Prejdené zápasy</small><b>${fixtures.length}</b><span>od ${escapeHtml(shortDate(new Date(first)))}</span></div>
+    <div class="kpi"><small>Tipov</small><b>${st.total}</b><span>${st.pending ? `${st.pending} ${st.pending === 1 ? "čaká" : "čakajú"}` : "nič nečaká"}</span></div>
+    <div class="kpi"><small>Vyšlo</small><b>${st.pct != null ? `${fmtNum(st.pct, 0)}${NB}%` : "–"}</b><span>${st.won} z ${st.settled}${st.model != null ? ` · model ${fmtNum(st.model, 0)}${NB}%` : ""}</span></div>
+    <div class="kpi"><small>Zisk</small><b class="${cls(st.profit)}">${st.withOdds ? `${signed(st.profit, 1)}${NB}j.` : "–"}</b><span>1 jednotka na tip</span></div>
+    <div class="kpi"><small>Dnes</small><b>${todayTips}</b><span>${plural(todayFx, "zápas", "zápasy", "zápasov")} prejdených</span></div>
+  </div>`;
+  const filter = `<div class="chips" style="margin:14px 0 4px">
+    <button type="button" class="chip${autoStrictOnly ? "" : " on"}" data-auto-strict="0">Všetky tipy modelu</button>
+    <button type="button" class="chip${autoStrictOnly ? " on" : ""}" data-auto-strict="1">Len tie, čo prejdú aj 60 / 40</button>
+  </div>`;
+  const row = (label, s) =>
+    `<td class="num">${s.total}</td><td class="num">${s.settled ? `${s.won} z ${s.settled} (${fmtNum(s.pct, 0)}${NB}%)` : "–"}</td><td class="num">${s.model != null ? `${fmtNum(s.model, 0)}${NB}%` : "–"}</td><td class="num ${cls(s.profit)}">${s.withOdds ? `${signed(s.profit, 1)}${NB}j.` : "–"}</td>`;
+  const byMarket = new Map();
+  for (const t of list) byMarket.set(t.market, [...(byMarket.get(t.market) || []), t]);
+  const marketRows = [...byMarket.entries()]
+    .map(([m, l]) => [m, autoStats(l)])
+    .sort((a, b) => b[1].total - a[1].total)
+    .map(([m, s]) => `<tr><td>${escapeHtml(m)}</td>${row(m, s)}</tr>`)
+    .join("");
+  const marketTable = `<h4 class="ct">Podľa trhov</h4><div class="table-wrap"><table class="bt-table"><thead><tr><th>Trh</th><th class="num">Tipov</th><th class="num">Vyšlo</th><th class="num">Model</th><th class="num">Zisk</th></tr></thead><tbody>${marketRows}</tbody></table></div>`;
+  // Po dňoch (posledných 30 dní): riadok dňa, po kliknutí všetky jeho tipy.
+  const fxByDay = new Map();
+  for (const f of fixtures) fxByDay.set(dayOf(f.matchDate), (fxByDay.get(dayOf(f.matchDate)) || 0) + 1);
+  const tipsByDay = new Map();
+  for (const t of list) tipsByDay.set(dayOf(t.matchDate), [...(tipsByDay.get(dayOf(t.matchDate)) || []), t]);
+  const res = { won: `<b class="g">vyšiel</b>`, lost: `<b class="l">nevyšiel</b>`, void: "vrátený", pending: `<span class="faint">čaká</span>` };
+  const days = [...fxByDay.keys()].sort().reverse().slice(0, 30);
+  const dayHtml = days
+    .map((day) => {
+      const tips = (tipsByDay.get(day) || []).sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime());
+      const s = autoStats(tips);
+      const rows = tips
+        .map((t) => `<tr><td style="white-space:nowrap">${escapeHtml(timeHm(new Date(t.matchDate)))}</td><td>${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))}<br><span class="faint">${escapeHtml(translateLeagueName(t.league))} · ${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}${t.strictFail ? " · neprejde 60 / 40" : ""}</span></td><td class="num">${fmtNum(t.probability, 0)}${NB}%</td><td class="num">${typeof t.odds === "number" ? fmtOdds(t.odds) : "–"}</td><td>${res[t.status] || escapeHtml(t.status)}</td></tr>`)
+        .join("");
+      return `<details class="auto-day"${day === today ? " open" : ""}>
+        <summary><span class="auto-d">${escapeHtml(dayKeyLabel(day))}</span><span>${plural(fxByDay.get(day) || 0, "zápas", "zápasy", "zápasov")} · ${plural(tips.length, "tip", "tipy", "tipov")}</span><span>${s.settled ? `vyšlo ${s.won} z ${s.settled}` : s.pending ? `čaká ${s.pending}` : ""}</span><span class="${cls(s.profit)}">${s.withOdds ? `${signed(s.profit, 1)}${NB}j.` : ""}</span></summary>
+        ${tips.length ? `<div class="table-wrap"><table class="bt-table"><thead><tr><th>Čas</th><th>Zápas a tip</th><th class="num">Dôvera</th><th class="num">Kurz</th><th>Výsledok</th></tr></thead><tbody>${rows}</tbody></table></div>` : `<p class="faint small">Model v týchto zápasoch nenašiel tip, ktorý by odporučil.</p>`}
+      </details>`;
+    })
+    .join("");
+  el.innerHTML =
+    kpis +
+    filter +
+    (list.length ? marketTable : "") +
+    `<h4 class="ct">Po dňoch</h4>${dayHtml}` +
+    `<p class="faint small">Server každý zápas zo všetkých súťaží prejde sám, asi hodinu pred výkopom, a zapíše všetky tipy, ktoré by model odporučil (pásmo 68 – 80${NB}%, hodnota +5 až +25${NB}%, kurz aspoň 1,50, najviac 1 tip z typu). Kurz je zo stávkoviek v tom čase. Klientom nejdú, nie sú na webe a nerátajú sa do úspešnosti – sú len pre teba, aby si videl, ako model funguje na veľkom množstve zápasov.</p>`;
+  el.querySelectorAll("[data-auto-strict]").forEach((b) => {
+    b.onclick = () => {
+      autoStrictOnly = b.dataset.autoStrict === "1";
+      drawAutoTips();
+    };
+  });
+}
+
 const CALIBRATION_STEP = 2.5;
 /**
  * Skúšobné pásmo 65 – 67 % (28. 10. 2026, Michal): tipy tesne pod pásmom pre klientov majú v Histórii tipov
