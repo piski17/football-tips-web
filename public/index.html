@@ -95,20 +95,20 @@
       <section class="view" data-view="historia" id="viewHistoria" hidden>
         <header class="top">
           <h2>História tipov</h2>
-          <div class="top-actions"><button type="button" class="btn sm" id="checkResultsBtn">Skontrolovať výsledky</button></div>
+          <div class="top-actions"><button type="button" class="btn ghost sm" id="sendDayTipsBtn" title="Poslať všetky tipy vybraného dňa do Telegramu naraz">Poslať tipy dňa</button><button type="button" class="btn sm" id="checkResultsBtn">Skontrolovať výsledky</button></div>
         </header>
-        <div class="page">
-          <div class="kpis" id="tipsKpis"></div>
+        <!-- História tipov (29. 10. 2026): prehľad hore, potom štyri karty – Tipy, Štatistiky, Sledované, Ďalšie akcie -->
+        <div class="page hist">
+          <div class="kpis hist-kpis" id="tipsKpis"></div>
           <div class="override-line muted small" id="overrideLine"></div>
-          <div class="acts">
-            <button type="button" class="btn sm" id="sendDayTipsBtn" title="Poslať všetky tipy vybraného dňa do Telegramu naraz">Poslať tipy dňa</button>
-            <button type="button" class="btn ghost sm" id="tipsComingBtn" title="Poslať do Telegramu oznam, že tipy prídu o pár minút">Tipy o pár minút</button>
-            <button type="button" class="btn ghost sm" id="noTipTodayBtn">Dnes bez tipu</button>
-            <button type="button" class="btn ghost sm" id="monthlyReportBtn" title="Súhrn všetkých tipov za mesiac s možnosťou odoslať ho do Telegramu">Mesačný report</button>
-            <button type="button" class="btn ghost sm" id="manualTipBtn" title="Zapísať tip na už odohraný zápas aj s výsledkom">+ Doplniť odohraný tip</button>
-            <button type="button" class="btn ghost sm" id="archiveResolvedBtn" title="Skryť vyhodnotené tipy z histórie – na prezentácii a v štatistikách ostanú">Skryť vyhodnotené</button>
-            <button type="button" class="btn ghost sm" id="restoreDailyBtn" title="Vrátiť do histórie tipy z denného súhrnu (/suhrn), ktoré v histórii chýbajú">Obnoviť z denného súhrnu</button>
+          <div class="chips hist-tabs" id="histTabs" role="tablist">
+            <button type="button" class="chip on" data-ht="tipy">Tipy</button>
+            <button type="button" class="chip" data-ht="stat">Štatistiky</button>
+            <button type="button" class="chip" data-ht="sled">Sledované</button>
+            <button type="button" class="chip" data-ht="akcie">Ďalšie akcie</button>
           </div>
+
+          <div class="hist-pane" data-hp="tipy">
           <div class="filter-row">
             <div class="chips" id="tipsFilter">
               <button type="button" class="chip on" data-f="all">Všetky</button>
@@ -118,20 +118,25 @@
             <label class="toggle"><input type="checkbox" id="showArchivedToggle" /> <span id="showArchivedLabel">Zobraziť skryté</span></label>
           </div>
           <div class="card list-card" id="tipsList"><p class="empty">Načítavam…</p></div>
+          </div>
 
-          <h3 class="sh">Úspešnosť podľa trhov <small>zisk pri vklade 1 jednotky na tip</small></h3>
+          <div class="hist-pane" data-hp="stat" hidden>
+          <h3 class="sh">Podľa trhov <small>zisk pri vklade 1 jednotky na tip</small></h3>
           <div class="card" id="marketBreakdown"></div>
-
-          <h3 class="sh">Všetky zápasy – automaticky <small>model sám prejde každý zápas zo všetkých súťaží – klientom nejde, neráta sa do štatistík</small></h3>
-          <div class="card" id="autoResult"><p class="empty">Načítavam…</p></div>
-
-          <h3 class="sh">Pásmo 65 – 67&nbsp;% <small>len sledovať – klientom nejde, neráta sa do štatistík</small></h3>
-          <div class="card" id="watchBandResult"></div>
-
-          <details class="card adv">
-            <summary>Pokročilé – bankroll, kalibrácia a tiché sledovanie</summary>
-            <div class="adv-body">
-              <h4 class="ct">Bankroll simulátor</h4>
+          <h3 class="sh">Podľa líg</h3>
+          <div class="card">
+              <p class="muted small">V ktorých súťažiach model zarába a kde prerába.</p>
+              <div id="leagueResult"></div></div>
+          <h3 class="sh">Podľa hodnoty</h3>
+          <div class="card">
+              <p class="muted small">Ktoré tipy zarábajú najviac – s malou, alebo veľkou hodnotou. Podľa toho sa dá posunúť hranica +5 %.</p>
+              <div id="valueResult"></div></div>
+          <h3 class="sh">Kalibrácia</h3>
+          <div class="card">
+              <p class="muted small">Porovnanie predpovedanej pravdepodobnosti s tým, ako často tipy reálne vyšli.</p>
+              <div id="calibrationResult"></div></div>
+          <h3 class="sh">Bankroll simulátor</h3>
+          <div class="card">
               <p class="muted small">Na každý tip ide zvolené percento z aktuálneho bankrollu. Počíta sa so skutočným kurzom, ak je uložený, inak s „fér“ kurzom z pravdepodobnosti modelu.</p>
               <div class="bk-controls">
                 <label class="inline-field">Počiatočný bankroll <input type="number" id="bankrollStartInput" value="1000" min="1" step="50" /> €</label>
@@ -143,31 +148,39 @@
                   <button type="button" class="chip" data-pct="5">5&nbsp;%</button>
                 </div>
               </div>
-              <div id="bankrollResult"></div>
-              <h4 class="ct">Kalibračný report</h4>
-              <p class="muted small">Porovnanie predpovedanej pravdepodobnosti s tým, ako často tipy reálne vyšli.</p>
-              <div id="calibrationResult"></div>
-              <h4 class="ct">Úspešnosť podľa hodnoty</h4>
-              <p class="muted small">Ktoré tipy zarábajú najviac – s malou, alebo veľkou hodnotou. Podľa toho sa dá posunúť hranica +5 %.</p>
-              <div id="valueResult"></div>
-              <h4 class="ct">Úspešnosť podľa líg</h4>
-              <p class="muted small">V ktorých súťažiach model zarába a kde prerába.</p>
-              <div id="leagueResult"></div>
-              <h4 class="ct">Sledované tipy – úspešnosť</h4>
-              <p class="muted small">Všetko, čo sa vyhodnocuje potichu: nejde to členom ani na web a neráta sa do štatistík. Vidíš to len ty.</p>
+              <div id="bankrollResult"></div></div>
+          </div>
+
+          <div class="hist-pane" data-hp="sled" hidden>
+          <p class="muted small hist-note">Všetko na tejto karte sa vyhodnocuje potichu: nejde to členom ani na web a neráta sa do štatistík.</p>
+          <h3 class="sh">Všetky zápasy – automaticky <small>model sám prejde každý zápas zo všetkých súťaží</small></h3>
+          <div class="card" id="autoResult"><p class="empty">Načítavam…</p></div>
+          <h3 class="sh">Pásmo 65 – 67&nbsp;%</h3>
+          <div class="card" id="watchBandResult"></div>
+          <h3 class="sh">Sledované tipy</h3>
+          <div class="card">
               <div id="watchOverview"></div>
               <h4 class="ct">Zoznam sledovaných tipov</h4>
               <div id="watchResult"></div>
               <h4 class="ct">Tiché sledovanie</h4>
               <div class="track-line muted small" id="shadowSummary"></div>
               <div class="track-line muted small" id="clvSummary"></div>
-              <div class="track-line muted small" id="blendSummary"></div>
-            </div>
-          </details>
+              <div class="track-line muted small" id="blendSummary"></div></div>
+          </div>
 
+          <div class="hist-pane" data-hp="akcie" hidden>
+          <div class="card hist-actions">
+            <button type="button" class="btn ghost sm" id="tipsComingBtn" title="Poslať do Telegramu oznam, že tipy prídu o pár minút">Tipy o pár minút</button>
+            <button type="button" class="btn ghost sm" id="noTipTodayBtn">Dnes bez tipu</button>
+            <button type="button" class="btn ghost sm" id="monthlyReportBtn" title="Súhrn všetkých tipov za mesiac s možnosťou odoslať ho do Telegramu">Mesačný report</button>
+            <button type="button" class="btn ghost sm" id="manualTipBtn" title="Zapísať tip na už odohraný zápas aj s výsledkom">+ Doplniť odohraný tip</button>
+            <button type="button" class="btn ghost sm" id="archiveResolvedBtn" title="Skryť vyhodnotené tipy z histórie – na prezentácii a v štatistikách ostanú">Skryť vyhodnotené</button>
+            <button type="button" class="btn ghost sm" id="restoreDailyBtn" title="Vrátiť do histórie tipy z denného súhrnu (/suhrn), ktoré v histórii chýbajú">Obnoviť z denného súhrnu</button>
+          </div>
           <div class="danger-zone">
             <span class="muted small">Natrvalo zmaže všetky uložené tipy aj ich správy v Telegrame.</span>
             <button type="button" class="btn danger sm" id="clearAllTipsBtn">Vymazať všetky tipy</button>
+          </div>
           </div>
         </div>
       </section>
@@ -197,7 +210,7 @@
               <label class="fld">Od<input type="date" id="subStart" /></label>
               <label class="fld">Cena (€)<input type="number" id="subPrice" min="0" step="1" inputmode="decimal" /></label>
               <label class="fld fld-wide">Poznámka<input type="text" id="subNote" placeholder="voliteľné" /></label>
-              <label class="check"><input type="checkbox" id="subFounder" checked /> Prvý člen (zamknutá cena)</label>
+              
             </div>
             <div class="form-foot"><span class="muted small" id="subEndPreview"></span><button type="button" class="btn sm" id="addSubscriberBtn">Pridať člena</button></div>
           </div>
@@ -235,9 +248,9 @@
             <button type="button" class="tool" id="openMonthlyBtn2"><b>Mesačný report</b><span>Súhrn tipov za mesiac s odoslaním do Telegramu.</span></button>
             <a class="tool" href="/suhrn"><b>Denný súhrn</b><span>Denný prehľad tipov a výsledkov.</span></a>
             <a class="tool" href="/instagram"><b>Instagram</b><span>Obrázky tipov a výsledkov na Instagram.</span></a>
-            <a class="tool" href="/TipRadar-ako-vyberame-tipy.pdf" target="_blank" rel="noopener"><b>PDF pre klientov</b><span>Ako vyberáme tipy.</span></a>
+            
             <a class="tool" href="/navratnost.html"><b>Návratnosť – kalkulačka</b><span>Zadáte vlastný bank (napr. 200 €) aj počet tipov mesačne (30, 45, 60…) a hneď vidíte, koľko tipov musí vyjsť za mesiac a zo 100 tipov celkovo. Ukáže aj čistý zisk za mesiac. Dá sa uložiť ako PDF.</span></a>
-            <a class="tool" href="/plan.html"><b>Plán – ziskový model</b><span>Aké ROI musí model dosiahnuť, aby sa oplatil každý balíček (Štart, Gold, Platinum), plán krokov do januára 2027 a pri akých číslach čo meníme.</span></a>
+            
           </div>
         </div>
       </section>

@@ -115,7 +115,7 @@ a.back { font-size: 11px !important; letter-spacing: .24em; text-transform: uppe
 <div class="wrap">
   <a class="back noprint" href="/#nastroje">← Späť do appky</a>
   <h1>Návratnosť balíčkov <span>– vlastný bank</span></h1>
-  <p class="lead">Zadajte svoj bank a počet tipov mesačne a hneď uvidíte, akú priemernú mesačnú úspešnosť treba, aby sa vrátili vklady aj cena balíčka (Štart 100, Gold 250, Onyx 500 tipov – platí sa za tip). Pod percentom je, koľko tipov musí vyjsť za mesiac (napr. 22 z 30) a koľko zo 100 tipov celkovo (nie mesačne, ale za dlhšie obdobie).</p>
+  <p class="lead">Zadajte svoj bank a počet tipov mesačne a hneď uvidíte, akú priemernú mesačnú úspešnosť treba, aby sa vrátili vklady aj cena balíčka (Štart 50, Gold 100, Platinum 200 tipov – platí sa za tip). Pod percentom je, koľko tipov musí vyjsť za mesiac (napr. 22 z 30) a koľko zo 100 tipov celkovo (nie mesačne, ale za dlhšie obdobie).</p>
 
   <div class="panel inputs-panel">
     <div class="inputs">
@@ -170,9 +170,9 @@ a.back { font-size: 11px !important; letter-spacing: .24em; text-transform: uppe
 <script>
 (function () {
   var PLANS = [
-    { tag: "Štart", name: "100 tipov", price: 89, tips: 100 },
-    { tag: "Gold", name: "250 tipov", price: 179, tips: 250 },
-    { tag: "Onyx", name: "500 tipov", price: 299, tips: 500 }
+    { tag: "Štart", name: "50 tipov", price: 49, tips: 50 },
+    { tag: "Gold", name: "100 tipov", price: 79, tips: 100 },
+    { tag: "Platinum", name: "200 tipov", price: 139, tips: 200 }
   ];
   var STAKES = [1, 2, 3, 5];
   var DEFAULT = { bank: 1000, tips: 60, target: 73, odds: [1.55, 1.62, 1.69, 1.76, 1.83] };

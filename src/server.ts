@@ -248,7 +248,9 @@ app.get(["/video", "/video/"], (_req, res) => {
 // Podstránky prezentácie (tipradar.eu/metoda, /vysledky, /otazky, /formular) – bez hesla.
 // Je to ten istý súbor ako úvod, podľa adresy sa v ňom zobrazí iná časť.
 // tipradar.eu/clenstvo = samostatná stránka Členstvo (aj odkazy z Instagramu a Telegramu).
-app.get(["/metoda", "/metoda/", "/vysledky", "/vysledky/", "/otazky", "/otazky/", "/formular", "/formular/", "/o-mne", "/o-mne/", "/clenstvo", "/clenstvo/"], (_req, res) => {
+// /metoda (29. 10. 2026) zrušená – bola kópia úvodu, staré odkazy vedú na úvod.
+app.get(["/metoda", "/metoda/"], (_req, res) => res.redirect(301, "/"));
+app.get(["/vysledky", "/vysledky/", "/otazky", "/otazky/", "/formular", "/formular/", "/o-mne", "/o-mne/", "/clenstvo", "/clenstvo/"], (_req, res) => {
   res.set("Cache-Control", "no-cache"); res.sendFile(path.join(__dirname, "..", "landing", "index.html"));
 });
 // ---- Platba za členstvo (prevod cez QR kód) – bez hesla ----

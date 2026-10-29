@@ -1837,9 +1837,21 @@ function renderTipsKpis(statTips) {
     <div class="kpi"><small>Tipov</small><b>${statTips.length}</b><span>${pending ? `${pending} ${pending === 1 ? "čaká" : "čakajú"}` : "nič nečaká"}</span></div>
     <div class="kpi"><small>Vyšlo</small><b>${decided ? `${Math.round((won / decided) * 100)}${NB}%` : "–"}</b><span>${won} z ${decided}</span></div>
     <div class="kpi"><small>Zisk</small><b class="${cls(st.profit)}">${st.withOdds ? `${signed(st.profit, 1)}${NB}j.` : "–"}</b><span>1 jednotka na tip</span></div>
-    <div class="kpi"><small>ROI</small><b class="${cls(st.roi)}">${st.roi != null ? `${signed(st.roi, 1)}${NB}%` : "–"}</b><span>na vsadený tip</span></div>
     <div class="kpi"><small>${MONTH_NAMES[now.getMonth()]}</small><b class="${cls(ms.profit)}">${ms.withOdds ? `${signed(ms.profit, 1)}${NB}j.` : "–"}</b><span>${ms.won} z ${ms.total} vyšlo</span></div>`;
 }
+
+// História tipov (29. 10. 2026): karty Tipy / Štatistiky / Sledované / Ďalšie akcie, posledná zvolená sa pamätá.
+function showHistTab(tab) {
+  if (!document.querySelector(`#histTabs [data-ht="${tab}"]`)) tab = "tipy";
+  document.querySelectorAll("#histTabs [data-ht]").forEach((b) => b.classList.toggle("on", b.dataset.ht === tab));
+  document.querySelectorAll("#viewHistoria .hist-pane").forEach((p) => (p.hidden = p.dataset.hp !== tab));
+  try { localStorage.setItem("histTab", tab); } catch { /* bez úložiska sa nepamätá */ }
+}
+document.getElementById("histTabs")?.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-ht]");
+  if (b) showHistTab(b.dataset.ht);
+});
+try { showHistTab(localStorage.getItem("histTab") || "tipy"); } catch { showHistTab("tipy"); }
 
 /** Prehľad tipov „mimo filtra“ – či sa oplatí prekonávať kontrolu kurzu. */
 function renderOverrideLine(tips) {
@@ -3568,7 +3580,6 @@ document.getElementById("addSubscriberBtn").addEventListener("click", async (e) 
     startDate: new Date(`${start}T12:00:00`).toISOString(),
     periodStart: new Date(`${start}T12:00:00`).toISOString(),
     nextPaymentDue: end.toISOString(),
-    founder: document.getElementById("subFounder").checked,
     note: document.getElementById("subNote").value.trim() || undefined,
     createdAt: new Date().toISOString(),
   };

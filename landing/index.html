@@ -2714,6 +2714,14 @@ html body .eyebrow::after, html body .page-head .eyebrow::after, html body .fina
 /* užší obsah – menej roztiahnuté (navigácia ostáva) */
 html body main .wrap, html body section .wrap, html body .sec .wrap, html body footer .wrap { max-width: 1040px !important; }
 html body .sec { padding-top: clamp(48px, 7vw, 88px) !important; padding-bottom: clamp(48px, 7vw, 88px) !important; }
+/* ===== ÚPRAVY 29. 10. 2026 VEČER: členstvo – jeden názov, na mobile cena hore; O mne – štítok na svetlej karte ===== */
+html body #clenstvo .lux-r .lux-term { display: none !important; }
+@media (max-width: 860px) {
+  html body #clenstvo .lux-r { order: -1; border-top: 0 !important; border-bottom: 1px solid var(--line); }
+  html body #clenstvo .lux-r .lux-term { display: block !important; }
+}
+html body #kto.om2-story .om2-paper .eyebrow { background: none !important; background-color: transparent !important; box-shadow: none !important; padding: 0 !important; color: #8A6E3A !important; -webkit-text-fill-color: #8A6E3A !important; }
+html body #kto.om2-story .om2-paper .eyebrow::before { background: #8A6E3A !important; box-shadow: none !important; }
 </style>
 
 <link href="https://fonts.googleapis.com/css2?family=Herr+Von+Muellerhoff&amp;family=Great+Vibes&amp;display=swap" rel="stylesheet" />
@@ -2811,8 +2819,8 @@ html body .sec { padding-top: clamp(48px, 7vw, 88px) !important; padding-bottom:
     <div class="wrap pz-hero-grid">
       <div class="pz-hero-text">
         <div class="eyebrow">Futbalová analytika · Est. 2026</div>
-        <h1>Futbal ako <em>investícia</em></h1>
-        <p class="hx-lead">Štatistický model každý deň prejde stovky zápasov a vyberie len tipy, pri ktorých je šanca vyššia, než naznačuje kurz. Žiadne pocity, len čísla – s jediným cieľom: aby váš bank dlhodobo rástol.</p>
+        <h1>Futbal podľa <em>čísel</em></h1>
+        <p class="hx-lead">Štatistický model každý deň prejde stovky zápasov a vyberie len tipy, pri ktorých je šanca vyššia, než naznačuje kurz. Žiadne pocity, len čísla – a každý tip zverejnený, výhry aj prehry.</p>
         <div class="hx-cta">
           <a class="btn" href="/clenstvo">Vybrať členstvo</a>
           <a class="btn btn-ghost" href="/vysledky">Overené výsledky</a>
@@ -3143,7 +3151,7 @@ html body .sec { padding-top: clamp(48px, 7vw, 88px) !important; padding-bottom:
       <div><div class="eyebrow">Otázky</div><h2>Čo sa ľudia <em>pýtajú</em></h2></div>
       <div class="faq">
         <details><summary>Kedy a kam tipy prídu?</summary><p>Do súkromného kanála na Telegrame, 1 – 2 hodiny pred výkopom zápasu. Večer, keď sa zápasy dohrajú, príde vyhodnotenie dňa.</p></details>
-        <details><summary>Koľko tipov denne dostanem?</summary><p>Najviac 3 – tie s najvyššou dôverou, ktoré prejdú všetkými pravidlami. Niektoré dni žiadny: keď neprejde nič, nepošleme nič a dáme vám vedieť. Kvalita pred kvantitou.</p></details>
+        <details><summary>Koľko tipov dostanem?</summary><p>Počet podľa dennej ponuky – len tie s najvyššou dôverou, ktoré prejdú všetkými pravidlami. Niektoré dni žiadny: keď neprejde nič, nepošleme nič a dáme vám vedieť. Kvalita pred kvantitou.</p></details>
         <details><summary>Čo je zisk v jednotkách?</summary><p>Jednotka je rovnaká suma na každý tip, napríklad 10 €. Zisk +5 jednotiek pri 10 € na tip je +50 €.</p></details>
         <details><summary>Zaručujete výhru?</summary><p>Nie. Žiadny model nevie zaručiť výsledok zápasu. TipRadar vyberá stávky, pri ktorých je šanca podľa štatistík vyššia, než naznačuje kurz. Rozhoduje dlhodobý výsledok, preto zverejňujeme aj prehraté tipy. Preto máte prvých 30 tipov bez rizika – ak budete v mínuse, vrátime vám peniaze (pozrite garanciu nižšie).</p></details>
         <details id="garancia"><summary>Ako funguje garancia?</summary><p><strong>Prvých 30 tipov bez rizika:</strong> ak je vaše prvé členstvo po 30 tipoch v&nbsp;mínuse, vrátime vám celú sumu a&nbsp;členstvo skončí. Stačí nám poslať číslo účtu. <strong>Mesiac zadarmo:</strong> ak vaše členstvo (Štart, Gold alebo Platinum) skončí v&nbsp;mínuse, dostanete 1 mesiac zadarmo – počas neho vám chodia všetky tipy do toho istého kanála a&nbsp;dáme vám vedieť na Telegrame. Počíta sa zo všetkých tipov vášho členstva s&nbsp;výsledkom, pri rovnakom vklade na každý tip (1 jednotka). Ak je súčet záporný, členstvo skončilo v&nbsp;mínuse. Na samotný mesiac zadarmo sa garancia už nevzťahuje, na ďalšie zaplatené členstvo áno.</p></details>

@@ -812,3 +812,48 @@ h3.sh { font-weight: 500 !important; letter-spacing: .03em !important; }
 @media (max-width: 599px) {
   .auto-day summary { grid-template-columns: 1fr 1fr; row-gap: 2px; font-size: 13px; }
 }
+
+/* =====================================================================
+   POLNOC – appka ako tipradar.eu (29. 10. 2026 večer): polnočná modročierna,
+   šampanské zlato, zaoblené rohy; História tipov na karty.
+   ===================================================================== */
+:root {
+  --bg: #0A0E16; --bg2: #0E131D; --panel: #131A26; --panel2: #18202E;
+  --line: rgba(244, 239, 230, .08); --line2: rgba(214, 190, 140, .35);
+  --gold: #D6BE8C; --gold-hi: #F5E9CC; --gold-lo: #A88E5E;
+  --gold-grad: linear-gradient(115deg, #F5E9CC, #D6BE8C 45%, #A88E5E);
+  --text: #F4EFE6; --muted: #A9AFBB; --faint: #737B89;
+}
+body { background: radial-gradient(ellipse 50% 40% at 85% -5%, rgba(214,190,140,.08), transparent 70%), var(--bg) !important; }
+.side { background: #080B12 !important; border-right: 1px solid rgba(214,190,140,.16) !important; }
+.card, .tip, .dtip, .tool, .kpi, .gar-card, .intro-card, .dt-promo, .modal, .res-row, .adv { background: linear-gradient(180deg, #141B27, #10161F) !important; border: 1px solid var(--line) !important; border-radius: 16px !important; }
+.kpi { border-top: 1px solid var(--line) !important; }
+.kpi::before { content: ""; display: block; width: 22px; height: 1px; margin-bottom: 12px; background: var(--gold); }
+.seats { background: linear-gradient(160deg, #161E2B, #0E131D) !important; border-radius: 14px !important; }
+.btn, .btn.ghost, .btn.btn-ghost { border-radius: 10px !important; }
+.chip, .tag, .pill, .seg, .seg button, .tabs, .tabs button { border-radius: 999px !important; }
+input, select, textarea, .search, table, .tab, .stat, .panel, .box { border-radius: 10px !important; }
+.nav a { border-radius: 10px !important; }
+.nav a.on { background: rgba(214,190,140,.09) !important; box-shadow: none !important; }
+.top { border-bottom: 1px solid rgba(214,190,140,.16) !important; }
+
+/* História tipov: prehľad (4 čísla) + karty */
+#tipsKpis.hist-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 4px; }
+.hist-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 18px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+.hist-tabs .chip { padding: 10px 18px; font-size: 13.5px; font-weight: 600; }
+.hist-tabs .chip.on { background: var(--gold-grad) !important; color: #0A0E16 !important; border-color: transparent !important; }
+.hist-pane > h3.sh:first-child { margin-top: 0; }
+.hist-pane .card { padding: 20px 22px; }
+.hist-pane .card.list-card { padding: 0; }
+.hist-note { margin: 0 0 14px; }
+.hist-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.hist .danger-zone { margin-top: 28px; }
+.top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+@media (max-width: 760px) {
+  #tipsKpis.hist-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hist-tabs { overflow-x: auto; flex-wrap: nowrap; }
+  .hist-tabs .chip { flex: none; }
+  .hist-actions .btn { flex: 1 1 100%; }
+}
+html body .top { background: rgba(10, 14, 22, .94) !important; }
+.hist-pane > h3.sh:first-child { border-top: 0 !important; padding-top: 0 !important; }
