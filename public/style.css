@@ -722,7 +722,7 @@ h3.sh { font-size: 20px !important; }
   --gold: #C8A96A; --gold-hi: #EBD9AE; --gold-lo: #9A7B3F;
   --gold-grad: linear-gradient(115deg, #F0E0B4, #C8A96A 45%, #9A7B3F);
   --text: #F3EEE4; --muted: #A9A397; --faint: #75706A; --win: #8CC7A1; --loss: #D08A8A;
-  --sans: "Inter", system-ui, sans-serif; --display: "Cinzel", "Times New Roman", serif;
+  --sans: "Manrope", system-ui, sans-serif; --display: "Tenor Sans", "Times New Roman", serif;
 }
 body { font-family: var(--sans) !important; background: var(--bg) !important; color: var(--text) !important; -webkit-font-smoothing: antialiased; }
 .top h2, h3.sh, .modal h3 { font-family: var(--display) !important; font-stretch: normal !important; font-weight: 500 !important; text-transform: none !important; letter-spacing: .02em !important; }

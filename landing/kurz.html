@@ -49,8 +49,8 @@
     --faint: #A39A8B;
     --win: #7FBF9A;
     --loss: #C0707C;
-    --sans: "Inter", "Helvetica Neue", Arial, system-ui, sans-serif;
-    --display: "Inter", "Inter", "Helvetica Neue", Arial, sans-serif;
+    --sans: "Manrope", "Helvetica Neue", Arial, system-ui, sans-serif;
+    --display: "Manrope", "Manrope", "Helvetica Neue", Arial, sans-serif;
     --serif: var(--sans);
     --r: 22px;
     --r-sm: 14px;
@@ -832,7 +832,7 @@
   .nav-social svg { width: 18px; height: 18px; }
 
   /* ===== písmo nadpisov: Cormorant Garamond (luxusné pätkové), zlaté slová plnou zlatou kurzívou ===== */
-  h1, h2, h3, .lux h3.lux-name { font-family: "Inter", Georgia, "Times New Roman", serif; font-weight: 700; letter-spacing: 0; }
+  h1, h2, h3, .lux h3.lux-name { font-family: "Manrope", Georgia, "Times New Roman", serif; font-weight: 700; letter-spacing: 0; }
   h1 { line-height: 1.02; }
   h2 { line-height: 1.04; }
   h3 { font-weight: 700; font-size: 1.18em; }
@@ -847,9 +847,9 @@
   @media (max-width: 640px) { .hero h1 { font-size: clamp(44px, 12.5vw, 60px); } }
 
   /* ===== celá stránka v písme Cormorant Garamond (font-size-adjust drží rovnakú čitateľnú veľkosť) ===== */
-  :root { --sans: "Inter", Georgia, "Times New Roman", serif; --display: "Inter", Georgia, "Times New Roman", serif; --font-body: "Inter", Georgia, serif; --font-display: "Inter", Georgia, serif; }
+  :root { --sans: "Manrope", Georgia, "Times New Roman", serif; --display: "Manrope", Georgia, "Times New Roman", serif; --font-body: "Manrope", Georgia, serif; --font-display: "Manrope", Georgia, serif; }
   html { font-size-adjust: .5; }
-  body { font-family: "Inter", Georgia, "Times New Roman", serif; font-variant-numeric: lining-nums; }
+  body { font-family: "Manrope", Georgia, "Times New Roman", serif; font-variant-numeric: lining-nums; }
   button, input, select, textarea { font-family: inherit; font-variant-numeric: lining-nums; }
   /* čísla v rovnakej výške aj tam, kde skratka font: nastavenie prepíše */
   *, *::before, *::after { font-variant-numeric: lining-nums !important; }
@@ -871,7 +871,7 @@
   }
 
   /* ===== čitateľnosť: dlhšie texty, tlačidlá a formuláre v písme Outfit; nadpisy, menu, štítky a čísla ostávajú v Cormorant Garamond ===== */
-  body, p, li, .lead, .intro, .btn, input, select, textarea, label, .small, .note, td, th, dd, dt, summary, details { font-family: "Inter", "Helvetica Neue", Arial, sans-serif !important; font-size-adjust: none !important; }
+  body, p, li, .lead, .intro, .btn, input, select, textarea, label, .small, .note, td, th, dd, dt, summary, details { font-family: "Manrope", "Helvetica Neue", Arial, sans-serif !important; font-size-adjust: none !important; }
   /* pätička bez hornej časti (logo, odkazy): právny text hneď na začiatku */
   .foot-legal { margin-top: 0 !important; padding-top: 0 !important; border-top: 0 !important; }
 /* pätička bez priesvitného nápisu: kratšia */
@@ -890,7 +890,7 @@ body { font-size: 16px; }
 /* NOVÝ DIZAJN (19. 10. 2026) – rovnaký vzhľad ako úvodná stránka */
 :root { --bg: #0B0B0C; --bg-2: #1A140F; --line: rgba(201,165,92,.14); --line-2: rgba(201,165,92,.3); --text: #EDE6D6; --muted: #BDB3A2; --faint: #8C8374;
   --gold-grad: linear-gradient(135deg, #FBF1D8 0%, #E8D3A0 40%, #C9A96A 75%, #A8894F 100%); --panel: linear-gradient(180deg, rgba(255,245,225,.045), rgba(255,245,225,.015));
-  --sans: "Inter", "Helvetica Neue", Arial, system-ui, sans-serif; --display: "Inter", Georgia, serif; }
+  --sans: "Manrope", "Helvetica Neue", Arial, system-ui, sans-serif; --display: "Manrope", Georgia, serif; }
 body { background: var(--bg); font-family: var(--sans); }
 p, li { font-weight: 300; }
 h1, h2, h3, .page-head h1, .skola-text h2 { font-family: var(--display); font-weight: 600; text-transform: none; letter-spacing: -0.01em; font-variant-numeric: lining-nums !important; }
@@ -1063,7 +1063,7 @@ html { scrollbar-color: rgba(201,165,92,.35) var(--bg); }
   .dock { left: 34px !important; padding: 18px 0 18px 0 !important; gap: 4px !important; align-items: stretch !important; background: transparent !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; counter-reset: dk; }
   .dock::before { display: block; left: 0 !important; right: auto !important; top: 0 !important; bottom: 0 !important; width: 1px !important; height: auto !important; background: linear-gradient(180deg, transparent, rgba(201,165,92,.28) 15%, rgba(201,165,92,.28) 85%, transparent) !important; }
   .dock a, .dock button { counter-increment: dk; flex-direction: row !important; justify-content: flex-start !important; align-items: baseline !important; width: 176px !important; height: 50px !important; padding: 0 0 0 24px !important; gap: 14px !important; border-radius: 0 !important; color: rgba(183,169,146,.85) !important; font: 600 12.5px/50px Plus Jakarta Sans, sans-serif !important; letter-spacing: .2em !important; text-transform: uppercase; transition: color .35s, transform .35s cubic-bezier(.2,.9,.25,1.2) !important; }
-  .dock a::before { content: counter(dk, decimal-leading-zero); font: italic 500 15px/50px "Inter", serif; letter-spacing: 0; color: rgba(201,165,92,.55); transition: color .35s; }
+  .dock a::before { content: counter(dk, decimal-leading-zero); font: italic 500 15px/50px "Manrope", serif; letter-spacing: 0; color: rgba(201,165,92,.55); transition: color .35s; }
   .dock svg { display: none !important; }
   .dock a:hover { color: #E8D3A0 !important; transform: translateX(5px); }
   .dock a:hover svg { transform: none !important; }
@@ -1096,8 +1096,8 @@ html.menu-open .nav { background: transparent !important; border-bottom-color: t
 .nq2-plaque { position: relative; display: inline-flex; align-items: center; gap: 14px; padding: 10px 26px; border-radius: 999px; background: linear-gradient(180deg, rgba(44,34,25,.92), rgba(24,18,13,.92)); box-shadow: inset 0 1px 0 rgba(255,245,225,.08), 0 10px 30px -12px rgba(0,0,0,.8), 0 0 28px -8px rgba(201,165,92,.35); isolation: isolate; }
 .nq2-plaque::before { content: ""; position: absolute; inset: -1px; z-index: -1; border-radius: inherit; padding: 1px; background: conic-gradient(from var(--nqA), rgba(201,165,92,.25) 0deg, rgba(201,165,92,.25) 250deg, #FFF6DD 320deg, rgba(201,165,92,.25) 360deg); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: nq2Spin 6s linear infinite; }
 @keyframes nq2Spin { to { --nqA: 360deg; } }
-.nq2-t { white-space: nowrap; font: italic 500 18px/1.2 "Inter", Georgia, serif !important; letter-spacing: .02em; color: rgba(244,238,227,.86) !important; }
-.nq2-t em { font: italic 600 18px/1.2 "Inter", Georgia, serif !important; padding: 0 .04em; background: linear-gradient(100deg, #A8823E 0%, #E8D3A0 30%, #FFF8E4 46%, #E8D3A0 60%, #A8823E 100%); background-size: 260% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: nqShine 5s ease-in-out 1.5s infinite; }
+.nq2-t { white-space: nowrap; font: italic 500 18px/1.2 "Manrope", Georgia, serif !important; letter-spacing: .02em; color: rgba(244,238,227,.86) !important; }
+.nq2-t em { font: italic 600 18px/1.2 "Manrope", Georgia, serif !important; padding: 0 .04em; background: linear-gradient(100deg, #A8823E 0%, #E8D3A0 30%, #FFF8E4 46%, #E8D3A0 60%, #A8823E 100%); background-size: 260% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: nqShine 5s ease-in-out 1.5s infinite; }
 .nq2-star { font-style: normal; font-size: 10px; line-height: 1; color: #E8D3A0; text-shadow: 0 0 10px rgba(232,211,160,.8); animation: nq2Tw 3s ease-in-out infinite; }
 .nq2-star:last-child { animation-delay: 1.5s; }
 @keyframes nq2Tw { 0%, 100% { opacity: .45; transform: scale(.85); } 50% { opacity: 1; transform: scale(1.15); } }
@@ -1122,18 +1122,18 @@ html.menu-open .nav { background: transparent !important; border-bottom-color: t
   --gold: #C8102E; --gold-hi: var(--ink); --gold-lo: #8A0B20;
   --text: var(--ink); --muted: var(--muted); --faint: #6E6E6E;
   --win: #157A3C; --loss: #C8102E;
-  --sans: "Inter", "Helvetica Neue", Arial, sans-serif;
-  --display: "Inter", "Arial Narrow", sans-serif;
+  --sans: "Manrope", "Helvetica Neue", Arial, sans-serif;
+  --display: "Manrope", "Arial Narrow", sans-serif;
   --r: 4px; --r-sm: 3px;
   --gold-grad: linear-gradient(var(--ink), var(--ink));
   --panel: var(--paper);
   --red: #C8102E;
 }
 html, body { background: var(--bg) !important; color: var(--text) !important; }
-body, p, li, .lead, .intro, .btn, input, select, textarea, label, .small, .note, td, th, dd, dt, summary, details { font-family: "Inter", "Helvetica Neue", Arial, sans-serif !important; }
+body, p, li, .lead, .intro, .btn, input, select, textarea, label, .small, .note, td, th, dd, dt, summary, details { font-family: "Manrope", "Helvetica Neue", Arial, sans-serif !important; }
 body { font-weight: 500; }
 /* nadpisy ako v novinách */
-h1, h2, h3, .page-head h1, .hero.hx h1, .sec-head h2, .finale h2 { font-family: "Inter", "Arial Narrow", sans-serif !important; font-weight: 800 !important; text-transform: uppercase; letter-spacing: -.005em !important; color: var(--text) !important; line-height: .95 !important; }
+h1, h2, h3, .page-head h1, .hero.hx h1, .sec-head h2, .finale h2 { font-family: "Manrope", "Arial Narrow", sans-serif !important; font-weight: 800 !important; text-transform: uppercase; letter-spacing: -.005em !important; color: var(--text) !important; line-height: .95 !important; }
 h3 { text-transform: none; font-weight: 700 !important; line-height: 1.1 !important; letter-spacing: 0 !important; }
 h1 em, h2 em, h3 em, .hero h1 em, .shine, .gold-text, .silver-text, .plat-text { font-style: normal !important; background: none !important; -webkit-text-fill-color: currentColor !important; color: var(--red) !important; animation: none !important; text-shadow: none !important; }
 .hero.hx h1 { font-size: clamp(64px, 9vw, 132px) !important; max-width: 14ch; }
@@ -1145,7 +1145,7 @@ h2 { font-size: clamp(40px, 4.8vw, 68px) !important; }
 .sec.alt { background: var(--bg-2) !important; }
 .sec::before, .sec::after, .finale::before, .finale::after, .page-head::before, .page-head::after, #kto::before, .om2-hero::before { display: none !important; }
 /* kicker namiesto žiariacich štítkov */
-.eyebrow, .hx-pill { display: inline-flex !important; align-items: center; gap: 8px; padding: 0 !important; border: 0 !important; border-radius: 0 !important; background: none !important; color: var(--red) !important; font: 700 13px/1 "Inter", sans-serif !important; letter-spacing: .14em !important; text-transform: uppercase; box-shadow: none !important; }
+.eyebrow, .hx-pill { display: inline-flex !important; align-items: center; gap: 8px; padding: 0 !important; border: 0 !important; border-radius: 0 !important; background: none !important; color: var(--red) !important; font: 700 13px/1 "Manrope", sans-serif !important; letter-spacing: .14em !important; text-transform: uppercase; box-shadow: none !important; }
 .eyebrow::before, .hx-pill i { content: ""; width: 10px !important; height: 10px !important; border-radius: 0 !important; background: var(--red) !important; box-shadow: none !important; display: inline-block; }
 /* karty ako stĺpce novín */
 .card, .hm-card, .hm-tier, .lux, .sc, .calc, .ledger-wrap, .faq details, .om2-paper, .steps li, .funnel li, .duel, .yday-card, .stake, .verdict, .calib-sec, .calc-sec, .showcase, .hm-kurz .wrap > *, .skola { background: var(--card) !important; border: 1px solid var(--line-2) !important; border-radius: 4px !important; box-shadow: none !important; color: var(--text) !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
@@ -1158,18 +1158,18 @@ h2 { font-size: clamp(40px, 4.8vw, 68px) !important; }
 .btn::before, .btn::after { display: none !important; }
 a { color: inherit; }
 /* čísla */
-.num, b.num, .sc-total, .figures b, .hm-tier b, .hx-live b, .funnel .c, .steps .n, #ako .steps .n, .stake .big, .lux-price b { font-family: "Inter", "Arial Narrow", sans-serif !important; font-weight: 800 !important; background: none !important; -webkit-text-fill-color: currentColor !important; color: var(--text) !important; letter-spacing: 0 !important; }
+.num, b.num, .sc-total, .figures b, .hm-tier b, .hx-live b, .funnel .c, .steps .n, #ako .steps .n, .stake .big, .lux-price b { font-family: "Manrope", "Arial Narrow", sans-serif !important; font-weight: 800 !important; background: none !important; -webkit-text-fill-color: currentColor !important; color: var(--text) !important; letter-spacing: 0 !important; }
 .pos, .win, .w { color: var(--win) !important; -webkit-text-fill-color: var(--win) !important; }
 .neg, .loss, .l { color: var(--loss) !important; -webkit-text-fill-color: var(--loss) !important; }
 /* horná lišta ako hlavička novín */
 .nav, html.scrolled .nav, html[data-page] .nav, html[data-page="home"] .nav, html[data-page]:not([data-page="home"]) .nav { background: var(--paper) !important; border-bottom: 3px solid var(--ink) !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
-.brand { color: var(--ink) !important; font-family: "Inter", sans-serif !important; font-weight: 800 !important; text-transform: uppercase; letter-spacing: .02em; font-size: 26px !important; }
+.brand { color: var(--ink) !important; font-family: "Manrope", sans-serif !important; font-weight: 800 !important; text-transform: uppercase; letter-spacing: .02em; font-size: 26px !important; }
 .brand svg { color: var(--red) !important; }
 .nav-social a { color: var(--ink) !important; }
 .nav-social a:hover { background: var(--hover) !important; color: var(--red) !important; }
 .nq2-plaque { background: none !important; box-shadow: none !important; padding: 0 !important; gap: 10px !important; }
 .nq2-plaque::before, .nq2-star { display: none !important; }
-.nq2-t, .nq2-t em { font: italic 600 17px/1.2 "Inter", sans-serif !important; color: var(--muted) !important; background: none !important; -webkit-text-fill-color: currentColor !important; animation: none !important; }
+.nq2-t, .nq2-t em { font: italic 600 17px/1.2 "Manrope", sans-serif !important; color: var(--muted) !important; background: none !important; -webkit-text-fill-color: currentColor !important; animation: none !important; }
 .nq2-t em { color: var(--red) !important; font-style: italic !important; }
 /* rozdeľovacie čiary sekcií */
 .sec-head { border-top: 3px solid var(--ink); padding-top: 18px; }
@@ -1179,8 +1179,8 @@ footer { border-top: 3px solid var(--ink); color: var(--muted) !important; }
 /* menu vľavo (počítač) */
 @media (min-width: 961px) {
   .dock::before { background: var(--ink) !important; width: 2px !important; }
-  .dock a, .dock button { color: var(--muted) !important; font: 700 13px/50px "Inter", sans-serif !important; letter-spacing: .12em !important; }
-  .dock a::before { font: 700 14px/50px "Inter", sans-serif !important; color: var(--faint) !important; }
+  .dock a, .dock button { color: var(--muted) !important; font: 700 13px/50px "Manrope", sans-serif !important; letter-spacing: .12em !important; }
+  .dock a::before { font: 700 14px/50px "Manrope", sans-serif !important; color: var(--faint) !important; }
   .dock a:hover { color: var(--red) !important; }
   .dock a.active { color: var(--ink) !important; }
   .dock a.active::before { color: var(--red) !important; }
@@ -1210,7 +1210,7 @@ footer { border-top: 3px solid var(--ink); color: var(--muted) !important; }
 .ic svg, .hm-card .ic svg { stroke: var(--on-ink) !important; color: var(--on-ink) !important; }
 .steps li small, .steps .k { color: var(--red) !important; }
 /* členstvá */
-.hm-tier .tn, .hm-tier.silver .tn, .hm-tier.gold .tn, .hm-tier.plat .tn { background: none !important; -webkit-text-fill-color: currentColor !important; color: var(--ink) !important; font-family: "Inter", sans-serif !important; font-weight: 800 !important; text-transform: uppercase; font-size: 30px !important; }
+.hm-tier .tn, .hm-tier.silver .tn, .hm-tier.gold .tn, .hm-tier.plat .tn { background: none !important; -webkit-text-fill-color: currentColor !important; color: var(--ink) !important; font-family: "Manrope", sans-serif !important; font-weight: 800 !important; text-transform: uppercase; font-size: 30px !important; }
 .hm-tier.plat { border: 2px solid var(--ink) !important; }
 .hm-tier .flag { background: var(--red) !important; color: var(--on-ink) !important; border-radius: 0 !important; box-shadow: none !important; }
 .hm-tier .tl, .hm-tier .pm { color: var(--faint) !important; }
@@ -1257,12 +1257,12 @@ input[type="checkbox"] { accent-color: var(--red); }
 .om2-sign .sig { color: var(--ink) !important; -webkit-text-fill-color: var(--ink) !important; }
 .om2-swash path { stroke: var(--red) !important; }
 .om2-paper h2 em, #kto h2 em { color: var(--red) !important; -webkit-text-fill-color: var(--red) !important; }
-.om2-quote { border-left-color: var(--red) !important; color: var(--ink) !important; font-family: "Inter", sans-serif !important; font-style: italic; font-weight: 700 !important; }
-.om2-paper .om2-lead::first-letter { color: var(--red) !important; font-family: "Inter", sans-serif !important; font-weight: 800; }
+.om2-quote { border-left-color: var(--red) !important; color: var(--ink) !important; font-family: "Manrope", sans-serif !important; font-style: italic; font-weight: 700 !important; }
+.om2-paper .om2-lead::first-letter { color: var(--red) !important; font-family: "Manrope", sans-serif !important; font-weight: 800; }
 .om2-list { border-top: 3px solid var(--ink) !important; }
 .om2-list li { border-color: var(--line) !important; }
 .om2-list li::before { background: var(--red) !important; box-shadow: none !important; }
-.om2-n { background: none !important; -webkit-text-fill-color: var(--red) !important; color: var(--red) !important; font: 800 48px/1 "Inter", sans-serif !important; font-style: normal !important; }
+.om2-n { background: none !important; -webkit-text-fill-color: var(--red) !important; color: var(--red) !important; font: 800 48px/1 "Manrope", sans-serif !important; font-style: normal !important; }
 .om2-list p, .om2-paper p { color: var(--muted) !important; }
 .om2-paper .om2-lead { color: var(--ink) !important; }
 .om2-paper p a { color: var(--ink) !important; }
@@ -1326,7 +1326,7 @@ footer, .om2-list { border-top: 1px solid rgba(201,165,92,.35) !important; }
   --gold: #C9A55C; --gold-hi: #F1E2B8; --gold-lo: #8E6E33; --red: #C9A55C;
   --gold-grad: linear-gradient(115deg, #8E6E33 0%, #C9A55C 30%, #F1E2B8 50%, #C9A55C 70%, #8E6E33 100%);
   --text: #EFE8D8; --muted: #A59D8F; --faint: #7F786C; --win: #8FC9A6; --loss: #C98088;
-  --sans: "Inter", system-ui, sans-serif; --display: "Inter", "Inter", Georgia, serif; --cond: "Inter", system-ui, sans-serif;
+  --sans: "Manrope", system-ui, sans-serif; --display: "Manrope", "Manrope", Georgia, serif; --cond: "Manrope", system-ui, sans-serif;
   --font-body: var(--sans); --font-display: var(--display);
   --r-card: 0; --r-sm: 0;
 }
@@ -1556,7 +1556,7 @@ p, li, small, label, input, select, textarea, button, td, th, dd, dt, figcaption
   --gold: #D6BE8C; --gold-hi: #F2E4C3; --gold-lo: #A88E5E; --red: #D6BE8C;
   --gold-grad: linear-gradient(115deg, #F5E9CC 0%, #D6BE8C 45%, #A88E5E 100%);
   --text: #F3EEE4; --muted: #A7ABB4; --faint: #737986; --win: #8CC7A1; --loss: #D08A8A;
-  --sans: "Inter", system-ui, sans-serif; --display: "Cinzel", "Times New Roman", serif; --cond: "Inter", system-ui, sans-serif;
+  --sans: "Manrope", system-ui, sans-serif; --display: "Tenor Sans", "Times New Roman", serif; --cond: "Manrope", system-ui, sans-serif;
   --font-body: var(--sans); --font-display: var(--display);
 }
 html, body { background: var(--bg) !important; }
@@ -2009,9 +2009,14 @@ html body .ledger-wrap, html body .mon, html body .figures > div, html body .cal
 }
 html body #clenstvo .last7, html body #clenstvo .pk-foot { max-width: 843px; margin-left: auto !important; margin-right: auto !important; }
 html body .om2-hero h1 { font-size: clamp(34px, 4.4vw, 60px) !important; }
+/* ===== PÍSMO A PÄTA (29. 10. 2026): Tenor Sans (nadpisy) + Manrope (text), päta len s upozornením ===== */
+html body footer.pz-foot { padding: 44px 0 34px !important; }
+html body footer .foot-legal { margin-top: 0 !important; padding-top: 0 !important; border-top: 0 !important; }
+html body h1, html body h2, html body .pz-brand span, html body .num { font-weight: 400 !important; }
+html body h1, html body h2 { letter-spacing: .01em !important; }
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Herr+Von+Muellerhoff&amp;family=Great+Vibes&amp;display=swap" rel="stylesheet" />
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..700&amp;family=Inter:wght@300..800&amp;display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Tenor+Sans&amp;family=Manrope:wght@300..800&amp;display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&amp;display=swap" rel="stylesheet" />
 </head>
 <body>
@@ -2140,20 +2145,6 @@ html body .om2-hero h1 { font-size: clamp(34px, 4.4vw, 60px) !important; }
 
 <footer class="pz-foot">
   <div class="wrap">
-    <div class="pz-foot-grid">
-      <div class="pz-foot-brand">
-        <a class="brand pz-brand" href="/"><svg aria-hidden="true"><use href="#pz-emblem"/></svg><span>TipRadar<small>Futbalová analytika</small></span></a>
-        <p>Futbal očami dát. Tipy s&nbsp;hodnotou, výhry aj prehry zverejnené.</p>
-        <div class="foot-social">
-          <a href="https://www.instagram.com/tipradar.eu/" target="_blank" rel="noopener" aria-label="Instagram"><svg aria-hidden="true"><use href="#i-ig"/></svg></a>
-          <a href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener" aria-label="Telegram"><svg aria-hidden="true"><use href="#i-tg"/></svg></a>
-          <a href="mailto:info@tipradar.eu" aria-label="E-mail"><svg aria-hidden="true"><use href="#i-mail"/></svg></a>
-        </div>
-      </div>
-      <div class="pz-foot-col"><h4>TipRadar</h4><a href="/vysledky">Výsledky</a><a href="/metoda">Metóda</a><a href="/clenstvo">Členstvo</a><a href="/kurz">Kurz</a></div>
-      <div class="pz-foot-col"><h4>O nás</h4><a href="/o-mne">O mne</a><a href="/otazky">Otázky</a><a href="/formular">Kontakt</a><a href="/ochrana-udajov">Ochrana osobných údajov</a></div>
-      <div class="pz-foot-col"><h4>Kontakt</h4><a href="mailto:info@tipradar.eu">info@tipradar.eu</a><a href="https://t.me/TipRadarAiBot" target="_blank" rel="noopener">Telegram</a><a href="https://www.instagram.com/tipradar.eu/" target="_blank" rel="noopener">Instagram @tipradar.eu</a></div>
-    </div>
     <div class="foot-legal">
       <p>TipRadar je analytický nástroj založený na štatistickom modeli, nie stávková kancelária ani finančné poradenstvo. Tipy sú informatívne a nezaručujú výsledok. Minulé výsledky nie sú zárukou budúcich. O tom, či a koľko staviť, rozhodujete vždy vy.</p>
       <p class="rg"><span class="age" aria-label="Len pre osoby staršie ako 18 rokov">18+</span><span>Hrajte zodpovedne a len za peniaze, ktorých stratu si môžete dovoliť. Ak vám stávkovanie prerastá cez hlavu, pomoc a register vylúčených osôb nájdete na <a href="https://www.urhh.sk" target="_blank" rel="noopener">urhh.sk</a>.</span></p>
