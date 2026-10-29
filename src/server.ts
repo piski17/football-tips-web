@@ -253,17 +253,18 @@ app.get(["/metoda", "/metoda/", "/vysledky", "/vysledky/", "/otazky", "/otazky/"
 // ---- Platba za členstvo (prevod cez QR kód) – bez hesla ----
 /** Členstvá sú bez obmedzenia miest – čísla slúžia len na prehľad (aktívni členovia a poradovník). */
 type TermSeats = Record<SellableTerm, { occupied: number; total: null; left: null }>;
-/** Plán z bota (t.me/…?start=…) → členstvo: gold = Gold 100 tipov, onyx = Onyx 250 tipov. Staré odkazy: stat / start = Gold, seria / sampion / vip = Onyx. */
+/** Plán z bota (t.me/…?start=…) → členstvo: stat = Štart 75 tipov, gold = Gold 150 tipov, onyx = Onyx 250 tipov. Staré odkazy: start = Štart, seria = Gold, sampion / vip = Onyx. */
 const LEAD_PLAN_TERM: Record<string, SellableTerm> = {
-  gold: "p100", gold_waitlist: "p100", stat: "p100", stat_waitlist: "p100", start: "p100", start_waitlist: "p100",
-  onyx: "p250", onyx_waitlist: "p250", seria: "p250", seria_waitlist: "p250", sampion: "p250", sampion_waitlist: "p250", vip: "p250", vip_waitlist: "p250",
+  stat: "p75", stat_waitlist: "p75", start: "p75", start_waitlist: "p75",
+  gold: "p150", gold_waitlist: "p150", seria: "p150", seria_waitlist: "p150",
+  onyx: "p250", onyx_waitlist: "p250", sampion: "p250", sampion_waitlist: "p250", vip: "p250", vip_waitlist: "p250",
 };
 /** Aktívni členovia (členstvo ešte neskončilo) podľa členstva + záujemcovia v poradovníku (pred spustením predaja). */
 async function termSeats(): Promise<TermSeats> {
   const subs = await listSubscribers();
   const statuses = await memberStatuses(subs);
   const active = subs.filter((s) => statuses.get(s.id)?.active);
-  const count: Record<SellableTerm, number> = { p100: 0, p250: 0 };
+  const count: Record<SellableTerm, number> = { p75: 0, p150: 0, p250: 0 };
   for (const s of active) {
     const t = sellableTerm(memberTerm(s));
     if (t) count[t]++;
@@ -276,15 +277,15 @@ async function termSeats(): Promise<TermSeats> {
     }
   }
   const row = (n: number) => ({ occupied: n, total: null, left: null });
-  return { p100: row(count.p100), p250: row(count.p250) };
+  return { p75: row(count.p75), p150: row(count.p150), p250: row(count.p250) };
 }
 /** Riadok pod tipom v bezplatnom kanáli (členstvá sú bez obmedzenia miest). */
 async function freeSeatsLine(): Promise<string | undefined> {
-  return `🎯 Členstvo: Gold 100 tipov · Onyx 250 tipov · 🛡 členstvo v mínuse = 1 mesiac zadarmo`;
+  return `🎯 Členstvo: Štart 75 · Gold 150 · Onyx 250 tipov · 🛡 členstvo v mínuse = 1 mesiac zadarmo`;
 }
 const BOT_USERNAME = process.env.TELEGRAM_BOT_USERNAME || "TipRadarAiBot";
 
-// tipradar.eu/zaplatit?term=p100|p250 (&c=Telegram ID z bota; staré odkazy t75 / m1 → Gold 100, t150 / t300 / m3 / season → Onyx 250) → založí platbu a presmeruje na stránku s QR kódom.
+// tipradar.eu/zaplatit?term=p75|p150|p250 (&c=Telegram ID z bota; staré odkazy prevedie sellableTerm) → založí platbu a presmeruje na stránku s QR kódom.
 app.get("/zaplatit", async (req, res) => {
   const term = sellableTerm(String(req.query.term ?? ""));
   const c = String(req.query.c ?? "");

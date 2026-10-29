@@ -439,12 +439,12 @@ export interface Subscriber {
   name: string;
   contact?: string;
   telegramChatId?: string; // voliteľné - ak vyplnené, appka mu vie poslať osobnú pripomienku pred obnovením
-  tier: "individual" | "group"; // individual = členstvo Gold / Onyx podľa počtu tipov (alebo staré balíčky a časové členstvá), group = staršie členstvo na 6 mesiacov (zrušené 24. 10. 2026)
+  tier: "individual" | "group"; // individual = členstvo Štart / Gold / Onyx podľa počtu tipov (alebo staré balíčky a časové členstvá), group = staršie členstvo na 6 mesiacov (zrušené 24. 10. 2026)
   priceEur: number;
   nextPaymentDue: string; // ISO dátum – pri balíčku: platí najneskôr do (balíček skončí skôr, keď sa minú tipy)
-  // Členstvo (od 28. 10. 2026): p100 = Gold 100 tipov, p250 = Onyx 250 tipov. Staré balíčky: t75 = Štart (100), t150 = Gold (250), t300 = Onyx (500).
+  // Členstvo (od 29. 10. 2026): p75 = Štart 75 tipov, p150 = Gold 150 tipov, p250 = Onyx 250 tipov. Staré balíčky: t75 = Štart (100), t150 = Gold (250), t300 = Onyx (500).
   // Staré časové členstvá: m1 = Gold 50 dní, m3 = Onyx 6 mesiacov, season (staršie záznamy bez dĺžky = m1).
-  length?: "p100" | "p250" | "t75" | "t150" | "t300" | "m1" | "m3" | "season";
+  length?: "p75" | "p150" | "p250" | "t75" | "t150" | "t300" | "m1" | "m3" | "season";
   tips?: number; // počet tipov v aktuálnom členstve (staré balíčky: pri tipoch zadarmo podľa garancie 30)
   startDate?: string; // ISO dátum začiatku členstva
   periodStart?: string; // ISO začiatok aktuálneho obdobia (zaplateného alebo mesiaca zadarmo), koniec = nextPaymentDue

@@ -1,7 +1,7 @@
 import { addActiveMonths, PAY_TERMS, Term, isTerm } from "./payments";
 import { MemberPeriod, SavedTip, Subscriber } from "./types";
 
-// Členstvo (od 28. 10. 2026): Gold 100 tipov, Onyx 250 tipov. Každému členovi sa počítajú tipy od dňa nákupu;
+// Členstvo (od 28. 10. 2026): Štart 75 tipov, Gold 150 tipov, Onyx 250 tipov. Každému členovi sa počítajú tipy od dňa nákupu;
 // členstvo skončí po poslednom tipe (bez časovej platnosti).
 // Garancia: ak členstvo skončí v strate, člen dostane 1 mesiac zadarmo – všetky tipy počas mesiaca, bez počtu
 // (na mesiac zadarmo sa garancia už nevzťahuje). Staré balíčky mali 30 tipov zadarmo.
