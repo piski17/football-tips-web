@@ -66,8 +66,8 @@
     --faint: #A39A8B;
     --win: #7FBF9A;
     --loss: #C0707C;
-    --sans: "DM Sans", "Helvetica Neue", Arial, system-ui, sans-serif;
-    --display: "DM Sans", "DM Sans", "Helvetica Neue", Arial, sans-serif;
+    --sans: "Figtree", "Helvetica Neue", Arial, system-ui, sans-serif;
+    --display: "Figtree", "Figtree", "Helvetica Neue", Arial, sans-serif;
     --serif: var(--sans);
     --r: 22px;
     --r-sm: 14px;
@@ -719,7 +719,7 @@
   .nav-social svg { width: 18px; height: 18px; }
 
   /* ===== písmo nadpisov: Cormorant Garamond (luxusné pätkové), zlaté slová plnou zlatou kurzívou ===== */
-  h1, h2, h3, .lux h3.lux-name { font-family: "DM Sans", Georgia, "Times New Roman", serif; font-weight: 700; letter-spacing: 0; }
+  h1, h2, h3, .lux h3.lux-name { font-family: "Figtree", Georgia, "Times New Roman", serif; font-weight: 700; letter-spacing: 0; }
   h1 { line-height: 1.02; }
   h2 { line-height: 1.04; }
   h3 { font-weight: 700; font-size: 1.18em; }
@@ -734,9 +734,9 @@
   @media (max-width: 640px) { .hero h1 { font-size: clamp(44px, 12.5vw, 60px); } }
 
   /* ===== celá stránka v písme Cormorant Garamond (font-size-adjust drží rovnakú čitateľnú veľkosť) ===== */
-  :root { --sans: "DM Sans", Georgia, "Times New Roman", serif; --display: "DM Sans", Georgia, "Times New Roman", serif; --font-body: "DM Sans", Georgia, serif; --font-display: "DM Sans", Georgia, serif; }
+  :root { --sans: "Figtree", Georgia, "Times New Roman", serif; --display: "Figtree", Georgia, "Times New Roman", serif; --font-body: "Figtree", Georgia, serif; --font-display: "Figtree", Georgia, serif; }
   html { font-size-adjust: .5; }
-  body { font-family: "DM Sans", Georgia, "Times New Roman", serif; font-variant-numeric: lining-nums; }
+  body { font-family: "Figtree", Georgia, "Times New Roman", serif; font-variant-numeric: lining-nums; }
   button, input, select, textarea { font-family: inherit; font-variant-numeric: lining-nums; }
   /* čísla v rovnakej výške aj tam, kde skratka font: nastavenie prepíše */
   *, *::before, *::after { font-variant-numeric: lining-nums !important; }
@@ -758,7 +758,7 @@
   }
 
   /* ===== čitateľnosť: dlhšie texty, tlačidlá a formuláre v písme Outfit; nadpisy, menu, štítky a čísla ostávajú v Cormorant Garamond ===== */
-  body, p, li, .lead, .intro, .btn, input, select, textarea, label, .small, .note, td, th, dd, dt, summary, details { font-family: "DM Sans", "Helvetica Neue", Arial, sans-serif !important; font-size-adjust: none !important; }
+  body, p, li, .lead, .intro, .btn, input, select, textarea, label, .small, .note, td, th, dd, dt, summary, details { font-family: "Figtree", "Helvetica Neue", Arial, sans-serif !important; font-size-adjust: none !important; }
   /* pätička bez hornej časti (logo, odkazy): právny text hneď na začiatku */
   .foot-legal { margin-top: 0 !important; padding-top: 0 !important; border-top: 0 !important; }
 /* pätička bez priesvitného nápisu: kratšia */
@@ -777,7 +777,7 @@ h1, h2, h3 { text-transform: uppercase; letter-spacing: .02em; }
 .payback-head p { margin: 0 auto; max-width: 520px; color: var(--muted); }
 .payback-stake { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 26px; color: var(--muted); font-weight: 600; }
 .payback-input { display: inline-flex; align-items: center; gap: 8px; padding: 0 16px; height: 52px; border-radius: 999px; border: 1px solid var(--line-2); background: rgba(201,165,92,.06); }
-.payback-input input { width: 90px; border: 0; background: none; color: var(--text); font: 700 20px/1 "DM Sans", Arial, sans-serif !important; font-variant-numeric: lining-nums tabular-nums !important; text-align: right; outline: none; }
+.payback-input input { width: 90px; border: 0; background: none; color: var(--text); font: 700 20px/1 "Figtree", Arial, sans-serif !important; font-variant-numeric: lining-nums tabular-nums !important; text-align: right; outline: none; }
 .payback-input b { color: var(--gold); font-weight: 700; }
 .payback-chips { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
 .payback-pct { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 14px; color: var(--muted); font-weight: 600; }
@@ -789,7 +789,7 @@ h1, h2, h3 { text-transform: uppercase; letter-spacing: .02em; }
 .payback-row.on { background: rgba(201,165,92,.06); border-radius: 14px; padding-inline: 14px; }
 .payback-row .t { font-weight: 700; color: var(--text); }
 .payback-row .t small { margin-left: 8px; color: var(--faint); font-weight: 600; }
-.payback-row .u { font: 700 30px/1 "DM Sans", Georgia, serif; color: var(--gold); text-align: right; }
+.payback-row .u { font: 700 30px/1 "Figtree", Georgia, serif; color: var(--gold); text-align: right; }
 .payback-row .m { grid-column: 1 / -1; color: var(--muted); font-size: 15px; }
 .payback-note { margin: 16px 0 0; color: var(--faint); font-size: 14px; text-align: center; }
 @media (max-width: 640px) { .payback { padding: 26px 18px 22px; } .payback-stake, .payback-pct { flex-direction: column; align-items: stretch; } .payback-stake-out { text-align: center; } .payback-input { justify-content: flex-end; } .payback-chips { justify-content: center; } }
@@ -843,7 +843,7 @@ h2 { font-size: clamp(32px, 3.9vw, 54px) !important; }
 .ns-ring svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); filter: drop-shadow(0 0 6px rgba(201,165,92,.35)); }
 .ns-track { fill: rgba(14,14,16,.25); stroke: rgba(232,211,160,.14); stroke-width: 5; }
 .ns-arc { fill: none; stroke-width: 5; stroke-linecap: round; }
-.ns-ring b { position: relative; margin-top: -8px; font: 700 25px/1 "DM Sans", Georgia, serif; font-variant-numeric: lining-nums; color: var(--gold-hi); }
+.ns-ring b { position: relative; margin-top: -8px; font: 700 25px/1 "Figtree", Georgia, serif; font-variant-numeric: lining-nums; color: var(--gold-hi); }
 .ns-ring b i { font-style: normal; font-size: 15px; color: var(--gold); }
 .ns-ring small { position: absolute; bottom: 24px; font-size: 7px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: rgba(232,211,160,.55); }
 .ns-body { display: flex; flex-direction: column; gap: 8px; position: relative; }
@@ -852,7 +852,7 @@ h2 { font-size: clamp(32px, 3.9vw, 54px) !important; }
 @keyframes nsPulse { 0% { box-shadow: 0 0 0 0 rgba(127,199,154,.55); } 70% { box-shadow: 0 0 0 7px rgba(127,199,154,0); } 100% { box-shadow: 0 0 0 0 rgba(127,199,154,0); } }
 .ns-grid { display: grid; grid-template-columns: auto auto; gap: 7px 22px; }
 .ns-grid > span { display: flex; flex-direction: column; white-space: nowrap; }
-.ns-grid b { font: 700 20px/1 "DM Sans", Georgia, serif; font-variant-numeric: lining-nums; color: var(--gold-hi); }
+.ns-grid b { font: 700 20px/1 "Figtree", Georgia, serif; font-variant-numeric: lining-nums; color: var(--gold-hi); }
 .ns-grid b.up { color: #8FD3A8; } .ns-grid b.down { color: #D88A94; }
 .ns-grid b .w { color: #8FD3A8; } .ns-grid b .l { color: #D88A94; } .ns-grid b .sl { margin: 0 4px; color: rgba(232,211,160,.35); }
 .ns-grid small { margin-top: 3px; font-size: 9px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
@@ -872,12 +872,12 @@ h2 { font-size: clamp(32px, 3.9vw, 54px) !important; }
 /* o niečo väčšia, hrubšie písmo (18. 10. 2026) */
 .nstat { gap: 12px; padding: 9px 15px 9px 10px; border-radius: 16px; }
 .ns-ring { width: 68px; height: 68px; }
-.ns-ring b { margin-top: -7px; font: 700 18px/1 "DM Sans", "Helvetica Neue", Arial, sans-serif; letter-spacing: -0.02em; }
+.ns-ring b { margin-top: -7px; font: 700 18px/1 "Figtree", "Helvetica Neue", Arial, sans-serif; letter-spacing: -0.02em; }
 .ns-ring b i { font-size: 11px; font-weight: 700; }
 .ns-ring small { bottom: 17px; font-size: 6px; font-weight: 700; }
 .ns-live { font-size: 8.5px; font-weight: 700; }
 .ns-grid { gap: 5px 16px; }
-.ns-grid b { font: 700 16px/1 "DM Sans", "Helvetica Neue", Arial, sans-serif; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.ns-grid b { font: 700 16px/1 "Figtree", "Helvetica Neue", Arial, sans-serif; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
 .ns-grid small { font-size: 8px; font-weight: 700; }
 /* zarovnanie: rovnaké stĺpce, číslo a popis presne pod sebou, nadpis cez celú šírku */
 .ns-body { align-items: stretch; }
@@ -1043,8 +1043,8 @@ h2 { font-size: clamp(28px, 3.1vw, 44px) !important; }
   --text: #EDE6D6; --muted: #BDB3A2; --faint: #8C8374; --win: #86C7A1; --loss: #D07C88;
   --gold-grad: linear-gradient(135deg, #FBF1D8 0%, #E8D3A0 40%, #C9A96A 75%, #A8894F 100%);
   --panel: linear-gradient(180deg, rgba(255,245,225,.045), rgba(255,245,225,.015));
-  --sans: "DM Sans", "Helvetica Neue", Arial, system-ui, sans-serif;
-  --display: "DM Sans", Georgia, "Times New Roman", serif;
+  --sans: "Figtree", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --display: "Figtree", Georgia, "Times New Roman", serif;
   --r: 26px; --r-sm: 16px;
 }
 html { font-size-adjust: none; }
@@ -1484,7 +1484,7 @@ html { scrollbar-color: rgba(201,165,92,.35) var(--bg); }
   .dock { left: 34px !important; padding: 18px 0 18px 0 !important; gap: 4px !important; align-items: stretch !important; background: transparent !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; counter-reset: dk; }
   .dock::before { display: block; left: 0 !important; right: auto !important; top: 0 !important; bottom: 0 !important; width: 1px !important; height: auto !important; background: linear-gradient(180deg, transparent, rgba(201,165,92,.28) 15%, rgba(201,165,92,.28) 85%, transparent) !important; }
   .dock a, .dock button { counter-increment: dk; flex-direction: row !important; justify-content: flex-start !important; align-items: baseline !important; width: 176px !important; height: 50px !important; padding: 0 0 0 24px !important; gap: 14px !important; border-radius: 0 !important; color: rgba(183,169,146,.85) !important; font: 600 12.5px/50px Plus Jakarta Sans, sans-serif !important; letter-spacing: .2em !important; text-transform: uppercase; transition: color .35s, transform .35s cubic-bezier(.2,.9,.25,1.2) !important; }
-  .dock a::before { content: counter(dk, decimal-leading-zero); font: italic 500 15px/50px "DM Sans", serif; letter-spacing: 0; color: rgba(201,165,92,.55); transition: color .35s; }
+  .dock a::before { content: counter(dk, decimal-leading-zero); font: italic 500 15px/50px "Figtree", serif; letter-spacing: 0; color: rgba(201,165,92,.55); transition: color .35s; }
   .dock svg { display: none !important; }
   .dock a:hover { color: #E8D3A0 !important; transform: translateX(5px); }
   .dock a:hover svg { transform: none !important; }
@@ -1667,8 +1667,8 @@ html.menu-open .nav { background: transparent !important; border-bottom-color: t
 .nq2-plaque { position: relative; display: inline-flex; align-items: center; gap: 14px; padding: 10px 26px; border-radius: 999px; background: linear-gradient(180deg, rgba(44,34,25,.92), rgba(24,18,13,.92)); box-shadow: inset 0 1px 0 rgba(255,245,225,.08), 0 10px 30px -12px rgba(0,0,0,.8), 0 0 28px -8px rgba(201,165,92,.35); isolation: isolate; }
 .nq2-plaque::before { content: ""; position: absolute; inset: -1px; z-index: -1; border-radius: inherit; padding: 1px; background: conic-gradient(from var(--nqA), rgba(201,165,92,.25) 0deg, rgba(201,165,92,.25) 250deg, #FFF6DD 320deg, rgba(201,165,92,.25) 360deg); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: nq2Spin 6s linear infinite; }
 @keyframes nq2Spin { to { --nqA: 360deg; } }
-.nq2-t { white-space: nowrap; font: italic 500 18px/1.2 "DM Sans", Georgia, serif !important; letter-spacing: .02em; color: rgba(244,238,227,.86) !important; }
-.nq2-t em { font: italic 600 18px/1.2 "DM Sans", Georgia, serif !important; padding: 0 .04em; background: linear-gradient(100deg, #A8823E 0%, #E8D3A0 30%, #FFF8E4 46%, #E8D3A0 60%, #A8823E 100%); background-size: 260% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: nqShine 5s ease-in-out 1.5s infinite; }
+.nq2-t { white-space: nowrap; font: italic 500 18px/1.2 "Figtree", Georgia, serif !important; letter-spacing: .02em; color: rgba(244,238,227,.86) !important; }
+.nq2-t em { font: italic 600 18px/1.2 "Figtree", Georgia, serif !important; padding: 0 .04em; background: linear-gradient(100deg, #A8823E 0%, #E8D3A0 30%, #FFF8E4 46%, #E8D3A0 60%, #A8823E 100%); background-size: 260% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: nqShine 5s ease-in-out 1.5s infinite; }
 .nq2-star { font-style: normal; font-size: 10px; line-height: 1; color: #E8D3A0; text-shadow: 0 0 10px rgba(232,211,160,.8); animation: nq2Tw 3s ease-in-out infinite; }
 .nq2-star:last-child { animation-delay: 1.5s; }
 @keyframes nq2Tw { 0%, 100% { opacity: .45; transform: scale(.85); } 50% { opacity: 1; transform: scale(1.15); } }
@@ -1699,18 +1699,18 @@ html.menu-open .nav { background: transparent !important; border-bottom-color: t
   --gold: #C8102E; --gold-hi: var(--ink); --gold-lo: #8A0B20;
   --text: var(--ink); --muted: var(--muted); --faint: #6E6E6E;
   --win: #157A3C; --loss: #C8102E;
-  --sans: "DM Sans", "Helvetica Neue", Arial, sans-serif;
-  --display: "DM Sans", "Arial Narrow", sans-serif;
+  --sans: "Figtree", "Helvetica Neue", Arial, sans-serif;
+  --display: "Figtree", "Arial Narrow", sans-serif;
   --r: 4px; --r-sm: 3px;
   --gold-grad: linear-gradient(var(--ink), var(--ink));
   --panel: var(--paper);
   --red: #C8102E;
 }
 html, body { background: var(--bg) !important; color: var(--text) !important; }
-body, p, li, .lead, .intro, .btn, input, select, textarea, label, .small, .note, td, th, dd, dt, summary, details { font-family: "DM Sans", "Helvetica Neue", Arial, sans-serif !important; }
+body, p, li, .lead, .intro, .btn, input, select, textarea, label, .small, .note, td, th, dd, dt, summary, details { font-family: "Figtree", "Helvetica Neue", Arial, sans-serif !important; }
 body { font-weight: 500; }
 /* nadpisy ako v novinách */
-h1, h2, h3, .page-head h1, .hero.hx h1, .sec-head h2, .finale h2 { font-family: "DM Sans", "Arial Narrow", sans-serif !important; font-weight: 800 !important; text-transform: uppercase; letter-spacing: -.005em !important; color: var(--text) !important; line-height: .95 !important; }
+h1, h2, h3, .page-head h1, .hero.hx h1, .sec-head h2, .finale h2 { font-family: "Figtree", "Arial Narrow", sans-serif !important; font-weight: 800 !important; text-transform: uppercase; letter-spacing: -.005em !important; color: var(--text) !important; line-height: .95 !important; }
 h3 { text-transform: none; font-weight: 700 !important; line-height: 1.1 !important; letter-spacing: 0 !important; }
 h1 em, h2 em, h3 em, .hero h1 em, .shine, .gold-text, .silver-text, .plat-text { font-style: normal !important; background: none !important; -webkit-text-fill-color: currentColor !important; color: var(--red) !important; animation: none !important; text-shadow: none !important; }
 .hero.hx h1 { font-size: clamp(64px, 9vw, 132px) !important; max-width: 14ch; }
@@ -1722,7 +1722,7 @@ h2 { font-size: clamp(40px, 4.8vw, 68px) !important; }
 .sec.alt { background: var(--bg-2) !important; }
 .sec::before, .sec::after, .finale::before, .finale::after, .page-head::before, .page-head::after, #kto::before, .om2-hero::before { display: none !important; }
 /* kicker namiesto žiariacich štítkov */
-.eyebrow, .hx-pill { display: inline-flex !important; align-items: center; gap: 8px; padding: 0 !important; border: 0 !important; border-radius: 0 !important; background: none !important; color: var(--red) !important; font: 700 13px/1 "DM Sans", sans-serif !important; letter-spacing: .14em !important; text-transform: uppercase; box-shadow: none !important; }
+.eyebrow, .hx-pill { display: inline-flex !important; align-items: center; gap: 8px; padding: 0 !important; border: 0 !important; border-radius: 0 !important; background: none !important; color: var(--red) !important; font: 700 13px/1 "Figtree", sans-serif !important; letter-spacing: .14em !important; text-transform: uppercase; box-shadow: none !important; }
 .eyebrow::before, .hx-pill i { content: ""; width: 10px !important; height: 10px !important; border-radius: 0 !important; background: var(--red) !important; box-shadow: none !important; display: inline-block; }
 /* karty ako stĺpce novín */
 .card, .hm-card, .hm-tier, .lux, .sc, .calc, .ledger-wrap, .faq details, .om2-paper, .steps li, .funnel li, .duel, .yday-card, .stake, .verdict, .calib-sec, .calc-sec, .showcase, .hm-kurz .wrap > *, .skola { background: var(--card) !important; border: 1px solid var(--line-2) !important; border-radius: 4px !important; box-shadow: none !important; color: var(--text) !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
@@ -1735,18 +1735,18 @@ h2 { font-size: clamp(40px, 4.8vw, 68px) !important; }
 .btn::before, .btn::after { display: none !important; }
 a { color: inherit; }
 /* čísla */
-.num, b.num, .sc-total, .figures b, .hm-tier b, .hx-live b, .funnel .c, .steps .n, #ako .steps .n, .stake .big, .lux-price b { font-family: "DM Sans", "Arial Narrow", sans-serif !important; font-weight: 800 !important; background: none !important; -webkit-text-fill-color: currentColor !important; color: var(--text) !important; letter-spacing: 0 !important; }
+.num, b.num, .sc-total, .figures b, .hm-tier b, .hx-live b, .funnel .c, .steps .n, #ako .steps .n, .stake .big, .lux-price b { font-family: "Figtree", "Arial Narrow", sans-serif !important; font-weight: 800 !important; background: none !important; -webkit-text-fill-color: currentColor !important; color: var(--text) !important; letter-spacing: 0 !important; }
 .pos, .win, .w { color: var(--win) !important; -webkit-text-fill-color: var(--win) !important; }
 .neg, .loss, .l { color: var(--loss) !important; -webkit-text-fill-color: var(--loss) !important; }
 /* horná lišta ako hlavička novín */
 .nav, html.scrolled .nav, html[data-page] .nav, html[data-page="home"] .nav, html[data-page]:not([data-page="home"]) .nav { background: var(--paper) !important; border-bottom: 3px solid var(--ink) !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
-.brand { color: var(--ink) !important; font-family: "DM Sans", sans-serif !important; font-weight: 800 !important; text-transform: uppercase; letter-spacing: .02em; font-size: 26px !important; }
+.brand { color: var(--ink) !important; font-family: "Figtree", sans-serif !important; font-weight: 800 !important; text-transform: uppercase; letter-spacing: .02em; font-size: 26px !important; }
 .brand svg { color: var(--red) !important; }
 .nav-social a { color: var(--ink) !important; }
 .nav-social a:hover { background: var(--hover) !important; color: var(--red) !important; }
 .nq2-plaque { background: none !important; box-shadow: none !important; padding: 0 !important; gap: 10px !important; }
 .nq2-plaque::before, .nq2-star { display: none !important; }
-.nq2-t, .nq2-t em { font: italic 600 17px/1.2 "DM Sans", sans-serif !important; color: var(--muted) !important; background: none !important; -webkit-text-fill-color: currentColor !important; animation: none !important; }
+.nq2-t, .nq2-t em { font: italic 600 17px/1.2 "Figtree", sans-serif !important; color: var(--muted) !important; background: none !important; -webkit-text-fill-color: currentColor !important; animation: none !important; }
 .nq2-t em { color: var(--red) !important; font-style: italic !important; }
 /* rozdeľovacie čiary sekcií */
 .sec-head { border-top: 3px solid var(--ink); padding-top: 18px; }
@@ -1756,8 +1756,8 @@ footer { border-top: 3px solid var(--ink); color: var(--muted) !important; }
 /* menu vľavo (počítač) */
 @media (min-width: 961px) {
   .dock::before { background: var(--ink) !important; width: 2px !important; }
-  .dock a, .dock button { color: var(--muted) !important; font: 700 13px/50px "DM Sans", sans-serif !important; letter-spacing: .12em !important; }
-  .dock a::before { font: 700 14px/50px "DM Sans", sans-serif !important; color: var(--faint) !important; }
+  .dock a, .dock button { color: var(--muted) !important; font: 700 13px/50px "Figtree", sans-serif !important; letter-spacing: .12em !important; }
+  .dock a::before { font: 700 14px/50px "Figtree", sans-serif !important; color: var(--faint) !important; }
   .dock a:hover { color: var(--red) !important; }
   .dock a.active { color: var(--ink) !important; }
   .dock a.active::before { color: var(--red) !important; }
@@ -1787,7 +1787,7 @@ footer { border-top: 3px solid var(--ink); color: var(--muted) !important; }
 .ic svg, .hm-card .ic svg { stroke: var(--on-ink) !important; color: var(--on-ink) !important; }
 .steps li small, .steps .k { color: var(--red) !important; }
 /* členstvá */
-.hm-tier .tn, .hm-tier.silver .tn, .hm-tier.gold .tn, .hm-tier.plat .tn { background: none !important; -webkit-text-fill-color: currentColor !important; color: var(--ink) !important; font-family: "DM Sans", sans-serif !important; font-weight: 800 !important; text-transform: uppercase; font-size: 30px !important; }
+.hm-tier .tn, .hm-tier.silver .tn, .hm-tier.gold .tn, .hm-tier.plat .tn { background: none !important; -webkit-text-fill-color: currentColor !important; color: var(--ink) !important; font-family: "Figtree", sans-serif !important; font-weight: 800 !important; text-transform: uppercase; font-size: 30px !important; }
 .hm-tier.plat { border: 2px solid var(--ink) !important; }
 .hm-tier .flag { background: var(--red) !important; color: var(--on-ink) !important; border-radius: 0 !important; box-shadow: none !important; }
 .hm-tier .tl, .hm-tier .pm { color: var(--faint) !important; }
@@ -1834,12 +1834,12 @@ input[type="checkbox"] { accent-color: var(--red); }
 .om2-sign .sig { color: var(--ink) !important; -webkit-text-fill-color: var(--ink) !important; }
 .om2-swash path { stroke: var(--red) !important; }
 .om2-paper h2 em, #kto h2 em { color: var(--red) !important; -webkit-text-fill-color: var(--red) !important; }
-.om2-quote { border-left-color: var(--red) !important; color: var(--ink) !important; font-family: "DM Sans", sans-serif !important; font-style: italic; font-weight: 700 !important; }
-.om2-paper .om2-lead::first-letter { color: var(--red) !important; font-family: "DM Sans", sans-serif !important; font-weight: 800; }
+.om2-quote { border-left-color: var(--red) !important; color: var(--ink) !important; font-family: "Figtree", sans-serif !important; font-style: italic; font-weight: 700 !important; }
+.om2-paper .om2-lead::first-letter { color: var(--red) !important; font-family: "Figtree", sans-serif !important; font-weight: 800; }
 .om2-list { border-top: 3px solid var(--ink) !important; }
 .om2-list li { border-color: var(--line) !important; }
 .om2-list li::before { background: var(--red) !important; box-shadow: none !important; }
-.om2-n { background: none !important; -webkit-text-fill-color: var(--red) !important; color: var(--red) !important; font: 800 48px/1 "DM Sans", sans-serif !important; font-style: normal !important; }
+.om2-n { background: none !important; -webkit-text-fill-color: var(--red) !important; color: var(--red) !important; font: 800 48px/1 "Figtree", sans-serif !important; font-style: normal !important; }
 .om2-list p, .om2-paper p { color: var(--muted) !important; }
 .om2-paper .om2-lead { color: var(--ink) !important; }
 .om2-paper p a { color: var(--ink) !important; }
@@ -1909,24 +1909,24 @@ footer, .om2-list { border-top: 1px solid rgba(201,165,92,.35) !important; }
 #clenstvo .pk-card { position: relative; display: flex; flex-direction: column; min-width: 0; background: var(--card); border: 1px solid var(--line-2); border-radius: 22px; padding: 30px 24px 24px; }
 #clenstvo .pk-card.feat { background: linear-gradient(180deg, #2A2216, var(--card)); border-color: var(--gold); box-shadow: 0 30px 70px -40px rgba(217,188,132,.55); }
 #clenstvo .pk-flag { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); background: var(--gold); color: #120E06; font: 700 11.5px/1 var(--sans); letter-spacing: .14em; text-transform: uppercase; padding: 7px 14px; border-radius: 999px; white-space: nowrap; }
-#clenstvo .pk-tn { font: 700 40px/1 "DM Sans", "Arial Narrow", sans-serif; color: var(--gold); letter-spacing: .01em; }
-#clenstvo .pk-tips { margin-top: 8px; font: 600 22px/1.1 "DM Sans", "Arial Narrow", sans-serif; letter-spacing: .03em; color: var(--text); }
+#clenstvo .pk-tn { font: 700 40px/1 "Figtree", "Arial Narrow", sans-serif; color: var(--gold); letter-spacing: .01em; }
+#clenstvo .pk-tips { margin-top: 8px; font: 600 22px/1.1 "Figtree", "Arial Narrow", sans-serif; letter-spacing: .03em; color: var(--text); }
 #clenstvo .pk-len { margin-top: 5px; min-height: 2.9em; font-size: 13.5px; line-height: 1.45; color: var(--faint); }
 #clenstvo .pk-price { margin-top: 20px; display: flex; align-items: baseline; gap: 4px; }
-#clenstvo .pk-price b { font: 800 64px/1 "DM Sans", "Arial Narrow", sans-serif !important; color: var(--text) !important; }
-#clenstvo .pk-price span { font: 500 24px/1 "DM Sans", "Arial Narrow", sans-serif; color: var(--muted); }
+#clenstvo .pk-price b { font: 800 64px/1 "Figtree", "Arial Narrow", sans-serif !important; color: var(--text) !important; }
+#clenstvo .pk-price span { font: 500 24px/1 "Figtree", "Arial Narrow", sans-serif; color: var(--muted); }
 #clenstvo .pk-pt { margin: 8px 0 0; font-size: 15px; color: var(--muted); }
 #clenstvo .pk-pt b { color: var(--win); font-weight: 600; }
 #clenstvo .pk-calc { margin-top: 20px; background: rgba(0,0,0,.18); border: 1px solid var(--line); border-radius: 16px; padding: 16px 16px 14px; }
 #clenstvo .pk-ttl { font-size: 11.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); font-weight: 700; }
 #clenstvo .pk-row { margin-top: 12px; }
 #clenstvo .pk-lab { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 13.5px; color: var(--muted); }
-#clenstvo .pk-lab b { font: 700 22px/1 "DM Sans", "Arial Narrow", sans-serif; color: var(--text); white-space: nowrap; }
+#clenstvo .pk-lab b { font: 700 22px/1 "Figtree", "Arial Narrow", sans-serif; color: var(--text); white-space: nowrap; }
 #clenstvo .pk-row input[type="range"] { display: block; width: 100%; margin: 12px 0 0; }
 #clenstvo .pk-ticks { display: flex; justify-content: space-between; font-size: 11px; color: var(--faint); margin-top: 6px; }
 #clenstvo .pk-out { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 #clenstvo .pk-out small { display: block; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); font-weight: 600; }
-#clenstvo .pk-out b { display: block; margin-top: 3px; font: 700 21px/1.1 "DM Sans", "Arial Narrow", sans-serif; color: var(--text); }
+#clenstvo .pk-out b { display: block; margin-top: 3px; font: 700 21px/1.1 "Figtree", "Arial Narrow", sans-serif; color: var(--text); }
 #clenstvo .pk-out .pk-sub { grid-column: 1 / -1; margin: 0; font-size: 12.5px; line-height: 1.4; color: var(--faint); }
 #clenstvo .pk-verdict { grid-column: 1 / -1; font-size: 13.5px; padding: 8px 10px; border-radius: 10px; line-height: 1.35; }
 #clenstvo .pk-verdict.ok { background: rgba(127,191,154,.12); color: var(--win); }
@@ -1954,7 +1954,7 @@ footer, .om2-list { border-top: 1px solid rgba(201,165,92,.35) !important; }
 #clenstvo .lux-r .term-switch { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; } /* 29. 10. 2026: Štart · Gold · Onyx */
 #clenstvo .lux-r .term-switch button { line-height: 1.15; }
 #clenstvo .lux-r .term-switch button b { display: block; font-weight: 700; }
-#clenstvo .lux-l .pk-tips { margin-top: 10px; font: 600 20px/1.2 "DM Sans", "Arial Narrow", sans-serif; letter-spacing: .03em; color: var(--muted); }
+#clenstvo .lux-l .pk-tips { margin-top: 10px; font: 600 20px/1.2 "Figtree", "Arial Narrow", sans-serif; letter-spacing: .03em; color: var(--muted); }
 #clenstvo .lux-r .pk-calc { margin-top: 18px; }
 .hm-tiers.three { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 1100px; }
 @media (max-width: 1100px) { .hm-tiers.three { grid-template-columns: minmax(0, 1fr); max-width: 560px; } }
@@ -1971,12 +1971,12 @@ footer, .om2-list { border-top: 1px solid rgba(201,165,92,.35) !important; }
 #clenstvo .lux-r .pk-out { display: block; margin-top: 18px; padding-top: 0; border-top: 0; }
 #clenstvo .pk-res { padding: 16px 18px; border-radius: 16px; border: 1px solid rgba(201,165,92,.4); background: radial-gradient(120% 140% at 0% 0%, rgba(201,165,92,.18), rgba(201,165,92,.03) 70%); }
 #clenstvo .pk-res small { display: block; font: 700 11px/1.3 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
-#clenstvo .pk-res b { display: block; margin-top: 8px; font: 800 44px/1 "DM Sans", "Arial Narrow", sans-serif; color: var(--gold-hi); letter-spacing: -0.01em; }
+#clenstvo .pk-res b { display: block; margin-top: 8px; font: 800 44px/1 "Figtree", "Arial Narrow", sans-serif; color: var(--gold-hi); letter-spacing: -0.01em; }
 #clenstvo .pk-res b span { font: 600 18px/1 var(--sans); letter-spacing: 0; color: var(--muted); margin-left: 4px; }
 #clenstvo .pk-mini { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
 #clenstvo .pk-mini > div { padding: 11px 12px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255,255,255,.02); }
 #clenstvo .pk-mini small { display: block; font: 600 10px/1.2 var(--sans); letter-spacing: .05em; text-transform: uppercase; color: var(--faint); }
-#clenstvo .pk-mini b { display: block; margin-top: 5px; font: 700 21px/1 "DM Sans", "Arial Narrow", sans-serif; color: var(--text); white-space: nowrap; }
+#clenstvo .pk-mini b { display: block; margin-top: 5px; font: 700 21px/1 "Figtree", "Arial Narrow", sans-serif; color: var(--text); white-space: nowrap; }
 #clenstvo .lux-r .pk-sub { margin: 12px 0 0; font-size: 12.5px; line-height: 1.45; color: var(--faint); }
 #clenstvo .lux-r .pk-verdict { display: flex; gap: 9px; align-items: flex-start; margin-top: 12px; padding: 11px 13px; border-radius: 12px; font-size: 13.5px; }
 #clenstvo .lux-r .pk-verdict::before { content: ""; flex: none; width: 8px; height: 8px; margin-top: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 22%, transparent); }
@@ -1988,7 +1988,7 @@ footer, .om2-list { border-top: 1px solid rgba(201,165,92,.35) !important; }
   --gold: #C9A55C; --gold-hi: #F1E2B8; --gold-lo: #8E6E33; --red: #C9A55C;
   --gold-grad: linear-gradient(115deg, #8E6E33 0%, #C9A55C 30%, #F1E2B8 50%, #C9A55C 70%, #8E6E33 100%);
   --text: #EFE8D8; --muted: #A59D8F; --faint: #7F786C; --win: #8FC9A6; --loss: #C98088;
-  --sans: "DM Sans", system-ui, sans-serif; --display: "DM Sans", "DM Sans", Georgia, serif; --cond: "DM Sans", system-ui, sans-serif;
+  --sans: "Figtree", system-ui, sans-serif; --display: "Figtree", "Figtree", Georgia, serif; --cond: "Figtree", system-ui, sans-serif;
   --font-body: var(--sans); --font-display: var(--display);
   --r-card: 0; --r-sm: 0;
 }
@@ -2218,7 +2218,7 @@ p, li, small, label, input, select, textarea, button, td, th, dd, dt, figcaption
   --gold: #D6BE8C; --gold-hi: #F2E4C3; --gold-lo: #A88E5E; --red: #D6BE8C;
   --gold-grad: linear-gradient(115deg, #F5E9CC 0%, #D6BE8C 45%, #A88E5E 100%);
   --text: #F3EEE4; --muted: #A7ABB4; --faint: #737986; --win: #8CC7A1; --loss: #D08A8A;
-  --sans: "DM Sans", system-ui, sans-serif; --display: "Unbounded", "Times New Roman", serif; --cond: "DM Sans", system-ui, sans-serif;
+  --sans: "Figtree", system-ui, sans-serif; --display: "Space Grotesk", "Times New Roman", serif; --cond: "Figtree", system-ui, sans-serif;
   --font-body: var(--sans); --font-display: var(--display);
 }
 html, body { background: var(--bg) !important; }
@@ -2679,26 +2679,46 @@ html body h1, html body h2 { letter-spacing: .01em !important; }
 /* úvod končí metódou (29. 10. 2026): Metóda už nie je v menu, záverečná výzva na úvode nahradená */
 html body .pz-hodnota-cta { margin-top: 30px !important; display: flex !important; justify-content: flex-start !important; }
 /* ===== PÍSMO 2 (29. 10. 2026): Unbounded (nadpisy, čísla) + DM Sans (text), štítky ako zlaté pilulky ===== */
-html body h1, html body h2, html body .page-head h1, html body .sec-head h2, html body .hero h1, html body .pz-hero h1, html body .om2-hero h1, html body .finale h2, html body .lux h3.lux-name { font-family: "Unbounded", system-ui, sans-serif !important; font-weight: 400 !important; letter-spacing: -0.025em !important; line-height: 1.1 !important; }
+html body h1, html body h2, html body .page-head h1, html body .sec-head h2, html body .hero h1, html body .pz-hero h1, html body .om2-hero h1, html body .finale h2, html body .lux h3.lux-name { font-family: "Space Grotesk", system-ui, sans-serif !important; font-weight: 400 !important; letter-spacing: -0.025em !important; line-height: 1.1 !important; }
 html body .pz-hero h1 { font-size: clamp(34px, 4.3vw, 64px) !important; }
 html body .page-head h1, html body .om2-hero h1 { font-size: clamp(28px, 3.5vw, 50px) !important; }
 html body .sec-head h2, html body .finale h2, html body h2 { font-size: clamp(22px, 2.4vw, 34px) !important; }
 html body .lux h3.lux-name { font-size: clamp(34px, 3.4vw, 46px) !important; }
 html body h1 em, html body h2 em { font-weight: 500 !important; }
-html body .num, html body .figures b, html body .hx-live b, html body .lux-price b, html body .verdict .v, html body .funnel .c, html body #clenstvo .pk-res b, html body #clenstvo .pk-mini b, html body #clenstvo .pk-lab b, html body .sc-total, html body .om2-mp { font-family: "Unbounded", system-ui, sans-serif !important; font-weight: 400 !important; letter-spacing: -0.03em !important; }
-html body .pz-brand span { font: 500 17px/1 "Unbounded", system-ui, sans-serif !important; letter-spacing: .04em !important; }
-html body, html body p, html body li, html body small, html body label, html body button, html body td, html body th, html body input, html body select, html body textarea { font-family: "DM Sans", system-ui, sans-serif !important; }
-html body h3 { font-family: "DM Sans", system-ui, sans-serif !important; font-weight: 600 !important; letter-spacing: -0.01em !important; }
+html body .num, html body .figures b, html body .hx-live b, html body .lux-price b, html body .verdict .v, html body .funnel .c, html body #clenstvo .pk-res b, html body #clenstvo .pk-mini b, html body #clenstvo .pk-lab b, html body .sc-total, html body .om2-mp { font-family: "Space Grotesk", system-ui, sans-serif !important; font-weight: 400 !important; letter-spacing: -0.03em !important; }
+html body .pz-brand span { font: 500 17px/1 "Space Grotesk", system-ui, sans-serif !important; letter-spacing: .04em !important; }
+html body, html body p, html body li, html body small, html body label, html body button, html body td, html body th, html body input, html body select, html body textarea { font-family: "Figtree", system-ui, sans-serif !important; }
+html body h3 { font-family: "Figtree", system-ui, sans-serif !important; font-weight: 600 !important; letter-spacing: -0.01em !important; }
 html body p, html body li { line-height: 1.7; }
 /* štítky nad nadpismi: zlatá pilulka namiesto čiary */
 html body .eyebrow { padding: 8px 14px !important; border: 1px solid rgba(214,190,140,.35) !important; border-radius: 999px !important; background: rgba(214,190,140,.06) !important; letter-spacing: .22em !important; font-size: 10.5px !important; gap: 9px !important; }
 html body .eyebrow::before, html body .pz-hero .eyebrow::before { flex: none !important; width: 6px !important; min-width: 6px !important; max-width: 6px !important; height: 6px !important; border-radius: 50% !important; background: var(--gold) !important; box-shadow: 0 0 10px rgba(214,190,140,.7) !important; }
 html body .eyebrow::after, html body .page-head .eyebrow::after, html body .finale .eyebrow::after { display: none !important; }
+/* ===== PÍSMO 3 (29. 10. 2026): Space Grotesk (nadpisy, čísla) + Figtree (text), užší obsah, štítky ako zlatý text s linkou ===== */
+html body h1, html body h2, html body .page-head h1, html body .sec-head h2, html body .hero h1, html body .pz-hero h1, html body .om2-hero h1, html body .finale h2, html body .lux h3.lux-name { font-family: "Space Grotesk", system-ui, sans-serif !important; font-weight: 500 !important; letter-spacing: -0.035em !important; line-height: 1.08 !important; }
+html body .pz-hero h1 { font-size: clamp(32px, 3.7vw, 54px) !important; }
+html body .page-head h1, html body .om2-hero h1 { font-size: clamp(28px, 3.1vw, 44px) !important; }
+html body .sec-head h2, html body .finale h2, html body h2 { font-size: clamp(24px, 2.3vw, 34px) !important; }
+html body .lux h3.lux-name { font-size: clamp(32px, 3vw, 42px) !important; }
+html body h1 em, html body h2 em { font-style: normal !important; font-weight: 500 !important; }
+html body .num, html body .figures b, html body .hx-live b, html body .lux-price b, html body .verdict .v, html body .funnel .c, html body #clenstvo .pk-res b, html body #clenstvo .pk-mini b, html body #clenstvo .pk-lab b, html body .sc-total, html body .om2-mp { font-family: "Space Grotesk", system-ui, sans-serif !important; font-weight: 500 !important; letter-spacing: -0.03em !important; font-variant-numeric: tabular-nums; }
+html body .pz-brand span { font: 600 17px/1 "Space Grotesk", system-ui, sans-serif !important; letter-spacing: -0.01em !important; }
+html body, html body p, html body li, html body small, html body label, html body button, html body td, html body th, html body input, html body select, html body textarea { font-family: "Figtree", system-ui, sans-serif !important; }
+html body h3 { font-family: "Space Grotesk", system-ui, sans-serif !important; font-weight: 500 !important; letter-spacing: -0.02em !important; }
+html body p, html body li { line-height: 1.65; }
+html body .lead, html body .sec-head p, html body .page-head p, html body .hero .intro { max-width: 58ch; }
+/* štítky nad nadpismi: zlatý text s krátkou linkou (bez pilulky) */
+html body .eyebrow { padding: 0 !important; border: 0 !important; border-radius: 0 !important; background: none !important; letter-spacing: .18em !important; font: 600 11px/1.2 "Figtree", system-ui, sans-serif !important; text-transform: uppercase; gap: 12px !important; }
+html body .eyebrow::before, html body .pz-hero .eyebrow::before { flex: none !important; width: 22px !important; min-width: 22px !important; max-width: 22px !important; height: 1px !important; border-radius: 0 !important; background: var(--gold) !important; box-shadow: none !important; }
+html body .eyebrow::after, html body .page-head .eyebrow::after, html body .finale .eyebrow::after { display: none !important; }
+/* užší obsah – menej roztiahnuté (navigácia ostáva) */
+html body main .wrap, html body section .wrap, html body .sec .wrap, html body footer .wrap { max-width: 1040px !important; }
+html body .sec { padding-top: clamp(48px, 7vw, 88px) !important; padding-bottom: clamp(48px, 7vw, 88px) !important; }
 </style>
 
 <link href="https://fonts.googleapis.com/css2?family=Herr+Von+Muellerhoff&amp;family=Great+Vibes&amp;display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&amp;display=swap" rel="stylesheet" />
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300..700&amp;family=DM+Sans:opsz,wght@9..40,300..700&amp;display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&amp;family=Figtree:wght@300..800&amp;display=swap" rel="stylesheet" />
 </head>
 <body>
 
@@ -2736,7 +2756,7 @@ html body .eyebrow::after, html body .page-head .eyebrow::after, html body .fina
     <ul class="ov-links">
       <li><a href="/">Úvod</a></li>
       <li><a href="/vysledky">Výsledky<small>všetky tipy</small></a></li>
-      <li><a href="/clenstvo">Členstvo<small>Štart · Gold · Onyx</small></a></li>
+      <li><a href="/clenstvo">Členstvo<small>Štart · Gold · Platinum</small></a></li>
       <li><a href="/kurz">Kurz<small>Škola stávkovania</small></a></li>
       <li><a href="/o-mne">O mne</a></li>
       <li><a href="/otazky">Otázky</a></li>
@@ -2775,7 +2795,7 @@ html body .eyebrow::after, html body .page-head .eyebrow::after, html body .fina
     <div class="wrap">
       <a class="back" href="/">← Úvod</a><div class="eyebrow">Členstvo</div>
       <h1>Členstvo s&nbsp;<em>garanciou</em></h1>
-      <p>Štart 75 tipov, Gold 150 tipov alebo Onyx 250 tipov. Všetci členovia dostávajú rovnaké tipy, súkromný VIP chat a&nbsp;úvodný hovor 1 na 1, Onyx navyše mentoring 1 na 1. Ak členstvo skončí v&nbsp;mínuse, dostanete 1 mesiac zadarmo.</p>
+      <p>Štart 50 tipov, Gold 100 tipov alebo Platinum 200 tipov. Všetci členovia dostávajú rovnaké tipy, súkromný VIP chat a&nbsp;úvodný hovor 1 na 1, Platinum navyše mentoring 1 na 1. Ak členstvo skončí v&nbsp;mínuse, dostanete 1 mesiac zadarmo.</p>
     </div>
   </header>
   <header class="page-head" data-pages="formular">
@@ -3022,25 +3042,25 @@ html body .eyebrow::after, html body .page-head .eyebrow::after, html body .fina
         <div class="lux-l">
           <div class="lux-top"><svg class="lux-crest" aria-hidden="true"><use href="#logo"/></svg><div class="lux-brand">TipRadar</div></div>
           <h3 class="lux-name gold-text" data-tier-name>Gold</h3>
-          <div class="pk-tips" data-tier-tips>150 tipov</div>
+          <div class="pk-tips" data-tier-tips>100 tipov</div>
           <div class="pk-feats">
             <div class="pk-f"><i aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12 18 6"/></svg></i><div><small>Výber</small><b>Len najsilnejšie tipy</b><span>model pustí ďalej len tipy s&nbsp;hodnotou</span></div></div>
             <div class="pk-f"><i aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></i><div><small>Doručenie</small><b>1 – 2 hodiny pred výkopom</b><span>na Telegram, s&nbsp;kurzom a&nbsp;zdôvodnením</span></div></div>
             <div class="pk-f"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 18.5V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H8.5L5 18.5Z"/><path d="M9 10h6M9 13h3.5"/></svg></i><div><small>Podpora</small><b>Priamy kontakt so mnou</b><span>na otázky odpisujem osobne</span></div></div>
             <div class="pk-f"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7.5 4.5h-2a1 1 0 0 0-1 1.1C5.1 13 11 18.9 18.4 19.5a1 1 0 0 0 1.1-1v-2l-3.6-1.5-1.7 1.7a11 11 0 0 1-5-5l1.7-1.7L9 4.5Z"/></svg></i><div><small>Na začiatok</small><b>Úvodný hovor 30 minút</b><span>nastavenie banku, vkladu a&nbsp;ako tipy hrať</span></div></div>
-            <div class="pk-f plus" data-min-term="p250"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z"/></svg></i><div><small>Len v Onyxe</small><b>Mentoring 1 na 1 počas celého členstva</b><span>a&nbsp;prednostné odpovede</span></div></div>
+            <div class="pk-f plus" data-min-term="p200"><i aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z"/></svg></i><div><small>Len v Platine</small><b>Mentoring 1 na 1 počas celého členstva</b><span>a&nbsp;prednostné odpovede</span></div></div>
           </div>
           <a class="lux-guarantee" href="#garancia"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.4 7.5 9.5 4.3-1.1 7.5-4.9 7.5-9.5V6L12 3Z"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></svg><span><strong>Garancia</strong>Ak vaše členstvo skončí v&nbsp;mínuse, dostanete 1 mesiac zadarmo.</span></a>
         </div>
         <div class="lux-r">
           <div class="term-switch" role="tablist" aria-label="Členstvo">
-            <button type="button" role="tab" data-term="p75" aria-selected="false"><b>Štart</b> 75 tipov</button>
-            <button type="button" role="tab" data-term="p150" aria-selected="true"><b>Gold</b> 150 tipov</button>
-            <button type="button" role="tab" data-term="p250" aria-selected="false"><b>Onyx</b> 250 tipov</button>
+            <button type="button" role="tab" data-term="p50" aria-selected="false"><b>Štart</b> 50 tipov</button>
+            <button type="button" role="tab" data-term="p100" aria-selected="true"><b>Gold</b> 100 tipov</button>
+            <button type="button" role="tab" data-term="p200" aria-selected="false"><b>Platinum</b> 200 tipov</button>
           </div>
-          <div class="lux-term" data-term-name>Gold · 150 tipov</div>
-          <div class="lux-price"><b class="num" data-price>89 €</b></div>
-          <p class="per-month" data-permonth><span>0,59 € za tip</span><span class="save">ušetríte 9 €</span></p>
+          <div class="lux-term" data-term-name>Gold · 100 tipov</div>
+          <div class="lux-price"><b class="num" data-price>65 €</b></div>
+          <p class="per-month" data-permonth><span>0,65 € za tip</span><span class="save">ušetríte 5 €</span></p>
           <div class="pk-calc">
             <div class="pk-ttl"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M8.5 7.5h7M8.5 11.5h1M12 11.5h1M15.5 11.5h0M8.5 15h1M12 15h1M15.5 15v1.5"/></svg>Prepočítajte si to</div>
             <div class="pk-row"><div class="pk-lab">Odporúčaný bank <b data-o="bank"></b></div><input type="range" min="200" max="5000" step="50" value="500" data-in="bank" aria-label="Bank v eurách"><div class="pk-ticks"><span>200&nbsp;€</span><span>5&nbsp;000&nbsp;€</span></div></div>
@@ -3055,7 +3075,7 @@ html body .eyebrow::after, html body .page-head .eyebrow::after, html body .fina
             </div>
           </div>
           <div class="plan-foot">
-            <a class="btn" id="memberCta" href="https://t.me/TipRadarAiBot?start=onyx" target="_blank" rel="noopener">Zapísať sa do poradovníka</a>
+            <a class="btn" id="memberCta" href="https://t.me/TipRadarAiBot?start=gold" target="_blank" rel="noopener">Zapísať sa do poradovníka</a>
             <p class="pay-note" id="payNote" hidden>Bankovým prevodom cez QR kód · bez poplatkov</p>
             <p class="small">Bez časového limitu, samo sa nepredlžuje.</p>
           </div>
@@ -3126,10 +3146,10 @@ html body .eyebrow::after, html body .page-head .eyebrow::after, html body .fina
         <details><summary>Koľko tipov denne dostanem?</summary><p>Najviac 3 – tie s najvyššou dôverou, ktoré prejdú všetkými pravidlami. Niektoré dni žiadny: keď neprejde nič, nepošleme nič a dáme vám vedieť. Kvalita pred kvantitou.</p></details>
         <details><summary>Čo je zisk v jednotkách?</summary><p>Jednotka je rovnaká suma na každý tip, napríklad 10 €. Zisk +5 jednotiek pri 10 € na tip je +50 €.</p></details>
         <details><summary>Zaručujete výhru?</summary><p>Nie. Žiadny model nevie zaručiť výsledok zápasu. TipRadar vyberá stávky, pri ktorých je šanca podľa štatistík vyššia, než naznačuje kurz. Rozhoduje dlhodobý výsledok, preto zverejňujeme aj prehraté tipy. Ak však vaše členstvo skončí v mínuse, dostanete 1 mesiac zadarmo (pozrite garanciu nižšie).</p></details>
-        <details id="garancia"><summary>Ako funguje garancia?</summary><p>Ak vaše členstvo (Štart, Gold alebo Onyx) skončí v&nbsp;mínuse, dostanete 1 mesiac zadarmo – počas neho vám chodia všetky tipy do toho istého kanála a&nbsp;dáme vám vedieť na Telegrame. Počíta sa zo všetkých tipov vášho členstva s&nbsp;výsledkom, pri rovnakom vklade na každý tip (1 jednotka). Ak je súčet záporný, členstvo skončilo v&nbsp;mínuse. Na samotný mesiac zadarmo sa garancia už nevzťahuje, na ďalšie zaplatené členstvo áno.</p></details>
+        <details id="garancia"><summary>Ako funguje garancia?</summary><p>Ak vaše členstvo (Štart, Gold alebo Platinum) skončí v&nbsp;mínuse, dostanete 1 mesiac zadarmo – počas neho vám chodia všetky tipy do toho istého kanála a&nbsp;dáme vám vedieť na Telegrame. Počíta sa zo všetkých tipov vášho členstva s&nbsp;výsledkom, pri rovnakom vklade na každý tip (1 jednotka). Ak je súčet záporný, členstvo skončilo v&nbsp;mínuse. Na samotný mesiac zadarmo sa garancia už nevzťahuje, na ďalšie zaplatené členstvo áno.</p></details>
         <details><summary>Ako overujete, že model funguje?</summary><p>Spätným testom na odohraných zápasoch a mesačnou kontrolou, či tipy s dôverou 70&nbsp;% naozaj vychádzajú zhruba v 70&nbsp;% prípadov. Tipy vyradené pre veľký rozpor s kurzami si zapisujeme a porovnávame, kto mal pravdu.</p></details>
-        <details><summary>Ako funguje členstvo?</summary><p>Platíte za počet tipov: Štart 75, Gold 150, Onyx 250. Tipy sa vám rátajú odo dňa nákupu, každý poslaný tip sa odpočíta (zrušený zápas sa neráta). Členstvo nemá časový limit – skončí, až keď dostanete posledný tip. Keď vám budú tipy dochádzať, dám vám vedieť.</p></details>
-        <details><summary>Aký bank a vklad odporúčate?</summary><p>Ideálne bank 1&nbsp;000&nbsp;€ a&nbsp;vklad 2&nbsp;–&nbsp;3&nbsp;% na tip. Pri vklade 3&nbsp;% aspoň 750&nbsp;€ pri Štarte, 700&nbsp;€ pri Golde a&nbsp;650&nbsp;€ pri Onyxe – vtedy sa cena členstva vráti pri bežnom zisku modelu. Vklad nikdy nad 5&nbsp;% banku a&nbsp;vždy z&nbsp;aktuálneho banku. Pri členstve si to môžete prepočítať posuvníkmi.</p></details>
+        <details><summary>Ako funguje členstvo?</summary><p>Platíte za počet tipov: Štart 50, Gold 100, Platinum 200. Tipy sa vám rátajú odo dňa nákupu, každý poslaný tip sa odpočíta (zrušený zápas sa neráta). Členstvo nemá časový limit – skončí, až keď dostanete posledný tip. Keď vám budú tipy dochádzať, dám vám vedieť.</p></details>
+        <details><summary>Aký bank a vklad odporúčate?</summary><p>Ideálne bank 1&nbsp;000&nbsp;€ a&nbsp;vklad 2&nbsp;–&nbsp;3&nbsp;% na tip. Pri vklade 3&nbsp;% aspoň 750&nbsp;€ pri Štarte, 700&nbsp;€ pri Golde a&nbsp;650&nbsp;€ pri Platine – vtedy sa cena členstva vráti pri bežnom zisku modelu. Vklad nikdy nad 5&nbsp;% banku a&nbsp;vždy z&nbsp;aktuálneho banku. Pri členstve si to môžete prepočítať posuvníkmi.</p></details>
         <details><summary>Musím členstvo rušiť?</summary><p>Nie. Členstvo sa samo nepredlžuje – skončí po poslednom tipe. Ak chcete pokračovať, jednoducho si kúpite ďalšie.</p></details>
       </div>
     </div>
@@ -3168,7 +3188,7 @@ html body .eyebrow::after, html body .page-head .eyebrow::after, html body .fina
     <div class="wrap">
       <div class="eyebrow">Členstvo TipRadar</div>
       <h2>Váš bank si zaslúži <em>stratégiu</em>.</h2>
-      <p>Vyberte si členstvo Štart, Gold alebo Onyx. Ak skončí v&nbsp;mínuse, dostanete 1 mesiac zadarmo.</p>
+      <p>Vyberte si členstvo Štart, Gold alebo Platinum. Ak skončí v&nbsp;mínuse, dostanete 1 mesiac zadarmo.</p>
       <div class="actions"><a class="btn" href="/clenstvo">Pozrieť členstvo <span class="arr" aria-hidden="true">→</span></a><a class="btn btn-ghost" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener">Telegram komunita</a></div>
     </div>
   </section>
@@ -3652,13 +3672,13 @@ html body .eyebrow::after, html body .page-head .eyebrow::after, html body .fina
   });
 
 
-  // ---------- Členstvo (od 29. 10. 2026): Štart 75 tipov 49 € / Gold 150 tipov 89 € / Onyx 250 tipov 139 €, garancia 1 mesiac zadarmo – prepínač + posuvníky banku a vkladu ----------
+  // ---------- Členstvo (od 29. 10. 2026 večer): Štart 50 tipov 35 € / Gold 100 tipov 65 € / Platinum 200 tipov 119 €, garancia 1 mesiac zadarmo – prepínač + posuvníky banku a vkladu ----------
   (function () {
     const f = (n, d) => n.toLocaleString("sk-SK", { minimumFractionDigits: d, maximumFractionDigits: d });
     const TERMS = {
-      p75: { tier: "Štart", cls: "silver-text", price: 49, tips: 75, note: "0,65 € za tip", bank: 750, bot: "stat", order: 1 },
-      p150: { tier: "Gold", cls: "gold-text", price: 89, tips: 150, note: "0,59 € za tip · ušetríte 9 €", bank: 700, bot: "gold", order: 2 },
-      p250: { tier: "Onyx", cls: "plat-text", price: 139, tips: 250, note: "0,56 € za tip · ušetríte 24 €", bank: 650, bot: "onyx", order: 3 },
+      p50: { tier: "Štart", cls: "silver-text", price: 35, tips: 50, note: "0,70 € za tip", bank: 750, bot: "stat", order: 1 },
+      p100: { tier: "Gold", cls: "gold-text", price: 65, tips: 100, note: "0,65 € za tip · ušetríte 5 €", bank: 700, bot: "gold", order: 2 },
+      p200: { tier: "Platinum", cls: "plat-text", price: 119, tips: 200, note: "0,60 € za tip · ušetríte 21 €", bank: 650, bot: "platinum", order: 3 },
     };
     const PCTS = [1, 2, 3, 5, 10]; // posuvník vkladu skáče len po týchto percentách
     const $$ = (s) => document.querySelectorAll(s);
@@ -3667,7 +3687,7 @@ html body .eyebrow::after, html body .page-head .eyebrow::after, html body .fina
     const bI = calc.querySelector('[data-in="bank"]'), pI = calc.querySelector('[data-in="pct"]');
     const o = (k) => calc.querySelector('[data-o="' + k + '"]');
     const fill = (el) => el.style.setProperty("--fill", ((el.value - el.min) / (el.max - el.min)) * 100 + "%");
-    let cur = "p150";
+    let cur = "p100";
     function draw() {
       const t = TERMS[cur];
       const bank = +bI.value, pct = PCTS[+pI.value] || 3, stake = (bank * pct) / 100, roi = (t.price / t.tips / stake) * 100;
@@ -3685,7 +3705,7 @@ html body .eyebrow::after, html body .page-head .eyebrow::after, html body .fina
       v.textContent = roi <= 4.2 ? "Reálne – členstvo sa vám vráti pri bežnom zisku modelu." : roi <= 6 ? "Náročnejšie – zvážte väčší bank alebo väčšie členstvo." : "Príliš malý vklad – členstvo sa ťažko vráti.";
     }
     function apply(term, keepBank) {
-      if (!TERMS[term]) term = "p150";
+      if (!TERMS[term]) term = "p100";
       cur = term;
       const t = TERMS[term];
       $$("#clenstvo .term-switch [data-term]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.term === term)));
@@ -3712,8 +3732,8 @@ html body .eyebrow::after, html body .page-head .eyebrow::after, html body .fina
     bI.addEventListener("input", draw); pI.addEventListener("input", draw);
     $$("#clenstvo .term-switch [data-term]").forEach((b) => b.addEventListener("click", () => apply(b.dataset.term)));
     window.__applySales = () => apply(cur, true);
-    // Odkaz /clenstvo#start, #gold alebo #onyx rovno vyberie členstvo (#stat, #silver → Štart, #platinum → Onyx).
-    apply({ start: "p75", stat: "p75", silver: "p75", gold: "p150", onyx: "p250", platinum: "p250" }[location.hash.slice(1)] || "p150");
+    // Odkaz /clenstvo#start, #gold alebo #platinum rovno vyberie členstvo (#stat, #silver → Štart, #onyx → Platinum).
+    apply({ start: "p50", stat: "p50", silver: "p50", gold: "p100", onyx: "p200", platinum: "p200" }[location.hash.slice(1)] || "p100");
     // Odkaz „Garancia“ na karte rovno otvorí odpoveď v otázkach.
     const openGuarantee = () => { const d = document.getElementById("garancia"); if (d) d.open = true; };
     document.querySelectorAll('a[href="#garancia"]').forEach((a) => a.addEventListener("click", openGuarantee));

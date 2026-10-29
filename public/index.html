@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="favicon-256.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300..700&family=DM+Sans:opsz,wght@9..40,300..700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Figtree:wght@300..800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -34,7 +34,7 @@
     <aside class="side">
       <div class="logo lx-logo"><svg viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="apg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F0E0B4"/><stop offset=".5" stop-color="#C8A96A"/><stop offset="1" stop-color="#8C6E36"/></linearGradient></defs><g fill="none" stroke="url(#apg)"><circle cx="50" cy="50" r="47" stroke-width="2"/><circle cx="50" cy="50" r="43" stroke-width=".8"/><circle cx="50" cy="50" r="30" stroke-width="1.4"/><circle cx="50" cy="50" r="16" stroke-width="1.4"/><path d="M50 3v8M50 89v8M3 50h8M89 50h8" stroke-width="1.4"/><path d="M50 50 72 28" stroke-width="3" stroke-linecap="round"/></g><path d="M50 50 L50 20 A30 30 0 0 1 71.2 28.8 Z" fill="url(#apg)" opacity=".22"/><circle cx="50" cy="50" r="4" fill="url(#apg)"/><circle cx="64" cy="36" r="3.4" fill="url(#apg)"/></svg><span>TipRadar<small>Futbalová analytika</small></span></div>
       <nav class="nav" id="sideNav" aria-label="Hlavné menu"></nav>
-      <button type="button" class="seats" id="seatBox" title="Členstvo TipRadar: počet aktívnych členov Štart (75 tipov), Gold (150 tipov) a Onyx (250 tipov). Kliknutím otvoríš sekciu Členovia."></button>
+      <button type="button" class="seats" id="seatBox" title="Členstvo TipRadar: počet aktívnych členov Štart (50 tipov), Gold (100 tipov) a Platinum (200 tipov). Kliknutím otvoríš sekciu Členovia."></button>
     </aside>
 
     <main class="main">
@@ -178,7 +178,7 @@
         <div class="page">
           <div class="card gar-card" id="guaranteeCard" hidden></div>
           <div class="seats seats-inline" id="seatBoxMobile"></div>
-          <p class="muted small">Všetci, ktorí si kúpili členstvo Gold alebo Onyx (pri platbe cez QR kód sa zapíšu sami). Server každému ráta tipy poslané do členského kanála od nákupu; keď ostane 5 tipov, upozorní teba aj člena. Ak členstvo skončí v mínuse, v karte Garancia pridáš mesiac zadarmo.</p>
+          <p class="muted small">Všetci, ktorí si kúpili členstvo Štart, Gold alebo Platinum (pri platbe cez QR kód sa zapíšu sami). Server každému ráta tipy poslané do členského kanála od nákupu; keď ostane 5 tipov, upozorní teba aj člena. Ak členstvo skončí v mínuse, v karte Garancia pridáš mesiac zadarmo.</p>
           <div class="kpis kpis-members" id="subscribersSummary"></div>
 
           <div class="card">
@@ -189,9 +189,9 @@
               <label class="fld">Telegram chat ID<input type="text" id="subTelegramChatId" placeholder="voliteľné" /></label>
               <label class="fld">Členstvo
                 <select id="subLength">
-                  <option value="p75">Štart · 75 tipov (49 €)</option>
-                  <option value="p150" selected>Gold · 150 tipov (89 €)</option>
-                  <option value="p250">Onyx · 250 tipov (139 €)</option>
+                  <option value="p50">Štart · 50 tipov (35 €)</option>
+                  <option value="p100" selected>Gold · 100 tipov (65 €)</option>
+                  <option value="p200">Platinum · 200 tipov (119 €)</option>
                 </select>
               </label>
               <label class="fld">Od<input type="date" id="subStart" /></label>
@@ -237,7 +237,7 @@
             <a class="tool" href="/instagram"><b>Instagram</b><span>Obrázky tipov a výsledkov na Instagram.</span></a>
             <a class="tool" href="/TipRadar-ako-vyberame-tipy.pdf" target="_blank" rel="noopener"><b>PDF pre klientov</b><span>Ako vyberáme tipy.</span></a>
             <a class="tool" href="/navratnost.html"><b>Návratnosť – kalkulačka</b><span>Zadáte vlastný bank (napr. 200 €) aj počet tipov mesačne (30, 45, 60…) a hneď vidíte, koľko tipov musí vyjsť za mesiac a zo 100 tipov celkovo. Ukáže aj čistý zisk za mesiac. Dá sa uložiť ako PDF.</span></a>
-            <a class="tool" href="/plan.html"><b>Plán – ziskový model</b><span>Aké ROI musí model dosiahnuť, aby sa oplatil každý balíček (Štart, Gold, Onyx), plán krokov do januára 2027 a pri akých číslach čo meníme.</span></a>
+            <a class="tool" href="/plan.html"><b>Plán – ziskový model</b><span>Aké ROI musí model dosiahnuť, aby sa oplatil každý balíček (Štart, Gold, Platinum), plán krokov do januára 2027 a pri akých číslach čo meníme.</span></a>
           </div>
         </div>
       </section>
