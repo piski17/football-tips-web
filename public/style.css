@@ -657,30 +657,83 @@ input[type=text], input[type=search], input[type=number], input[type=date], inpu
 h3.sh small { text-transform: none; letter-spacing: 0; }
 
 /* =====================================================================
-   KLUB (28. 10. 2026) – rovnaký vzhľad ako tipradar.eu: onyx a zlato,
-   erb so zlatým radarom, ostré hrany, nadpisy Playfair, štítky Barlow Condensed.
+   LUXUS (29. 10. 2026) – rovnaký vzhľad ako tipradar.eu: onyx a šampanské,
+   zlatý radar, tenké nadpisy Bodoni Moda, drobné verzálky, vlasové zlaté linky.
    ===================================================================== */
 :root {
-  --bg: #08080A; --bg2: #121214; --panel: #17171A; --panel2: #1E1E22;
-  --line: rgba(201, 165, 92, .2); --line2: rgba(201, 165, 92, .38);
-  --gold: #C9A55C; --gold-hi: #E8D3A0; --gold-lo: #A8823E;
-  --gold-grad: linear-gradient(135deg, #F1DFAE, #C9A55C 45%, #8E6A2E);
-  --text: #EFE8D8; --muted: #A9A193; --faint: #857E72; --win: #7FBF9A; --loss: #C0707C;
-  --sans: "Plus Jakarta Sans", "Helvetica Neue", Arial, sans-serif;
-  --display: "Barlow Condensed", "Arial Narrow", sans-serif;
-  --radius: 2px;
+  --bg: #0A0A0B; --bg2: #111113; --panel: #141416; --panel2: #1A1A1D;
+  --line: rgba(201, 165, 92, .16); --line2: rgba(201, 165, 92, .34);
+  --gold: #C9A55C; --gold-hi: #F1E2B8; --gold-lo: #8E6E33;
+  --gold-grad: linear-gradient(115deg, #8E6E33 0%, #C9A55C 30%, #F1E2B8 50%, #C9A55C 70%, #8E6E33 100%);
+  --text: #EFE8D8; --muted: #A59D8F; --faint: #7F786C; --win: #8FC9A6; --loss: #C98088;
+  --sans: "Jost", "Helvetica Neue", Arial, sans-serif;
+  --display: "Bodoni Moda", Georgia, serif;
+  --radius: 0;
 }
-body { font-family: var(--sans); font-weight: 500; }
-.top h2, h3.sh, .modal h3 { font-family: "Playfair Display", Georgia, serif !important; text-transform: none !important; letter-spacing: -0.02em !important; font-weight: 800 !important; }
-.btn { background: var(--gold-grad) !important; color: #120E06 !important; border: 0 !important; border-radius: 0 !important; font-family: var(--display) !important; font-weight: 700 !important; letter-spacing: .18em !important; text-transform: uppercase; }
-.btn.ghost, .btn.btn-ghost { background: transparent !important; color: var(--text) !important; border: 1px solid var(--line2) !important; }
+body { font-family: var(--sans); font-weight: 400; background: var(--bg) !important; }
+.top h2, h3.sh, .modal h3 { font-family: var(--display) !important; text-transform: none !important; letter-spacing: 0 !important; font-weight: 400 !important; }
+.top h2 { font-size: clamp(30px, 3vw, 42px) !important; }
+h3.sh { font-size: 26px !important; }
+.btn { background: var(--gold-grad) !important; background-size: 200% 100% !important; color: #0A0A0B !important; border: 0 !important; border-radius: 0 !important; font-family: var(--sans) !important; font-weight: 600 !important; font-size: 11.5px !important; letter-spacing: .24em !important; text-transform: uppercase; transition: background-position .8s ease !important; }
+.btn:hover { background-position: 100% 0 !important; }
+.btn.ghost, .btn.btn-ghost { background: transparent !important; color: var(--gold) !important; border: 1px solid var(--line2) !important; }
 .btn.ghost:hover, .btn.btn-ghost:hover { border-color: var(--gold) !important; color: var(--gold-hi) !important; }
-.chip, .tag, .tabs, .tabs button, .search, input, select, textarea { border-radius: 2px !important; }
-.side { background: #060607 !important; border-right: 1px solid var(--line) !important; }
-.kb-logo { display: flex; align-items: center; gap: 12px; text-transform: none !important; }
-.kb-logo .kb-crest { width: 34px !important; height: 42px !important; flex: none; }
-.kb-logo span { font: 700 19px/1 var(--display) !important; letter-spacing: .3em !important; text-transform: uppercase; color: var(--text) !important; }
-.kb-logo small { display: block; margin-top: 5px; font: 600 9.5px/1 var(--display); letter-spacing: .28em; color: var(--gold); }
-.nav a { font-family: var(--display) !important; font-size: 14px !important; letter-spacing: .2em !important; }
-.nav a.on { background: var(--gold-grad) !important; color: #120E06 !important; border-radius: 0 !important; }
-.splash-word { font-family: "Playfair Display", Georgia, serif !important; text-transform: none !important; letter-spacing: -0.01em !important; color: var(--gold-hi) !important; }
+.chip, .tag, .tabs, .tabs button, .search, input, select, textarea, .card, .panel, .box, .modal, .stat, .kpi { border-radius: 0 !important; }
+.side { background: #070708 !important; border-right: 1px solid var(--line) !important; }
+.lx-logo { display: flex; align-items: center; gap: 14px; text-transform: none !important; }
+.lx-logo svg { width: 32px !important; height: 32px !important; flex: none; }
+.lx-logo span { font: 400 19px/1 var(--display) !important; letter-spacing: .4em !important; text-transform: uppercase; color: var(--text) !important; }
+.lx-logo small { display: block; margin-top: 7px; font: 500 8.5px/1 var(--sans); letter-spacing: .2em; white-space: nowrap; color: var(--gold); }
+.nav a { font-family: var(--sans) !important; font-weight: 500 !important; font-size: 11.5px !important; letter-spacing: .22em !important; text-transform: uppercase; border-radius: 0 !important; }
+.nav a.on { background: transparent !important; color: var(--gold-hi) !important; box-shadow: inset 2px 0 0 var(--gold) !important; }
+.splash-word { font-family: var(--display) !important; font-weight: 400 !important; text-transform: uppercase !important; letter-spacing: .4em !important; color: var(--gold-hi) !important; }
+
+/* =====================================================================
+   ŠTADIÓN (29. 10. 2026) – rovnaký vzhľad ako tipradar.eu: čierna, biela
+   a zlatá, široké športové písmo Archivo.
+   ===================================================================== */
+:root {
+  --bg: #050506; --bg2: #0B0C0E; --panel: #0F1013; --panel2: #15161A;
+  --line: rgba(255, 255, 255, .08); --line2: rgba(212, 178, 106, .42);
+  --gold: #D4B26A; --gold-hi: #EED9A2; --gold-lo: #A9873F;
+  --gold-grad: linear-gradient(135deg, #EED9A2, #D4B26A 45%, #B08D45);
+  --text: #F5F5F2; --muted: #9A9DA3; --faint: #6E7178; --win: #7FD0A0; --loss: #E27C88;
+  --sans: "Archivo", "Helvetica Neue", Arial, sans-serif; --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+}
+body { font-family: var(--sans) !important; }
+.top h2, h3.sh, .modal h3 { font-family: var(--display) !important; font-stretch: 125% !important; font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: -0.01em !important; }
+.top h2 { font-size: clamp(24px, 2.4vw, 34px) !important; }
+h3.sh { font-size: 20px !important; }
+.btn { background: var(--gold) !important; color: #050506 !important; font-family: var(--sans) !important; font-stretch: 112%; font-weight: 700 !important; font-size: 11.5px !important; letter-spacing: .14em !important; }
+.btn:hover { background: #F5F5F2 !important; }
+.btn.ghost, .btn.btn-ghost { background: transparent !important; color: var(--text) !important; border: 1px solid rgba(255,255,255,.26) !important; }
+.lx-logo span { font: 700 16px/1 var(--display) !important; font-stretch: 125% !important; letter-spacing: .2em !important; }
+.lx-logo small { font: 600 8.5px/1 var(--sans) !important; letter-spacing: .2em; }
+.nav a { font-family: var(--sans) !important; font-weight: 600 !important; font-size: 11.5px !important; letter-spacing: .16em !important; }
+.splash-word { font-family: var(--display) !important; font-stretch: 125% !important; font-weight: 700 !important; letter-spacing: .2em !important; }
+
+/* =====================================================================
+   PRESTÍŽ (29. 10. 2026) – rovnaký vzhľad ako tipradar.eu: čierna,
+   slonovinová a šampanské zlato, písmo Cinzel (nadpisy) a Inter (text).
+   ===================================================================== */
+:root {
+  --bg: #0A0A0B; --bg2: #0F0F11; --panel: #141416; --panel2: #19181B;
+  --line: rgba(243, 238, 228, .08); --line2: rgba(200, 169, 106, .35);
+  --gold: #C8A96A; --gold-hi: #EBD9AE; --gold-lo: #9A7B3F;
+  --gold-grad: linear-gradient(115deg, #F0E0B4, #C8A96A 45%, #9A7B3F);
+  --text: #F3EEE4; --muted: #A9A397; --faint: #75706A; --win: #8CC7A1; --loss: #D08A8A;
+  --sans: "Inter", system-ui, sans-serif; --display: "Cinzel", "Times New Roman", serif;
+}
+body { font-family: var(--sans) !important; background: var(--bg) !important; color: var(--text) !important; -webkit-font-smoothing: antialiased; }
+.top h2, h3.sh, .modal h3 { font-family: var(--display) !important; font-stretch: normal !important; font-weight: 500 !important; text-transform: none !important; letter-spacing: .02em !important; }
+.top h2 { font-size: clamp(26px, 2.6vw, 36px) !important; }
+h3.sh { font-size: 20px !important; color: var(--gold-hi) !important; }
+.btn { background: var(--gold-grad) !important; color: #0A0A0B !important; font-family: var(--sans) !important; font-stretch: normal !important; font-weight: 600 !important; font-size: 11.5px !important; letter-spacing: .2em !important; text-transform: uppercase !important; border-radius: 0 !important; border: 0 !important; }
+.btn:hover { filter: brightness(1.08); }
+.btn.ghost, .btn.btn-ghost { background: transparent !important; color: var(--text) !important; border: 1px solid rgba(200,169,106,.5) !important; }
+.lx-logo span { font: 500 20px/1 var(--display) !important; font-stretch: normal !important; letter-spacing: .12em !important; text-transform: none !important; }
+.lx-logo small { font: 600 9px/1 var(--sans) !important; letter-spacing: .3em !important; color: var(--gold) !important; }
+.nav a { font-family: var(--sans) !important; font-weight: 500 !important; font-size: 12px !important; letter-spacing: .18em !important; text-transform: uppercase !important; border-radius: 0 !important; }
+.nav a.on { background: rgba(200,169,106,.08) !important; color: var(--gold-hi) !important; box-shadow: inset 2px 0 0 var(--gold) !important; }
+.splash-word { font-family: var(--display) !important; font-stretch: normal !important; font-weight: 500 !important; text-transform: none !important; letter-spacing: .14em !important; }
+.card, .panel, .box, .modal, .stat, .kpi, table, input, select, textarea, .tab, .chip, .pill, .seg, .seg button { border-radius: 0 !important; }
