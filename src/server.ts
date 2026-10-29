@@ -157,6 +157,15 @@ const LEAGUE_PRESETS: LeaguePreset[] = [
   { id: 79, name: "2. Bundesliga", country: "Nemecko" },
   { id: 345, name: "Chance Liga", country: "Česko" },
   { id: 332, name: "Niké liga", country: "Slovensko" },
+  // 29. 10. 2026 (Michalovo rozhodnutie): ďalších 8 líg naostro – tipy idú klientom aj do štatistík.
+  { id: 218, name: "Bundesliga", country: "Rakúsko" },
+  { id: 207, name: "Super League", country: "Švajčiarsko" },
+  { id: 119, name: "Superliga", country: "Dánsko" },
+  { id: 179, name: "Premiership", country: "Škótsko" },
+  { id: 210, name: "HNL", country: "Chorvátsko" },
+  { id: 136, name: "Serie B", country: "Taliansko" },
+  { id: 141, name: "Segunda División", country: "Španielsko" },
+  { id: 62, name: "Ligue 2", country: "Francúzsko" },
   // Liga národov (id 5) odstránená 6. 10. 2026 - reprezentácie majú málo zápasov, tipy nespoľahlivé.
 ];
 
