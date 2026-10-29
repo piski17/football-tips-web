@@ -138,34 +138,23 @@ function monthlyResults(tips: SavedTip[]) {
 const CUP_LEAGUE_IDS = [2, 3]; // Liga majstrov, Európska liga
 
 const LEAGUE_PRESETS: LeaguePreset[] = [
+  // 29. 10. 2026 (Michalovo rozhodnutie): 15 súťaží – 9 najvyšších líg, 5 druhých líg a Liga majstrov.
+  // Odstránené: Európska liga, Belgicko, Turecko, Poľsko (a skúšané Rakúsko, Švajčiarsko, Dánsko, Škótsko, Chorvátsko).
   { id: 39, name: "Premier League", country: "Anglicko" },
   { id: 140, name: "La Liga", country: "Španielsko" },
   { id: 135, name: "Serie A", country: "Taliansko" },
   { id: 78, name: "Bundesliga", country: "Nemecko" },
   { id: 61, name: "Ligue 1", country: "Francúzsko" },
-  { id: 2, name: "UEFA Champions League", country: "Európa" },
-  // 21. 10. 2026 (Michalovo rozhodnutie): viac zápasov aj cez týždeň.
-  { id: 3, name: "UEFA Europa League", country: "Európa" },
   { id: 88, name: "Eredivisie", country: "Holandsko" },
   { id: 94, name: "Primeira Liga", country: "Portugalsko" },
-  // 25. 10. 2026 (Michalovo rozhodnutie): viac líg.
-  { id: 144, name: "Jupiler Pro League", country: "Belgicko" },
-  { id: 203, name: "Süper Lig", country: "Turecko" },
-  { id: 106, name: "Ekstraklasa", country: "Poľsko" },
-  // 26. 10. 2026 (Michalovo rozhodnutie): ďalšie ligy.
-  { id: 40, name: "Championship", country: "Anglicko" },
-  { id: 79, name: "2. Bundesliga", country: "Nemecko" },
   { id: 345, name: "Chance Liga", country: "Česko" },
   { id: 332, name: "Niké liga", country: "Slovensko" },
-  // 29. 10. 2026 (Michalovo rozhodnutie): ďalších 8 líg naostro – tipy idú klientom aj do štatistík.
-  { id: 218, name: "Bundesliga", country: "Rakúsko" },
-  { id: 207, name: "Super League", country: "Švajčiarsko" },
-  { id: 119, name: "Superliga", country: "Dánsko" },
-  { id: 179, name: "Premiership", country: "Škótsko" },
-  { id: 210, name: "HNL", country: "Chorvátsko" },
+  { id: 40, name: "Championship", country: "Anglicko" },
+  { id: 79, name: "2. Bundesliga", country: "Nemecko" },
   { id: 136, name: "Serie B", country: "Taliansko" },
   { id: 141, name: "Segunda División", country: "Španielsko" },
   { id: 62, name: "Ligue 2", country: "Francúzsko" },
+  { id: 2, name: "UEFA Champions League", country: "Európa" },
   // Liga národov (id 5) odstránená 6. 10. 2026 - reprezentácie majú málo zápasov, tipy nespoľahlivé.
 ];
 
