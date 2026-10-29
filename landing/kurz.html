@@ -1914,6 +1914,57 @@ html body .pz-live .hx-spark .ln, html body .pz-live .hx-spark path:last-child {
 @media (max-width: 340px) { .pz-ic { display: none; } }
 @media (max-width: 520px) { html body .pz-nav .wrap { padding: 0 8px 0 12px; gap: 8px !important; } .pz-ic, .pz-tg, html body .lx-burger, html body .nav-toggle.lx-burger { width: 36px !important; height: 36px !important; } .pz-nav-right { gap: 5px; } .pz-brand span { font-size: 15px !important; letter-spacing: .12em !important; } .pz-brand svg { width: 28px; height: 28px; } .pz-brand { gap: 8px; } html body .lx-burger span { left: 10px; right: 10px; } html body .lx-burger span:first-child { top: 14px; } html body .lx-burger span:last-child { top: 21px; } html.menu-open body .lx-burger span { top: 17px !important; } }
 
+/* ===== PRESTÍŽ PRO (29. 10. 2026): zaoblené rohy, čistejšie karty, jednotné rozostupy ===== */
+:root { --rx: 24px; --rc: 18px; --rs: 12px; --rb: 12px; }
+/* menu: zaoblená sklenená lišta a ikonky */
+html body .pz-nav .wrap { border-radius: var(--rc) !important; }
+html body .pz-ic, html body .pz-tg, html body .lx-burger, html body .nav-toggle.lx-burger, html body .pz-member { border-radius: var(--rb) !important; }
+/* tlačidlá */
+html body .btn, html body a.btn, html body button.btn, html body .btn.btn-ghost, html body #clenstvo .pk-btn, html body .back, html body .page-head .back { border-radius: var(--rb) !important; }
+html body .jump { border-radius: 50% !important; }
+/* veľké panely */
+html body .lux, html body #clenstvo .lux, html body .pz-live, html body .ledger-wrap, html body .mon, html body .showcase, html body .calib-sec, html body .calc-sec, html body .calc, html body .om2-paper, html body .form, html body .skola-media, html body .skola-chaps, html body .skola-buy, html body .skola-price, html body .duel, html body .finale .card { border-radius: var(--rx) !important; }
+html body #clenstvo .lux { overflow: hidden; }
+/* bežné karty */
+html body .card, html body .hm-card, html body .hm-tier, html body .sc, html body .steps li, html body .funnel li, html body .yday-card, html body .stake, html body .verdict, html body .last7, html body .om-card, html body .payback, html body .calib, html body .calib-tip, html body .growth-tip, html body .cal-tip, html body .pz-grid li, html body .skola-more, html body .skola-slider, html body .cal-m, html body .cal-stat { border-radius: var(--rc) !important; }
+/* členstvo: všetky vnútorné časti zaoblené */
+html body #clenstvo .pk-f, html body #clenstvo .lux-guarantee, html body #clenstvo .pk-calc, html body #clenstvo .pk-res, html body #clenstvo .pk-mini > div, html body #clenstvo .pk-verdict, html body #clenstvo .per-month span { border-radius: var(--rs) !important; }
+html body #clenstvo .pk-f i, html body #clenstvo .pk-ic { border-radius: 10px !important; }
+html body #clenstvo .lux-r .term-switch, html body #clenstvo .term-switch { border-radius: 16px !important; padding: 5px !important; border-color: rgba(200,169,106,.4) !important; }
+html body #clenstvo .lux-r .term-switch button, html body #clenstvo .term-switch button { border-radius: 11px !important; }
+html body #clenstvo .lux-r .per-month span, html body #clenstvo .per-month span { border-radius: 999px !important; padding: 7px 12px !important; }
+html body #clenstvo .lux-guarantee svg { border-radius: 50%; }
+/* výsledky: štyri čísla v jednom zaoblenom paneli */
+html body .figures { border-radius: var(--rx) !important; overflow: hidden; }
+html body .ledger li { border-radius: var(--rs) !important; }
+html body .ledger .st, html body .ledger .badge, html body .ledger li .r { border-radius: 999px !important; }
+html body .mon-list li { border-radius: var(--rs) !important; }
+html body .cal-g i { border-radius: 9px !important; }
+/* prepínače a štítky */
+html body .tabs, html body .seg, html body .filter, html body .term-switch { border-radius: 14px !important; padding: 4px !important; }
+html body .tab, html body .seg button, html body .term-switch button, html body .payback-chips button { border-radius: 10px !important; }
+html body .skola-zoom, html body .chip, html body .pill, html body .tag, html body .res, html body .badge, html body .lux-pill { border-radius: 999px !important; }
+html body .hm-m, html body .hm-kurz-img, html body .duel-band, html body .duel-verdict, html body #ako .steps .ic { border-radius: var(--rs) !important; }
+html body #ako .steps .ic { border-radius: 50% !important; }
+/* ROI sa na webe neukazuje (len eurá a jednotky) */
+html body .mon-cols, html body .mon-list li { grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, .8fr)) minmax(0, 1fr) !important; }
+html body .mon-cols span:nth-child(5), html body .mon-list li > span:nth-child(5) { display: none !important; }
+@media (max-width: 760px) { html body .mon-list li { grid-template-columns: minmax(0, 1fr) auto !important; } }
+/* kalkulačka hodnoty: odsadenie výsledku */
+html body .verdict { padding: 22px 24px !important; }
+/* úvod: panel bez dvojitého rámu */
+html body .pz-live .hx-live { border: 0 !important; background: none !important; box-shadow: none !important; border-radius: 0 !important; }
+html body .pz-live { box-shadow: 0 40px 90px -50px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.04) !important; }
+html body .pz-live::before { display: none !important; }
+/* úvod: pás dôvery pod tlačidlami */
+.pz-trust { list-style: none; margin: 34px 0 0; padding: 26px 0 0; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 14px 28px; }
+.pz-trust li { display: flex; align-items: center; gap: 10px; font: 500 13.5px/1.35 var(--sans) !important; color: var(--muted); }
+.pz-trust svg { width: 18px; height: 18px; flex: none; fill: none; stroke: var(--gold); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+@media (max-width: 760px) { .pz-trust { flex-direction: column; gap: 12px; margin-top: 28px; padding-top: 22px; } }
+/* telefón a obrázky */
+html body .phone { border-radius: 38px !important; }
+/* mobil: o niečo menšie zaoblenie */
+@media (max-width: 760px) { :root { --rx: 20px; --rc: 16px; } }
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Herr+Von+Muellerhoff&amp;family=Great+Vibes&amp;display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..700&amp;family=Inter:wght@300..800&amp;display=swap" rel="stylesheet" />
