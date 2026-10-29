@@ -5,11 +5,16 @@ import { MemberPeriod, SavedTip, Subscriber } from "./types";
 // členstvo skončí po poslednom tipe (bez časovej platnosti).
 // Garancia: ak členstvo skončí v strate, člen dostane 1 mesiac zadarmo – všetky tipy počas mesiaca, bez počtu
 // (na mesiac zadarmo sa garancia už nevzťahuje). Staré balíčky mali 30 tipov zadarmo.
+// Garancia „30 tipov bez rizika“ (od 29. 10. 2026): ak je člen po prvých 30 tipoch svojho prvého členstva v mínuse,
+// vrátime mu celú sumu a členstvo skončí (REFUND_TIPS). Potom už nemá nárok na mesiac zadarmo.
 // Staré balíčky (Štart / Gold / Onyx, 27. – 29. 10. 2026) sa počítajú rovnako, staršie časové členstvá
 // (Gold 50 dní, Onyx 6 mesiacov) po dňoch.
 
 /** Koľko predošlých období si pri členovi pamätáme (stačí na vyhodnotenie za posledných 60 dní). */
 const KEEP_PAST = 6;
+
+/** Po koľkých tipoch prvého členstva sa vyhodnotí garancia vrátenia peňazí. */
+export const REFUND_TIPS = 30;
 
 /** Dĺžka členstva / balíček člena (staršie záznamy bez dĺžky: group = 6 mesiacov, inak Gold 50 dní). */
 export function memberTerm(s: Subscriber): Term {

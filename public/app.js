@@ -3338,7 +3338,23 @@ function renderGuarantee() {
   const el = document.getElementById("guaranteeCard");
   if (!el) return;
   const due = lastGuarantee.filter((r) => r.eligible);
-  el.className = `card gar-card${due.length ? " warn" : ""}`;
+  const refunds = lastGuarantee.filter((r) => r.refundEligible);
+  el.className = `card gar-card${due.length || refunds.length ? " warn" : ""}`;
+  // „30 tipov bez rizika“ (od 29. 10. 2026): člen je po prvých 30 tipoch v mínuse → vrátiť celú sumu prevodom
+  const refundHtml = refunds.length
+    ? `<p class="gar-line">${refunds.length === 1 ? "1 člen je" : `${refunds.length} členovia sú`} po prvých 30 tipoch v mínuse – podľa garancie ${refunds.length === 1 ? "má" : "majú"} nárok na vrátenie peňazí. Po kliknutí na Vrátiť peniaze sa členstvo ukončí a bot člena poprosí o číslo účtu – peniaze mu potom pošli prevodom.</p>
+      <div class="gar-rows">${refunds.map((r) => `
+        <div class="gar-row">
+          <span><b>${escapeHtml(r.name)}</b> <span class="tag gold">${escapeHtml(r.tier.toUpperCase())}</span><br>
+          <span class="muted small">prvých 30 tipov · <span class="l">${signed(r.refundProfit, 1)}${NB}j.</span> · vrátiť ${r.refundAmount}${NB}€</span></span>
+          <button type="button" class="btn sm" data-refund-id="${escapeHtml(r.id)}">Vrátiť peniaze</button>
+        </div>`).join("")}</div>`
+    : "";
+  if (refunds.length && !due.length) {
+    el.innerHTML = `<div class="gar-head"><h4 class="ct">Garancia</h4><label class="check"><input type="checkbox" data-gar-notify checked /> Poslať správu do Telegramu</label></div>${refundHtml}`;
+    el.hidden = false;
+    return;
+  }
   el.innerHTML = due.length
     ? `<div class="gar-head"><h4 class="ct">Garancia</h4><label class="check"><input type="checkbox" data-gar-notify checked /> Poslať správu do Telegramu</label></div>
       <p class="gar-line">${due.length === 1 ? "1 členovi skončilo" : `${due.length} členom skončilo`} členstvo v mínuse – podľa garancie ${due.length === 1 ? "má" : "majú"} nárok na mesiac zadarmo.</p>
@@ -3347,8 +3363,8 @@ function renderGuarantee() {
           <span><b>${escapeHtml(r.name)}</b> <span class="tag gold">${escapeHtml(r.tier.toUpperCase())}</span><br>
           <span class="muted small">${fmtDay(r.periodStart)} – ${fmtDay(r.periodEnd)} · <span class="l">${signed(r.profit, 1)}${NB}j.</span> (${plural(r.resolved, "tip", "tipy", "tipov")})</span></span>
           <button type="button" class="btn sm" data-gar-id="${escapeHtml(r.id)}" data-gar-start="${escapeHtml(r.periodStart)}">Pridať mesiac zadarmo</button>
-        </div>`).join("")}</div>`
-    : `<div class="gar-head"><h4 class="ct">Garancia</h4></div><p class="gar-line faint">Teraz nikto nemá nárok na mesiac zadarmo.</p>`;
+        </div>`).join("")}</div>${refundHtml}`
+    : `<div class="gar-head"><h4 class="ct">Garancia</h4></div><p class="gar-line faint">Teraz nikto nemá nárok na mesiac zadarmo ani na vrátenie peňazí.</p>`;
   el.hidden = false;
 }
 /** Bežiace obdobie člena (výsledok garancie priebežne). */
@@ -3356,6 +3372,23 @@ function currentGuaranteeRow(id) {
   return lastGuarantee.find((r) => r.id === id && !r.ended);
 }
 document.getElementById("guaranteeCard")?.addEventListener("click", async (e) => {
+  const rb = e.target.closest("button[data-refund-id]");
+  if (rb && !rb.disabled) {
+    const row = lastGuarantee.find((r) => r.id === rb.dataset.refundId && r.refundEligible);
+    if (!row) return;
+    const notify = !!document.querySelector("#guaranteeCard [data-gar-notify]")?.checked;
+    if (!window.confirm(`Vrátiť ${row.name} ${row.refundAmount} €? Členstvo sa tým ukončí.${notify ? " Člen dostane správu do Telegramu a pošle ti číslo účtu." : ""}`)) return;
+    rb.disabled = true;
+    try {
+      const r = await postJson("/api/guarantee/refund", { id: row.id, notify });
+      showToast(`Vrátenie ${r.amount} € zapísané, členstvo ukončené. Peniaze pošli prevodom.` + (notify ? (r.notified ? " Správa odišla." : " Správa neodišla.") : ""));
+      openSubscribers();
+    } catch (err) {
+      showToast(`Nepodarilo sa zapísať: ${err.message}`);
+      rb.disabled = false;
+    }
+    return;
+  }
   const b = e.target.closest("button[data-gar-id]");
   if (!b || b.disabled) return;
   const row = lastGuarantee.find((r) => r.id === b.dataset.garId && r.periodStart === b.dataset.garStart);

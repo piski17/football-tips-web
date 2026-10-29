@@ -452,6 +452,7 @@ export interface Subscriber {
   freeMonth?: boolean; // aktuálne obdobie je mesiac zadarmo (časové, bez počtu tipov) – aj keď má člen inak členstvo podľa tipov
   pastPeriods?: MemberPeriod[]; // predošlé obdobia (posledných pár), aby sa dali vyhodnotiť aj po predĺžení
   guarantees?: { periodStart: string; periodEnd: string; profit: number; appliedAt: string; freeUntil: string; freeTips?: number }[]; // použité garancie
+  refund?: { periodStart: string; profit: number; amountEur: number; at: string }; // vrátené peniaze podľa garancie „30 tipov bez rizika“ (od 29. 10. 2026)
   reminderFor?: string; // začiatok balíčka, ku ktorému už odišla pripomienka „dochádzajú tipy“ (posiela sa raz)
   founder?: boolean; // „Prví členovia“ – zamknutá cena
   cardSent?: boolean; // VIP kovová karta odoslaná

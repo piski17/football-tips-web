@@ -60,7 +60,7 @@ import { sendAdminEmail } from "./mailer";
 import { listSubscribers, addSubscriber, updateSubscriber, deleteSubscriber } from "./subscribersStore";
 import { recordHit, readStats, sourceFrom } from "./statsStore";
 import { Subscriber } from "./types";
-import { memberTerm, memberTips, newPeriodUpdates, currentPeriodStart, periodUsage, PeriodUsage } from "./guarantee";
+import { memberTerm, memberTips, newPeriodUpdates, currentPeriodStart, periodUsage, PeriodUsage, REFUND_TIPS } from "./guarantee";
 
 /** Slovenský tvar podľa počtu: plural(3, "tip", "tipy", "tipov") -> "3 tipy". */
 /** Číslo so slovenskou desatinnou čiarkou: fmtNum(1.845, 2) -> "1,85". */
@@ -283,7 +283,7 @@ async function termSeats(): Promise<TermSeats> {
 }
 /** Riadok pod tipom v bezplatnom kanáli (členstvá sú bez obmedzenia miest). */
 async function freeSeatsLine(): Promise<string | undefined> {
-  return `🎯 Členstvo: Štart 50 · Gold 100 · Platinum 200 tipov · 🛡 členstvo v mínuse = 1 mesiac zadarmo`;
+  return `🎯 Členstvo: Štart 50 · Gold 100 · Platinum 200 tipov · 🛡 prvých 30 tipov bez rizika`;
 }
 const BOT_USERNAME = process.env.TELEGRAM_BOT_USERNAME || "TipRadarAiBot";
 
@@ -2967,7 +2967,10 @@ async function guaranteeRows() {
   const rows = [];
   for (const s of subs) {
     const term = memberTerm(s);
-    for (const u of usage.get(s.id) ?? []) {
+    const periodsOf = usage.get(s.id) ?? [];
+    // „30 tipov bez rizika“: len prvé zaplatené členstvo podľa tipov (staršie záznamy s viacerými obdobiami nie)
+    const firstPaid = s.pastPeriods && s.pastPeriods.length > 0 ? null : periodsOf.find((u) => u.total !== null && !u.period.free) ?? null;
+    for (const u of periodsOf) {
       const p = u.period;
       const startMs = new Date(p.start).getTime();
       if (isNaN(startMs) || startMs > now) continue; // obdobie ešte nezačalo
@@ -2977,6 +2980,10 @@ async function guaranteeRows() {
       const free = Boolean(p.free);
       const applied = (s.guarantees ?? []).some((g) => g.periodStart === p.start);
       const inLoss = sm.profit < 0;
+      const refunded = Boolean(s.refund && s.refund.periodStart === p.start);
+      const first30 = u === firstPaid && u.tips.length >= REFUND_TIPS ? u.tips.slice(0, REFUND_TIPS) : null;
+      const first30Done = first30 !== null && first30.every((t) => t.status !== "pending");
+      const refundProfit = first30Done ? summarizeTips(first30!).profit : null;
       rows.push({
         id: s.id,
         name: s.name,
@@ -2993,8 +3000,12 @@ async function guaranteeRows() {
         ended: u.ended,
         free,
         inLoss,
-        eligible: u.ended && u.pending === 0 && inLoss && !free && !applied,
+        eligible: u.ended && u.pending === 0 && inLoss && !free && !applied && !s.refund,
         applied,
+        refundProfit,
+        refundEligible: refundProfit !== null && refundProfit < 0 && !refunded && !applied && !s.refund,
+        refunded,
+        refundAmount: Number(s.priceEur) || PAY_TERMS[term].price,
       });
     }
   }
@@ -3082,6 +3093,47 @@ app.post("/api/guarantee/apply", async (req, res) => {
   }
 });
 
+// „30 tipov bez rizika“: vráti peniaze (prevod robíš ty), zapíše to k členovi a členstvo ukončí.
+app.post("/api/guarantee/refund", async (req, res) => {
+  const id = typeof req.body?.id === "string" ? req.body.id : "";
+  if (!id) {
+    res.status(400).json({ error: "Chýba člen." });
+    return;
+  }
+  if (guaranteeRunning.has(id)) {
+    res.status(409).json({ error: "Garancia pre tohto člena sa práve spracúva." });
+    return;
+  }
+  guaranteeRunning.add(id);
+  try {
+    const row = (await guaranteeRows()).find((r) => r.id === id && r.refundEligible);
+    const sub = (await listSubscribers()).find((s) => s.id === id);
+    if (!row || !sub) {
+      res.status(400).json({ error: sub?.refund ? "Peniaze už boli vrátené." : "Člen teraz nemá nárok na vrátenie peňazí." });
+      return;
+    }
+    const now = new Date().toISOString();
+    const isCurrent = currentPeriodStart(sub) === row.periodStart;
+    await updateSubscriber(id, {
+      refund: { periodStart: row.periodStart, profit: row.refundProfit!, amountEur: row.refundAmount, at: now },
+      ...(isCurrent ? { nextPaymentDue: now } : {}), // členstvo končí – ďalšie tipy sa mu už nerátajú
+      note: `${sub.note ? sub.note + " · " : ""}Garancia 30 tipov (${signed(row.refundProfit!, 1)} j.): vrátené ${row.refundAmount} €`,
+    });
+    let notified = false;
+    if (req.body?.notify === true && sub.telegramChatId) {
+      const text =
+        `🛡 <b>Garancia TipRadar</b>\n\nTvojich prvých ${REFUND_TIPS} tipov skončilo v mínuse (${signed(row.refundProfit!, 1)} j.), preto ti podľa garancie <b>vraciam celú sumu ${row.refundAmount} €</b>. ` +
+        `Pošli mi sem prosím číslo účtu (IBAN), peniaze ti pošlem prevodom. Členstvo tým končí – ďakujem, že si to s nami skúsil.`;
+      notified = await sendMemberMessage(String(sub.telegramChatId), text).catch(() => false);
+    }
+    res.json({ ok: true, id, amount: row.refundAmount, notified });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  } finally {
+    guaranteeRunning.delete(id);
+  }
+});
+
 // ---- Pravidelná kontrola členstiev: dochádzajúce tipy (staré časové členstvá: končiaca platnosť) ----
 
 /** Upozorniť, keď v balíčku ostáva najviac toľko tipov. */
@@ -3117,6 +3169,11 @@ async function checkExpiringSubscribers(): Promise<void> {
       else if (k.active && k.left !== null && k.left <= LOW_TIPS) when = `ostáva ${k.left} z ${k.total} tipov`;
       else if (k.active && r.daysLeft <= 3) when = r.daysLeft <= 0 ? "platnosť končí dnes" : `platnosť končí o ${r.daysLeft} d.`;
       if (when) notes.push({ name: s.name, length: s.length, tier: s.tier, when });
+    }
+    // Garancia „30 tipov bez rizika“: člen je po prvých 30 tipoch v mínuse → vrátiť peniaze (app.tipradar.eu → Členovia → Garancia).
+    for (const g of (await guaranteeRows()).filter((r) => r.refundEligible)) {
+      const sub = subs.find((s) => s.id === g.id);
+      notes.push({ name: g.name, length: sub?.length, tier: sub?.tier ?? "individual", when: `po ${REFUND_TIPS} tipoch v mínuse (${signed(g.refundProfit!, 1)} j.) – vráť ${g.refundAmount} € (Členovia → Garancia)` });
     }
     if (notes.length > 0) await notifyAdminExpiringSubscribers(notes);
 

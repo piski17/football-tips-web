@@ -395,7 +395,7 @@ const TELEGRAM_CONTACT_USERNAME = process.env.TELEGRAM_CONTACT_USERNAME || "im_m
 
 // ---- Členstvo TipRadar (od 29. 10. 2026) – rovnaké texty ako na tipradar.eu ----
 // Štart 50 tipov 49 €, Gold 100 tipov 79 €, Platinum 200 tipov 139 € (navyše mentoring 1 na 1). Bez časovej platnosti, počet tipov denne sa neuvádza.
-// Garancia: ak členstvo skončí v mínuse, člen dostane 1 mesiac zadarmo.
+// Garancia: prvých 30 tipov bez rizika (inak peniaze späť) a členstvo v mínuse = 1 mesiac zadarmo.
 const BENEFITS_BASE =
   `• <b>Denné tipy na Telegrame</b> v súkromnom kanáli, 1 – 2 hodiny pred výkopom – najviac 3 najsilnejšie denne\n` +
   `• <b>Pri každom tipe</b> kurz, šanca podľa modelu, dôvod a odporúčaná sadzba`;
@@ -404,12 +404,12 @@ const BENEFIT_CHAT = `• <b>💬 Súkromný VIP chat</b> – na vaše otázky o
 const BENEFIT_MENTOR =
   `• <b>🤝 Mentoring 1 na 1 počas celého členstva</b> – osobné stretnutia alebo videohovory priamo so mnou\n` +
   `• <b>⚡ Prednostné odpovede v chate</b>`;
-/** Garancia: ak členstvo skončí v mínuse, člen dostane 1 mesiac zadarmo. */
-const GUARANTEE_LINE = `🛡 <b>Garancia:</b> ak vaše členstvo skončí v mínuse, dostanete 1 mesiac zadarmo.`;
-const BANK_LINE = `💼 Odporúčame bank 1 000 € a vklad 2 – 3 % na tip, nikdy nad 5 %.`;
-const PLAN_START = `🥈 <b>Štart · 50 tipov</b> – 49 € (0,98 € za tip)\n<i>Odporúčaný bank aspoň 800 € pri vklade 3 %</i>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
-const PLAN_GOLD = `🥇 <b>Gold · 100 tipov</b> – 79 € (0,79 € za tip, ušetríte 19 €)\n<i>Odporúčaný bank aspoň 700 € pri vklade 3 %</i>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
-const PLAN_PLATINUM = `💎 <b>Platinum · 200 tipov</b> – 139 € (0,70 € za tip, ušetríte 57 €)\n<i>Odporúčaný bank aspoň 650 € pri vklade 3 %</i>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_MENTOR}`;
+/** Garancia: prvých 30 tipov bez rizika (peniaze späť) + členstvo v mínuse = 1 mesiac zadarmo. */
+const GUARANTEE_LINE = `🛡 <b>Prvých 30 tipov bez rizika:</b> ak bude vaše prvé členstvo po 30 tipoch v mínuse, vrátime vám celú sumu. A ak členstvo skončí v mínuse, dostanete 1 mesiac zadarmo.`;
+const BANK_LINE = `💼 Na začiatok stačí bank 350 – 500 € a vklad 5 % na tip. S väčším bankom (napríklad 1 000 €) je bezpečnejší vklad 2 – 3 %. Nikdy nad 5 %.`;
+const PLAN_START = `🥈 <b>Štart · 50 tipov</b> – 49 € (0,98 € za tip)\n<i>Odporúčaný bank aspoň 500 € pri vklade 5 %</i>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
+const PLAN_GOLD = `🥇 <b>Gold · 100 tipov</b> – 79 € (0,79 € za tip, ušetríte 19 €)\n<i>Odporúčaný bank aspoň 400 € pri vklade 5 %</i>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
+const PLAN_PLATINUM = `💎 <b>Platinum · 200 tipov</b> – 139 € (0,70 € za tip, ušetríte 57 €)\n<i>Odporúčaný bank aspoň 350 € pri vklade 5 %</i>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_MENTOR}`;
 const ALL_PLANS = `${PLAN_START}\n\n${PLAN_GOLD}\n\n${PLAN_PLATINUM}`;
 
 const FAQ_ANSWERS: Record<string, string> = {
