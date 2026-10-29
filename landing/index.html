@@ -2676,6 +2676,8 @@ html body footer.pz-foot { padding: 44px 0 34px !important; }
 html body footer .foot-legal { margin-top: 0 !important; padding-top: 0 !important; border-top: 0 !important; }
 html body h1, html body h2, html body .pz-brand span, html body .num { font-weight: 400 !important; }
 html body h1, html body h2 { letter-spacing: .01em !important; }
+/* úvod končí metódou (29. 10. 2026): Metóda už nie je v menu, záverečná výzva na úvode nahradená */
+html body .pz-hodnota-cta { margin-top: 30px !important; display: flex !important; justify-content: flex-start !important; }
 </style>
 
 <link href="https://fonts.googleapis.com/css2?family=Herr+Von+Muellerhoff&amp;family=Great+Vibes&amp;display=swap" rel="stylesheet" />
@@ -2704,7 +2706,7 @@ html body h1, html body h2 { letter-spacing: .01em !important; }
 <nav class="nav pz-nav" aria-label="Hlavná navigácia">
   <div class="wrap">
     <a class="brand pz-brand" href="/" aria-label="TipRadar – úvod"><svg aria-hidden="true"><use href="#pz-emblem"/></svg><span>TipRadar</span></a>
-    <div class="nav-links pz-links"><a href="/vysledky">Výsledky</a><a href="/clenstvo">Členstvo</a><a href="/metoda">Metóda</a><a href="/kurz">Kurz</a><a href="/o-mne">O mne</a><a href="/otazky">Otázky</a><a href="/formular">Kontakt</a></div>
+    <div class="nav-links pz-links"><a href="/vysledky">Výsledky</a><a href="/clenstvo">Členstvo</a><a href="/kurz">Kurz</a><a href="/o-mne">O mne</a><a href="/otazky">Otázky</a><a href="/formular">Kontakt</a></div>
     <div class="pz-nav-right">
       <a class="pz-ic" href="https://www.instagram.com/tipradar.eu/" target="_blank" rel="noopener" aria-label="Instagram"><svg aria-hidden="true"><use href="#i-ig"/></svg></a>
       <a class="pz-ic" href="mailto:info@tipradar.eu" aria-label="E-mail"><svg aria-hidden="true"><use href="#i-mail"/></svg></a>
@@ -2719,7 +2721,6 @@ html body h1, html body h2 { letter-spacing: .01em !important; }
       <li><a href="/">Úvod</a></li>
       <li><a href="/vysledky">Výsledky<small>všetky tipy</small></a></li>
       <li><a href="/clenstvo">Členstvo<small>Štart · Gold · Onyx</small></a></li>
-      <li><a href="/metoda">Metóda<small>ako vzniká tip</small></a></li>
       <li><a href="/kurz">Kurz<small>Škola stávkovania</small></a></li>
       <li><a href="/o-mne">O mne</a></li>
       <li><a href="/otazky">Otázky</a></li>
@@ -2829,7 +2830,6 @@ html body h1, html body h2 { letter-spacing: .01em !important; }
             <li class="card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v16M6 20h12M4 8h16"/><path d="M4 8l-2.5 6a3 3 0 0 0 5 0L4 8ZM20 8l-2.5 6a3 3 0 0 0 5 0L20 8Z"/></svg></span><div><span class="n">Krok 2</span><h3>Porovná šancu s kurzom</h3><p>Tip prejde, len keď model vidí vyššiu šancu, než naznačuje kurz stávkovej kancelárie. Väčšina zápasov neprejde.</p></div></li>
             <li class="card"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 4 3 11l6 2 2 6 3-4 5 4 2-15Z"/><path d="m9 13 8-6"/></svg></span><div><span class="n">Krok 3</span><h3>Tip príde do Telegramu</h3><p>1 – 2 hodiny pred výkopom, večer vyhodnotenie. Výhry aj prehry zverejníme.</p></div></li>
           </ol>
-          <a class="more" href="/metoda">Celý postup a kalkulačka hodnoty <span aria-hidden="true">→</span></a>
         </div>
         <div class="how-phone">
           <figure class="phone" aria-label="Ukážka: takto príde tip do Telegramu">
@@ -2867,7 +2867,7 @@ html body h1, html body h2 { letter-spacing: .01em !important; }
     </div>
   </section>
 
-      <section class="sec" id="postup" data-pages="metoda">
+      <section class="sec alt" id="postup" data-pages="metoda home">
     <div class="wrap split">
       <div>
         <div class="eyebrow">Postup</div>
@@ -2888,13 +2888,14 @@ html body h1, html body h2 { letter-spacing: .01em !important; }
     </div>
   </section>
 
-  <section class="sec alt" id="hodnota" data-pages="metoda">
+  <section class="sec" id="hodnota" data-pages="metoda home">
     <div class="wrap split">
       <div>
         <div class="eyebrow">Hodnota</div>
         <h2>Kedy má tip <em>hodnotu</em></h2>
         <p>Keď model dáva výsledku 68&nbsp;% a kurz je 1,75, z každého eura sa v priemere vráti 0,68 × 1,75 = 1,19 €. To je hodnota +19&nbsp;%. Pri kurze 1,45 by to bolo 0,68 × 1,45 = 0,99 €, teda −1&nbsp;%, a tip by sme neposlali.</p>
         <p>Skúste si to sami posunutím oboch čísel.</p>
+        <div class="hx-cta pz-hodnota-cta" data-pages="home"><a class="btn" href="/clenstvo">Pozrieť členstvo</a></div>
       </div>
       <div class="calc glow">
         <div>
@@ -3146,7 +3147,7 @@ html body h1, html body h2 { letter-spacing: .01em !important; }
     </div>
   </section>
 
-  <section class="finale" data-pages="home">
+  <section class="finale" data-pages="none">
     <div class="rings" aria-hidden="true"></div>
     <div class="wrap">
       <div class="eyebrow">Členstvo TipRadar</div>
