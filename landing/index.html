@@ -2568,6 +2568,13 @@ html body .pz-live .hx-spark svg { width: 100%; height: 100%; display: block; }
 @media (max-width: 760px) { .pz-live { padding: 26px 20px 24px; } .pz-live-head small { display: none; } .pz-live-rules b { font-size: 16px; } .pz-live-rules li + li { padding-left: 10px; } }
 .pz-live-pill[hidden] { display: none !important; }
 html body .pz-live .hx-spark .ln, html body .pz-live .hx-spark path:last-child { stroke: var(--gold) !important; stroke-width: 2 !important; }
+.pz-ic { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid rgba(200,169,106,.35); color: var(--gold-hi) !important; transition: border-color .25s, background .25s; }
+.pz-ic:hover { border-color: var(--gold); background: rgba(200,169,106,.1); }
+.pz-ic svg { width: 18px; height: 18px; }
+@media (max-width: 1400px) { .pz-live-pill { display: none !important; } }
+@media (max-width: 520px) { .pz-ic { width: 40px; height: 40px; } .pz-nav-right { gap: 6px; } }
+@media (max-width: 340px) { .pz-ic { display: none; } }
+@media (max-width: 520px) { html body .pz-nav .wrap { padding: 0 8px 0 12px; gap: 8px !important; } .pz-ic, .pz-tg, html body .lx-burger, html body .nav-toggle.lx-burger { width: 36px !important; height: 36px !important; } .pz-nav-right { gap: 5px; } .pz-brand span { font-size: 15px !important; letter-spacing: .12em !important; } .pz-brand svg { width: 28px; height: 28px; } .pz-brand { gap: 8px; } html body .lx-burger span { left: 10px; right: 10px; } html body .lx-burger span:first-child { top: 14px; } html body .lx-burger span:last-child { top: 21px; } html.menu-open body .lx-burger span { top: 17px !important; } }
 
 </style>
 
@@ -2599,7 +2606,8 @@ html body .pz-live .hx-spark .ln, html body .pz-live .hx-spark path:last-child {
     <a class="brand pz-brand" href="/" aria-label="TipRadar – úvod"><svg aria-hidden="true"><use href="#pz-emblem"/></svg><span>TipRadar</span></a>
     <div class="nav-links pz-links"><a href="/vysledky">Výsledky</a><a href="/clenstvo">Členstvo</a><a href="/metoda">Metóda</a><a href="/kurz">Kurz</a><a href="/o-mne">O mne</a><a href="/otazky">Otázky</a><a href="/formular">Kontakt</a></div>
     <div class="pz-nav-right">
-      <a class="pz-live-pill" id="pzNavLive" href="/vysledky" hidden><i></i><span></span></a>
+      <a class="pz-ic" href="https://www.instagram.com/tipradar.eu/" target="_blank" rel="noopener" aria-label="Instagram"><svg aria-hidden="true"><use href="#i-ig"/></svg></a>
+      <a class="pz-ic" href="mailto:info@tipradar.eu" aria-label="E-mail"><svg aria-hidden="true"><use href="#i-mail"/></svg></a>
       <a class="pz-tg" href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener" aria-label="Telegram komunita" data-free><svg aria-hidden="true"><use href="#i-tg"/></svg></a>
       <button class="nav-toggle lx-burger" type="button" aria-expanded="false" aria-controls="overlay" aria-label="Menu"><span></span><span></span></button>
     </div>
@@ -3876,17 +3884,6 @@ html body .pz-live .hx-spark .ln, html body .pz-live .hx-spark path:last-child {
     function check() { var v = window.scrollY > 320; if (v !== on) { on = v; root.classList.toggle("mcta-on", v); } }
     window.addEventListener("scroll", check, { passive: true }); check();
   })();
-</script>
-<script>
-/* PRESTÍŽ: v menu malý ukazovateľ úspešnosti zo živých výsledkov */
-(function () {
-  var el = document.getElementById("pzNavLive"); if (!el || !window.fetch) return;
-  fetch("/api/public/track-record", { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : Promise.reject(); }).then(function (d) {
-    var n = Number(d.totalResolved) || 0; if (n < 1 || d.winRate == null) return;
-    el.querySelector("span").innerHTML = "<b>" + Math.round(d.winRate) + "&nbsp;%</b> vyšlo · " + n + "&nbsp;" + (n === 1 ? "tip" : n < 5 ? "tipy" : "tipov");
-    el.hidden = false;
-  }).catch(function () {});
-})();
 </script>
 </body>
 </html>
