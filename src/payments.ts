@@ -4,7 +4,7 @@ import * as crypto from "crypto";
 import axios from "axios";
 import { ibanValid } from "./payBySquare";
 
-// Platby za členstvo TipRadar (Štart 50 tipov 35 €, Gold 100 tipov 65 €, Platinum 200 tipov 119 €): bankový prevod cez QR kód (PAY by square), bez poplatkov.
+// Platby za členstvo TipRadar (Štart 50 tipov 49 €, Gold 100 tipov 79 €, Platinum 200 tipov 139 €): bankový prevod cez QR kód (PAY by square), bez poplatkov.
 // Zapne sa, keď sú na Renderi nastavené SALES_OPEN=true, PAY_IBAN a PAY_NAME.
 // Platbu potvrdíš jedným klikom v appke alebo v Telegrame, bot potom pošle pozvánku.
 
@@ -52,7 +52,7 @@ export function addActiveMonths(from: Date, months: number, days?: number): Date
 }
 
 // Od 29. 10. 2026 večer sa predávajú tri členstvá podľa počtu tipov (Michalovo rozhodnutie):
-// p50 = Štart · 50 tipov · 35 €, p100 = Gold · 100 tipov · 65 €, p200 = Platinum · 200 tipov · 119 € (navyše mentoring 1 na 1).
+// p50 = Štart · 50 tipov · 49 €, p100 = Gold · 100 tipov · 79 €, p200 = Platinum · 200 tipov · 139 € (navyše mentoring 1 na 1).
 // Predošlé p75 / p150 / p250 (Štart 75 / Gold 150 / Onyx 250 tipov, 29. 10. 2026 ráno) ostávajú kvôli starším záznamom.
 // Bez časovej platnosti: členstvo platí, kým sa neminú tipy (NO_EXPIRY_MONTHS je len technický dátum, nikde sa neukazuje).
 // Garancia: ak členstvo skončí v strate (v jednotkách), člen dostane 1 mesiac zadarmo (na ten sa garancia nevzťahuje).
@@ -61,9 +61,9 @@ export function addActiveMonths(from: Date, months: number, days?: number): Date
 export const NO_EXPIRY_MONTHS = 1200;
 export type Term = "p50" | "p100" | "p200" | "p75" | "p150" | "p250" | "t75" | "t150" | "t300" | "m1" | "m3" | "season";
 export const PAY_TERMS: Record<Term, { price: number; name: string; months?: number; days?: number; tips?: number }> = {
-  p50: { price: 35, name: "50 tipov", tips: 50, months: NO_EXPIRY_MONTHS },
-  p100: { price: 65, name: "100 tipov", tips: 100, months: NO_EXPIRY_MONTHS },
-  p200: { price: 119, name: "200 tipov", tips: 200, months: NO_EXPIRY_MONTHS },
+  p50: { price: 49, name: "50 tipov", tips: 50, months: NO_EXPIRY_MONTHS },
+  p100: { price: 79, name: "100 tipov", tips: 100, months: NO_EXPIRY_MONTHS },
+  p200: { price: 139, name: "200 tipov", tips: 200, months: NO_EXPIRY_MONTHS },
   p75: { price: 49, name: "75 tipov", tips: 75, months: NO_EXPIRY_MONTHS },
   p150: { price: 89, name: "150 tipov", tips: 150, months: NO_EXPIRY_MONTHS },
   p250: { price: 139, name: "250 tipov", tips: 250, months: NO_EXPIRY_MONTHS },

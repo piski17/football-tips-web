@@ -3059,8 +3059,8 @@ html body .sec { padding-top: clamp(48px, 7vw, 88px) !important; padding-bottom:
             <button type="button" role="tab" data-term="p200" aria-selected="false"><b>Platinum</b> 200 tipov</button>
           </div>
           <div class="lux-term" data-term-name>Gold · 100 tipov</div>
-          <div class="lux-price"><b class="num" data-price>65 €</b></div>
-          <p class="per-month" data-permonth><span>0,65 € za tip</span><span class="save">ušetríte 5 €</span></p>
+          <div class="lux-price"><b class="num" data-price>79 €</b></div>
+          <p class="per-month" data-permonth><span>0,79 € za tip</span><span class="save">ušetríte 19 €</span></p>
           <div class="pk-calc">
             <div class="pk-ttl"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M8.5 7.5h7M8.5 11.5h1M12 11.5h1M15.5 11.5h0M8.5 15h1M12 15h1M15.5 15v1.5"/></svg>Prepočítajte si to</div>
             <div class="pk-row"><div class="pk-lab">Odporúčaný bank <b data-o="bank"></b></div><input type="range" min="200" max="5000" step="50" value="500" data-in="bank" aria-label="Bank v eurách"><div class="pk-ticks"><span>200&nbsp;€</span><span>5&nbsp;000&nbsp;€</span></div></div>
@@ -3149,7 +3149,7 @@ html body .sec { padding-top: clamp(48px, 7vw, 88px) !important; padding-bottom:
         <details id="garancia"><summary>Ako funguje garancia?</summary><p>Ak vaše členstvo (Štart, Gold alebo Platinum) skončí v&nbsp;mínuse, dostanete 1 mesiac zadarmo – počas neho vám chodia všetky tipy do toho istého kanála a&nbsp;dáme vám vedieť na Telegrame. Počíta sa zo všetkých tipov vášho členstva s&nbsp;výsledkom, pri rovnakom vklade na každý tip (1 jednotka). Ak je súčet záporný, členstvo skončilo v&nbsp;mínuse. Na samotný mesiac zadarmo sa garancia už nevzťahuje, na ďalšie zaplatené členstvo áno.</p></details>
         <details><summary>Ako overujete, že model funguje?</summary><p>Spätným testom na odohraných zápasoch a mesačnou kontrolou, či tipy s dôverou 70&nbsp;% naozaj vychádzajú zhruba v 70&nbsp;% prípadov. Tipy vyradené pre veľký rozpor s kurzami si zapisujeme a porovnávame, kto mal pravdu.</p></details>
         <details><summary>Ako funguje členstvo?</summary><p>Platíte za počet tipov: Štart 50, Gold 100, Platinum 200. Tipy sa vám rátajú odo dňa nákupu, každý poslaný tip sa odpočíta (zrušený zápas sa neráta). Členstvo nemá časový limit – skončí, až keď dostanete posledný tip. Keď vám budú tipy dochádzať, dám vám vedieť.</p></details>
-        <details><summary>Aký bank a vklad odporúčate?</summary><p>Ideálne bank 1&nbsp;000&nbsp;€ a&nbsp;vklad 2&nbsp;–&nbsp;3&nbsp;% na tip. Pri vklade 3&nbsp;% aspoň 750&nbsp;€ pri Štarte, 700&nbsp;€ pri Golde a&nbsp;650&nbsp;€ pri Platine – vtedy sa cena členstva vráti pri bežnom zisku modelu. Vklad nikdy nad 5&nbsp;% banku a&nbsp;vždy z&nbsp;aktuálneho banku. Pri členstve si to môžete prepočítať posuvníkmi.</p></details>
+        <details><summary>Aký bank a vklad odporúčate?</summary><p>Ideálne bank 1&nbsp;000&nbsp;€ a&nbsp;vklad 2&nbsp;–&nbsp;3&nbsp;% na tip. Pri vklade 3&nbsp;% aspoň 800&nbsp;€ pri Štarte, 700&nbsp;€ pri Golde a&nbsp;650&nbsp;€ pri Platine – vtedy sa cena členstva vráti pri bežnom zisku modelu. Vklad nikdy nad 5&nbsp;% banku a&nbsp;vždy z&nbsp;aktuálneho banku. Pri členstve si to môžete prepočítať posuvníkmi.</p></details>
         <details><summary>Musím členstvo rušiť?</summary><p>Nie. Členstvo sa samo nepredlžuje – skončí po poslednom tipe. Ak chcete pokračovať, jednoducho si kúpite ďalšie.</p></details>
       </div>
     </div>
@@ -3672,13 +3672,13 @@ html body .sec { padding-top: clamp(48px, 7vw, 88px) !important; padding-bottom:
   });
 
 
-  // ---------- Členstvo (od 29. 10. 2026 večer): Štart 50 tipov 35 € / Gold 100 tipov 65 € / Platinum 200 tipov 119 €, garancia 1 mesiac zadarmo – prepínač + posuvníky banku a vkladu ----------
+  // ---------- Členstvo (od 29. 10. 2026 večer): Štart 50 tipov 49 € / Gold 100 tipov 79 € / Platinum 200 tipov 139 €, garancia 1 mesiac zadarmo – prepínač + posuvníky banku a vkladu ----------
   (function () {
     const f = (n, d) => n.toLocaleString("sk-SK", { minimumFractionDigits: d, maximumFractionDigits: d });
     const TERMS = {
-      p50: { tier: "Štart", cls: "silver-text", price: 35, tips: 50, note: "0,70 € za tip", bank: 750, bot: "stat", order: 1 },
-      p100: { tier: "Gold", cls: "gold-text", price: 65, tips: 100, note: "0,65 € za tip · ušetríte 5 €", bank: 700, bot: "gold", order: 2 },
-      p200: { tier: "Platinum", cls: "plat-text", price: 119, tips: 200, note: "0,60 € za tip · ušetríte 21 €", bank: 650, bot: "platinum", order: 3 },
+      p50: { tier: "Štart", cls: "silver-text", price: 49, tips: 50, note: "0,98 € za tip", bank: 800, bot: "stat", order: 1 },
+      p100: { tier: "Gold", cls: "gold-text", price: 79, tips: 100, note: "0,79 € za tip · ušetríte 19 €", bank: 700, bot: "gold", order: 2 },
+      p200: { tier: "Platinum", cls: "plat-text", price: 139, tips: 200, note: "0,70 € za tip · ušetríte 57 €", bank: 650, bot: "platinum", order: 3 },
     };
     const PCTS = [1, 2, 3, 5, 10]; // posuvník vkladu skáče len po týchto percentách
     const $$ = (s) => document.querySelectorAll(s);

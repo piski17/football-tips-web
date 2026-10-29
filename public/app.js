@@ -3226,11 +3226,11 @@ async function renderBlendSummary() {
 // ČLENOVIA (platba beží mimo appky, napr. bankovým prevodom)
 // =====================================================================
 // Ceny musia sedieť s členstvom na tipradar.eu (landing/index.html) a PAY_TERMS v src/payments.ts.
-// Členstvo (od 29. 10. 2026 večer): p50 = Štart 50 tipov 35 €, p100 = Gold 100 tipov 65 €, p200 = Platinum 200 tipov 119 €, bez časového limitu (tipy počíta server v poli pkg).
+// Členstvo (od 29. 10. 2026 večer): p50 = Štart 50 tipov 49 €, p100 = Gold 100 tipov 79 €, p200 = Platinum 200 tipov 139 €, bez časového limitu (tipy počíta server v poli pkg).
 // Garancia: členstvo v mínuse → 1 mesiac zadarmo (všetky tipy počas mesiaca).
 // Staré p75 / p150 / p250 (Štart 75, Gold 150, Onyx 250), staré balíčky tipov t75 / t150 / t300 (Štart 100, Gold 250, Onyx 500; tipy počíta server v poli pkg) a ešte staršie
 // časové členstvá m1 (Gold 50 dní), m3 (Onyx 6 mesiacov) a season sa nepredávajú, ostávajú pre staršie záznamy.
-const MEMBER_PRICES = { p50: 35, p100: 65, p200: 119, p75: 49, p150: 89, p250: 139, t75: 89, t150: 179, t300: 299, m1: 69, m3: 199, season: 219 };
+const MEMBER_PRICES = { p50: 49, p100: 79, p200: 139, p75: 49, p150: 89, p250: 139, t75: 89, t150: 179, t300: 299, m1: 69, m3: 199, season: 219 };
 const MEMBER_NAME = { p50: "Štart", p100: "Gold", p200: "Platinum", p75: "Štart (staré)", p150: "Gold (staré)", p250: "Onyx (staré)", t75: "Štart (starý)", t150: "Gold (starý)", t300: "Onyx (starý)", m1: "Gold (staré)", m3: "Onyx (staré)", season: "Platinum (staré)" };
 const MEMBER_LENGTH_LABEL = { p50: "50 tipov", p100: "100 tipov", p200: "200 tipov", p75: "75 tipov", p150: "150 tipov", p250: "250 tipov", t75: "100 tipov", t150: "250 tipov", t300: "500 tipov", m1: "50 dní", m3: "6 mesiacov", season: "6 mesiacov" };
 const MEMBER_TIPS = { p50: 50, p100: 100, p200: 200, p75: 75, p150: 150, p250: 250, t75: 100, t150: 250, t300: 500 };

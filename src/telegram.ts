@@ -394,7 +394,7 @@ export async function deleteTelegramMessages(messages: { chatId: string; message
 const TELEGRAM_CONTACT_USERNAME = process.env.TELEGRAM_CONTACT_USERNAME || "im_mishko";
 
 // ---- Členstvo TipRadar (od 29. 10. 2026) – rovnaké texty ako na tipradar.eu ----
-// Štart 50 tipov 35 €, Gold 100 tipov 65 €, Platinum 200 tipov 119 € (navyše mentoring 1 na 1). Bez časovej platnosti, počet tipov denne sa neuvádza.
+// Štart 50 tipov 49 €, Gold 100 tipov 79 €, Platinum 200 tipov 139 € (navyše mentoring 1 na 1). Bez časovej platnosti, počet tipov denne sa neuvádza.
 // Garancia: ak členstvo skončí v mínuse, člen dostane 1 mesiac zadarmo.
 const BENEFITS_BASE =
   `• <b>Denné tipy na Telegrame</b> v súkromnom kanáli, 1 – 2 hodiny pred výkopom – najviac 3 najsilnejšie denne\n` +
@@ -407,9 +407,9 @@ const BENEFIT_MENTOR =
 /** Garancia: ak členstvo skončí v mínuse, člen dostane 1 mesiac zadarmo. */
 const GUARANTEE_LINE = `🛡 <b>Garancia:</b> ak vaše členstvo skončí v mínuse, dostanete 1 mesiac zadarmo.`;
 const BANK_LINE = `💼 Odporúčame bank 1 000 € a vklad 2 – 3 % na tip, nikdy nad 5 %.`;
-const PLAN_START = `🥈 <b>Štart · 50 tipov</b> – 35 € (0,70 € za tip)\n<i>Odporúčaný bank aspoň 750 € pri vklade 3 %</i>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
-const PLAN_GOLD = `🥇 <b>Gold · 100 tipov</b> – 65 € (0,65 € za tip, ušetríte 5 €)\n<i>Odporúčaný bank aspoň 700 € pri vklade 3 %</i>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
-const PLAN_PLATINUM = `💎 <b>Platinum · 200 tipov</b> – 119 € (0,60 € za tip, ušetríte 21 €)\n<i>Odporúčaný bank aspoň 650 € pri vklade 3 %</i>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_MENTOR}`;
+const PLAN_START = `🥈 <b>Štart · 50 tipov</b> – 49 € (0,98 € za tip)\n<i>Odporúčaný bank aspoň 800 € pri vklade 3 %</i>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
+const PLAN_GOLD = `🥇 <b>Gold · 100 tipov</b> – 79 € (0,79 € za tip, ušetríte 19 €)\n<i>Odporúčaný bank aspoň 700 € pri vklade 3 %</i>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}`;
+const PLAN_PLATINUM = `💎 <b>Platinum · 200 tipov</b> – 139 € (0,70 € za tip, ušetríte 57 €)\n<i>Odporúčaný bank aspoň 650 € pri vklade 3 %</i>\n${BENEFITS_BASE}\n${BENEFIT_CHAT}\n${BENEFIT_MENTOR}`;
 const ALL_PLANS = `${PLAN_START}\n\n${PLAN_GOLD}\n\n${PLAN_PLATINUM}`;
 
 const FAQ_ANSWERS: Record<string, string> = {
@@ -476,9 +476,9 @@ for (const k of ["gold", "platinum", "onyx", "stat", "start", "seria", "sampion"
 function payKeyboard(chatId: number | string, only?: SellableTerm) {
   const row = (t: SellableTerm, label: string) => [{ text: label, url: `${PUBLIC_URL}/zaplatit?term=${t}&c=${chatId}` }];
   const all: [SellableTerm, string][] = [
-    ["p50", "Štart · 50 tipov · 35 €"],
-    ["p100", "Gold · 100 tipov · 65 €"],
-    ["p200", "◆ Platinum · 200 tipov · 119 €"],
+    ["p50", "Štart · 50 tipov · 49 €"],
+    ["p100", "Gold · 100 tipov · 79 €"],
+    ["p200", "◆ Platinum · 200 tipov · 139 €"],
   ];
   return { inline_keyboard: all.filter(([t]) => !only || t === only).map(([t, l]) => row(t, only ? `Zaplatiť ${PAY_TERMS[t].price} €` : l)) };
 }
@@ -1041,7 +1041,7 @@ export async function sendSalesOpenToWaitlist(): Promise<{ sent: number; skipped
       `Ahoj${first ? " " + first : ""} 👋\n\n` +
       `Zapísal si sa do poradovníka na <b>TipRadar</b>. Predaj členstva je práve otvorený a ty máš prednosť.\n\n` +
       `◆ najviac 3 najsilnejšie tipy denne, 1 – 2 hodiny pred výkopom\n◆ pri každom tipe kurz, šanca a sadzba\n◆ súkromný VIP chat a úvodný hovor 1 na 1\n\n` +
-      `🥈 Štart · 50 tipov · 35 €\n🥇 Gold · 100 tipov · 65 €\n💎 Platinum · 200 tipov · 119 € (navyše mentoring 1 na 1)\n\n` +
+      `🥈 Štart · 50 tipov · 49 €\n🥇 Gold · 100 tipov · 79 €\n💎 Platinum · 200 tipov · 139 € (navyše mentoring 1 na 1)\n\n` +
       `${GUARANTEE_LINE}\n\nVyber si 👇`;
     try {
       await axios.post(
