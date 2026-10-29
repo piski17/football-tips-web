@@ -2886,6 +2886,27 @@ async function renderModelHealth(el) {
       : `Oba modely sú rovnako presné (${nm.settledPicks} odhadov).`;
     const markets = (nm.byMarket || []).filter((x) => x.picks >= 10)
       .map((x) => `<tr><td>${escapeHtml(x.market)}</td><td class="num">${x.picks}</td><td class="num">${err(x.current)}</td><td class="num ${x.novy < x.current - 0.0005 ? "bt-good" : x.novy > x.current + 0.0005 ? "bt-bad" : ""}">${err(x.novy)}</td></tr>`).join("");
+    // Skúška opravy rohov domácich (29. 10. 2026) – len sledovanie, o zapnutí sa rozhodne 1. 12.
+    const hc = d.homeCorners || {};
+    const hcEnough = (hc.settledPicks || 0) >= 100;
+    const hcBest = (hc.rows || []).filter((r) => r.brier != null).reduce((a, r) => (!a || r.brier < a.brier - 0.0005 ? r : a), null);
+    const hcRows = (hc.rows || []).map((r) => {
+      const label = r.k === 1 ? "dnes (bez opravy)" : `oprava × ${fmtNum(r.k, 2)}${r.k === hc.proposedK ? " – navrhnutá" : ""}`;
+      const promise = r.tips ? `${fmtNum(r.promised, 0)} → ${fmtNum(r.hitRate, 0)}${NB}%` : "–";
+      return `<tr><td>${label}${hcEnough && hcBest && hcBest.k === r.k ? " ★" : ""}</td><td class="num">${err(r.brier)}</td><td class="num">${promise}</td><td class="num">${tipsTxt(r)}</td></tr>`;
+    }).join("");
+    const hcSides = (hc.sides || []).map((x) => `${x.side === "Over" ? "nad" : "pod"} ${fmtNum(x.promised, 0)} → ${fmtNum(x.actual, 0)}${NB}% (${x.picks})`).join(", ");
+    const hcVerdict = !hc.settledPicks
+      ? "Zatiaľ žiadny vyhodnotený odhad rohov domácich."
+      : !hcEnough
+      ? `Vyhodnotené odhady: ${hc.settledPicks} – na záver treba aspoň 100.`
+      : hcBest && hcBest.k < 1
+      ? `<b class="g">Oprava × ${fmtNum(hcBest.k, 2)} by percentá spresnila</b> (${hc.settledPicks} odhadov).`
+      : `<b>Dnešný model sedí</b> – opravu netreba (${hc.settledPicks} odhadov).`;
+    const homeCornersHtml = `
+      <h4 class="ct">Rohy domácich – skúška opravy</h4>
+      <p class="small">Spätné testy ukázali, že rohy domácich vychádzajú o 2 – 3 body horšie, než model sľubuje. Oprava beží <b>len v sledovaní</b>, ostré tipy sa nemenia. ${hcVerdict}${hcSides ? ` Dnes po stranách: ${hcSides}.` : ""}</p>
+      ${hc.settledPicks ? `<div class="table-wrap"><table class="bt-table"><thead><tr><th></th><th class="num" title="Ako ďaleko boli percentá od reality (× 100). Nižšie = presnejšie.">Chyba</th><th class="num" title="Tipy, ktoré by prešli: priemerná dôvera → skutočná úspešnosť">Sľuboval → vyšlo</th><th class="num">Tipy, ktoré by prešli</th></tr></thead><tbody>${hcRows}</tbody></table></div>` : ""}`;
     const rows = (d.rows || []).map((r) => {
       const status = r.disabled
         ? `<b class="l" title="${escapeHtml(r.disabledReason || "")}">vypnutý</b>`
@@ -2909,6 +2930,7 @@ async function renderModelHealth(el) {
       ${markets ? `<details class="inner-details"><summary>Podľa trhov</summary><div class="table-wrap"><table class="bt-table"><thead><tr><th>Trh</th><th class="num">Odhady</th><th class="num">Chyba – súčasný</th><th class="num">Chyba – nový</th></tr></thead><tbody>${markets}</tbody></table></div></details>` : ""}
       <p class="small">Tipy teraz vyberá: <b>${nm.active ? "nový model" : "súčasný model"}</b>
         <button type="button" class="btn ghost xs" data-toggle-model>${nm.active ? "Vrátiť súčasný model" : "Zapnúť nový model"}</button></p>
+      ${homeCornersHtml}
       <h4 class="ct">Trhy: sľuboval → vyšlo</h4>
       ${rows ? `<div class="table-wrap"><table class="bt-table"><thead><tr><th>Trh</th><th class="num">Tipy</th><th class="num" title="Priemerná dôvera modelu → skutočná úspešnosť (posledných najviac 100 tipov)">Sľuboval → vyšlo</th><th class="num" title="Posledných najviac ${d.thresholds.disableWindow} tipov">Zisk</th><th class="num" title="Priemerný uzatvárací kurz (počet tipov)">Uzatvárací kurz</th><th>Stav</th><th class="num">Oprava</th></tr></thead><tbody>${rows}</tbody></table></div>` : `<p class="faint small">Zatiaľ žiadne vyhodnotené tipy.</p>`}
       <p class="faint small">Trh sa sám vypne, keď má aspoň ${d.thresholds.disableMin} tipov a za posledných ${d.thresholds.disableWindow} je bez zisku a bez lepšieho uzatváracieho kurzu – a sám sa znova zapne, keď sa mu opäť darí. Oprava presnosti sa zapne sama od ${d.thresholds.calibrationMin} tipov trhu. O každej zmene ti príde správa na Telegram.</p>`;
@@ -3742,7 +3764,9 @@ function renderBacktestOptimizer(o) {
   const cal = o.calibration.map((c) => {
     const enough = c.bestK != null && !Number.isNaN(c.bestK);
     const better = enough && c.brierNow - c.brierBest > 0.002;
-    return `<tr><td>${escapeHtml(c.markets.join(", "))}</td><td class="num">${c.count}</td><td class="num">${k(c.currentK)}</td><td class="num ${better ? "bt-good" : ""}">${enough ? k(c.bestK) : '<span class="muted">málo tipov</span>'}</td><td class="num">${err(c.brierNow)}</td><td class="num">${enough ? err(c.brierBest) : "–"}</td><td class="num">${enough ? `${pct(c.avgPredictedBest)} → ${pct(c.hitRate)}` : "–"}</td></tr>`;
+    // Riadok s „typ:trh" = jeden trh zvlášť (rohy domácich a hostí, 29. 10. 2026), len na porovnanie.
+    const name = String(c.category).includes(":") ? `<span class="muted">↳</span> ${escapeHtml(c.markets.join(", "))} <span class="muted">(zvlášť)</span>` : escapeHtml(c.markets.join(", "));
+    return `<tr><td>${name}</td><td class="num">${c.count}</td><td class="num">${k(c.currentK)}</td><td class="num ${better ? "bt-good" : ""}">${enough ? k(c.bestK) : '<span class="muted">málo tipov</span>'}</td><td class="num">${err(c.brierNow)}</td><td class="num">${enough ? err(c.brierBest) : "–"}</td><td class="num">${enough ? `${pct(c.avgPredictedBest)} → ${pct(c.hitRate)}` : "–"}</td></tr>`;
   }).join("");
   const set = (o.settings || []).map((r) => {
     const label = `${r.lo}–${r.hi} %, min. ${r.minGames} ${r.minGames >= 5 ? "zápasov" : "zápasy"}`;

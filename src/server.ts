@@ -3,7 +3,7 @@ import { listLeads, deleteLead, recordLead } from "./leadsStore";
 import { getMeta, setMeta } from "./metaStore";
 import * as crypto from "crypto";
 import { recordShadow, listShadow, updateShadow, shadowEntriesFrom, shadowReasonCode, ShadowEntry } from "./shadowStore";
-import { recordBlend, listBlend, updateBlend, blendEntryFrom, blendSummary, newModelSummary } from "./blendStore";
+import { recordBlend, listBlend, updateBlend, blendEntryFrom, blendSummary, newModelSummary, homeCornersSummary } from "./blendStore";
 import { recordLegs, listLegs, updateLeg, legCandidatesFrom, legQualifies, buildTickets, TicketLegCandidate, TICKET_RULES } from "./ticketWatchStore";
 import { startBacktest, getBacktest } from "./backtest";
 import { applyCupGoals } from "./cupAdjust";
@@ -1977,9 +1977,11 @@ app.post("/api/shadow/record", async (req, res) => {
 app.get("/api/model/health", async (_req, res) => {
   try {
     const health = computeMarketHealth(await listTips(), await listShadow().catch(() => []));
+    const blend = await listBlend();
     res.json({
       ...health,
-      newModel: { active: await isNewModelActive(), ...newModelSummary(await listBlend()) },
+      newModel: { active: await isNewModelActive(), ...newModelSummary(blend) },
+      homeCorners: homeCornersSummary(blend),
     });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });

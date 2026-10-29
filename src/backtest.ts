@@ -279,6 +279,8 @@ async function outcomes(fixture: Fixture, pickSets: MarketPick[][]): Promise<Sam
 // Trhy, ktoré sa neodporúčajú (rovnaký zoznam ako v predictor.ts) – do hľadania nastavenia nevstupujú.
 const NOT_RECOMMENDED = ["Ofsajdy", "Výsledok zápasu", "Oba tímy skórujú", "Obaja tímy skórujú"];
 const MIN_SAMPLES_FOR_K = 30;
+/** Trhy, ktoré „Hľadanie najlepšieho nastavenia“ ukáže aj samostatne (nielen v spoločnom type). */
+const SPLIT_MARKETS = ["Rohy domácich", "Rohy hostí"];
 
 const brier = (list: { p: number; won: boolean }[]) =>
   list.reduce((a, x) => a + Math.pow(x.p / 100 - (x.won ? 1 : 0), 2), 0) / list.length;
@@ -298,8 +300,7 @@ export function optimize(all: Sample[]): OptimizerReport {
   const cats = Array.from(new Set(samples.map((s) => s.category)));
   const bestK = new Map<string, number>();
   const calibration: CalibrationRow[] = [];
-  for (const category of cats) {
-    const list = samples.filter((s) => s.category === category);
+  const calRow = (category: string, list: Sample[]): { row: CalibrationRow; enough: boolean; k: number } => {
     const won = list.filter((s) => s.outcome === "won").length;
     let best = { k: 1, b: Infinity };
     for (let k = 0.3; k <= 1.0001; k += 0.05) {
@@ -310,20 +311,35 @@ export function optimize(all: Sample[]): OptimizerReport {
     const enough = list.length >= MIN_SAMPLES_FOR_K;
     const avgRaw = list.reduce((a, s) => a + Math.abs(s.raw - 50), 0);
     const avgNow = list.reduce((a, s) => a + Math.abs(s.probability - 50), 0);
-    calibration.push({
-      category,
-      markets: Array.from(new Set(list.map((s) => s.market))),
-      count: list.length,
-      currentK: avgRaw > 0 ? Math.round((avgNow / avgRaw) * 100) / 100 : 1,
-      brierNow: brier(list.map((s) => ({ p: s.probability, won: s.outcome === "won" }))),
-      bestK: enough ? best.k : NaN,
-      brierBest: enough ? best.b : NaN,
-      avgPredictedBest: enough ? list.reduce((a, s) => a + calibrate(s.raw, best.k), 0) / list.length : NaN,
-      hitRate: (won / list.length) * 100,
-    });
-    if (enough) bestK.set(category, best.k);
+    return {
+      enough,
+      k: best.k,
+      row: {
+        category,
+        markets: Array.from(new Set(list.map((s) => s.market))),
+        count: list.length,
+        currentK: avgRaw > 0 ? Math.round((avgNow / avgRaw) * 100) / 100 : 1,
+        brierNow: brier(list.map((s) => ({ p: s.probability, won: s.outcome === "won" }))),
+        bestK: enough ? best.k : NaN,
+        brierBest: enough ? best.b : NaN,
+        avgPredictedBest: enough ? list.reduce((a, s) => a + calibrate(s.raw, best.k), 0) / list.length : NaN,
+        hitRate: (won / list.length) * 100,
+      },
+    };
+  };
+  for (const category of cats) {
+    const r = calRow(category, samples.filter((s) => s.category === category));
+    calibration.push(r.row);
+    if (r.enough) bestK.set(category, r.k);
   }
   calibration.sort((a, b) => b.count - a.count);
+  // Rohy domácich a hostí zvlášť (29. 10. 2026): v spätných testoch z 26. 10. vyšli rohy domácich
+  // o 2 – 3 body horšie, než model sľuboval. Len na porovnanie – hľadanie nastavenia ďalej
+  // používa spoločné k pre rohy tímu.
+  for (const market of SPLIT_MARKETS) {
+    const list = samples.filter((s) => s.market === market);
+    if (list.length) calibration.push(calRow(`${list[0].category}:${market}`, list).row);
+  }
 
   // percentá s najlepšou kalibráciou (trhy s málo tipmi ostávajú ako teraz)
   const tuned = samples.map((s) => ({

@@ -284,3 +284,65 @@ export function newModelSummary(all: BlendFixture[], minOdds = MIN_ODDS): {
     byMarket,
   };
 }
+
+/**
+ * Skúška opravy rohov domácich (29. 10. 2026) – len sledovanie, ostré tipy sa nemenia.
+ * Vo všetkých troch spätných testoch z 26. 10. 2026 vyšli rohy domácich o 2 – 3 body horšie,
+ * než model sľuboval. Na tých istých vyhodnotených odhadoch sa porovná dnešný model (k 1,00)
+ * s opatrnejšími percentami p' = 50 + k × (p − 50); navrhnutá oprava je k 0,90 (≈ −2,3 bodu
+ * pri 73 %). O zapnutí sa rozhodne pri kontrole 1. 12. 2026.
+ */
+export const HOME_CORNERS_MARKET = "Rohy domácich";
+export const HOME_CORNERS_KS = [1, 0.95, 0.9, 0.85, 0.8];
+export const HOME_CORNERS_PROPOSED_K = 0.9;
+
+export interface HomeCornersRow extends ModelCompareRow {
+  k: number;
+  /** Priemerná dôvera tipov, ktoré by prešli (70 % model / 30 % stávkovky). */
+  promised: number | null;
+}
+
+export function homeCornersSummary(all: BlendFixture[], minOdds = MIN_ODDS): {
+  settledPicks: number;
+  pendingPicks: number;
+  proposedK: number;
+  rows: HomeCornersRow[];
+  /** Dnešný model po stranách nad / pod: sľuboval → vyšlo (všetky vyhodnotené odhady 55 – 92 %). */
+  sides: { side: "Over" | "Under"; picks: number; promised: number; actual: number }[];
+} {
+  const mine = all.flatMap((f) => f.picks.map((p) => ({ p, settled: f.status === "settled" }))).filter((x) => x.p.market === HOME_CORNERS_MARKET);
+  const settled = mine.filter((x) => x.settled && (x.p.outcome === "won" || x.p.outcome === "lost")).map((x) => x.p);
+  const prob = (p: BlendPick, k: number) => (1 - LIVE_BLEND) * (50 + k * (p.model - 50)) + LIVE_BLEND * p.bookmakers;
+  const rows = HOME_CORNERS_KS.map((k): HomeCornersRow => {
+    const passing = settled.filter((p) => {
+      const pr = prob(p, k);
+      if (p.odds == null || p.conflict) return false;
+      const ev = (pr / 100) * p.odds;
+      return p.odds >= minOdds && pr >= MIN_PROBABILITY && pr <= MAX_PROBABILITY && ev >= MIN_EXPECTED_VALUE && ev <= SUSPICIOUS_EXPECTED_VALUE;
+    });
+    const won = passing.filter((p) => p.outcome === "won").length;
+    const profit = passing.reduce((a, p) => a + (p.outcome === "won" ? p.odds! - 1 : -1), 0);
+    return {
+      k,
+      brier: settled.length ? settled.reduce((a, p) => a + Math.pow(prob(p, k) / 100 - (p.outcome === "won" ? 1 : 0), 2), 0) / settled.length : null,
+      tips: passing.length,
+      won,
+      hitRate: passing.length ? (won / passing.length) * 100 : null,
+      promised: passing.length ? passing.reduce((a, p) => a + prob(p, k), 0) / passing.length : null,
+      profit: Math.round(profit * 100) / 100,
+      roi: passing.length ? (profit / passing.length) * 100 : null,
+    };
+  });
+  const sides = (["Over", "Under"] as const)
+    .map((side) => {
+      const list = settled.filter((p) => p.selection.startsWith(side));
+      return {
+        side,
+        picks: list.length,
+        promised: list.length ? list.reduce((a, p) => a + prob(p, 1), 0) / list.length : 0,
+        actual: list.length ? (list.filter((p) => p.outcome === "won").length / list.length) * 100 : 0,
+      };
+    })
+    .filter((x) => x.picks > 0);
+  return { settledPicks: settled.length, pendingPicks: mine.length - settled.length, proposedK: HOME_CORNERS_PROPOSED_K, rows, sides };
+}
