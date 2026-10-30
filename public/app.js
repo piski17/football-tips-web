@@ -242,7 +242,8 @@ function betOddsHtml(bet) {
     return `<span>Kurz <b>${fmtOdds(bet.odds)}</b>${bk}</span><span>Hodnota <b class="g">${signed(ev, 0)}${NB}%</b></span>`;
   }
   if (typeof bet.minOdds === "number") {
-    return `<span><b>Hraj len pri kurze aspoň ${fmtOdds(bet.minOdds)}</b> <span class="faint">(kurz over v stávkovke)</span></span>`;
+    // Priemerný (férový) kurz podľa modelu – len orientačne; skutočný kurz Michal zadá zo stávkovky.
+    return `<span>Priemerný kurz ~${impliedOdds(bet.probability).replace(".", ",")}</span><span><b>Hraj len pri kurze aspoň ${fmtOdds(bet.minOdds)}</b> <span class="faint">(kurz zadaj zo stávkovky)</span></span>`;
   }
   return `<span>Kurz ~${impliedOdds(bet.probability).replace(".", ",")} <span class="faint">(odhad – stávkovky kurz neponúkajú)</span></span>`;
 }
