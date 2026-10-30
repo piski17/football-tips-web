@@ -4259,7 +4259,9 @@ async function openCoverage() {
     const cell = (r, k) => {
       if (!r.withOdds) return `<td class="num faint">–</td>`;
       const n = r.markets[k] || 0;
-      return n === r.withOdds ? `<td class="num g">✓</td>` : n === 0 ? `<td class="num l">✕</td>` : `<td class="num">${n}/${r.withOdds}</td>`;
+      const one = (r.single || {})[k] || 0;
+      const oneTxt = one ? `<br><span class="faint small">1 stávkovka: ${one}/${r.withOdds}</span>` : "";
+      return n === r.withOdds ? `<td class="num g">✓</td>` : n === 0 ? `<td class="num l">✕${oneTxt}</td>` : `<td class="num">${n}/${r.withOdds}${oneTxt}</td>`;
     };
     const score = (r) => (r.withOdds ? markets.filter((mk) => (r.markets[mk.key] || 0) === r.withOdds).length : null);
     const rowHtml = (r) => {
@@ -4271,7 +4273,10 @@ async function openCoverage() {
     const sec = (title, rows) => (rows.length ? `<tr class="auto-lg-head"><td colspan="${markets.length + 2}">${escapeHtml(title)}</td></tr>${rows.map(rowHtml).join("")}` : "");
     const mine = job.rows.filter((r) => r.inProject);
     const others = job.rows.filter((r) => !r.inProject).sort((a, b) => (score(b) ?? -1) - (score(a) ?? -1));
+    const names = [...new Set(job.rows.flatMap((r) => r.betNames || []))].sort();
+    const namesHtml = `<p class="faint small"><b>Stávky so strelami a faulmi, ktoré API posiela:</b> ${names.length ? names.map(escapeHtml).join(", ") : "žiadne – API-Football ich pri týchto zápasoch nemá od žiadnej stávkovky."}</p>`;
     body.innerHTML = `<div class="table-wrap"><table class="bt-table cov-table"><thead>${head}</thead><tbody>${sec("V projekte", mine)}${sec("Najvyššie ligy, ktoré nemáme – od najlepšej", others)}</tbody></table></div>
+      ${job.rows.some((r) => r.betNames) ? namesHtml : ""}
       <p class="faint small">${running ? "Kontrola beží na serveri, okno môžeš zavrieť a vrátiť sa neskôr." : `Skontrolované ${escapeHtml(new Date(job.finishedAt).toLocaleString("sk-SK"))}.`} Ak pri lige vidíš „kurzy ešte nie sú“, stávkovky ešte nevypísali kurzy na najbližšie zápasy – skús o deň-dva.</p>`;
     if (running && m.el.isConnected) timer = setTimeout(load, 3000);
   };

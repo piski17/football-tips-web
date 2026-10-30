@@ -548,7 +548,7 @@ const COVERAGE_MARKETS: { key: string; label: string; markets: string[] }[] = [
   { key: "shots", label: "Strely na bránu", markets: ["Strely na bránu", "Strely na bránu domácich", "Strely na bránu hostí"] },
   { key: "fouls", label: "Fauly", markets: ["Fauly", "Fauly domácich", "Fauly hostí"] },
 ];
-type CoverageRow = { order: number; id: number; name: string; country: string; inProject: boolean; fixtures: number; withOdds: number; markets: Record<string, number>; error?: string };
+type CoverageRow = { order: number; id: number; name: string; country: string; inProject: boolean; fixtures: number; withOdds: number; markets: Record<string, number>; single: Record<string, number>; betNames: string[]; error?: string };
 let coverageJob: { startedAt: string; finishedAt?: string; done: number; total: number; rows: CoverageRow[] } | null = null;
 const COVERAGE_FIXTURES = 3;
 
@@ -564,16 +564,23 @@ async function runMarketCoverage() {
   const queue = [...leagues];
   const worker = async () => {
     for (let l = queue.shift(); l; l = queue.shift()) {
-      const row: CoverageRow = { order: l.order, id: l.id, name: l.name, country: l.country, inProject: l.inProject, fixtures: 0, withOdds: 0, markets: {} };
+      const row: CoverageRow = { order: l.order, id: l.id, name: l.name, country: l.country, inProject: l.inProject, fixtures: 0, withOdds: 0, markets: {}, single: {}, betNames: [] };
       try {
         const fixtures = await getFixturesByLeague(l.id, l.calendar ? now.getFullYear() : season, COVERAGE_FIXTURES);
         row.fixtures = fixtures.length;
         for (const f of fixtures) {
-          const odds = (await getFixtureOdds(f.fixtureId)).filter((o) => o.bookmakers >= MIN_BOOKMAKERS);
+          const all = await getFixtureOdds(f.fixtureId);
+          const odds = all.filter((o) => o.bookmakers >= MIN_BOOKMAKERS);
           if (!odds.length) continue;
           row.withOdds++;
           for (const m of COVERAGE_MARKETS) {
             if (m.markets.some((market) => offeredLines(odds, market).length > 0)) row.markets[m.key] = (row.markets[m.key] || 0) + 1;
+            // Trh, ktorý ponúka len 1 stávkovka (model ho kvôli MIN_BOOKMAKERS neberie).
+            else if (m.markets.some((market) => offeredLines(all, market).length > 0)) row.single[m.key] = (row.single[m.key] || 0) + 1;
+          }
+          // Názvy stávok so strelami a faulmi, ako ich API posiela (či ich appka správne rozpozná).
+          for (const o of all) {
+            if (/shot|foul/i.test(o.bet) && !row.betNames.includes(o.bet)) row.betNames.push(o.bet);
           }
         }
       } catch (err: any) {
