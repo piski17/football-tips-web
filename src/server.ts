@@ -138,8 +138,9 @@ function monthlyResults(tips: SavedTip[]) {
 const CUP_LEAGUE_IDS = [2, 3]; // Liga majstrov, Európska liga
 
 const LEAGUE_PRESETS: LeaguePreset[] = [
-  // 30. 10. 2026 (Michalovo rozhodnutie): 15 súťaží – 9 najvyšších líg, 5 druhých líg a Liga majstrov.
-  // 30. 10. Chance Liga (Česko) a Niké liga (Slovensko) nahradené Belgickom a Škótskom (viac trhov u stávkoviek).
+  // 30. 10. 2026 (Michalovo rozhodnutie, podľa nástroja Trhy v ligách): 12 súťaží – 7 najvyšších líg,
+  // 4 druhé ligy a Liga majstrov. Belgicko, Škótsko a Serie B vyradené (Serie B má kurzy len na góly).
+  // (Predtým v ten deň Chance Liga a Niké liga nahradené Belgickom a Škótskom.)
   // Odstránené: Európska liga, Belgicko, Turecko, Poľsko (a skúšané Rakúsko, Švajčiarsko, Dánsko, Škótsko, Chorvátsko).
   { id: 39, name: "Premier League", country: "Anglicko" },
   { id: 140, name: "La Liga", country: "Španielsko" },
@@ -148,11 +149,8 @@ const LEAGUE_PRESETS: LeaguePreset[] = [
   { id: 61, name: "Ligue 1", country: "Francúzsko" },
   { id: 88, name: "Eredivisie", country: "Holandsko" },
   { id: 94, name: "Primeira Liga", country: "Portugalsko" },
-  { id: 144, name: "Jupiler Pro League", country: "Belgicko" },
-  { id: 179, name: "Premiership", country: "Škótsko" },
   { id: 40, name: "Championship", country: "Anglicko" },
   { id: 79, name: "2. Bundesliga", country: "Nemecko" },
-  { id: 136, name: "Serie B", country: "Taliansko" },
   { id: 141, name: "Segunda División", country: "Španielsko" },
   { id: 62, name: "Ligue 2", country: "Francúzsko" },
   { id: 2, name: "UEFA Champions League", country: "Európa" },
@@ -520,9 +518,12 @@ app.get("/api/leagues", (_req, res) => {
  * Trhy v ligách (30. 10. 2026, Michal): ktoré naše druhy stávok stávkovky v lige naozaj ponúkajú.
  * Pre každú ligu sa pozrie na najbližšie zápasy a ich kurzy v API-Football (rovnaký zdroj ako model)
  * a spočíta, pri koľkých zápasoch je trh s kurzom aspoň od MIN_BOOKMAKERS stávkoviek.
- * Okrem súťaží v projekte aj najvyššie ligy, ktoré by sa dali pridať. Držanie lopty API neponúka nikde.
+ * Okrem súťaží v projekte aj ligy, ktoré by sa dali pridať (alebo sme ich vyradili). Držanie lopty API neponúka nikde.
  */
 const COVERAGE_CANDIDATES: (LeaguePreset & { calendar?: boolean })[] = [
+  { id: 144, name: "Jupiler Pro League", country: "Belgicko" },
+  { id: 179, name: "Premiership", country: "Škótsko" },
+  { id: 136, name: "Serie B", country: "Taliansko" },
   { id: 218, name: "Bundesliga", country: "Rakúsko" },
   { id: 207, name: "Super League", country: "Švajčiarsko" },
   { id: 119, name: "Superliga", country: "Dánsko" },

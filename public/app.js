@@ -71,11 +71,8 @@ const LEAGUE_ORDER = [
   ["Ligue 1", "Francúzsko", 0],
   ["Eredivisie", "Holandsko", 0],
   ["Primeira Liga", "Portugalsko", 0],
-  ["Jupiler Pro League", "Belgicko", 0],
-  ["Premiership", "", 0],
   ["Championship", "Anglicko", 1],
   ["2. Bundesliga", "Nemecko", 1],
-  ["Serie B", "Taliansko", 1],
   ["Segunda División", "Španielsko", 1],
   ["Ligue 2", "Francúzsko", 1],
   ["UEFA Champions League", "", 2],
@@ -4276,7 +4273,7 @@ async function openCoverage() {
     const others = job.rows.filter((r) => !r.inProject).sort((a, b) => (score(b) ?? -1) - (score(a) ?? -1));
     const names = [...new Set(job.rows.flatMap((r) => r.betNames || []))].sort();
     const namesHtml = `<p class="faint small"><b>Stávky so strelami a faulmi, ktoré API posiela:</b> ${names.length ? names.map(escapeHtml).join(", ") : "žiadne – API-Football ich pri týchto zápasoch nemá od žiadnej stávkovky."}</p>`;
-    body.innerHTML = `<div class="table-wrap"><table class="bt-table cov-table"><thead>${head}</thead><tbody>${sec("V projekte", mine)}${sec("Najvyššie ligy, ktoré nemáme – od najlepšej", others)}</tbody></table></div>
+    body.innerHTML = `<div class="table-wrap"><table class="bt-table cov-table"><thead>${head}</thead><tbody>${sec("V projekte", mine)}${sec("Ligy, ktoré nemáme – od najlepšej", others)}</tbody></table></div>
       ${job.rows.some((r) => r.betNames) ? namesHtml : ""}
       <p class="faint small">${running ? "Kontrola beží na serveri, okno môžeš zavrieť a vrátiť sa neskôr." : `Skontrolované ${escapeHtml(new Date(job.finishedAt).toLocaleString("sk-SK"))}.`} Ak pri lige vidíš „kurzy ešte nie sú“, stávkovky ešte nevypísali kurzy na najbližšie zápasy – skús o deň-dva.</p>`;
     if (running && m.el.isConnected) timer = setTimeout(load, 3000);
