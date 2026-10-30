@@ -399,7 +399,7 @@ const TELEGRAM_CONTACT_USERNAME = process.env.TELEGRAM_CONTACT_USERNAME || "im_m
 const BENEFITS_BASE =
   `• <b>Denné tipy na Telegrame</b> v súkromnom kanáli, 1 – 2 hodiny pred výkopom – najviac 3 najsilnejšie denne\n` +
   `• <b>Pri každom tipe</b> kurz, šanca podľa modelu, dôvod a odporúčaná sadzba`;
-const BENEFIT_CHAT = `• <b>💬 Súkromný VIP chat</b> – na vaše otázky odpisujem priamo ja\n` +
+const BENEFIT_CHAT = `• <b>💬 Súkromný VIP chat</b> – na vaše otázky odpovedám priamo ja\n` +
   `• <b>📞 Úvodný hovor 1 na 1</b> (30 min) – nastavenie banku, vkladu a ako tipy hrať`;
 const BENEFIT_MENTOR =
   `• <b>🤝 Mentoring 1 na 1 počas celého členstva</b> – osobné stretnutia alebo videohovory priamo so mnou\n` +
@@ -626,7 +626,7 @@ export async function handleTelegramUpdate(update: any): Promise<void> {
   await callTelegramApi("sendMessage", {
     chat_id: chatId,
     text:
-      `👋 Vitaj v <b>TipRadar</b>!\n\nVyber si, čo ťa zaujíma:` +
+      `👋 Vitajte v <b>TipRadare</b>!\n\nVyberte si, čo vás zaujíma:` +
       // Telegram ID vidí len administrátor (alebo ktokoľvek po príkaze /id).
       (String(chatId) === String(TELEGRAM_ADMIN_CHAT_ID) || text === "/id" ? `\n\n<i>Tvoje Telegram ID: <code>${chatId}</code></i>` : ""),
     parse_mode: "HTML",
@@ -675,14 +675,14 @@ export async function sendPackageLowReminder(
   if (!TELEGRAM_BOT_TOKEN) return false;
   const head =
     st.left !== null && st.total !== null
-      ? `🔔 <b>V členstve ${escapeTg(st.tier)} ti ${st.left === 1 ? "ostáva posledný tip" : `ostávajú ${st.left} ${plural(st.left, "tip", "tipy", "tipov")}`}</b> (z ${st.total})`
-      : `🔔 <b>Tvoje členstvo TipRadar končí ${fmtDateSk(st.validUntil)}</b>`;
+      ? `🔔 <b>V členstve ${escapeTg(st.tier)} vám ${st.left === 1 ? "ostáva posledný tip" : `ostávajú ${st.left} ${plural(st.left, "tip", "tipy", "tipov")}`}</b> (z ${st.total})`
+      : `🔔 <b>Vaše členstvo TipRadar končí ${fmtDateSk(st.validUntil)}</b>`;
   const text =
     `${head}\n\nZatiaľ je výsledok členstva <b>${signed(st.profit, 1)} j.</b>` +
-    (st.profit < 0 ? `\n🛡 Ak skončí v mínuse, dostaneš podľa garancie 1 mesiac zadarmo.` : "") +
+    (st.profit < 0 ? `\n🛡 Ak skončí v mínuse, dostanete podľa garancie 1 mesiac zadarmo.` : "") +
     (paymentsEnabled()
-      ? `\n\nAk chceš pokračovať, vyber si ďalšie členstvo 👇 Nové tipy sa začnú rátať, až keď sa minú tie súčasné. 🙌`
-      : `\n\nAk chceš pokračovať, napíš nám a pripravíme ti ďalšie členstvo. 🙌`);
+      ? `\n\nAk chcete pokračovať, vyberte si ďalšie členstvo 👇 Nové tipy sa začnú rátať, až keď sa minú tie súčasné. 🙌`
+      : `\n\nAk chcete pokračovať, napíšte nám a pripravíme vám ďalšie členstvo. 🙌`);
   if (paymentsEnabled()) {
     try {
       await axios.post(
@@ -868,9 +868,9 @@ export async function redeemPayment(token: string, chatId: number | string, from
     ...(chat ? [[{ text: "💬 Vstúpiť do VIP chatu", url: chat }]] : []),
   ];
   await say(
-    `✅ <b>Platba prijatá, vitajte v TipRadar!</b>\n\n` +
+    `✅ <b>Platba prijatá, vitajte v TipRadare!</b>\n\n` +
       `Členstvo: <b>${termLabel(term)}</b>\n` +
-      (tips ? `Tipy sa vám rátajú od dnes${current ? " (najprv sa minú tie, ktoré vám ostali)" : ""}. Keď vám budú dochádzať, dám vám vedieť.\n` : `Platí do <b>${fmtDateSk(until)}</b>.\n`) +
+      (tips ? `Tipy sa vám rátajú odo dneška${current ? " (najprv sa minú tie, ktoré vám ostali)" : ""}. Keď vám budú dochádzať, dám vám vedieť.\n` : `Platí do <b>${fmtDateSk(until)}</b>.\n`) +
       `${GUARANTEE_LINE}\n\n` +
       (buttons.length
         ? `Tu je vaša osobná pozvánka${chat ? " do súkromného kanála a do VIP chatu" : " do súkromného kanála"} 👇 Platí 7 dní a len pre vás.`
@@ -917,7 +917,7 @@ export async function redeemPayment(token: string, chatId: number | string, from
         `Meno: <b>${escapeTg(name)}</b>\n` +
         (from?.username ? `Telegram: @${escapeTg(from.username)}\n` : "") +
         (p.vs ? `Variabilný symbol: ${p.vs}\n` : "") +
-        `\nČlen je zapísaný v appke, tipy sa mu rátajú od dnes.${missing}`,
+        `\nČlen je zapísaný v appke, tipy sa mu rátajú odo dneška.${missing}`,
       parse_mode: "HTML",
     });
   }
@@ -1038,11 +1038,11 @@ export async function sendSalesOpenToWaitlist(): Promise<{ sent: number; skipped
     }
     const first = escapeTg((l.name || "").split(" ")[0] || "");
     const text =
-      `Ahoj${first ? " " + first : ""} 👋\n\n` +
-      `Zapísal si sa do poradovníka na <b>TipRadar</b>. Predaj členstva je práve otvorený a ty máš prednosť.\n\n` +
+      `Dobrý deň${first ? ", " + first : ""} 👋\n\n` +
+      `Zapísali ste sa do poradovníka <b>TipRadaru</b>. Predaj členstva je práve otvorený a máte prednosť.\n\n` +
       `◆ najviac 3 najsilnejšie tipy denne, 1 – 2 hodiny pred výkopom\n◆ pri každom tipe kurz, šanca a sadzba\n◆ súkromný VIP chat a úvodný hovor 1 na 1\n\n` +
       `🥈 Štart · 50 tipov · 49 €\n🥇 Gold · 100 tipov · 79 €\n💎 Platinum · 200 tipov · 139 € (navyše mentoring 1 na 1)\n\n` +
-      `${GUARANTEE_LINE}\n\nVyber si 👇`;
+      `${GUARANTEE_LINE}\n\nVyberte si 👇`;
     try {
       await axios.post(
         `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,

@@ -274,6 +274,14 @@ function ring(p, size = 64) {
 function crest(logo, cls = "crest") {
   return logo ? `<img class="${cls}" src="${escapeHtml(logo)}" alt="" loading="lazy" />` : `<span class="${cls}"></span>`;
 }
+/** Znak ligy (30. 10. 2026): keď API logo nepošle, vezme sa podľa ID ligy; ak sa nenačíta, ukáže sa začiatočné písmeno. */
+function leagueLogoHtml(league) {
+  const src = league.logo || (league.id ? `https://media.api-sports.io/football/leagues/${encodeURIComponent(league.id)}.png` : "");
+  const initial = escapeHtml(translateLeagueName(league.name ?? "L").charAt(0));
+  const ph = `<span class="lg-logo-ph" aria-hidden="true">${initial}</span>`;
+  if (!src) return ph;
+  return `<img class="lg-logo" src="${escapeHtml(src)}" alt="" loading="lazy" onerror="this.outerHTML='${ph.replace(/"/g, "&quot;")}'" />`;
+}
 function skeletonHtml(rows = 3) {
   return `<div class="skel-wrap">${Array.from({ length: rows }).map(() => `<div class="skeleton"></div>`).join("")}</div>`;
 }
@@ -381,7 +389,7 @@ function promptModal(label, value = "") {
 async function askRealOdds(bet) {
   const min = minOddsFor(bet);
   const pre = typeof bet.odds === "number" && bet.odds > 1 ? fmtOdds(bet.odds) : "";
-  const raw = await promptModal(`KURZ tvojej stávkovky, napr. 1,85 (minimum ${fmtOdds(min)})`, pre);
+  const raw = await promptModal(`Kurz tvojej stávkovky, napr. 1,85 (minimum ${fmtOdds(min)})`, pre);
   if (raw == null) return null;
   const odd = parseFloat(String(raw).replace(",", "."));
   if (!(odd > 1)) { showToast("Neplatný kurz – tip sa neuložil."); return null; }
@@ -749,7 +757,7 @@ function renderFixtureList() {
       lastGroup = info.group;
       return `${head}<div class="league-group">
         <button type="button" class="lg" data-league="${escapeHtml(name)}" aria-expanded="${!collapsed}">
-          ${league.logo ? `<img class="lg-logo" src="${escapeHtml(league.logo)}" alt="" loading="lazy" />` : ""}
+          ${leagueLogoHtml(league)}
           <span>${escapeHtml(translateLeagueName(name))}${info.country ? ` <i class="lg-c">${escapeHtml(info.country)}</i>` : ""}</span>
           <em>${plural(fixtures.length, "zápas", "zápasy", "zápasov")}</em>
           <span class="chev">${collapsed ? "▸" : "▾"}</span>
@@ -816,7 +824,7 @@ function updateDayTipsPromo() {
   const el = document.getElementById("dtPromoText");
   if (fixturesLoading) { el.textContent = "Načítavam zápasy…"; return; }
   const n = currentFixtures.filter((f) => !matchHasStarted(f)).length;
-  el.textContent = n ? `Prejde ${plural(n, "zápas", "zápasy", "zápasov")} pred výkopom naraz` : "V tento deň už nie sú zápasy pred výkopom";
+  el.textContent = n ? `Naraz prejde ${plural(n, "zápas", "zápasy", "zápasov")} pred výkopom` : "V tento deň už nie sú zápasy pred výkopom";
 }
 document.getElementById("dtPromoBtn").addEventListener("click", () => {
   goTo("tipy");
@@ -2341,7 +2349,7 @@ async function renderWatchOverview(watchTips, statTips = []) {
     })
     .join("");
   el.innerHTML = `<div class="table-wrap"><table class="bt-table"><thead><tr><th>Čo sa sleduje</th><th class="num">Spolu</th><th class="num">Vyšlo</th><th class="num">Model sľuboval</th><th class="num">Zisk</th><th class="num">Návratnosť</th></tr></thead><tbody>${body}</tbody></table></div>
-    <p class="faint small">Zisk pri vklade 1 jednotka na tip (tiket) za zaznamenaný kurz. Skupina sa oplatí zapnúť naostro, až keď má aspoň 30 vyhodnotených tipov v zisku – pri menšom počte je výsledok ešte prevažne náhoda. Nový model sa porovnáva zvlášť, v mesačnom reporte a spätným testom.</p>
+    <p class="faint small">Zisk pri vklade 1 jednotky na tip (tiket) za zaznamenaný kurz. Skupina sa oplatí zapnúť naostro, až keď má aspoň 30 vyhodnotených tipov v zisku – pri menšom počte je výsledok ešte prevažne náhoda. Nový model sa porovnáva zvlášť, v mesačnom reporte a spätným testom.</p>
     <p class="faint small">Spätná kontrola 60 / 40 je odhad: šanca sa dopočíta z uloženej dôvery a šance stávkoviek v čase tipu.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
       ${retroStrictFail.length ? `<button type="button" class="btn sm ghost" id="retroStrictMove">Presunúť ${retroStrictFail.length} ${retroStrictFail.length === 1 ? "zverejnený tip, ktorý neprejde" : retroStrictFail.length <= 4 ? "zverejnené tipy, ktoré neprejdú" : "zverejnených tipov, ktoré neprejdú"} 60 / 40, do sledovaných</button>` : ""}
@@ -2462,7 +2470,7 @@ function renderValueReport(tips) {
     )
     .join("");
   el.innerHTML = `<div class="table-wrap"><table class="bt-table"><thead><tr><th>Hodnota</th><th class="num">Tipy</th><th class="num">Vyšlo</th><th class="num">Priem. kurz</th><th class="num">Zisk</th><th class="num">Návratnosť</th><th class="num">Kurz vs. pred výkopom</th></tr></thead><tbody>${body}</tbody></table></div>
-    <p class="faint small">Zisk pri vklade 1 jednotka na tip. „Kurz vs. pred výkopom“ ukazuje, o koľko bol náš kurz lepší (+) alebo horší (−) ako uzatvárací kurz – dlhodobo kladné číslo znamená, že model naozaj nachádza hodnotu. Pri skupine s menej ako 30 tipmi je výsledok ešte prevažne náhoda.</p>`;
+    <p class="faint small">Zisk pri vklade 1 jednotky na tip. „Kurz vs. pred výkopom“ ukazuje, o koľko bol náš kurz lepší (+) alebo horší (−) ako uzatvárací kurz – dlhodobo kladné číslo znamená, že model naozaj nachádza hodnotu. Pri skupine s menej ako 30 tipmi je výsledok ešte prevažne náhoda.</p>`;
 }
 // Úspešnosť podľa líg (25. 10. 2026): liga, kde model po 30+ tipoch prerába, sa oplatí vypnúť.
 const LEAGUE_WARN_MIN_TIPS = 30;
