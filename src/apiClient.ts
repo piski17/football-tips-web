@@ -1343,7 +1343,8 @@ export async function getFixtureReferee(fixtureId: number): Promise<string | nul
     const res = await client().get("/fixtures", { params: { id: fixtureId } });
     checkApiErrors(res.data);
     const ref: string | null = res.data?.response?.[0]?.fixture?.referee ?? null;
-    setCached(key, ref, 60 * 60 * 1000);
+    // Keď rozhodca ešte nie je v API, skúsi sa znova o 10 minút (známeho si pamätá hodinu).
+    setCached(key, ref, (ref ? 60 : 10) * 60 * 1000);
     return ref;
   } catch {
     return null;
