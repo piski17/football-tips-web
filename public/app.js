@@ -4239,5 +4239,53 @@ async function openVisits() {
 }
 document.getElementById("openVisitsBtn").addEventListener("click", () => openVisits());
 
+// ---- Trhy v ligách (30. 10. 2026) ----
+async function openCoverage() {
+  const m = openModal(`
+    <h3>Trhy v ligách</h3>
+    <p class="muted small">Appka sa pri každej lige pozrie na 3 najbližšie zápasy a na kurzy v API-Football (odtiaľ ich berie aj model). ✓ = trh s kurzom aspoň od 2 stávkoviek pri všetkých zápasoch, čísla = pri koľkých zápasoch z koľkých. Držanie lopty stávkovky cez API neponúkajú v žiadnej lige.</p>
+    <div data-body><p class="empty">Načítavam…</p></div>
+    <div class="modal-actions"><button type="button" class="btn ghost" data-close>Zavrieť</button><button type="button" class="btn" data-run>Skontrolovať teraz</button></div>`, { wide: true });
+  const body = m.el.querySelector("[data-body]");
+  const runBtn = m.el.querySelector("[data-run]");
+  let timer = null;
+  const draw = (data) => {
+    const job = data.job;
+    const markets = data.markets || [];
+    if (!job) { body.innerHTML = `<p class="faint small">Ešte nebola spustená. Ťukni na „Skontrolovať teraz“ (trvá asi 1 – 2 minúty, stojí pár stoviek požiadaviek z denného limitu).</p>`; return; }
+    const running = !job.finishedAt;
+    runBtn.disabled = running;
+    runBtn.textContent = running ? `Kontrolujem… ${job.done} / ${job.total}` : "Skontrolovať znova";
+    const cell = (r, k) => {
+      if (!r.withOdds) return `<td class="num faint">–</td>`;
+      const n = r.markets[k] || 0;
+      return n === r.withOdds ? `<td class="num g">✓</td>` : n === 0 ? `<td class="num l">✕</td>` : `<td class="num">${n}/${r.withOdds}</td>`;
+    };
+    const score = (r) => (r.withOdds ? markets.filter((mk) => (r.markets[mk.key] || 0) === r.withOdds).length : null);
+    const rowHtml = (r) => {
+      const sc = score(r);
+      const note = r.error ? `chyba: ${escapeHtml(r.error)}` : !r.fixtures ? "žiadne zápasy" : !r.withOdds ? "kurzy ešte nie sú" : "";
+      return `<tr><td>${escapeHtml(r.name)}${r.country ? ` <span class="faint">${escapeHtml(r.country)}</span>` : ""}${note ? `<br><span class="faint small">${note}</span>` : ""}</td>${markets.map((mk) => cell(r, mk.key)).join("")}<td class="num ${sc == null ? "faint" : sc >= 6 ? "g" : sc <= 3 ? "l" : ""}">${sc == null ? "–" : `${sc}/${markets.length}`}</td></tr>`;
+    };
+    const head = `<tr><th>Súťaž</th>${markets.map((mk) => `<th class="num">${escapeHtml(mk.label)}</th>`).join("")}<th class="num">Spolu</th></tr>`;
+    const sec = (title, rows) => (rows.length ? `<tr class="auto-lg-head"><td colspan="${markets.length + 2}">${escapeHtml(title)}</td></tr>${rows.map(rowHtml).join("")}` : "");
+    const mine = job.rows.filter((r) => r.inProject);
+    const others = job.rows.filter((r) => !r.inProject).sort((a, b) => (score(b) ?? -1) - (score(a) ?? -1));
+    body.innerHTML = `<div class="table-wrap"><table class="bt-table cov-table"><thead>${head}</thead><tbody>${sec("V projekte", mine)}${sec("Najvyššie ligy, ktoré nemáme – od najlepšej", others)}</tbody></table></div>
+      <p class="faint small">${running ? "Kontrola beží na serveri, okno môžeš zavrieť a vrátiť sa neskôr." : `Skontrolované ${escapeHtml(new Date(job.finishedAt).toLocaleString("sk-SK"))}.`} Ak pri lige vidíš „kurzy ešte nie sú“, stávkovky ešte nevypísali kurzy na najbližšie zápasy – skús o deň-dva.</p>`;
+    if (running && m.el.isConnected) timer = setTimeout(load, 3000);
+  };
+  const load = async () => {
+    try { draw(await fetchJson("/api/market-coverage")); } catch (err) { body.innerHTML = `<p class="l small">Nepodarilo sa načítať: ${escapeHtml(err.message)}</p>`; }
+  };
+  runBtn.onclick = async () => {
+    clearTimeout(timer);
+    try { await postJson("/api/market-coverage", {}); } catch (err) { showToast(`Spustenie zlyhalo: ${err.message}`); }
+    load();
+  };
+  load();
+}
+document.getElementById("openCoverageBtn").addEventListener("click", () => openCoverage());
+
 // ---- Štart ----
 init();

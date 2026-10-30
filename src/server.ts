@@ -1,4 +1,4 @@
-import { plausibleLine, MIN_ODDS, MAX_PROBABILITY, MIN_PROBABILITY, MIN_EXPECTED_VALUE, SUSPICIOUS_EXPECTED_VALUE, findOdds, marketProbabilityDetail, STRONG_TIP_MIN_PROBABILITY, WATCH_BELOW_PROBABILITY, WATCH_BAND_MIN_PROBABILITY } from "./oddsMatcher";
+import { plausibleLine, offeredLines, MIN_BOOKMAKERS, MIN_ODDS, MAX_PROBABILITY, MIN_PROBABILITY, MIN_EXPECTED_VALUE, SUSPICIOUS_EXPECTED_VALUE, findOdds, marketProbabilityDetail, STRONG_TIP_MIN_PROBABILITY, WATCH_BELOW_PROBABILITY, WATCH_BAND_MIN_PROBABILITY } from "./oddsMatcher";
 import { listLeads, deleteLead, recordLead } from "./leadsStore";
 import { getMeta, setMeta } from "./metaStore";
 import * as crypto from "crypto";
@@ -514,6 +514,88 @@ app.use(express.static(path.join(__dirname, "..", "public")));
 
 app.get("/api/leagues", (_req, res) => {
   res.json(LEAGUE_PRESETS);
+});
+
+/**
+ * Trhy v ligách (30. 10. 2026, Michal): ktoré naše druhy stávok stávkovky v lige naozaj ponúkajú.
+ * Pre každú ligu sa pozrie na najbližšie zápasy a ich kurzy v API-Football (rovnaký zdroj ako model)
+ * a spočíta, pri koľkých zápasoch je trh s kurzom aspoň od MIN_BOOKMAKERS stávkoviek.
+ * Okrem súťaží v projekte aj najvyššie ligy, ktoré by sa dali pridať. Držanie lopty API neponúka nikde.
+ */
+const COVERAGE_CANDIDATES: (LeaguePreset & { calendar?: boolean })[] = [
+  { id: 218, name: "Bundesliga", country: "Rakúsko" },
+  { id: 207, name: "Super League", country: "Švajčiarsko" },
+  { id: 119, name: "Superliga", country: "Dánsko" },
+  { id: 210, name: "HNL", country: "Chorvátsko" },
+  { id: 203, name: "Süper Lig", country: "Turecko" },
+  { id: 106, name: "Ekstraklasa", country: "Poľsko" },
+  { id: 197, name: "Super League 1", country: "Grécko" },
+  { id: 345, name: "Chance Liga", country: "Česko" },
+  { id: 332, name: "Niké liga", country: "Slovensko" },
+  { id: 283, name: "Liga I", country: "Rumunsko" },
+  { id: 286, name: "Super Liga", country: "Srbsko" },
+  { id: 271, name: "NB I", country: "Maďarsko" },
+  { id: 333, name: "Premier League", country: "Ukrajina" },
+  { id: 103, name: "Eliteserien", country: "Nórsko", calendar: true },
+  { id: 113, name: "Allsvenskan", country: "Švédsko", calendar: true },
+];
+const COVERAGE_MARKETS: { key: string; label: string; markets: string[] }[] = [
+  { key: "goals", label: "Góly v zápase", markets: ["Góly"] },
+  { key: "teamGoals", label: "Góly tímu", markets: ["Góly domácich", "Góly hostí"] },
+  { key: "corners", label: "Rohy v zápase", markets: ["Rohy"] },
+  { key: "teamCorners", label: "Rohy tímu", markets: ["Rohy domácich", "Rohy hostí"] },
+  { key: "cards", label: "Karty", markets: ["Karty", "Karty domácich", "Karty hostí"] },
+  { key: "shots", label: "Strely na bránu", markets: ["Strely na bránu", "Strely na bránu domácich", "Strely na bránu hostí"] },
+  { key: "fouls", label: "Fauly", markets: ["Fauly", "Fauly domácich", "Fauly hostí"] },
+];
+type CoverageRow = { order: number; id: number; name: string; country: string; inProject: boolean; fixtures: number; withOdds: number; markets: Record<string, number>; error?: string };
+let coverageJob: { startedAt: string; finishedAt?: string; done: number; total: number; rows: CoverageRow[] } | null = null;
+const COVERAGE_FIXTURES = 3;
+
+async function runMarketCoverage() {
+  const now = new Date();
+  const season = now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1;
+  const leagues = [
+    ...LEAGUE_PRESETS.map((l) => ({ ...l, inProject: true, calendar: false })),
+    ...COVERAGE_CANDIDATES.map((l) => ({ ...l, inProject: false, calendar: !!l.calendar })),
+  ].map((l, order) => ({ ...l, order }));
+  const job = { startedAt: now.toISOString(), done: 0, total: leagues.length, rows: [] as CoverageRow[] };
+  coverageJob = job;
+  const queue = [...leagues];
+  const worker = async () => {
+    for (let l = queue.shift(); l; l = queue.shift()) {
+      const row: CoverageRow = { order: l.order, id: l.id, name: l.name, country: l.country, inProject: l.inProject, fixtures: 0, withOdds: 0, markets: {} };
+      try {
+        const fixtures = await getFixturesByLeague(l.id, l.calendar ? now.getFullYear() : season, COVERAGE_FIXTURES);
+        row.fixtures = fixtures.length;
+        for (const f of fixtures) {
+          const odds = (await getFixtureOdds(f.fixtureId)).filter((o) => o.bookmakers >= MIN_BOOKMAKERS);
+          if (!odds.length) continue;
+          row.withOdds++;
+          for (const m of COVERAGE_MARKETS) {
+            if (m.markets.some((market) => offeredLines(odds, market).length > 0)) row.markets[m.key] = (row.markets[m.key] || 0) + 1;
+          }
+        }
+      } catch (err: any) {
+        row.error = String(err?.message ?? err);
+      }
+      job.rows.push(row);
+      job.rows.sort((a, b) => a.order - b.order);
+      job.done++;
+    }
+  };
+  await Promise.all([worker(), worker(), worker()]);
+  (job as any).finishedAt = new Date().toISOString();
+}
+
+// GET = stav posledného prehľadu; POST = spustiť nový (beží na serveri asi 1 – 2 minúty).
+app.get("/api/market-coverage", (_req, res) => {
+  res.json({ job: coverageJob, markets: COVERAGE_MARKETS.map(({ key, label }) => ({ key, label })) });
+});
+app.post("/api/market-coverage", (_req, res) => {
+  if (coverageJob && !coverageJob.finishedAt) return res.json({ job: coverageJob });
+  void runMarketCoverage().catch((err) => console.error("[trhy v ligách]", err));
+  res.json({ job: coverageJob });
 });
 
 app.get("/api/fixtures", async (req, res) => {
