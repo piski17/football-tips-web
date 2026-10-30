@@ -544,6 +544,8 @@ let fixturesPromise = null;
 // Zápasy (30. 10. 2026, Michal): súťaže sú zbalené ako karty, ťuknutím na súťaž sa otvoria jej zápasy.
 // Otvorené súťaže zostávajú otvorené aj po automatickom obnovení.
 const openLeagues = new Set();
+// Čas výkopu v Zápasoch (30. 10. 2026, Michal): ťuknutím na čas sa ukážu len zápasy s týmto výkopom. "" = všetky.
+let fixtureTime = "";
 
 const matchDateInput = document.getElementById("matchDateInput");
 const fixtureListEl = document.getElementById("fixtureList");
@@ -718,6 +720,23 @@ function fixtureRowHtml(f) {
   </div>`;
 }
 
+/** Riadok časov výkopu nad súťažami: Všetky · 11:30 · 13:00 … s počtom zápasov. */
+function fixtureTimeBarHtml() {
+  const counts = new Map();
+  for (const f of currentFixtures) {
+    const t = kickoffTime(f);
+    if (t) counts.set(t, (counts.get(t) || 0) + 1);
+  }
+  if (fixtureTime && !counts.has(fixtureTime)) fixtureTime = "";
+  if (counts.size < 2) return "";
+  const chip = (t, label, n) =>
+    `<button type="button" class="chip${fixtureTime === t ? " on" : ""}" data-fx-time="${escapeHtml(t)}">${label}<b class="dt-time-n">${n}</b></button>`;
+  return `<div class="fx-times"><span class="dt-times-l">Čas výkopu</span><div class="chips">${chip("", "Všetky", currentFixtures.length)}${[...counts.keys()]
+    .sort()
+    .map((t) => chip(t, escapeHtml(t), counts.get(t)))
+    .join("")}</div></div>`;
+}
+
 function renderFixtureList() {
   const results = lastFixtureResults;
   const failed = results.filter((r) => r.error);
@@ -732,7 +751,7 @@ function renderFixtureList() {
         : r.fixtures.filter((f) =>
             [f.homeTeam.name, f.awayTeam.name, translateTeamName(f.homeTeam.name), translateTeamName(f.awayTeam.name)].some((n) => normText(n).includes(q))
           );
-      return { league, fixtures };
+      return { league, fixtures: fixtureTime ? fixtures.filter((f) => kickoffTime(f) === fixtureTime) : fixtures };
     })
     .filter((g) => g.fixtures.length > 0)
     .sort(byLeagueOrder((g) => g.league.name));
@@ -746,8 +765,9 @@ function renderFixtureList() {
   } else if (!groups.length) {
     html += `<p class="empty">Pre „${escapeHtml(fixtureSearchEl.value.trim())}“ sa nič nenašlo.</p>`;
   }
+  html += fixtureTimeBarHtml();
   // Súťaže v pevnom poradí a v skupinách (najvyššie ligy, druhé ligy, Liga majstrov).
-  if (groups.length > 1) {
+  if (groups.length > 1 && !fixtureTime) {
     const allCollapsed = !q && groups.every((g) => !openLeagues.has(g.league.name ?? "Liga"));
     html += `<div class="lg-tools"><span class="faint small">${plural(groups.length, "súťaž", "súťaže", "súťaží")} · ${plural(groups.reduce((a, g) => a + g.fixtures.length, 0), "zápas", "zápasy", "zápasov")}</span><button type="button" class="btn ghost sm" data-lg-all="${allCollapsed ? "open" : "close"}">${allCollapsed ? "Rozbaliť všetky" : "Zbaliť všetky"}</button></div>`;
   }
@@ -755,7 +775,7 @@ function renderFixtureList() {
   html += groups
     .map(({ league, fixtures }) => {
       const name = league.name ?? "Liga";
-      const collapsed = !openLeagues.has(name) && !q && !fixtures.some((f) => f.fixtureId === selectedFixtureId);
+      const collapsed = !openLeagues.has(name) && !q && !fixtureTime && !fixtures.some((f) => f.fixtureId === selectedFixtureId);
       const info = leagueInfo(name);
       const live = fixtures.filter((f) => LIVE_STATUSES.includes(f.status)).length;
       const upcoming = fixtures.filter((f) => !LIVE_STATUSES.includes(f.status) && !FINISHED_STATUSES.includes(f.status));
@@ -783,6 +803,13 @@ function renderFixtureList() {
 fixtureSearchEl.addEventListener("input", () => renderFixtureList());
 
 fixtureListEl.addEventListener("click", (e) => {
+  const tb = e.target.closest("[data-fx-time]");
+  if (tb) {
+    fixtureTime = fixtureTime === tb.dataset.fxTime ? "" : tb.dataset.fxTime;
+    renderFixtureList();
+    updateDayTipsPromo();
+    return;
+  }
   const all = e.target.closest("[data-lg-all]");
   if (all) {
     const names = [...fixtureListEl.querySelectorAll(".lg")].map((b) => b.dataset.league);
@@ -839,12 +866,14 @@ document.getElementById("anBackBtn").addEventListener("click", closeMobileAnalys
 function updateDayTipsPromo() {
   const el = document.getElementById("dtPromoText");
   if (fixturesLoading) { el.textContent = "Načítavam zápasy…"; return; }
-  const n = currentFixtures.filter((f) => !matchHasStarted(f)).length;
-  el.textContent = n ? `Naraz prejde ${plural(n, "zápas", "zápasy", "zápasov")} pred výkopom` : "V tento deň už nie sú zápasy pred výkopom";
+  const n = currentFixtures.filter((f) => !matchHasStarted(f) && (!fixtureTime || kickoffTime(f) === fixtureTime)).length;
+  el.textContent = n
+    ? `Naraz prejde ${plural(n, "zápas", "zápasy", "zápasov")} ${fixtureTime ? `o ${fixtureTime}` : "pred výkopom"}`
+    : fixtureTime ? `O ${fixtureTime} už nie sú zápasy pred výkopom` : "V tento deň už nie sú zápasy pred výkopom";
 }
 document.getElementById("dtPromoBtn").addEventListener("click", () => {
   goTo("tipy");
-  dayTipsTime = "";
+  dayTipsTime = fixtureTime;
   showDayTips();
 });
 
