@@ -679,6 +679,8 @@ async function doLoadFixtures(silent) {
     if (requestId === fixturesRequestId) {
       fixturesLoading = false;
       updateDayTipsPromo();
+      // Tipy dňa ešte nespustené: obnoviť počet zápasov a výber času výkopu.
+      if (currentView === "tipy" && !dayTips.ran && !dayTipsRun.running && !dayTipsDetail) renderDayTipsView();
     }
   }
 }
@@ -842,6 +844,7 @@ function updateDayTipsPromo() {
 }
 document.getElementById("dtPromoBtn").addEventListener("click", () => {
   goTo("tipy");
+  dayTipsTime = "";
   showDayTips();
 });
 
@@ -1538,10 +1541,46 @@ let dayTipsViewId = 0;
 let dayTipsCollapsed = new Set(); // zbalené skupiny v Tipoch dňa („klienti“, „sledovane“)
 let dayTipsMini = new Set(); // zbalené jednotlivé tipy (poradie v zozname); nová analýza ich vynuluje
 let strongIdx = -1;
+// Čas výkopu (30. 10. 2026, Michal): analyzovať len zápasy s vybraným časom výkopu, napr. len tie o 15:00. "" = všetky.
+let dayTipsTime = "";
 
 function kickoffTime(fixture) {
   const d = new Date(fixture?.date);
   return isNaN(d.getTime()) ? "" : timeHm(d);
+}
+
+/** Zápasy pred výkopom, ktoré Tipy dňa prejdú – všetky alebo len s vybraným časom výkopu. */
+function dayTipsFixtures() {
+  const all = currentFixtures.filter((f) => !matchHasStarted(f));
+  if (dayTipsTime && !all.some((f) => kickoffTime(f) === dayTipsTime)) dayTipsTime = "";
+  return dayTipsTime ? all.filter((f) => kickoffTime(f) === dayTipsTime) : all;
+}
+
+/** Výber času výkopu nad Tipmi dňa: Všetky · 13:30 · 15:00 … – ťuknutím sa spustí analýza len pre ten čas. */
+function dayTipsTimeBarHtml() {
+  const counts = new Map();
+  for (const f of currentFixtures) {
+    if (matchHasStarted(f)) continue;
+    const t = kickoffTime(f);
+    if (t) counts.set(t, (counts.get(t) || 0) + 1);
+  }
+  if (counts.size < 2) return "";
+  const total = [...counts.values()].reduce((a, b) => a + b, 0);
+  const chip = (t, label, n) =>
+    `<button type="button" class="chip${dayTipsTime === t ? " on" : ""}" data-dt-time="${escapeHtml(t)}">${label}<b class="dt-time-n">${n}</b></button>`;
+  return `<div class="dt-times"><span class="dt-times-l">Čas výkopu</span><div class="chips">${chip("", "Všetky", total)}${[...counts.keys()]
+    .sort()
+    .map((t) => chip(t, escapeHtml(t), counts.get(t)))
+    .join("")}</div></div>`;
+}
+function bindDayTipsTimeBar() {
+  dayTipsPaneEl.querySelectorAll("[data-dt-time]").forEach((btn) => {
+    btn.onclick = () => {
+      if (dayTipsRun.running) return;
+      dayTipsTime = btn.dataset.dtTime;
+      showDayTips();
+    };
+  });
 }
 
 async function showDayTips() {
@@ -1551,10 +1590,10 @@ async function showDayTips() {
     dayTipsPaneEl.innerHTML = `<div class="empty-card">Zápasy sa ešte načítavajú…</div>`;
     await fixturesPromise.catch(() => {});
   }
-  const fixtures = currentFixtures.filter((f) => !matchHasStarted(f));
+  const fixtures = dayTipsFixtures();
   const date = matchDateInput.value || localToday();
   if (fixtures.length === 0) {
-    dayTips = { items: [], analyzed: 0, failed: 0, date, ran: true, none: true };
+    dayTips = { items: [], analyzed: 0, failed: 0, date, ran: true, none: true, time: dayTipsTime };
     renderDayTipsView();
     return;
   }
@@ -1580,7 +1619,7 @@ async function showDayTips() {
     if (currentView === "tipy" && !dayTipsDetail) renderDayTipsProgress();
   }
   items.sort((a, b) => b.bet.probability - a.bet.probability);
-  dayTips = { items, analyzed: fixtures.length, failed, failedList, date, ran: true };
+  dayTips = { items, analyzed: fixtures.length, failed, failedList, date, ran: true, time: dayTipsTime };
   dayTipOdds = {}; dayTipSaved = new Set(); dayTipsMini = new Set();
   dayTipsRun.running = false;
   computeStrongIdx();
@@ -1612,7 +1651,7 @@ function renderDayTipsProgress() {
   const p = dayTipsRun;
   const pct = p.total ? (p.done / p.total) * 100 : 0;
   dayTipsPaneEl.innerHTML = `<div class="card progress-card">
-    <b>Analyzujem zápasy dňa… ${p.done} / ${p.total}</b>
+    <b>Analyzujem zápasy${dayTipsTime ? ` o ${escapeHtml(dayTipsTime)}` : " dňa"}… ${p.done} / ${p.total}</b>
     <div class="bar big"><i style="width:${pct.toFixed(1)}%"></i></div>
     <p class="faint small">Prvé načítanie chvíľu trvá, ďalšie sú rýchle. Môžeš medzitým prejsť na inú obrazovku.</p>
   </div>`;
@@ -1625,16 +1664,18 @@ function renderDayTipsView() {
   if (dayTipsRun.running) { renderDayTipsProgress(); return; }
   if (!dayTips.ran) {
     const n = currentFixtures.filter((f) => !matchHasStarted(f)).length;
-    dayTipsPaneEl.innerHTML = `<div class="card intro-card">
+    dayTipsPaneEl.innerHTML = `${dayTipsTimeBarHtml()}<div class="card intro-card">
       <h3 class="sh" style="margin-top:0">Všetky odporúčané tipy dňa naraz</h3>
-      <p class="muted">Appka prejde všetky zápasy vybraného dňa pred výkopom${fixturesLoading ? "" : ` (${plural(n, "zápas", "zápasy", "zápasov")})`} a ukáže všetky tipy, ktoré prešli pravidlami (68 – 80${NB}% a kontrola kurzu), zoradené od najvyššej dôvery. Tipy 65 – 67${NB}% ukáže zvlášť – idú len do sledovaných.</p>
+      <p class="muted">Appka prejde všetky zápasy vybraného dňa pred výkopom${fixturesLoading ? "" : ` (${plural(n, "zápas", "zápasy", "zápasov")})`} a ukáže všetky tipy, ktoré prešli pravidlami (68 – 80${NB}% a kontrola kurzu), zoradené od najvyššej dôvery. Tipy 65 – 67${NB}% ukáže zvlášť – idú len do sledovaných.${dayTipsTimeBarHtml() ? " Hore si môžeš vybrať len jeden čas výkopu, napríklad len zápasy o 15:00." : ""}</p>
       <button type="button" class="btn" data-dt-start>Spustiť analýzu</button>
     </div>`;
-    dayTipsPaneEl.querySelector("[data-dt-start]").onclick = () => showDayTips();
+    dayTipsPaneEl.querySelector("[data-dt-start]").onclick = () => { dayTipsTime = ""; showDayTips(); };
+    bindDayTipsTimeBar();
     return;
   }
   if (dayTips.none) {
-    dayTipsPaneEl.innerHTML = `<div class="empty-card">V tento deň (${escapeHtml(dayKeyLabel(dayTips.date))}) už nie sú žiadne zápasy pred výkopom.</div>`;
+    dayTipsPaneEl.innerHTML = `${dayTipsTimeBarHtml()}<div class="empty-card">V tento deň (${escapeHtml(dayKeyLabel(dayTips.date))}) už nie sú žiadne zápasy pred výkopom${dayTips.time ? ` o ${escapeHtml(dayTips.time)}` : ""}.</div>`;
+    bindDayTipsTimeBar();
     return;
   }
   const otherDate = dayTips.date !== (matchDateInput.value || localToday());
@@ -1687,9 +1728,9 @@ function renderDayTipsView() {
       </div>`;
     })
     .join("");
-  dayTipsPaneEl.innerHTML = `
+  dayTipsPaneEl.innerHTML = `${dayTipsTimeBarHtml()}
     <p class="muted small dt-meta">
-      ${plural(dayTips.items.length, "tip", "tipy", "tipov")} · analyzované: ${plural(dayTips.analyzed, "zápas", "zápasy", "zápasov")} pred výkopom · zoradené od najvyššej dôvery${
+      ${plural(dayTips.items.length, "tip", "tipy", "tipov")} · analyzované: ${plural(dayTips.analyzed, "zápas", "zápasy", "zápasov")} ${dayTips.time ? `s výkopom o ${escapeHtml(dayTips.time)}` : "pred výkopom"} · zoradené od najvyššej dôvery${
         dayTips.failed ? ` · <span class="loss">${dayTips.failed} sa nepodarilo analyzovať</span>` : ""
       }${otherDate ? ` · <span class="gold">výsledky sú pre ${escapeHtml(dayKeyLabel(dayTips.date))}</span>` : ""}
     </p>
@@ -1700,8 +1741,9 @@ function renderDayTipsView() {
         <label class="small">Telegram <select id="dtBulkTg"><option value="premium">◆ Členský kanál</option><option value="free">★ FREE kanál</option><option value="">Neposielať</option></select></label>
         <button type="button" class="btn" id="dtBulkSave" disabled>Uložiť všetky s kurzom</button>
       </div>
-    </div>${rows}` : `<div class="empty-card">V tento deň nie je žiadny tip, ktorý by prešiel pravidlami (68 – 80${NB}% a kontrola kurzu).</div>`}`;
+    </div>${rows}` : `<div class="empty-card">${dayTips.time ? `Pri zápasoch o ${escapeHtml(dayTips.time)}` : "V tento deň"} nie je žiadny tip, ktorý by prešiel pravidlami (68 – 80${NB}% a kontrola kurzu).</div>`}`;
 
+  bindDayTipsTimeBar();
   // − / + pri každom tipe: zbalený tip ukáže len zápas, tip a dôveru.
   dayTipsPaneEl.querySelectorAll("[data-tip-toggle]").forEach((btn) => {
     btn.onclick = () => {

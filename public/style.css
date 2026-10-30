@@ -869,6 +869,15 @@ span.crest { background: radial-gradient(circle at 35% 35%, #2A3346, #141A26); b
 
 .kpis { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
 
+/* --- Tipy dňa: výber času výkopu (30. 10. 2026) --- */
+.dt-times { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; margin: 0 0 18px; padding: 12px 14px; border-radius: 18px; border: 1px solid var(--line); background: rgba(255, 255, 255, .02); }
+.dt-times-l { font: 600 10.5px/1.4 var(--sans); letter-spacing: .22em; text-transform: uppercase; color: var(--gold); }
+.dt-times .chips { gap: 6px; }
+.dt-times .chip { font-family: var(--display); font-weight: 600; }
+.dt-time-n { margin-left: 6px; padding: 1px 7px; border-radius: 999px; font: 600 11px/1.4 var(--sans); background: rgba(255, 255, 255, .07); color: var(--muted); }
+.dt-times .chip.on .dt-time-n { background: rgba(11, 14, 20, .18); color: #0B0E14; }
+@media (max-width: 899px) { .dt-times { flex-direction: column; align-items: flex-start; } .dt-times .chips { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; padding-bottom: 2px; } .dt-times .chip { flex: none; } }
+
 /* --- Zápasy: súťaže ako karty, ťuknutím sa otvoria (30. 10. 2026) --- */
 .fixture-list { padding: 0 20px; }
 .fixture-list .lg-tools, .fixture-list .lg-sec { padding-left: 0; padding-right: 0; }
