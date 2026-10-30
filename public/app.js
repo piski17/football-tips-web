@@ -541,7 +541,9 @@ let fixtureTotalCount = 0;
 let selectedFixtureId = null;
 let fixturesLoading = false;
 let fixturesPromise = null;
-const collapsedLeagues = new Set(); // ligy schované kliknutím, zostáva aj po automatickom obnovení
+// Zápasy (30. 10. 2026, Michal): súťaže sú zbalené ako karty, ťuknutím na súťaž sa otvoria jej zápasy.
+// Otvorené súťaže zostávajú otvorené aj po automatickom obnovení.
+const openLeagues = new Set();
 
 const matchDateInput = document.getElementById("matchDateInput");
 const fixtureListEl = document.getElementById("fixtureList");
@@ -744,23 +746,30 @@ function renderFixtureList() {
   }
   // Súťaže v pevnom poradí a v skupinách (najvyššie ligy, druhé ligy, Liga majstrov).
   if (groups.length > 1) {
-    const allCollapsed = groups.every((g) => collapsedLeagues.has(g.league.name ?? "Liga"));
+    const allCollapsed = !q && groups.every((g) => !openLeagues.has(g.league.name ?? "Liga"));
     html += `<div class="lg-tools"><span class="faint small">${plural(groups.length, "súťaž", "súťaže", "súťaží")} · ${plural(groups.reduce((a, g) => a + g.fixtures.length, 0), "zápas", "zápasy", "zápasov")}</span><button type="button" class="btn ghost sm" data-lg-all="${allCollapsed ? "open" : "close"}">${allCollapsed ? "Rozbaliť všetky" : "Zbaliť všetky"}</button></div>`;
   }
   let lastGroup = -1;
   html += groups
     .map(({ league, fixtures }) => {
       const name = league.name ?? "Liga";
-      const collapsed = collapsedLeagues.has(name) && !q;
+      const collapsed = !openLeagues.has(name) && !q && !fixtures.some((f) => f.fixtureId === selectedFixtureId);
       const info = leagueInfo(name);
+      const live = fixtures.filter((f) => LIVE_STATUSES.includes(f.status)).length;
+      const upcoming = fixtures.filter((f) => !LIVE_STATUSES.includes(f.status) && !FINISHED_STATUSES.includes(f.status));
+      const meta = live
+        ? `<span class="lg-live"><i class="live-dot"></i>${live} naživo</span>`
+        : upcoming.length
+          ? `prvý výkop ${escapeHtml(timeHm(new Date(Math.min(...upcoming.map((f) => new Date(f.date).getTime())))))}`
+          : "odohrané";
       const head = info.group !== lastGroup ? `<div class="lg-sec">${escapeHtml(LEAGUE_GROUPS[info.group])}</div>` : "";
       lastGroup = info.group;
-      return `${head}<div class="league-group">
+      return `${head}<div class="league-group${collapsed ? "" : " open"}">
         <button type="button" class="lg" data-league="${escapeHtml(name)}" aria-expanded="${!collapsed}">
           ${leagueLogoHtml(league)}
-          <span>${escapeHtml(translateLeagueName(name))}${info.country ? ` <i class="lg-c">${escapeHtml(info.country)}</i>` : ""}</span>
-          <em>${plural(fixtures.length, "zápas", "zápasy", "zápasov")}</em>
-          <span class="chev">${collapsed ? "▸" : "▾"}</span>
+          <span class="lg-name"><b>${escapeHtml(translateLeagueName(name))}</b><small>${info.country ? `${escapeHtml(info.country)} · ` : ""}${meta}</small></span>
+          <em class="lg-count">${fixtures.length}</em>
+          <span class="chev" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16"><path d="m9 6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         </button>
         <div class="lg-rows"${collapsed ? " hidden" : ""}>${fixtures.map(fixtureRowHtml).join("")}</div>
       </div>`;
@@ -775,15 +784,20 @@ fixtureListEl.addEventListener("click", (e) => {
   const all = e.target.closest("[data-lg-all]");
   if (all) {
     const names = [...fixtureListEl.querySelectorAll(".lg")].map((b) => b.dataset.league);
-    for (const n of names) all.dataset.lgAll === "close" ? collapsedLeagues.add(n) : collapsedLeagues.delete(n);
+    for (const n of names) all.dataset.lgAll === "close" ? openLeagues.delete(n) : openLeagues.add(n);
+    if (all.dataset.lgAll === "close") selectedFixtureId = null;
     renderFixtureList();
     return;
   }
   const lg = e.target.closest(".lg");
   if (lg) {
     const name = lg.dataset.league;
-    if (collapsedLeagues.has(name)) collapsedLeagues.delete(name);
-    else collapsedLeagues.add(name);
+    const group = lg.closest(".league-group");
+    if (group?.classList.contains("open")) {
+      openLeagues.delete(name);
+      // súťaž so zvoleným zápasom ostáva inak otvorená – pri zbalení výber zrušíme
+      if (group.querySelector(".fx.on")) selectedFixtureId = null;
+    } else openLeagues.add(name);
     renderFixtureList();
     return;
   }
