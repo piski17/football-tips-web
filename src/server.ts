@@ -138,7 +138,8 @@ function monthlyResults(tips: SavedTip[]) {
 const CUP_LEAGUE_IDS = [2, 3]; // Liga majstrov, Európska liga
 
 const LEAGUE_PRESETS: LeaguePreset[] = [
-  // 29. 10. 2026 (Michalovo rozhodnutie): 15 súťaží – 9 najvyšších líg, 5 druhých líg a Liga majstrov.
+  // 30. 10. 2026 (Michalovo rozhodnutie): 15 súťaží – 9 najvyšších líg, 5 druhých líg a Liga majstrov.
+  // 30. 10. Chance Liga (Česko) a Niké liga (Slovensko) nahradené Belgickom a Škótskom (viac trhov u stávkoviek).
   // Odstránené: Európska liga, Belgicko, Turecko, Poľsko (a skúšané Rakúsko, Švajčiarsko, Dánsko, Škótsko, Chorvátsko).
   { id: 39, name: "Premier League", country: "Anglicko" },
   { id: 140, name: "La Liga", country: "Španielsko" },
@@ -147,8 +148,8 @@ const LEAGUE_PRESETS: LeaguePreset[] = [
   { id: 61, name: "Ligue 1", country: "Francúzsko" },
   { id: 88, name: "Eredivisie", country: "Holandsko" },
   { id: 94, name: "Primeira Liga", country: "Portugalsko" },
-  { id: 345, name: "Chance Liga", country: "Česko" },
-  { id: 332, name: "Niké liga", country: "Slovensko" },
+  { id: 144, name: "Jupiler Pro League", country: "Belgicko" },
+  { id: 179, name: "Premiership", country: "Škótsko" },
   { id: 40, name: "Championship", country: "Anglicko" },
   { id: 79, name: "2. Bundesliga", country: "Nemecko" },
   { id: 136, name: "Serie B", country: "Taliansko" },
@@ -2751,7 +2752,7 @@ async function runAutoAnalysis(): Promise<void> {
           recordedAt,
           status: "pending" as const,
         }));
-        await recordAutoFixture({ fixtureId: fixture.fixtureId, matchDate: fixture.date, tips: entries.length }, entries);
+        await recordAutoFixture({ fixtureId: fixture.fixtureId, matchDate: fixture.date, tips: entries.length, league: String(fixture.league.name ?? "") }, entries);
       } catch (err) {
         // jeden zápas nesmie zastaviť ostatné – skúsi sa znova o 15 minút
         console.error(`Automatická analýza zápasu ${fixture.fixtureId} zlyhala:`, err);
@@ -2793,7 +2794,7 @@ async function settleAutoEntries(): Promise<void> {
 app.get("/api/auto-tips", async (_req, res) => {
   try {
     const [entries, fixtures] = await Promise.all([listAuto(), listAutoFixtures()]);
-    res.json({ entries, fixtures: fixtures.map((f) => ({ matchDate: f.matchDate, tips: f.tips })) });
+    res.json({ entries, fixtures: fixtures.map((f) => ({ matchDate: f.matchDate, tips: f.tips, league: f.league ?? null })) });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }

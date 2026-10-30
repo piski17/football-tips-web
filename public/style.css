@@ -857,3 +857,15 @@ input, select, textarea, .search, table, .tab, .stat, .panel, .box { border-radi
 }
 html body .top { background: rgba(10, 14, 22, .94) !important; }
 .hist-pane > h3.sh:first-child { border-top: 0 !important; padding-top: 0 !important; }
+
+/* Všetky zápasy – automaticky: každá súťaž zvlášť (30. 10. 2026) */
+.auto-leagues { margin: 4px 0 10px; flex-wrap: wrap; }
+.auto-leagues .chip b { margin-left: 4px; opacity: .7; font-weight: 600; }
+.auto-lg-row { cursor: pointer; }
+.auto-lg-row:hover td { background: rgba(212, 175, 106, .07); }
+.auto-lg-head td { padding-top: 14px !important; border-bottom: 1px solid var(--line); }
+.auto-lg-head b { color: var(--gold-hi); font-weight: 600; }
+.auto-lg-head span { margin-left: 10px; color: var(--muted); font-size: 12.5px; }
+.auto-lg-head span b { color: inherit; }
+.auto-lg-head span b.g { color: var(--win); }
+.auto-lg-head span b.l { color: var(--loss); }

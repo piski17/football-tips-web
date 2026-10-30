@@ -50,6 +50,7 @@ const LEAGUE_NAME_SK = {
   // Názvy z API pre české a slovenské ligy (26. 10. 2026).
   "Czech Liga": "Chance Liga",
   "Super Liga": "Niké liga",
+  "Premiership": "Škótska Premiership",
 };
 
 function translateLeagueName(name) {
@@ -1952,6 +1953,8 @@ const CALIBRATION_TO = 82.5;
 // =====================================================================
 let autoData = null;
 let autoStrictOnly = false;
+// Filter súťaže (30. 10. 2026, Michal): „nech to nie je všetko na jednu kopu, každá liga zvlášť“.
+let autoLeague = "";
 async function renderAutoTips() {
   const el = document.getElementById("autoResult");
   if (!el) return;
@@ -1982,17 +1985,25 @@ function autoStats(list) {
 function drawAutoTips() {
   const el = document.getElementById("autoResult");
   if (!el || !autoData) return;
-  const fixtures = autoData.fixtures || [];
-  const list = (autoData.entries || []).filter((t) => !autoStrictOnly || !t.strictFail);
+  const allFixtures = autoData.fixtures || [];
+  const allList = (autoData.entries || []).filter((t) => !autoStrictOnly || !t.strictFail);
+  const leagueSk = (name) => translateLeagueName(name || "Iná súťaž");
+  // Súťaže podľa počtu tipov; vybraná súťaž zúži všetko nižšie (KPI, trhy, dni).
+  const leagueCount = new Map();
+  for (const t of allList) leagueCount.set(leagueSk(t.league), (leagueCount.get(leagueSk(t.league)) || 0) + 1);
+  for (const f of allFixtures) if (f.league && !leagueCount.has(leagueSk(f.league))) leagueCount.set(leagueSk(f.league), 0);
+  if (autoLeague && !leagueCount.has(autoLeague)) autoLeague = "";
+  const list = autoLeague ? allList.filter((t) => leagueSk(t.league) === autoLeague) : allList;
+  const fixtures = autoLeague ? allFixtures.filter((f) => f.league && leagueSk(f.league) === autoLeague) : allFixtures;
   const cls = (v) => (v > 0 ? "g" : v < 0 ? "l" : "");
-  if (!fixtures.length) {
+  if (!allFixtures.length) {
     el.innerHTML = `<p class="faint small">Zatiaľ nič. Server prejde každý zápas zo všetkých súťaží sám, asi hodinu pred výkopom (keď už bývajú zostavy). Prvé tipy sa tu ukážu pri najbližších zápasoch, vyhodnotia sa samy po skončení zápasu.</p>`;
     return;
   }
   const st = autoStats(list);
   const dayOf = (d) => isoDay(new Date(d));
   const today = localToday();
-  const first = fixtures.reduce((m, f) => (!m || f.matchDate < m ? f.matchDate : m), "");
+  const first = fixtures.reduce((m, f) => (!m || f.matchDate < m ? f.matchDate : m), "") || allFixtures.reduce((m, f) => (!m || f.matchDate < m ? f.matchDate : m), "");
   const todayFx = fixtures.filter((f) => dayOf(f.matchDate) === today).length;
   const todayTips = list.filter((t) => dayOf(t.matchDate) === today).length;
   const kpis = `<div class="kpis">
@@ -2005,6 +2016,10 @@ function drawAutoTips() {
   const filter = `<div class="chips" style="margin:14px 0 4px">
     <button type="button" class="chip${autoStrictOnly ? "" : " on"}" data-auto-strict="0">Všetky tipy modelu</button>
     <button type="button" class="chip${autoStrictOnly ? " on" : ""}" data-auto-strict="1">Len tie, čo prejdú aj 60 / 40</button>
+  </div>
+  <div class="chips auto-leagues">
+    <button type="button" class="chip${autoLeague ? "" : " on"}" data-auto-league="">Všetky súťaže <b>${allList.length}</b></button>
+    ${[...leagueCount.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "sk")).map(([name, n]) => `<button type="button" class="chip${autoLeague === name ? " on" : ""}" data-auto-league="${escapeHtml(name)}">${escapeHtml(name)} <b>${n}</b></button>`).join("")}
   </div>`;
   const row = (label, s) =>
     `<td class="num">${s.total}</td><td class="num">${s.settled ? `${s.won} z ${s.settled} (${fmtNum(s.pct, 0)}${NB}%)` : "–"}</td><td class="num">${s.model != null ? `${fmtNum(s.model, 0)}${NB}%` : "–"}</td><td class="num ${cls(s.profit)}">${s.withOdds ? `${signed(s.profit, 1)}${NB}j.` : "–"}</td>`;
@@ -2015,7 +2030,16 @@ function drawAutoTips() {
     .sort((a, b) => b[1].total - a[1].total)
     .map(([m, s]) => `<tr><td>${escapeHtml(m)}</td>${row(m, s)}</tr>`)
     .join("");
-  const marketTable = `<h4 class="ct">Podľa trhov</h4><div class="table-wrap"><table class="bt-table"><thead><tr><th>Trh</th><th class="num">Tipov</th><th class="num">Vyšlo</th><th class="num">Model</th><th class="num">Zisk</th></tr></thead><tbody>${marketRows}</tbody></table></div>`;
+  // Podľa súťaží: každá liga zvlášť, klik na riadok zobrazí len ju.
+  const byLeague = new Map();
+  for (const t of allList) byLeague.set(leagueSk(t.league), [...(byLeague.get(leagueSk(t.league)) || []), t]);
+  const leagueRows = [...byLeague.entries()]
+    .map(([lg, l]) => [lg, autoStats(l)])
+    .sort((a, b) => b[1].total - a[1].total)
+    .map(([lg, s]) => `<tr class="auto-lg-row${autoLeague === lg ? " on" : ""}" data-auto-league="${escapeHtml(lg)}"><td>${escapeHtml(lg)}</td>${row(lg, s)}</tr>`)
+    .join("");
+  const leagueTable = autoLeague ? "" : `<h4 class="ct">Podľa súťaží</h4><div class="table-wrap"><table class="bt-table"><thead><tr><th>Súťaž</th><th class="num">Tipov</th><th class="num">Vyšlo</th><th class="num">Model</th><th class="num">Zisk</th></tr></thead><tbody>${leagueRows}</tbody></table></div><p class="faint small">Ťukni na súťaž a uvidíš len jej zápasy a tipy.</p>`;
+  const marketTable = `<h4 class="ct">Podľa trhov${autoLeague ? ` – ${escapeHtml(autoLeague)}` : ""}</h4><div class="table-wrap"><table class="bt-table"><thead><tr><th>Trh</th><th class="num">Tipov</th><th class="num">Vyšlo</th><th class="num">Model</th><th class="num">Zisk</th></tr></thead><tbody>${marketRows}</tbody></table></div>`;
   // Po dňoch (posledných 30 dní): riadok dňa, po kliknutí všetky jeho tipy.
   const fxByDay = new Map();
   for (const f of fixtures) fxByDay.set(dayOf(f.matchDate), (fxByDay.get(dayOf(f.matchDate)) || 0) + 1);
@@ -2027,8 +2051,16 @@ function drawAutoTips() {
     .map((day) => {
       const tips = (tipsByDay.get(day) || []).sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime());
       const s = autoStats(tips);
-      const rows = tips
-        .map((t) => `<tr><td style="white-space:nowrap">${escapeHtml(timeHm(new Date(t.matchDate)))}</td><td>${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))}<br><span class="faint">${escapeHtml(translateLeagueName(t.league))} · ${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}${t.strictFail ? " · neprejde 60 / 40" : ""}</span></td><td class="num">${fmtNum(t.probability, 0)}${NB}%</td><td class="num">${typeof t.odds === "number" ? fmtOdds(t.odds) : "–"}</td><td>${res[t.status] || escapeHtml(t.status)}</td></tr>`)
+      // V rámci dňa každá súťaž zvlášť (s vlastným súčtom), súťaže podľa prvého výkopu.
+      const dayLeagues = new Map();
+      for (const t of tips) dayLeagues.set(leagueSk(t.league), [...(dayLeagues.get(leagueSk(t.league)) || []), t]);
+      const tipRow = (t) => `<tr><td style="white-space:nowrap">${escapeHtml(timeHm(new Date(t.matchDate)))}</td><td>${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))}<br><span class="faint">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}${t.strictFail ? " · neprejde 60 / 40" : ""}</span></td><td class="num">${fmtNum(t.probability, 0)}${NB}%</td><td class="num">${typeof t.odds === "number" ? fmtOdds(t.odds) : "–"}</td><td>${res[t.status] || escapeHtml(t.status)}</td></tr>`;
+      const rows = [...dayLeagues.entries()]
+        .map(([lg, l]) => {
+          const ls = autoStats(l);
+          const head = autoLeague ? "" : `<tr class="auto-lg-head"><td colspan="5"><b>${escapeHtml(lg)}</b><span>${plural(l.length, "tip", "tipy", "tipov")}${ls.settled ? ` · vyšlo ${ls.won} z ${ls.settled}` : ""}${ls.withOdds && ls.settled ? ` · <b class="${cls(ls.profit)}">${signed(ls.profit, 1)}${NB}j.</b>` : ""}</span></td></tr>`;
+          return head + l.map(tipRow).join("");
+        })
         .join("");
       return `<details class="auto-day"${day === today ? " open" : ""}>
         <summary><span class="auto-d">${escapeHtml(dayKeyLabel(day))}</span><span>${plural(fxByDay.get(day) || 0, "zápas", "zápasy", "zápasov")} · ${plural(tips.length, "tip", "tipy", "tipov")}</span><span>${s.settled ? `vyšlo ${s.won} z ${s.settled}` : s.pending ? `čaká ${s.pending}` : ""}</span><span class="${cls(s.profit)}">${s.withOdds ? `${signed(s.profit, 1)}${NB}j.` : ""}</span></summary>
@@ -2039,9 +2071,16 @@ function drawAutoTips() {
   el.innerHTML =
     kpis +
     filter +
+    (allList.length ? leagueTable : "") +
     (list.length ? marketTable : "") +
     `<h4 class="ct">Po dňoch</h4>${dayHtml}` +
     `<p class="faint small">Server každý zápas zo všetkých súťaží prejde sám, asi hodinu pred výkopom, a zapíše všetky tipy, ktoré by model odporučil (pásmo 68 – 80${NB}%, hodnota +5 až +25${NB}%, kurz aspoň 1,50, najviac 1 tip z typu). Kurz je zo stávkoviek v tom čase. Klientom nejdú, nie sú na webe a nerátajú sa do úspešnosti – sú len pre teba, aby si videl, ako model funguje na veľkom množstve zápasov.</p>`;
+  el.querySelectorAll("[data-auto-league]").forEach((b) => {
+    b.onclick = () => {
+      autoLeague = b.dataset.autoLeague;
+      drawAutoTips();
+    };
+  });
   el.querySelectorAll("[data-auto-strict]").forEach((b) => {
     b.onclick = () => {
       autoStrictOnly = b.dataset.autoStrict === "1";

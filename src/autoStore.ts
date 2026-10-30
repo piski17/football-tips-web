@@ -42,6 +42,8 @@ export interface AutoFixture {
   fixtureId: number;
   matchDate: string;
   tips: number;
+  /** Súťaž (od 30. 10. 2026 – pre rozdelenie podľa líg; staršie záznamy ju nemajú). */
+  league?: string;
 }
 
 interface FileData {
