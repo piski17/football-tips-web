@@ -84,15 +84,15 @@ export const MAX_PROBABILITY = 80;
  * testoch vyšli tipy 70 – 80 % o ~3 body častejšie ako celé pásmo 68 – 80 %.
  */
 export const STRONG_TIP_MIN_PROBABILITY = 70;
-/** Kurz pre odporúčaný tip musí ponúkať aspoň toľko stávkoviek. */
-export const MIN_BOOKMAKERS = 2;
 /**
- * 30. 10. 2026 (Michalovo rozhodnutie, naostro): strely na bránu a karty v API-Football ponúka
- * vo väčšine líg len 1 stávkovka (Nástroje → Trhy v ligách), preto pri nich stačí 1. Kurz aj tak
- * stráži filter rozporu so stávkovkami a hranica podozrivej hodnoty. Pri málo dátach v sezóne
- * ostáva podmienka 2 stávkoviek.
+ * Kurz pre odporúčaný tip musí ponúkať aspoň toľko stávkoviek.
+ * 30. 10. 2026 (Michalovo rozhodnutie, naostro): pri všetkých trhoch stačí 1 stávkovka – v API-Football
+ * ponúka napr. strely na bránu a karty vo väčšine líg len jedna (Nástroje → Trhy v ligách). Kurz aj tak
+ * stráži filter rozporu so stávkovkami, hranica podozrivej hodnoty (+25 %) a poistka hraníc rohov.
+ * Pri tíme s málo zápasmi v sezóne ostávajú 2 stávkovky (MIN_BOOKMAKERS_FEW_GAMES), ako v Mac appke.
  */
-export const ONE_BOOKMAKER_CATEGORIES = ["strely", "strely_timu", "karty", "karty_timu"];
+export const MIN_BOOKMAKERS = 1;
+export const MIN_BOOKMAKERS_FEW_GAMES = 2;
 
 // Stávky na polčasy, jednotlivé tímy, handicapy a pod. - tie nechceme.
 // „Multicorners“ = rohy v 1. polčase × rohy v 2. polčase (22. 10. 2026: appka ho brala ako rohy

@@ -1,4 +1,4 @@
-import { plausibleLine, offeredLines, MIN_BOOKMAKERS, ONE_BOOKMAKER_CATEGORIES, MIN_ODDS, MAX_PROBABILITY, MIN_PROBABILITY, MIN_EXPECTED_VALUE, SUSPICIOUS_EXPECTED_VALUE, findOdds, marketProbabilityDetail, STRONG_TIP_MIN_PROBABILITY, WATCH_BELOW_PROBABILITY, WATCH_BAND_MIN_PROBABILITY } from "./oddsMatcher";
+import { plausibleLine, offeredLines, MIN_BOOKMAKERS, MIN_ODDS, MAX_PROBABILITY, MIN_PROBABILITY, MIN_EXPECTED_VALUE, SUSPICIOUS_EXPECTED_VALUE, findOdds, marketProbabilityDetail, STRONG_TIP_MIN_PROBABILITY, WATCH_BELOW_PROBABILITY, WATCH_BAND_MIN_PROBABILITY } from "./oddsMatcher";
 import { listLeads, deleteLead, recordLead } from "./leadsStore";
 import { getMeta, setMeta } from "./metaStore";
 import * as crypto from "crypto";
@@ -539,13 +539,13 @@ const COVERAGE_CANDIDATES: (LeaguePreset & { calendar?: boolean })[] = [
   { id: 103, name: "Eliteserien", country: "Nórsko", calendar: true },
   { id: 113, name: "Allsvenskan", country: "Švédsko", calendar: true },
 ];
-const COVERAGE_MARKETS: { key: string; label: string; markets: string[]; one?: boolean }[] = [
+const COVERAGE_MARKETS: { key: string; label: string; markets: string[] }[] = [
   { key: "goals", label: "Góly v zápase", markets: ["Góly"] },
   { key: "teamGoals", label: "Góly tímu", markets: ["Góly domácich", "Góly hostí"] },
   { key: "corners", label: "Rohy v zápase", markets: ["Rohy"] },
   { key: "teamCorners", label: "Rohy tímu", markets: ["Rohy domácich", "Rohy hostí"] },
-  { key: "cards", label: "Karty", markets: ["Karty", "Karty domácich", "Karty hostí"], one: ONE_BOOKMAKER_CATEGORIES.includes("karty") },
-  { key: "shots", label: "Strely na bránu", markets: ["Strely na bránu", "Strely na bránu domácich", "Strely na bránu hostí"], one: ONE_BOOKMAKER_CATEGORIES.includes("strely") },
+  { key: "cards", label: "Karty", markets: ["Karty", "Karty domácich", "Karty hostí"] },
+  { key: "shots", label: "Strely na bránu", markets: ["Strely na bránu", "Strely na bránu domácich", "Strely na bránu hostí"] },
   { key: "fouls", label: "Fauly", markets: ["Fauly", "Fauly domácich", "Fauly hostí"] },
 ];
 type CoverageRow = { order: number; id: number; name: string; country: string; inProject: boolean; fixtures: number; withOdds: number; markets: Record<string, number>; single: Record<string, number>; betNames: string[]; error?: string };
@@ -574,8 +574,7 @@ async function runMarketCoverage() {
           if (!all.length) continue;
           row.withOdds++;
           for (const m of COVERAGE_MARKETS) {
-            // Strely a karty (30. 10. 2026) model berie aj od 1 stávkovky – rovnako ich ráta aj tento prehľad.
-            if (m.markets.some((market) => offeredLines(m.one ? all : odds, market).length > 0)) row.markets[m.key] = (row.markets[m.key] || 0) + 1;
+            if (m.markets.some((market) => offeredLines(odds, market).length > 0)) row.markets[m.key] = (row.markets[m.key] || 0) + 1;
             // Trh, ktorý ponúka len 1 stávkovka (model ho kvôli MIN_BOOKMAKERS neberie).
             else if (m.markets.some((market) => offeredLines(all, market).length > 0)) row.single[m.key] = (row.single[m.key] || 0) + 1;
           }

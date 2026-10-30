@@ -12,7 +12,7 @@ import {
   MAX_PROBABILITY,
   WATCH_BAND_MIN_PROBABILITY,
   MIN_BOOKMAKERS,
-  ONE_BOOKMAKER_CATEGORIES,
+  MIN_BOOKMAKERS_FEW_GAMES,
 } from "./oddsMatcher";
 import {
   Fixture,
@@ -1411,10 +1411,9 @@ export function predictMatch(
         b.rejectReason = `kurz pod ${MIN_ODDS.toFixed(2).replace(".", ",")}`;
         b.rejectCode = "min_odds";
         lowValueBets.push(b);
-      } else if ((b.oddsBookmakers ?? 0) < (ONE_BOOKMAKER_CATEGORIES.includes(marketCategory(b.market) ?? "") && !fewGames ? 1 : MIN_BOOKMAKERS)) {
-        // Kurz len od jednej stávkovky býva nespoľahlivý (často hranica, ktorú
-        // naše stávkovky ani neponúkajú) - hodnota sa nedá overiť.
-        b.rejectReason = "kurz len od jednej stávkovky";
+      } else if ((b.oddsBookmakers ?? 0) < (fewGames ? MIN_BOOKMAKERS_FEW_GAMES : MIN_BOOKMAKERS)) {
+        // Málo dát v sezóne a kurz len od jednej stávkovky - hodnota sa nedá spoľahlivo overiť.
+        b.rejectReason = "kurz len od jednej stávkovky pri málo dátach v sezóne";
         b.rejectCode = "one_bookmaker";
         lowValueBets.push(b);
       } else if (ev > SUSPICIOUS_EXPECTED_VALUE && fewGames) {

@@ -4243,7 +4243,7 @@ document.getElementById("openVisitsBtn").addEventListener("click", () => openVis
 async function openCoverage() {
   const m = openModal(`
     <h3>Trhy v ligách</h3>
-    <p class="muted small">Appka sa pri každej lige pozrie na 3 najbližšie zápasy a na kurzy v API-Football (odtiaľ ich berie aj model). ✓ = trh s kurzom aspoň od 2 stávkoviek (pri strelách na bránu a kartách stačí 1) pri všetkých zápasoch, čísla = pri koľkých zápasoch z koľkých. Držanie lopty stávkovky cez API neponúkajú v žiadnej lige.</p>
+    <p class="muted small">Appka sa pri každej lige pozrie na 3 najbližšie zápasy a na kurzy v API-Football (odtiaľ ich berie aj model). ✓ = trh s kurzom aspoň od 1 stávkovky pri všetkých zápasoch, čísla = pri koľkých zápasoch z koľkých. Držanie lopty stávkovky cez API neponúkajú v žiadnej lige.</p>
     <div data-body><p class="empty">Načítavam…</p></div>
     <div class="modal-actions"><button type="button" class="btn ghost" data-close>Zavrieť</button><button type="button" class="btn" data-run>Skontrolovať teraz</button></div>`, { wide: true });
   const body = m.el.querySelector("[data-body]");
