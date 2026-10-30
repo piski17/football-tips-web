@@ -383,7 +383,24 @@ async function askRealOdds(bet) {
   // Poistka: kurz nad 20 pri tipe s dôverou 68 – 80 % je takmer iste preklep (napr. hranica namiesto kurzu).
   if (odd > 20) { showToast(`${fmtOdds(odd)} nevyzerá ako kurz – tip sa neuložil. Zadaj kurz, napr. 1,85.`); return null; }
   if (odd < min) { showToast(`Kurz ${fmtOdds(odd)} je pod minimom ${fmtOdds(min)} – tip sa neuložil, radšej ho vynechaj.`); return null; }
+  if (!confirmHighValue(bet, odd)) return null;
   return Math.round(odd * 100) / 100;
+}
+
+/**
+ * Poistka (30. 10. 2026): hodnota nad +25 % s tvojím kurzom znamená, že kurz je oveľa vyšší ako
+ * u ostatných stávkoviek – často preklep alebo iný trh. Vráti hodnotu v % (napr. 27), inak null.
+ */
+function highValuePct(bet, odd) {
+  const p = bet?.probability;
+  if (typeof p !== "number" || !(odd > 1)) return null;
+  const ev = (p / 100) * odd;
+  return ev > 1.25 ? Math.round((ev - 1) * 100) : null;
+}
+function confirmHighValue(bet, odd) {
+  const pct = highValuePct(bet, odd);
+  if (pct == null) return true;
+  return window.confirm(`Skontroluj kurz – je oveľa vyšší ako u ostatných stávkoviek.\n\nPri kurze ${fmtOdds(odd)} a dôvere ${fmtNum(bet.probability, 0)}${NB}% vychádza hodnota +${pct}${NB}% (pravidlo je najviac +25${NB}%). Nie je to preklep alebo iný trh?\n\nUložiť tip aj tak?`);
 }
 
 /** Výber Telegram kanála: "premium", "free", alebo null = neposielať. */
@@ -1708,6 +1725,8 @@ function renderDayTipsView() {
       const sc = st.ok && dayTips.items[i].bet.softConflict ? softConflictCheck(dayTips.items[i].bet, st.odd) : null;
       const sx = st.ok && (!sc || sc.pass) && !dayTips.items[i].bet.watchBand ? strictCheck(dayTips.items[i].bet, st.odd) : null;
       el.className = "odds-st" + (st.odd == null ? "" : (sc && !sc.pass) || (sx && !sx.pass) ? " bad" : st.ok ? " ok" : " bad");
+      const hv = st.ok ? highValuePct(dayTips.items[i].bet, st.odd) : null;
+      if (hv != null) { el.className = "odds-st bad"; el.textContent = `⚠ Skontroluj kurz – hodnota +${hv}${NB}%`; if (!matchHasStarted(dayTips.items[i].r.fixture)) n++; return; }
       el.textContent = st.odd == null ? "" : sc && !sc.pass ? `✗ rozpor ${Math.round(sc.gap)} b. – len sledovať` : sx && !sx.pass ? "✗ neprejde pri 60 / 40 – len sledovať" : sc ? `✓ rozpor ${Math.round(sc.gap)} b. – prejde` : st.ok && dayTips.items[i].bet.watchBand ? "✓ má hodnotu – len sledovať" : st.ok ? "✓ má hodnotu" : st.odd > 20 ? "✗ preklep?" : `✗ pod ${fmtOdds(st.min)}`;
       if (st.ok && !matchHasStarted(dayTips.items[i].r.fixture)) n++;
     });
@@ -1741,6 +1760,7 @@ function renderDayTipsView() {
       if (matchHasStarted(item.r.fixture)) { showToast(MATCH_STARTED_TEXT); return; }
       const st = oddsState(idx);
       if (st.odd != null && !st.ok) { showToast(st.odd > 20 ? `${fmtOdds(st.odd)} nevyzerá ako kurz.` : `Kurz ${fmtOdds(st.odd)} je pod minimom ${fmtOdds(st.min)} – tip radšej vynechaj.`); return; }
+      if (st.ok && !confirmHighValue(item.bet, st.odd)) return;
       const realOdds = st.ok ? Math.round(st.odd * 100) / 100 : await askRealOdds(item.bet);
       if (realOdds == null) return;
       btn.disabled = true;
@@ -1761,6 +1781,8 @@ function renderDayTipsView() {
     const target = document.getElementById("dtBulkTg").value;
     const todo = dayTips.items.map((_, i) => i).filter((i) => !dayTipSaved.has(i) && oddsState(i).ok && !matchHasStarted(dayTips.items[i].r.fixture));
     if (!todo.length) return;
+    const high = todo.filter((i) => highValuePct(dayTips.items[i].bet, oddsState(i).odd) != null);
+    if (high.length && !window.confirm(`Skontroluj kurz – ${plural(high.length, "tip má", "tipy majú", "tipov má")} kurz oveľa vyšší ako u ostatných stávkoviek (hodnota nad +25${NB}%). Nie je to preklep?\n\nUložiť všetky aj tak?`)) return;
     bulk.disabled = true;
     let saved = 0, sent = 0, errs = 0;
     for (const i of todo) {

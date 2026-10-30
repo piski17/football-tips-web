@@ -2750,7 +2750,10 @@ async function checkLineups(): Promise<void> {
           ok = false;
           const lo = tip.watchBand ? WATCH_BAND_MIN_PROBABILITY : MIN_PROBABILITY;
           reason = `dôvera ${c.probability.toFixed(0)} % je mimo pásma ${lo} – ${MAX_PROBABILITY} %`;
-        } else if (c.marketConflict) {
+        } else if (c.marketConflict && c.rejectCode !== "ev_high") {
+          // „Podozrivo vysoká hodnota“ z modelu sa počíta s momentálnym kurzom z API (30. 10. 2026 chyba:
+          // Bielefeld – Braunschweig hlásil +27 %, s uloženým kurzom 1,64 to bolo +15 %).
+          // Hodnota sa preto overuje nižšie len s kurzom uloženým pri tipe.
           ok = false;
           reason = c.marketConflict;
         } else if (odds != null) {
