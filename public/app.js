@@ -57,6 +57,63 @@ function translateLeagueName(name) {
   return LEAGUE_NAME_SK[name] ?? name;
 }
 
+/**
+ * Poradie a skupiny súťaží (30. 10. 2026, Michal: „nech je v tom poriadok“) – všade v appke rovnako:
+ * najvyššie ligy, druhé ligy, Liga majstrov; staré súťaže (už sa netipujú) na koniec ako „Vyradené“.
+ * Kľúč je názov ligy z API (tak, ako je uložený pri tipe).
+ */
+const LEAGUE_GROUPS = ["Najvyššie ligy", "Druhé ligy", "Liga majstrov", "Vyradené súťaže"];
+const LEAGUE_ORDER = [
+  ["Premier League", "Anglicko", 0],
+  ["La Liga", "Španielsko", 0],
+  ["Serie A", "Taliansko", 0],
+  ["Bundesliga", "Nemecko", 0],
+  ["Ligue 1", "Francúzsko", 0],
+  ["Eredivisie", "Holandsko", 0],
+  ["Primeira Liga", "Portugalsko", 0],
+  ["Jupiler Pro League", "Belgicko", 0],
+  ["Premiership", "", 0],
+  ["Championship", "Anglicko", 1],
+  ["2. Bundesliga", "Nemecko", 1],
+  ["Serie B", "Taliansko", 1],
+  ["Segunda División", "Španielsko", 1],
+  ["Ligue 2", "Francúzsko", 1],
+  ["UEFA Champions League", "", 2],
+];
+const LEAGUE_INFO = new Map(LEAGUE_ORDER.map(([name, country, group], i) => [name, { country, group, order: i }]));
+// Aj podľa slovenského názvu (časť tipov má uložený už preložený názov).
+for (const [name, info] of [...LEAGUE_INFO]) LEAGUE_INFO.set(translateLeagueName(name), info);
+function leagueInfo(name) {
+  return LEAGUE_INFO.get(name) || { country: "", group: 3, order: 1000 };
+}
+/** Zoradí položky podľa poradia súťaží (nato podľa názvu). */
+function byLeagueOrder(nameOf) {
+  return (a, b) => {
+    const x = leagueInfo(nameOf(a));
+    const y = leagueInfo(nameOf(b));
+    return x.order - y.order || translateLeagueName(nameOf(a)).localeCompare(translateLeagueName(nameOf(b)), "sk");
+  };
+}
+/** Riadky rozdelené do skupín súťaží: [{ group, title, items }] v správnom poradí. */
+function groupByLeague(items, nameOf) {
+  const sorted = [...items].sort(byLeagueOrder(nameOf));
+  const out = [];
+  for (const it of sorted) {
+    const g = leagueInfo(nameOf(it)).group;
+    if (!out.length || out[out.length - 1].group !== g) out.push({ group: g, title: LEAGUE_GROUPS[g], items: [] });
+    out[out.length - 1].items.push(it);
+  }
+  return out;
+}
+/** <option> zoznam súťaží rozdelený do skupín; counts = Map(názov SK → počet). */
+function leagueOptionsHtml(counts, selected) {
+  return groupByLeague([...counts.keys()], (n) => n)
+    .map((g) => `<optgroup label="${escapeHtml(g.title)}">${g.items
+      .map((n) => `<option value="${escapeHtml(n)}"${n === selected ? " selected" : ""}>${escapeHtml(n)}${leagueInfo(n).country ? ` (${escapeHtml(leagueInfo(n).country)})` : ""} · ${counts.get(n)}</option>`)
+      .join("")}</optgroup>`)
+    .join("");
+}
+
 /** Forma tímu z API (W/D/L) -> slovenské písmená (V/R/P). */
 function translateFormLetter(letter) {
   return ({ W: "V", D: "R", L: "P" })[letter] ?? letter;
@@ -645,7 +702,8 @@ function renderFixtureList() {
           );
       return { league, fixtures };
     })
-    .filter((g) => g.fixtures.length > 0);
+    .filter((g) => g.fixtures.length > 0)
+    .sort(byLeagueOrder((g) => g.league.name));
 
   let html = "";
   if (failed.length) {
@@ -656,14 +714,23 @@ function renderFixtureList() {
   } else if (!groups.length) {
     html += `<p class="empty">Pre „${escapeHtml(fixtureSearchEl.value.trim())}“ sa nič nenašlo.</p>`;
   }
+  // Súťaže v pevnom poradí a v skupinách (najvyššie ligy, druhé ligy, Liga majstrov).
+  if (groups.length > 1) {
+    const allCollapsed = groups.every((g) => collapsedLeagues.has(g.league.name ?? "Liga"));
+    html += `<div class="lg-tools"><span class="faint small">${plural(groups.length, "súťaž", "súťaže", "súťaží")} · ${plural(groups.reduce((a, g) => a + g.fixtures.length, 0), "zápas", "zápasy", "zápasov")}</span><button type="button" class="btn ghost sm" data-lg-all="${allCollapsed ? "open" : "close"}">${allCollapsed ? "Rozbaliť všetky" : "Zbaliť všetky"}</button></div>`;
+  }
+  let lastGroup = -1;
   html += groups
     .map(({ league, fixtures }) => {
       const name = league.name ?? "Liga";
       const collapsed = collapsedLeagues.has(name) && !q;
-      return `<div class="league-group">
+      const info = leagueInfo(name);
+      const head = info.group !== lastGroup ? `<div class="lg-sec">${escapeHtml(LEAGUE_GROUPS[info.group])}</div>` : "";
+      lastGroup = info.group;
+      return `${head}<div class="league-group">
         <button type="button" class="lg" data-league="${escapeHtml(name)}" aria-expanded="${!collapsed}">
           ${league.logo ? `<img class="lg-logo" src="${escapeHtml(league.logo)}" alt="" loading="lazy" />` : ""}
-          <span>${escapeHtml(translateLeagueName(name))}</span>
+          <span>${escapeHtml(translateLeagueName(name))}${info.country ? ` <i class="lg-c">${escapeHtml(info.country)}</i>` : ""}</span>
           <em>${plural(fixtures.length, "zápas", "zápasy", "zápasov")}</em>
           <span class="chev">${collapsed ? "▸" : "▾"}</span>
         </button>
@@ -677,16 +744,19 @@ function renderFixtureList() {
 fixtureSearchEl.addEventListener("input", () => renderFixtureList());
 
 fixtureListEl.addEventListener("click", (e) => {
+  const all = e.target.closest("[data-lg-all]");
+  if (all) {
+    const names = [...fixtureListEl.querySelectorAll(".lg")].map((b) => b.dataset.league);
+    for (const n of names) all.dataset.lgAll === "close" ? collapsedLeagues.add(n) : collapsedLeagues.delete(n);
+    renderFixtureList();
+    return;
+  }
   const lg = e.target.closest(".lg");
   if (lg) {
     const name = lg.dataset.league;
     if (collapsedLeagues.has(name)) collapsedLeagues.delete(name);
     else collapsedLeagues.add(name);
-    const rows = lg.nextElementSibling;
-    const collapsed = collapsedLeagues.has(name);
-    rows.hidden = collapsed;
-    lg.setAttribute("aria-expanded", String(!collapsed));
-    lg.querySelector(".chev").textContent = collapsed ? "▸" : "▾";
+    renderFixtureList();
     return;
   }
   const row = e.target.closest(".fx");
@@ -1759,6 +1829,7 @@ let currentHistoryTips = [];
 let lastStatTips = [];
 let showArchivedTips = false;
 let tipsFilter = "all";
+let tipsLeague = "";
 const tipsListEl = document.getElementById("tipsList");
 const bankrollStartInput = document.getElementById("bankrollStartInput");
 const checkResultsBtn = document.getElementById("checkResultsBtn");
@@ -2017,9 +2088,9 @@ function drawAutoTips() {
     <button type="button" class="chip${autoStrictOnly ? "" : " on"}" data-auto-strict="0">Všetky tipy modelu</button>
     <button type="button" class="chip${autoStrictOnly ? " on" : ""}" data-auto-strict="1">Len tie, čo prejdú aj 60 / 40</button>
   </div>
-  <div class="chips auto-leagues">
-    <button type="button" class="chip${autoLeague ? "" : " on"}" data-auto-league="">Všetky súťaže <b>${allList.length}</b></button>
-    ${[...leagueCount.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "sk")).map(([name, n]) => `<button type="button" class="chip${autoLeague === name ? " on" : ""}" data-auto-league="${escapeHtml(name)}">${escapeHtml(name)} <b>${n}</b></button>`).join("")}
+  <div class="auto-leagues">
+    <select class="lg-select" id="autoLeagueSel" aria-label="Súťaž"><option value="">Všetky súťaže · ${allList.length}</option>${leagueOptionsHtml(leagueCount, autoLeague)}</select>
+    ${autoLeague ? `<button type="button" class="btn ghost sm" data-auto-league="">× Zrušiť výber</button>` : ""}
   </div>`;
   const row = (label, s) =>
     `<td class="num">${s.total}</td><td class="num">${s.settled ? `${s.won} z ${s.settled} (${fmtNum(s.pct, 0)}${NB}%)` : "–"}</td><td class="num">${s.model != null ? `${fmtNum(s.model, 0)}${NB}%` : "–"}</td><td class="num ${cls(s.profit)}">${s.withOdds ? `${signed(s.profit, 1)}${NB}j.` : "–"}</td>`;
@@ -2033,10 +2104,12 @@ function drawAutoTips() {
   // Podľa súťaží: každá liga zvlášť, klik na riadok zobrazí len ju.
   const byLeague = new Map();
   for (const t of allList) byLeague.set(leagueSk(t.league), [...(byLeague.get(leagueSk(t.league)) || []), t]);
-  const leagueRows = [...byLeague.entries()]
-    .map(([lg, l]) => [lg, autoStats(l)])
-    .sort((a, b) => b[1].total - a[1].total)
-    .map(([lg, s]) => `<tr class="auto-lg-row${autoLeague === lg ? " on" : ""}" data-auto-league="${escapeHtml(lg)}"><td>${escapeHtml(lg)}</td>${row(lg, s)}</tr>`)
+  const leagueRows = groupByLeague([...byLeague.entries()].map(([lg, l]) => [lg, autoStats(l)]), (x) => x[0])
+    .map((g) => {
+      const gs = autoStats(g.items.flatMap(([lg]) => byLeague.get(lg)));
+      return `<tr class="auto-lg-head"><td>${escapeHtml(g.title)}</td>${row(g.title, gs)}</tr>` +
+        g.items.map(([lg, s]) => `<tr class="auto-lg-row${autoLeague === lg ? " on" : ""}" data-auto-league="${escapeHtml(lg)}"><td>${escapeHtml(lg)}</td>${row(lg, s)}</tr>`).join("");
+    })
     .join("");
   const leagueTable = autoLeague ? "" : `<h4 class="ct">Podľa súťaží</h4><div class="table-wrap"><table class="bt-table"><thead><tr><th>Súťaž</th><th class="num">Tipov</th><th class="num">Vyšlo</th><th class="num">Model</th><th class="num">Zisk</th></tr></thead><tbody>${leagueRows}</tbody></table></div><p class="faint small">Ťukni na súťaž a uvidíš len jej zápasy a tipy.</p>`;
   const marketTable = `<h4 class="ct">Podľa trhov${autoLeague ? ` – ${escapeHtml(autoLeague)}` : ""}</h4><div class="table-wrap"><table class="bt-table"><thead><tr><th>Trh</th><th class="num">Tipov</th><th class="num">Vyšlo</th><th class="num">Model</th><th class="num">Zisk</th></tr></thead><tbody>${marketRows}</tbody></table></div>`;
@@ -2051,11 +2124,12 @@ function drawAutoTips() {
     .map((day) => {
       const tips = (tipsByDay.get(day) || []).sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime());
       const s = autoStats(tips);
-      // V rámci dňa každá súťaž zvlášť (s vlastným súčtom), súťaže podľa prvého výkopu.
+      // V rámci dňa každá súťaž zvlášť (s vlastným súčtom), v poradí súťaží.
       const dayLeagues = new Map();
       for (const t of tips) dayLeagues.set(leagueSk(t.league), [...(dayLeagues.get(leagueSk(t.league)) || []), t]);
       const tipRow = (t) => `<tr><td style="white-space:nowrap">${escapeHtml(timeHm(new Date(t.matchDate)))}</td><td>${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))}<br><span class="faint">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}${t.strictFail ? " · neprejde 60 / 40" : ""}</span></td><td class="num">${fmtNum(t.probability, 0)}${NB}%</td><td class="num">${typeof t.odds === "number" ? fmtOdds(t.odds) : "–"}</td><td>${res[t.status] || escapeHtml(t.status)}</td></tr>`;
       const rows = [...dayLeagues.entries()]
+        .sort(byLeagueOrder((x) => x[0]))
         .map(([lg, l]) => {
           const ls = autoStats(l);
           const head = autoLeague ? "" : `<tr class="auto-lg-head"><td colspan="5"><b>${escapeHtml(lg)}</b><span>${plural(l.length, "tip", "tipy", "tipov")}${ls.settled ? ` · vyšlo ${ls.won} z ${ls.settled}` : ""}${ls.withOdds && ls.settled ? ` · <b class="${cls(ls.profit)}">${signed(ls.profit, 1)}${NB}j.</b>` : ""}</span></td></tr>`;
@@ -2081,6 +2155,8 @@ function drawAutoTips() {
       drawAutoTips();
     };
   });
+  const sel = el.querySelector("#autoLeagueSel");
+  if (sel) sel.onchange = () => { autoLeague = sel.value; drawAutoTips(); };
   el.querySelectorAll("[data-auto-strict]").forEach((b) => {
     b.onclick = () => {
       autoStrictOnly = b.dataset.autoStrict === "1";
@@ -2374,23 +2450,28 @@ function renderLeagueReport(tips) {
     return;
   }
   const byLeague = {};
-  for (const t of resolved) (byLeague[t.leagueName || "Iná súťaž"] ??= []).push(t);
+  for (const t of resolved) (byLeague[translateLeagueName(t.leagueName || "Iná súťaž")] ??= []).push(t);
   const rows = Object.entries(byLeague)
     .map(([league, list]) => {
       const won = list.filter((t) => t.status === "won").length;
       const profit = list.reduce((a, t) => a + (t.status === "won" ? t.odds - 1 : -1), 0);
       const avgProb = list.reduce((a, t) => a + Number(t.probability || 0), 0) / list.length;
       return { league, count: list.length, won, profit, roi: (profit / list.length) * 100, avgProb };
-    })
-    .sort((a, b) => b.count - a.count);
-  const body = rows
-    .map((r) => {
-      const warn = r.count >= LEAGUE_WARN_MIN_TIPS && r.roi < -5;
-      return `<tr><td>${escapeHtml(r.league)}${warn ? ` <span class="l small">– zvážiť vypnutie</span>` : ""}</td><td class="num">${r.count}</td><td class="num">${fmtNum((r.won / r.count) * 100, 0)}${NB}% <span class="faint">(model ${fmtNum(r.avgProb, 0)}${NB}%)</span></td><td class="num ${r.profit >= 0 ? "g" : "l"}">${signed(r.profit, 1)}${NB}j.</td><td class="num ${r.roi >= 0 ? "g" : "l"}">${signed(r.roi, 1)}${NB}%</td></tr>`;
+    });
+  // V poradí a skupinách súťaží; každá skupina má vlastný súčet.
+  const body = groupByLeague(rows, (r) => r.league)
+    .map((g) => {
+      const n = g.items.reduce((a, r) => a + r.count, 0);
+      const p = g.items.reduce((a, r) => a + r.profit, 0);
+      const head = `<tr class="auto-lg-head"><td colspan="5"><b>${escapeHtml(g.title)}</b><span>${plural(n, "tip", "tipy", "tipov")} · <b class="${p >= 0 ? "g" : "l"}">${signed(p, 1)}${NB}j.</b></span></td></tr>`;
+      return head + g.items.map((r) => {
+        const warn = g.group !== 3 && r.count >= LEAGUE_WARN_MIN_TIPS && r.roi < -5;
+        return `<tr><td>${escapeHtml(r.league)}${warn ? ` <span class="l small">– zvážiť vypnutie</span>` : ""}</td><td class="num">${r.count}</td><td class="num">${fmtNum((r.won / r.count) * 100, 0)}${NB}% <span class="faint">(model ${fmtNum(r.avgProb, 0)}${NB}%)</span></td><td class="num ${r.profit >= 0 ? "g" : "l"}">${signed(r.profit, 1)}${NB}j.</td><td class="num ${r.roi >= 0 ? "g" : "l"}">${signed(r.roi, 1)}${NB}%</td></tr>`;
+      }).join("");
     })
     .join("");
   el.innerHTML = `<div class="table-wrap"><table class="bt-table"><thead><tr><th>Súťaž</th><th class="num">Tipy</th><th class="num">Vyšlo</th><th class="num">Zisk</th><th class="num">Návratnosť</th></tr></thead><tbody>${body}</tbody></table></div>
-    <p class="faint small">Liga s ${LEAGUE_WARN_MIN_TIPS}+ tipmi a návratnosťou pod −5${NB}% je označená. Pri menšom počte tipov je výsledok ešte prevažne náhoda.</p>`;
+    <p class="faint small">Liga s ${LEAGUE_WARN_MIN_TIPS}+ tipmi a návratnosťou pod −5${NB}% je označená. Pri menšom počte tipov je výsledok ešte prevažne náhoda. „Vyradené súťaže“ sa už netipujú, ich staré tipy ostávajú v štatistikách.</p>`;
 }
 bankrollStartInput.addEventListener("input", () => renderBankrollSimulation(lastStatTips));
 document.getElementById("bankrollPct").addEventListener("click", (e) => {
@@ -2472,6 +2553,14 @@ function renderTipRows(tips) {
   toggle.closest(".toggle").hidden = archivedCount === 0 && !showArchivedTips;
   document.getElementById("showArchivedLabel").textContent = `Zobraziť skryté (${archivedCount})`;
   document.querySelectorAll("#tipsFilter [data-f]").forEach((b) => b.classList.toggle("on", b.dataset.f === tipsFilter));
+  // Výber súťaže (30. 10. 2026): len súťaže, v ktorých sú nejaké tipy, v poradí a skupinách ako všade.
+  const leagueCounts = new Map();
+  for (const t of tips) {
+    const n = translateLeagueName(t.leagueName || "Iná súťaž");
+    leagueCounts.set(n, (leagueCounts.get(n) || 0) + 1);
+  }
+  if (tipsLeague && !leagueCounts.has(tipsLeague)) tipsLeague = "";
+  document.getElementById("tipsLeague").innerHTML = `<option value="">Všetky súťaže · ${tips.length}</option>${leagueOptionsHtml(leagueCounts, tipsLeague)}`;
 
   // Zoradené podľa času zápasu (najnovšie hore) – aj tipy doplnené dodatočne sedia na správnom mieste.
   const byMatchTime = (a, b) =>
@@ -2479,11 +2568,13 @@ function renderTipRows(tips) {
     new Date(b.savedAt || 0).getTime() - new Date(a.savedAt || 0).getTime();
   const visible = (showArchivedTips ? tips : tips.filter((t) => !t.archived))
     .filter((t) => tipsFilter === "all" || (tipsFilter === "pending" ? t.status === "pending" : t.status !== "pending"))
+    .filter((t) => !tipsLeague || translateLeagueName(t.leagueName || "Iná súťaž") === tipsLeague)
     .sort(byMatchTime);
   if (!visible.length) {
     tipsListEl.innerHTML = `<p class="empty">${
       tips.length === 0 ? "Zatiaľ nemáš uložené žiadne tipy."
       : tipsFilter === "pending" ? "Žiadne tipy nečakajú na výsledok."
+      : tipsLeague ? `V súťaži ${tipsLeague} tu nie je žiadny tip.`
       : tipsFilter === "resolved" ? "Žiadne vyhodnotené tipy na zobrazenie."
       : "Všetky tipy sú skryté."
     }${archivedCount && !showArchivedTips ? ` Skrytých tipov: ${archivedCount} (rátajú sa do štatistík aj na prezentácii).` : ""}</p>`;
@@ -2496,6 +2587,10 @@ document.getElementById("tipsFilter").addEventListener("click", (e) => {
   const b = e.target.closest("[data-f]");
   if (!b) return;
   tipsFilter = b.dataset.f;
+  renderTipRows(currentHistoryTips.filter((t) => !t.watchOnly));
+});
+document.getElementById("tipsLeague").addEventListener("change", (e) => {
+  tipsLeague = e.target.value;
   renderTipRows(currentHistoryTips.filter((t) => !t.watchOnly));
 });
 document.getElementById("showArchivedToggle").addEventListener("change", (e) => {
@@ -3839,9 +3934,19 @@ async function openBacktest() {
   try {
     const leagues = await fetchJson("/api/leagues");
     if (!btModal) return;
-    $("btLeagues").innerHTML = leagues
-      .map((l) => `<label class="check"><input type="checkbox" value="${l.id}" checked /> ${escapeHtml(translateLeagueName(l.name))}</label>`)
+    // Po skupinách súťaží; ťuknutím na názov skupiny ju zapneš / vypneš celú.
+    $("btLeagues").innerHTML = groupByLeague(leagues, (l) => l.name)
+      .map((g) => `<div class="bt-lg-group"><button type="button" class="bt-lg-title" data-bt-group>${escapeHtml(g.title)}</button>${g.items
+        .map((l) => `<label class="check"><input type="checkbox" value="${l.id}" checked /> ${escapeHtml(translateLeagueName(l.name))}</label>`)
+        .join("")}</div>`)
       .join("");
+    $("btLeagues").querySelectorAll("[data-bt-group]").forEach((b) => {
+      b.onclick = () => {
+        const boxes = [...b.parentElement.querySelectorAll("input")];
+        const on = !boxes.every((x) => x.checked);
+        boxes.forEach((x) => { x.checked = on; });
+      };
+    });
   } catch {
     if (btModal) $("btLeagues").innerHTML = `<span class="faint small">Ligy sa nepodarilo načítať.</span>`;
   }

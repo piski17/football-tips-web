@@ -869,3 +869,23 @@ html body .top { background: rgba(10, 14, 22, .94) !important; }
 .auto-lg-head span b { color: inherit; }
 .auto-lg-head span b.g { color: var(--win); }
 .auto-lg-head span b.l { color: var(--loss); }
+
+/* ===== PORIADOK V SÚŤAŽIACH (30. 10. 2026) ===== */
+.lg-tools { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 20px 0; }
+.lg-sec { padding: 18px 20px 4px; font-size: 10px; letter-spacing: .22em; text-transform: uppercase; color: var(--faint); border-top: 1px solid var(--line); margin-top: 8px; }
+.lg-tools + .lg-sec { border-top: 0; margin-top: 0; }
+.lg .lg-c { font-style: normal; color: var(--faint); letter-spacing: .08em; margin-left: 6px; }
+.lg-select { height: 38px; padding: 0 12px; max-width: 100%; color: var(--text); background: var(--panel, #141416); }
+.lg-select option, .lg-select optgroup { background: #141416; color: #EDE6D6; }
+.filter-row .lg-select { margin-left: auto; }
+.auto-leagues { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.auto-lg-head td:first-child { color: var(--gold-hi); font-weight: 600; }
+.bt-leagues { display: block; }
+.bt-lg-group { display: flex; flex-wrap: wrap; gap: 8px 16px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.bt-lg-group:last-child { border-bottom: 0; }
+.bt-lg-title { flex-basis: 100%; text-align: left; font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--gold); cursor: pointer; }
+@media (max-width: 700px) {
+  .lg-tools { padding: 12px 16px 0; }
+  .lg-sec { padding: 16px 16px 4px; }
+  .filter-row .lg-select { margin-left: 0; width: 100%; }
+}
