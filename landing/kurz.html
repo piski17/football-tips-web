@@ -2050,6 +2050,212 @@ html body .eyebrow::after, html body .page-head .eyebrow::after, html body .fina
 /* užší obsah – menej roztiahnuté (navigácia ostáva) */
 html body main .wrap, html body section .wrap, html body .sec .wrap, html body footer .wrap { max-width: 1040px !important; }
 html body .sec { padding-top: clamp(48px, 7vw, 88px) !important; padding-bottom: clamp(48px, 7vw, 88px) !important; }
+/* ===================== NOIR WEB (31. 10. 2026) – tipradar.eu v rovnakom vzhľade ako app.tipradar.eu (Noir) =====================
+   Hlboká polnočná čierna #06080D, šampanské zlato #D6BE8C, Space Grotesk + Figtree, sklenené panely,
+   pilulkové tlačidlá a prepínače, čísla so zlatou linkou, menu s ikonkami v štvorčekoch, na mobile plávajúca spodná lišta. */
+:root {
+  --nw-bg: #06080D; --nw-bg2: #0B0F17; --nw-panel: #0F141E; --nw-panel2: #141B27;
+  --nw-line: rgba(255,255,255,.065); --nw-line2: rgba(214,190,140,.3); --nw-line3: rgba(214,190,140,.55);
+  --nw-gold: #D6BE8C; --nw-gold-hi: #F5E9CC; --nw-gold-lo: #A88E5E;
+  --nw-grad: linear-gradient(120deg, #F7EDD3 0%, #E2CB98 35%, #C9AC72 65%, #9E8253 100%);
+  --nw-text: #F4EFE6; --nw-muted: #A7ADB9; --nw-faint: #6E7786; --nw-win: #7FC9A0; --nw-loss: #D9808C;
+  --nw-card: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.012)), #0F141E;
+  --nw-shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 24px 60px -32px rgba(0,0,0,.9);
+  /* staré premenné úvodu a podstránok prepojené na Noir */
+  --rx-bg: #06080D; --rx-bg2: #0B0F17; --rx-card: rgba(16,22,33,.72); --rx-card-s: #0F141E;
+  --rx-line: rgba(214,190,140,.16); --rx-line2: rgba(214,190,140,.32);
+  --rx-gold: #D6BE8C; --rx-gold-hi: #F5E9CC; --rx-gold-lo: #A88E5E; --rx-ink: #F4EFE6; --rx-mute: #A7ADB9; --rx-win: #7FC9A0; --rx-loss: #D9808C;
+  --rx-grad: linear-gradient(120deg, #F7EDD3 0%, #E2CB98 35%, #C9AC72 65%, #9E8253 100%);
+  --bg: #06080D; --bg-2: #0B0F17; --card: #0F141E; --paper: #0F141E; --panel: #0F141E; --navy: #06080D;
+  --line: rgba(255,255,255,.065); --line-2: rgba(214,190,140,.3); --text: #F4EFE6; --muted: #A7ADB9; --faint: #6E7786;
+  --gold: #D6BE8C; --gold-hi: #F5E9CC; --gold-lo: #A88E5E; --win: #7FC9A0; --loss: #D9808C;
+  --gold-grad: linear-gradient(120deg, #F7EDD3 0%, #E2CB98 35%, #C9AC72 65%, #9E8253 100%);
+}
+/* --- pozadie: jedna súvislá polnočná plocha so zlatým a modrým svitom ako v appke --- */
+html, html body { background-color: #06080D !important; }
+html body {
+  background:
+    radial-gradient(900px 520px at 88% -8%, rgba(214,190,140,.085), transparent 70%),
+    radial-gradient(700px 600px at -10% 110%, rgba(70,96,140,.07), transparent 70%),
+    #06080D !important;
+  background-attachment: fixed !important;
+  color: var(--nw-text);
+}
+html body ::selection { background: rgba(214,190,140,.3); color: #fff; }
+html body .sec, html body .sec.alt, html body .rx-sec, html body .rx-final, html body .finale, html body .om2-hero,
+html body .om2-story, html body .om2-values, html[data-page="home"] body, html body .page-head { background: transparent !important; }
+html body .rx-hero { background: radial-gradient(ellipse 60% 70% at 78% 30%, rgba(214,190,140,.07), transparent 70%), transparent !important; }
+html body .sec.alt, html body .rx-sec.rx-duel { background: linear-gradient(180deg, transparent, rgba(255,255,255,.012) 18%, rgba(255,255,255,.012) 82%, transparent) !important; }
+html body .rx-sec + .rx-sec { border-top: 0 !important; }
+html body .rx-sec::before { content: ""; position: absolute; top: 0; left: 50%; width: min(1200px, 100% - 64px); height: 1px; transform: translateX(-50%); background: linear-gradient(90deg, transparent, rgba(214,190,140,.22), transparent); }
+html body .rx-hero .rx-grid { opacity: .5; }
+html body footer, html body .pz-foot { background: rgba(4,6,10,.75) !important; border-top: 1px solid transparent !important; border-image: linear-gradient(90deg, transparent, rgba(214,190,140,.28), transparent) 1 !important; }
+html body .overlay { background: radial-gradient(900px 520px at 88% -8%, rgba(214,190,140,.1), transparent 70%), rgba(6,8,13,.97) !important; -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+
+/* --- plávajúce sklenené menu (ako bočné menu appky) --- */
+html body .pz-nav .wrap {
+  border-radius: 24px !important; border: 1px solid rgba(214,190,140,.16) !important;
+  background: linear-gradient(180deg, rgba(20,27,40,.9), rgba(10,13,20,.92)) !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 24px 60px -30px rgba(0,0,0,.95), 0 0 0 1px rgba(0,0,0,.4) !important;
+  -webkit-backdrop-filter: blur(18px) !important; backdrop-filter: blur(18px) !important;
+  padding: 0 12px 0 14px !important;
+}
+html.scrolled body .pz-nav .wrap { background: linear-gradient(180deg, rgba(20,27,40,.95), rgba(10,13,20,.96)) !important; }
+html body .pz-nav .wrap::after { left: 30%; right: 30%; opacity: .45; }
+html body .pz-brand { gap: 12px !important; }
+html body .pz-brand svg { width: 42px !important; height: 42px !important; padding: 6px; border-radius: 13px; background: radial-gradient(circle at 30% 25%, #1E2738, #0A0E15); border: 1px solid rgba(214,190,140,.3); box-shadow: 0 8px 22px -10px rgba(214,190,140,.45); box-sizing: border-box; }
+html body .pz-brand span { display: flex !important; flex-direction: column; font: 600 18px/1 "Space Grotesk", system-ui, sans-serif !important; letter-spacing: .01em !important; text-transform: none !important; color: var(--nw-text); }
+html body .pz-brand span small { display: block; margin-top: 6px; font: 600 8.5px/1 "Figtree", system-ui, sans-serif !important; letter-spacing: .26em !important; text-transform: uppercase; color: var(--nw-gold); white-space: nowrap; }
+html body .pz-links { gap: 3px !important; }
+html body .pz-nav .nav-links a {
+  display: inline-flex !important; align-items: center; gap: 9px; padding: 6px 13px 6px 6px !important; border-radius: 14px !important;
+  font: 500 13.5px/1.1 "Figtree", system-ui, sans-serif !important; letter-spacing: .01em !important; text-transform: none !important;
+  color: var(--nw-muted) !important; transition: background .2s, color .2s;
+}
+html body .pz-nav .nav-links a::after { display: none !important; }
+html body .pz-nav .nav-links a svg { width: 30px; height: 30px; padding: 7px; box-sizing: border-box; border-radius: 10px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; background: rgba(255,255,255,.035); border: 1px solid var(--nw-line); transition: background .2s, color .2s, border-color .2s, box-shadow .2s; }
+html body .pz-nav .nav-links a:hover { color: var(--nw-text) !important; background: rgba(255,255,255,.03); }
+html body .pz-nav .nav-links a:hover svg { border-color: var(--nw-line2); color: var(--nw-gold-hi); }
+html body .pz-nav .nav-links a.active { color: var(--nw-gold-hi) !important; background: linear-gradient(90deg, rgba(214,190,140,.14), rgba(214,190,140,.02)); box-shadow: inset 0 0 0 1px rgba(214,190,140,.16); }
+html body .pz-nav .nav-links a.active svg { background: var(--nw-grad); color: #0B0E14; border-color: transparent; box-shadow: 0 6px 18px -6px rgba(214,190,140,.6); }
+html body .pz-ic, html body .pz-tg, html body .lx-burger, html body .nav-toggle.lx-burger { width: 40px !important; height: 40px !important; border-radius: 12px !important; }
+html body .pz-ic { background: rgba(255,255,255,.035) !important; border: 1px solid var(--nw-line) !important; color: var(--nw-muted) !important; }
+html body .pz-ic:hover { border-color: var(--nw-line2) !important; color: var(--nw-gold-hi) !important; background: rgba(214,190,140,.1) !important; }
+html body .pz-tg { background: var(--nw-grad) !important; color: #0B0E14 !important; border: 0 !important; box-shadow: 0 1px 0 rgba(255,255,255,.45) inset, 0 10px 26px -12px rgba(214,190,140,.7) !important; }
+@media (max-width: 1240px) and (min-width: 1101px) { html body .pz-nav .nav-links a { padding-right: 9px !important; font-size: 13px !important; } html body .pz-nav .nav-links a svg { display: none; } html body .pz-nav .nav-links a { padding-left: 11px !important; } }
+
+/* --- typografia: nadpisy Space Grotesk, štítky ako v appke (zlatý text s linkou) --- */
+html body h1, html body h2, html body .rx-h2, html body .page-head h1, html body .om2-hero h1, html body .finale h2 { font-family: "Space Grotesk", system-ui, sans-serif !important; color: var(--nw-text); }
+html body .rx-eye, html body .eyebrow { font: 600 10.5px/1.4 "Figtree", system-ui, sans-serif !important; letter-spacing: .22em !important; text-transform: uppercase; color: var(--nw-gold) !important; }
+html body .rx-eye::before, html body .eyebrow::before { width: 18px !important; min-width: 18px !important; max-width: 18px !important; height: 2px !important; border-radius: 2px !important; background: var(--nw-grad) !important; }
+html body main .page-head h1::after, html body .rx-sec .rx-h2::after { content: ""; display: inline-block; width: .16em; height: .16em; margin-left: .14em; border-radius: 50%; background: var(--nw-grad); box-shadow: 0 0 14px rgba(214,190,140,.7); vertical-align: .12em; }
+html body .rx-hero h1::after { content: none; }
+html body p, html body li { color: inherit; }
+
+/* --- tlačidlá: pilulky so zlatým prechodom (ako .btn v appke) --- */
+html body .rx-btn, html body a.btn, html body button.btn, html body .btn, html body main .actions a.btn, html body main .hx-cta a.btn, html body .ov-foot a.btn, html body main .om2-hero a.btn, html body main form button.btn {
+  padding-left: 26px !important; padding-right: 26px !important; font-size: 14.5px !important;
+  border-radius: 999px !important; border: 0 !important; color: #0B0E14 !important;
+  background: var(--nw-grad) !important; background-size: 140% 100% !important; background-position: 0 0 !important;
+  font-family: "Figtree", system-ui, sans-serif !important; font-weight: 600 !important; letter-spacing: .02em !important; text-transform: none !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,.45) inset, 0 10px 26px -12px rgba(214,190,140,.7) !important;
+  transition: background-position .4s, transform .1s, box-shadow .2s !important;
+}
+html body .rx-btn:hover, html body .btn:hover, html body main .actions a.btn:hover { background-position: 100% 0 !important; box-shadow: 0 1px 0 rgba(255,255,255,.5) inset, 0 14px 32px -12px rgba(214,190,140,.85) !important; }
+html body .rx-btn.rx-ghost, html body .btn.btn-ghost, html body a.btn.btn-ghost, html body main .actions a.btn.btn-ghost, html body main .om2-hero a.btn.btn-ghost {
+  background: rgba(255,255,255,.025) !important; color: var(--nw-gold-hi) !important; border: 1px solid var(--nw-line2) !important; box-shadow: none !important;
+}
+html body .rx-btn.rx-ghost:hover, html body .btn.btn-ghost:hover, html body main .actions a.btn.btn-ghost:hover { background: rgba(214,190,140,.1) !important; border-color: var(--nw-line3) !important; }
+html body .rx-btn.rx-ghost::after, html body .btn.btn-ghost::after { display: none; }
+html body .rx-chip, html body .rx-ph-day { border-radius: 999px !important; border: 1px solid var(--nw-line2) !important; background: rgba(214,190,140,.07) !important; color: var(--nw-gold-hi) !important; }
+
+/* --- karty a panely: sklenený panel s jemnou hornou linkou --- */
+html body .rx-panel, html body .rx-how li, html body .rx-mk-grid li, html body .rx-stats, html body .ledger-wrap, html body .mon, html body .mon.cal,
+html body .cal-m, html body .cal-stat, html body article.lux, html body .lux, html body .pk-calc, html body .form, html body form.form, html body .last7,
+html body .faq details, html body .card {
+  border-radius: 20px !important; border: 1px solid var(--nw-line) !important;
+  background: var(--nw-card) !important; box-shadow: var(--nw-shadow) !important;
+}
+html body .rx-panel, html body article.lux, html body .ledger-wrap, html body .form, html body form.form { border-radius: 24px !important; border-color: rgba(214,190,140,.18) !important; box-shadow: var(--nw-shadow), 0 30px 80px -40px rgba(214,190,140,.25) !important; }
+html body .rx-panel::before, html body article.lux::before, html body .ledger-wrap::before, html body .mon::before, html body form.form::before {
+  content: "" !important; display: block !important; position: absolute; left: 24px; right: 24px; top: 0; height: 1px; width: auto !important; border: 0 !important;
+  background: linear-gradient(90deg, transparent, var(--nw-gold), transparent) !important; opacity: .7; pointer-events: none; transform: none !important; inset: 0 24px auto 24px;
+}
+html body .rx-panel, html body .ledger-wrap, html body .mon, html body form.form { position: relative; }
+html body .rx-how li, html body .rx-mk-grid li { transition: border-color .25s, transform .25s, box-shadow .25s, background .25s; }
+html body .rx-how li:hover, html body .rx-mk-grid li:hover { border-color: rgba(214,190,140,.3) !important; transform: translateY(-2px); background: linear-gradient(180deg, rgba(214,190,140,.07), rgba(255,255,255,.012)), #0F141E !important; box-shadow: var(--nw-shadow), 0 18px 40px -24px rgba(214,190,140,.35) !important; }
+/* ikonky trhov v štvorčekoch ako menu appky */
+html body .rx-mk-grid { counter-reset: nwmk; }
+html body .rx-mk-grid li { position: relative; }
+html body .rx-mk-grid li::after { counter-increment: nwmk; content: counter(nwmk, decimal-leading-zero); position: absolute; top: 20px; right: 20px; font: 600 11px/1 "Space Grotesk", system-ui, sans-serif; letter-spacing: .2em; color: var(--nw-gold); opacity: .8; }
+html body .rx-mk-grid li svg { width: 40px !important; height: 40px !important; padding: 9px; box-sizing: border-box; border-radius: 12px; background: rgba(255,255,255,.035); border: 1px solid var(--nw-line); color: var(--nw-gold-hi); transition: background .25s, color .25s; }
+html body .rx-mk-grid li:hover svg { background: var(--nw-grad); color: #0B0E14; border-color: transparent; box-shadow: 0 6px 18px -6px rgba(214,190,140,.6); }
+html body .rx-how .rx-n { font-family: "Space Grotesk", system-ui, sans-serif !important; background: var(--nw-grad); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
+/* malé vnútorné bloky */
+html body .pk-f, html body .lux-guarantee, html body .pk-calc > div > div, html body .pk-res, html body .rx-verdict, html body .p3-card, html body .p3-head, html body .p3-pos {
+  border-radius: 14px; border-color: var(--nw-line) !important;
+}
+html body .p3-card, html body .p3-head, html body .p3-pos { background: rgba(15,20,30,.86) !important; border: 1px solid rgba(214,190,140,.18) !important; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: 0 18px 40px -20px rgba(0,0,0,.9) !important; }
+html body .p3-head, html body .p3-pos { border-radius: 999px !important; }
+html body .pk-f i, html body #clenstvo .pk-f i { border-radius: 10px !important; background: rgba(214,190,140,.1) !important; border: 1px solid rgba(214,190,140,.2); }
+
+/* --- čísla (KPI) so zlatou linkou ako v appke --- */
+html body .figures { gap: 12px !important; border: 0 !important; background: none !important; }
+html body .figures > div { position: relative; border-radius: 20px !important; border: 1px solid var(--nw-line) !important; background: var(--nw-card) !important; box-shadow: var(--nw-shadow) !important; overflow: hidden; }
+html body .figures > div::before { content: "" !important; display: block !important; position: absolute; left: 22px; right: 22px; top: 0; width: auto !important; height: 1px !important; background: linear-gradient(90deg, var(--nw-gold), transparent 70%) !important; opacity: .85; box-shadow: none !important; }
+html body .figures b { font-family: "Space Grotesk", system-ui, sans-serif !important; font-weight: 600 !important; letter-spacing: -0.02em !important; }
+html body .figures span, html body .figures small { font: 600 10.5px/1.4 "Figtree", system-ui, sans-serif !important; letter-spacing: .22em !important; text-transform: uppercase; color: var(--nw-gold) !important; }
+html body .rx-stats { overflow: hidden; }
+html body .rx-stats > * + * { border-left-color: var(--nw-line) !important; }
+html body .rx-stats b { font-family: "Space Grotesk", system-ui, sans-serif !important; font-weight: 600 !important; letter-spacing: -0.02em; }
+html body .rx-stats > div { position: relative; }
+html body .rx-stats > div:not(:first-child)::before { content: ""; position: absolute; left: 20px; right: 20px; top: 0; height: 1px; background: linear-gradient(90deg, var(--nw-gold), transparent 75%); opacity: .7; }
+html body .cal-stat small, html body .cal-stat > span:first-child { color: var(--nw-gold) !important; }
+
+/* --- segmentové prepínače (pilulky) --- */
+html body .tabs, html body .term-switch, html body #clenstvo .lux-r .term-switch {
+  display: inline-flex; gap: 2px !important; padding: 4px !important; border-radius: 999px !important;
+  background: rgba(255,255,255,.03) !important; border: 1px solid var(--nw-line) !important; box-shadow: none !important;
+}
+html body #clenstvo .lux-r .term-switch { display: grid !important; border-radius: 20px !important; }
+html body .tab, html body .term-switch button { border-radius: 999px !important; color: var(--nw-muted) !important; background: transparent !important; font-family: "Figtree", system-ui, sans-serif !important; font-weight: 500 !important; }
+html body #clenstvo .lux-r .term-switch button { border-radius: 16px !important; }
+html body .tab:hover, html body .term-switch button:hover { color: var(--nw-text) !important; background: rgba(255,255,255,.04) !important; }
+html body .tab[aria-pressed="true"], html body .term-switch button[aria-selected="true"], html body #clenstvo .lux-r .term-switch [aria-selected="true"] {
+  background: var(--nw-grad) !important; color: #0B0E14 !important; font-weight: 600 !important; box-shadow: 0 6px 18px -8px rgba(214,190,140,.7) !important;
+}
+html body #clenstvo .lux-r .term-switch button b { color: var(--nw-text) !important; font-family: "Space Grotesk", system-ui, sans-serif; }
+html body #clenstvo .lux-r .term-switch [aria-selected="true"] b { color: #0B0E14 !important; }
+/* predvoľby v „Kedy má tip hodnotu“ a súťaže ako čipy z appky */
+html body .rx-duel button[data-p], html body .rx-lg-row span {
+  border-radius: 999px !important; border: 1px solid var(--nw-line) !important; background: rgba(255,255,255,.025) !important;
+  color: var(--nw-muted) !important; font: 500 13px/1.2 "Figtree", system-ui, sans-serif !important; transition: background .2s, color .2s, border-color .2s;
+}
+html body .rx-duel button[data-p]:hover, html body .rx-lg-row span:hover { color: var(--nw-text) !important; border-color: var(--nw-line2) !important; }
+html body .rx-duel button[data-p][aria-pressed="true"] { background: var(--nw-grad) !important; color: #0B0E14 !important; border-color: transparent !important; font-weight: 600 !important; box-shadow: 0 6px 18px -8px rgba(214,190,140,.7); }
+
+/* --- výsledky: riadky ako v Histórii appky --- */
+html body .ledger-wrap li.won, html body .ledger-wrap li.lost, html body .ledger-wrap li { border-radius: 14px !important; transition: background .15s, border-color .15s; }
+html body .ledger-wrap li.won { background: rgba(127,201,160,.05) !important; border-color: rgba(127,201,160,.16) !important; }
+html body .ledger-wrap li.lost { background: rgba(217,128,140,.05) !important; border-color: rgba(217,128,140,.18) !important; }
+html body span.r.won { background: rgba(127,201,160,.12) !important; color: var(--nw-win) !important; border-color: transparent !important; }
+html body span.r.lost { background: rgba(217,128,140,.12) !important; color: var(--nw-loss) !important; border-color: transparent !important; }
+html body button.pg, html body .jump { border-radius: 50% !important; border: 1px solid var(--nw-line) !important; background: rgba(16,22,33,.8) !important; color: var(--nw-muted) !important; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+html body button.pg:hover, html body .jump:hover { color: var(--nw-gold-hi) !important; border-color: var(--nw-line2) !important; }
+html body .cal-m i { border-radius: 10px !important; }
+
+/* --- formuláre ako v appke --- */
+html body .form input, html body .form select, html body .form textarea { border-radius: 12px !important; border: 1px solid var(--nw-line) !important; background: rgba(255,255,255,.03) !important; color: var(--nw-text) !important; }
+html body .form input:focus, html body .form select:focus, html body .form textarea:focus { outline: none; border-color: var(--nw-line3) !important; box-shadow: 0 0 0 4px rgba(214,190,140,.1) !important; }
+html body input[type=range] { accent-color: #D6BE8C; }
+
+/* --- mobil: plávajúca spodná lišta ako v appke --- */
+.nw-tabbar { display: none; }
+@media (max-width: 860px) {
+  .nw-tabbar {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; position: fixed; z-index: 90;
+    left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); padding: 7px; border-radius: 24px;
+    border: 1px solid rgba(214,190,140,.18); background: linear-gradient(180deg, rgba(20,27,40,.92), rgba(10,13,20,.95));
+    box-shadow: 0 1px 0 rgba(255,255,255,.05) inset, 0 20px 50px -14px rgba(0,0,0,.95);
+    -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+  }
+  .nw-tabbar a, .nw-tabbar button { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 5px 2px 4px; border: 0; border-radius: 16px; background: none; color: #A7ADB9; font: 500 10.5px/1.1 "Figtree", system-ui, sans-serif; letter-spacing: .01em; text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .nw-tabbar svg { width: 34px; height: 30px; padding: 6px 8px; box-sizing: border-box; border-radius: 11px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; transition: background .2s, color .2s; }
+  .nw-tabbar .on { color: #F5E9CC; }
+  .nw-tabbar .on svg { background: linear-gradient(120deg, #F7EDD3 0%, #E2CB98 35%, #C9AC72 65%, #9E8253 100%); color: #0B0E14; box-shadow: 0 6px 18px -6px rgba(214,190,140,.6); }
+  html.menu-open .nw-tabbar .nw-more { color: #F5E9CC; }
+  html body { padding-bottom: calc(86px + env(safe-area-inset-bottom)) !important; }
+  html body .jump { bottom: calc(96px + env(safe-area-inset-bottom)) !important; }
+  html body .pz-nav .nav-links a svg { display: none; }
+}
+@media (max-width: 520px) {
+  html body .pz-brand svg { width: 36px !important; height: 36px !important; padding: 5px; border-radius: 11px; }
+  html body .pz-brand span { font-size: 16px !important; }
+  html body .pz-brand span small { font-size: 7.5px !important; letter-spacing: .2em !important; }
+  html body .pz-ic, html body .pz-tg, html body .lx-burger, html body .nav-toggle.lx-burger { width: 36px !important; height: 36px !important; }
+}
+/* ===================== /NOIR WEB ===================== */
+
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Herr+Von+Muellerhoff&amp;family=Great+Vibes&amp;display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&amp;family=Figtree:wght@300..800&amp;display=swap" rel="stylesheet" />
@@ -2076,8 +2282,8 @@ html body .sec { padding-top: clamp(48px, 7vw, 88px) !important; padding-bottom:
 
 <nav class="nav pz-nav" aria-label="Hlavná navigácia">
   <div class="wrap">
-    <a class="brand pz-brand" href="/" aria-label="TipRadar – úvod"><svg aria-hidden="true"><use href="#pz-emblem"/></svg><span>TipRadar</span></a>
-    <div class="nav-links pz-links"><a href="/vysledky">Výsledky</a><a href="/clenstvo">Členstvo</a><a href="/kurz">Kurz</a><a href="/o-mne">O mne</a><a href="/otazky">Otázky</a><a href="/formular">Kontakt</a></div>
+    <a class="brand pz-brand" href="/" aria-label="TipRadar – úvod"><svg aria-hidden="true"><use href="#pz-emblem"/></svg><span>TipRadar<small>Futbalová analytika</small></span></a>
+    <div class="nav-links pz-links"><a href="/vysledky"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5h16M7 16v-5M12 16V6.5M17 16v-8"/></svg>Výsledky</a><a href="/clenstvo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3.5 8 4.5 4 4-6.5 4 6.5 4.5-4-2 11h-13Z"/></svg>Členstvo</a><a href="/kurz"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5c-.8 0-1.5.5-1.5 1.2ZM20 5.5c0-.8-.7-1.5-1.5-1.5H13v15h5.5c.8 0 1.5.5 1.5 1.2Z"/></svg>Kurz</a><a href="/o-mne"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c1-3.6 3.8-5.5 7-5.5s6 1.9 7 5.5"/></svg>O mne</a><a href="/otazky"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.6a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.3"/><path d="M12 16.9v.1"/></svg>Otázky</a><a href="/formular"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="2"/><path d="m4.5 7 7.5 6 7.5-6"/></svg>Kontakt</a></div>
     <div class="pz-nav-right">
       <a class="pz-ic" href="https://www.instagram.com/tipradar.eu/" target="_blank" rel="noopener" aria-label="Instagram"><svg aria-hidden="true"><use href="#i-ig"/></svg></a>
       <a class="pz-ic" href="mailto:info@tipradar.eu" aria-label="E-mail"><svg aria-hidden="true"><use href="#i-mail"/></svg></a>
@@ -2402,6 +2608,17 @@ html body .sec { padding-top: clamp(48px, 7vw, 88px) !important; padding-bottom:
     else if (h === "#zapis") c = "formular";
     if (c) send({ c: c });
   }, true);
+})();
+</script>
+<nav class="nw-tabbar" aria-label="Rýchle menu"><a href="/" data-nw="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11 12 4l8 7v8.5a.5.5 0 0 1-.5.5H15v-6H9v6H4.5a.5.5 0 0 1-.5-.5Z"/></svg>Úvod</a><a href="/vysledky" data-nw="vysledky"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5h16M7 16v-5M12 16V6.5M17 16v-8"/></svg>Výsledky</a><a href="/clenstvo" data-nw="clenstvo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3.5 8 4.5 4 4-6.5 4 6.5 4.5-4-2 11h-13Z"/></svg>Členstvo</a><a href="/kurz" data-nw="kurz"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5c-.8 0-1.5.5-1.5 1.2ZM20 5.5c0-.8-.7-1.5-1.5-1.5H13v15h5.5c.8 0 1.5.5 1.5 1.2Z"/></svg>Kurz</a><button type="button" class="nw-more" aria-label="Celé menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h9"/></svg>Menu</button></nav>
+<script>
+/* NOIR WEB (31. 10. 2026): spodná lišta na mobile */
+(function () {
+  var p = (document.documentElement.getAttribute("data-page") || location.pathname.replace(/\/+$/, "").split("/").pop() || "home");
+  if (/kurz/.test(location.pathname)) p = "kurz";
+  var a = document.querySelector('.nw-tabbar [data-nw="' + p + '"]'); if (a) a.classList.add("on");
+  var m = document.querySelector(".nw-tabbar .nw-more"), t = document.querySelector(".nav-toggle");
+  if (m && t) m.addEventListener("click", function () { t.click(); });
 })();
 </script>
 </body>
