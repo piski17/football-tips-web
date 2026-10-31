@@ -2109,7 +2109,7 @@ app.get("/api/blend/summary", async (_req, res) => {
 // Poradie dôvodov vyradenia v prehľade (podľa poradia filtrov v predictor.ts).
 const SHADOW_REASON_ORDER = [
   "conflict", "ev_high", "ev_high_few_games", "ev_low", "min_odds", "one_bookmaker", "band_low", "band_high",
-  "category_lower_ev", "match_lower_ev", "market_disabled", "market_excluded", "few_games", "no_market_odds", "no_odds", "unknown",
+  "category_lower_ev", "match_lower_ev", "market_disabled", "market_excluded", "line_too_high", "few_games", "no_market_odds", "no_odds", "unknown",
 ];
 const SHADOW_GAP_ORDER = ["< 0", "0 – 5", "5 – 10", "10 – 15", "15+", "unknown"];
 

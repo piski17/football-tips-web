@@ -1361,6 +1361,11 @@ export function predictMatch(
   const lowValueBets: MarketPick[] = [];
   // Trhy, pri ktorých tip bez kurzu z API ide do výberu s minimálnym kurzom (kurz sa zadá ručne).
   const MANUAL_ODDS_CATEGORIES = ["drzanie_lopty", "fauly", "fauly_timu", "rohy", "rohy_timu", "strely", "strely_timu", "karty", "karty_timu"];
+  const MAX_RECOMMEND_LINE: Record<string, number> = { "Rohy": 12.5, "Rohy domácich": 6.5, "Rohy hostí": 6.5 };
+  const lineTooHigh = (b: MarketPick): boolean => {
+    const x = ouParts(b.selection), max = MAX_RECOMMEND_LINE[b.market];
+    return !!x && max != null && x.line > max + 0.001;
+  };
   // Poistka rohov (max. 15,5 zápas / 9,5 tím) platí aj pre ručný kurz.
   const manualLineOk = (b: MarketPick): boolean => {
     const x = ouParts(b.selection);
@@ -1378,6 +1383,12 @@ export function predictMatch(
         // ručne sa dajú uložiť.
         b.rejectReason = "tento trh neodporúčame";
         b.rejectCode = "market_excluded";
+        lowValueBets.push(b);
+      } else if (lineTooHigh(b)) {
+        // Prísnejšie rohy (31. 10. 2026, Michal): klientom len bežné hranice – zápas najviac 12,5,
+        // jeden tím najviac 6,5 rohu. Vyššie hranice ostávajú len v analýze.
+        b.rejectReason = "príliš vysoká hranica rohov";
+        b.rejectCode = "line_too_high";
         lowValueBets.push(b);
       } else if (gamesForRecommend < MIN_GAMES_TO_RECOMMEND) {
         // Príliš málo zápasov v sezóne (napr. začiatok Ligy národov) - odhad stojí

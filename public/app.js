@@ -3418,6 +3418,7 @@ const SHADOW_REASON_LABEL = {
   match_lower_ev: "iný tip rovnakého typu zo zápasu mal vyššiu dôveru",
   market_disabled: "trh dočasne vypnutý (slabé výsledky)",
   market_excluded: "trh neodporúčame",
+  line_too_high: "príliš vysoká hranica rohov",
   few_games: "málo odohraných zápasov",
   no_market_odds: "trh bez kurzu",
   no_odds: "zápas bez kurzov",
