@@ -3,6 +3,7 @@ import {
   findOdds,
   marketProbability,
   offeredLines,
+  plausibleLine,
   MIN_EXPECTED_VALUE,
   MIN_ODDS,
   SUSPICIOUS_EXPECTED_VALUE,
@@ -1358,6 +1359,13 @@ export function predictMatch(
     return near.length > 0 && near.every((c) => (c.expectedValue ?? 0) < 0.98);
   };
   const lowValueBets: MarketPick[] = [];
+  // Trhy, pri ktorých tip bez kurzu z API ide do výberu s minimálnym kurzom (kurz sa zadá ručne).
+  const MANUAL_ODDS_CATEGORIES = ["drzanie_lopty", "fauly", "fauly_timu", "rohy", "rohy_timu", "strely", "strely_timu", "karty", "karty_timu"];
+  // Poistka rohov (max. 15,5 zápas / 9,5 tím) platí aj pre ručný kurz.
+  const manualLineOk = (b: MarketPick): boolean => {
+    const x = ouParts(b.selection);
+    return !x || plausibleLine(b.market, x.line);
+  };
   // Výber tipov podľa pravidiel (hodnota, kurz, rozpor, najviac 1 tip z trhu a z typu).
   // Rovnaký postup ide aj pre skúšobné pásmo 65 – 67 % (len sledovať, 28. 10. 2026).
   const selectPicks = (pool: MarketPick[], lowValueBets: MarketPick[], watchBand: boolean): MarketPick[] => {
@@ -1385,7 +1393,9 @@ export function predictMatch(
         b.rejectReason = `trh je dočasne vypnutý (${adjust.disabled[b.category]})`;
         b.rejectCode = "market_disabled";
         lowValueBets.push(b);
-      } else if (ev == null && (b.category === "drzanie_lopty" || b.category === "fauly" || b.category === "fauly_timu")) {
+      } else if (ev == null && MANUAL_ODDS_CATEGORIES.includes(b.category) && manualLineOk(b)) {
+        // Rohy, strely a karty (31. 10. 2026, Michal): keď API kurz na túto hranicu nemá (Tipsport v API
+        // nie je), tip ide do výberu rovnako ako fauly – s minimálnym kurzom, ktorý sa doplní ručne.
         // Držanie lopty a fauly (fauly od 30. 10. 2026, Michal): kurz cez API nie je (API-Football má len
         // fauly hráčov), tip ide do výberu s minimálnym kurzom, ktorý Michal porovná so stávkovkou
         // (Tipsport) a kurz zadá ručne – uloží sa len pri hodnote +5 % a aspoň MIN_ODDS.
@@ -1462,7 +1472,7 @@ export function predictMatch(
       const ev = rankValue(bet), curEv = cur ? rankValue(cur) : 0;
       // Držanie lopty (bez kurzu): hranica s dôverou najbližšie k spodku pásma má najväčšiu
       // šancu, že kurz v stávkovke dosiahne minimum.
-      const better = (bet.category === "drzanie_lopty" || bet.category.startsWith("fauly")) && ev === curEv ? bet.probability < (cur?.probability ?? 101) : bet.probability > (cur?.probability ?? -1);
+      const better = typeof bet.minOdds === "number" && ev === curEv ? bet.probability < (cur?.probability ?? 101) : bet.probability > (cur?.probability ?? -1);
       // Tip, ktorý prejde aj pri 60 / 40, má prednosť pred tipom len pre sledované.
       if (cur && !!bet.strictFail !== !!cur.strictFail) { if (cur.strictFail) bestInCategory.set(bet.category, bet); continue; }
       if (!cur || ev > curEv || (ev === curEv && better)) bestInCategory.set(bet.category, bet);
