@@ -168,6 +168,8 @@ const MARKET_BLEND = 0.3;
  * 60 % model / 40 % stávkovky (sledovanie ukázalo presnejšie percentá). Kto neprejde, ide do sledovaných.
  */
 const STRICT_BLEND = 0.4;
+/** 31. 10. 2026 (Michal): kontrola 60 / 40 VYPNUTÁ – tipy, ktoré by neprešli, idú klientom normálne a len sa označia (strictWouldFail) na porovnanie. */
+export const STRICT_CHECK_ON = true;
 /** Prejde tip aj pri 60 / 40? Rovnaké pravidlá: pásmo dôvery a hodnota aspoň +5 % pri danom kurze. */
 export function passesStrict(t: { strictProbability?: number }, odds: number | null | undefined): boolean {
   if (typeof t.strictProbability !== "number" || typeof odds !== "number" || !(odds > 1)) return true;
@@ -1469,7 +1471,7 @@ export function predictMatch(
       } else {
         // Dvojitá kontrola 60 / 40: tip ostáva vo výbere, ale ak neprejde, uloží sa len do sledovaných.
         // (Pásmo 65 – 67 % ide celé len do sledovaných, kontrola 60 / 40 sa pri ňom nerobí.)
-        if (!watchBand && !passesStrict(b, b.odds)) b.strictFail = true;
+        if (!watchBand && !passesStrict(b, b.odds)) { if (STRICT_CHECK_ON) b.strictFail = true; else b.strictWouldFail = true; }
         pickPool.push(b);
       }
     }

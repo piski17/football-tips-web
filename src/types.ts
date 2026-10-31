@@ -84,6 +84,7 @@ export interface MarketPick {
   strictProbability?: number;
   /** Neprešiel pri 60 / 40 (s kurzom zo stávkovky). */
   strictFail?: boolean;
+  strictWouldFail?: boolean;
   /** Tip zo skúšobného pásma 65 – 67 % (28. 10. 2026) – len sledovať. */
   watchBand?: boolean;
   /** Dôvod, prečo bol tip vyradený (len pri lowValueBets). */
@@ -323,6 +324,7 @@ export interface SavedTip {
   strictProbability?: number;
   /** Prešiel pri 70 / 30, ale nie pri 60 / 40 – len sledovať. */
   strictFail?: boolean;
+  strictWouldFail?: boolean;
   /** Tip zo skúšobného pásma 65 – 67 % (28. 10. 2026) – len sledovať, vlastná skupina v Histórii tipov. */
   watchBand?: boolean;
   /** Zverejnený tip spätne presunutý do sledovaných podľa kontroly 60 / 40 (27. 10. 2026, skúšobné obdobie). */

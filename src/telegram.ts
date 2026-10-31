@@ -230,7 +230,7 @@ function buildMessageText(tip: SavedTip, headerOverride?: string, vip = false, s
     ? `💰 Kurz: <b>${fmtNum(tip.odds!, 2)}</b>\n`
     : `💰 Odhadovaný kurz: <b>~${String(odds).replace(".", ",")}</b>\n`;
   const oddsNote = hasRealOdds
-    ? `<i>ℹ️ Priemerný kurz stávkových kancelárií v čase odoslania – u tvojej stávkovky sa môže mierne líšiť.</i>`
+    ? `<i>ℹ️ Priemerný kurz stávkových kancelárií v čase odoslania – vo vašej stávkovke sa môže mierne líšiť.</i>`
     : `<i>ℹ️ Odhad na základe modelu, nie garantovaný kurz stávkovej kancelárie.</i>`;
 
   if (tip.legs && tip.legs.length > 0) {
@@ -258,9 +258,20 @@ function buildMessageText(tip: SavedTip, headerOverride?: string, vip = false, s
     `📊 ${escapeHtml(tip.market)}: <b>${escapeHtml(translateNamesInText(tip.selection, tip.homeTeam, tip.awayTeam))}</b>\n` +
     `📈 Dôvera: <b>${tip.probability.toFixed(0)} %</b>${vip && strong ? " · ⭐ <b>Najsilnejší tip dňa</b>" : ""}\n` +
     oddsLine +
+    minOddsLine(tip) +
     `💵 Odporúčaná sadzba: <b>${stakePct} % bankrollu</b>\n\n` +
     oddsNote
   );
+}
+
+/**
+ * Minimálny kurz pre klienta (31. 10. 2026, Michal): tip ide s kurzom z API bez prepisovania,
+ * klient si ho podá len pri kurze aspoň X – vždy aspoň 1,50 a hodnota +5 % (aj pri kontrole 60 / 40).
+ */
+function minOddsLine(tip: SavedTip): string {
+  const need = (p: number | undefined) => (typeof p === "number" && p > 0 ? 1.05 / (p / 100) : 0);
+  const min = Math.ceil(Math.max(1.5, need(tip.probability), need(tip.strictProbability)) * 100) / 100;
+  return `✅ Hrajte len pri kurze aspoň <b>${fmtNum(min, 2)}</b>\n`;
 }
 
 async function sendToChat(chatId: string, text: string): Promise<number | null> {

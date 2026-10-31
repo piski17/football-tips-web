@@ -1194,6 +1194,8 @@ function softConflictCheck(bet, odd) {
  * Dvojitá kontrola (27. 10. 2026): tip musí prejsť aj pri 60 % model / 40 % stávkovky
  * (pásmo dôvery a hodnota +5 % s Michalovým kurzom). Rovnaké pravidlo ako passesStrict na serveri.
  */
+// 31. 10. 2026 (Michal): kontrola 60 / 40 vypnutá – tipy idú klientom, len sa označia. strictCheck ostáva pre rozbory.
+const STRICT_CHECK_ON = true;
 function strictCheck(bet, odd) {
   const p = bet.strictProbability;
   if (typeof p !== "number" || !(odd > 1)) return { pass: true, p: null };
@@ -1229,7 +1231,7 @@ function buildTip(r, bet, realOdds, extra = {}) {
     ...measurementFields(r, bet),
     ...(bet.softConflict && !softConflictCheck(bet, realOdds).pass ? { softConflict: true, watchOnly: true } : {}),
     ...(typeof bet.strictProbability === "number" ? { strictProbability: bet.strictProbability } : {}),
-    ...(bet.watchBand ? { watchBand: true, watchOnly: true } : !strictCheck(bet, realOdds).pass ? { strictFail: true, watchOnly: true } : {}),
+    ...(bet.watchBand ? { watchBand: true, watchOnly: true } : !strictCheck(bet, realOdds).pass ? (STRICT_CHECK_ON ? { strictFail: true, watchOnly: true } : { strictWouldFail: true }) : {}),
     ...extra,
     savedAt: new Date().toISOString(),
     status: "pending",
@@ -1829,7 +1831,11 @@ function renderDayTipsView() {
   // Kurzy zo stávkovky: zadávajú sa priamo v riadkoch, hneď vidno, či kurz stačí.
   const oddsState = (i) => {
     const item = dayTips.items[i];
-    const odd = parseOddsInput(dayTipOdds[i]);
+    // 31. 10. 2026 (Michal): kurzy sa netreba prepisovať – bez zadaného kurzu platí kurz z API
+    // (klient dostane v správe „Hrajte len pri kurze aspoň X“). Zadaný kurz má prednosť.
+    const typed = parseOddsInput(dayTipOdds[i]);
+    const api = item && typeof item.bet.odds === "number" && item.bet.odds > 1 ? item.bet.odds : null;
+    const odd = typed ?? api;
     if (!item || odd == null) return { ok: false, odd: null };
     const min = minOddsFor(item.bet);
     return { ok: odd >= min && odd <= 20, odd, min };
@@ -1841,12 +1847,13 @@ function renderDayTipsView() {
       if (dayTipSaved.has(i)) { el.textContent = ""; el.className = "odds-st"; return; }
       const st = oddsState(i);
       const sc = st.ok && dayTips.items[i].bet.softConflict ? softConflictCheck(dayTips.items[i].bet, st.odd) : null;
-      const sx = st.ok && (!sc || sc.pass) && !dayTips.items[i].bet.watchBand ? strictCheck(dayTips.items[i].bet, st.odd) : null;
+      const sx = st.ok && (!sc || sc.pass) && STRICT_CHECK_ON && !dayTips.items[i].bet.watchBand ? strictCheck(dayTips.items[i].bet, st.odd) : null;
       el.className = "odds-st" + (st.odd == null ? "" : (sc && !sc.pass) || (sx && !sx.pass) ? " bad" : st.ok ? " ok" : " bad");
       const hv = st.ok ? highValuePct(dayTips.items[i].bet, st.odd) : null;
       if (hv != null) { el.className = "odds-st bad"; el.textContent = `⚠ Skontroluj kurz – hodnota +${hv}${NB}%`; if (!matchHasStarted(dayTips.items[i].r.fixture)) n++; return; }
       el.textContent = st.odd == null ? "" : sc && !sc.pass ? `✗ rozpor ${Math.round(sc.gap)} b. – len sledovať` : sx && !sx.pass ? "✗ neprejde pri 60 / 40 – len sledovať" : sc ? `✓ rozpor ${Math.round(sc.gap)} b. – prejde` : st.ok && dayTips.items[i].bet.watchBand ? "✓ má hodnotu – len sledovať" : st.ok ? "✓ má hodnotu" : st.odd > 20 ? "✗ preklep?" : `✗ pod ${fmtOdds(st.min)}`;
       if (st.odd != null && dayTipBest[i]) el.textContent += ` · ${dayTipBest[i]} ${fmtOdds(st.odd)}`;
+      else if (st.odd != null && parseOddsInput(dayTipOdds[i]) == null) el.textContent += ` · kurz z API ${fmtOdds(st.odd)}`;
       if (st.ok && !matchHasStarted(dayTips.items[i].r.fixture)) n++;
     });
     const b = document.getElementById("dtBulkSave");

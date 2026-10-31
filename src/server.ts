@@ -35,7 +35,7 @@ import {
   getHeadToHeadStats,
   getRestInfo,
 } from "./apiClient";
-import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, MarketAdjustments, marketCategory, passesStrict } from "./predictor";
+import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, MarketAdjustments, marketCategory, passesStrict, STRICT_CHECK_ON } from "./predictor";
 import { newModelInputs } from "./newModel";
 import { computeMarketHealth, marketChangesText, clvOf, CLV_TIE } from "./marketHealth";
 import { LeaguePreset, SavedTip } from "./types";
@@ -975,7 +975,10 @@ app.post("/api/tips", async (req, res) => {
     }
     // Dvojitá kontrola (27. 10. 2026, Michalovo rozhodnutie): tip musí prejsť aj pri 60 % model / 40 % stávkovky
     // s kurzom, ktorý Michal zadal. Ak neprejde, uloží sa len na sledovanie.
-    if (!(tip.legs && tip.legs.length) && !tip.manualEntry && !tip.overrideFilter && !tip.watchBand && !passesStrict(tip, tip.odds)) {
+    // 31. 10. 2026 (Michal): kontrola vypnutá (STRICT_CHECK_ON) – tip sa len označí strictWouldFail na porovnanie.
+    const failsStrict = !(tip.legs && tip.legs.length) && !tip.manualEntry && !tip.overrideFilter && !tip.watchBand && !passesStrict(tip, tip.odds);
+    tip.strictWouldFail = !STRICT_CHECK_ON && failsStrict ? true : undefined;
+    if (STRICT_CHECK_ON && failsStrict) {
       tip.watchOnly = true;
       tip.strictFail = true;
       tip.strongOfDay = undefined;
@@ -2843,7 +2846,7 @@ async function runAutoAnalysis(): Promise<void> {
           selection: String(b.selection),
           probability: Math.round(Number(b.probability) * 10) / 10,
           odds: typeof b.odds === "number" && b.odds > 1 ? b.odds : null,
-          ...(b.strictFail ? { strictFail: true } : {}),
+          ...(b.strictFail || b.strictWouldFail ? { strictFail: true } : {}),
           recordedAt,
           status: "pending" as const,
         }));
