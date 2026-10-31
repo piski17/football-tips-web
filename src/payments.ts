@@ -4,7 +4,7 @@ import * as crypto from "crypto";
 import axios from "axios";
 import { ibanValid } from "./payBySquare";
 
-// Platby za členstvo TipRadar (50 – 300 tipov po 50, od 39 €): bankový prevod cez QR kód (PAY by square), bez poplatkov.
+// Platby za členstvo TipRadar (Štart / Premium / VIP / Gold / Platinum = 50 – 250 tipov, od 39 €): bankový prevod cez QR kód (PAY by square), bez poplatkov.
 // Zapne sa, keď sú na Renderi nastavené SALES_OPEN=true, PAY_IBAN a PAY_NAME.
 // Platbu potvrdíš jedným klikom v appke alebo v Telegrame, bot potom pošle pozvánku.
 
@@ -51,17 +51,17 @@ export function addActiveMonths(from: Date, months: number, days?: number): Date
   return calEnd;
 }
 
-// Od 31. 10. 2026 večer (Michalovo rozhodnutie): jedno členstvo s posuvníkom 50 – 300 tipov, vždy po 50.
-// Čím viac tipov, tým lacnejší tip: 50 = 39 €, 100 = 75 €, 150 = 109 €, 200 = 139 €, 250 = 169 €, 300 = 199 €.
-// Názov podľa počtu tipov: 50 = Štart, 100 – 150 = Gold, 200 – 300 = Platinum (navyše mentoring 1 na 1).
+// Od 31. 10. 2026 večer (Michalovo rozhodnutie): posuvník 50 – 250 tipov, vždy po 50, každý počet má vlastný názov a výhody:
+// 50 = Štart 39 €, 100 = Premium 75 €, 150 = VIP 109 €, 200 = Gold 139 €, 250 = Platinum 169 € (Gold a Platinum navyše mentoring 1 na 1).
+// Výhody členstiev sú v src/telegram.ts (TIER_PERKS) a na webe (landing/index.html, data-min-tips).
 // Rovnaké ceny sú na webe (landing/index.html, MEMBER_STEPS), v app.tipradar.eu (public/app.js) a v Mac appke.
-// Staré p75 (Štart 75 tipov) a balíčky t75 / t150 / t300, časové m1 / m3 / season ostávajú kvôli starším záznamom.
+// Staré p75 (Štart 75 tipov), p300 (300 tipov, len pár minút 31. 10.) a balíčky t75 / t150 / t300, časové m1 / m3 / season ostávajú kvôli starším záznamom.
 // Bez časovej platnosti: členstvo platí, kým sa neminú tipy (NO_EXPIRY_MONTHS je len technický dátum, nikde sa neukazuje).
-// Garancia: prvých 30 tipov bez rizika; ak členstvo skončí v strate (v jednotkách), člen dostane 1 mesiac zadarmo.
+// Garancia: prvých 20 tipov bez rizika; ak členstvo skončí v strate (v jednotkách), člen dostane 1 mesiac zadarmo.
 export const NO_EXPIRY_MONTHS = 1200;
-export type SellableTerm = "p50" | "p100" | "p150" | "p200" | "p250" | "p300";
-export type Term = SellableTerm | "p75" | "t75" | "t150" | "t300" | "m1" | "m3" | "season";
-export const SELLABLE_TERMS: SellableTerm[] = ["p50", "p100", "p150", "p200", "p250", "p300"];
+export type SellableTerm = "p50" | "p100" | "p150" | "p200" | "p250";
+export type Term = SellableTerm | "p300" | "p75" | "t75" | "t150" | "t300" | "m1" | "m3" | "season";
+export const SELLABLE_TERMS: SellableTerm[] = ["p50", "p100", "p150", "p200", "p250"];
 const pk = (price: number, tips: number) => ({ price, name: `${tips} tipov`, tips, months: NO_EXPIRY_MONTHS });
 export const PAY_TERMS: Record<Term, { price: number; name: string; months?: number; days?: number; tips?: number }> = {
   p50: pk(39, 50),
@@ -81,11 +81,11 @@ export const PAY_TERMS: Record<Term, { price: number; name: string; months?: num
 /** Názov členstva: Štart / Gold / Platinum (staré balíčky a časové členstvá majú v názve „starý / staré“). */
 export const TIER_NAMES: Record<Term, string> = {
   p50: "Štart",
-  p100: "Gold",
-  p150: "Gold",
-  p200: "Platinum",
+  p100: "Premium",
+  p150: "VIP",
+  p200: "Gold",
   p250: "Platinum",
-  p300: "Platinum",
+  p300: "Platinum (staré, 300 tipov)",
   p75: "Štart (staré, 75 tipov)",
   t75: "Štart (starý balíček)",
   t150: "Gold (starý balíček)",
@@ -104,7 +104,7 @@ export function termLabel(term: Term): string {
 export function isTerm(v: unknown): v is Term {
   return typeof v === "string" && Object.prototype.hasOwnProperty.call(PAY_TERMS, v);
 }
-/** Členstvá, ktoré sa dajú kúpiť (50 – 300 tipov po 50; staré balíčky a časové členstvá nie). */
+/** Členstvá, ktoré sa dajú kúpiť (50 – 250 tipov po 50; staré balíčky a časové členstvá nie). */
 export function isSellableTerm(v: unknown): v is SellableTerm {
   return typeof v === "string" && (SELLABLE_TERMS as string[]).includes(v);
 }
@@ -122,18 +122,17 @@ export function memberSaving(term: Term): number {
   const t = PAY_TERMS[term];
   return Math.round(((t.tips || 50) / 50) * PAY_TERMS.p50.price - t.price);
 }
-/** Členstvo podľa počtu tipov (50 – 300, zaokrúhlené na 50). */
+/** Členstvo podľa počtu tipov (50 – 250, zaokrúhlené na 50). */
 export function termForTips(tips: number): SellableTerm {
-  const n = Math.min(300, Math.max(50, Math.round((Number(tips) || 50) / 50) * 50));
+  const n = Math.min(250, Math.max(50, Math.round((Number(tips) || 50) / 50) * 50));
   return ("p" + n) as SellableTerm;
 }
-/** Staré odkazy vedú na nové členstvá: Štart 75 / 50 dní → 50 tipov, Štart 100 → 100, Gold 250 → 250, Onyx 500 / 6 mesiacov → 300. */
+/** Staré odkazy vedú na nové členstvá: Štart 75 / 50 dní → Štart, Štart 100 → Premium, Gold 250 / Onyx 500 / 300 tipov / 6 mesiacov → Platinum. */
 export function sellableTerm(v: unknown): SellableTerm | null {
   if (isSellableTerm(v)) return v;
   if (v === "p75" || v === "m1") return "p50";
   if (v === "t75") return "p100";
-  if (v === "t150") return "p250";
-  if (v === "t300" || v === "m3" || v === "season") return "p300";
+  if (v === "t150" || v === "p300" || v === "t300" || v === "m3" || v === "season") return "p250";
   return null;
 }
 

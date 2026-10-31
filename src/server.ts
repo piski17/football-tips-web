@@ -264,15 +264,11 @@ app.get(["/vysledky", "/vysledky/", "/otazky", "/otazky/", "/formular", "/formul
 // ---- Platba za členstvo (prevod cez QR kód) – bez hesla ----
 /** Členstvá sú bez obmedzenia miest – čísla slúžia len na prehľad (aktívni členovia a poradovník). */
 type TermSeats = Record<SellableTerm, { occupied: number; total: null; left: null }>;
-/** Plán z bota (t.me/…?start=…) → členstvo: c50 … c300 = počet tipov z posuvníka, stat = 50 tipov, gold = 100 tipov, platinum = 200 tipov. Staré odkazy: start = Štart, seria = Gold, onyx / sampion / vip = Platinum. */
-const LEAD_PLAN_TERM: Record<string, SellableTerm> = {
-  stat: "p50", stat_waitlist: "p50", start: "p50", start_waitlist: "p50",
-  gold: "p100", gold_waitlist: "p100", seria: "p100", seria_waitlist: "p100",
-  platinum: "p200", platinum_waitlist: "p200",
-  onyx: "p200", onyx_waitlist: "p200", sampion: "p200", sampion_waitlist: "p200", vip: "p200", vip_waitlist: "p200",
-};
-// Posuvník na tipradar.eu (od 31. 10. 2026): ?start=c50 … c300 = zvolený počet tipov.
+/** Plán z bota (t.me/…?start=…) → členstvo: c50 … c250 = posuvník na webe (Štart / Premium / VIP / Gold / Platinum). Staré odkazy:
+ *  stat / start = Štart, seria = Premium, vip = VIP, gold = Gold, platinum / onyx / sampion = Platinum. Rovnako v src/telegram.ts (PLAN_TERM). */
+const LEAD_PLAN_TERM: Record<string, SellableTerm> = { stat: "p50", start: "p50", seria: "p100", vip: "p150", gold: "p200", platinum: "p250", onyx: "p250", sampion: "p250" };
 for (const t of SELLABLE_TERMS) LEAD_PLAN_TERM["c" + PAY_TERMS[t].tips] = t;
+for (const k of Object.keys(LEAD_PLAN_TERM)) LEAD_PLAN_TERM[k + "_waitlist"] = LEAD_PLAN_TERM[k];
 /** Aktívni členovia (členstvo ešte neskončilo) podľa členstva + záujemcovia v poradovníku (pred spustením predaja). */
 async function termSeats(): Promise<TermSeats> {
   const subs = await listSubscribers();
@@ -295,11 +291,11 @@ async function termSeats(): Promise<TermSeats> {
 }
 /** Riadok pod tipom v bezplatnom kanáli (členstvá sú bez obmedzenia miest). */
 async function freeSeatsLine(): Promise<string | undefined> {
-  return `🎯 Členstvo: 50 – 300 tipov podľa vás, od 39 € · 🛡 prvých 30 tipov bez rizika`;
+  return `🎯 Členstvo: Štart · Premium · VIP · Gold · Platinum, od 39 € · 🛡 prvých 20 tipov bez rizika`;
 }
 const BOT_USERNAME = process.env.TELEGRAM_BOT_USERNAME || "TipRadarAiBot";
 
-// tipradar.eu/zaplatit?term=p50|p100|p150|p200|p250|p300 (&c=Telegram ID z bota; staré odkazy prevedie sellableTerm) → založí platbu a presmeruje na stránku s QR kódom.
+// tipradar.eu/zaplatit?term=p50|p100|p150|p200|p250 (&c=Telegram ID z bota; staré odkazy prevedie sellableTerm) → založí platbu a presmeruje na stránku s QR kódom.
 app.get("/zaplatit", async (req, res) => {
   const term = sellableTerm(String(req.query.term ?? ""));
   const c = String(req.query.c ?? "");
@@ -3206,7 +3202,7 @@ async function guaranteeRows() {
   for (const s of subs) {
     const term = memberTerm(s);
     const periodsOf = usage.get(s.id) ?? [];
-    // „30 tipov bez rizika“: len prvé zaplatené členstvo podľa tipov (staršie záznamy s viacerými obdobiami nie)
+    // „20 tipov bez rizika“: len prvé zaplatené členstvo podľa tipov (staršie záznamy s viacerými obdobiami nie)
     const firstPaid = s.pastPeriods && s.pastPeriods.length > 0 ? null : periodsOf.find((u) => u.total !== null && !u.period.free) ?? null;
     for (const u of periodsOf) {
       const p = u.period;
@@ -3219,9 +3215,9 @@ async function guaranteeRows() {
       const applied = (s.guarantees ?? []).some((g) => g.periodStart === p.start);
       const inLoss = sm.profit < 0;
       const refunded = Boolean(s.refund && s.refund.periodStart === p.start);
-      const first30 = u === firstPaid && u.tips.length >= REFUND_TIPS ? u.tips.slice(0, REFUND_TIPS) : null;
-      const first30Done = first30 !== null && first30.every((t) => t.status !== "pending");
-      const refundProfit = first30Done ? summarizeTips(first30!).profit : null;
+      const first20 = u === firstPaid && u.tips.length >= REFUND_TIPS ? u.tips.slice(0, REFUND_TIPS) : null;
+      const first20Done = first20 !== null && first20.every((t) => t.status !== "pending");
+      const refundProfit = first20Done ? summarizeTips(first20!).profit : null;
       rows.push({
         id: s.id,
         name: s.name,
@@ -3331,7 +3327,7 @@ app.post("/api/guarantee/apply", async (req, res) => {
   }
 });
 
-// „30 tipov bez rizika“: vráti peniaze (prevod robíš ty), zapíše to k členovi a členstvo ukončí.
+// „20 tipov bez rizika“: vráti peniaze (prevod robíš ty), zapíše to k členovi a členstvo ukončí.
 app.post("/api/guarantee/refund", async (req, res) => {
   const id = typeof req.body?.id === "string" ? req.body.id : "";
   if (!id) {
@@ -3355,7 +3351,7 @@ app.post("/api/guarantee/refund", async (req, res) => {
     await updateSubscriber(id, {
       refund: { periodStart: row.periodStart, profit: row.refundProfit!, amountEur: row.refundAmount, at: now },
       ...(isCurrent ? { nextPaymentDue: now } : {}), // členstvo končí – ďalšie tipy sa mu už nerátajú
-      note: `${sub.note ? sub.note + " · " : ""}Garancia 30 tipov (${signed(row.refundProfit!, 1)} j.): vrátené ${row.refundAmount} €`,
+      note: `${sub.note ? sub.note + " · " : ""}Garancia 20 tipov (${signed(row.refundProfit!, 1)} j.): vrátené ${row.refundAmount} €`,
     });
     let notified = false;
     if (req.body?.notify === true && sub.telegramChatId) {
@@ -3408,7 +3404,7 @@ async function checkExpiringSubscribers(): Promise<void> {
       else if (k.active && r.daysLeft <= 3) when = r.daysLeft <= 0 ? "platnosť končí dnes" : `platnosť končí o ${r.daysLeft} d.`;
       if (when) notes.push({ name: s.name, length: s.length, tier: s.tier, when });
     }
-    // Garancia „30 tipov bez rizika“: člen je po prvých 30 tipoch v mínuse → vrátiť peniaze (app.tipradar.eu → Členovia → Garancia).
+    // Garancia „20 tipov bez rizika“: člen je po prvých 20 tipoch v mínuse → vrátiť peniaze (app.tipradar.eu → Členovia → Garancia).
     for (const g of (await guaranteeRows()).filter((r) => r.refundEligible)) {
       const sub = subs.find((s) => s.id === g.id);
       notes.push({ name: g.name, length: sub?.length, tier: sub?.tier ?? "individual", when: `po ${REFUND_TIPS} tipoch v mínuse (${signed(g.refundProfit!, 1)} j.) – vráť ${g.refundAmount} € (Členovia → Garancia)` });
