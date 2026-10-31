@@ -271,7 +271,7 @@ function buildMessageText(tip: SavedTip, headerOverride?: string, vip = false, s
 function minOddsLine(tip: SavedTip): string {
   const need = (p: number | undefined) => (typeof p === "number" && p > 0 ? 1.05 / (p / 100) : 0);
   const min = Math.ceil(Math.max(1.5, need(tip.probability), need(tip.strictProbability)) * 100) / 100;
-  return `✅ Hrajte len pri kurze aspoň <b>${fmtNum(min, 2)}</b>\n`;
+  return `✅ Minimálny kurz, pri ktorom tip odporúčam hrať: <b>${fmtNum(min, 2)}</b>\n`;
 }
 
 async function sendToChat(chatId: string, text: string): Promise<number | null> {

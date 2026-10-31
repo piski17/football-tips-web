@@ -23,6 +23,10 @@ export interface AutoEntry {
   fixtureId: number;
   leagueId: number;
   league: string;
+  /** Sezóna a logá (od 31. 10. 2026 – na doplnenie tipu do Histórie tipov; staršie záznamy ich nemajú). */
+  season?: number;
+  homeTeamLogo?: string;
+  awayTeamLogo?: string;
   matchDate: string;
   homeTeam: string;
   awayTeam: string;

@@ -990,7 +990,7 @@ function renderAnalysis(r, root, opts = {}) {
     ${lineupNote ? `<p class="note">${escapeHtml(lineupNote)}</p>` : ""}
     <p class="note" data-lineup-out></p>
     ${r.sampleSizeWarning ? `<div class="warn-box">⚠️ ${escapeHtml(tr(r.sampleSizeWarning))}</div>` : ""}
-    ${started ? `<div class="locked">⏱ ${MATCH_STARTED_TEXT}</div>` : ""}`;
+    ${started ? `<div class="locked">⏱ ${MATCH_STARTED_TEXT} Ak si ho zabudol uložiť, doplníš ho v Histórii tipov → Sledované → Všetky zápasy – automaticky (tlačidlo „+ Pridať“).</div>` : ""}`;
 
   // --- odporúčané tipy (server vracia pásmo 68 – 80 %, max. 1 na trh) ---
   const tipsHtml = topBets.length
@@ -2181,6 +2181,9 @@ const CALIBRATION_TO = 82.5;
 // Klientom nejdú, nie sú na webe a nerátajú sa do štatistík – vidí ich len Michal tu.
 // =====================================================================
 let autoData = null;
+/** Automatické tipy, ktoré už sú v Histórii tipov (id aj „zápas|trh|tip“). */
+let autoSavedKeys = new Set();
+const autoInHistory = (t) => autoSavedKeys.has(t.id) || autoSavedKeys.has(`${t.fixtureId}|${t.market}|${t.selection}`);
 let autoStrictOnly = false;
 // Filter súťaže (30. 10. 2026, Michal): „nech to nie je všetko na jednu kopu, každá liga zvlášť“.
 let autoLeague = "";
@@ -2188,7 +2191,9 @@ async function renderAutoTips() {
   const el = document.getElementById("autoResult");
   if (!el) return;
   try {
-    autoData = await fetchJson("/api/auto-tips");
+    const [data, tips] = await Promise.all([fetchJson("/api/auto-tips"), fetchJson("/api/tips").catch(() => null)]);
+    autoData = data;
+    if (Array.isArray(tips)) autoSavedKeys = new Set(tips.flatMap((t) => [t.autoId, `${t.fixtureId}|${t.market}|${t.selection}`].filter(Boolean)));
   } catch (err) {
     el.innerHTML = `<p class="empty">Nepodarilo sa načítať: ${escapeHtml(err.message)}</p>`;
     return;
@@ -2285,18 +2290,18 @@ function drawAutoTips() {
       // V rámci dňa každá súťaž zvlášť (s vlastným súčtom), v poradí súťaží.
       const dayLeagues = new Map();
       for (const t of tips) dayLeagues.set(leagueSk(t.league), [...(dayLeagues.get(leagueSk(t.league)) || []), t]);
-      const tipRow = (t) => `<tr><td style="white-space:nowrap">${escapeHtml(timeHm(new Date(t.matchDate)))}</td><td>${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))}<br><span class="faint">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}${t.strictFail ? " · neprejde 60 / 40" : ""}</span></td><td class="num">${fmtNum(t.probability, 0)}${NB}%</td><td class="num">${typeof t.odds === "number" ? fmtOdds(t.odds) : "–"}</td><td>${res[t.status] || escapeHtml(t.status)}</td></tr>`;
+      const tipRow = (t) => `<tr><td style="white-space:nowrap">${escapeHtml(timeHm(new Date(t.matchDate)))}</td><td>${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))}<br><span class="faint">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}${t.strictFail ? " · neprejde 60 / 40" : ""}</span></td><td class="num">${fmtNum(t.probability, 0)}${NB}%</td><td class="num">${typeof t.odds === "number" ? fmtOdds(t.odds) : "–"}</td><td>${res[t.status] || escapeHtml(t.status)}</td><td class="num">${autoInHistory(t) ? `<span class="faint small" title="Tip už je v Histórii tipov">✓ v histórii</span>` : `<button type="button" class="btn ghost sm" data-auto-add="${escapeHtml(t.id)}" title="Pridať tento tip do Histórie tipov (aj keď sa zápas už hrá alebo je po zápase)">+ Pridať</button>`}</td></tr>`;
       const rows = [...dayLeagues.entries()]
         .sort(byLeagueOrder((x) => x[0]))
         .map(([lg, l]) => {
           const ls = autoStats(l);
-          const head = autoLeague ? "" : `<tr class="auto-lg-head"><td colspan="5"><b>${escapeHtml(lg)}</b><span>${plural(l.length, "tip", "tipy", "tipov")}${ls.settled ? ` · vyšlo ${ls.won} z ${ls.settled}` : ""}${ls.withOdds && ls.settled ? ` · <b class="${cls(ls.profit)}">${signed(ls.profit, 1)}${NB}j.</b>` : ""}</span></td></tr>`;
+          const head = autoLeague ? "" : `<tr class="auto-lg-head"><td colspan="6"><b>${escapeHtml(lg)}</b><span>${plural(l.length, "tip", "tipy", "tipov")}${ls.settled ? ` · vyšlo ${ls.won} z ${ls.settled}` : ""}${ls.withOdds && ls.settled ? ` · <b class="${cls(ls.profit)}">${signed(ls.profit, 1)}${NB}j.</b>` : ""}</span></td></tr>`;
           return head + l.map(tipRow).join("");
         })
         .join("");
       return `<details class="auto-day"${day === today ? " open" : ""}>
         <summary><span class="auto-d">${escapeHtml(dayKeyLabel(day))}</span><span>${plural(fxByDay.get(day) || 0, "zápas", "zápasy", "zápasov")} · ${plural(tips.length, "tip", "tipy", "tipov")}</span><span>${s.settled ? `vyšlo ${s.won} z ${s.settled}` : s.pending ? `čaká ${s.pending}` : ""}</span><span class="${cls(s.profit)}">${s.withOdds ? `${signed(s.profit, 1)}${NB}j.` : ""}</span></summary>
-        ${tips.length ? `<div class="table-wrap"><table class="bt-table"><thead><tr><th>Čas</th><th>Zápas a tip</th><th class="num">Dôvera</th><th class="num">Kurz</th><th>Výsledok</th></tr></thead><tbody>${rows}</tbody></table></div>` : `<p class="faint small">Model v týchto zápasoch nenašiel tip, ktorý by odporučil.</p>`}
+        ${tips.length ? `<div class="table-wrap"><table class="bt-table"><thead><tr><th>Čas</th><th>Zápas a tip</th><th class="num">Dôvera</th><th class="num">Kurz</th><th>Výsledok</th><th class="num">História</th></tr></thead><tbody>${rows}</tbody></table></div>` : `<p class="faint small">Model v týchto zápasoch nenašiel tip, ktorý by odporučil.</p>`}
       </details>`;
     })
     .join("");
@@ -2306,7 +2311,8 @@ function drawAutoTips() {
     (allList.length ? leagueTable : "") +
     (list.length ? marketTable : "") +
     `<h4 class="ct">Po dňoch</h4>${dayHtml}` +
-    `<p class="faint small">Server každý zápas zo všetkých súťaží prejde sám, asi hodinu pred výkopom, a zapíše všetky tipy, ktoré by model odporučil (pásmo 68 – 80${NB}%, hodnota +5 až +25${NB}%, kurz aspoň 1,50, najviac 1 tip z typu). Kurz je zo stávkoviek v tom čase. Klientom nejdú, nie sú na webe a nerátajú sa do úspešnosti – sú len pre teba, aby si videl, ako model funguje na veľkom množstve zápasov.</p>`;
+    `<p class="faint small">Server každý zápas zo všetkých súťaží prejde sám, asi hodinu pred výkopom, a zapíše všetky tipy, ktoré by model odporučil (pásmo 68 – 80${NB}%, hodnota +5 až +25${NB}%, kurz aspoň 1,50, najviac 1 tip z typu). Kurz je zo stávkoviek v tom čase. Klientom nejdú, nie sú na webe a nerátajú sa do úspešnosti – sú len pre teba, aby si videl, ako model funguje na veľkom množstve zápasov.</p>` +
+    `<p class="faint small">Zabudol si tip uložiť? Ťukni na „+ Pridať“ – tip pôjde do Histórie tipov ako ostatné, aj keď sa zápas už hrá alebo je po zápase. Berie sa dôvera a kurz, ktoré server zapísal pred výkopom, a platia rovnaké pravidlá (68 – 80${NB}%, kurz aspoň 1,50, kontrola 60 / 40) – čo by klientom nešlo, pôjde do sledovaných. Tip pridaný po výkope má značku „⏱ doplnené po výkope“ a do Telegramu sa neposiela. Po spustení predaja sa takéto tipy na webe nerátajú.</p>`;
   el.querySelectorAll("[data-auto-league]").forEach((b) => {
     b.onclick = () => {
       autoLeague = b.dataset.autoLeague;
@@ -2315,6 +2321,32 @@ function drawAutoTips() {
   });
   const sel = el.querySelector("#autoLeagueSel");
   if (sel) sel.onchange = () => { autoLeague = sel.value; drawAutoTips(); };
+  el.querySelectorAll("[data-auto-add]").forEach((b) => {
+    b.onclick = async () => {
+      const t = (autoData.entries || []).find((x) => x.id === b.dataset.autoAdd);
+      if (!t) return;
+      const label = `${translateTeamName(t.homeTeam)} – ${translateTeamName(t.awayTeam)}: ${t.market} ${translateNamesInText(t.selection, t.homeTeam, t.awayTeam)}`;
+      let odds;
+      if (!(typeof t.odds === "number" && t.odds > 1)) {
+        // trh bez kurzu v API (napr. fauly) – kurz zadá Michal
+        const raw = await promptModal(`Server pri tomto tipe kurz nemá. Zadaj kurz, ktorý si mal v stávkovke pred zápasom (napr. 1,65):`, "");
+        if (raw == null) return;
+        odds = parseOddsInput(raw);
+        if (odds == null || odds > 20) { showToast("Neplatný kurz – tip sa nepridal."); return; }
+      } else if (!window.confirm(`Pridať do Histórie tipov?\n\n${label}\nDôvera ${fmtNum(t.probability, 0)} % · kurz ${fmtOdds(t.odds)}`)) return;
+      b.disabled = true;
+      try {
+        const r = await postJson(`/api/auto-tips/${encodeURIComponent(t.id)}/add`, odds != null ? { odds } : {});
+        autoSavedKeys.add(t.id);
+        showToast(r.watchOnly ? `✓ Pridané medzi sledované tipy (${r.reason || "nespĺňa pravidlá"})` : `✓ Pridané do Histórie tipov${r.lateAdd ? " · doplnené po výkope" : ""}`);
+        drawAutoTips();
+        try { renderTipsList(await fetchJson("/api/tips")); } catch { /* história sa obnoví pri ďalšom otvorení */ }
+      } catch (err) {
+        showToast(`Nepodarilo sa pridať: ${err?.message ?? String(err)}`);
+        b.disabled = false;
+      }
+    };
+  });
   el.querySelectorAll("[data-auto-strict]").forEach((b) => {
     b.onclick = () => {
       autoStrictOnly = b.dataset.autoStrict === "1";
@@ -2652,6 +2684,7 @@ function tipBadges(t) {
   let b = "";
   if (isOverrideTip(t)) b += ` <span class="tag warn" title="Vyradené kontrolou kurzu, pridané ručne">⚠️ mimo filtra</span>`;
   if (t.manualEntry) b += ` <span class="tag" title="Tip doplnený ručne po zápase">✍ doplnené ručne</span>`;
+  if (t.lateAdd) b += ` <span class="tag" title="Doplnené po výkope zo Všetkých zápasov – automaticky (dôvera a kurz zapísané asi hodinu pred výkopom). Klientom nešiel.">⏱ doplnené po výkope</span>`;
   if (t.edited) b += ` <span class="tag" title="Výsledok alebo kurz bol ručne opravený">✎ upravené</span>`;
   if (t.strongOfDay) b += ` <span class="tag gold" title="Silný tip dňa">⭐ silný tip dňa</span>`;
   if (t.archived) b += ` <span class="tag" title="Skrytý tip – v štatistikách aj na prezentácii ostáva">skrytý</span>`;
@@ -2687,7 +2720,9 @@ function historyRowHtml(t) {
     : "";
   const btn = (attr, icon, title, extra = "") => `<button type="button" class="ib${extra}" ${attr}="${escapeHtml(t.id)}" title="${title}" aria-label="${title}">${icon}</button>`;
   const buttons = [btn("data-edit-id", ICON.edit, "Upraviť výsledok alebo kurz")];
-  if (t.status === "pending") {
+  if (t.lateAdd) {
+    // doplnené po výkope – klientom nešiel, do Telegramu sa neposiela
+  } else if (t.status === "pending") {
     buttons.push(btn("data-send-id", ICON.send, "Poslať do kanála na Telegrame"));
   } else {
     buttons.push(btn("data-result-id", ICON.result, "Poslať výsledok do Telegramu"));

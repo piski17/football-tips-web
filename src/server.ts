@@ -97,7 +97,11 @@ const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté kont
 function statsTips(tips: SavedTip[]): SavedTip[] {
   // Tipy „Len sledovať“ (napr. Liga majstrov na skúšku) sa vyhodnocujú, ale nerátajú sa
   // do štatistík, na web ani do vyhodnotení pre členov.
-  return tips.filter((t) => !EXCLUDED_STATS_MARKETS.includes(t.market) && !t.watchOnly);
+  // Tip doplnený po výkope zo „Všetkých zápasov – automaticky“ (31. 10. 2026): kým sa nepredáva, ráta sa
+  // ako ostatné. Po spustení predaja (SALES_OPEN=true) sa na webe a v súhrnoch pre klientov neráta –
+  // klientom nikdy neprišiel.
+  const salesOpen = process.env.SALES_OPEN === "true";
+  return tips.filter((t) => !EXCLUDED_STATS_MARKETS.includes(t.market) && !t.watchOnly && !(salesOpen && t.lateAdd));
 }
 
 /** Súhrn tipov pri rovnakom vklade 1 jednotka na tip (zisk a ROI len z tipov s kurzom). */
@@ -1018,6 +1022,10 @@ app.post("/api/tips/:id/telegram", async (req, res) => {
       res.status(404).json({ error: "Tip sa nenašiel." });
       return;
     }
+    if (tip.lateAdd) {
+      res.status(400).json({ error: "Tip bol doplnený až po výkope – klientom nešiel, do Telegramu sa neposiela." });
+      return;
+    }
     if (tip.watchOnly) {
       res.status(400).json({ error: "Tento tip je len na sledovanie, do Telegramu sa neposiela." });
       return;
@@ -1075,7 +1083,7 @@ app.post("/api/telegram/send-tips", async (req, res) => {
     const tips = await listTips();
     const chosen = ids
       .map((id) => tips.find((t) => t.id === id))
-      .filter((t): t is SavedTip => !!t && !t.watchOnly)
+      .filter((t): t is SavedTip => !!t && !t.watchOnly && !t.lateAdd)
       .sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime());
     let sent = 0;
     let failed = 0;
@@ -1096,6 +1104,10 @@ app.post("/api/tips/:id/telegram-result", async (req, res) => {
     const tip = tips.find((t) => t.id === req.params.id);
     if (!tip) {
       res.status(404).json({ error: "Tip sa nenašiel." });
+      return;
+    }
+    if (tip.lateAdd) {
+      res.status(400).json({ error: "Tip bol doplnený až po výkope – klientom nešiel, do Telegramu sa neposiela." });
       return;
     }
     if (tip.watchOnly) {
@@ -2839,6 +2851,9 @@ async function runAutoAnalysis(): Promise<void> {
           fixtureId: fixture.fixtureId,
           leagueId: Number(fixture.league.id),
           league: String(fixture.league.name ?? ""),
+          season: Number(fixture.league.season) || seasonOfDate(String(fixture.date).slice(0, 10)),
+          ...(fixture.homeTeam.logo ? { homeTeamLogo: fixture.homeTeam.logo } : {}),
+          ...(fixture.awayTeam.logo ? { awayTeamLogo: fixture.awayTeam.logo } : {}),
           matchDate: fixture.date,
           homeTeam: fixture.homeTeam.name,
           awayTeam: fixture.awayTeam.name,
@@ -2893,6 +2908,81 @@ app.get("/api/auto-tips", async (_req, res) => {
   try {
     const [entries, fixtures] = await Promise.all([listAuto(), listAutoFixtures()]);
     res.json({ entries, fixtures: fixtures.map((f) => ({ matchDate: f.matchDate, tips: f.tips, league: f.league ?? null })) });
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
+
+/**
+ * Zabudnutý tip (31. 10. 2026, Michal): tip zo „Všetkých zápasov – automaticky“ sa dá pridať do Histórie tipov
+ * aj po výkope alebo po vyhodnotení. Berie sa len to, čo server zapísal asi 65 min pred výkopom (dôvera a kurz),
+ * takže sa nedá nič prikrášliť. Prejde rovnakými pravidlami ako ostatné tipy (68 – 80 %, kurz aspoň 1,50,
+ * hodnota +5 až +25 %, kontrola 60 / 40) – inak ide do sledovaných. Tip po výkope sa označí lateAdd
+ * a do Telegramu sa neposiela.
+ */
+app.post("/api/auto-tips/:id/add", async (req, res) => {
+  try {
+    const entry = (await listAuto()).find((e) => e.id === req.params.id);
+    if (!entry) {
+      res.status(404).json({ error: "Tip sa v automatických tipoch nenašiel." });
+      return;
+    }
+    const tips = await listTips();
+    if (tips.some((t) => t.autoId === entry.id || (!(t.legs && t.legs.length) && t.fixtureId === entry.fixtureId && t.market === entry.market && t.selection === entry.selection))) {
+      res.status(409).json({ error: "Tento tip už v Histórii tipov je." });
+      return;
+    }
+    // Kurz: ten, ktorý server zapísal pred výkopom. Len pri trhoch bez kurzu v API (napr. fauly) ho treba zadať.
+    const typed = Number(String(req.body?.odds ?? "").replace(",", "."));
+    const odds = typeof entry.odds === "number" && entry.odds > 1 ? entry.odds : typed > 1 && typed <= 20 ? Math.round(typed * 100) / 100 : null;
+    if (odds == null) {
+      res.status(400).json({ error: "Pri tomto tipe server kurz nemá – zadaj kurz, ktorý si mal v stávkovke." });
+      return;
+    }
+    const tip: SavedTip = {
+      id: `${entry.fixtureId}-${Date.now()}`,
+      fixtureId: entry.fixtureId,
+      leagueId: entry.leagueId,
+      season: entry.season ?? seasonOfDate(entry.matchDate.slice(0, 10)),
+      leagueName: entry.league,
+      homeTeam: entry.homeTeam,
+      awayTeam: entry.awayTeam,
+      ...(entry.homeTeamLogo ? { homeTeamLogo: entry.homeTeamLogo } : {}),
+      ...(entry.awayTeamLogo ? { awayTeamLogo: entry.awayTeamLogo } : {}),
+      matchDate: entry.matchDate,
+      market: entry.market,
+      selection: entry.selection,
+      probability: entry.probability,
+      odds,
+      ...(typeof entry.odds === "number" ? { apiOdds: entry.odds } : {}),
+      autoId: entry.id,
+      modelVersion: MODEL_VERSION,
+      savedAt: new Date().toISOString(),
+      status: "pending",
+    };
+    const kick = new Date(entry.matchDate).getTime();
+    const rec = new Date(entry.recordedAt).getTime();
+    if (isFinite(kick) && isFinite(rec)) tip.hoursBeforeKickoff = Math.round(((kick - rec) / 3600000) * 10) / 10;
+    if (tipHasStartedMatch(tip)) tip.lateAdd = true;
+    else await addMeasurement(tip);
+    // Rovnaké pravidlá ako pri ostatných tipoch – čo by klientom nešlo, ide len do sledovaných.
+    const ev = (tip.probability / 100) * odds;
+    let reason = "";
+    if (entry.strictFail && STRICT_CHECK_ON) {
+      tip.strictFail = true;
+      reason = "neprešiel kontrolou 60 / 40";
+    } else if (tip.probability < WATCH_BELOW_PROBABILITY) {
+      if (tip.probability >= WATCH_BAND_MIN_PROBABILITY) tip.watchBand = true;
+      reason = `dôvera pod ${WATCH_BELOW_PROBABILITY} %`;
+    } else if (tip.probability > MAX_PROBABILITY) reason = `dôvera nad ${MAX_PROBABILITY} %`;
+    else if (odds < MIN_ODDS) reason = `kurz pod ${String(MIN_ODDS).replace(".", ",")}`;
+    else if (ev < MIN_EXPECTED_VALUE) reason = "hodnota pod +5 %";
+    else if (ev > SUSPICIOUS_EXPECTED_VALUE) reason = "hodnota nad +25 %";
+    if (reason) tip.watchOnly = true;
+    await saveTip(tip);
+    // Odohraný zápas sa vyhodnotí hneď (inak do 15 minút sám).
+    if (tip.lateAdd) await checkPendingResults().catch(() => {});
+    res.json({ ok: true, watchOnly: tip.watchOnly === true, reason, lateAdd: tip.lateAdd === true });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
