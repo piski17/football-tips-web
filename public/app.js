@@ -1563,6 +1563,19 @@ const dtRunBtn = document.getElementById("dtRunBtn");
 let dayTips = { items: [], analyzed: 0, failed: 0, date: "", ran: false };
 // Kurzy zadané v Tipoch dňa a už uložené tipy (podľa poradia v zozname); nová analýza ich vynuluje.
 let dayTipOdds = {};
+// Kurzy z 3 stávkoviek (31. 10. 2026, Michal): pri každom tipe Tipsport / Fortuna / Niké,
+// appka vezme najvyšší kurz (dayTipOdds) a zapamätá si, z ktorej stávkovky je (dayTipBest).
+const DT_BOOKS = [{ key: "tipsport", name: "Tipsport" }, { key: "fortuna", name: "Fortuna" }, { key: "nike", name: "Niké" }];
+let dayTipBooks = {};
+let dayTipBest = {};
+function dayTipBestOf(i) {
+  let best = null;
+  for (const b of DT_BOOKS) {
+    const o = parseOddsInput((dayTipBooks[i] || {})[b.key]);
+    if (o != null && (best == null || o > best.odd)) best = { odd: o, name: b.name };
+  }
+  return best;
+}
 let dayTipSaved = new Set();
 let dayTipsRun = { running: false, done: 0, total: 0, id: 0 };
 let dayTipsDetail = null; // otvorený zápas z Tipov dňa
@@ -1649,7 +1662,7 @@ async function showDayTips() {
   }
   items.sort((a, b) => b.bet.probability - a.bet.probability);
   dayTips = { items, analyzed: fixtures.length, failed, failedList, date, ran: true, time: dayTipsTime };
-  dayTipOdds = {}; dayTipSaved = new Set(); dayTipsMini = new Set();
+  dayTipOdds = {}; dayTipBooks = {}; dayTipBest = {}; dayTipSaved = new Set(); dayTipsMini = new Set();
   dayTipsRun.running = false;
   computeStrongIdx();
   if (!dayTipsDetail) renderDayTipsView();
@@ -1728,7 +1741,9 @@ function renderDayTipsView() {
           ${bet.strictFail ? `<div class="why warn">⚠️ ${escapeHtml(strictHint(bet))}</div>` : ""}
         </div>
         <div class="dtip-odds">
-          <label class="odds-in"><span>Kurz v stávkovke</span><input type="text" inputmode="decimal" autocomplete="off" data-odds="${i}" placeholder="min ${fmtOdds(minOddsFor(bet))}" value="${escapeHtml(dayTipOdds[i] ?? "")}"${dayTipSaved.has(i) ? " disabled" : ""} /></label>
+          <div class="odds-books" role="group" aria-label="Kurzy v stávkovkách – platí najvyšší">
+            ${DT_BOOKS.map((b) => `<label class="odds-in odds-bk"><span>${b.name}</span><input type="text" inputmode="decimal" autocomplete="off" data-odds="${i}" data-bk="${b.key}" placeholder="min ${fmtOdds(minOddsFor(bet))}" value="${escapeHtml((dayTipBooks[i] || {})[b.key] ?? "")}"${dayTipSaved.has(i) ? " disabled" : ""} /></label>`).join("")}
+          </div>
           <span class="odds-st" data-odds-st="${i}"></span>
           <button type="button" class="btn sm${i === 0 ? "" : " ghost"}" data-save="${i}"${dayTipSaved.has(i) ? " disabled" : ""}>${dayTipSaved.has(i) ? "✓ Uložené" : "Uložiť"}</button>
         </div>
@@ -1826,6 +1841,7 @@ function renderDayTipsView() {
       const hv = st.ok ? highValuePct(dayTips.items[i].bet, st.odd) : null;
       if (hv != null) { el.className = "odds-st bad"; el.textContent = `⚠ Skontroluj kurz – hodnota +${hv}${NB}%`; if (!matchHasStarted(dayTips.items[i].r.fixture)) n++; return; }
       el.textContent = st.odd == null ? "" : sc && !sc.pass ? `✗ rozpor ${Math.round(sc.gap)} b. – len sledovať` : sx && !sx.pass ? "✗ neprejde pri 60 / 40 – len sledovať" : sc ? `✓ rozpor ${Math.round(sc.gap)} b. – prejde` : st.ok && dayTips.items[i].bet.watchBand ? "✓ má hodnotu – len sledovať" : st.ok ? "✓ má hodnotu" : st.odd > 20 ? "✗ preklep?" : `✗ pod ${fmtOdds(st.min)}`;
+      if (st.odd != null && dayTipBest[i]) el.textContent += ` · ${dayTipBest[i]} ${fmtOdds(st.odd)}`;
       if (st.ok && !matchHasStarted(dayTips.items[i].r.fixture)) n++;
     });
     const b = document.getElementById("dtBulkSave");
@@ -1833,7 +1849,16 @@ function renderDayTipsView() {
   };
   const inputs = [...dayTipsPaneEl.querySelectorAll("[data-odds]")];
   inputs.forEach((inp, k) => {
-    inp.oninput = () => { dayTipOdds[Number(inp.dataset.odds)] = inp.value; refreshOdds(); };
+    inp.oninput = () => {
+      const i = Number(inp.dataset.odds);
+      dayTipBooks[i] = { ...(dayTipBooks[i] || {}), [inp.dataset.bk]: inp.value };
+      const best = dayTipBestOf(i);
+      dayTipOdds[i] = best ? String(best.odd) : "";
+      dayTipBest[i] = best ? best.name : null;
+      // najvyšší kurz zvýraznený zlatou
+      dayTipsPaneEl.querySelectorAll(`[data-odds="${i}"]`).forEach((x) => x.closest(".odds-bk")?.classList.toggle("best", !!best && parseOddsInput(x.value) === best.odd && DT_BOOKS.filter((b) => parseOddsInput((dayTipBooks[i] || {})[b.key]) != null).length > 1));
+      refreshOdds();
+    };
     inp.onkeydown = (e) => {
       if (e.key !== "Enter") return;
       e.preventDefault();
@@ -1845,7 +1870,10 @@ function renderDayTipsView() {
   const saveOne = async (idx, realOdds) => {
     const { r, bet } = dayTips.items[idx];
     // Kandidát na ⭐ Silný tip dňa si značku nesie do Histórie tipov (server nechá max. 1 za deň).
-    const tip = buildTip(r, bet, realOdds, idx === strongIdx ? { strongOfDay: true } : {});
+    const tip = buildTip(r, bet, realOdds, {
+      ...(idx === strongIdx ? { strongOfDay: true } : {}),
+      ...(dayTipBest[idx] && parseOddsInput(dayTipOdds[idx]) === realOdds ? { bookmaker: dayTipBest[idx] } : {}),
+    });
     await postJson("/api/tips", tip);
     dayTipSaved.add(idx);
     return tip;
@@ -1865,7 +1893,7 @@ function renderDayTipsView() {
       try {
         const tip = await saveOne(idx, realOdds);
         btn.textContent = "✓ Uložené";
-        const inp = dayTipsPaneEl.querySelector(`[data-odds="${idx}"]`); if (inp) inp.disabled = true;
+        dayTipsPaneEl.querySelectorAll(`[data-odds="${idx}"]`).forEach((inp) => { inp.disabled = true; });
         refreshOdds();
         await maybeOfferTelegram(tip.id, tip);
       } catch (err) {
@@ -2637,7 +2665,7 @@ function historyRowHtml(t) {
          .join("")}`
     : `<b>${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))}</b>
        <span>${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}${tipBadges(t)}</span>`;
-  const conf = isTicket ? `${fmtNum(t.probability, 1)}${NB}% · ${tipOddsLabel(t)}` : `Dôvera ${Number(t.probability).toFixed(0)}${NB}% · ${tipOddsLabel(t)}`;
+  const conf = isTicket ? `${fmtNum(t.probability, 1)}${NB}% · ${tipOddsLabel(t)}` : `Dôvera ${Number(t.probability).toFixed(0)}${NB}% · ${tipOddsLabel(t)}${t.bookmaker ? ` (${escapeHtml(t.bookmaker)})` : ""}`;
   // Kontrola po zostavách (25. 10. 2026): výsledok prepočtu ~60 min pred výkopom.
   const lc = t.lineupCheck;
   const lineupLine = lc

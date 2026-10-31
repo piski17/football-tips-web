@@ -942,3 +942,12 @@ span.crest { background: radial-gradient(circle at 35% 35%, #2A3346, #141A26); b
   .tabs { width: 100%; overflow-x: auto; }
   .toast { bottom: calc(var(--tabbar-h) + 22px); }
 }
+
+/* --- Tipy dňa: kurzy z 3 stávkoviek, platí najvyšší (31. 10. 2026) --- */
+.odds-books { display: flex; gap: 6px; }
+.odds-bk input { width: 86px !important; height: 38px !important; padding: 0 10px !important; font-size: 15px !important; }
+.odds-bk span { font-size: 10px; letter-spacing: .12em; }
+.odds-bk.best span { color: var(--gold); }
+.odds-bk.best input { border-color: var(--line3) !important; box-shadow: 0 0 0 3px rgba(214, 190, 140, .12); }
+.dtip-odds { flex-wrap: wrap; justify-content: flex-end; }
+@media (max-width: 899px) { .odds-books { width: 100%; } .odds-bk { flex: 1; } .odds-bk input { width: 100% !important; } }
