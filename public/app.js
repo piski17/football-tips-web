@@ -266,10 +266,15 @@ const ICON = {
 };
 
 /** Kruh s dôverou okolo percenta. */
+/** Dôvera na celé percentá – tesne pod hranicou 68 % (67,5–67,9) s desatinou, aby nevyzerala ako 68 % (31. 10. 2026). */
+function probTxt(p) {
+  const v = Number(p);
+  return v >= 67.5 && v < 68 ? fmtNum(Math.floor(v * 10) / 10, 1) : v.toFixed(0);
+}
 function ring(p, size = 64) {
   const v = clampPercent(p);
   const C = 2 * Math.PI * 26;
-  return `<div class="ring" style="width:${size}px;height:${size}px" aria-label="Dôvera ${Math.round(v)} %"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="5"/><circle cx="32" cy="32" r="26" fill="none" stroke="url(#ringGrad)" stroke-width="5" stroke-linecap="round" stroke-dasharray="${((C * v) / 100).toFixed(1)} 999"/></svg><b>${Math.round(v)}</b></div>`;
+  return `<div class="ring" style="width:${size}px;height:${size}px" aria-label="Dôvera ${Math.round(v)} %"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="5"/><circle cx="32" cy="32" r="26" fill="none" stroke="url(#ringGrad)" stroke-width="5" stroke-linecap="round" stroke-dasharray="${((C * v) / 100).toFixed(1)} 999"/></svg><b>${probTxt(v)}</b></div>`;
 }
 function crest(logo, cls = "crest") {
   return logo ? `<img class="${cls}" src="${escapeHtml(logo)}" alt="" loading="lazy" />` : `<span class="${cls}"></span>`;
@@ -997,7 +1002,7 @@ function renderAnalysis(r, root, opts = {}) {
           <div class="tip-body">
             <div class="k">${idx === 0 ? "Najsilnejší tip · " : ""}${escapeHtml(bet.market)}</div>
             <div class="s">${escapeHtml(tr(bet.selection))}${strongTipBadge(bet.probability)}</div>
-            <div class="m"><span>Dôvera <b>${bet.probability.toFixed(0)}${NB}%</b></span>${betOddsHtml(bet)}</div>
+            <div class="m"><span>Dôvera <b>${probTxt(bet.probability)}${NB}%</b></span>${betOddsHtml(bet)}</div>
             ${bet.explanation ? `<div class="why">${escapeHtml(tr(bet.explanation))}</div>` : ""}
             ${bet.valueWarning ? `<div class="why warn">⚠️ ${escapeHtml(bet.valueWarning)}</div>` : ""}
           </div>
@@ -1735,8 +1740,8 @@ function renderDayTipsView() {
             <span class="faint">${escapeHtml(kickoffTime(f))}</span> ${escapeHtml(translateTeamName(f.homeTeam.name))} – ${escapeHtml(translateTeamName(f.awayTeam.name))}
             <span class="faint small">· ${escapeHtml(translateLeagueName(f.league.name))}</span>
           </button>
-          <div class="s">${escapeHtml(bet.market)}: <b>${escapeHtml(translateNamesInText(bet.selection, f.homeTeam.name, f.awayTeam.name))}</b><span class="mini-prob"> · ${bet.probability.toFixed(0)}${NB}%${dayTipSaved.has(i) ? " · ✓ uložené" : ""}</span>${strongTipBadge(bet.probability)}</div>
-          <div class="m"><span>Dôvera <b>${bet.probability.toFixed(0)}${NB}%</b></span>${betOddsHtml(bet)}</div>
+          <div class="s">${escapeHtml(bet.market)}: <b>${escapeHtml(translateNamesInText(bet.selection, f.homeTeam.name, f.awayTeam.name))}</b><span class="mini-prob"> · ${probTxt(bet.probability)}${NB}%${dayTipSaved.has(i) ? " · ✓ uložené" : ""}</span>${strongTipBadge(bet.probability)}</div>
+          <div class="m"><span>Dôvera <b>${probTxt(bet.probability)}${NB}%</b></span>${betOddsHtml(bet)}</div>
           ${bet.valueWarning ? `<div class="why warn">⚠️ ${escapeHtml(bet.valueWarning)}</div>` : ""}
           ${bet.strictFail ? `<div class="why warn">⚠️ ${escapeHtml(strictHint(bet))}</div>` : ""}
         </div>
@@ -2665,7 +2670,7 @@ function historyRowHtml(t) {
          .join("")}`
     : `<b>${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))}</b>
        <span>${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}${tipBadges(t)}</span>`;
-  const conf = isTicket ? `${fmtNum(t.probability, 1)}${NB}% · ${tipOddsLabel(t)}` : `Dôvera ${Number(t.probability).toFixed(0)}${NB}% · ${tipOddsLabel(t)}${t.bookmaker ? ` (${escapeHtml(t.bookmaker)})` : ""}`;
+  const conf = isTicket ? `${fmtNum(t.probability, 1)}${NB}% · ${tipOddsLabel(t)}` : `Dôvera ${probTxt(t.probability)}${NB}% · ${tipOddsLabel(t)}${t.bookmaker ? ` (${escapeHtml(t.bookmaker)})` : ""}`;
   // Kontrola po zostavách (25. 10. 2026): výsledok prepočtu ~60 min pred výkopom.
   const lc = t.lineupCheck;
   const lineupLine = lc
