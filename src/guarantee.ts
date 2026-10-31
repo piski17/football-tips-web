@@ -1,7 +1,7 @@
 import { addActiveMonths, PAY_TERMS, Term, isTerm } from "./payments";
 import { MemberPeriod, SavedTip, Subscriber } from "./types";
 
-// Členstvo (od 29. 10. 2026): Štart 50 tipov, Gold 100 tipov, Platinum 200 tipov. Každému členovi sa počítajú tipy od dňa nákupu;
+// Členstvo (od 31. 10. 2026): 50 – 300 tipov po 50 (Štart / Gold / Platinum). Každému členovi sa počítajú tipy od dňa nákupu;
 // členstvo skončí po poslednom tipe (bez časovej platnosti).
 // Garancia: ak členstvo skončí v strate, člen dostane 1 mesiac zadarmo – všetky tipy počas mesiaca, bez počtu
 // (na mesiac zadarmo sa garancia už nevzťahuje). Staré balíčky mali 30 tipov zadarmo.

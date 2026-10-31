@@ -53,7 +53,7 @@ import {
   notifyAdminExpiringSubscribers,
   sendCustomMessage,
   sendTipResultToTelegram, notifyAdmin, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite, sendMemberMessage, isMemberChannel, memberChannelConfigured, sendPackageLowReminder } from "./telegram";
-import { paymentsEnabled, isTerm, sellableTerm, SellableTerm, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, deletePayment, Payment, termLabel, tierName, addActiveMonths, SUMMER_PAUSE } from "./payments";
+import { paymentsEnabled, isTerm, sellableTerm, SellableTerm, SELLABLE_TERMS, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, deletePayment, Payment, termLabel, tierName, addActiveMonths, SUMMER_PAUSE } from "./payments";
 import { payBySquareString } from "./payBySquare";
 import QRCode from "qrcode";
 import { sendAdminEmail } from "./mailer";
@@ -264,19 +264,21 @@ app.get(["/vysledky", "/vysledky/", "/otazky", "/otazky/", "/formular", "/formul
 // ---- Platba za členstvo (prevod cez QR kód) – bez hesla ----
 /** Členstvá sú bez obmedzenia miest – čísla slúžia len na prehľad (aktívni členovia a poradovník). */
 type TermSeats = Record<SellableTerm, { occupied: number; total: null; left: null }>;
-/** Plán z bota (t.me/…?start=…) → členstvo: stat = Štart 50 tipov, gold = Gold 100 tipov, platinum = Platinum 200 tipov. Staré odkazy: start = Štart, seria = Gold, onyx / sampion / vip = Platinum. */
+/** Plán z bota (t.me/…?start=…) → členstvo: c50 … c300 = počet tipov z posuvníka, stat = 50 tipov, gold = 100 tipov, platinum = 200 tipov. Staré odkazy: start = Štart, seria = Gold, onyx / sampion / vip = Platinum. */
 const LEAD_PLAN_TERM: Record<string, SellableTerm> = {
   stat: "p50", stat_waitlist: "p50", start: "p50", start_waitlist: "p50",
   gold: "p100", gold_waitlist: "p100", seria: "p100", seria_waitlist: "p100",
   platinum: "p200", platinum_waitlist: "p200",
   onyx: "p200", onyx_waitlist: "p200", sampion: "p200", sampion_waitlist: "p200", vip: "p200", vip_waitlist: "p200",
 };
+// Posuvník na tipradar.eu (od 31. 10. 2026): ?start=c50 … c300 = zvolený počet tipov.
+for (const t of SELLABLE_TERMS) LEAD_PLAN_TERM["c" + PAY_TERMS[t].tips] = t;
 /** Aktívni členovia (členstvo ešte neskončilo) podľa členstva + záujemcovia v poradovníku (pred spustením predaja). */
 async function termSeats(): Promise<TermSeats> {
   const subs = await listSubscribers();
   const statuses = await memberStatuses(subs);
   const active = subs.filter((s) => statuses.get(s.id)?.active);
-  const count: Record<SellableTerm, number> = { p50: 0, p100: 0, p200: 0 };
+  const count = Object.fromEntries(SELLABLE_TERMS.map((t) => [t, 0])) as Record<SellableTerm, number>;
   for (const s of active) {
     const t = sellableTerm(memberTerm(s));
     if (t) count[t]++;
@@ -289,15 +291,15 @@ async function termSeats(): Promise<TermSeats> {
     }
   }
   const row = (n: number) => ({ occupied: n, total: null, left: null });
-  return { p50: row(count.p50), p100: row(count.p100), p200: row(count.p200) };
+  return Object.fromEntries(SELLABLE_TERMS.map((t) => [t, row(count[t])])) as TermSeats;
 }
 /** Riadok pod tipom v bezplatnom kanáli (členstvá sú bez obmedzenia miest). */
 async function freeSeatsLine(): Promise<string | undefined> {
-  return `🎯 Členstvo: Štart 50 · Gold 100 · Platinum 200 tipov · 🛡 prvých 30 tipov bez rizika`;
+  return `🎯 Členstvo: 50 – 300 tipov podľa vás, od 39 € · 🛡 prvých 30 tipov bez rizika`;
 }
 const BOT_USERNAME = process.env.TELEGRAM_BOT_USERNAME || "TipRadarAiBot";
 
-// tipradar.eu/zaplatit?term=p50|p100|p200 (&c=Telegram ID z bota; staré odkazy prevedie sellableTerm) → založí platbu a presmeruje na stránku s QR kódom.
+// tipradar.eu/zaplatit?term=p50|p100|p150|p200|p250|p300 (&c=Telegram ID z bota; staré odkazy prevedie sellableTerm) → založí platbu a presmeruje na stránku s QR kódom.
 app.get("/zaplatit", async (req, res) => {
   const term = sellableTerm(String(req.query.term ?? ""));
   const c = String(req.query.c ?? "");

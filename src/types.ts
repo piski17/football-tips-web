@@ -448,9 +448,9 @@ export interface Subscriber {
   tier: "individual" | "group"; // individual = členstvo Štart / Gold / Platinum podľa počtu tipov (alebo staré balíčky a časové členstvá), group = staršie členstvo na 6 mesiacov (zrušené 24. 10. 2026)
   priceEur: number;
   nextPaymentDue: string; // ISO dátum – pri balíčku: platí najneskôr do (balíček skončí skôr, keď sa minú tipy)
-  // Členstvo (od 29. 10. 2026 večer): p50 = Štart 50 tipov, p100 = Gold 100 tipov, p200 = Platinum 200 tipov. Staré: p75 / p150 / p250 = Štart 75 / Gold 150 / Onyx 250. Staré balíčky: t75 = Štart (100), t150 = Gold (250), t300 = Onyx (500).
+  // Členstvo (od 31. 10. 2026 večer): p50 – p300 = 50 – 300 tipov po 50 (50 Štart, 100 – 150 Gold, 200 – 300 Platinum). Staré: p75 = Štart 75. Staré balíčky: t75 = Štart (100), t150 = Gold (250), t300 = Onyx (500).
   // Staré časové členstvá: m1 = Gold 50 dní, m3 = Onyx 6 mesiacov, season (staršie záznamy bez dĺžky = m1).
-  length?: "p50" | "p100" | "p200" | "p75" | "p150" | "p250" | "t75" | "t150" | "t300" | "m1" | "m3" | "season";
+  length?: "p50" | "p100" | "p150" | "p200" | "p250" | "p300" | "p75" | "t75" | "t150" | "t300" | "m1" | "m3" | "season";
   tips?: number; // počet tipov v aktuálnom členstve (staré balíčky: pri tipoch zadarmo podľa garancie 30)
   startDate?: string; // ISO dátum začiatku členstva
   periodStart?: string; // ISO začiatok aktuálneho obdobia (zaplateného alebo mesiaca zadarmo), koniec = nextPaymentDue
