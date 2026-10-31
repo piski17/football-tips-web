@@ -1151,7 +1151,11 @@ function wireSaveTipButtons(r, root) {
       if (matchHasStarted(r.fixture)) { showToast(MATCH_STARTED_TEXT); return; }
       const bet = (r.bestBets || [])[parseInt(btn.dataset.betIdx ?? "0", 10)];
       if (!bet) return;
-      const realOdds = await askRealOdds(bet);
+      // 31. 10. 2026 (Michal): ako v Tipoch dňa – ak má tip kurz z API (aspoň minimálny), uloží sa s ním bez pýtania.
+      // Kurz sa pýta len pri tipoch bez kurzu v API (napr. rohy tímu, fauly, držanie lopty).
+      const api = typeof bet.odds === "number" && bet.odds > 1 && bet.odds <= 20 && bet.odds >= minOddsFor(bet) ? Math.round(bet.odds * 100) / 100 : null;
+      if (api != null && !confirmHighValue(bet, api)) return;
+      const realOdds = api ?? (await askRealOdds(bet));
       if (realOdds == null) return;
       const tip = buildTip(r, bet, realOdds);
       btn.disabled = true;
