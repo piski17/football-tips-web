@@ -242,7 +242,12 @@ const SHOTS_ON_GOAL_LINE = 8.5;
 const FOULS_LINE = 21.5;
 const OFFSIDES_LINE = 3.5;
 /** Hranice držania lopty (v %), ktoré model skúša pri tipoch (stávkovky ich cez API neponúkajú). */
-const POSSESSION_LINES = [30.5, 35.5, 40.5, 45.5, 50.5, 55.5, 60.5, 65.5, 70.5];
+/**
+ * Držanie lopty podľa favorita (31. 10. 2026, Michal): tip sa počíta len na tím, ktorý má mať loptu viac
+ * („Bayern nad 59,5“ namiesto „Dortmund pod 45,5“) – tak ho ponúka aj Tipsport. Hranice po 1 % (50,5 – 75,5),
+ * aby sa dali porovnať s hranicou v stávkovke.
+ */
+const POSSESSION_FAVORITE_LINES = Array.from({ length: 26 }, (_, i) => 50.5 + i);
 
 // Hranice, ktoré model skúša, keď stávkovky k zápasu ešte nemajú kurzy (a v spätnom
 // teste). Keď kurzy sú, model vyhodnotí presne tie hranice, ktoré stávkovky ponúkajú.
@@ -1206,8 +1211,10 @@ export function predictMatch(
     // Len Premier League, Bundesliga, La Liga a Serie A (26. 10. 2026, Michalovo rozhodnutie).
     const possOffered = POSSESSION_LEAGUE_IDS.includes(Number(fixture.league?.id));
     const possDominant = possOffered && Math.abs(expectedHome - 50) >= 8;
-    for (const [market, team, exp] of possDominant ? possTeams : []) {
-      for (const line of POSSESSION_LINES) {
+    // Len favorit zápasu (tím s vyšším očakávaným držaním).
+    const possFavorite = possTeams.filter(([, , exp]) => exp > 50);
+    for (const [market, team, exp] of possDominant ? possFavorite : []) {
+      for (const line of POSSESSION_FAVORITE_LINES) {
         const over = (1 - normalCdf((line - exp) / POSSESSION_SD)) * 100;
         const isOver = over >= 50;
         candidates.push({
@@ -1215,7 +1222,7 @@ export function predictMatch(
           selection: `${isOver ? "Over" : "Under"} ${line}`,
           probability: isOver ? over : 100 - over,
           category: "drzanie_lopty",
-          explanation: `${team}: očakávané držanie lopty ${exp.toFixed(0)} %, hranica ${String(line).replace(".", ",")} %. Kurz zadajte zo stávkovky.`,
+          explanation: `${team} (favorit držania lopty): očakávané držanie ${exp.toFixed(0)} %, hranica ${String(line).replace(".", ",")} %. Kurz zadajte zo stávkovky.`,
         });
       }
     }
