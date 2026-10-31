@@ -411,15 +411,11 @@ const TELEGRAM_CONTACT_USERNAME = process.env.TELEGRAM_CONTACT_USERNAME || "im_m
 const BENEFITS_BASE =
   `• <b>Denné tipy na Telegrame</b> v súkromnom kanáli, 1 – 2 hodiny pred výkopom – najviac 3 najsilnejšie denne\n` +
   `• <b>Pri každom tipe</b> kurz, šanca podľa modelu, dôvod a odporúčaná sadzba\n` +
-  `• <b>Večerné vyhodnotenie dňa</b> a súkromný chat členov`;
-/** Výhody navyše podľa členstva (od koľkých tipov platia). Rovnaké sú na webe (landing/index.html, .pk-extras). */
+  `• <b>Súkromný chat členov</b>`;
+/** Výhody navyše podľa členstva (od koľkých tipov platia). Rovnaké sú na webe (landing/index.html, #feats – zdroj zip nocny-zapas/zdroj). */
 const TIER_PERKS: { min: number; max?: number; text: string }[] = [
   { min: 100, text: `📞 <b>Úvodný hovor 1 na 1</b> (30 min) – nastavenie banku, vkladu a ako tipy hrať` },
-  { min: 100, text: `📊 <b>Osobná tabuľka banku</b> – hotová tabuľka, v ktorej uvidíte každý tip a stav banku` },
-  { min: 150, text: `🗓 <b>Nedeľný rozbor týždňa</b> – ako sa darilo a na čo sa chystáme` },
-  { min: 150, text: `⚡ <b>Prednostné odpovede v chate</b>` },
   { min: 200, max: 200, text: `🤝 <b>Mentoring 1 na 1</b> – videohovor so mnou raz mesačne` },
-  { min: 200, text: `🧾 <b>Rozbor vašich vlastných tiketov</b> – pozriem sa, čo hráte popri tipoch` },
   { min: 250, text: `🤝 <b>Mentoring 1 na 1 kedykoľvek</b> počas celého členstva – videohovory alebo osobné stretnutia` },
   { min: 250, text: `📱 <b>Priama linka na mňa</b> – súkromné číslo na rýchle otázky` },
 ];
@@ -446,10 +442,9 @@ function planText(t: SellableTerm): string {
 /** Celý cenník: Štart / Premium / VIP / Gold / Platinum. */
 const PRICE_LIST = SELLABLE_TERMS.map(priceLine).join("\n");
 const PERKS_SHORT =
-  `<b>Všetci členovia:</b> rovnaké tipy, vyhodnotenie dňa, súkromný chat\n` +
-  `<b>Premium navyše:</b> úvodný hovor 1 na 1, osobná tabuľka banku\n` +
-  `<b>VIP navyše:</b> nedeľný rozbor týždňa, prednostné odpovede\n` +
-  `<b>Gold navyše:</b> mentoring 1 na 1 raz mesačne, rozbor vašich tiketov\n` +
+  `<b>Všetci členovia:</b> rovnaké tipy a súkromný chat členov\n` +
+  `<b>Premium a VIP navyše:</b> úvodný hovor 1 na 1\n` +
+  `<b>Gold navyše:</b> mentoring 1 na 1 raz mesačne\n` +
   `<b>Platinum navyše:</b> mentoring kedykoľvek, priama linka na mňa`;
 const ALL_PLANS = `Počet tipov si zvolíte sami – od 50 do 250. Čím viac tipov, tým lacnejší tip a viac výhod.\n\n${PRICE_LIST}\n\n${PERKS_SHORT}`;
 
