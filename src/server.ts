@@ -2834,6 +2834,39 @@ async function autoFixturesFor(day: string): Promise<any[]> {
   }
   return out;
 }
+/**
+ * Upozornenie pre Michala (31. 10. 2026): keď server pri automatickej analýze (~65 min pred výkopom) nájde tip,
+ * ktorý prejde všetkými pravidlami pre klientov (68 – 80 %, kurz aspoň 1,50, hodnota, kontrola 60 / 40),
+ * pošle mu ho do admin chatu na Telegrame (telefón aj počítač). Klientom sa nič neposiela.
+ */
+async function notifyAdminClientTips(fixture: any, bets: any[]): Promise<void> {
+  const ok = bets.filter(
+    (b) =>
+      !b.strictFail && !b.softConflict && !b.watchBand && !b.watchOnly &&
+      typeof b.probability === "number" && b.probability >= WATCH_BELOW_PROBABILITY && b.probability <= MAX_PROBABILITY &&
+      (typeof b.odds === "number" && b.odds > 1 ? b.odds >= MIN_ODDS : typeof b.minOdds === "number"),
+  );
+  if (!ok.length) return;
+  const need = (p: unknown) => (typeof p === "number" && p > 0 ? MIN_EXPECTED_VALUE / (p / 100) : 0);
+  const fmt = (n: number) => n.toFixed(2).replace(".", ",");
+  const home = translateTeamName(fixture.homeTeam.name);
+  const away = translateTeamName(fixture.awayTeam.name);
+  const lines = ok
+    .sort((a, b) => b.probability - a.probability)
+    .map((b) => {
+      const min = Math.ceil(Math.max(MIN_ODDS, need(b.probability), need(b.strictProbability), typeof b.minOdds === "number" ? b.minOdds : 0) * 100) / 100;
+      const odds = typeof b.odds === "number" && b.odds > 1 ? `kurz ${fmt(b.odds)} (min. ${fmt(min)})` : `kurz zadaj zo stávkovky – aspoň ${fmt(min)}`;
+      return `• <b>${escapeTg(b.market)}: ${escapeTg(translateNamesInText(b.selection, fixture.homeTeam.name, fixture.awayTeam.name))}</b>\n   dôvera ${Math.round(b.probability)} % · ${odds}`;
+    })
+    .join("\n");
+  await notifyAdmin(
+    `🔔 <b>Nový tip pre klientov</b>\n${escapeTg(home)} – ${escapeTg(away)} · ${timeSk(new Date(fixture.date))}\n<i>${escapeTg(String(fixture.league?.name ?? ""))}</i>\n\n${lines}\n\nUlož ho v app.tipradar.eu (Tipy dňa alebo detail zápasu) a pošli klientom.`,
+  );
+}
+function escapeTg(s: string): string {
+  return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 async function runAutoAnalysis(): Promise<void> {
   if (autoRunning) return;
   autoRunning = true;
@@ -2870,7 +2903,8 @@ async function runAutoAnalysis(): Promise<void> {
           recordedAt,
           status: "pending" as const,
         }));
-        await recordAutoFixture({ fixtureId: fixture.fixtureId, matchDate: fixture.date, tips: entries.length, league: String(fixture.league.name ?? "") }, entries);
+        const isNew = await recordAutoFixture({ fixtureId: fixture.fixtureId, matchDate: fixture.date, tips: entries.length, league: String(fixture.league.name ?? "") }, entries);
+        if (isNew) await notifyAdminClientTips(fixture, (result as any).bestBets ?? []).catch(() => {});
       } catch (err) {
         // jeden zápas nesmie zastaviť ostatné – skúsi sa znova o 15 minút
         console.error(`Automatická analýza zápasu ${fixture.fixtureId} zlyhala:`, err);

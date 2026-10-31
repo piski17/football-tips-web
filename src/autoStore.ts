@@ -80,18 +80,20 @@ function parseHash<T>(flat: string[] | null): T[] {
 }
 
 /** Zapíše prejdený zápas a jeho tipy (ak už zápas bol prejdený, nič nemení). */
-export async function recordAutoFixture(fixture: AutoFixture, entries: AutoEntry[]): Promise<void> {
+/** Vráti true, ak sa zápas zapísal prvý raz (false = už bol prejdený). */
+export async function recordAutoFixture(fixture: AutoFixture, entries: AutoEntry[]): Promise<boolean> {
   if (!useUpstash) {
     const all = readFile();
-    if (all.fixtures[fixture.fixtureId]) return;
+    if (all.fixtures[fixture.fixtureId]) return false;
     all.fixtures[fixture.fixtureId] = fixture;
     for (const e of entries) if (!all.entries[e.id]) all.entries[e.id] = e;
     writeFile(all);
-    return;
+    return true;
   }
   const added = Number(await redis(["HSETNX", FIXTURES_KEY, fixture.fixtureId, JSON.stringify(fixture)]));
-  if (!added) return;
+  if (!added) return false;
   for (const e of entries) await redis(["HSETNX", KEY, e.id, JSON.stringify(e)]);
+  return true;
 }
 
 export async function listAuto(): Promise<AutoEntry[]> {
