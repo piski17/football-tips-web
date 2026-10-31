@@ -2904,9 +2904,13 @@ async function settleAutoEntries(): Promise<void> {
   }
 }
 
-app.get("/api/auto-tips", async (_req, res) => {
+app.get("/api/auto-tips", async (req, res) => {
   try {
-    const [entries, fixtures] = await Promise.all([listAuto(), listAutoFixtures()]);
+    const [allEntries, allFixtures] = await Promise.all([listAuto(), listAutoFixtures()]);
+    // ?fixtureId=… – len jeden zápas (detail začatého zápasu, tlačidlo „+ Pridať“).
+    const only = Number(req.query.fixtureId);
+    const entries = only > 0 ? allEntries.filter((e) => e.fixtureId === only) : allEntries;
+    const fixtures = only > 0 ? allFixtures.filter((f) => f.fixtureId === only) : allFixtures;
     res.json({ entries, fixtures: fixtures.map((f) => ({ matchDate: f.matchDate, tips: f.tips, league: f.league ?? null })) });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });

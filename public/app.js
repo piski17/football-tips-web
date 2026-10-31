@@ -205,7 +205,7 @@ const MONTH_NAMES = ["Január", "Február", "Marec", "Apríl", "Máj", "Jún", "
 const STRONG_TIP_MIN_PROBABILITY = 70; // STRONG_TIP_MIN_PROBABILITY v oddsMatcher.ts
 let MIN_ODDS = 1.5; // predvolené: 1,50 (od 25. 10. 2026, predtým 1,55); ak server pošle MIN_ODDS (/api/public/vip-seats), použije sa ten
 const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté konto"];
-const MATCH_STARTED_TEXT = "Zápas už začal – tip z neho sa nedá pridať.";
+const MATCH_STARTED_TEXT = "Zápas už začal – zabudnutý tip pridáš v detaile zápasu (Pridať zabudnutý tip).";
 const LIVE_STATUSES = ["1H", "HT", "2H", "ET", "BT", "P", "SUSP", "INT"];
 const FINISHED_STATUSES = ["FT", "AET", "PEN"];
 
@@ -990,7 +990,7 @@ function renderAnalysis(r, root, opts = {}) {
     ${lineupNote ? `<p class="note">${escapeHtml(lineupNote)}</p>` : ""}
     <p class="note" data-lineup-out></p>
     ${r.sampleSizeWarning ? `<div class="warn-box">⚠️ ${escapeHtml(tr(r.sampleSizeWarning))}</div>` : ""}
-    ${started ? `<div class="locked">⏱ ${MATCH_STARTED_TEXT} Ak si ho zabudol uložiť, doplníš ho v Histórii tipov → Sledované → Všetky zápasy – automaticky (tlačidlo „+ Pridať“).</div>` : ""}`;
+    ${started ? `<div class="locked">⏱ Zápas už začal. Zabudol si tip uložiť? Pridáš ho nižšie – s dôverou a kurzom, ktoré server zapísal pred výkopom.</div>` : ""}`;
 
   // --- odporúčané tipy (server vracia pásmo 68 – 80 %, max. 1 na trh) ---
   const tipsHtml = topBets.length
@@ -1054,6 +1054,7 @@ function renderAnalysis(r, root, opts = {}) {
   root.innerHTML = `
     ${header}
     ${statusHtml}
+    ${started ? `<h3 class="sh">Pridať zabudnutý tip <small>zapísané pred výkopom</small></h3><div class="card" data-late-add><p class="faint small">Načítavam…</p></div>` : ""}
     <h3 class="sh">Odporúčané tipy <small>pásmo 68 – 80${NB}%, len s hodnotou</small></h3>
     ${tipsHtml}
     ${r.cupNote ? `<p class="faint small" data-cup-note>${escapeHtml(r.cupNote)}</p>` : ""}
@@ -1092,6 +1093,66 @@ function renderAnalysis(r, root, opts = {}) {
       b.disabled = true;
       b.title = MATCH_STARTED_TEXT;
     });
+    void renderLateAdd(f, root.querySelector("[data-late-add]"));
+  }
+}
+
+/**
+ * Zabudnutý tip priamo v detaile začatého zápasu (31. 10. 2026, Michal): ukáže tipy, ktoré server zapísal
+ * asi hodinu pred výkopom (Všetky zápasy – automaticky), a pri každom „+ Pridať do histórie“.
+ */
+async function renderLateAdd(f, box) {
+  if (!box) return;
+  let entries = [];
+  try {
+    const [data, tips] = await Promise.all([fetchJson(`/api/auto-tips?fixtureId=${encodeURIComponent(f.fixtureId)}`), fetchJson("/api/tips").catch(() => null)]);
+    entries = (data.entries || []).sort((a, b) => b.probability - a.probability);
+    if (Array.isArray(tips)) for (const t of tips) { if (t.autoId) autoSavedKeys.add(t.autoId); autoSavedKeys.add(`${t.fixtureId}|${t.market}|${t.selection}`); }
+    if (!(data.fixtures || []).length) {
+      box.innerHTML = `<p class="faint small">Tento zápas server pred výkopom neprešiel (súťaž nie je medzi automaticky sledovanými alebo bol zápas pridaný neskoro), takže tip sa doplniť nedá.</p>`;
+      return;
+    }
+  } catch (err) {
+    box.innerHTML = `<p class="faint small">Nepodarilo sa načítať: ${escapeHtml(err.message)}</p>`;
+    return;
+  }
+  if (!entries.length) {
+    box.innerHTML = `<p class="faint small">Model pred výkopom v tomto zápase nenašiel tip, ktorý by odporučil – nie je čo doplniť.</p>`;
+    return;
+  }
+  const res = { won: `<b class="g">vyšiel</b>`, lost: `<b class="l">nevyšiel</b>`, void: "vrátený", pending: `<span class="faint">čaká</span>` };
+  box.innerHTML = `<div class="table-wrap"><table class="bt-table"><thead><tr><th>Tip</th><th class="num">Dôvera</th><th class="num">Kurz</th><th>Výsledok</th><th class="num"></th></tr></thead><tbody>${entries
+    .map((t) => `<tr><td>${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}${t.strictFail ? `<br><span class="faint small">neprejde 60 / 40 – pôjde do sledovaných</span>` : ""}</td><td class="num">${fmtNum(t.probability, 0)}${NB}%</td><td class="num">${typeof t.odds === "number" ? fmtOdds(t.odds) : "–"}</td><td>${res[t.status] || escapeHtml(t.status)}</td><td class="num">${autoInHistory(t) ? `<span class="faint small">✓ v histórii</span>` : `<button type="button" class="btn sm" data-late-id="${escapeHtml(t.id)}">+ Pridať do histórie</button>`}</td></tr>`)
+    .join("")}</tbody></table></div><p class="faint small">Dôvera a kurz sú tie, ktoré server zapísal asi hodinu pred výkopom. Platia rovnaké pravidlá ako pri ostatných tipoch; tip dostane značku „⏱ doplnené po výkope“ a do Telegramu sa neposiela.</p>`;
+  box.querySelectorAll("[data-late-id]").forEach((b) => {
+    b.onclick = async () => {
+      const t = entries.find((x) => x.id === b.dataset.lateId);
+      if (!t) return;
+      b.disabled = true;
+      if (await addAutoTip(t)) void renderLateAdd(f, box);
+      else b.disabled = false;
+    };
+  });
+}
+
+/** Pridá automatický tip do Histórie tipov (POST /api/auto-tips/:id/add). Vráti true, ak sa podarilo. */
+async function addAutoTip(t) {
+  let odds;
+  if (!(typeof t.odds === "number" && t.odds > 1)) {
+    // trh bez kurzu v API (napr. fauly) – kurz zadá Michal
+    const raw = await promptModal(`Server pri tomto tipe kurz nemá. Zadaj kurz, ktorý si mal v stávkovke pred zápasom (napr. 1,65):`, "");
+    if (raw == null) return false;
+    odds = parseOddsInput(raw);
+    if (odds == null || odds > 20) { showToast("Neplatný kurz – tip sa nepridal."); return false; }
+  }
+  try {
+    const r = await postJson(`/api/auto-tips/${encodeURIComponent(t.id)}/add`, odds != null ? { odds } : {});
+    autoSavedKeys.add(t.id);
+    showToast(r.watchOnly ? `✓ Pridané medzi sledované tipy (${r.reason || "nespĺňa pravidlá"})` : `✓ Pridané do Histórie tipov${r.lateAdd ? " · doplnené po výkope" : ""}`);
+    return true;
+  } catch (err) {
+    showToast(`Nepodarilo sa pridať: ${err?.message ?? String(err)}`);
+    return false;
   }
 }
 
@@ -2329,26 +2390,10 @@ function drawAutoTips() {
     b.onclick = async () => {
       const t = (autoData.entries || []).find((x) => x.id === b.dataset.autoAdd);
       if (!t) return;
-      const label = `${translateTeamName(t.homeTeam)} – ${translateTeamName(t.awayTeam)}: ${t.market} ${translateNamesInText(t.selection, t.homeTeam, t.awayTeam)}`;
-      let odds;
-      if (!(typeof t.odds === "number" && t.odds > 1)) {
-        // trh bez kurzu v API (napr. fauly) – kurz zadá Michal
-        const raw = await promptModal(`Server pri tomto tipe kurz nemá. Zadaj kurz, ktorý si mal v stávkovke pred zápasom (napr. 1,65):`, "");
-        if (raw == null) return;
-        odds = parseOddsInput(raw);
-        if (odds == null || odds > 20) { showToast("Neplatný kurz – tip sa nepridal."); return; }
-      } else if (!window.confirm(`Pridať do Histórie tipov?\n\n${label}\nDôvera ${fmtNum(t.probability, 0)} % · kurz ${fmtOdds(t.odds)}`)) return;
       b.disabled = true;
-      try {
-        const r = await postJson(`/api/auto-tips/${encodeURIComponent(t.id)}/add`, odds != null ? { odds } : {});
-        autoSavedKeys.add(t.id);
-        showToast(r.watchOnly ? `✓ Pridané medzi sledované tipy (${r.reason || "nespĺňa pravidlá"})` : `✓ Pridané do Histórie tipov${r.lateAdd ? " · doplnené po výkope" : ""}`);
-        drawAutoTips();
-        try { renderTipsList(await fetchJson("/api/tips")); } catch { /* história sa obnoví pri ďalšom otvorení */ }
-      } catch (err) {
-        showToast(`Nepodarilo sa pridať: ${err?.message ?? String(err)}`);
-        b.disabled = false;
-      }
+      if (!(await addAutoTip(t))) { b.disabled = false; return; }
+      drawAutoTips();
+      try { renderTipsList(await fetchJson("/api/tips")); } catch { /* história sa obnoví pri ďalšom otvorení */ }
     };
   });
   el.querySelectorAll("[data-auto-strict]").forEach((b) => {
