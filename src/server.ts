@@ -957,6 +957,11 @@ app.post("/api/tips", async (req, res) => {
       res.status(400).json({ error: MATCH_STARTED_MESSAGE });
       return;
     }
+    // Ten istý tip (zápas + trh + tip) sa nedá uložiť dvakrát (31. 10. 2026, Michal).
+    if (!(tip.legs && tip.legs.length) && Number(tip.fixtureId) > 0 && (await listTips()).some((t) => t.id !== tip.id && !(t.legs && t.legs.length) && t.fixtureId === tip.fixtureId && t.market === tip.market && t.selection === tip.selection)) {
+      res.status(409).json({ error: "Tento tip už máš uložený v Histórii tipov." });
+      return;
+    }
     // ⭐ Silný tip dňa z Tipov dňa: najviac jeden za deň – ak už v ten deň iný tip značku má, nový ju nedostane.
     if (tip.strongOfDay) {
       const day = dayKeySk(new Date(tip.matchDate));

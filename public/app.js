@@ -493,7 +493,7 @@ function showView(id) {
   if (changed) window.scrollTo(0, 0);
   if (id === "historia") openTipsHistory();
   if (id === "clenovia") openSubscribers();
-  if (id === "tipy") renderDayTipsView();
+  if (id === "tipy") { renderDayTipsView(); void syncDayTipSaved(); }
 }
 window.addEventListener("hashchange", () => showView(location.hash.slice(1)));
 function goTo(id) {
@@ -1223,15 +1223,25 @@ function wireSaveTipButtons(r, root) {
       try {
         await postJson("/api/tips", tip);
         btn.textContent = "✓ Uložené";
+        btn.dataset.saved = "1";
+        autoSavedKeys.add(tipKey(r, bet));
         msgEl.innerHTML = `✓ Tip uložený (${escapeHtml(bet.market)}: ${escapeHtml(translateNamesInText(bet.selection, r.fixture.homeTeam.name, r.fixture.awayTeam.name))})`;
         await maybeOfferTelegram(tip.id, tip);
       } catch (err) {
         msgEl.innerHTML = `<span class="loss">Uloženie zlyhalo: ${escapeHtml(err.message)}</span>`;
-      } finally {
         btn.disabled = false;
       }
     };
   });
+  // Už uložený tip sa nedá uložiť znova (31. 10. 2026, Michal).
+  loadSavedTipKeys()
+    .then((keys) => {
+      root.querySelectorAll("[data-bet-idx]").forEach((btn) => {
+        const bet = (r.bestBets || [])[parseInt(btn.dataset.betIdx ?? "0", 10)];
+        if (bet && keys.has(tipKey(r, bet))) { btn.disabled = true; btn.dataset.saved = "1"; btn.textContent = "✓ Uložené"; btn.title = "Tento tip už je v Histórii tipov"; }
+      });
+    })
+    .catch(() => {});
 }
 
 /** Meranie (20. 10. 2026): verzia modelu a odhad stávkoviek z analýzy – na tip ani správy nemá vplyv. */
@@ -1739,6 +1749,7 @@ async function showDayTips() {
   computeStrongIdx();
   if (!dayTipsDetail) renderDayTipsView();
   else updateDtRunBtn();
+  void syncDayTipSaved();
 }
 
 // Kandidát na silný tip dňa: najvyššia dôvera (aspoň 70 %), pri zhode vyšší kurz, potom skorší výkop – rovnako ako na serveri.
@@ -2014,6 +2025,7 @@ function renderDayTipDetail(r) {
       ++dayTipsViewId;
       dayTipsDetail = null;
       renderDayTipsView();
+      void syncDayTipSaved();
       window.scrollTo(0, 0);
     },
   };
@@ -2248,6 +2260,32 @@ const CALIBRATION_TO = 82.5;
 let autoData = null;
 /** Automatické tipy, ktoré už sú v Histórii tipov (id aj „zápas|trh|tip“). */
 let autoSavedKeys = new Set();
+/**
+ * Už uložené tipy (31. 10. 2026, Michal): ten istý tip sa nedá uložiť dvakrát. Načíta uložené tipy
+ * a vráti množinu „zápas|trh|tip“ (zároveň ich pridá do autoSavedKeys).
+ */
+async function loadSavedTipKeys() {
+  const tips = await fetchJson("/api/tips");
+  const keys = new Set();
+  for (const t of Array.isArray(tips) ? tips : []) {
+    if (t.legs && t.legs.length) continue;
+    keys.add(`${t.fixtureId}|${t.market}|${t.selection}`);
+    if (t.autoId) autoSavedKeys.add(t.autoId);
+  }
+  for (const k of keys) autoSavedKeys.add(k);
+  return keys;
+}
+const tipKey = (r, bet) => `${r.fixture.fixtureId}|${bet.market}|${bet.selection}`;
+/** Tipy dňa: označí už uložené tipy ako „✓ Uložené“ (aj po obnovení stránky). */
+async function syncDayTipSaved() {
+  if (!dayTips || !dayTips.items || !dayTips.items.length) return;
+  try {
+    const keys = await loadSavedTipKeys();
+    let changed = false;
+    dayTips.items.forEach(({ r, bet }, i) => { if (!dayTipSaved.has(i) && keys.has(tipKey(r, bet))) { dayTipSaved.add(i); changed = true; } });
+    if (changed && currentView === "tipy" && !dayTipsDetail) renderDayTipsView();
+  } catch { /* bez spojenia ostane, ako je – server aj tak druhé uloženie odmietne */ }
+}
 const autoInHistory = (t) => autoSavedKeys.has(t.id) || autoSavedKeys.has(`${t.fixtureId}|${t.market}|${t.selection}`);
 let autoStrictOnly = false;
 // Filter súťaže (30. 10. 2026, Michal): „nech to nie je všetko na jednu kopu, každá liga zvlášť“.
