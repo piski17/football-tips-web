@@ -2256,6 +2256,149 @@ html body input[type=range] { accent-color: #D6BE8C; }
 }
 /* ===================== /NOIR WEB ===================== */
 
+/* ===================== PANEL (31. 10. 2026) – nové rozloženie: menu vľavo ako v appke, obsah ako mozaika kariet =====================
+   Farby (Noir) a texty ostávajú. Počítač (od 1101 px): zvislé plávajúce menu vľavo, úvod poskladaný z kariet.
+   Mobil: karty pod sebou, hore lišta s logom, dole plávajúca lišta. */
+:root { --pn-gap: 14px; --pn-side: 252px; --pn-r: 28px; }
+.pn-cta { display: none; }
+
+/* ---------- karty spoločné pre celý web ---------- */
+html body .pn-card, html[data-page="home"] body .rx-copy, html[data-page="home"] body .rx-p3, html[data-page="home"] body .rx-duel-copy,
+html[data-page="home"] body .rx-how > .rx-wrap, html[data-page="home"] body .rx-markets > .rx-wrap, html[data-page="home"] body .rx-final,
+html body main .page-head, html body .finale {
+  position: relative; border-radius: var(--pn-r) !important; border: 1px solid rgba(255,255,255,.07) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.01)), #0D121B !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 30px 70px -40px rgba(0,0,0,.95) !important;
+}
+
+/* ---------- úvod: mozaika kariet ---------- */
+html[data-page="home"] body main { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--pn-gap); padding: 104px 14px 14px; }
+html[data-page="home"] body main > * { grid-column: 1 / -1; min-width: 0; }
+html[data-page="home"] body main > .rx-sec, html[data-page="home"] body main > .rx-hero { padding: 0 !important; overflow: visible; background: none !important; border: 0 !important; }
+html[data-page="home"] body main > .rx-sec::before { content: none !important; }
+html[data-page="home"] body main .rx-wrap { width: 100% !important; margin: 0; }
+html[data-page="home"] body .rx-hero .rx-bg { display: none; }
+/* hero: text + ihrisko ako dve karty, pod nimi dlaždice s číslami */
+html[data-page="home"] body .rx-hero-in { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--pn-gap); align-items: stretch; }
+html[data-page="home"] body .rx-copy { padding: clamp(32px, 4vw, 56px); display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+html[data-page="home"] body .rx-copy::before { content: ""; position: absolute; inset: auto -20% -60% auto; width: 520px; height: 520px; border-radius: 50%; background: radial-gradient(closest-side, rgba(214,190,140,.13), transparent); pointer-events: none; }
+html[data-page="home"] body .rx-copy .rx-chip { align-self: flex-start; }
+html[data-page="home"] body .rx-p3 .p3-stage { transform: scale(.86); transform-origin: 50% 50%; }
+html[data-page="home"] body .rx-copy .rx-h1 { font-size: clamp(54px, 6.2vw, 104px) !important; }
+html[data-page="home"] body .rx-p3 { max-width: none; justify-self: stretch; padding: 26px 22px 18px; display: flex; flex-direction: column; justify-content: center; overflow: hidden;
+  background: radial-gradient(80% 60% at 50% 30%, rgba(214,190,140,.1), transparent 70%), linear-gradient(180deg, #111826, #0A0F17) !important; }
+html[data-page="home"] body .rx-stats { margin-top: var(--pn-gap) !important; display: grid !important; grid-template-columns: 1.15fr repeat(4, 1fr) 1.3fr; gap: var(--pn-gap); align-items: stretch !important; border: 0 !important; background: none !important; box-shadow: none !important; border-radius: 0 !important; overflow: visible !important; padding: 0 !important; }
+html[data-page="home"] body .rx-stats[hidden] { display: none !important; }
+html[data-page="home"] body .rx-stats > div { padding: 22px 22px 20px !important; border: 1px solid rgba(255,255,255,.07) !important; border-radius: 22px; background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.01)), #0D121B; box-shadow: 0 1px 0 rgba(255,255,255,.04) inset; min-height: 112px; display: flex; flex-direction: column; justify-content: center; }
+html[data-page="home"] body .rx-stats > .rx-live { background: radial-gradient(120% 120% at 0% 0%, rgba(214,190,140,.16), transparent 60%), #0D121B; border-color: rgba(214,190,140,.22) !important; }
+html[data-page="home"] body .rx-stats > div::before { left: 22px !important; right: 22px !important; }
+html[data-page="home"] body .rx-stats > * + * { border-left: 1px solid rgba(255,255,255,.07) !important; }
+html[data-page="home"] body .rx-stats:hover > div { border-color: rgba(214,190,140,.2) !important; }
+/* hodnota: text a kalkulačka ako dve karty */
+html[data-page="home"] body .rx-duel-in { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--pn-gap); align-items: stretch; }
+html[data-page="home"] body .rx-duel-copy { padding: clamp(28px, 3.4vw, 48px); display: flex; flex-direction: column; justify-content: center; }
+html[data-page="home"] body .rx-panel { border-radius: var(--pn-r) !important; padding: clamp(24px, 3vw, 40px) !important; }
+/* ako to funguje: jedna veľká karta */
+html[data-page="home"] body .rx-how > .rx-wrap { padding: clamp(28px, 3.6vw, 52px); overflow: hidden; }
+html[data-page="home"] body .rx-how .rx-head { margin-bottom: 30px; }
+html[data-page="home"] body .rx-how-grid { grid-template-columns: minmax(0, 1fr) 300px; gap: 40px; }
+html[data-page="home"] body .rx-steps li { background: rgba(255,255,255,.025) !important; box-shadow: none !important; }
+/* trhy + záver vedľa seba */
+html[data-page="home"] body main > .rx-markets { grid-column: span 8; }
+html[data-page="home"] body main > .rx-final { grid-column: span 4; }
+html[data-page="home"] body .rx-markets > .rx-wrap { height: 100%; padding: clamp(28px, 3.2vw, 44px); box-sizing: border-box; }
+html[data-page="home"] body .rx-markets .rx-head-c { justify-items: start; text-align: left; margin-bottom: 26px; }
+html[data-page="home"] body .rx-markets .rx-head-c .rx-eye { justify-content: flex-start; }
+html[data-page="home"] body .rx-mk-grid { gap: 10px; }
+html[data-page="home"] body .rx-mk-grid li { background: rgba(255,255,255,.025) !important; box-shadow: none !important; border-radius: 18px !important; }
+html[data-page="home"] body .rx-leagues .rx-lg-row { justify-content: flex-start; }
+html[data-page="home"] body .rx-leagues .rx-lg-row em { text-align: left; }
+html[data-page="home"] body main > .rx-final { padding: clamp(36px, 3.4vw, 52px) clamp(26px, 2.8vw, 40px) !important; display: flex; flex-direction: column; justify-content: center; text-align: left; overflow: hidden;
+  background: radial-gradient(90% 70% at 100% 0%, rgba(214,190,140,.2), transparent 60%), linear-gradient(180deg, #121927, #0B1018) !important; border-color: rgba(214,190,140,.24) !important; }
+html[data-page="home"] body .rx-final .rx-wrap { text-align: left; }
+html[data-page="home"] body .rx-final .rx-eye { justify-content: flex-start; }
+html[data-page="home"] body .rx-final .rx-h2 { font-size: clamp(34px, 3.3vw, 52px) !important; text-align: left; }
+html[data-page="home"] body .rx-final p { margin-left: 0 !important; text-align: left; }
+html[data-page="home"] body .rx-final .rx-cta { justify-content: flex-start; flex-direction: column; align-items: stretch; }
+html[data-page="home"] body .rx-final .rx-btn { width: 100%; }
+html[data-page="home"] body .rx-final .rx-final-bg { opacity: .55; }
+html[data-page="home"] body .rx-final .rx-rings, html[data-page="home"] body .rx-final .rx-sweep { left: 70% !important; top: 15% !important; }
+
+/* ---------- podstránky: hlavička ako karta, obsah v rovnakom rámci ---------- */
+html body main .page-head { margin: 104px 14px 0; padding: clamp(40px, 5vw, 72px) clamp(28px, 4vw, 64px) !important; text-align: left !important; overflow: hidden;
+  background: radial-gradient(70% 90% at 100% 0%, rgba(214,190,140,.13), transparent 60%), linear-gradient(180deg, #111826, #0B1018) !important; border-color: rgba(214,190,140,.2) !important; }
+html body main .page-head .wrap { align-items: flex-start !important; justify-content: flex-start !important; width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 !important; text-align: left !important; }
+html body main .page-head .eyebrow { justify-content: flex-start !important; }
+html body main .page-head h1 { margin-left: 0 !important; margin-right: 0 !important; text-align: left !important; max-width: 18ch; }
+html body main .page-head p, html body main .page-head .wrap > p { margin-left: 0 !important; margin-right: 0 !important; text-align: left !important; max-width: 62ch; }
+html body main .page-head::after { content: ""; position: absolute; right: -120px; top: -120px; width: 420px; height: 420px; border-radius: 50%; border: 1px solid rgba(214,190,140,.14); box-shadow: 0 0 0 60px rgba(214,190,140,.025), 0 0 0 120px rgba(214,190,140,.018); pointer-events: none; }
+html body main .sec { padding: 56px 0 !important; border-top: 0 !important; border-bottom: 0 !important; }
+html body main .page-head + .sec, html body main .sec + .sec { border-top: 0 !important; }
+html body .finale { margin: 0 14px 14px; padding: clamp(56px, 6vw, 88px) 24px !important; overflow: hidden; background: radial-gradient(70% 90% at 50% 0%, rgba(214,190,140,.14), transparent 60%), linear-gradient(180deg, #111826, #0B1018) !important; border-color: rgba(214,190,140,.22) !important; }
+html body .om2-hero { padding-top: 140px !important; }
+html body footer, html body .pz-foot { margin: 0 14px 14px; border-radius: var(--pn-r) !important; border: 1px solid rgba(255,255,255,.06) !important; border-image: none !important; background: rgba(9,12,18,.85) !important; }
+
+/* ---------- počítač: zvislé menu vľavo ako v appke ---------- */
+@media (min-width: 1101px) {
+  html body { padding-left: calc(var(--pn-side) + 14px) !important; }
+  html body .pz-nav, html.scrolled body .pz-nav { position: fixed !important; top: 14px !important; bottom: 14px !important; left: 14px !important; right: auto !important; width: var(--pn-side) !important; height: auto !important; padding: 0 !important; background: none !important; border: 0 !important; box-shadow: none !important; transform: none !important; }
+  html body .pz-nav .wrap, html.scrolled body .pz-nav .wrap {
+    width: 100% !important; height: 100% !important; max-width: none !important; margin: 0 !important; box-sizing: border-box;
+    display: flex !important; flex-direction: column; align-items: stretch; gap: 6px !important; padding: 22px 14px 14px !important;
+  }
+  html body .pz-nav .wrap::after { display: none; }
+  html body .pz-brand { padding: 2px 6px 20px; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,.065); }
+  html body .pz-links { flex-direction: column; align-items: stretch !important; justify-content: flex-start !important; gap: 3px !important; }
+  html body .pz-nav .nav-links a { padding: 7px 10px 7px 7px !important; gap: 12px; font-size: 14px !important; }
+  html body .pz-nav .nav-links a svg { display: block !important; width: 34px; height: 34px; padding: 8px; border-radius: 11px; }
+  html body .pn-cta { display: block; margin-top: auto; padding: 16px; border-radius: 18px; border: 1px solid rgba(214,190,140,.2); text-decoration: none; position: relative; overflow: hidden;
+    background: radial-gradient(120% 90% at 0% 0%, rgba(214,190,140,.15), transparent 60%), linear-gradient(180deg, #141B28, #0D121B); }
+  html body .pn-cta::before { content: ""; position: absolute; left: 16px; right: 16px; top: 0; height: 1px; background: linear-gradient(90deg, transparent, #D6BE8C, transparent); opacity: .7; }
+  html body .pn-cta small { display: block; font: 600 10px/1.3 "Figtree", system-ui, sans-serif; letter-spacing: .24em; text-transform: uppercase; color: #D6BE8C; margin-bottom: 8px; }
+  html body .pn-cta b { display: block; font: 600 17px/1.2 "Space Grotesk", system-ui, sans-serif; color: #F4EFE6; letter-spacing: -0.01em; }
+  html body .pn-cta span { display: inline-flex; margin-top: 14px; padding: 9px 16px; border-radius: 999px; font: 600 13px/1 "Figtree", system-ui, sans-serif; color: #0B0E14; background: linear-gradient(120deg, #F7EDD3 0%, #E2CB98 35%, #C9AC72 65%, #9E8253 100%); box-shadow: 0 10px 26px -12px rgba(214,190,140,.7); }
+  html body .pn-cta:hover { border-color: rgba(214,190,140,.4); }
+  html body .pz-nav-right { justify-content: flex-start; gap: 8px !important; padding-top: 12px; margin-top: 10px; border-top: 1px solid rgba(255,255,255,.065); }
+  html body .pz-nav-right .lx-burger, html body .pz-nav-right .nav-toggle { display: none !important; }
+  html body .pz-nav-right .pz-tg { margin-left: auto; }
+  html[data-page="home"] body main { padding-top: 14px; }
+  html body main .page-head { margin-top: 14px; }
+  html body .om2-hero { padding-top: 70px !important; }
+  html body .progress { left: calc(var(--pn-side) + 28px) !important; }
+}
+/* stredné šírky */
+@media (max-width: 1280px) {
+  html[data-page="home"] body .rx-stats { grid-template-columns: repeat(3, 1fr); }
+  html[data-page="home"] body main > .rx-markets, html[data-page="home"] body main > .rx-final { grid-column: 1 / -1; }
+  html[data-page="home"] body .rx-final .rx-cta { flex-direction: row; } html[data-page="home"] body .rx-final .rx-btn { width: auto; }
+}
+@media (max-width: 1020px) {
+  html[data-page="home"] body .rx-hero-in, html[data-page="home"] body .rx-duel-in, html[data-page="home"] body .rx-how-grid { grid-template-columns: 1fr; }
+  html[data-page="home"] body .rx-how-grid .rx-phone { justify-self: center; }
+}
+/* ---------- mobil ---------- */
+@media (max-width: 860px) {
+  :root { --pn-gap: 10px; --pn-r: 22px; }
+  html[data-page="home"] body main { padding: 92px 10px 10px; }
+  html[data-page="home"] body .rx-copy { padding: 30px 22px; }
+  html[data-page="home"] body .rx-copy .rx-chip { align-self: flex-start; }
+html[data-page="home"] body .rx-p3 .p3-stage { transform: scale(.86); transform-origin: 50% 50%; }
+html[data-page="home"] body .rx-copy .rx-h1 { font-size: clamp(46px, 13vw, 64px) !important; }
+  html[data-page="home"] body .rx-p3 { padding: 18px 10px 12px; }
+  html[data-page="home"] body .rx-stats { grid-template-columns: 1fr 1fr; }
+  html[data-page="home"] body .rx-stats > .rx-live, html[data-page="home"] body .rx-stats > .rx-form { grid-column: 1 / -1; min-height: 0; }
+  html[data-page="home"] body .rx-stats > div { padding: 18px !important; min-height: 96px; }
+  html[data-page="home"] body .rx-duel-copy, html[data-page="home"] body .rx-how > .rx-wrap, html[data-page="home"] body .rx-markets > .rx-wrap { padding: 28px 20px; }
+  html[data-page="home"] body .rx-panel { padding: 22px 18px !important; }
+  html[data-page="home"] body main > .rx-final { padding: 40px 22px !important; }
+  html[data-page="home"] body .rx-final .rx-cta { flex-direction: column; } html[data-page="home"] body .rx-final .rx-btn { width: 100%; }
+  html body main .page-head { margin: 92px 10px 0; padding: 40px 22px !important; }
+  html body .finale { margin: 0 10px 10px; }
+  html body footer, html body .pz-foot { margin: 0 10px 10px; }
+  html body main .sec { padding: 40px 0 !important; }
+}
+/* ===================== /PANEL ===================== */
+
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Herr+Von+Muellerhoff&amp;family=Great+Vibes&amp;display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&amp;family=Figtree:wght@300..800&amp;display=swap" rel="stylesheet" />
@@ -2284,6 +2427,7 @@ html body input[type=range] { accent-color: #D6BE8C; }
   <div class="wrap">
     <a class="brand pz-brand" href="/" aria-label="TipRadar – úvod"><svg aria-hidden="true"><use href="#pz-emblem"/></svg><span>TipRadar<small>Futbalová analytika</small></span></a>
     <div class="nav-links pz-links"><a href="/vysledky"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5h16M7 16v-5M12 16V6.5M17 16v-8"/></svg>Výsledky</a><a href="/clenstvo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3.5 8 4.5 4 4-6.5 4 6.5 4.5-4-2 11h-13Z"/></svg>Členstvo</a><a href="/kurz"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15H5.5c-.8 0-1.5.5-1.5 1.2ZM20 5.5c0-.8-.7-1.5-1.5-1.5H13v15h5.5c.8 0 1.5.5 1.5 1.2Z"/></svg>Kurz</a><a href="/o-mne"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c1-3.6 3.8-5.5 7-5.5s6 1.9 7 5.5"/></svg>O mne</a><a href="/otazky"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.6a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.3"/><path d="M12 16.9v.1"/></svg>Otázky</a><a href="/formular"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="2"/><path d="m4.5 7 7.5 6 7.5-6"/></svg>Kontakt</a></div>
+    <a class="pn-cta" href="/clenstvo"><small>Členstvo</small><b>Štart · Gold · Platinum</b><span>Vybrať členstvo →</span></a>
     <div class="pz-nav-right">
       <a class="pz-ic" href="https://www.instagram.com/tipradar.eu/" target="_blank" rel="noopener" aria-label="Instagram"><svg aria-hidden="true"><use href="#i-ig"/></svg></a>
       <a class="pz-ic" href="mailto:info@tipradar.eu" aria-label="E-mail"><svg aria-hidden="true"><use href="#i-mail"/></svg></a>
