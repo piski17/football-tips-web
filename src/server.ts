@@ -638,7 +638,8 @@ app.get("/api/fixtures", async (req, res) => {
       return;
     }
     const date = String(req.query.date ?? "") || new Date().toISOString().slice(0, 10);
-    const fixtures = await getFixturesByLeague(league, season, 30, date);
+    // Aj odohrané zápasy (1. 11. 2026) – aby sa dal pridať zabudnutý tip aj po skončení.
+    const fixtures = await getFixturesByLeague(league, season, 30, date, true);
     res.json(fixtures);
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });

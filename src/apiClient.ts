@@ -180,6 +180,8 @@ export async function getFixtureById(fixtureId: number): Promise<Fixture | null>
 /** Načíta zápasy danej ligy/sezóny na konkrétny deň (alebo všetky, ak deň nie je zadaný). */
 // Stavy zápasu, ktoré považujeme za "skončené" - takéto zápasy sa v zozname
 // dnešných zápasov už nezobrazujú (FT = koniec, AET = po predĺžení, PEN = po penaltách).
+// Výnimka (1. 11. 2026): zoznam zápasov v app.tipradar.eu (includeFinished) ukazuje aj odohrané,
+// aby sa k nim dal pridať zabudnutý tip (Pridať zabudnutý tip v detaile zápasu).
 const FINISHED_STATUSES = ["FT", "AET", "PEN"];
 // Nedohrané zápasy tiež zmiznú: ABD = prerušený a nedohraný (napr. pre výtržnosti),
 // CANC = zrušený, PST = odložený, AWD = kontumácia, WO = súper nenastúpil.
@@ -189,7 +191,8 @@ export async function getFixturesByLeague(
   leagueId: number,
   season: number,
   limitCount: number = 20,
-  date?: string
+  date?: string,
+  includeFinished = false
 ): Promise<Fixture[]> {
   const params: Record<string, any> = { league: leagueId, season };
   if (date) params.date = date;
@@ -199,7 +202,7 @@ export async function getFixturesByLeague(
 
   const all = (res.data?.response ?? [])
     .map((item: any) => mapFixture(item))
-    .filter((f: Fixture) => !FINISHED_STATUSES.includes(f.status) && !NOT_PLAYED_STATUSES.includes(f.status));
+    .filter((f: Fixture) => (includeFinished || !FINISHED_STATUSES.includes(f.status)) && !NOT_PLAYED_STATUSES.includes(f.status));
 
   return all.sort((a: Fixture, b: Fixture) => a.timestamp - b.timestamp).slice(0, limitCount);
 }
