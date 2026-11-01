@@ -52,7 +52,7 @@ import {
   setTelegramWebhook,
   notifyAdminExpiringSubscribers,
   sendCustomMessage,
-  sendTipResultToTelegram, notifyAdmin, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite, sendMemberMessage, isMemberChannel, memberChannelConfigured, sendPackageLowReminder } from "./telegram";
+  sendTipResultToTelegram, notifyAdmin, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite, sendMemberMessage, isMemberChannel, memberChannelConfigured, sendPackageLowReminder, freeChannelConfigured, sendFreeResult, sendFreeDaySummary, tipUnits, FreeBalance } from "./telegram";
 import { paymentsEnabled, isTerm, sellableTerm, SellableTerm, SELLABLE_TERMS, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, deletePayment, Payment, termLabel, tierName, addActiveMonths, SUMMER_PAUSE } from "./payments";
 import { payBySquareString } from "./payBySquare";
 import QRCode from "qrcode";
@@ -1150,8 +1150,12 @@ app.post("/api/tips/:id/telegram-result", async (req, res) => {
         : "both";
     const sent = await sendTipResultToTelegram(tip, target);
     if (sent.length > 0) {
-      const existing = tip.telegramMessages ?? [];
-      await updateTip(tip.id, { telegramMessages: [...existing, ...sent] });
+      const free = sent.filter((m) => isFreeChat(m.chatId));
+      const other = sent.filter((m) => !isFreeChat(m.chatId));
+      await updateTip(tip.id, {
+        ...(other.length ? { telegramMessages: [...(tip.telegramMessages ?? []), ...other] } : {}),
+        ...(free.length ? { freeResultSent: true, freeResultMessages: [...(tip.freeResultMessages ?? []), ...free] } : {}),
+      });
     }
     res.json({ ok: sent.length > 0 });
   } catch (err: any) {
@@ -1637,6 +1641,7 @@ app.post("/api/telegram/daily-results", async (req, res) => {
 
     const text = buildDailyResultsText(tips, day);
     const sent = await sendCustomMessage(text, target);
+    if (target === "free" && sent.length > 0) await setMeta(`freeDaySummary:${day}`, new Date().toISOString());
     res.json({ ok: sent.length > 0 });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
@@ -2610,6 +2615,9 @@ app.delete("/api/tips/:id", async (req, res) => {
     if (deleted?.telegramMessages?.length) {
       await deleteTelegramMessages(deleted.telegramMessages);
     }
+    if (deleted?.freeResultMessages?.length) {
+      await deleteTelegramMessages(deleted.freeResultMessages);
+    }
     res.json({ ok: true });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
@@ -2645,6 +2653,8 @@ async function checkPendingResults(): Promise<void> {
     });
   }
   await pendingCheck;
+  // Výsledky do bezplatného kanála (od 1. 11. 2026) – hneď po vyhodnotení.
+  await postFreeResults().catch((err) => console.error("Výsledky do kanála zadarmo zlyhali:", err));
   // Tichá evidencia, sledovanie miešania a tikety dňa bežia až potom, na pozadí.
   if (!backgroundCheck) {
     backgroundCheck = settleBackgroundRecords()
@@ -2652,6 +2662,60 @@ async function checkPendingResults(): Promise<void> {
       .finally(() => {
         backgroundCheck = null;
       });
+  }
+}
+
+/**
+ * Výsledky do bezplatného Telegram kanála (1. 11. 2026, Michal): každý vyhodnotený tip od 1. 11. 2026 sa sám
+ * pošle do kanála „TipRadar – tipy zadarmo“ – výhra aj prehra, s kurzom, skóre a bilanciou v jednotkách.
+ * Keď je dohraný celý deň, príde aj „Vyhodnotenie dňa“. Rátajú sa rovnaké tipy ako na tipradar.eu/vysledky
+ * (bez sledovaných a duplicít). Vypnúť: na Renderi TELEGRAM_FREE_RESULTS=false.
+ */
+const FREE_RESULTS_FROM = "2026-11-01";
+const FREE_RESULTS_MAX_PER_RUN = 10; // pri väčšom počte pošle zvyšok o 15 minút (limit Telegramu)
+let freeResultsRunning = false;
+
+async function postFreeResults(): Promise<void> {
+  if (process.env.TELEGRAM_FREE_RESULTS === "false" || !freeChannelConfigured() || freeResultsRunning) return;
+  freeResultsRunning = true;
+  try {
+    const counted = statsTips(await listTips())
+      .filter((t) => (tipDayKey(t) ?? "") >= FREE_RESULTS_FROM)
+      .sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime());
+    const done = (t: SavedTip) => t.status === "won" || t.status === "lost" || t.status === "void";
+    const balance = (list: SavedTip[]): FreeBalance => ({
+      won: list.filter((t) => t.status === "won").length,
+      lost: list.filter((t) => t.status === "lost").length,
+      units: list.reduce((sum, t) => sum + tipUnits(t), 0),
+      from: FREE_RESULTS_FROM,
+    });
+    const posted = counted.filter((t) => t.freeResultSent);
+    let sentNow = 0;
+    for (const tip of counted.filter((t) => done(t) && !t.freeResultSent)) {
+      if (sentNow >= FREE_RESULTS_MAX_PER_RUN) break;
+      const sent = await sendFreeResult(tip, balance([...posted, tip]));
+      if (sent.length === 0) break; // Telegram neodpovedá – skúsi sa pri ďalšej kontrole
+      await updateTip(tip.id, { freeResultSent: true, freeResultMessages: [...(tip.freeResultMessages ?? []), ...sent] });
+      tip.freeResultSent = true;
+      posted.push(tip);
+      sentNow++;
+      await new Promise((r) => setTimeout(r, 3000));
+    }
+    // Vyhodnotenie dňa: ráno o 9:00 (slovenský čas) za včerajšok a staršie dni – keď sú všetky tipy dňa dohrané
+    // a ich výsledky už v kanáli (skôr nie, lebo večerné tipy sa ukladajú až 1 – 2 hodiny pred výkopom).
+    const today = dayKeySk(new Date());
+    const hourSk = Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Bratislava", hour: "2-digit", hour12: false }).format(new Date()));
+    const days = [...new Set(counted.map((t) => tipDayKey(t)!).filter(Boolean))].filter((d) => d < today && hourSk >= 9);
+    for (const day of days) {
+      const dayTips = counted.filter((t) => tipDayKey(t) === day);
+      if (!dayTips.every((t) => done(t) && t.freeResultSent)) continue;
+      const key = `freeDaySummary:${day}`;
+      if (await getMeta(key)) continue;
+      const upTo = counted.filter((t) => (tipDayKey(t) ?? "") <= day && done(t));
+      if (await sendFreeDaySummary(dayTips, day, balance(upTo))) await setMeta(key, new Date().toISOString());
+    }
+  } finally {
+    freeResultsRunning = false;
   }
 }
 

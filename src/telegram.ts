@@ -372,6 +372,91 @@ export async function sendTipResultToTelegram(
   return sent;
 }
 
+/** Je nastavený bezplatný kanál? */
+export function freeChannelConfigured(): boolean {
+  return Boolean(TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID_FREE);
+}
+
+/** Bilancia v bezplatnom kanáli od začiatku zverejňovania (1 tip = vklad 1 jednotka). */
+export interface FreeBalance {
+  won: number;
+  lost: number;
+  units: number;
+  from: string; // YYYY-MM-DD
+}
+
+function dayShort(day: string): string {
+  const [, m, d] = day.split("-").map((n) => parseInt(n, 10));
+  return `${d}. ${m}.`;
+}
+
+/** Zisk tipu v jednotkách pri vklade 1 j. (výhra = kurz − 1, prehra = −1, vrátený = 0). */
+export function tipUnits(tip: SavedTip): number {
+  if (tip.status === "won") return typeof tip.odds === "number" && tip.odds > 1 ? tip.odds - 1 : 0;
+  if (tip.status === "lost") return -1;
+  return 0;
+}
+
+function freeBalanceLine(b: FreeBalance): string {
+  return `📈 Bilancia od ${dayShort(b.from)}: <b>${b.won} ✅ · ${b.lost} ❌ · ${signed(b.units, 2)} j.</b>`;
+}
+
+const FREE_FOOTER =
+  `📊 Všetky výsledky: <a href="https://tipradar.eu/vysledky?utm_source=telegram">tipradar.eu/vysledky</a>\n` +
+  `◆ Tipy pred zápasom dostávajú členovia: <a href="https://tipradar.eu/clenstvo?utm_source=telegram">tipradar.eu/clenstvo</a>`;
+
+/**
+ * Výsledok tipu do bezplatného kanála (1. 11. 2026, Michal: „budú tam všetky výsledky od dnes“).
+ * Po zápase – výhra aj prehra, s kurzom, skóre a priebežnou bilanciou v jednotkách.
+ */
+export async function sendFreeResult(tip: SavedTip, balance: FreeBalance): Promise<{ chatId: string; messageId: number }[]> {
+  if (!freeChannelConfigured()) return [];
+  const units = tipUnits(tip);
+  const head =
+    tip.status === "won"
+      ? `✅ <b>VÝHRA</b> · ${signed(units, 2)} j.`
+      : tip.status === "lost"
+        ? `❌ <b>PREHRA</b> · −1 j.`
+        : `↩️ <b>VRÁTENÉ</b> · 0 j.`;
+  const oddsTxt = typeof tip.odds === "number" && tip.odds > 1 ? `💰 Kurz <b>${fmtNum(tip.odds, 2)}</b> · dôvera modelu ${tip.probability.toFixed(0)} %` : `📈 Dôvera modelu ${tip.probability.toFixed(0)} %`;
+  let body: string;
+  if (tip.legs && tip.legs.length > 0) {
+    const icon = (s: string) => (s === "won" ? "✅" : s === "lost" ? "❌" : "➖");
+    body =
+      `🎫 Tiket (${plural(tip.legs.length, "zápas", "zápasy", "zápasov")})\n` +
+      tip.legs
+        .map(
+          (l) =>
+            `${icon(l.status)} ${escapeHtml(translateTeamName(l.homeTeam))} – ${escapeHtml(translateTeamName(l.awayTeam))}` +
+            (typeof l.actualHomeGoals === "number" && typeof l.actualAwayGoals === "number" ? ` · ${l.actualHomeGoals}:${l.actualAwayGoals}` : "") +
+            `\n    ${escapeHtml(l.market)}: ${escapeHtml(translateNamesInText(l.selection, l.homeTeam, l.awayTeam))}`
+        )
+        .join("\n");
+  } else {
+    const score =
+      typeof tip.actualHomeGoals === "number" && typeof tip.actualAwayGoals === "number" ? ` · <b>${tip.actualHomeGoals}:${tip.actualAwayGoals}</b>` : "";
+    body =
+      `⚽ ${escapeHtml(translateTeamName(tip.homeTeam))} – ${escapeHtml(translateTeamName(tip.awayTeam))}${score}\n` +
+      (tip.leagueName ? `🏆 ${escapeHtml(tip.leagueName)}\n` : "") +
+      `📊 ${escapeHtml(tip.market)}: <b>${escapeHtml(translateNamesInText(tip.selection, tip.homeTeam, tip.awayTeam))}</b>`;
+  }
+  const text = `${head}\n\n${body}\n${oddsTxt}\n\n${freeBalanceLine(balance)}\n\n${FREE_FOOTER}`;
+  const messageId = await sendToChat(TELEGRAM_CHAT_ID_FREE!, text);
+  return messageId ? [{ chatId: TELEGRAM_CHAT_ID_FREE!, messageId }] : [];
+}
+
+/** Vyhodnotenie celého dňa do bezplatného kanála – keď sú všetky tipy dňa dohrané. */
+export async function sendFreeDaySummary(tips: SavedTip[], day: string, balance: FreeBalance): Promise<boolean> {
+  if (!freeChannelConfigured()) return false;
+  const text = buildDailyResultsText(tips, day)
+    .replace(/ \(\d+ %\)\n/, "\n") // bez percent – na webe aj tu len počty a jednotky
+    .replace(
+    /\n<i>Poctivá história – vrátane prehratých tipov\.<\/i>$/,
+    `${freeBalanceLine(balance)}\n\n<i>Poctivá história – vrátane prehratých tipov.</i>\n\n${FREE_FOOTER}`
+  );
+  return (await sendToChat(TELEGRAM_CHAT_ID_FREE!, text)) !== null;
+}
+
 export async function sendCustomMessage(
   text: string,
   target: TelegramTarget

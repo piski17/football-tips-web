@@ -359,6 +359,10 @@ export interface SavedTip {
   /** Tip bol vo VIP kanáli odoslaný ako „⭐ Silný tip dňa“ (najviac jeden za deň). */
   strongOfDay?: boolean;
   sentFree?: boolean; // tip bol poslaný do bezplatného kanála – ukáže sa na tipradar.eu ako „Tip zadarmo“
+  /** Výsledok tipu bol poslaný do bezplatného kanála (od 1. 11. 2026 automaticky) – nepošle sa druhýkrát. */
+  freeResultSent?: boolean;
+  /** Správa s výsledkom v bezplatnom kanáli – zvlášť od telegramMessages, aby sa tip na webe nebral ako „Tip zadarmo“. */
+  freeResultMessages?: { chatId: string; messageId: number }[];
 }
 
 export interface LeaguePreset {
