@@ -1791,7 +1791,7 @@ function renderDayTipsProgress() {
 
 function renderDayTipsView() {
   renderDayTipsViewMain();
-  if (dayTipsDetail || dayTipsRun.running) return;
+  if (dayTipsDetail || dayTipsRun.running || !dayTipsTime) return;
   const box = document.createElement("div");
   box.setAttribute("data-dt-late", "");
   dayTipsPaneEl.appendChild(box);
@@ -1799,15 +1799,21 @@ function renderDayTipsView() {
 }
 
 /**
- * Začaté a odohrané zápasy v Tipoch dňa (1. 11. 2026, Michal: „keď si to dal do Zápasov, daj to aj do Tipov dňa“).
- * Tipy, ktoré server zapísal asi hodinu pred výkopom, zoradené podľa času výkopu – pri každom „+ Pridať do histórie“.
+ * Odohrané časy v Tipoch dňa (1. 11. 2026, Michal): po kliknutí na čas, keď sa zápasy už hrajú alebo skončili,
+ * sa ukážu tipy, ktoré server zapísal asi hodinu pred výkopom – rozdelené ako ostatné (Pre klientov / Do sledovaných).
+ * „+ Pridať“ ich uloží s dôverou a kurzom spred výkopu; server rozhodne podľa rovnakých pravidiel.
  */
 let dayLateCache = null;
+function lateTipForClients(t) {
+  if (t.strictFail || t.probability < 68 || t.probability > 80 || typeof t.odds !== "number") return false;
+  const value = (t.probability / 100) * t.odds;
+  return t.odds >= MIN_ODDS && value >= 1.05 && value <= 1.25;
+}
 async function renderDayLateTips(box) {
-  const started = currentFixtures.filter((f) => matchHasStarted(f) && (!dayTipsTime || kickoffTime(f) === dayTipsTime));
+  const started = currentFixtures.filter((f) => matchHasStarted(f) && kickoffTime(f) === dayTipsTime);
   if (!started.length) return;
   const ids = new Set(started.map((f) => f.fixtureId));
-  box.innerHTML = `<h3 class="sh">Začaté a odohrané zápasy <small>zabudnutý tip</small></h3><div class="card"><p class="faint small">Načítavam…</p></div>`;
+  box.innerHTML = `<p class="faint small">Načítavam tipy zápasov o ${escapeHtml(dayTipsTime)}…</p>`;
   let entries = [];
   try {
     if (!dayLateCache || Date.now() - dayLateCache.at > 60 * 1000) {
@@ -1816,37 +1822,51 @@ async function renderDayLateTips(box) {
     }
     entries = dayLateCache.entries.filter((e) => ids.has(e.fixtureId));
   } catch (err) {
-    box.querySelector(".card").innerHTML = `<p class="faint small">Nepodarilo sa načítať: ${escapeHtml(err.message)}</p>`;
+    box.innerHTML = `<p class="faint small">Tipy sa nepodarilo načítať: ${escapeHtml(err.message)}</p>`;
     return;
   }
   if (!box.isConnected) return;
   if (!entries.length) {
-    box.querySelector(".card").innerHTML = `<p class="faint small">Pri ${plural(started.length, "začatom zápase", "začatých zápasoch", "začatých zápasoch")} server pred výkopom nenašiel tip, ktorý by sa dal doplniť.</p>`;
+    box.innerHTML = `<div class="empty-card">Pri ${plural(started.length, "zápase", "zápasoch", "zápasoch")} o ${escapeHtml(dayTipsTime)} server pred výkopom nenašiel žiadny tip.</div>`;
     return;
   }
   const byFx = new Map(started.map((f) => [f.fixtureId, f]));
-  entries.sort((a, b) => new Date(a.matchDate) - new Date(b.matchDate) || a.fixtureId - b.fixtureId || b.probability - a.probability);
-  const res = { won: `<b class="g">vyšiel</b>`, lost: `<b class="l">nevyšiel</b>`, void: "vrátený", pending: `<span class="faint">čaká</span>` };
-  let lastFx = null;
-  const rows = entries
-    .map((t) => {
-      const f = byFx.get(t.fixtureId);
-      let head = "";
-      if (t.fixtureId !== lastFx) {
-        lastFx = t.fixtureId;
-        const score = f && f.goalsHome != null ? ` · ${f.goalsHome}:${f.goalsAway}${FINISHED_STATUSES.includes(f.status) ? " (koniec)" : LIVE_STATUSES.includes(f.status) ? " (hrá sa)" : ""}` : "";
-        head = `<tr class="dt-late-fx"><td colspan="5"><b>${escapeHtml(timeHm(new Date(t.matchDate)))}</b> ${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))}<span class="faint small"> · ${escapeHtml(translateLeagueName(t.league || ""))}${score}</span></td></tr>`;
-      }
-      return `${head}<tr><td>${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}${t.strictFail ? `<br><span class="faint small">neprejde 60 / 40 – pôjde do sledovaných</span>` : ""}</td><td class="num">${probTxt(t.probability)}${NB}%</td><td class="num">${typeof t.odds === "number" ? fmtOdds(t.odds) : "–"}</td><td>${res[t.status] || escapeHtml(t.status)}</td><td class="num">${autoInHistory(t) ? `<span class="faint small">✓ v histórii</span>` : `<button type="button" class="btn sm" data-dt-late-id="${escapeHtml(t.id)}">+ Pridať do histórie</button>`}</td></tr>`;
-    })
-    .join("");
-  box.querySelector(".card").innerHTML = `<div class="table-wrap"><table class="bt-table"><thead><tr><th>Tip</th><th class="num">Dôvera</th><th class="num">Kurz</th><th>Výsledok</th><th class="num"></th></tr></thead><tbody>${rows}</tbody></table></div><p class="faint small">Dôvera a kurz sú tie, ktoré server zapísal asi hodinu pred výkopom. Platia rovnaké pravidlá ako pri ostatných tipoch; tip dostane značku „⏱ doplnené po výkope“ a do Telegramu sa neposiela.</p>`;
+  entries.sort((x, y) => y.probability - x.probability);
+  const res = { won: `<b class="g">vyšiel</b>`, lost: `<b class="l">nevyšiel</b>`, void: "vrátený", pending: "" };
+  const rowHtml = (t, n) => {
+    const f = byFx.get(t.fixtureId);
+    const score = f && f.goalsHome != null ? ` · ${f.goalsHome}:${f.goalsAway}${FINISHED_STATUSES.includes(f.status) ? " koniec" : " hrá sa"}` : "";
+    const saved = autoInHistory(t);
+    return `<div class="dtip">
+      <div class="rank">${n}.</div>
+      ${ring(t.probability, 54)}
+      <div class="dtip-body">
+        <div class="dtip-match"><span class="faint">${escapeHtml(timeHm(new Date(t.matchDate)))}</span> ${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))} <span class="faint small">· ${escapeHtml(translateLeagueName(t.league || ""))}${score}</span></div>
+        <div class="s">${escapeHtml(t.market)}: <b>${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}</b>${strongTipBadge(t.probability)}</div>
+        <div class="m"><span>Dôvera <b>${probTxt(t.probability)}${NB}%</b></span><span>Kurz pred výkopom <b>${typeof t.odds === "number" ? fmtOdds(t.odds) : "–"}</b></span>${res[t.status] ? `<span>${res[t.status]}</span>` : ""}</div>
+        ${t.strictFail ? `<div class="why warn">⚠️ neprejde pri 60 / 40</div>` : ""}
+      </div>
+      <div class="dtip-odds">
+        ${saved ? `<button type="button" class="btn sm" disabled>✓ Uložené</button>` : `<button type="button" class="btn sm${n === 1 ? "" : " ghost"}" data-dt-late-id="${escapeHtml(t.id)}">+ Pridať</button>`}
+      </div>
+    </div>`;
+  };
+  const groups = [
+    { title: "Pre klientov", list: entries.filter(lateTipForClients) },
+    { title: "Do sledovaných", note: "nesplnia pravidlá pre klientov – uložia sa medzi sledované", list: entries.filter((t) => !lateTipForClients(t)) },
+  ];
+  let shown = 0;
+  box.innerHTML = `<p class="muted small dt-meta">Zápasy o ${escapeHtml(dayTipsTime)} už začali – dôvera a kurz sú zo záznamu asi hodinu pred výkopom. Tip pridaný po výkope sa do Telegramu neposiela.</p>` +
+    groups
+      .filter((g) => g.list.length)
+      .map((g) => `<div class="dt-group"><div class="dt-group-head"><span class="dt-group-title">${g.title} <b>${g.list.length}</b></span>${g.note ? `<span class="faint small">${g.note}</span>` : ""}</div><div class="dtips">${g.list.map((t) => rowHtml(t, ++shown)).join("")}</div></div>`)
+      .join("");
   box.querySelectorAll("[data-dt-late-id]").forEach((b) => {
     b.onclick = async () => {
       const t = entries.find((x) => x.id === b.dataset.dtLateId);
       if (!t) return;
       b.disabled = true;
-      if (await addAutoTip(t)) b.outerHTML = `<span class="faint small">✓ v histórii</span>`;
+      if (await addAutoTip(t)) { b.textContent = "✓ Uložené"; b.classList.remove("ghost"); }
       else b.disabled = false;
     };
   });
@@ -1868,7 +1888,7 @@ function renderDayTipsViewMain() {
     return;
   }
   if (dayTips.none) {
-    dayTipsPaneEl.innerHTML = `${dayTipsTimeBarHtml()}<div class="empty-card">${dayTips.time ? `Zápasy o ${escapeHtml(dayTips.time)} už začali alebo skončili – tipy, ktoré server zapísal pred výkopom, sú nižšie.` : `V tento deň (${escapeHtml(dayKeyLabel(dayTips.date))}) už nie sú žiadne zápasy pred výkopom.`}</div>`;
+    dayTipsPaneEl.innerHTML = `${dayTipsTimeBarHtml()}${dayTips.time ? "" : `<div class="empty-card">V tento deň (${escapeHtml(dayKeyLabel(dayTips.date))}) už nie sú žiadne zápasy pred výkopom.</div>`}`;
     bindDayTipsTimeBar();
     return;
   }
