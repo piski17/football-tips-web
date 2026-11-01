@@ -32,8 +32,19 @@ const TELEGRAM_CHAT_ID_VIPCHAT = process.env.TELEGRAM_CHAT_ID_VIPCHAT;
 // použije sa názov z TELEGRAM_FREE_CHANNEL_URL (https://t.me/nazovkanala → @nazovkanala).
 const TELEGRAM_CHAT_ID_FREE = process.env.TELEGRAM_CHAT_ID_FREE || freeChatFromUrl(process.env.TELEGRAM_FREE_CHANNEL_URL);
 
+/**
+ * Odkaz na kanál v akomkoľvek tvare z Renderu („https://t.me/tipradar“, „t.me/tipradar“, „@tipradar“, „tipradar“)
+ * → „https://t.me/tipradar“. Inak undefined.
+ */
+export function normalizeTelegramUrl(raw?: string): string | undefined {
+  const v = (raw || "").trim().replace(/^["']|["']$/g, "");
+  const m = /^(?:https?:\/\/)?(?:www\.)?(?:t\.me|telegram\.me)\/(.+?)\/?$/i.exec(v) || /^@?([A-Za-z][A-Za-z0-9_]{3,})$/.exec(v);
+  if (!m) return undefined;
+  return "https://t.me/" + m[1];
+}
+
 function freeChatFromUrl(url?: string): string | undefined {
-  const m = /^https?:\/\/(?:www\.)?t\.me\/([A-Za-z][A-Za-z0-9_]{3,})\/?$/.exec((url || "").trim());
+  const m = /^https?:\/\/(?:www\.)?t\.me\/([A-Za-z][A-Za-z0-9_]{3,})\/?$/.exec(normalizeTelegramUrl(url) || "");
   if (!m || /bot$/i.test(m[1])) return undefined;
   return "@" + m[1];
 }

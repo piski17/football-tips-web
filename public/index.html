@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#06080D" />
+  <meta name="theme-color" content="#070708" />
   <meta name="color-scheme" content="dark" />
   <title>TipRadar</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
@@ -11,28 +11,30 @@
   <link rel="apple-touch-icon" href="favicon-256.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Figtree:wght@300..800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Serif:ital@0;1&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- Nočný zápas (1. 11. 2026): reflektory v pozadí ako na tipradar.eu -->
+  <div class="lights" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
   <!-- Úvodná obrazovka: zmizne sama (CSS) najneskôr po 1,2 s, na dáta nečaká -->
   <div id="splashScreen" class="splash" aria-hidden="true">
     <div class="splash-inner">
       <svg class="splash-radar" viewBox="0 0 200 200">
-        <circle cx="100" cy="100" r="92" fill="#0B0F17"/>
-        <circle cx="100" cy="100" r="58" fill="none" stroke="#D6BE8C" stroke-opacity=".35" stroke-width="3"/>
-        <g class="splash-sweep"><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#D6BE8C" fill-opacity=".32"/><line x1="100" y1="100" x2="100" y2="12" stroke="#F5E9CC" stroke-width="5" stroke-linecap="round"/></g>
-        <circle cx="100" cy="100" r="92" fill="none" stroke="#D6BE8C" stroke-width="7"/>
-        <circle cx="100" cy="100" r="8" fill="#F5E9CC"/>
+        <circle cx="100" cy="100" r="92" fill="#0B0B0C"/>
+        <circle cx="100" cy="100" r="58" fill="none" stroke="#D6B676" stroke-opacity=".35" stroke-width="3"/>
+        <g class="splash-sweep"><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#D6B676" fill-opacity=".32"/><line x1="100" y1="100" x2="100" y2="12" stroke="#F3E2B3" stroke-width="5" stroke-linecap="round"/></g>
+        <circle cx="100" cy="100" r="92" fill="none" stroke="#D6B676" stroke-width="7"/>
+        <circle cx="100" cy="100" r="8" fill="#F3E2B3"/>
       </svg>
-      <div class="splash-word">TipRadar</div>
+      <div class="splash-word">Tip<em>Radar</em></div>
     </div>
   </div>
 
   <div class="shell">
     <!-- Ľavý panel (počítač) -->
     <aside class="side">
-      <div class="logo lx-logo"><svg viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="apg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F0E0B4"/><stop offset=".5" stop-color="#C8A96A"/><stop offset="1" stop-color="#8C6E36"/></linearGradient></defs><g fill="none" stroke="url(#apg)"><circle cx="50" cy="50" r="47" stroke-width="2"/><circle cx="50" cy="50" r="43" stroke-width=".8"/><circle cx="50" cy="50" r="30" stroke-width="1.4"/><circle cx="50" cy="50" r="16" stroke-width="1.4"/><path d="M50 3v8M50 89v8M3 50h8M89 50h8" stroke-width="1.4"/><path d="M50 50 72 28" stroke-width="3" stroke-linecap="round"/></g><path d="M50 50 L50 20 A30 30 0 0 1 71.2 28.8 Z" fill="url(#apg)" opacity=".22"/><circle cx="50" cy="50" r="4" fill="url(#apg)"/><circle cx="64" cy="36" r="3.4" fill="url(#apg)"/></svg><span>TipRadar<small>Futbalová analytika</small></span></div>
+      <div class="logo lx-logo"><svg viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="apg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F0E0B4"/><stop offset=".5" stop-color="#C8A96A"/><stop offset="1" stop-color="#8C6E36"/></linearGradient></defs><g fill="none" stroke="url(#apg)"><circle cx="50" cy="50" r="47" stroke-width="2"/><circle cx="50" cy="50" r="43" stroke-width=".8"/><circle cx="50" cy="50" r="30" stroke-width="1.4"/><circle cx="50" cy="50" r="16" stroke-width="1.4"/><path d="M50 3v8M50 89v8M3 50h8M89 50h8" stroke-width="1.4"/><path d="M50 50 72 28" stroke-width="3" stroke-linecap="round"/></g><path d="M50 50 L50 20 A30 30 0 0 1 71.2 28.8 Z" fill="url(#apg)" opacity=".22"/><circle cx="50" cy="50" r="4" fill="url(#apg)"/><circle cx="64" cy="36" r="3.4" fill="url(#apg)"/></svg><span>Tip<em>Radar</em><small>Futbalová analytika</small></span></div>
       <nav class="nav" id="sideNav" aria-label="Hlavné menu"></nav>
       <button type="button" class="seats" id="seatBox" title="Členstvo TipRadar: počet aktívnych členov Štart (50 tipov), Premium (100 tipov) a VIP (150 tipov). Kliknutím otvoríš sekciu Členovia."></button>
     </aside>
@@ -72,7 +74,7 @@
             </header>
             <div class="an" id="analysisPane">
               <div class="an-empty">
-                <svg class="empty-radar" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="92" fill="#0B0F17"/><circle cx="100" cy="100" r="58" fill="none" stroke="#D6BE8C" stroke-opacity=".3" stroke-width="2"/><g class="splash-sweep"><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#D6BE8C" fill-opacity=".25"/></g><circle cx="100" cy="100" r="92" fill="none" stroke="#D6BE8C" stroke-width="3"/><circle cx="100" cy="100" r="6" fill="#F5E9CC"/></svg>
+                <svg class="empty-radar" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="92" fill="#0B0B0C"/><circle cx="100" cy="100" r="58" fill="none" stroke="#D6B676" stroke-opacity=".3" stroke-width="2"/><g class="splash-sweep"><path d="M100 100 L100 12 A88 88 0 0 1 162.2 37.8 Z" fill="#D6B676" fill-opacity=".25"/></g><circle cx="100" cy="100" r="92" fill="none" stroke="#D6B676" stroke-width="3"/><circle cx="100" cy="100" r="6" fill="#F3E2B3"/></svg>
                 <p>Vyber zápas zo zoznamu.</p>
                 <p class="muted small">Zobrazí sa štatistická analýza a odporúčané tipy.</p>
               </div>
@@ -84,7 +86,7 @@
       <!-- TIPY DŇA -->
       <section class="view" data-view="tipy" id="viewTipy" hidden>
         <header class="top">
-          <h2>Tipy dňa</h2>
+          <h2>Tipy <em>dňa</em></h2>
           <span class="muted small top-sub" id="dtDateLabel"></span>
           <div class="top-actions"><button type="button" class="btn sm" id="dtRunBtn">Spustiť analýzu</button></div>
         </header>
@@ -94,7 +96,7 @@
       <!-- HISTÓRIA TIPOV -->
       <section class="view" data-view="historia" id="viewHistoria" hidden>
         <header class="top">
-          <h2>História tipov</h2>
+          <h2>História <em>tipov</em></h2>
           <div class="top-actions"><button type="button" class="btn ghost sm" id="sendDayTipsBtn" title="Poslať všetky tipy vybraného dňa do Telegramu naraz">Poslať tipy dňa</button><button type="button" class="btn sm" id="checkResultsBtn">Skontrolovať výsledky</button></div>
         </header>
         <!-- História tipov (29. 10. 2026): prehľad hore, potom štyri karty – Tipy, Štatistiky, Sledované, Ďalšie akcie -->

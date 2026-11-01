@@ -52,7 +52,7 @@ import {
   setTelegramWebhook,
   notifyAdminExpiringSubscribers,
   sendCustomMessage,
-  sendTipResultToTelegram, notifyAdmin, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite, sendMemberMessage, isMemberChannel, memberChannelConfigured, sendPackageLowReminder, freeChannelConfigured, sendFreeResult, sendFreeDaySummary, tipUnits, FreeBalance } from "./telegram";
+  sendTipResultToTelegram, notifyAdmin, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite, sendMemberMessage, isMemberChannel, memberChannelConfigured, sendPackageLowReminder, freeChannelConfigured, sendFreeResult, sendFreeDaySummary, tipUnits, FreeBalance, normalizeTelegramUrl } from "./telegram";
 import { paymentsEnabled, isTerm, sellableTerm, SellableTerm, SELLABLE_TERMS, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, deletePayment, Payment, termLabel, tierName, addActiveMonths, SUMMER_PAUSE } from "./payments";
 import { payBySquareString } from "./payBySquare";
 import QRCode from "qrcode";
@@ -1487,7 +1487,7 @@ app.get("/api/public/vip-seats", async (_req, res) => {
   try {
     // Predaj: SALES_OPEN=true na Renderi (kým nie je živnosť, len poradovník).
     // Odkaz na bezplatný Telegram kanál: premenná TELEGRAM_FREE_CHANNEL_URL na Renderi (napr. https://t.me/tipradar_free).
-    const freeChannelUrl = process.env.TELEGRAM_FREE_CHANNEL_URL || "https://t.me/TipRadarAiBot?start=free";
+    const freeChannelUrl = normalizeTelegramUrl(process.env.TELEGRAM_FREE_CHANNEL_URL) || "https://t.me/TipRadarAiBot?start=free";
     const terms = await termSeats();
     res.json({ salesOpen: process.env.SALES_OPEN === "true", payOpen: paymentsEnabled(), minOdds: MIN_ODDS, freeChannelUrl, terms });
   } catch (err: any) {
