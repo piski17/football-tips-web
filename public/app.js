@@ -1676,22 +1676,28 @@ function kickoffTime(fixture) {
 /** Zápasy pred výkopom, ktoré Tipy dňa prejdú – všetky alebo len s vybraným časom výkopu. */
 function dayTipsFixtures() {
   const all = currentFixtures.filter((f) => !matchHasStarted(f));
-  if (dayTipsTime && !all.some((f) => kickoffTime(f) === dayTipsTime)) dayTipsTime = "";
+  // Čas, keď sa zápasy už hrajú/skončili, ostáva vybraný – nižšie sa ukážu ich zapísané tipy (1. 11. 2026).
+  if (dayTipsTime && !currentFixtures.some((f) => kickoffTime(f) === dayTipsTime)) dayTipsTime = "";
   return dayTipsTime ? all.filter((f) => kickoffTime(f) === dayTipsTime) : all;
 }
 
 /** Výber času výkopu nad Tipmi dňa: Všetky · 13:30 · 15:00 … – ťuknutím sa spustí analýza len pre ten čas. */
 function dayTipsTimeBarHtml() {
+  // Aj časy začatých a odohraných zápasov (1. 11. 2026, Michal) – takýto čas je stlmený a má bodku.
   const counts = new Map();
+  const upcoming = new Set();
   for (const f of currentFixtures) {
-    if (matchHasStarted(f)) continue;
     const t = kickoffTime(f);
-    if (t) counts.set(t, (counts.get(t) || 0) + 1);
+    if (!t) continue;
+    counts.set(t, (counts.get(t) || 0) + 1);
+    if (!matchHasStarted(f)) upcoming.add(t);
   }
   if (counts.size < 2) return "";
   const total = [...counts.values()].reduce((a, b) => a + b, 0);
-  const chip = (t, label, n) =>
-    `<button type="button" class="chip${dayTipsTime === t ? " on" : ""}" data-dt-time="${escapeHtml(t)}">${label}<b class="dt-time-n">${n}</b></button>`;
+  const chip = (t, label, n) => {
+    const past = t && !upcoming.has(t);
+    return `<button type="button" class="chip${dayTipsTime === t ? " on" : ""}${past ? " dt-past" : ""}" data-dt-time="${escapeHtml(t)}"${past ? ` title="Zápasy už začali – ukážu sa tipy zapísané pred výkopom"` : ""}>${label}<b class="dt-time-n">${n}</b></button>`;
+  };
   return `<div class="dt-times"><span class="dt-times-l">Čas výkopu</span><div class="chips">${chip("", "Všetky", total)}${[...counts.keys()]
     .sort()
     .map((t) => chip(t, escapeHtml(t), counts.get(t)))
@@ -1862,7 +1868,7 @@ function renderDayTipsViewMain() {
     return;
   }
   if (dayTips.none) {
-    dayTipsPaneEl.innerHTML = `${dayTipsTimeBarHtml()}<div class="empty-card">V tento deň (${escapeHtml(dayKeyLabel(dayTips.date))}) už nie sú žiadne zápasy pred výkopom${dayTips.time ? ` o ${escapeHtml(dayTips.time)}` : ""}.</div>`;
+    dayTipsPaneEl.innerHTML = `${dayTipsTimeBarHtml()}<div class="empty-card">${dayTips.time ? `Zápasy o ${escapeHtml(dayTips.time)} už začali alebo skončili – tipy, ktoré server zapísal pred výkopom, sú nižšie.` : `V tento deň (${escapeHtml(dayKeyLabel(dayTips.date))}) už nie sú žiadne zápasy pred výkopom.`}</div>`;
     bindDayTipsTimeBar();
     return;
   }
