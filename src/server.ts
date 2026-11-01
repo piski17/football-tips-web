@@ -53,7 +53,7 @@ import {
   notifyAdminExpiringSubscribers,
   sendCustomMessage,
   sendTipResultToTelegram, notifyAdmin, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite, sendMemberMessage, isMemberChannel, memberChannelConfigured, sendPackageLowReminder } from "./telegram";
-import { paymentsEnabled, isTerm, sellableTerm, SellableTerm, SELLABLE_TERMS, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, deletePayment, Payment, termLabel, tierName, addActiveMonths, SUMMER_PAUSE } from "./payments";
+import { paymentsEnabled, isTerm, sellableTerm, SellableTerm, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, deletePayment, Payment, termLabel, tierName, addActiveMonths, SUMMER_PAUSE } from "./payments";
 import { payBySquareString } from "./payBySquare";
 import QRCode from "qrcode";
 import { sendAdminEmail } from "./mailer";
@@ -101,7 +101,26 @@ function statsTips(tips: SavedTip[]): SavedTip[] {
   // ako ostatné. Po spustení predaja (SALES_OPEN=true) sa na webe a v súhrnoch pre klientov neráta –
   // klientom nikdy neprišiel.
   const salesOpen = process.env.SALES_OPEN === "true";
-  return tips.filter((t) => !EXCLUDED_STATS_MARKETS.includes(t.market) && !t.watchOnly && !(salesOpen && t.lateAdd));
+  return dedupeTips(tips).filter((t) => !EXCLUDED_STATS_MARKETS.includes(t.market) && !t.watchOnly && !(salesOpen && t.lateAdd));
+}
+
+/**
+ * Duplicity (1. 11. 2026): ten istý tip (zápas + trh + tip) uložený viackrát – napr. po „Analyzovať znova“
+ * v Tipoch dňa pred poistkou z 31. 10. – sa ráta len raz. Ostáva tip poslaný do Telegramu, potom zverejnený
+ * (nie len sledovaný), potom ten uložený skôr. Nič sa nemaže.
+ */
+export function dedupeTips(tips: SavedTip[]): SavedTip[] {
+  const rank = (t: SavedTip) => [t.telegramMessages?.length ? 0 : 1, t.watchOnly ? 1 : 0, new Date(t.savedAt).getTime() || 0];
+  const best = new Map<string, SavedTip>();
+  for (const t of tips) {
+    if ((t.legs && t.legs.length) || !(Number(t.fixtureId) > 0)) continue;
+    const k = `${t.fixtureId}|${t.market}|${t.selection}`;
+    const cur = best.get(k);
+    if (!cur) { best.set(k, t); continue; }
+    const a = rank(t), b = rank(cur);
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) { if (a[i] < b[i]) best.set(k, t); break; }
+  }
+  return tips.filter((t) => (t.legs && t.legs.length) || !(Number(t.fixtureId) > 0) || best.get(`${t.fixtureId}|${t.market}|${t.selection}`) === t);
 }
 
 /** Súhrn tipov pri rovnakom vklade 1 jednotka na tip (zisk a ROI len z tipov s kurzom). */
@@ -264,17 +283,19 @@ app.get(["/vysledky", "/vysledky/", "/otazky", "/otazky/", "/formular", "/formul
 // ---- Platba za členstvo (prevod cez QR kód) – bez hesla ----
 /** Členstvá sú bez obmedzenia miest – čísla slúžia len na prehľad (aktívni členovia a poradovník). */
 type TermSeats = Record<SellableTerm, { occupied: number; total: null; left: null }>;
-/** Plán z bota (t.me/…?start=…) → členstvo: c50 … c250 = posuvník na webe (Štart / Premium / VIP / Gold / Platinum). Staré odkazy:
- *  stat / start = Štart, seria = Premium, vip = VIP, gold = Gold, platinum / onyx / sampion = Platinum. Rovnako v src/telegram.ts (PLAN_TERM). */
-const LEAD_PLAN_TERM: Record<string, SellableTerm> = { stat: "p50", start: "p50", seria: "p100", vip: "p150", gold: "p200", platinum: "p250", onyx: "p250", sampion: "p250" };
-for (const t of SELLABLE_TERMS) LEAD_PLAN_TERM["c" + PAY_TERMS[t].tips] = t;
-for (const k of Object.keys(LEAD_PLAN_TERM)) LEAD_PLAN_TERM[k + "_waitlist"] = LEAD_PLAN_TERM[k];
+/** Plán z bota (t.me/…?start=…) → členstvo: stat = Štart 50 tipov, gold = Gold 100 tipov, platinum = Platinum 200 tipov. Staré odkazy: start = Štart, seria = Gold, onyx / sampion / vip = Platinum. */
+const LEAD_PLAN_TERM: Record<string, SellableTerm> = {
+  stat: "p50", stat_waitlist: "p50", start: "p50", start_waitlist: "p50",
+  gold: "p100", gold_waitlist: "p100", seria: "p100", seria_waitlist: "p100",
+  platinum: "p200", platinum_waitlist: "p200",
+  onyx: "p200", onyx_waitlist: "p200", sampion: "p200", sampion_waitlist: "p200", vip: "p200", vip_waitlist: "p200",
+};
 /** Aktívni členovia (členstvo ešte neskončilo) podľa členstva + záujemcovia v poradovníku (pred spustením predaja). */
 async function termSeats(): Promise<TermSeats> {
   const subs = await listSubscribers();
   const statuses = await memberStatuses(subs);
   const active = subs.filter((s) => statuses.get(s.id)?.active);
-  const count = Object.fromEntries(SELLABLE_TERMS.map((t) => [t, 0])) as Record<SellableTerm, number>;
+  const count: Record<SellableTerm, number> = { p50: 0, p100: 0, p200: 0 };
   for (const s of active) {
     const t = sellableTerm(memberTerm(s));
     if (t) count[t]++;
@@ -287,15 +308,15 @@ async function termSeats(): Promise<TermSeats> {
     }
   }
   const row = (n: number) => ({ occupied: n, total: null, left: null });
-  return Object.fromEntries(SELLABLE_TERMS.map((t) => [t, row(count[t])])) as TermSeats;
+  return { p50: row(count.p50), p100: row(count.p100), p200: row(count.p200) };
 }
 /** Riadok pod tipom v bezplatnom kanáli (členstvá sú bez obmedzenia miest). */
 async function freeSeatsLine(): Promise<string | undefined> {
-  return `🎯 Členstvo: Štart · Premium · VIP · Gold · Platinum, od 39 € · 🛡 prvých 20 tipov bez rizika`;
+  return `🎯 Členstvo: Štart 50 · Gold 100 · Platinum 200 tipov · 🛡 prvých 30 tipov bez rizika`;
 }
 const BOT_USERNAME = process.env.TELEGRAM_BOT_USERNAME || "TipRadarAiBot";
 
-// tipradar.eu/zaplatit?term=p50|p100|p150|p200|p250 (&c=Telegram ID z bota; staré odkazy prevedie sellableTerm) → založí platbu a presmeruje na stránku s QR kódom.
+// tipradar.eu/zaplatit?term=p50|p100|p200 (&c=Telegram ID z bota; staré odkazy prevedie sellableTerm) → založí platbu a presmeruje na stránku s QR kódom.
 app.get("/zaplatit", async (req, res) => {
   const term = sellableTerm(String(req.query.term ?? ""));
   const c = String(req.query.c ?? "");
@@ -660,7 +681,7 @@ async function getMarketAdjustments(force = false): Promise<MarketAdjustments> {
   if (adjustRefresh) return adjustRefresh;
   adjustRefresh = (async () => {
     try {
-      const health = computeMarketHealth(await listTips(), await listShadow().catch(() => []));
+      const health = computeMarketHealth(dedupeTips(await listTips()), await listShadow().catch(() => []));
       const next = health.adjustments;
       let prev: MarketAdjustments | null = null;
       try { prev = JSON.parse((await getMeta(MARKET_STATE_META)) ?? "null"); } catch { prev = null; }
@@ -1783,7 +1804,7 @@ function buildMonthlyReport(tips: SavedTip[], month: string) {
 
 app.get("/api/reports/monthly", async (req, res) => {
   try {
-    res.json(buildMonthlyReport(await listTips(), reportMonth(req.query.month)));
+    res.json(buildMonthlyReport(dedupeTips(await listTips()), reportMonth(req.query.month)));
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
@@ -1795,7 +1816,7 @@ app.post("/api/telegram/monthly-report", async (req, res) => {
       res.status(400).json({ error: "Telegram nie je na serveri nastavený." });
       return;
     }
-    const report = buildMonthlyReport(await listTips(), reportMonth(req.body?.month));
+    const report = buildMonthlyReport(dedupeTips(await listTips()), reportMonth(req.body?.month));
     const target =
       req.body?.target === "premium" || req.body?.target === "vip" || req.body?.target === "both" || req.body?.target === "free"
         ? req.body.target
@@ -2093,7 +2114,7 @@ app.post("/api/shadow/record", async (req, res) => {
 // ---- Model: zdravie trhov, porovnanie nového modelu a prepínač (21. 10. 2026) ----
 app.get("/api/model/health", async (_req, res) => {
   try {
-    const health = computeMarketHealth(await listTips(), await listShadow().catch(() => []));
+    const health = computeMarketHealth(dedupeTips(await listTips()), await listShadow().catch(() => []));
     const blend = await listBlend();
     res.json({
       ...health,
@@ -2389,7 +2410,7 @@ function clvStats(list: { clv: number; method: "prob" | "price" }[]) {
 
 app.get("/api/clv/summary", async (_req, res) => {
   try {
-    const tips = await listTips();
+    const tips = dedupeTips(await listTips());
     const done = tips.filter(
       (t) => typeof clvOpen(t) === "number" && clvOpen(t)! > 1 && typeof t.closingOdds === "number" && t.closingOdds > 1
     );
@@ -3202,7 +3223,7 @@ async function guaranteeRows() {
   for (const s of subs) {
     const term = memberTerm(s);
     const periodsOf = usage.get(s.id) ?? [];
-    // „20 tipov bez rizika“: len prvé zaplatené členstvo podľa tipov (staršie záznamy s viacerými obdobiami nie)
+    // „30 tipov bez rizika“: len prvé zaplatené členstvo podľa tipov (staršie záznamy s viacerými obdobiami nie)
     const firstPaid = s.pastPeriods && s.pastPeriods.length > 0 ? null : periodsOf.find((u) => u.total !== null && !u.period.free) ?? null;
     for (const u of periodsOf) {
       const p = u.period;
@@ -3215,9 +3236,9 @@ async function guaranteeRows() {
       const applied = (s.guarantees ?? []).some((g) => g.periodStart === p.start);
       const inLoss = sm.profit < 0;
       const refunded = Boolean(s.refund && s.refund.periodStart === p.start);
-      const first20 = u === firstPaid && u.tips.length >= REFUND_TIPS ? u.tips.slice(0, REFUND_TIPS) : null;
-      const first20Done = first20 !== null && first20.every((t) => t.status !== "pending");
-      const refundProfit = first20Done ? summarizeTips(first20!).profit : null;
+      const first30 = u === firstPaid && u.tips.length >= REFUND_TIPS ? u.tips.slice(0, REFUND_TIPS) : null;
+      const first30Done = first30 !== null && first30.every((t) => t.status !== "pending");
+      const refundProfit = first30Done ? summarizeTips(first30!).profit : null;
       rows.push({
         id: s.id,
         name: s.name,
@@ -3327,7 +3348,7 @@ app.post("/api/guarantee/apply", async (req, res) => {
   }
 });
 
-// „20 tipov bez rizika“: vráti peniaze (prevod robíš ty), zapíše to k členovi a členstvo ukončí.
+// „30 tipov bez rizika“: vráti peniaze (prevod robíš ty), zapíše to k členovi a členstvo ukončí.
 app.post("/api/guarantee/refund", async (req, res) => {
   const id = typeof req.body?.id === "string" ? req.body.id : "";
   if (!id) {
@@ -3351,7 +3372,7 @@ app.post("/api/guarantee/refund", async (req, res) => {
     await updateSubscriber(id, {
       refund: { periodStart: row.periodStart, profit: row.refundProfit!, amountEur: row.refundAmount, at: now },
       ...(isCurrent ? { nextPaymentDue: now } : {}), // členstvo končí – ďalšie tipy sa mu už nerátajú
-      note: `${sub.note ? sub.note + " · " : ""}Garancia 20 tipov (${signed(row.refundProfit!, 1)} j.): vrátené ${row.refundAmount} €`,
+      note: `${sub.note ? sub.note + " · " : ""}Garancia 30 tipov (${signed(row.refundProfit!, 1)} j.): vrátené ${row.refundAmount} €`,
     });
     let notified = false;
     if (req.body?.notify === true && sub.telegramChatId) {
@@ -3404,7 +3425,7 @@ async function checkExpiringSubscribers(): Promise<void> {
       else if (k.active && r.daysLeft <= 3) when = r.daysLeft <= 0 ? "platnosť končí dnes" : `platnosť končí o ${r.daysLeft} d.`;
       if (when) notes.push({ name: s.name, length: s.length, tier: s.tier, when });
     }
-    // Garancia „20 tipov bez rizika“: člen je po prvých 20 tipoch v mínuse → vrátiť peniaze (app.tipradar.eu → Členovia → Garancia).
+    // Garancia „30 tipov bez rizika“: člen je po prvých 30 tipoch v mínuse → vrátiť peniaze (app.tipradar.eu → Členovia → Garancia).
     for (const g of (await guaranteeRows()).filter((r) => r.refundEligible)) {
       const sub = subs.find((s) => s.id === g.id);
       notes.push({ name: g.name, length: sub?.length, tier: sub?.tier ?? "individual", when: `po ${REFUND_TIPS} tipoch v mínuse (${signed(g.refundProfit!, 1)} j.) – vráť ${g.refundAmount} € (Členovia → Garancia)` });
