@@ -1844,7 +1844,7 @@ async function renderDayLateTips(box) {
       <div class="dtip-body">
         <div class="dtip-match"><span class="faint">${escapeHtml(timeHm(new Date(t.matchDate)))}</span> ${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))} <span class="faint small">· ${escapeHtml(translateLeagueName(t.league || ""))}${score}</span></div>
         <div class="s">${escapeHtml(t.market)}: <b>${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}</b>${strongTipBadge(t.probability)}</div>
-        <div class="m"><span>Dôvera <b>${probTxt(t.probability)}${NB}%</b></span>${typeof t.odds === "number" ? `<span>Kurz pred výkopom <b>${fmtOdds(t.odds)}</b></span>` : `<span>Kurz v API nie je · hrať od <b>${fmtOdds(minOddsFor(t))}</b></span>`}${res[t.status] ? `<span>${res[t.status]}</span>` : ""}</div>
+        <div class="m"><span>Dôvera <b>${probTxt(t.probability)}${NB}%</b></span>${typeof t.odds === "number" ? `<span>Kurz pred výkopom <b>${fmtOdds(t.odds)}</b></span>` : `<span>Priemerný kurz ~${impliedOdds(t.probability).replace(".", ",")}</span><span><b>Hraj len pri kurze aspoň ${fmtOdds(minOddsFor(t))}</b> <span class="faint">(Kurz v API nie je – zadáš ho pri pridaní)</span></span>`}${res[t.status] ? `<span>${res[t.status]}</span>` : ""}</div>
         ${t.strictFail ? `<div class="why warn">⚠️ neprejde pri 60 / 40</div>` : ""}
       </div>
       <div class="dtip-odds">
@@ -3115,6 +3115,43 @@ async function archiveAllResolved() {
   openTipsHistory();
 }
 document.getElementById("archiveResolvedBtn").addEventListener("click", () => archiveAllResolved());
+
+// Overenie vyhodnotenia (1. 11. 2026, Michal): či niektorý tip nie je vyhodnotený zle.
+const auditTipsBtn = document.getElementById("auditTipsBtn");
+const AUDIT_ST = { won: "✓ Vyšlo", lost: "✕ Nevyšlo", void: "↺ Vrátené" };
+auditTipsBtn?.addEventListener("click", async () => {
+  auditTipsBtn.disabled = true;
+  auditTipsBtn.textContent = "Overujem…";
+  try {
+    const r = await fetchJson("/api/tips/audit", { method: "POST" });
+    const rows = r.rows || [];
+    const head = `<p class="muted">Skontrolované ${plural(r.checked, "vyhodnotený tip", "vyhodnotené tipy", "vyhodnotených tipov")} za posledných ${r.days} dní (aj skryté a sledované)${r.failed ? `, ${r.failed} sa nepodarilo overiť` : ""}.</p>`;
+    const body = rows.length
+      ? `<p><b>Nesedí ${plural(rows.length, "tip", "tipy", "tipov")}:</b> uložený výsledok je iný, než vychádza z dát API.</p><div class="table-wrap"><table class="bt-table"><thead><tr><th>Zápas a tip</th><th>Uložené</th><th>Podľa API</th><th></th></tr></thead><tbody>${rows
+          .map((x) => `<tr><td>${escapeHtml(shortDate(new Date(x.matchDate)))} ${escapeHtml(translateTeamName(x.homeTeam))} – ${escapeHtml(translateTeamName(x.awayTeam))}<br><b>${escapeHtml(x.market)}: ${escapeHtml(translateNamesInText(x.selection, x.homeTeam, x.awayTeam))}</b>${x.detail ? `<br><span class="faint small">${escapeHtml(x.detail)}</span>` : ""}</td><td>${AUDIT_ST[x.saved] || escapeHtml(x.saved)}</td><td><b>${AUDIT_ST[x.api] || escapeHtml(x.api)}</b></td><td class="num"><button type="button" class="btn sm" data-audit-fix="${escapeHtml(x.id)}" data-audit-st="${escapeHtml(x.api)}">Opraviť</button></td></tr>`)
+          .join("")}</tbody></table></div><p class="faint small">„Vrátené“ podľa API znamená napr. predĺženie alebo zrušený zápas. Ak si si istý, že stávkovka to vyhodnotila inak (napr. iné štatistiky), nechaj to tak.</p>`
+      : `<p><b>✓ Všetko sedí</b> – každý overený tip je vyhodnotený rovnako, ako vychádza z dát API.</p>`;
+    openModal(`<h3>Overenie vyhodnotenia</h3>${head}${body}<div class="modal-actions"><button type="button" class="btn" data-close>Zavrieť</button></div>`, { wide: true });
+    document.querySelectorAll("[data-audit-fix]").forEach((b) => {
+      b.onclick = async () => {
+        b.disabled = true;
+        try {
+          await postJson(`/api/tips/${encodeURIComponent(b.dataset.auditFix)}/edit`, { status: b.dataset.auditSt });
+          b.outerHTML = `<span class="faint small">✓ opravené</span>`;
+          openTipsHistory();
+        } catch (err) {
+          b.disabled = false;
+          showToast(`Nepodarilo sa opraviť: ${err?.message ?? String(err)}`);
+        }
+      };
+    });
+  } catch (err) {
+    showToast(`Overenie zlyhalo: ${err?.message ?? String(err)}`);
+  } finally {
+    auditTipsBtn.disabled = false;
+    auditTipsBtn.textContent = "Overiť vyhodnotenie";
+  }
+});
 
 checkResultsBtn.addEventListener("click", async () => {
   checkResultsBtn.disabled = true;

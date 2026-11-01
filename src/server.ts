@@ -34,6 +34,7 @@ import {
   getSeasonGamesAnyCompetition,
   getHeadToHeadStats,
   getRestInfo,
+  getFixtureCornersAndCards,
 } from "./apiClient";
 import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, MarketAdjustments, marketCategory, passesStrict, STRICT_CHECK_ON } from "./predictor";
 import { newModelInputs } from "./newModel";
@@ -3131,6 +3132,64 @@ app.post("/api/auto-tips/:id/add", async (req, res) => {
 
 // Výsledky sa kontrolujú aj samy, každých 15 minút – netreba čakať na tlačidlo.
 setInterval(() => void checkPendingResults().catch((err) => console.error("Automatická kontrola výsledkov zlyhala:", err)), 15 * 60 * 1000);
+
+/**
+ * Overenie vyhodnotenia (1. 11. 2026, Michal: „nepomýlil som sa pri niektorom tipe?“). Znova vyhodnotí
+ * už vyhodnotené tipy (bez tiketov) rovnakým spôsobom ako automatika – z výsledku a štatistík API –
+ * a vráti tie, pri ktorých sa uložený výsledok líši. Nič neprepisuje, opraviť sa dá tlačidlom v appke.
+ */
+const AUDIT_DAYS = 60;
+let auditRun: Promise<any> | null = null;
+function statLine(label: string, list: { team: string; value: number }[] | null | undefined): string {
+  if (!list || list.length !== 2) return "";
+  return `${label}: ${list[0].value} – ${list[1].value} (spolu ${list[0].value + list[1].value})`;
+}
+async function auditTips() {
+  const from = Date.now() - AUDIT_DAYS * 24 * 3600 * 1000;
+  const tips = (await listTips()).filter(
+    (t) => !(t.legs && t.legs.length) && ["won", "lost", "void"].includes(t.status) && typeof t.fixtureId === "number" && new Date(t.matchDate).getTime() >= from
+  );
+  const rows: any[] = [];
+  let checked = 0;
+  let failed = 0;
+  const queue = [...tips];
+  const worker = async () => {
+    for (let t = queue.shift(); t; t = queue.shift()) {
+      try {
+        const settled = await settleBet(t as any);
+        if (!settled) { failed++; continue; }
+        checked++;
+        if (settled.status === t.status) continue;
+        const parts: string[] = [];
+        if (settled.homeGoals != null) parts.push(`Skóre ${settled.homeGoals}:${settled.awayGoals}`);
+        if (/Rohy|Karty|Fauly|Strely|držanie|Ofsajdy/i.test(t.market)) {
+          const st = await getFixtureCornersAndCards(t.fixtureId);
+          if (/Rohy/.test(t.market)) parts.push(statLine("Rohy", st.cornersByTeam));
+          if (/Karty/.test(t.market)) parts.push(statLine("Žlté karty", st.cardsByTeam));
+          if (/Fauly/.test(t.market)) parts.push(statLine("Fauly", st.foulsByTeam));
+          if (/Strely/.test(t.market)) parts.push(statLine("Strely na bránu", st.shotsByTeam));
+        }
+        rows.push({
+          id: t.id, matchDate: t.matchDate, homeTeam: t.homeTeam, awayTeam: t.awayTeam, market: t.market, selection: t.selection,
+          saved: t.status, api: settled.status, detail: parts.filter(Boolean).join(" · "), edited: !!t.edited, manualEntry: !!t.manualEntry,
+        });
+      } catch {
+        failed++;
+      }
+    }
+  };
+  await Promise.all([worker(), worker(), worker()]);
+  rows.sort((a, b) => new Date(b.matchDate).getTime() - new Date(a.matchDate).getTime());
+  return { total: tips.length, checked, failed, days: AUDIT_DAYS, rows };
+}
+app.post("/api/tips/audit", async (_req, res) => {
+  try {
+    if (!auditRun) auditRun = auditTips().finally(() => { auditRun = null; });
+    res.json(await auditRun);
+  } catch (err: any) {
+    res.status(502).json({ error: err.message ?? String(err) });
+  }
+});
 
 app.post("/api/tips/check-results", async (_req, res) => {
   try {
