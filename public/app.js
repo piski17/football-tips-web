@@ -1784,6 +1784,69 @@ function renderDayTipsProgress() {
 }
 
 function renderDayTipsView() {
+  renderDayTipsViewMain();
+  if (dayTipsDetail || dayTipsRun.running) return;
+  const box = document.createElement("div");
+  box.setAttribute("data-dt-late", "");
+  dayTipsPaneEl.appendChild(box);
+  void renderDayLateTips(box);
+}
+
+/**
+ * Začaté a odohrané zápasy v Tipoch dňa (1. 11. 2026, Michal: „keď si to dal do Zápasov, daj to aj do Tipov dňa“).
+ * Tipy, ktoré server zapísal asi hodinu pred výkopom, zoradené podľa času výkopu – pri každom „+ Pridať do histórie“.
+ */
+let dayLateCache = null;
+async function renderDayLateTips(box) {
+  const started = currentFixtures.filter((f) => matchHasStarted(f) && (!dayTipsTime || kickoffTime(f) === dayTipsTime));
+  if (!started.length) return;
+  const ids = new Set(started.map((f) => f.fixtureId));
+  box.innerHTML = `<h3 class="sh">Začaté a odohrané zápasy <small>zabudnutý tip</small></h3><div class="card"><p class="faint small">Načítavam…</p></div>`;
+  let entries = [];
+  try {
+    if (!dayLateCache || Date.now() - dayLateCache.at > 60 * 1000) {
+      const [data] = await Promise.all([fetchJson("/api/auto-tips"), loadSavedTipKeys().catch(() => null)]);
+      dayLateCache = { at: Date.now(), entries: data.entries || [] };
+    }
+    entries = dayLateCache.entries.filter((e) => ids.has(e.fixtureId));
+  } catch (err) {
+    box.querySelector(".card").innerHTML = `<p class="faint small">Nepodarilo sa načítať: ${escapeHtml(err.message)}</p>`;
+    return;
+  }
+  if (!box.isConnected) return;
+  if (!entries.length) {
+    box.querySelector(".card").innerHTML = `<p class="faint small">Pri ${plural(started.length, "začatom zápase", "začatých zápasoch", "začatých zápasoch")} server pred výkopom nenašiel tip, ktorý by sa dal doplniť.</p>`;
+    return;
+  }
+  const byFx = new Map(started.map((f) => [f.fixtureId, f]));
+  entries.sort((a, b) => new Date(a.matchDate) - new Date(b.matchDate) || a.fixtureId - b.fixtureId || b.probability - a.probability);
+  const res = { won: `<b class="g">vyšiel</b>`, lost: `<b class="l">nevyšiel</b>`, void: "vrátený", pending: `<span class="faint">čaká</span>` };
+  let lastFx = null;
+  const rows = entries
+    .map((t) => {
+      const f = byFx.get(t.fixtureId);
+      let head = "";
+      if (t.fixtureId !== lastFx) {
+        lastFx = t.fixtureId;
+        const score = f && f.goalsHome != null ? ` · ${f.goalsHome}:${f.goalsAway}${FINISHED_STATUSES.includes(f.status) ? " (koniec)" : LIVE_STATUSES.includes(f.status) ? " (hrá sa)" : ""}` : "";
+        head = `<tr class="dt-late-fx"><td colspan="5"><b>${escapeHtml(timeHm(new Date(t.matchDate)))}</b> ${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))}<span class="faint small"> · ${escapeHtml(translateLeagueName(t.league || ""))}${score}</span></td></tr>`;
+      }
+      return `${head}<tr><td>${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}${t.strictFail ? `<br><span class="faint small">neprejde 60 / 40 – pôjde do sledovaných</span>` : ""}</td><td class="num">${probTxt(t.probability)}${NB}%</td><td class="num">${typeof t.odds === "number" ? fmtOdds(t.odds) : "–"}</td><td>${res[t.status] || escapeHtml(t.status)}</td><td class="num">${autoInHistory(t) ? `<span class="faint small">✓ v histórii</span>` : `<button type="button" class="btn sm" data-dt-late-id="${escapeHtml(t.id)}">+ Pridať do histórie</button>`}</td></tr>`;
+    })
+    .join("");
+  box.querySelector(".card").innerHTML = `<div class="table-wrap"><table class="bt-table"><thead><tr><th>Tip</th><th class="num">Dôvera</th><th class="num">Kurz</th><th>Výsledok</th><th class="num"></th></tr></thead><tbody>${rows}</tbody></table></div><p class="faint small">Dôvera a kurz sú tie, ktoré server zapísal asi hodinu pred výkopom. Platia rovnaké pravidlá ako pri ostatných tipoch; tip dostane značku „⏱ doplnené po výkope“ a do Telegramu sa neposiela.</p>`;
+  box.querySelectorAll("[data-dt-late-id]").forEach((b) => {
+    b.onclick = async () => {
+      const t = entries.find((x) => x.id === b.dataset.dtLateId);
+      if (!t) return;
+      b.disabled = true;
+      if (await addAutoTip(t)) b.outerHTML = `<span class="faint small">✓ v histórii</span>`;
+      else b.disabled = false;
+    };
+  });
+}
+
+function renderDayTipsViewMain() {
   updateDtRunBtn();
   if (dayTipsDetail) { renderDayTipDetail(dayTipsDetail); return; }
   if (dayTipsRun.running) { renderDayTipsProgress(); return; }

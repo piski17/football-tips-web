@@ -1113,3 +1113,7 @@ select option, select optgroup { background: #141417; }
   .lights i, .top h2 em, .lx-logo em, .splash-word em, h3.sh em { animation: none !important; }
   .btn::after { transition: none !important; }
 }
+
+/* Tipy dňa – začaté a odohrané zápasy (1. 11. 2026) */
+[data-dt-late] { margin-top: 22px; }
+.bt-table tr.dt-late-fx td { padding-top: 14px; color: var(--text, #EDE6D6); border-bottom-color: transparent; }
