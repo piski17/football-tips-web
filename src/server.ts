@@ -2682,6 +2682,8 @@ async function postFreeResults(): Promise<void> {
   try {
     const counted = statsTips(await listTips())
       .filter((t) => (tipDayKey(t) ?? "") >= FREE_RESULTS_FROM)
+      // Tip doplnený po výkope (1. 11. 2026) do verejného kanála nejde – nikto ho pred zápasom nevidel.
+      .filter((t) => !t.lateAdd)
       .sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime());
     const done = (t: SavedTip) => t.status === "won" || t.status === "lost" || t.status === "void";
     const balance = (list: SavedTip[]): FreeBalance => ({
