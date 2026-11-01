@@ -734,6 +734,48 @@ html { scrollbar-color: rgba(214,182,118,.35) #070708; }
 }
 .hero h1 { letter-spacing: -.028em; }
 
+/* =====================================================================
+   1. 11. 2026 – ČLENSTVO: 3 jednoduché cenové stĺpce Štart / Premium / VIP (bez členských kariet)
+   ===================================================================== */
+.plans { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: stretch; }
+.plan { display: flex; flex-direction: column; padding: clamp(24px, 2.6vw, 34px); cursor: pointer; transition: transform .3s cubic-bezier(.2,.7,.2,1), box-shadow .3s; }
+.plan:hover { transform: translateY(-4px); }
+.plan.on { box-shadow: 0 0 0 1px var(--gold), 0 30px 60px -30px rgba(214,182,118,.35); }
+.plan.feat { background: radial-gradient(120% 70% at 50% 0%, rgba(214,182,118,.16), transparent 60%), var(--card); }
+.plan-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); padding: 6px 14px; border-radius: 999px; background: var(--foil); color: #17130A; font: 700 11px/1 var(--sans); letter-spacing: .14em; text-transform: uppercase; white-space: nowrap; box-shadow: 0 8px 20px -8px rgba(214,182,118,.6); }
+.plan-name { font: 600 12.5px/1 var(--sans); letter-spacing: .26em; text-transform: uppercase; color: var(--gold); }
+.plan-tips { margin-top: 18px; font: 500 18px/1 var(--sans); color: var(--muted); }
+.plan-tips b { font: 750 clamp(52px, 5vw, 68px)/.9 var(--display); letter-spacing: -.04em; color: var(--text); margin-right: 6px; }
+.plan-price { display: flex; align-items: baseline; gap: 10px; margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--line); }
+.plan-price b { font: 700 34px/1 var(--display); letter-spacing: -.03em; }
+.plan.feat .plan-price b { background: var(--foil); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.plan-price span { font-size: 13.5px; color: var(--faint); }
+.plan-per { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; min-height: 30px; }
+.plan-per span { padding: 5px 11px; border-radius: 999px; border: 1px solid var(--line2); font-size: 12.5px; color: var(--gold-hi); }
+.plan-per span.save { color: var(--win); border-color: rgba(134,201,162,.35); }
+.plan-feats { list-style: none; margin: 22px 0 26px; padding: 0; display: grid; gap: 11px; font-size: 14.5px; color: var(--muted); }
+.plan-feats li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; align-items: start; }
+.plan-feats li b { color: var(--text); font-weight: 600; }
+.plan-feats svg { width: 18px; height: 18px; margin-top: 2px; fill: none; stroke: var(--gold); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.plan-feats li.off { color: var(--faint); opacity: .6; }
+.plan-feats .dash { text-align: center; color: var(--faint); }
+.plan-cta { margin-top: auto; width: 100%; --h: 50px; }
+.pay-note { margin-top: 14px; text-align: center; color: var(--faint); }
+.mem-under { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 16px; margin-top: 22px; align-items: start; }
+.mem-under .guar { margin-top: 0; padding: 26px; flex-direction: column; gap: 12px; font-size: 14.5px; line-height: 1.6; border-radius: var(--r); }
+.mem-under .guar::before { display: none; }
+.mem-under .guar svg { width: 34px; height: 34px; }
+.mem-under .guar strong { font: 700 20px/1.2 var(--display); letter-spacing: -.02em; margin-bottom: 6px; }
+.mem-under .pk-calc { margin-top: 0; padding: 26px; border-radius: var(--r); background: var(--card); }
+.pk-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; border: 1px solid var(--line); background: rgba(0,0,0,.3); }
+.seg button { border: 0; background: none; color: var(--muted); font: 600 13px/1 var(--sans); padding: 8px 14px; border-radius: 999px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--foil); color: #17130A; }
+@media (max-width: 900px) {
+  .plans { grid-template-columns: 1fr; gap: 22px; max-width: 520px; margin-inline: auto; }
+  .mem-under { grid-template-columns: 1fr; max-width: 520px; margin-inline: auto; }
+}
+
 </style>
 </head>
 <body>
@@ -769,7 +811,7 @@ html { scrollbar-color: rgba(214,182,118,.35) #070708; }
     <ul class="ov-links">
       <li><a href="/">Úvod</a></li>
       <li><a href="/vysledky">Výsledky<small>všetky tipy</small></a></li>
-      <li><a href="/clenstvo">Členstvo<small>Štart · Premium · VIP · Gold · Platinum</small></a></li>
+      <li><a href="/clenstvo">Členstvo<small>Štart · Premium · VIP</small></a></li>
       <li><a href="/kurz">Kurz<small>Škola stávkovania</small></a></li>
       <li><a href="/o-mne">O mne</a></li>
       <li><a href="/otazky">Otázky</a></li>

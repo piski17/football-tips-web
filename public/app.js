@@ -514,7 +514,7 @@ function seatsHtml(t) {
     }
     return `<div class="r${full ? " full" : ""}">${label}<b>${val}</b></div>${bar}`;
   };
-  return `<small>Členstvo</small>${["p50", "p100", "p150", "p200", "p250"].map((t) => row(t, `${MEMBER_NAME[t]} · ${MEMBER_TIPS[t]}`)).join("")}`;
+  return `<small>Členstvo</small>${["p50", "p100", "p150"].map((t) => row(t, `${MEMBER_NAME[t]} · ${MEMBER_TIPS[t]}`)).join("")}`;
 }
 function renderSeats(terms) {
   document.getElementById("seatBox").innerHTML = seatsHtml(terms);
@@ -528,7 +528,7 @@ async function loadSeats() {
     const d = await res.json();
     if (typeof d.minOdds === "number" && d.minOdds > 1 && d.minOdds < 5) MIN_ODDS = d.minOdds;
     const t = d.terms;
-    if (!t || !t.p50 || !t.p250) return;
+    if (!t || !t.p50 || !t.p150) return;
     renderSeats(t);
   } catch {
     /* pri chybe ostane „–“ */
@@ -3723,13 +3723,14 @@ async function renderBlendSummary() {
 // ČLENOVIA (platba beží mimo appky, napr. bankovým prevodom)
 // =====================================================================
 // Ceny musia sedieť s členstvom na tipradar.eu (landing/index.html) a PAY_TERMS v src/payments.ts.
-// Členstvo (od 31. 10. 2026 večer): posuvník 50 – 250 tipov po 50 – Štart p50 39 €, Premium p100 75 €, VIP p150 109 €, Gold p200 139 €, Platinum p250 169 €
+// Členstvo od 1. 11. 2026: len Štart p50 39 €, Premium p100 75 €, VIP p150 109 € (Gold a Platinum zrušené).
+// Predtým (31. 10. 2026 večer): posuvník 50 – 250 tipov po 50 – Štart p50 39 €, Premium p100 75 €, VIP p150 109 €, Gold p200 139 €, Platinum p250 169 €
 // (Gold a Platinum mentoring 1 na 1). Garancia: prvých 20 tipov bez rizika. Bez časového limitu (tipy počíta server v poli pkg).
 // Garancia: členstvo v mínuse → 1 mesiac zadarmo (všetky tipy počas mesiaca).
 // Staré p75 (Štart 75), staré balíčky tipov t75 / t150 / t300 (Štart 100, Gold 250, Onyx 500; tipy počíta server v poli pkg) a ešte staršie
 // časové členstvá m1 (Gold 50 dní), m3 (Onyx 6 mesiacov) a season sa nepredávajú, ostávajú pre staršie záznamy.
 const MEMBER_PRICES = { p50: 39, p100: 75, p150: 109, p200: 139, p250: 169, p300: 199, p75: 49, t75: 89, t150: 179, t300: 299, m1: 69, m3: 199, season: 219 };
-const MEMBER_NAME = { p50: "Štart", p100: "Premium", p150: "VIP", p200: "Gold", p250: "Platinum", p300: "Platinum (staré)", p75: "Štart (staré)", t75: "Štart (starý)", t150: "Gold (starý)", t300: "Onyx (starý)", m1: "Gold (staré)", m3: "Onyx (staré)", season: "Platinum (staré)" };
+const MEMBER_NAME = { p50: "Štart", p100: "Premium", p150: "VIP", p200: "Gold (staré)", p250: "Platinum (staré)", p300: "Platinum (staré)", p75: "Štart (staré)", t75: "Štart (starý)", t150: "Gold (starý)", t300: "Onyx (starý)", m1: "Gold (staré)", m3: "Onyx (staré)", season: "Platinum (staré)" };
 const MEMBER_LENGTH_LABEL = { p50: "50 tipov", p100: "100 tipov", p150: "150 tipov", p200: "200 tipov", p250: "250 tipov", p300: "300 tipov", p75: "75 tipov", t75: "100 tipov", t150: "250 tipov", t300: "500 tipov", m1: "50 dní", m3: "6 mesiacov", season: "6 mesiacov" };
 const MEMBER_TIPS = { p50: 50, p100: 100, p150: 150, p200: 200, p250: 250, p300: 300, p75: 75, t75: 100, t150: 250, t300: 500 };
 const MEMBER_MONTHS = { p50: 1200, p100: 1200, p150: 1200, p200: 1200, p250: 1200, p300: 1200, p75: 1200, t75: 1200, t150: 1200, t300: 1200, m1: 1, m3: 6, season: 6 };
@@ -3777,8 +3778,8 @@ function memberEnd(from, length) {
 
 /** Ďalšie členstvo po doterajšom: rovnaké; staré → Štart 50 / Premium 100 / Platinum 250. */
 function nextTerm(length) {
-  if (/^p(50|100|150|200|250)$/.test(length)) return length;
-  return length === "p75" || length === "m1" ? "p50" : length === "t75" ? "p100" : "p250";
+  if (/^p(50|100|150)$/.test(length)) return length;
+  return length === "p75" || length === "m1" ? "p50" : length === "t75" ? "p100" : "p150";
 }
 function syncMemberPrice() {
   subPriceInput.value = MEMBER_PRICES[subLengthSelect.value];
@@ -3933,8 +3934,7 @@ function renderSubscribersList(subs) {
     <div class="kpi"><small>Aktívni</small><b>${active.length}</b></div>
     <div class="kpi"><small>Štart · Premium</small><b>${byTerm("p50") + byTerm("p100")}</b></div>
     <div class="kpi"><small>VIP</small><b>${byTerm("p150")}</b></div>
-    <div class="kpi"><small>Gold · Platinum</small><b>${byTerm("p200") + byTerm("p250") + byTerm("p300")}</b></div>
-    <div class="kpi"><small>Zaplatené</small><b>${income}${NB}€</b><span>aktívni členovia</span></div>
+        <div class="kpi"><small>Zaplatené</small><b>${income}${NB}€</b><span>aktívni členovia</span></div>
     <div class="kpi${ending ? " warn" : ""}"><small>Čoskoro končí</small><b>${ending}</b><span>ostáva ≤ 10 tipov</span></div>`;
   document.querySelectorAll("#memberFilter [data-f]").forEach((b) => b.classList.toggle("on", b.dataset.f === memberFilter));
 
@@ -3994,9 +3994,9 @@ subscribersListEl.addEventListener("click", async (e) => {
     // Ďalšie členstvo (rovnaké, staré → Štart / Gold / Platinum): začína dnes, tipy idú najprv do starého členstva
     // (alebo mesiaca zadarmo), kým sa nemiňú (počíta server). Iné členstvo sa dá zadať do okna.
     const def = nextTerm(sub.length || "m1");
-    const pick = window.prompt(`Ďalšie zaplatené členstvo pre ${sub.name}. Napíš počet tipov: 50 (Štart), 100 (Premium), 150 (VIP), 200 (Gold) alebo 250 (Platinum):`, String(MEMBER_TIPS[def]));
+    const pick = window.prompt(`Ďalšie zaplatené členstvo pre ${sub.name}. Napíš počet tipov: 50 (Štart), 100 (Premium) alebo 150 (VIP):`, String(MEMBER_TIPS[def]));
     if (pick === null) return;
-    const term = { "50": "p50", "100": "p100", "150": "p150", "200": "p200", "250": "p250" }[pick.trim()];
+    const term = { "50": "p50", "100": "p100", "150": "p150" }[pick.trim()];
     if (!term) { showToast("Zadaj 50, 100, 150, 200 alebo 250."); return; }
     const end = memberEnd(todayIso(), term);
     if (!window.confirm(`Zapísať ${sub.name} členstvo ${MEMBER_NAME[term]} · ${MEMBER_LENGTH_LABEL[term]} (${MEMBER_PRICES[term]} €)?`)) return;
@@ -4175,10 +4175,10 @@ document.getElementById("salesOpenBtn").addEventListener("click", async (e) => {
   renderLeads();
 });
 // Odkaz z bota → členstvo (rovnako ako src/telegram.ts PLAN_TERM): c50 … c250 = posuvník na webe, ostatné sú staré odkazy.
-const LEAD_PLAN_TERM = { stat: "p50", start: "p50", seria: "p100", vip: "p150", gold: "p200", platinum: "p250", onyx: "p250", sampion: "p250" };
+const LEAD_PLAN_TERM = { stat: "p50", start: "p50", seria: "p100", vip: "p150", gold: "p150", platinum: "p150", onyx: "p150", sampion: "p150" };
 const LEAD_PLAN_LABEL = { premium: "starý odkaz Premium", clenstvo: "nevybral", otazka: "otázka z webu" };
 for (const [k, t] of Object.entries(LEAD_PLAN_TERM)) LEAD_PLAN_LABEL[k] = `${MEMBER_NAME[t]} ${MEMBER_TIPS[t]} tipov (starý odkaz)`;
-for (const n of [50, 100, 150, 200, 250]) { LEAD_PLAN_TERM["c" + n] = "p" + n; LEAD_PLAN_LABEL["c" + n] = `${MEMBER_NAME["p" + n]} ${n} tipov`; }
+for (const n of [50, 100, 150, 200, 250]) { LEAD_PLAN_TERM["c" + n] = n > 150 ? "p150" : "p" + n; LEAD_PLAN_LABEL["c" + n] = `${MEMBER_NAME["p" + n]} ${n} tipov`; }
 async function renderLeads() {
   const el = document.getElementById("leadsList");
   try {

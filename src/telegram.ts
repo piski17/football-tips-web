@@ -406,7 +406,7 @@ const TELEGRAM_CONTACT_USERNAME = process.env.TELEGRAM_CONTACT_USERNAME || "im_m
 
 // ---- Členstvo TipRadar (od 31. 10. 2026 večer) – rovnaké texty ako na tipradar.eu ----
 // Posuvník 50 – 250 tipov po 50, každý počet má vlastný názov a výhody (každé vyššie má všetko z nižšieho):
-// Štart 50 tipov 39 €, Premium 100 tipov 75 €, VIP 150 tipov 109 €, Gold 200 tipov 139 €, Platinum 250 tipov 169 € (Gold a Platinum mentoring 1 na 1).
+// Od 1. 11. 2026 len 3: Štart 50 tipov 39 €, Premium 100 tipov 75 €, VIP 150 tipov 109 € (Premium a VIP úvodný hovor 1 na 1). Gold a Platinum zrušené.
 // Bez časovej platnosti, počet tipov denne sa neuvádza. Garancia: prvých 20 tipov bez rizika (inak peniaze späť) a členstvo v mínuse = 1 mesiac zadarmo.
 const BENEFITS_BASE =
   `• <b>Denné tipy na Telegrame</b> v súkromnom kanáli, 1 – 2 hodiny pred výkopom – najviac 3 najsilnejšie denne\n` +
@@ -415,9 +415,6 @@ const BENEFITS_BASE =
 /** Výhody navyše podľa členstva (od koľkých tipov platia). Rovnaké sú na webe (landing/index.html, #feats – zdroj zip nocny-zapas/zdroj). */
 const TIER_PERKS: { min: number; max?: number; text: string }[] = [
   { min: 100, text: `📞 <b>Úvodný hovor 1 na 1</b> (30 min) – nastavenie banku, vkladu a ako tipy hrať` },
-  { min: 200, max: 200, text: `🤝 <b>Mentoring 1 na 1</b> – videohovor so mnou raz týždenne` },
-  { min: 250, text: `🤝 <b>Mentoring 1 na 1 kedykoľvek</b> počas celého členstva – videohovory alebo osobné stretnutia` },
-  { min: 250, text: `📱 <b>Priama linka na mňa</b> – súkromné číslo na rýchle otázky` },
 ];
 function perksFor(tips: number): string {
   return TIER_PERKS.filter((p) => tips >= p.min && (p.max == null || tips <= p.max)).map((p) => `• ${p.text}`).join("\n");
@@ -426,7 +423,7 @@ function perksFor(tips: number): string {
 const GUARANTEE_LINE = `🛡 <b>Prvých 20 tipov bez rizika:</b> ak bude vaše prvé členstvo po 20 tipoch v mínuse, vrátime vám celú sumu. A ak členstvo skončí v mínuse, dostanete 1 mesiac zadarmo.`;
 const BANK_LINE = `💼 Odporúčame vklad 2 – 3 % banku na tip, nikdy nad 5 %.`;
 const eur2 = (n: number) => n.toFixed(2).replace(".", ",");
-const TIER_ICON: Record<SellableTerm, string> = { p50: "🥉", p100: "🥈", p150: "⭐", p200: "🥇", p250: "💎" };
+const TIER_ICON: Record<SellableTerm, string> = { p50: "🥉", p100: "🥈", p150: "⭐" };
 /** Riadok cenníka: „⭐ VIP · 150 tipov – 109 € (0,73 € za tip, ušetríte 8 €)“. */
 function priceLine(t: SellableTerm): string {
   const p = PAY_TERMS[t], save = memberSaving(t);
@@ -439,14 +436,12 @@ function planText(t: SellableTerm): string {
   const perks = perksFor(PAY_TERMS[t].tips || 50);
   return `<b>${priceLine(t)}</b>\n<i>Odporúčaný bank aspoň ${bank} € · vklad ${MEMBER_STAKE_PCT} % = ${eur2(stake)} € na tip</i>\n${BENEFITS_BASE}` + (perks ? `\n${perks}` : "");
 }
-/** Celý cenník: Štart / Premium / VIP / Gold / Platinum. */
+/** Celý cenník: Štart / Premium / VIP (od 1. 11. 2026 len tri). */
 const PRICE_LIST = SELLABLE_TERMS.map(priceLine).join("\n");
 const PERKS_SHORT =
   `<b>Všetci členovia:</b> rovnaké tipy a súkromný chat členov\n` +
-  `<b>Premium a VIP navyše:</b> úvodný hovor 1 na 1\n` +
-  `<b>Gold navyše:</b> mentoring 1 na 1 raz týždenne\n` +
-  `<b>Platinum navyše:</b> mentoring kedykoľvek, priama linka na mňa`;
-const ALL_PLANS = `Počet tipov si zvolíte sami – od 50 do 250. Čím viac tipov, tým lacnejší tip a viac výhod.\n\n${PRICE_LIST}\n\n${PERKS_SHORT}`;
+  `<b>Premium a VIP navyše:</b> úvodný hovor 1 na 1`;
+const ALL_PLANS = `Na výber sú tri členstvá: 50, 100 alebo 150 tipov. Čím viac tipov, tým lacnejší tip.\n\n${PRICE_LIST}\n\n${PERKS_SHORT}`;
 
 const FAQ_ANSWERS: Record<string, string> = {
   faq_price:
@@ -495,7 +490,7 @@ const PAY_STEP =
   `Bez viazanosti, členstvo sa samo nepredlžuje.`;
 /** Odkaz z bota (t.me/…?start=…) → členstvo. Web posiela c50 … c250 (posuvník). Staré odkazy: stat / start = Štart, seria = Premium,
  *  vip = VIP, gold = Gold, platinum / onyx / sampion = Platinum. */
-const PLAN_TERM: Record<string, SellableTerm> = { stat: "p50", start: "p50", seria: "p100", vip: "p150", gold: "p200", platinum: "p250", onyx: "p250", sampion: "p250" };
+const PLAN_TERM: Record<string, SellableTerm> = { stat: "p50", start: "p50", seria: "p100", vip: "p150", gold: "p150", platinum: "p150", onyx: "p150", sampion: "p150", c200: "p150", c250: "p150" };
 for (const t of SELLABLE_TERMS) PLAN_TERM["c" + PAY_TERMS[t].tips] = t;
 const JOIN_MESSAGES: Record<string, string> = {
   clenstvo: `✨ <b>Členstvo TipRadar</b>\n\n${ALL_PLANS}\n\n${GUARANTEE_LINE}\n${BANK_LINE}\n\n${NEXT_STEP}`,
