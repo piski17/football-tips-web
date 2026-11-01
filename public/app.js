@@ -514,7 +514,7 @@ function seatsHtml(t) {
     }
     return `<div class="r${full ? " full" : ""}">${label}<b>${val}</b></div>${bar}`;
   };
-  return `<small>Členstvo</small>${row("p50", "Štart · 50")}${row("p100", "Gold · 100")}${row("p200", "Platinum · 200")}`;
+  return `<small>Členstvo</small>${["p50", "p100", "p150", "p200", "p250"].map((t) => row(t, `${MEMBER_NAME[t]} · ${MEMBER_TIPS[t]}`)).join("")}`;
 }
 function renderSeats(terms) {
   document.getElementById("seatBox").innerHTML = seatsHtml(terms);
@@ -528,7 +528,7 @@ async function loadSeats() {
     const d = await res.json();
     if (typeof d.minOdds === "number" && d.minOdds > 1 && d.minOdds < 5) MIN_ODDS = d.minOdds;
     const t = d.terms;
-    if (!t || !t.p50 || !t.p100 || !t.p200) return;
+    if (!t || !t.p50 || !t.p250) return;
     renderSeats(t);
   } catch {
     /* pri chybe ostane „–“ */
@@ -2145,7 +2145,55 @@ function renderTipsList(rawTips) {
   renderWatchReport(watchTips.filter((t) => !isWatchBandTip(t)));
   void renderWatchOverview(watchTips, statTips);
   renderTipRows(tips);
+  renderFoldSums(statTips, watchTips);
 }
+
+/** Krátke čísla na kolónkach v Štatistikách a Sledovaných (1. 11. 2026). */
+function renderFoldSums(statTips, watchTips) {
+  const decided = statTips.filter((t) => t.status === "won" || t.status === "lost");
+  const sum = (list) => {
+    const d = list.filter((t) => t.status === "won" || t.status === "lost");
+    const st = marketStats(d);
+    return d.length ? `${st.won} z ${d.length} vyšlo${st.withOdds ? ` · ${signed(st.profit, 1)}${NB}j.` : ""}` : list.length ? `${list.length} ${list.length === 1 ? "čaká" : "čakajú"}` : "zatiaľ nič";
+  };
+  const markets = new Set(decided.map((t) => t.market)).size;
+  const leagues = new Set(decided.map((t) => t.leagueName).filter(Boolean)).size;
+  const st = marketStats(decided);
+  setFoldSum("trhy", decided.length ? `${markets} ${markets === 1 ? "trh" : markets < 5 ? "trhy" : "trhov"} · ${sum(statTips)}` : null);
+  setFoldSum("ligy", decided.length ? `${leagues} ${leagues === 1 ? "súťaž" : leagues < 5 ? "súťaže" : "súťaží"}` : null);
+  setFoldSum("kalib", decided.length && st.expected != null ? `model ${fmtNum(st.expected, 0)}${NB}% · vyšlo ${fmtNum(st.pct, 0)}${NB}%` : null);
+  const band = watchTips.filter(isWatchBandTip), rest = watchTips.filter((t) => !isWatchBandTip(t));
+  setFoldSum("pasmo", band.length ? sum(band) : null);
+  setFoldSum("zoznam", rest.length ? `${rest.length} ${rest.length === 1 ? "tip" : rest.length < 5 ? "tipy" : "tipov"} · ${sum(rest)}` : null);
+}
+function setFoldSum(key, text) {
+  const el = document.querySelector(`[data-fold-sum="${key}"]`);
+  if (!el) return;
+  if (!el.dataset.base) el.dataset.base = el.textContent;
+  el.textContent = text || el.dataset.base;
+  el.classList.toggle("has-num", !!text);
+}
+/** Kolónky (1. 11. 2026, Michal: „História tipov je neprehľadná“): klik otvorí len danú časť, ostatné sa zatvoria. */
+function openFold(key, scroll) {
+  const tile = document.querySelector(`.fold-tile[data-fold="${key}"]`);
+  if (!tile) return;
+  const grid = tile.closest(".fold-grid"), group = grid.dataset.foldGroup, pane = grid.parentElement;
+  const isOpen = tile.getAttribute("aria-expanded") === "true";
+  grid.querySelectorAll(".fold-tile").forEach((b) => b.setAttribute("aria-expanded", String(!isOpen && b === tile)));
+  pane.querySelectorAll(".fold-sec").forEach((sec) => (sec.hidden = isOpen || sec.dataset.foldSec !== key));
+  try { localStorage.setItem("fold-" + group, isOpen ? "" : key); } catch { /* bez úložiska sa nepamätá */ }
+  if (!isOpen && scroll) pane.querySelector(`[data-fold-sec="${key}"]`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+document.querySelectorAll(".fold-grid").forEach((grid) => {
+  grid.addEventListener("click", (e) => { const b = e.target.closest(".fold-tile"); if (b) openFold(b.dataset.fold, true); });
+  try { const k = localStorage.getItem("fold-" + grid.dataset.foldGroup); if (k) openFold(k, false); } catch { /* nič */ }
+});
+document.getElementById("viewHistoria")?.addEventListener("click", (e) => {
+  const c = e.target.closest("[data-fold-close]");
+  if (!c) return;
+  const key = c.closest(".fold-sec")?.dataset.foldSec;
+  if (key) { openFold(key, false); c.closest(".hist-pane")?.querySelector(".fold-grid")?.scrollIntoView({ behavior: "smooth", block: "start" }); }
+});
 
 function renderTipsKpis(statTips) {
   const won = statTips.filter((t) => t.status === "won").length;
@@ -2359,6 +2407,7 @@ function drawAutoTips() {
     return;
   }
   const st = autoStats(list);
+  setFoldSum("auto", `${st.total} ${st.total === 1 ? "tip" : st.total < 5 ? "tipy" : "tipov"}${st.settled ? ` · ${st.won} z ${st.settled} vyšlo` : ""}${st.withOdds ? ` · ${signed(st.profit, 1)}${NB}j.` : ""}`);
   const dayOf = (d) => isoDay(new Date(d));
   const today = localToday();
   const first = fixtures.reduce((m, f) => (!m || f.matchDate < m ? f.matchDate : m), "") || allFixtures.reduce((m, f) => (!m || f.matchDate < m ? f.matchDate : m), "");
@@ -3674,15 +3723,16 @@ async function renderBlendSummary() {
 // ČLENOVIA (platba beží mimo appky, napr. bankovým prevodom)
 // =====================================================================
 // Ceny musia sedieť s členstvom na tipradar.eu (landing/index.html) a PAY_TERMS v src/payments.ts.
-// Členstvo (od 29. 10. 2026 večer): p50 = Štart 50 tipov 49 €, p100 = Gold 100 tipov 79 €, p200 = Platinum 200 tipov 139 €, bez časového limitu (tipy počíta server v poli pkg).
+// Členstvo (od 31. 10. 2026 večer): posuvník 50 – 250 tipov po 50 – Štart p50 39 €, Premium p100 75 €, VIP p150 109 €, Gold p200 139 €, Platinum p250 169 €
+// (Gold a Platinum mentoring 1 na 1). Garancia: prvých 20 tipov bez rizika. Bez časového limitu (tipy počíta server v poli pkg).
 // Garancia: členstvo v mínuse → 1 mesiac zadarmo (všetky tipy počas mesiaca).
-// Staré p75 / p150 / p250 (Štart 75, Gold 150, Onyx 250), staré balíčky tipov t75 / t150 / t300 (Štart 100, Gold 250, Onyx 500; tipy počíta server v poli pkg) a ešte staršie
+// Staré p75 (Štart 75), staré balíčky tipov t75 / t150 / t300 (Štart 100, Gold 250, Onyx 500; tipy počíta server v poli pkg) a ešte staršie
 // časové členstvá m1 (Gold 50 dní), m3 (Onyx 6 mesiacov) a season sa nepredávajú, ostávajú pre staršie záznamy.
-const MEMBER_PRICES = { p50: 49, p100: 79, p200: 139, p75: 49, p150: 89, p250: 139, t75: 89, t150: 179, t300: 299, m1: 69, m3: 199, season: 219 };
-const MEMBER_NAME = { p50: "Štart", p100: "Gold", p200: "Platinum", p75: "Štart (staré)", p150: "Gold (staré)", p250: "Onyx (staré)", t75: "Štart (starý)", t150: "Gold (starý)", t300: "Onyx (starý)", m1: "Gold (staré)", m3: "Onyx (staré)", season: "Platinum (staré)" };
-const MEMBER_LENGTH_LABEL = { p50: "50 tipov", p100: "100 tipov", p200: "200 tipov", p75: "75 tipov", p150: "150 tipov", p250: "250 tipov", t75: "100 tipov", t150: "250 tipov", t300: "500 tipov", m1: "50 dní", m3: "6 mesiacov", season: "6 mesiacov" };
-const MEMBER_TIPS = { p50: 50, p100: 100, p200: 200, p75: 75, p150: 150, p250: 250, t75: 100, t150: 250, t300: 500 };
-const MEMBER_MONTHS = { p50: 1200, p100: 1200, p200: 1200, p75: 1200, p150: 1200, p250: 1200, t75: 1200, t150: 1200, t300: 1200, m1: 1, m3: 6, season: 6 };
+const MEMBER_PRICES = { p50: 39, p100: 75, p150: 109, p200: 139, p250: 169, p300: 199, p75: 49, t75: 89, t150: 179, t300: 299, m1: 69, m3: 199, season: 219 };
+const MEMBER_NAME = { p50: "Štart", p100: "Premium", p150: "VIP", p200: "Gold", p250: "Platinum", p300: "Platinum (staré)", p75: "Štart (staré)", t75: "Štart (starý)", t150: "Gold (starý)", t300: "Onyx (starý)", m1: "Gold (staré)", m3: "Onyx (staré)", season: "Platinum (staré)" };
+const MEMBER_LENGTH_LABEL = { p50: "50 tipov", p100: "100 tipov", p150: "150 tipov", p200: "200 tipov", p250: "250 tipov", p300: "300 tipov", p75: "75 tipov", t75: "100 tipov", t150: "250 tipov", t300: "500 tipov", m1: "50 dní", m3: "6 mesiacov", season: "6 mesiacov" };
+const MEMBER_TIPS = { p50: 50, p100: 100, p150: 150, p200: 200, p250: 250, p300: 300, p75: 75, t75: 100, t150: 250, t300: 500 };
+const MEMBER_MONTHS = { p50: 1200, p100: 1200, p150: 1200, p200: 1200, p250: 1200, p300: 1200, p75: 1200, t75: 1200, t150: 1200, t300: 1200, m1: 1, m3: 6, season: 6 };
 const MEMBER_DAYS = { m1: 50 }; // dĺžka v dňoch (staré Gold); ostatné v mesiacoch
 // Letná prestávka: jún a júl sa do členstva nepočítajú (rovnako ako src/payments.ts).
 const SUMMER_PAUSE = { fromMonth: 6, toMonth: 7 };
@@ -3725,10 +3775,10 @@ function memberEnd(from, length) {
   return calEnd;
 }
 
-/** Ďalšie členstvo po doterajšom: rovnaké; staré Štart / 50 dní → Štart, staré Gold / 3 mesiace → Gold, ostatné staré → Platinum. */
+/** Ďalšie členstvo po doterajšom: rovnaké; staré → Štart 50 / Premium 100 / Platinum 250. */
 function nextTerm(length) {
-  if (length === "p50" || length === "p100" || length === "p200") return length;
-  return length === "p75" || length === "t75" || length === "m1" ? "p50" : length === "p150" || length === "t150" || length === "m3" ? "p100" : "p200";
+  if (/^p(50|100|150|200|250)$/.test(length)) return length;
+  return length === "p75" || length === "m1" ? "p50" : length === "t75" ? "p100" : "p250";
 }
 function syncMemberPrice() {
   subPriceInput.value = MEMBER_PRICES[subLengthSelect.value];
@@ -3788,13 +3838,13 @@ function renderGuarantee() {
   const due = lastGuarantee.filter((r) => r.eligible);
   const refunds = lastGuarantee.filter((r) => r.refundEligible);
   el.className = `card gar-card${due.length || refunds.length ? " warn" : ""}`;
-  // „30 tipov bez rizika“ (od 29. 10. 2026): člen je po prvých 30 tipoch v mínuse → vrátiť celú sumu prevodom
+  // „20 tipov bez rizika“ (od 29. 10. 2026): člen je po prvých 20 tipoch v mínuse → vrátiť celú sumu prevodom
   const refundHtml = refunds.length
-    ? `<p class="gar-line">${refunds.length === 1 ? "1 člen je" : `${refunds.length} členovia sú`} po prvých 30 tipoch v mínuse – podľa garancie ${refunds.length === 1 ? "má" : "majú"} nárok na vrátenie peňazí. Po kliknutí na Vrátiť peniaze sa členstvo ukončí a bot člena poprosí o číslo účtu – peniaze mu potom pošli prevodom.</p>
+    ? `<p class="gar-line">${refunds.length === 1 ? "1 člen je" : `${refunds.length} členovia sú`} po prvých 20 tipoch v mínuse – podľa garancie ${refunds.length === 1 ? "má" : "majú"} nárok na vrátenie peňazí. Po kliknutí na Vrátiť peniaze sa členstvo ukončí a bot člena poprosí o číslo účtu – peniaze mu potom pošli prevodom.</p>
       <div class="gar-rows">${refunds.map((r) => `
         <div class="gar-row">
           <span><b>${escapeHtml(r.name)}</b> <span class="tag gold">${escapeHtml(r.tier.toUpperCase())}</span><br>
-          <span class="muted small">prvých 30 tipov · <span class="l">${signed(r.refundProfit, 1)}${NB}j.</span> · vrátiť ${r.refundAmount}${NB}€</span></span>
+          <span class="muted small">prvých 20 tipov · <span class="l">${signed(r.refundProfit, 1)}${NB}j.</span> · vrátiť ${r.refundAmount}${NB}€</span></span>
           <button type="button" class="btn sm" data-refund-id="${escapeHtml(r.id)}">Vrátiť peniaze</button>
         </div>`).join("")}</div>`
     : "";
@@ -3881,9 +3931,9 @@ function renderSubscribersList(subs) {
   const byTerm = (t) => active.filter((s) => s.length === t).length;
   document.getElementById("subscribersSummary").innerHTML = `
     <div class="kpi"><small>Aktívni</small><b>${active.length}</b></div>
-    <div class="kpi"><small>Štart · 50</small><b>${byTerm("p50")}</b></div>
-    <div class="kpi"><small>Gold · 100</small><b>${byTerm("p100")}</b></div>
-    <div class="kpi"><small>Platinum · 200</small><b>${byTerm("p200")}</b></div>
+    <div class="kpi"><small>Štart · Premium</small><b>${byTerm("p50") + byTerm("p100")}</b></div>
+    <div class="kpi"><small>VIP</small><b>${byTerm("p150")}</b></div>
+    <div class="kpi"><small>Gold · Platinum</small><b>${byTerm("p200") + byTerm("p250") + byTerm("p300")}</b></div>
     <div class="kpi"><small>Zaplatené</small><b>${income}${NB}€</b><span>aktívni členovia</span></div>
     <div class="kpi${ending ? " warn" : ""}"><small>Čoskoro končí</small><b>${ending}</b><span>ostáva ≤ 10 tipov</span></div>`;
   document.querySelectorAll("#memberFilter [data-f]").forEach((b) => b.classList.toggle("on", b.dataset.f === memberFilter));
@@ -3944,10 +3994,10 @@ subscribersListEl.addEventListener("click", async (e) => {
     // Ďalšie členstvo (rovnaké, staré → Štart / Gold / Platinum): začína dnes, tipy idú najprv do starého členstva
     // (alebo mesiaca zadarmo), kým sa nemiňú (počíta server). Iné členstvo sa dá zadať do okna.
     const def = nextTerm(sub.length || "m1");
-    const pick = window.prompt(`Ďalšie zaplatené členstvo pre ${sub.name}. Napíš 50 (Štart), 100 (Gold) alebo 200 (Platinum):`, String(MEMBER_TIPS[def]));
+    const pick = window.prompt(`Ďalšie zaplatené členstvo pre ${sub.name}. Napíš počet tipov: 50 (Štart), 100 (Premium), 150 (VIP), 200 (Gold) alebo 250 (Platinum):`, String(MEMBER_TIPS[def]));
     if (pick === null) return;
-    const term = { "50": "p50", "100": "p100", "200": "p200" }[pick.trim()];
-    if (!term) { showToast("Zadaj 50, 100 alebo 200."); return; }
+    const term = { "50": "p50", "100": "p100", "150": "p150", "200": "p200", "250": "p250" }[pick.trim()];
+    if (!term) { showToast("Zadaj 50, 100, 150, 200 alebo 250."); return; }
     const end = memberEnd(todayIso(), term);
     if (!window.confirm(`Zapísať ${sub.name} členstvo ${MEMBER_NAME[term]} · ${MEMBER_LENGTH_LABEL[term]} (${MEMBER_PRICES[term]} €)?`)) return;
     try {
@@ -4124,8 +4174,11 @@ document.getElementById("salesOpenBtn").addEventListener("click", async (e) => {
   btn.disabled = false;
   renderLeads();
 });
-const LEAD_PLAN_LABEL = { stat: "Štart 50 tipov", gold: "Gold 100 tipov", platinum: "Platinum 200 tipov", onyx: "Platinum 200 tipov (starý odkaz Onyx)", start: "Štart 50 tipov (starý odkaz)", seria: "Gold 100 tipov (starý odkaz)", sampion: "Platinum 200 tipov (starý odkaz)", vip: "Platinum 200 tipov (starý odkaz VIP)", premium: "starý odkaz Premium", clenstvo: "nevybral", otazka: "otázka z webu" };
-const LEAD_PLAN_TERM = { stat: "p50", start: "p50", gold: "p100", seria: "p100", platinum: "p200", onyx: "p200", sampion: "p200", vip: "p200" };
+// Odkaz z bota → členstvo (rovnako ako src/telegram.ts PLAN_TERM): c50 … c250 = posuvník na webe, ostatné sú staré odkazy.
+const LEAD_PLAN_TERM = { stat: "p50", start: "p50", seria: "p100", vip: "p150", gold: "p200", platinum: "p250", onyx: "p250", sampion: "p250" };
+const LEAD_PLAN_LABEL = { premium: "starý odkaz Premium", clenstvo: "nevybral", otazka: "otázka z webu" };
+for (const [k, t] of Object.entries(LEAD_PLAN_TERM)) LEAD_PLAN_LABEL[k] = `${MEMBER_NAME[t]} ${MEMBER_TIPS[t]} tipov (starý odkaz)`;
+for (const n of [50, 100, 150, 200, 250]) { LEAD_PLAN_TERM["c" + n] = "p" + n; LEAD_PLAN_LABEL["c" + n] = `${MEMBER_NAME["p" + n]} ${n} tipov`; }
 async function renderLeads() {
   const el = document.getElementById("leadsList");
   try {

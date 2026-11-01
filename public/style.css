@@ -951,3 +951,20 @@ span.crest { background: radial-gradient(circle at 35% 35%, #2A3346, #141A26); b
 .odds-bk.best input { border-color: var(--line3) !important; box-shadow: 0 0 0 3px rgba(214, 190, 140, .12); }
 .dtip-odds { flex-wrap: wrap; justify-content: flex-end; }
 @media (max-width: 899px) { .odds-books { width: 100%; } .odds-bk { flex: 1; } .odds-bk input { width: 100% !important; } }
+
+/* ===== História tipov – kolónky (1. 11. 2026): každá časť sa otvorí kliknutím ===== */
+.fold-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; margin: 4px 0 8px; }
+.fold-tile { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; text-align: left; padding: 16px 40px 16px 18px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); transition: border-color .2s, background .2s, transform .15s; min-height: 84px; }
+.fold-tile:hover { border-color: var(--line2, rgba(201,165,92,.3)); transform: translateY(-1px); }
+.fold-tile .ft-t { font-weight: 650; font-size: 15px; color: var(--text); line-height: 1.25; }
+.fold-tile .ft-s { font-size: 12.5px; color: var(--faint); line-height: 1.35; }
+.fold-tile .ft-s.has-num { color: var(--muted); }
+.fold-tile > i { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-style: normal; font-size: 22px; color: var(--gold); transition: transform .2s; }
+.fold-tile[aria-expanded="true"] { border-color: var(--gold); background: linear-gradient(180deg, rgba(201,165,92,.12), rgba(201,165,92,.03)), var(--panel); }
+.fold-tile[aria-expanded="true"] > i { transform: translateY(-50%) rotate(90deg); }
+.fold-sec { scroll-margin-top: 16px; animation: foldIn .25s ease-out; }
+.fold-sec h3.sh { justify-content: flex-start; }
+.fold-close { margin-left: auto; font: 500 13px var(--sans); color: var(--muted); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); }
+.fold-close:hover { color: var(--text); border-color: var(--gold); }
+@keyframes foldIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (max-width: 560px) { .fold-grid { grid-template-columns: 1fr 1fr; } .fold-tile { padding: 14px 30px 14px 14px; min-height: 76px; } .fold-tile > i { right: 10px; } .fold-close { margin-left: 0; } }
