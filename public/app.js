@@ -1805,7 +1805,8 @@ function renderDayTipsView() {
  */
 let dayLateCache = null;
 function lateTipForClients(t) {
-  if (t.strictFail || t.probability < 68 || t.probability > 80 || typeof t.odds !== "number") return false;
+  if (t.strictFail || t.probability < 68 || t.probability > 80) return false;
+  if (typeof t.odds !== "number") return true; // trh bez kurzu v API – rozhodne kurz, ktorý zadá Michal
   const value = (t.probability / 100) * t.odds;
   return t.odds >= MIN_ODDS && value >= 1.05 && value <= 1.25;
 }
@@ -1843,7 +1844,7 @@ async function renderDayLateTips(box) {
       <div class="dtip-body">
         <div class="dtip-match"><span class="faint">${escapeHtml(timeHm(new Date(t.matchDate)))}</span> ${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))} <span class="faint small">· ${escapeHtml(translateLeagueName(t.league || ""))}${score}</span></div>
         <div class="s">${escapeHtml(t.market)}: <b>${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}</b>${strongTipBadge(t.probability)}</div>
-        <div class="m"><span>Dôvera <b>${probTxt(t.probability)}${NB}%</b></span><span>Kurz pred výkopom <b>${typeof t.odds === "number" ? fmtOdds(t.odds) : "–"}</b></span>${res[t.status] ? `<span>${res[t.status]}</span>` : ""}</div>
+        <div class="m"><span>Dôvera <b>${probTxt(t.probability)}${NB}%</b></span>${typeof t.odds === "number" ? `<span>Kurz pred výkopom <b>${fmtOdds(t.odds)}</b></span>` : `<span>Kurz v API nie je · hrať od <b>${fmtOdds(minOddsFor(t))}</b></span>`}${res[t.status] ? `<span>${res[t.status]}</span>` : ""}</div>
         ${t.strictFail ? `<div class="why warn">⚠️ neprejde pri 60 / 40</div>` : ""}
       </div>
       <div class="dtip-odds">
