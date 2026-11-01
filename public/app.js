@@ -439,13 +439,9 @@ function askTelegramTarget() {
 
 /** Skúšobné pásmo (21. 10. 2026): tipy pod 68 % sa ukladajú len na sledovanie (rovnako ako server). */
 const WATCH_BELOW = 68;
-const isWatchTip = (tip) => !(tip.legs && tip.legs.length) && (tip.softConflict || tip.strictFail || (!tip.manualEntry && typeof tip.probability === "number" && tip.probability < WATCH_BELOW));
+const isWatchTip = (tip) => !(tip.legs && tip.legs.length) && (tip.strictFail || (!tip.manualEntry && typeof tip.probability === "number" && tip.probability < WATCH_BELOW));
 
 async function maybeOfferTelegram(tipId, tip) {
-  if (tip && tip.softConflict) {
-    showToast("Tip s rozporom so stávkovkami je uložený len na sledovanie – neposiela sa a nerátá do štatistík.");
-    return;
-  }
   if (tip && tip.strictFail) {
     showToast("Tip neprešiel kontrolou 60 / 40 – je uložený len na sledovanie, neposiela sa a nerátá do štatistík.");
     return;
@@ -1304,7 +1300,8 @@ function buildTip(r, bet, realOdds, extra = {}) {
     odds: realOdds,
     ...(typeof bet.odds === "number" ? { apiOdds: bet.odds } : {}),
     ...measurementFields(r, bet),
-    ...(bet.softConflict && !softConflictCheck(bet, realOdds).pass ? { softConflict: true, watchOnly: true } : {}),
+    // Šedá zóna ide od 1. 11. 2026 klientom (Michal) – len značka na rozbor.
+    ...(bet.softConflict ? { softConflict: true } : {}),
     ...(typeof bet.strictProbability === "number" ? { strictProbability: bet.strictProbability } : {}),
     ...(bet.watchBand ? { watchBand: true, watchOnly: true } : !strictCheck(bet, realOdds).pass ? (STRICT_CHECK_ON ? { strictFail: true, watchOnly: true } : { strictWouldFail: true }) : {}),
     ...extra,
@@ -1926,10 +1923,10 @@ function renderDayTipsViewMain() {
   // každá sa dá zbaliť a rozbaliť tlačidlom − / +. Poradie a čísla tipov ostávajú.
   const groups = [
     { key: "klienti", title: "Pre klientov", note: "", idx: [] },
-    { key: "sledovane", title: "Do sledovaných", note: "šedá zóna – slabší rozpor so stávkovkami alebo neprešli pri 60 / 40; s dobrým kurzom môže tip prejsť aj ku klientom", idx: [] },
+    { key: "sledovane", title: "Do sledovaných", note: "neprešli pri 60 / 40; s dobrým kurzom môže tip prejsť aj ku klientom", idx: [] },
     { key: "pasmo65", title: `Pásmo 65 – 67${NB}% – len sledovať`, note: "skúška do kontroly 1. 12.: klientom nejdú, len sa vyhodnotia (História tipov → Pásmo 65 – 67 %)", idx: [] },
   ];
-  dayTips.items.forEach(({ bet }, i) => groups[bet.watchBand ? 2 : bet.softConflict || bet.strictFail ? 1 : 0].idx.push(i));
+  dayTips.items.forEach(({ bet }, i) => groups[bet.watchBand ? 2 : bet.strictFail ? 1 : 0].idx.push(i));
   let shown = 0;
   const rows = groups
     .filter((g) => g.idx.length)
@@ -2012,7 +2009,7 @@ function renderDayTipsViewMain() {
       const i = Number(el.dataset.oddsSt);
       if (dayTipSaved.has(i)) { el.textContent = ""; el.className = "odds-st"; return; }
       const st = oddsState(i);
-      const sc = st.ok && dayTips.items[i].bet.softConflict ? softConflictCheck(dayTips.items[i].bet, st.odd) : null;
+      const sc = null; // šedá zóna ide od 1. 11. 2026 klientom
       const sx = st.ok && (!sc || sc.pass) && STRICT_CHECK_ON && !dayTips.items[i].bet.watchBand ? strictCheck(dayTips.items[i].bet, st.odd) : null;
       el.className = "odds-st" + (st.odd == null ? "" : (sc && !sc.pass) || (sx && !sx.pass) ? " bad" : st.ok ? " ok" : " bad");
       const hv = st.ok ? highValuePct(dayTips.items[i].bet, st.odd) : null;

@@ -997,10 +997,7 @@ app.post("/api/tips", async (req, res) => {
     }
     // Rozpor so stávkovkami, ktorý prešiel len vďaka zmierneniu filtra (22. 10. 2026, Michalovo
     // rozhodnutie): tip sa uloží len na sledovanie, klientom nejde.
-    if (tip.softConflict && !(tip.legs && tip.legs.length)) {
-      tip.watchOnly = true;
-      tip.strongOfDay = undefined;
-    }
+    // 1. 11. 2026 (Michal): šedá zóna ide od teraz klientom – značka softConflict ostáva len na rozbor.
     // Dvojitá kontrola (27. 10. 2026, Michalovo rozhodnutie): tip musí prejsť aj pri 60 % model / 40 % stávkovky
     // s kurzom, ktorý Michal zadal. Ak neprejde, uloží sa len na sledovanie.
     // 31. 10. 2026 (Michal): kontrola vypnutá (STRICT_CHECK_ON) – tip sa len označí strictWouldFail na porovnanie.
@@ -2941,7 +2938,7 @@ async function autoFixturesFor(day: string): Promise<any[]> {
 async function notifyAdminClientTips(fixture: any, bets: any[]): Promise<void> {
   const ok = bets.filter(
     (b) =>
-      !b.strictFail && !b.softConflict && !b.watchBand && !b.watchOnly &&
+      !b.strictFail && !b.watchBand && !b.watchOnly &&
       typeof b.probability === "number" && b.probability >= WATCH_BELOW_PROBABILITY && b.probability <= MAX_PROBABILITY &&
       (typeof b.odds === "number" && b.odds > 1 ? b.odds >= MIN_ODDS : typeof b.minOdds === "number"),
   );
