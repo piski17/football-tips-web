@@ -958,7 +958,7 @@ html { scrollbar-color: rgba(214,182,118,.35) #070708; }
   fetch("/api/public/vip-seats", { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
     if (!d) return;
     if (typeof d.freeChannelUrl === "string" && /^https:\/\/t\.me\//.test(d.freeChannelUrl)) document.querySelectorAll("[data-free]").forEach(function (a) { a.href = d.freeChannelUrl; });
-    window.__sales = { open: !!d.salesOpen, pay: d.salesOpen && d.payOpen === true, minOdds: Number(d.minOdds) || 1.5 };
+    window.__sales = { open: !!d.salesOpen, pay: d.salesOpen && d.payOpen === true, minOdds: Number(d.minOdds) || 1.6 };
     if (window.__applySales) window.__applySales();
   }).catch(function () {});
 

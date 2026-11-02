@@ -183,3 +183,40 @@ export async function clearAllTips(): Promise<SavedTip[]> {
     return previous;
   });
 }
+
+/**
+ * Kurz od 1,60 (2. 11. 2026, Michal): tipy s kurzom pod 1,60 sa odstránia z Histórie tipov, štatistík aj webu.
+ * Nemažú sa natrvalo – presunú sa bokom do kľúča tipradar_tips_pod_160 (záloha), odkiaľ sa dajú vrátiť.
+ * Beží raz (po nasadení pri štarte servera); ďalšie spustenie nájde príznak a nič nerobí.
+ * Ostávajú: tikety, tipy bez kurzu, tipy „Len sledovať“ (do štatistík sa aj tak nerátajú).
+ */
+const BELOW_KEY = "tipradar_tips_pod_160";
+const BELOW_DONE_KEY = "tipradar_migr_pod_160_done";
+export async function moveTipsBelowOddsOnce(min = 1.6): Promise<number> {
+  if (!useUpstash) return 0;
+  const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };
+  const done = (await upstashClient().get(`${UPSTASH_URL}/get/${BELOW_DONE_KEY}`, auth)).data?.result;
+  if (done) return 0;
+  return withWriteLock(async () => {
+    const tips = await readAll();
+    const isBelow = (t: SavedTip) =>
+      !(t.legs && t.legs.length) && !t.watchOnly && typeof t.odds === "number" && t.odds > 1 && t.odds < min - 1e-9;
+    const below = tips.filter(isBelow);
+    if (below.length) {
+      // najprv záloha, až potom zápis bez nich – pri chybe zálohy sa nič neodstráni
+      let prev: SavedTip[] = [];
+      try {
+        const raw = (await upstashClient().get(`${UPSTASH_URL}/get/${BELOW_KEY}`, auth)).data?.result;
+        prev = raw ? JSON.parse(raw) : [];
+      } catch { prev = []; }
+      await upstashClient().post(`${UPSTASH_URL}/set/${BELOW_KEY}`, JSON.stringify([...prev, ...below]), {
+        headers: { ...auth.headers, "Content-Type": "text/plain" },
+      });
+      await writeAll(tips.filter((t) => !isBelow(t)));
+    }
+    await upstashClient().post(`${UPSTASH_URL}/set/${BELOW_DONE_KEY}`, new Date().toISOString(), {
+      headers: { ...auth.headers, "Content-Type": "text/plain" },
+    });
+    return below.length;
+  });
+}

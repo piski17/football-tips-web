@@ -34,7 +34,7 @@ import {
  * evidencie, aby sa výsledky dali porovnávať len v rámci jednej verzie. Pri každej
  * zmene modelu, kalibrácie alebo filtrov ju zmeň (napr. na dátum zmeny).
  */
-export const MODEL_VERSION = "2026-10-25b"; // pásmo 68 – 80 %, minimálny kurz 1,50
+export const MODEL_VERSION = "2026-10-25b"; // pásmo 68 – 80 %, minimálny kurz 1,50 (od 2. 11. 2026 MIN_ODDS 1,60)
 /** Verzia, ktorá sa zapíše, keď tipy vyberá nový model (xG, únava, doma/vonku). */
 export const NEW_MODEL_VERSION = `${MODEL_VERSION}-novy`;
 
@@ -1456,7 +1456,7 @@ export function predictMatch(
         b.rejectCode = "ev_low";
         lowValueBets.push(b);
       } else if (b.odds != null && b.odds < MIN_ODDS) {
-        // Kurz pod minimom (predvolene 1,50) - tip má hodnotu, ale zisk z výhry je malý.
+        // Kurz pod minimom (predvolene 1,60) - tip má hodnotu, ale zisk z výhry je malý.
         b.rejectReason = `kurz pod ${MIN_ODDS.toFixed(2).replace(".", ",")}`;
         b.rejectCode = "min_odds";
         lowValueBets.push(b);

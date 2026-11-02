@@ -41,7 +41,7 @@ import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, Market
 import { newModelInputs } from "./newModel";
 import { computeMarketHealth, marketChangesText, clvOf, CLV_TIE } from "./marketHealth";
 import { LeaguePreset, SavedTip } from "./types";
-import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText } from "./tipsStore";
+import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, moveTipsBelowOddsOnce } from "./tipsStore";
 import { computeTicketStatus, settleBet, settleFixtureBets, tipHasStartedMatch, MATCH_STARTED_MESSAGE, buildTipEdit } from "./tipEvaluator";
 import {
   sendTipToTelegram,
@@ -1046,6 +1046,10 @@ app.post("/api/tips", async (req, res) => {
       if (tip.probability < WATCH_BELOW_PROBABILITY || tip.probability > MAX_PROBABILITY || tip.odds < MIN_ODDS || ev < 1.05 || ev > 1.25) {
         tip.watchOnly = true;
       }
+    }
+    // Kurz od 1,60 (2. 11. 2026, Michal): tip s kurzom pod minimom klientom nejde – len do sledovaných.
+    if (!(tip.legs && tip.legs.length) && typeof tip.odds === "number" && tip.odds > 1 && tip.odds < MIN_ODDS - 1e-9) {
+      tip.watchOnly = true;
     }
     await saveTip(tip);
     res.json({ ok: true, telegramAvailable: isTelegramEnabled(), watchOnly: tip.watchOnly === true });
@@ -2288,7 +2292,7 @@ function conflictDetail(all: ShadowEntry[]) {
   const conflict = all.filter((e) => shadowReasonCode(e) === "conflict");
   const marketPct = (e: ShadowEntry) => (typeof e.marketProb === "number" ? e.marketProb : e.marketProbability);
   const modelPct = (e: ShadowEntry) => (typeof e.modelProbability === "number" ? e.modelProbability : e.probability);
-  // Tip, ktorý by bez rozporu prešiel: dôvera 68 – 80 %, kurz aspoň 1,50, hodnota +5 až +25 %.
+  // Tip, ktorý by bez rozporu prešiel: dôvera 68 – 80 %, kurz aspoň 1,60, hodnota +5 až +25 %.
   const passesRules = (e: ShadowEntry) => {
     if (typeof e.odds !== "number" || !(e.odds > 1)) return false;
     const ev = (e.probability / 100) * e.odds;
@@ -2995,7 +2999,7 @@ async function autoFixturesFor(day: string): Promise<any[]> {
 }
 /**
  * Upozornenie pre Michala (31. 10. 2026): keď server pri automatickej analýze (~65 min pred výkopom) nájde tip,
- * ktorý prejde všetkými pravidlami pre klientov (68 – 80 %, kurz aspoň 1,50, hodnota, kontrola 60 / 40),
+ * ktorý prejde všetkými pravidlami pre klientov (68 – 80 %, kurz aspoň 1,60, hodnota, kontrola 60 / 40),
  * pošle mu ho do admin chatu na Telegrame (telefón aj počítač). Klientom sa nič neposiela.
  */
 async function notifyAdminClientTips(fixture: any, bets: any[]): Promise<void> {
@@ -3118,7 +3122,7 @@ app.get("/api/auto-tips", async (req, res) => {
 /**
  * Zabudnutý tip (31. 10. 2026, Michal): tip zo „Všetkých zápasov – automaticky“ sa dá pridať do Histórie tipov
  * aj po výkope alebo po vyhodnotení. Berie sa len to, čo server zapísal asi 65 min pred výkopom (dôvera a kurz),
- * takže sa nedá nič prikrášliť. Prejde rovnakými pravidlami ako ostatné tipy (68 – 80 %, kurz aspoň 1,50,
+ * takže sa nedá nič prikrášliť. Prejde rovnakými pravidlami ako ostatné tipy (68 – 80 %, kurz aspoň 1,60,
  * hodnota +5 až +25 %, kontrola 60 / 40) – inak ide do sledovaných. Tip po výkope sa označí lateAdd
  * a do Telegramu sa neposiela.
  */
@@ -3655,4 +3659,8 @@ checkExpiringSubscribers(); // aj hneď po štarte appky
 app.listen(PORT, () => {
   console.log(`TipRadar beží na porte ${PORT}`);
   void refreshTelegramWebhookSecret(telegramWebhookSecret());
+  // Kurz od 1,60 (2. 11. 2026): raz presunie staré tipy pod 1,60 bokom (záloha tipradar_tips_pod_160).
+  void moveTipsBelowOddsOnce(1.6)
+    .then((n) => { if (n) console.log(`Tipy pod 1,60: presunuté bokom ${n}`); })
+    .catch((err) => console.error("Presun tipov pod 1,60 zlyhal:", err));
 });

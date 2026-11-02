@@ -908,7 +908,7 @@ html { scrollbar-color: rgba(214,182,118,.35) #070708; }
         <div class="presets" role="group" aria-label="Ukážkové trhy">
           <button type="button" data-p="72" data-o="1.62" aria-pressed="false">Rohy nad 9,5</button>
           <button type="button" data-p="64" data-o="1.45" aria-pressed="false">Góly nad 2,5</button>
-          <button type="button" data-p="70" data-o="1.58" aria-pressed="false">Karty nad 3,5</button>
+          <button type="button" data-p="70" data-o="1.64" aria-pressed="false">Karty nad 3,5</button>
           <button type="button" data-p="84" data-o="1.55" aria-pressed="false">Strely nad 7,5</button>
         </div>
       </div>
@@ -1332,7 +1332,7 @@ html { scrollbar-color: rgba(214,182,118,.35) #070708; }
   fetch("/api/public/vip-seats", { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
     if (!d) return;
     if (typeof d.freeChannelUrl === "string" && /^https:\/\/t\.me\//.test(d.freeChannelUrl)) document.querySelectorAll("[data-free]").forEach(function (a) { a.href = d.freeChannelUrl; });
-    window.__sales = { open: !!d.salesOpen, pay: d.salesOpen && d.payOpen === true, minOdds: Number(d.minOdds) || 1.5 };
+    window.__sales = { open: !!d.salesOpen, pay: d.salesOpen && d.payOpen === true, minOdds: Number(d.minOdds) || 1.6 };
     if (window.__applySales) window.__applySales();
   }).catch(function () {});
 
@@ -1438,9 +1438,9 @@ html { scrollbar-color: rgba(214,182,118,.35) #070708; }
       $("oP").textContent = p + " %"; $("oO").textContent = fmt(o, 2);
       $("gP").textContent = p + " %"; $("gI").textContent = Math.round(imp) + " %"; $("gOdds").textContent = fmt(o, 2);
       $("gNeedleP").style.transform = rot(p); $("gNeedleO").style.transform = rot(imp);
-      var c1 = p >= 68 && p <= 80, c2 = val >= 5, c3 = o >= 1.5 - 1e-9;
+      var c1 = p >= 68 && p <= 80, c2 = val >= 5, c3 = o >= 1.6 - 1e-9;
       var li = function (ok, t, v) { return '<li class="' + (ok ? "ok" : "no") + '"><i>' + (ok ? "✓" : "✕") + "</i>" + t + "<b>" + v + "</b></li>"; };
-      $("checks").innerHTML = li(c1, "šanca v pásme 68 – 80 %", p + " %") + li(c2, "hodnota aspoň +5 %", signed(val, 0) + " %") + li(c3, "kurz aspoň 1,50", fmt(o, 2));
+      $("checks").innerHTML = li(c1, "šanca v pásme 68 – 80 %", p + " %") + li(c2, "hodnota aspoň +5 %", signed(val, 0) + " %") + li(c3, "kurz aspoň 1,60", fmt(o, 2));
       var ok = c1 && c2 && c3, v = $("verdict");
       v.className = "verdict " + (ok ? "ok" : "no");
       v.innerHTML = '<span class="stamp">' + (ok ? "✓" : "✕") + "</span><div>" + (ok ? "Taký tip by sme poslali." : "Taký tip by sme neposlali.") + "<small>" + fmt(p / 100, 2) + " × " + fmt(o, 2) + " = " + fmt((p / 100) * o, 2) + " · hodnota " + signed(val, 0) + " %</small></div>";

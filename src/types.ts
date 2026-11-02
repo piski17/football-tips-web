@@ -66,7 +66,7 @@ export interface MarketPick {
   odds?: number | null;
   /**
    * Držanie lopty (17. 10. 2026): API naň kurzy nemá, preto model povie minimálny
-   * kurz (hodnota +5 %, aspoň 1,50) a skutočný kurz Michal overí v stávkovke.
+   * kurz (hodnota +5 %, aspoň 1,60) a skutočný kurz Michal overí v stávkovke.
    */
   minOdds?: number;
   /** Z koľkých stávkoviek kurz pochádza. */
