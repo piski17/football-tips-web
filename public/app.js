@@ -3165,6 +3165,63 @@ auditTipsBtn?.addEventListener("click", async () => {
   }
 });
 
+// Kontrola 60 / 40 na zverejnených tipoch (2. 11. 2026, Michal): rovnaký výpočet ako „Prehľad a kontrola 60 / 40“
+// v Sledovaných, ale ako samostatné tlačidlo s prehľadom a zoznamom tipov, ktoré by neprešli.
+document.getElementById("strict6040Btn")?.addEventListener("click", () => {
+  const statTips = lastStatTips || [];
+  const { pass, fail } = retroStrictSplit(statTips);
+  const checked = new Set([...pass, ...fail]);
+  const unknown = statTips.filter((t) => !checked.has(t) && !(t.legs && t.legs.length));
+  const moved = currentHistoryTips.filter((t) => t.retroStrict && t.watchOnly);
+  const sum = (list) => {
+    const d = list.filter((t) => t.status === "won" || t.status === "lost");
+    const st = marketStats(d);
+    return d.length ? `${st.won} z ${d.length} vyšlo${st.withOdds ? ` · ${signed(st.profit, 1)}${NB}j.` : ""}` : list.length ? "zatiaľ nevyhodnotené" : "–";
+  };
+  const ST = { won: "✓", lost: "✕", void: "↺", pending: "…" };
+  const rows = fail
+    .slice()
+    .sort((a, b) => String(b.matchDate).localeCompare(String(a.matchDate)))
+    .map((t) => `<tr><td>${escapeHtml(shortDate(new Date(t.matchDate)))} ${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))}<br><b>${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}</b></td><td class="num">${fmtNum(t.probability, 0)}${NB}%</td><td class="num">${probTxt(retroStrictProbability(t))}${NB}%</td><td class="num">${fmtNum(t.odds, 2)}</td><td class="num">${ST[t.status] || ""}</td></tr>`)
+    .join("");
+  const table = fail.length
+    ? `<div class="table-wrap"><table class="bt-table"><thead><tr><th>Neprešli by pri 60 / 40</th><th class="num">Dôvera</th><th class="num">60 / 40</th><th class="num">Kurz</th><th class="num"></th></tr></thead><tbody>${rows}</tbody></table></div>`
+    : `<p><b>✓ Všetky overené tipy prejdú aj pri 60 / 40.</b></p>`;
+  const modal = openModal(
+    `<h3>Kontrola 60 / 40</h3>
+    <div class="table-wrap"><table class="bt-table"><tbody>
+      <tr><td>Prešli by aj pri 60 / 40</td><td class="num">${pass.length}</td><td class="num">${sum(pass)}</td></tr>
+      <tr><td><b>Neprešli by pri 60 / 40</b></td><td class="num">${fail.length}</td><td class="num">${sum(fail)}</td></tr>
+      ${unknown.length ? `<tr><td class="faint">Nedá sa overiť (chýba kurz alebo šanca stávkoviek)</td><td class="num">${unknown.length}</td><td class="num">${sum(unknown)}</td></tr>` : ""}
+      ${moved.length ? `<tr><td class="faint">Už presunuté do sledovaných</td><td class="num">${moved.length}</td><td class="num">${sum(moved)}</td></tr>` : ""}
+    </tbody></table></div>
+    ${table}
+    <p class="faint small">Šanca pri 60 / 40 sa dopočíta z uloženej dôvery a šance stávkoviek v čase tipu (odhad). Tip prejde, ak má pri 60 / 40 dôveru 68 – 80${NB}% a hodnotu aspoň +5${NB}% pri uloženom kurze. Presúvajú sa vždy všetky naraz – výherné aj prehraté – a dá sa to vrátiť.</p>
+    <div class="modal-actions">
+      ${fail.length ? `<button type="button" class="btn" id="s64Move">Presunúť ${fail.length} do sledovaných</button>` : ""}
+      ${moved.length ? `<button type="button" class="btn ghost" id="s64Undo">Vrátiť presunuté (${moved.length})</button>` : ""}
+      <button type="button" class="btn ghost" data-close>Zavrieť</button>
+    </div>`,
+    { wide: true }
+  );
+  const setWatch = async (list, on) => {
+    for (const t of list) await postJson(`/api/tips/${encodeURIComponent(t.id)}/edit`, { watchOnly: on, retroStrict: on });
+  };
+  document.getElementById("s64Move")?.addEventListener("click", async (e) => {
+    e.target.disabled = true;
+    e.target.textContent = "Presúvam…";
+    try { await setWatch(fail, true); showToast(`Presunuté do sledovaných: ${fail.length}`); } catch (err) { showToast(`Presun zlyhal: ${err.message}`); }
+    modal?.close?.();
+    openTipsHistory();
+  });
+  document.getElementById("s64Undo")?.addEventListener("click", async (e) => {
+    e.target.disabled = true;
+    try { await setWatch(moved, false); showToast("Tipy vrátené do štatistík."); } catch (err) { showToast(`Vrátenie zlyhalo: ${err.message}`); }
+    modal?.close?.();
+    openTipsHistory();
+  });
+});
+
 checkResultsBtn.addEventListener("click", async () => {
   checkResultsBtn.disabled = true;
   checkResultsBtn.textContent = "Kontrolujem…";
