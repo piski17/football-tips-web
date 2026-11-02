@@ -1418,10 +1418,10 @@ export function predictMatch(
         b.rejectReason = `trh je dočasne vypnutý (${adjust.disabled[b.category]})`;
         b.rejectCode = "market_disabled";
         lowValueBets.push(b);
-      } else if (MANUAL_FAR_LINE_CATEGORIES.includes(b.category) && (b.rawProbability ?? b.probability) > MANUAL_MAX_PROBABILITY) {
-        // 2. 11. 2026 15:10 (Michal): platí aj pri kurze z API. Ak je model na rohy/karty istý nad 73 % a stávkovky
-        // napriek tomu dávajú 1,50+ (napr. „Rohy domácich Under 6,5“ za 1,72), takmer vždy sa mýli model
-        // (spätné testy: rohy domácich o 2 – 3 b. horšie, než model sľubuje) alebo kurz v API nesedí.
+      } else if (ev == null && MANUAL_FAR_LINE_CATEGORIES.includes(b.category) && (b.rawProbability ?? b.probability) > MANUAL_MAX_PROBABILITY) {
+        // 2. 11. 2026 15:10 skúšobne aj pri kurze z API – 15:25 VRÁTENÉ: z Michalových tipov by také pravidlo vyradilo
+        // 24 tipov na rohy/karty s reálnym kurzom 1,50+, z ktorých vyšlo 21 (+9,0 j.). Keď stávkovka dá 1,50+,
+        // tip je hrateľný a model mal pravdu. Platí len pre tipy BEZ kurzu z API.
         // Rohy a karty bez kurzu z API (2. 11. 2026, Michal): pri vysokej istote (napr. „Rohy hostí Under 6,5“
         // pri priemere 4 rohy) stávkovky dávajú kurz okolo 1,15 – 1,30 a minimálny kurz 1,50 sa v praxi
         // nedá dostať. Taký tip klientom neodporúčame (v analýze ostáva).

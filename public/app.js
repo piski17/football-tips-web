@@ -1812,7 +1812,7 @@ function farLineTip(t) {
 }
 function lateTipForClients(t) {
   if (t.strictFail || t.probability < 68 || t.probability > 80) return false;
-  if (farLineTip(t)) return false;
+  if (typeof t.odds !== "number" && farLineTip(t)) return false; // len bez kurzu z API
   if (typeof t.odds !== "number") return true; // trh bez kurzu v API – rozhodne kurz, ktorý zadá Michal
   const value = (t.probability / 100) * t.odds;
   return t.odds >= MIN_ODDS && value >= 1.05 && value <= 1.25;
@@ -3757,7 +3757,7 @@ const SHADOW_REASON_LABEL = {
   market_disabled: "trh dočasne vypnutý (slabé výsledky)",
   market_excluded: "trh neodporúčame",
   line_too_high: "príliš vysoká hranica rohov",
-  manual_far_line: "rohy/karty – príliš vzdialená hranica",
+  manual_far_line: "rohy/karty bez kurzu – 1,50 sa nedá dostať",
   few_games: "málo odohraných zápasov",
   no_market_odds: "trh bez kurzu",
   no_odds: "zápas bez kurzov",
