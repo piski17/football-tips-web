@@ -313,7 +313,7 @@ app.get(["/vysledky", "/vysledky/", "/otazky", "/otazky/", "/formular", "/formul
 type TermSeats = Record<SellableTerm, { occupied: number; total: null; left: null }>;
 /** Plán z bota (t.me/…?start=…) → členstvo: c50 … c250 = posuvník na webe (Štart / Premium / VIP / Gold / Platinum). Staré odkazy:
  *  stat / start = Štart, seria = Premium, vip = VIP, gold = Gold, platinum / onyx / sampion = Platinum. Rovnako v src/telegram.ts (PLAN_TERM). */
-const LEAD_PLAN_TERM: Record<string, SellableTerm> = { stat: "p50", start: "p50", seria: "p100", vip: "p150", gold: "p150", platinum: "p150", onyx: "p150", sampion: "p150", c200: "p150", c250: "p150" };
+const LEAD_PLAN_TERM: Record<string, SellableTerm> = { stat: "p50", start: "p50", seria: "p100", vip: "p100", gold: "p100", platinum: "p100", onyx: "p100", sampion: "p100", c150: "p100", c200: "p100", c250: "p100" };
 for (const t of SELLABLE_TERMS) LEAD_PLAN_TERM["c" + PAY_TERMS[t].tips] = t;
 for (const k of Object.keys(LEAD_PLAN_TERM)) LEAD_PLAN_TERM[k + "_waitlist"] = LEAD_PLAN_TERM[k];
 /** Aktívni členovia (členstvo ešte neskončilo) podľa členstva + záujemcovia v poradovníku (pred spustením predaja). */
@@ -338,7 +338,7 @@ async function termSeats(): Promise<TermSeats> {
 }
 /** Riadok pod tipom v bezplatnom kanáli (členstvá sú bez obmedzenia miest). */
 async function freeSeatsLine(): Promise<string | undefined> {
-  return `🎯 Členstvo: Štart · Premium · VIP, od 39 € · 🛡 v mínuse = mesiac zadarmo`;
+  return `🎯 Členstvo: Štart · VIP, od 29 € · 🛡 v mínuse = mesiac zadarmo`;
 }
 /** Vracanie peňazí po prvých 20 tipoch (zrušené 2. 11. 2026). */
 const REFUND_ON = false;
