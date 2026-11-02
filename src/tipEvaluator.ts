@@ -309,7 +309,19 @@ export async function settleBet(
     cornersByTeam,
     teamStats
   );
+  // Štatistiky (rohy, karty, strely…) API zverejní často až niekoľko minút – hodín po zápase, alebo požiadavka
+  // zlyhá. Kým od výkopu neuplynú 2 dni, chýbajúce štatistiky nie sú dôvod tip vrátiť – skúsi sa to znova
+  // (2. 11. 2026 kontrola: predtým sa taký tip natrvalo vyhodnotil ako „vrátený“).
+  if (status === "void" && statsMissingTooEarly(bet.market, wentToExtraTime, bet.matchDate)) return null;
   return { status, homeGoals: result.homeGoals, awayGoals: result.awayGoals };
+}
+
+const STATS_RETRY_MS = 2 * 24 * 60 * 60 * 1000;
+function statsMissingTooEarly(market: string, wentToExtraTime: boolean, matchDate?: string): boolean {
+  if (wentToExtraTime) return false; // pri predĺžení sa štatistiky tipy vracajú zámerne
+  if (!STATS_MARKETS.includes(market) && !CARD_HALF_MARKETS.includes(market) && market !== "Góly v 1. polčase" && market !== "Góly v 2. polčase") return false;
+  const kickoff = matchDate ? new Date(matchDate).getTime() : NaN;
+  return !isNaN(kickoff) && Date.now() - kickoff < STATS_RETRY_MS;
 }
 
 /** Zápas (alebo niektorý zápas tiketu) už začal - tip sa nesmie uložiť. */
@@ -373,6 +385,8 @@ export async function settleFixtureBets(
   const stats = needStats ? await getFixtureCornersAndCards(fixture.fixtureId) : null;
   const cardHalves = !wentToExtraTime && bets.some((b) => CARD_HALF_MARKETS.includes(b.market)) ? await getFixtureYellowCardHalves(fixture.fixtureId) : null;
   const halftime = halftimeOf(result);
+  // Štatistiky ešte nie sú (alebo API zlyhalo) – do 2 dní od výkopu skúsiť neskôr, nevracať.
+  if (needStats && stats && stats.corners == null && stats.cards == null && stats.fouls == null && statsMissingTooEarly("Rohy", false, fixture.matchDate)) return null;
   return bets.map((b) => {
     const s = STATS_MARKETS.includes(b.market) ? stats : null;
     return evaluateTip(
