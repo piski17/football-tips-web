@@ -1801,8 +1801,18 @@ function renderDayTipsView() {
  * „+ Pridať“ ich uloží s dôverou a kurzom spred výkopu; server rozhodne podľa rovnakých pravidiel.
  */
 let dayLateCache = null;
+// Rohy a karty (2. 11. 2026): rovnaké pravidlo ako predictor.ts manual_far_line – šanca pred kalibráciou nad 73 %
+// = príliš vzdialená hranica. Pre staršie automatické záznamy (zapísané pred zmenou) sa odhaduje z kalibrácie trhu.
+const FAR_LINE_K = { "Rohy": 0.72, "Rohy domácich": 0.8, "Rohy hostí": 0.8, "Karty": 0.9, "Karty domácich": 0.9, "Karty hostí": 0.9 };
+function farLineTip(t) {
+  const k = FAR_LINE_K[t.market];
+  if (!k) return false;
+  const raw = typeof t.rawProbability === "number" ? t.rawProbability : 50 + (t.probability - 50) / k;
+  return raw > 73;
+}
 function lateTipForClients(t) {
   if (t.strictFail || t.probability < 68 || t.probability > 80) return false;
+  if (farLineTip(t)) return false;
   if (typeof t.odds !== "number") return true; // trh bez kurzu v API – rozhodne kurz, ktorý zadá Michal
   const value = (t.probability / 100) * t.odds;
   return t.odds >= MIN_ODDS && value >= 1.05 && value <= 1.25;

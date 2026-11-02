@@ -111,6 +111,16 @@ function statsTips(tips: SavedTip[]): SavedTip[] {
  * na web ani do súhrnov. V Histórii tipov ostávajú so značkou „vyradená súťaž“ – nič sa nemaže,
  * stačí vrátiť ligu do LEAGUE_PRESETS a tipy sa znova rátajú. Tikety (legs) sa nevyraďujú.
  */
+/**
+ * Rohy a karty (2. 11. 2026): ako predictor.ts manual_far_line – šanca pred kalibráciou nad 73 % = príliš vzdialená
+ * hranica, klientom nejde. Pri automatických záznamoch sa šanca pred kalibráciou odhaduje z kalibrácie trhu.
+ */
+const FAR_LINE_K: Record<string, number> = { "Rohy": 0.72, "Rohy domácich": 0.8, "Rohy hostí": 0.8, "Karty": 0.9, "Karty domácich": 0.9, "Karty hostí": 0.9 };
+function isFarLineTip(market: string, probability: number): boolean {
+  const k = FAR_LINE_K[market];
+  return !!k && 50 + (probability - 50) / k > 73;
+}
+
 function isRemovedLeagueTip(t: SavedTip): boolean {
   if (t.legs && t.legs.length) return false;
   if (!t.leagueId) return false;
@@ -3123,6 +3133,7 @@ app.post("/api/auto-tips/:id/add", async (req, res) => {
       if (tip.probability >= WATCH_BAND_MIN_PROBABILITY) tip.watchBand = true;
       reason = `dôvera pod ${WATCH_BELOW_PROBABILITY} %`;
     } else if (tip.probability > MAX_PROBABILITY) reason = `dôvera nad ${MAX_PROBABILITY} %`;
+    else if (isFarLineTip(tip.market, tip.probability)) reason = "rohy/karty – príliš vzdialená hranica";
     else if (odds < MIN_ODDS) reason = `kurz pod ${String(MIN_ODDS).replace(".", ",")}`;
     else if (ev < MIN_EXPECTED_VALUE) reason = "hodnota pod +5 %";
     else if (ev > SUSPICIOUS_EXPECTED_VALUE) reason = "hodnota nad +25 %";
