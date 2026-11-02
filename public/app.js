@@ -3747,7 +3747,7 @@ const SHADOW_REASON_LABEL = {
   market_disabled: "trh dočasne vypnutý (slabé výsledky)",
   market_excluded: "trh neodporúčame",
   line_too_high: "príliš vysoká hranica rohov",
-  manual_far_line: "rohy/karty – kurz 1,50 sa nedá dostať",
+  manual_far_line: "rohy/karty – príliš vzdialená hranica",
   few_games: "málo odohraných zápasov",
   no_market_odds: "trh bez kurzu",
   no_odds: "zápas bez kurzov",

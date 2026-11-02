@@ -1418,12 +1418,17 @@ export function predictMatch(
         b.rejectReason = `trh je dočasne vypnutý (${adjust.disabled[b.category]})`;
         b.rejectCode = "market_disabled";
         lowValueBets.push(b);
-      } else if (ev == null && MANUAL_FAR_LINE_CATEGORIES.includes(b.category) && (b.rawProbability ?? b.probability) > MANUAL_MAX_PROBABILITY) {
+      } else if (MANUAL_FAR_LINE_CATEGORIES.includes(b.category) && (b.rawProbability ?? b.probability) > MANUAL_MAX_PROBABILITY) {
+        // 2. 11. 2026 15:10 (Michal): platí aj pri kurze z API. Ak je model na rohy/karty istý nad 73 % a stávkovky
+        // napriek tomu dávajú 1,50+ (napr. „Rohy domácich Under 6,5“ za 1,72), takmer vždy sa mýli model
+        // (spätné testy: rohy domácich o 2 – 3 b. horšie, než model sľubuje) alebo kurz v API nesedí.
         // Rohy a karty bez kurzu z API (2. 11. 2026, Michal): pri vysokej istote (napr. „Rohy hostí Under 6,5“
         // pri priemere 4 rohy) stávkovky dávajú kurz okolo 1,15 – 1,30 a minimálny kurz 1,50 sa v praxi
         // nedá dostať. Taký tip klientom neodporúčame (v analýze ostáva).
         const fair = 100 / (b.rawProbability ?? b.probability);
-        b.rejectReason = `pri tejto hranici stávkovky dávajú nízky kurz (férový ~${fair.toFixed(2).replace(".", ",")}), kurz ${MIN_ODDS.toFixed(2).replace(".", ",")} sa nedá reálne dostať`;
+        b.rejectReason = ev == null
+          ? `pri tejto hranici stávkovky dávajú nízky kurz (férový ~${fair.toFixed(2).replace(".", ",")}), kurz ${MIN_ODDS.toFixed(2).replace(".", ",")} sa nedá reálne dostať`
+          : `príliš vzdialená hranica – model si je istý (${Math.round(b.rawProbability ?? b.probability)} % pred kalibráciou), stávkovky vôbec nie; pri rohoch a kartách sa v takom prípade mýli skôr model`;
         b.rejectCode = "manual_far_line";
         lowValueBets.push(b);
       } else if (ev == null && MANUAL_ODDS_CATEGORIES.includes(b.category) && manualLineOk(b)) {
