@@ -6,7 +6,7 @@ import axios from "axios";
 // Server z kurzov API-Football hľadá zápasy, kde dve stávkovky ponúkajú opačné
 // stávky (nad / pod, áno / nie, párny / nepárny, víťaz bez remízy) s takými kurzami,
 // že vsadením na obe strany je zisk istý. Len dve stávkovky, len dvojcestné trhy.
-// Nedotýka sa tipov, štatistík ani klientov. Každé 2 hodiny prehľadá dnešok a zajtrajšok
+// Nedotýka sa tipov, štatistík ani klientov. Každú hodinu prehľadá zápasy 17 súťaží TipRadaru na 7 dní dopredu
 // a nájdené surebety zapíše do evidencie (Upstash hash), aby sa po skúške dalo
 // vyhodnotiť, koľko ich bolo a aký by bol zisk.
 
@@ -17,13 +17,15 @@ const LOG_KEY = "tipradar_surebets";
 const BOOKS_META = "surebets_my_books";
 const FILE = path.join(__dirname, "..", "data", "surebets.json");
 const KEEP_DAYS = 45;
-/** Najviac strán kurzov na jeden deň (1 strana = 10 zápasov = 1 požiadavka). */
-const MAX_PAGES_PER_DAY = 80;
+/** Najviac strán kurzov na jednu súťaž (1 strana = 10 zápasov = 1 požiadavka). */
+const MAX_PAGES_PER_LEAGUE = 6;
+/** Koľko dní dopredu sa surebety hľadajú (stávkovky vypisujú kurzy zvyčajne týždeň vopred). */
+export const DAYS_AHEAD = 7;
 /** Surebet s väčším ziskom je takmer vždy chyba v kurzoch (preklep, iné pravidlá trhu). */
 export const SUSPICIOUS_MARGIN = 0.08;
 /** Menší zisk nemá zmysel – zaokrúhlenie vkladov a zmena kurzu ho zjedia. */
 export const MIN_MARGIN = 0.005;
-const SCAN_EVERY_MS = 2 * 60 * 60 * 1000;
+const SCAN_EVERY_MS = 60 * 60 * 1000; // každú hodinu
 
 interface BookOdd { book: string; odd: number }
 interface FixtureOdds {
@@ -78,20 +80,31 @@ function skDate(plus: number): string {
   const d = new Date(Date.now() + plus * 86400000);
   return d.toLocaleDateString("sv-SE", { timeZone: "Europe/Bratislava" });
 }
+/** Sezóna európskych súťaží: od júla nová (2026 = 2026/27). */
+function currentSeason(): number {
+  const now = new Date();
+  return now.getUTCMonth() >= 6 ? now.getUTCFullYear() : now.getUTCFullYear() - 1;
+}
 
-async function scanDay(date: string, out: Map<number, FixtureOdds>, counter: { n: number }): Promise<void> {
+export interface SurebetLeague { id: number; name: string; country: string }
+/** Súťaže TipRadaru (LEAGUE_PRESETS zo server.ts) – nastaví ich startSurebetScanner. */
+let LEAGUES: SurebetLeague[] = [];
+
+/** Jedna súťaž: najbližšie zápasy (mená tímov) + ich kurzy. Asi 2 – 4 požiadavky. */
+async function scanLeague(lg: SurebetLeague, out: Map<number, FixtureOdds>, counter: { n: number }): Promise<void> {
   const http = api();
-  // Mená tímov (endpoint /odds ich nevracia) – 1 požiadavka na celý deň.
+  const season = currentSeason();
   const names = new Map<number, { home: string; away: string; status: string }>();
-  const fx = await http.get("/fixtures", { params: { date, timezone: "Europe/Bratislava" } });
+  const fx = await http.get("/fixtures", { params: { league: lg.id, season, from: skDate(0), to: skDate(DAYS_AHEAD), timezone: "Europe/Bratislava" } });
   counter.n++;
   for (const f of fx.data?.response ?? []) {
     names.set(Number(f?.fixture?.id), { home: f?.teams?.home?.name ?? "?", away: f?.teams?.away?.name ?? "?", status: f?.fixture?.status?.short ?? "" });
   }
+  if (!names.size) return; // súťaž v týchto dňoch nehrá – kurzy netreba
   let page = 1;
   let total = 1;
   do {
-    const res = await http.get("/odds", { params: { date, timezone: "Europe/Bratislava", page } });
+    const res = await http.get("/odds", { params: { league: lg.id, season, page, timezone: "Europe/Bratislava" } });
     counter.n++;
     const err = apiErrors(res.data);
     if (err) throw new Error(err);
@@ -100,17 +113,9 @@ async function scanDay(date: string, out: Map<number, FixtureOdds>, counter: { n
       const id = Number(item?.fixture?.id);
       const when = String(item?.fixture?.date ?? "");
       const nm = names.get(id);
-      // Len zápasy, ktoré sa ešte nezačali.
-      if (!id || !when || new Date(when).getTime() <= Date.now() || (nm && nm.status !== "NS" && nm.status !== "TBD")) continue;
-      const fo: FixtureOdds = out.get(id) ?? {
-        fixtureId: id,
-        league: item?.league?.name ?? "",
-        country: item?.league?.country ?? "",
-        date: when,
-        home: nm?.home ?? "Domáci",
-        away: nm?.away ?? "Hostia",
-        bets: {},
-      };
+      // Len zápasy najbližších dní, ktoré sa ešte nezačali.
+      if (!id || !when || !nm || new Date(when).getTime() <= Date.now() || (nm.status !== "NS" && nm.status !== "TBD")) continue;
+      const fo: FixtureOdds = out.get(id) ?? { fixtureId: id, league: lg.name, country: lg.country, date: when, home: nm.home, away: nm.away, bets: {} };
       for (const bk of item?.bookmakers ?? []) {
         const book = String(bk?.name ?? "").trim();
         if (!book) continue;
@@ -127,20 +132,23 @@ async function scanDay(date: string, out: Map<number, FixtureOdds>, counter: { n
       out.set(id, fo);
     }
     page++;
-  } while (page <= total && page <= MAX_PAGES_PER_DAY);
+  } while (page <= total && page <= MAX_PAGES_PER_LEAGUE);
 }
 
-/** Prehľadá kurzy na dnes a zajtra (asi 20 – 120 požiadaviek API). */
+/** Prehľadá kurzy zápasov TipRadar súťaží na najbližších DAYS_AHEAD dní (asi 30 – 60 požiadaviek API). */
 export async function scanSurebets(): Promise<void> {
-  if (scanning) return;
+  if (scanning || !LEAGUES.length) return;
   scanning = true;
   const counter = { n: 0 };
+  const failed: string[] = [];
   try {
     const out = new Map<number, FixtureOdds>();
-    for (const d of [skDate(0), skDate(1)]) await scanDay(d, out, counter);
+    for (const lg of LEAGUES) {
+      try { await scanLeague(lg, out, counter); } catch (err: any) { failed.push(`${lg.name}: ${String(err?.message ?? err)}`); }
+    }
     const books = new Set<string>();
     for (const f of out.values()) for (const b of Object.values(f.bets)) for (const list of Object.values(b.values)) for (const o of list) books.add(o.book);
-    lastScan = { at: new Date().toISOString(), fixtures: [...out.values()], requests: counter.n, books: [...books].sort((a, b) => a.localeCompare(b)) };
+    lastScan = { at: new Date().toISOString(), fixtures: [...out.values()], requests: counter.n, books: [...books].sort((a, b) => a.localeCompare(b)), ...(failed.length ? { error: failed.join(" · ").slice(0, 300) } : {}) };
     await logCurrent();
   } catch (err: any) {
     lastScan = { at: new Date().toISOString(), fixtures: lastScan?.fixtures ?? [], requests: counter.n, books: lastScan?.books ?? [], error: String(err?.message ?? err) };
@@ -336,11 +344,14 @@ export function surebetStatus() {
     requests: lastScan?.requests ?? 0,
     fixtures: lastScan?.fixtures.length ?? 0,
     books: lastScan?.books ?? [],
+    leagues: LEAGUES.length,
+    daysAhead: DAYS_AHEAD,
     error: lastScan?.error ?? null,
   };
 }
 
-export function startSurebetScanner(): void {
+export function startSurebetScanner(leagues: SurebetLeague[]): void {
+  LEAGUES = leagues.map((l) => ({ id: l.id, name: l.name, country: l.country }));
   setTimeout(() => void scanSurebets(), 60 * 1000); // minútu po štarte servera
   setInterval(() => void scanSurebets(), SCAN_EVERY_MS);
 }

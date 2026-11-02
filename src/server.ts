@@ -1997,7 +1997,7 @@ app.get("/api/surebets/log", async (_req, res) => {
     res.status(500).json({ error: err.message ?? String(err) });
   }
 });
-startSurebetScanner();
+startSurebetScanner(LEAGUE_PRESETS);
 
 app.get("/api/daily", async (_req, res) => {
   try {

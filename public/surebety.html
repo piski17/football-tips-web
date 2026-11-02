@@ -81,6 +81,20 @@ th { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: va
 td { padding: 7px 6px; text-align: right; border-top: 1px solid var(--line2); }
 th:first-child, td:first-child { text-align: left; }
 details summary { cursor: pointer; color: var(--gold); font-weight: 600; }
+.day-h { font: 600 15px var(--display); color: var(--gold); margin: 14px 0 8px; display: flex; justify-content: space-between; gap: 10px; }
+.day-h:first-child { margin-top: 0; }
+.day-h span { color: var(--muted); font: 400 13px var(--body); }
+details.day { background: var(--card); border: 1px solid var(--line2); border-radius: 12px; margin-bottom: 8px; }
+details.day > summary { list-style: none; display: grid; grid-template-columns: 1fr auto auto; gap: 14px; align-items: baseline; padding: 12px 14px; color: var(--text); font-weight: 500; }
+details.day > summary::-webkit-details-marker { display: none; }
+details.day > summary b { font: 600 15px var(--display); }
+details.day > summary::before { content: "›"; display: none; }
+details.day[open] > summary { border-bottom: 1px solid var(--line2); }
+.lrow { padding: 10px 14px; border-top: 1px solid var(--line2); font-size: 14px; }
+.lrow:first-of-type { border-top: 0; }
+.lrow .t { display: flex; justify-content: space-between; gap: 10px; }
+.lrow .t b { font-weight: 600; }
+@media (max-width: 520px) { details.day > summary { grid-template-columns: 1fr auto; } details.day > summary .hide-m { display: none; } }
 details p, details li { color: var(--muted); font-size: 14px; }
 </style>
 </head>
@@ -139,13 +153,13 @@ details p, details li { color: var(--muted); font-size: 14px; }
 
   <!-- SKÚŠKA -->
   <section class="panel">
-    <div class="head"><div><h2>Skúška – prehľad</h2><div class="muted small">Server každé 2 hodiny prehľadá dnešné a zajtrajšie zápasy a zapíše každý surebet so ziskom aspoň 0,5 % (bez podozrivých nad 8 %).</div></div></div>
+    <div class="head"><div><h2>Skúška – prehľad</h2><div class="muted small">Server každú hodinu prehľadá zápasy 17 súťaží TipRadaru na 7 dní dopredu a zapíše každý surebet so ziskom aspoň 0,5 % (bez podozrivých nad 8 %). Kliknutím na deň uvidíte, ktoré surebety to boli.</div></div></div>
     <div class="chips" id="logScope" style="margin-bottom:12px">
       <button type="button" class="chip" data-s="mine">Len moje stávkovky</button>
       <button type="button" class="chip on" data-s="all">Všetky stávkovky</button>
     </div>
     <div class="kpis" id="logKpis"></div>
-    <div class="tbl"><table><thead><tr><th>Deň zápasov</th><th>Surebetov</th><th>Priemerný zisk</th><th>Zisk pri 100 € na každý</th></tr></thead><tbody id="logRows"></tbody></table></div>
+    <div id="logDays"></div>
   </section>
 
   <section class="panel">
@@ -222,18 +236,33 @@ function when(iso) {
   const d = new Date(iso);
   return d.toLocaleDateString("sk-SK", { weekday: "short", day: "numeric", month: "numeric" }) + " " + d.toLocaleTimeString("sk-SK", { hour: "2-digit", minute: "2-digit" });
 }
+function dayKey(iso) { return new Date(iso).toLocaleDateString("sv-SE", { timeZone: "Europe/Bratislava" }); }
+function dayName(d) {
+  const today = dayKey(new Date().toISOString()), tomorrow = dayKey(new Date(Date.now() + 86400000).toISOString()), yesterday = dayKey(new Date(Date.now() - 86400000).toISOString());
+  const base = new Date(d + "T12:00:00").toLocaleDateString("sk-SK", { weekday: "long", day: "numeric", month: "numeric" });
+  return d === today ? "Dnes · " + base : d === tomorrow ? "Zajtra · " + base : d === yesterday ? "Včera · " + base : base.charAt(0).toUpperCase() + base.slice(1);
+}
+function plural(n) { return n === 1 ? "surebet" : n >= 2 && n <= 4 ? "surebety" : "surebetov"; }
 function renderList(list) {
+  // Zoradiť podľa dňa a v rámci dňa od najvyššieho zisku.
+  list = [...list].sort((a, b) => dayKey(a.date).localeCompare(dayKey(b.date)) || b.margin - a.margin);
   if (!list.length) {
-    $("sbList").innerHTML = `<p class="empty">${scope === "mine" && myBooks.length < 2 ? "Najprv nižšie vyberte aspoň 2 svoje stávkovky." : "Momentálne žiadny surebet. Nájdu sa zvyčajne pár hodín pred zápasmi, skúste neskôr."}</p>`;
+    $("sbList").innerHTML = `<p class="empty">${scope === "mine" && myBooks.length < 2 ? "Najprv nižšie vyberte aspoň 2 svoje stávkovky." : "V zápasoch 17 súťaží na 7 dní dopredu teraz nie je žiadny surebet. Server to skúša každú hodinu."}</p>`;
     return;
   }
-  $("sbList").innerHTML = list.map((s, i) => `
+  let lastDay = "";
+  $("sbList").innerHTML = list.map((s, i) => {
+    const d = dayKey(s.date);
+    const head = d !== lastDay ? `<div class="day-h">${dayName(d)}<span>${list.filter((x) => dayKey(x.date) === d).length} ${plural(list.filter((x) => dayKey(x.date) === d).length)}</span></div>` : "";
+    lastDay = d;
+    return head + `
     <div class="sb${s.suspicious ? " sus" : ""}">
       <div class="sb-top"><b>${esc(s.home)} – ${esc(s.away)}</b><span class="pct">+${pct(s.margin)}</span></div>
       <div class="muted small">${esc(s.league)}${s.country ? " (" + esc(s.country) + ")" : ""} · ${when(s.date)} · ${esc(s.market)}</div>
       <div class="legs">${s.sides.map((x) => `<div class="leg">${esc(x.label)} · <b>${fmt(x.odd)}</b> <span class="muted">v ${esc(x.book)}</span></div>`).join("")}</div>
       <div class="sb-foot">${s.suspicious ? '<span class="warn">Podozrivo vysoký zisk – takmer určite chyba v kurze.</span>' : "<span></span>"}<button type="button" class="btn ghost" data-i="${i}">Do kalkulačky</button></div>
-    </div>`).join("");
+    </div>`;
+  }).join("");
   $("sbList").onclick = (e) => {
     const btn = e.target.closest("button[data-i]"); if (!btn) return;
     const s = list[Number(btn.dataset.i)];
@@ -269,13 +298,13 @@ async function load() {
     const st = j.status;
     $("scanInfo").textContent = st.scanning ? "Práve prehľadávam…" : st.at
       ? `Naposledy ${new Date(st.at).toLocaleString("sk-SK", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "numeric" })} · ${st.fixtures} zápasov · ${allBooks.length} stávkoviek${st.error ? " · chyba: " + st.error : ""}`
-      : "Server ešte neprehľadával (prvýkrát minútu po spustení).";
+      : "Server ešte neprehľadával (prvýkrát minútu po spustení, potom každú hodinu).";
     renderList(j.surebets);
     renderBooks();
   } catch (err) { $("scanInfo").textContent = err.message; }
 }
 $("scanBtn").addEventListener("click", async () => {
-  $("scanBtn").disabled = true; $("scanInfo").textContent = "Prehľadávam dnešné a zajtrajšie zápasy, trvá to asi minútu…";
+  $("scanBtn").disabled = true; $("scanInfo").textContent = "Prehľadávam zápasy 17 súťaží na 7 dní dopredu, trvá to asi minútu…";
   try { await api("/api/surebets/scan", { method: "POST" }); } catch (err) { /* chyba sa ukáže v stave */ }
   $("scanBtn").disabled = false;
   load(); loadLog();
@@ -300,21 +329,23 @@ function renderLog() {
     <div class="kpi"><span>Surebetov spolu</span><b>${n}</b></div>
     <div class="kpi"><span>Priemerný zisk</span><b>${n ? pct(avg) : "–"}</b></div>
     <div class="kpi"><span>Zisk pri 100 € na každý</span><b>${eur(profit, 0)}</b></div>
-    <div class="kpi"><span>Vydržali aspoň 2 hodiny</span><b>${n ? lasting : "–"}</b></div>`;
+    <div class="kpi"><span>Vydržali aspoň hodinu</span><b>${n ? lasting : "–"}</b></div>`;
   const byDay = {};
-  for (const e of list) {
-    const d = new Date(e.date).toLocaleDateString("sv-SE", { timeZone: "Europe/Bratislava" });
-    (byDay[d] ??= []).push(e);
-  }
+  for (const e of list) (byDay[dayKey(e.date)] ??= []).push(e);
   const days = Object.keys(byDay).sort().reverse();
-  $("logRows").innerHTML = days.length ? days.map((d) => {
-    const l = byDay[d];
+  $("logDays").innerHTML = days.length ? days.map((d) => {
+    const l = byDay[d].sort((x, y) => y.maxMargin - x.maxMargin);
     const a = l.reduce((s, e) => s + e.maxMargin, 0) / l.length;
-    return `<tr><td>${new Date(d + "T12:00:00").toLocaleDateString("sk-SK", { weekday: "short", day: "numeric", month: "numeric" })}</td><td>${l.length}</td><td>${pct(a)}</td><td>${eur(a * 100 * l.length, 0)}</td></tr>`;
-  }).join("") : `<tr><td colspan="4" class="muted">${logScope === "mine" && myBooks.length < 2 ? "Vyberte aspoň 2 svoje stávkovky – evidencia začne od ďalšieho prehľadania." : "Zatiaľ nič zapísané."}</td></tr>`;
+    return `<details class="day"><summary><b>${dayName(d)}</b><span>${l.length} ${plural(l.length)} · priemerne ${pct(a)}</span><span class="hide-m muted">+${eur(a * 100 * l.length, 0)} pri 100 €</span></summary>
+      ${l.map((e) => `<div class="lrow"><div class="t"><b>${esc(e.home)} – ${esc(e.away)}</b><span style="color:var(--good);white-space:nowrap">+${pct(e.maxMargin)}</span></div>
+        <div class="muted small">${esc(e.league)} · ${new Date(e.date).toLocaleTimeString("sk-SK", { hour: "2-digit", minute: "2-digit" })} · ${esc(e.market)}</div>
+        <div class="small">${e.sides.map((x) => `${esc(x.label)} <b style="color:var(--gold-hi)">${fmt(x.odd)}</b> <span class="muted">v ${esc(x.book)}</span>`).join(" &nbsp;·&nbsp; ")}</div>
+        <div class="faint small">Videný ${e.seen}× · prvýkrát ${new Date(e.firstSeen).toLocaleString("sk-SK", { day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" })}, naposledy ${new Date(e.lastSeen).toLocaleString("sk-SK", { day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" })}</div></div>`).join("")}
+    </details>`;
+  }).join("") : `<p class="empty">${logScope === "mine" && myBooks.length < 2 ? "Vyberte aspoň 2 svoje stávkovky – evidencia začne od ďalšieho prehľadania." : "Zatiaľ nič zapísané."}</p>`;
 }
 async function loadLog() {
-  try { const j = await api("/api/surebets/log"); logEntries = j.entries || []; renderLog(); } catch (err) { $("logRows").innerHTML = `<tr><td colspan="4">${esc(err.message)}</td></tr>`; }
+  try { const j = await api("/api/surebets/log"); logEntries = j.entries || []; renderLog(); } catch (err) { $("logDays").innerHTML = `<p class="empty">${esc(err.message)}</p>`; }
 }
 $("logScope").addEventListener("click", (e) => {
   const c = e.target.closest(".chip"); if (!c) return;
