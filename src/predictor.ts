@@ -1370,6 +1370,11 @@ export function predictMatch(
   const lowValueBets: MarketPick[] = [];
   // Trhy, pri ktorých tip bez kurzu z API ide do výberu s minimálnym kurzom (kurz sa zadá ručne).
   const MANUAL_ODDS_CATEGORIES = ["drzanie_lopty", "fauly", "fauly_timu", "rohy", "rohy_timu", "strely", "strely_timu", "karty", "karty_timu"];
+  // Rohy a karty bez kurzu z API (2. 11. 2026): rozhoduje šanca modelu PRED kalibráciou (tak to vidia stávkovky).
+  // Nad 73 % je férový kurz pod ~1,37 a stávkovky (s maržou) dávajú okolo 1,15 – 1,30, takže kurz aspoň 1,50
+  // sa takmer nikdy nedá dostať. Príklad: Las Palmas priemer 4,8 rohu, „Under 6,5“ – po kalibrácii 72 %, pred ňou ~78 %.
+  const MANUAL_FAR_LINE_CATEGORIES = ["rohy", "rohy_timu", "karty", "karty_timu"];
+  const MANUAL_MAX_PROBABILITY = 73;
   const MAX_RECOMMEND_LINE: Record<string, number> = { "Rohy": 12.5, "Rohy domácich": 6.5, "Rohy hostí": 6.5 };
   const lineTooHigh = (b: MarketPick): boolean => {
     const x = ouParts(b.selection), max = MAX_RECOMMEND_LINE[b.market];
@@ -1412,6 +1417,14 @@ export function predictMatch(
       } else if (ev == null && b.category === "drzanie_lopty" && adjust?.disabled?.[b.category]) {
         b.rejectReason = `trh je dočasne vypnutý (${adjust.disabled[b.category]})`;
         b.rejectCode = "market_disabled";
+        lowValueBets.push(b);
+      } else if (ev == null && MANUAL_FAR_LINE_CATEGORIES.includes(b.category) && (b.rawProbability ?? b.probability) > MANUAL_MAX_PROBABILITY) {
+        // Rohy a karty bez kurzu z API (2. 11. 2026, Michal): pri vysokej istote (napr. „Rohy hostí Under 6,5“
+        // pri priemere 4 rohy) stávkovky dávajú kurz okolo 1,15 – 1,30 a minimálny kurz 1,50 sa v praxi
+        // nedá dostať. Taký tip klientom neodporúčame (v analýze ostáva).
+        const fair = 100 / (b.rawProbability ?? b.probability);
+        b.rejectReason = `pri tejto hranici stávkovky dávajú nízky kurz (férový ~${fair.toFixed(2).replace(".", ",")}), kurz ${MIN_ODDS.toFixed(2).replace(".", ",")} sa nedá reálne dostať`;
+        b.rejectCode = "manual_far_line";
         lowValueBets.push(b);
       } else if (ev == null && MANUAL_ODDS_CATEGORIES.includes(b.category) && manualLineOk(b)) {
         // Rohy, strely a karty (31. 10. 2026, Michal): keď API kurz na túto hranicu nemá (Tipsport v API
