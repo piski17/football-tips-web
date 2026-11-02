@@ -243,6 +243,13 @@ function dayName(d) {
   return d === today ? "Dnes · " + base : d === tomorrow ? "Zajtra · " + base : d === yesterday ? "Včera · " + base : base.charAt(0).toUpperCase() + base.slice(1);
 }
 function plural(n) { return n === 1 ? "surebet" : n >= 2 && n <= 4 ? "surebety" : "surebetov"; }
+/** Kurzy surebetu do kalkulačky hore. */
+function toCalc(s) {
+  $("nmA").value = `${s.sides[0].book} – ${s.sides[0].label}`; $("oddA").value = fmt(s.sides[0].odd);
+  $("nmB").value = `${s.sides[1].book} – ${s.sides[1].label}`; $("oddB").value = fmt(s.sides[1].odd);
+  calc();
+  $("calcPanel").scrollIntoView({ behavior: "smooth" });
+}
 function renderList(list) {
   // Zoradiť podľa dňa a v rámci dňa od najvyššieho zisku.
   list = [...list].sort((a, b) => dayKey(a.date).localeCompare(dayKey(b.date)) || b.margin - a.margin);
@@ -265,11 +272,7 @@ function renderList(list) {
   }).join("");
   $("sbList").onclick = (e) => {
     const btn = e.target.closest("button[data-i]"); if (!btn) return;
-    const s = list[Number(btn.dataset.i)];
-    $("nmA").value = `${s.sides[0].book} – ${s.sides[0].label}`; $("oddA").value = fmt(s.sides[0].odd);
-    $("nmB").value = `${s.sides[1].book} – ${s.sides[1].label}`; $("oddB").value = fmt(s.sides[1].odd);
-    calc();
-    $("calcPanel").scrollIntoView({ behavior: "smooth" });
+    toCalc(list[Number(btn.dataset.i)]);
   };
 }
 function renderBooks() {
@@ -337,16 +340,21 @@ function renderLog() {
     const l = byDay[d].sort((x, y) => y.maxMargin - x.maxMargin);
     const a = l.reduce((s, e) => s + e.maxMargin, 0) / l.length;
     return `<details class="day"><summary><b>${dayName(d)}</b><span>${l.length} ${plural(l.length)} · priemerne ${pct(a)}</span><span class="hide-m muted">+${eur(a * 100 * l.length, 0)} pri 100 €</span></summary>
-      ${l.map((e) => `<div class="lrow"><div class="t"><b>${esc(e.home)} – ${esc(e.away)}</b><span style="color:var(--good);white-space:nowrap">+${pct(e.maxMargin)}</span></div>
+      ${l.map((e) => `<div class="lrow" data-k="${esc(e.scope + "|" + e.key)}"><div class="t"><b>${esc(e.home)} – ${esc(e.away)}</b><span style="color:var(--good);white-space:nowrap">+${pct(e.maxMargin)}</span></div>
         <div class="muted small">${esc(e.league)} · ${new Date(e.date).toLocaleTimeString("sk-SK", { hour: "2-digit", minute: "2-digit" })} · ${esc(e.market)}</div>
         <div class="small">${e.sides.map((x) => `${esc(x.label)} <b style="color:var(--gold-hi)">${fmt(x.odd)}</b> <span class="muted">v ${esc(x.book)}</span>`).join(" &nbsp;·&nbsp; ")}</div>
-        <div class="faint small">Videný ${e.seen}× · prvýkrát ${new Date(e.firstSeen).toLocaleString("sk-SK", { day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" })}, naposledy ${new Date(e.lastSeen).toLocaleString("sk-SK", { day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" })}</div></div>`).join("")}
+        <div class="sb-foot" style="margin-top:4px"><span class="faint small">Videný ${e.seen}× · prvýkrát ${new Date(e.firstSeen).toLocaleString("sk-SK", { day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" })}, naposledy ${new Date(e.lastSeen).toLocaleString("sk-SK", { day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" })}</span><button type="button" class="btn ghost" data-k="${esc(e.scope + "|" + e.key)}">Do kalkulačky</button></div></div>`).join("")}
     </details>`;
   }).join("") : `<p class="empty">${logScope === "mine" && myBooks.length < 2 ? "Vyberte aspoň 2 svoje stávkovky – evidencia začne od ďalšieho prehľadania." : "Zatiaľ nič zapísané."}</p>`;
 }
 async function loadLog() {
   try { const j = await api("/api/surebets/log"); logEntries = j.entries || []; renderLog(); } catch (err) { $("logDays").innerHTML = `<p class="empty">${esc(err.message)}</p>`; }
 }
+$("logDays").addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-k]"); if (!btn) return;
+  const entry = logEntries.find((x) => x.scope + "|" + x.key === btn.dataset.k);
+  if (entry) toCalc(entry);
+});
 $("logScope").addEventListener("click", (e) => {
   const c = e.target.closest(".chip"); if (!c) return;
   logScope = c.dataset.s;
