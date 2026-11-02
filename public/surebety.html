@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TipRadar – surebety</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Surebety (2. 11. 2026) – skúška, samostatná stránka appky. */
+:root {
+  --bg: #0B0B0C; --section: #141416; --card: #1A1A1E; --line: rgba(201,165,92,.24); --line2: rgba(201,165,92,.12);
+  --gold: #C9A55C; --gold-hi: #E8D3A0; --gold-lo: #A8823E;
+  --text: #EDE6D6; --muted: #B8B0A2; --faint: #857E72; --good: #7FBF9A; --bad: #C0707C; --warn: #D9BE7A;
+  --display: "Bricolage Grotesque", system-ui, sans-serif;
+  --body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 var(--body); font-variant-numeric: tabular-nums; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 28px 20px 56px; }
+@media (max-width: 620px) { .wrap { padding: 20px 16px 44px; } }
+a.back { color: var(--muted); text-decoration: none; font-size: 13.5px; }
+a.back:hover { color: var(--gold); }
+h1, h2, h3 { font-family: var(--display); letter-spacing: -0.02em; margin: 0; }
+h1 { font-size: 32px; margin: 10px 0 6px; }
+h1 span { color: var(--gold); }
+h2 { font-size: 22px; margin: 0 0 4px; }
+.lead { color: var(--muted); margin: 0 0 22px; max-width: 74ch; }
+.muted { color: var(--muted); } .faint { color: var(--faint); } .small { font-size: 13px; }
+.panel { background: var(--section); border: 1px solid var(--line); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+@media (max-width: 620px) { .panel { padding: 14px; } }
+.head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+label.f { display: block; font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; font-weight: 600; }
+input[type=text], input[type=number] { width: 100%; font: 600 20px/1.2 var(--display); color: var(--text); background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+input:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.calc { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+@media (max-width: 760px) { .calc { grid-template-columns: 1fr; } }
+.side-in { background: var(--card); border: 1px solid var(--line2); border-radius: 12px; padding: 12px; }
+.side-in input.nm { font: 500 14px var(--body); padding: 7px 10px; margin-bottom: 8px; }
+.res { margin-top: 16px; border-radius: 12px; padding: 16px; border: 1px solid var(--line2); background: var(--card); }
+.res.ok { border-color: rgba(127,191,154,.5); background: rgba(127,191,154,.07); }
+.res.no { border-color: rgba(192,112,124,.45); background: rgba(192,112,124,.07); }
+.res-top { font: 700 22px/1.2 var(--display); margin-bottom: 10px; }
+.res.ok .res-top { color: var(--good); } .res.no .res-top { color: var(--bad); }
+.stakes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 520px) { .stakes { grid-template-columns: 1fr; } }
+.stake { background: var(--section); border-radius: 10px; padding: 10px 12px; }
+.stake b { display: block; font: 700 24px var(--display); color: var(--gold-hi); }
+.btn { font: 600 14px var(--body); color: #120E06; background: linear-gradient(135deg, var(--gold-hi), var(--gold)); border: 0; border-radius: 999px; padding: 9px 18px; cursor: pointer; }
+.btn.ghost { color: var(--gold); background: transparent; border: 1px solid var(--line); }
+.btn:disabled { opacity: .5; cursor: default; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 13px var(--body); color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; cursor: pointer; }
+.chip.on { color: #120E06; background: var(--gold); border-color: var(--gold); }
+.books { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 12px; max-height: 220px; overflow: auto; }
+.sb-list { display: grid; gap: 10px; }
+.sb { background: var(--card); border: 1px solid var(--line2); border-radius: 12px; padding: 14px; }
+.sb.sus { border-color: rgba(217,190,122,.45); }
+.sb-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.sb-top b { font: 600 17px var(--display); }
+.pct { font: 700 20px var(--display); color: var(--good); white-space: nowrap; }
+.sb.sus .pct { color: var(--warn); }
+.legs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0 8px; }
+@media (max-width: 520px) { .legs { grid-template-columns: 1fr; } }
+.leg { background: var(--section); border-radius: 9px; padding: 8px 10px; font-size: 14px; }
+.leg b { color: var(--gold-hi); }
+.sb-foot { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; }
+.warn { color: var(--warn); font-size: 13px; }
+.empty { color: var(--muted); padding: 10px 0; }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+@media (max-width: 760px) { .kpis { grid-template-columns: 1fr 1fr; } }
+.kpi { background: var(--card); border: 1px solid var(--line2); border-radius: 12px; padding: 12px; }
+.kpi span { display: block; font-size: 12px; color: var(--muted); }
+.kpi b { font: 700 24px var(--display); color: var(--gold-hi); }
+.tbl { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 420px; font-size: 14px; }
+th { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 6px; text-align: right; }
+td { padding: 7px 6px; text-align: right; border-top: 1px solid var(--line2); }
+th:first-child, td:first-child { text-align: left; }
+details summary { cursor: pointer; color: var(--gold); font-weight: 600; }
+details p, details li { color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/">‹ Späť do appky</a>
+  <h1>Sure<span>bety</span></h1>
+  <p class="lead">Surebet = dve stávkovky ponúkajú opačné stávky (napr. nad a pod 2,5 gólu) s takými kurzami, že pri vsadení na obe strany zarobíte, nech zápas skončí akokoľvek. Táto stránka je len pre vás, s tipmi TipRadaru nesúvisí.</p>
+
+  <!-- KALKULAČKA -->
+  <section class="panel" id="calcPanel">
+    <div class="head"><div><h2>Kalkulačka</h2><div class="muted small">Zadajte kurzy z dvoch stávkoviek (napr. Tipsport nad 2,5 a Fortuna pod 2,5).</div></div></div>
+    <div class="calc">
+      <div class="side-in">
+        <label class="f">Stávka 1</label>
+        <input type="text" class="nm" id="nmA" placeholder="napr. Tipsport – nad 2,5" autocomplete="off">
+        <input type="text" id="oddA" inputmode="decimal" placeholder="kurz, napr. 2,10" autocomplete="off">
+      </div>
+      <div class="side-in">
+        <label class="f">Stávka 2</label>
+        <input type="text" class="nm" id="nmB" placeholder="napr. Fortuna – pod 2,5" autocomplete="off">
+        <input type="text" id="oddB" inputmode="decimal" placeholder="kurz, napr. 2,05" autocomplete="off">
+      </div>
+      <div class="side-in">
+        <label class="f">Celkový vklad</label>
+        <input type="text" id="total" inputmode="decimal" value="100" autocomplete="off" style="margin-bottom:8px">
+        <div class="chips" id="roundChips">
+          <button type="button" class="chip on" data-r="1">Zaokrúhliť na celé €</button>
+          <button type="button" class="chip" data-r="0.1">na 0,10 €</button>
+        </div>
+      </div>
+    </div>
+    <div class="res" id="calcRes"><span class="muted">Zadajte oba kurzy.</span></div>
+  </section>
+
+  <!-- NÁJDENÉ SUREBETY -->
+  <section class="panel">
+    <div class="head">
+      <div><h2>Nájdené surebety</h2><div class="muted small" id="scanInfo">Načítavam…</div></div>
+      <button type="button" class="btn" id="scanBtn">Prehľadať teraz</button>
+    </div>
+    <div class="chips" id="scopeChips" style="margin-bottom:12px">
+      <button type="button" class="chip" data-s="mine">Len moje stávkovky</button>
+      <button type="button" class="chip on" data-s="all">Všetky stávkovky</button>
+    </div>
+    <p class="warn" style="margin:0 0 12px">Kurzy sú z API-Football (zahraničné stávkovky, obnovujú sa raz za pár hodín). Pred stávkou vždy overte oba kurzy priamo v stávkovke a prepočítajte v kalkulačke hore.</p>
+    <div class="sb-list" id="sbList"></div>
+  </section>
+
+  <!-- MOJE STÁVKOVKY -->
+  <section class="panel">
+    <div class="head"><div><h2>Moje stávkovky</h2><div class="muted small">Vyberte aspoň 2 stávkovky, v ktorých máte účet. Server potom eviduje aj surebety len medzi nimi.</div></div></div>
+    <div class="books" id="bookList"><span class="muted small">Zoznam sa zobrazí po prvom prehľadaní.</span></div>
+    <button type="button" class="btn ghost" id="saveBooksBtn">Uložiť výber</button> <span class="muted small" id="booksMsg"></span>
+  </section>
+
+  <!-- SKÚŠKA -->
+  <section class="panel">
+    <div class="head"><div><h2>Skúška – prehľad</h2><div class="muted small">Server každé 2 hodiny prehľadá dnešné a zajtrajšie zápasy a zapíše každý surebet so ziskom aspoň 0,5 % (bez podozrivých nad 8 %).</div></div></div>
+    <div class="chips" id="logScope" style="margin-bottom:12px">
+      <button type="button" class="chip" data-s="mine">Len moje stávkovky</button>
+      <button type="button" class="chip on" data-s="all">Všetky stávkovky</button>
+    </div>
+    <div class="kpis" id="logKpis"></div>
+    <div class="tbl"><table><thead><tr><th>Deň zápasov</th><th>Surebetov</th><th>Priemerný zisk</th><th>Zisk pri 100 € na každý</th></tr></thead><tbody id="logRows"></tbody></table></div>
+  </section>
+
+  <section class="panel">
+    <details>
+      <summary>Na čo si dať pozor</summary>
+      <ul>
+        <li><b>Vsaďte najprv vyšší kurz.</b> Ten sa mení najrýchlejšie. Druhú stranu vsaďte hneď potom a ak sa kurz medzitým zmenil, prepočítajte to v kalkulačke.</li>
+        <li><b>Rovnaké pravidlá.</b> Obe stávky musia byť na ten istý trh a čas (zvyčajne len riadny hrací čas, bez predĺženia).</li>
+        <li><b>Obmedzenie účtu.</b> Stávkovky surebetárov spoznajú podľa nepárnych súm a stávok len na „čudné“ kurzy. Zaokrúhľujte vklady na celé eurá a občas vsaďte aj bežnú stávku.</li>
+        <li><b>Zisk nad 8 %</b> je skoro vždy chyba v kurze. Stávkovka môže takú stávku zrušiť a vy ostanete s jednou stranou.</li>
+      </ul>
+    </details>
+  </section>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const num = (s) => { const n = parseFloat(String(s || "").replace(/\s/g, "").replace(",", ".")); return isFinite(n) ? n : NaN; };
+const fmt = (n, d = 2) => n.toLocaleString("sk-SK", { minimumFractionDigits: d, maximumFractionDigits: d });
+const eur = (n, d = 2) => fmt(n, d) + " €";
+const pct = (m) => fmt(m * 100, 1) + " %";
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+let roundTo = 1;
+
+// ---------- Kalkulačka ----------
+function calc() {
+  const a = num($("oddA").value), b = num($("oddB").value), total = num($("total").value);
+  const box = $("calcRes");
+  const nA = $("nmA").value.trim() || "Stávka 1", nB = $("nmB").value.trim() || "Stávka 2";
+  if (!(a > 1) || !(b > 1)) { box.className = "res"; box.innerHTML = '<span class="muted">Zadajte oba kurzy (väčšie ako 1).</span>'; return; }
+  const sum = 1 / a + 1 / b;
+  const margin = 1 / sum - 1;
+  if (sum >= 1) {
+    const needB = 1 / (1 - 1 / a);
+    box.className = "res no";
+    box.innerHTML = `<div class="res-top">Nie je to surebet (${pct(margin)})</div>
+      <div class="muted">Pri kurze ${fmt(a)} by druhá stávka potrebovala kurz aspoň <b>${fmt(Math.ceil(needB * 100 + 0.0001) / 100)}</b>.</div>`;
+    return;
+  }
+  const T = total > 0 ? total : 100;
+  let sA = Math.round((T * (1 / a) / sum) / roundTo) * roundTo;
+  let sB = Math.round((T - sA) / roundTo) * roundTo;
+  const spent = sA + sB;
+  const winA = sA * a - spent, winB = sB * b - spent;
+  const worst = Math.min(winA, winB);
+  box.className = "res " + (worst >= 0 ? "ok" : "no");
+  box.innerHTML = `<div class="res-top">${worst >= 0 ? "Surebet" : "Surebet, ale zaokrúhlenie ho zjedlo"} · ${pct(margin)}</div>
+    <div class="stakes">
+      <div class="stake"><span class="muted small">${esc(nA)} · kurz ${fmt(a)}</span><b>${eur(sA, roundTo < 1 ? 2 : 0)}</b><span class="small">ak vyjde: ${winA >= 0 ? "+" : ""}${eur(winA)}</span></div>
+      <div class="stake"><span class="muted small">${esc(nB)} · kurz ${fmt(b)}</span><b>${eur(sB, roundTo < 1 ? 2 : 0)}</b><span class="small">ak vyjde: ${winB >= 0 ? "+" : ""}${eur(winB)}</span></div>
+    </div>
+    <div class="muted small" style="margin-top:10px">Spolu vsadíte ${eur(spent)}. Istý zisk aspoň <b style="color:var(--text)">${eur(worst)}</b>, nech zápas skončí akokoľvek.</div>`;
+}
+["oddA", "oddB", "total", "nmA", "nmB"].forEach((id) => $(id).addEventListener("input", calc));
+$("roundChips").addEventListener("click", (e) => {
+  const c = e.target.closest(".chip"); if (!c) return;
+  roundTo = Number(c.dataset.r);
+  for (const x of $("roundChips").children) x.classList.toggle("on", x === c);
+  calc();
+});
+calc();
+
+// ---------- Nájdené surebety ----------
+let scope = "all";
+let myBooks = [];
+let allBooks = [];
+async function api(url, opts) {
+  const r = await fetch(url, opts);
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || "Chyba servera");
+  return j;
+}
+function when(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString("sk-SK", { weekday: "short", day: "numeric", month: "numeric" }) + " " + d.toLocaleTimeString("sk-SK", { hour: "2-digit", minute: "2-digit" });
+}
+function renderList(list) {
+  if (!list.length) {
+    $("sbList").innerHTML = `<p class="empty">${scope === "mine" && myBooks.length < 2 ? "Najprv nižšie vyberte aspoň 2 svoje stávkovky." : "Momentálne žiadny surebet. Nájdu sa zvyčajne pár hodín pred zápasmi, skúste neskôr."}</p>`;
+    return;
+  }
+  $("sbList").innerHTML = list.map((s, i) => `
+    <div class="sb${s.suspicious ? " sus" : ""}">
+      <div class="sb-top"><b>${esc(s.home)} – ${esc(s.away)}</b><span class="pct">+${pct(s.margin)}</span></div>
+      <div class="muted small">${esc(s.league)}${s.country ? " (" + esc(s.country) + ")" : ""} · ${when(s.date)} · ${esc(s.market)}</div>
+      <div class="legs">${s.sides.map((x) => `<div class="leg">${esc(x.label)} · <b>${fmt(x.odd)}</b> <span class="muted">v ${esc(x.book)}</span></div>`).join("")}</div>
+      <div class="sb-foot">${s.suspicious ? '<span class="warn">Podozrivo vysoký zisk – takmer určite chyba v kurze.</span>' : "<span></span>"}<button type="button" class="btn ghost" data-i="${i}">Do kalkulačky</button></div>
+    </div>`).join("");
+  $("sbList").onclick = (e) => {
+    const btn = e.target.closest("button[data-i]"); if (!btn) return;
+    const s = list[Number(btn.dataset.i)];
+    $("nmA").value = `${s.sides[0].book} – ${s.sides[0].label}`; $("oddA").value = fmt(s.sides[0].odd);
+    $("nmB").value = `${s.sides[1].book} – ${s.sides[1].label}`; $("oddB").value = fmt(s.sides[1].odd);
+    calc();
+    $("calcPanel").scrollIntoView({ behavior: "smooth" });
+  };
+}
+function renderBooks() {
+  if (!allBooks.length) return;
+  const set = new Set(myBooks);
+  const names = [...new Set([...myBooks, ...allBooks])];
+  $("bookList").innerHTML = names.map((b) => `<button type="button" class="chip${set.has(b) ? " on" : ""}" data-b="${esc(b)}">${esc(b)}</button>`).join("");
+}
+$("bookList").addEventListener("click", (e) => {
+  const c = e.target.closest(".chip"); if (c) c.classList.toggle("on");
+});
+$("saveBooksBtn").addEventListener("click", async () => {
+  const books = [...$("bookList").querySelectorAll(".chip.on")].map((c) => c.dataset.b);
+  try {
+    const j = await api("/api/surebets/books", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ books }) });
+    myBooks = j.myBooks;
+    $("booksMsg").textContent = books.length < 2 ? "Uložené. Na surebety treba aspoň 2 stávkovky." : "Uložené.";
+    load();
+  } catch (err) { $("booksMsg").textContent = err.message; }
+});
+async function load() {
+  try {
+    const j = await api("/api/surebets?scope=" + scope);
+    myBooks = j.myBooks || [];
+    allBooks = j.status.books || [];
+    const st = j.status;
+    $("scanInfo").textContent = st.scanning ? "Práve prehľadávam…" : st.at
+      ? `Naposledy ${new Date(st.at).toLocaleString("sk-SK", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "numeric" })} · ${st.fixtures} zápasov · ${allBooks.length} stávkoviek${st.error ? " · chyba: " + st.error : ""}`
+      : "Server ešte neprehľadával (prvýkrát minútu po spustení).";
+    renderList(j.surebets);
+    renderBooks();
+  } catch (err) { $("scanInfo").textContent = err.message; }
+}
+$("scanBtn").addEventListener("click", async () => {
+  $("scanBtn").disabled = true; $("scanInfo").textContent = "Prehľadávam dnešné a zajtrajšie zápasy, trvá to asi minútu…";
+  try { await api("/api/surebets/scan", { method: "POST" }); } catch (err) { /* chyba sa ukáže v stave */ }
+  $("scanBtn").disabled = false;
+  load(); loadLog();
+});
+$("scopeChips").addEventListener("click", (e) => {
+  const c = e.target.closest(".chip"); if (!c) return;
+  scope = c.dataset.s;
+  for (const x of $("scopeChips").children) x.classList.toggle("on", x === c);
+  load();
+});
+
+// ---------- Skúška – prehľad ----------
+let logScope = "all";
+let logEntries = [];
+function renderLog() {
+  const list = logEntries.filter((e) => e.scope === logScope);
+  const n = list.length;
+  const avg = n ? list.reduce((s, e) => s + e.maxMargin, 0) / n : 0;
+  const profit = list.reduce((s, e) => s + e.maxMargin * 100, 0);
+  const lasting = list.filter((e) => e.seen >= 2).length;
+  $("logKpis").innerHTML = `
+    <div class="kpi"><span>Surebetov spolu</span><b>${n}</b></div>
+    <div class="kpi"><span>Priemerný zisk</span><b>${n ? pct(avg) : "–"}</b></div>
+    <div class="kpi"><span>Zisk pri 100 € na každý</span><b>${eur(profit, 0)}</b></div>
+    <div class="kpi"><span>Vydržali aspoň 2 hodiny</span><b>${n ? lasting : "–"}</b></div>`;
+  const byDay = {};
+  for (const e of list) {
+    const d = new Date(e.date).toLocaleDateString("sv-SE", { timeZone: "Europe/Bratislava" });
+    (byDay[d] ??= []).push(e);
+  }
+  const days = Object.keys(byDay).sort().reverse();
+  $("logRows").innerHTML = days.length ? days.map((d) => {
+    const l = byDay[d];
+    const a = l.reduce((s, e) => s + e.maxMargin, 0) / l.length;
+    return `<tr><td>${new Date(d + "T12:00:00").toLocaleDateString("sk-SK", { weekday: "short", day: "numeric", month: "numeric" })}</td><td>${l.length}</td><td>${pct(a)}</td><td>${eur(a * 100 * l.length, 0)}</td></tr>`;
+  }).join("") : `<tr><td colspan="4" class="muted">${logScope === "mine" && myBooks.length < 2 ? "Vyberte aspoň 2 svoje stávkovky – evidencia začne od ďalšieho prehľadania." : "Zatiaľ nič zapísané."}</td></tr>`;
+}
+async function loadLog() {
+  try { const j = await api("/api/surebets/log"); logEntries = j.entries || []; renderLog(); } catch (err) { $("logRows").innerHTML = `<tr><td colspan="4">${esc(err.message)}</td></tr>`; }
+}
+$("logScope").addEventListener("click", (e) => {
+  const c = e.target.closest(".chip"); if (!c) return;
+  logScope = c.dataset.s;
+  for (const x of $("logScope").children) x.classList.toggle("on", x === c);
+  renderLog();
+});
+load(); loadLog();
+</script>
+</body>
+</html>

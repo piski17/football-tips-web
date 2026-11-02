@@ -9,6 +9,7 @@ import { startBacktest, getBacktest } from "./backtest";
 import { applyCupGoals } from "./cupAdjust";
 import { getDay, getAllDays, setDay } from "./dailyStore";
 import { saveSlip, deleteSlip, listSlipIds, getSlipImage, MAX_SLIP_CHARS } from "./slipStore";
+import { scanSurebets, computeSurebets, surebetStatus, surebetLog, getMyBooks, setMyBooks, startSurebetScanner } from "./surebets";
 import { recordAutoFixture, listAuto, listAutoFixtures, autoFixtureDone, updateAuto, pruneAuto, AutoEntry } from "./autoStore";
 import "dotenv/config";
 import express, { NextFunction, Request, Response } from "express";
@@ -1963,6 +1964,40 @@ app.get(["/suhrn", "/suhrn/"], (_req, res) => {
 app.get(["/instagram", "/instagram/"], (_req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "instagram.html"));
 });
+
+// ---- Surebety (/surebety) – Michalov vedľajší projekt, skúška od 2. 11. 2026 ----
+// Nedotýka sa tipov, štatistík ani klientov. Logika v src/surebets.ts.
+app.get(["/surebety", "/surebety/"], (_req, res) => {
+  res.set("Cache-Control", "no-cache");
+  res.sendFile(path.join(__dirname, "..", "public", "surebety.html"));
+});
+app.get("/api/surebets", async (req, res) => {
+  try {
+    const mine = await getMyBooks();
+    const scope = req.query.scope === "mine" ? "mine" : "all";
+    const list = computeSurebets(scope === "mine" ? (mine.length >= 2 ? mine : ["-"]) : null);
+    res.json({ status: surebetStatus(), myBooks: mine, scope, surebets: list.slice(0, 200) });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message ?? String(err) });
+  }
+});
+app.post("/api/surebets/scan", async (_req, res) => {
+  await scanSurebets();
+  res.json({ status: surebetStatus() });
+});
+app.post("/api/surebets/books", async (req, res) => {
+  const books = Array.isArray(req.body?.books) ? req.body.books.map(String).filter(Boolean) : [];
+  await setMyBooks(books);
+  res.json({ ok: true, myBooks: await getMyBooks() });
+});
+app.get("/api/surebets/log", async (_req, res) => {
+  try {
+    res.json({ entries: await surebetLog(), myBooks: await getMyBooks() });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message ?? String(err) });
+  }
+});
+startSurebetScanner();
 
 app.get("/api/daily", async (_req, res) => {
   try {
