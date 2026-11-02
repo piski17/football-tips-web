@@ -41,7 +41,7 @@ import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, Market
 import { newModelInputs } from "./newModel";
 import { computeMarketHealth, marketChangesText, clvOf, CLV_TIE } from "./marketHealth";
 import { LeaguePreset, SavedTip } from "./types";
-import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, moveTipsBelowOddsOnce } from "./tipsStore";
+import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once } from "./tipsStore";
 import { computeTicketStatus, settleBet, settleFixtureBets, tipHasStartedMatch, MATCH_STARTED_MESSAGE, buildTipEdit } from "./tipEvaluator";
 import {
   sendTipToTelegram,
@@ -3659,8 +3659,9 @@ checkExpiringSubscribers(); // aj hneď po štarte appky
 app.listen(PORT, () => {
   console.log(`TipRadar beží na porte ${PORT}`);
   void refreshTelegramWebhookSecret(telegramWebhookSecret());
-  // Kurz od 1,60 (2. 11. 2026): raz presunie staré tipy pod 1,60 bokom (záloha tipradar_tips_pod_160).
-  void moveTipsBelowOddsOnce(1.6)
-    .then((n) => { if (n) console.log(`Tipy pod 1,60: presunuté bokom ${n}`); })
-    .catch((err) => console.error("Presun tipov pod 1,60 zlyhal:", err));
+  // 2. 11. 2026 20:50: pásmo 70 – 80 %, kurz od 1,50 – raz vráti tipy odložené pri 1,60 a tipy pod 70 % presunie do sledovaných.
+  // (Presun pod 1,60 – moveTipsBelowOddsOnce – sa už nevolá.)
+  void restoreBelow160AndBand70Once(MIN_PROBABILITY)
+    .then((r) => { if (r.restored || r.moved) console.log(`Pásmo 70 – 80 %: vrátené ${r.restored}, presunuté do sledovaných ${r.moved}`); })
+    .catch((err) => console.error("Prechod na pásmo 70 – 80 % zlyhal:", err));
 });

@@ -34,7 +34,7 @@ export const MIN_EXPECTED_VALUE = 1.05;
  */
 function parseMinOdds(raw: string | undefined): number {
   const n = Number(String(raw ?? "").trim().replace(",", "."));
-  return raw && Number.isFinite(n) && n >= 1.01 && n <= 10 ? n : 1.6;
+  return raw && Number.isFinite(n) && n >= 1.01 && n <= 10 ? n : 1.5; // 2. 11. 2026 20:50 (Michal): späť 1,50 spolu s pásmom 70 – 80 %
 }
 export const MIN_ODDS = parseMinOdds(typeof process !== "undefined" ? process.env.MIN_ODDS : undefined);
 
@@ -65,13 +65,15 @@ export const MIN_GAMES_TO_RECOMMEND = 3;
 // 24. 10. 2026 ráno späť na 68 – 80 %; v ten deň opäť 65 – 80 % (65 – 67 % len sledovať).
 // 25. 10. 2026 (Michalovo rozhodnutie): tipy 65 – 67 % vyšli 1 z 5 – definitívne 68 – 80 %
 // a minimálny kurz 1,60 (MIN_ODDS).
-export const MIN_PROBABILITY = 68;
+// 2. 11. 2026 20:50 (Michalovo rozhodnutie, skúška): pásmo 70 – 80 % pri kurze od 1,50 (kontrola 60 / 40 tiež od 70 %).
+// Návrat: MIN_PROBABILITY 68, WATCH_BELOW_PROBABILITY 68, MIN_ODDS 1,6.
+export const MIN_PROBABILITY = 70;
 /**
  * Skúšobné pásmo (21. 10. 2026, Michalovo rozhodnutie): tipy s dôverou pod touto hranicou
  * (65 – 68 %) sa ukladajú len na sledovanie – vyhodnotia sa, ale neposielajú sa členom
  * a nerátajú sa do štatistík. Keď sa ukážu ako dobré, stačí hranicu znížiť na MIN_PROBABILITY.
  */
-export const WATCH_BELOW_PROBABILITY = 68;
+export const WATCH_BELOW_PROBABILITY = 70;
 /**
  * Skúšobné pásmo 65 – 67 % (28. 10. 2026, Michalovo rozhodnutie): tipy od tejto dôvery po MIN_PROBABILITY
  * appka ukáže zvlášť a ukladajú sa len do sledovaných (vlastná skupina v Histórii tipov). Pri kontrole

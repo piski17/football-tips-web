@@ -17,7 +17,7 @@ const KEY = "tipradar_ticket_legs";
 const FILE = path.join(__dirname, "..", "data", "ticket-legs.json");
 
 export const TICKET_RULES = {
-  legMinOdds: 1.6, // od 2. 11. 2026 (predtým 1,50)
+  legMinOdds: 1.5, // 2. 11. 2026 20:50 späť 1,50 (krátko 1,60)
   legMinProb: 70,
   legMaxProb: 75,
   legMinValue: 1.05, // +5 %

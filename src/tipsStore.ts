@@ -220,3 +220,56 @@ export async function moveTipsBelowOddsOnce(min = 1.6): Promise<number> {
     return below.length;
   });
 }
+
+/**
+ * Pásmo 70 – 80 % a kurz od 1,50 (2. 11. 2026 20:50, Michalovo rozhodnutie, skúška). Beží raz pri štarte:
+ * 1) tipy odložené bokom pri kurze 1,60 (tipradar_tips_pod_160) sa vrátia do Histórie tipov (bez duplicít podľa id;
+ *    záloha v Redise ostáva),
+ * 2) zverejnené tipy s dôverou pod 70 % (nie tikety) sa presunú do sledovaných – značka band70Moved,
+ *    65 – 69 % aj watchBand; rovnako tipy, ktoré neprejdú kontrolou 60 / 40 od 70 % (aj strictFail). Nič sa nemaže.
+ * Návrat k 1,60 / 68 – 80 %: tipom s band70Moved zrušiť watchOnly (+ watchBand, strictFail), MIN_PROBABILITY 68, MIN_ODDS 1,6.
+ */
+const BAND70_DONE_KEY = "tipradar_migr_70_150_done";
+export async function restoreBelow160AndBand70Once(minProb = 70): Promise<{ restored: number; moved: number }> {
+  if (!useUpstash) return { restored: 0, moved: 0 };
+  const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };
+  const done = (await upstashClient().get(`${UPSTASH_URL}/get/${BAND70_DONE_KEY}`, auth)).data?.result;
+  if (done) return { restored: 0, moved: 0 };
+  return withWriteLock(async () => {
+    const tips = await readAll();
+    let below: SavedTip[] = [];
+    try {
+      const raw = (await upstashClient().get(`${UPSTASH_URL}/get/${BELOW_KEY}`, auth)).data?.result;
+      below = raw ? JSON.parse(raw) : [];
+    } catch { below = []; }
+    const ids = new Set(tips.map((t) => t.id));
+    const restore = (Array.isArray(below) ? below : []).filter((t) => t && t.id && !ids.has(t.id));
+    const all = [...tips, ...restore];
+    let moved = 0;
+    for (const t of all) {
+      if ((t.legs && t.legs.length) || t.watchOnly) continue;
+      if (typeof t.probability === "number" && t.probability < minProb) {
+        t.watchOnly = true;
+        t.band70Moved = true;
+        if (t.probability >= 65) t.watchBand = true;
+        t.strongOfDay = undefined;
+        moved++;
+      } else if (
+        typeof t.strictProbability === "number" && typeof t.odds === "number" && t.odds > 1 && !t.manualEntry &&
+        !(t.strictProbability >= minProb && t.strictProbability <= 80 && (t.strictProbability / 100) * t.odds >= 1.05)
+      ) {
+        // kontrola 60 / 40 od 70 %: tip by pri nových pravidlách neprešiel – tiež do sledovaných (skupina 60 / 40)
+        t.watchOnly = true;
+        t.band70Moved = true;
+        t.strictFail = true;
+        t.strongOfDay = undefined;
+        moved++;
+      }
+    }
+    if (restore.length || moved) await writeAll(all);
+    await upstashClient().post(`${UPSTASH_URL}/set/${BAND70_DONE_KEY}`, new Date().toISOString(), {
+      headers: { ...auth.headers, "Content-Type": "text/plain" },
+    });
+    return { restored: restore.length, moved };
+  });
+}

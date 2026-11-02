@@ -203,7 +203,7 @@ const MONTH_NAMES = ["Január", "Február", "Marec", "Apríl", "Máj", "Jún", "
 
 // ---- Pravidlá tipov ----
 const STRONG_TIP_MIN_PROBABILITY = 70; // STRONG_TIP_MIN_PROBABILITY v oddsMatcher.ts
-let MIN_ODDS = 1.6; // predvolené: 1,60 (od 2. 11. 2026, predtým 1,50); ak server pošle MIN_ODDS (/api/public/vip-seats), použije sa ten
+let MIN_ODDS = 1.5; // predvolené: 1,50 (2. 11. 2026 20:50 späť z 1,60, spolu s pásmom 70 – 80 %); ak server pošle MIN_ODDS (/api/public/vip-seats), použije sa ten
 const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté konto"];
 const MATCH_STARTED_TEXT = "Zápas už začal – zabudnutý tip pridáš v detaile zápasu (Pridať zabudnutý tip).";
 const LIVE_STATUSES = ["1H", "HT", "2H", "ET", "BT", "P", "SUSP", "INT"];
@@ -230,8 +230,8 @@ function evPct(ev) {
   return `${p >= 0 ? "+" : "−"}${Math.abs(p)}${NB}%`;
 }
 function strongTipBadge(p) {
-  if (typeof p === "number" && p < 68)
-    return ` <span class="badge-strong" style="opacity:.75" title="Skúšobné pásmo 65 – 67 %: tip sa uloží len na sledovanie – vyhodnotí sa, ale neposiela sa členom a nerátá sa do štatistík.">len sledovať</span>`;
+  if (typeof p === "number" && p < WATCH_BELOW)
+    return ` <span class="badge-strong" style="opacity:.75" title="Skúšobné pásmo 65 – 69 %: tip sa uloží len na sledovanie – vyhodnotí sa, ale neposiela sa členom a nerátá sa do štatistík.">len sledovať</span>`;
   return typeof p === "number" && p >= STRONG_TIP_MIN_PROBABILITY
     ? ` <span class="badge-strong" title="Dôvera 70 % a viac.">★ 70${NB}%+</span>`
     : "";
@@ -269,7 +269,7 @@ const ICON = {
 /** Dôvera na celé percentá – tesne pod hranicou 68 % (67,5–67,9) s desatinou, aby nevyzerala ako 68 % (31. 10. 2026). */
 function probTxt(p) {
   const v = Number(p);
-  return v >= 67.5 && v < 68 ? fmtNum(Math.floor(v * 10) / 10, 1) : v.toFixed(0);
+  return v >= 69.5 && v < 70 ? fmtNum(Math.floor(v * 10) / 10, 1) : v.toFixed(0);
 }
 function ring(p, size = 64) {
   const v = clampPercent(p);
@@ -438,7 +438,7 @@ function askTelegramTarget() {
 }
 
 /** Skúšobné pásmo (21. 10. 2026): tipy pod 68 % sa ukladajú len na sledovanie (rovnako ako server). */
-const WATCH_BELOW = 68;
+const WATCH_BELOW = 70; // 2. 11. 2026 20:50: pásmo pre klientov 70 – 80 % (predtým 68)
 const isWatchTip = (tip) => !(tip.legs && tip.legs.length) && (tip.strictFail || (!tip.manualEntry && typeof tip.probability === "number" && tip.probability < WATCH_BELOW));
 
 async function maybeOfferTelegram(tipId, tip) {
@@ -1006,7 +1006,7 @@ function renderAnalysis(r, root, opts = {}) {
         </div>`
         )
         .join("")}</div>`
-    : `<div class="empty-card">Pri tomto zápase nie je žiadny tip v pásme 68 – 80${NB}%${(r.lowValueBets || []).length > 0 ? ", ktorý by prešiel kontrolou kurzu" : ""}.</div>${rejectedBetsHtml(r)}`;
+    : `<div class="empty-card">Pri tomto zápase nie je žiadny tip v pásme 70 – 80${NB}%${(r.lowValueBets || []).length > 0 ? ", ktorý by prešiel kontrolou kurzu" : ""}.</div>${rejectedBetsHtml(r)}`;
 
   // --- výsledok zápasu + forma ---
   const pr = r.probabilities || { homeWin: 0, draw: 0, awayWin: 0 };
@@ -1051,7 +1051,7 @@ function renderAnalysis(r, root, opts = {}) {
     ${header}
     ${statusHtml}
     ${started ? `<h3 class="sh">Pridať zabudnutý tip <small>zapísané pred výkopom</small></h3><div class="card" data-late-add><p class="faint small">Načítavam…</p></div>` : ""}
-    <h3 class="sh">Odporúčané tipy <small>pásmo 68 – 80${NB}%, len s hodnotou</small></h3>
+    <h3 class="sh">Odporúčané tipy <small>pásmo 70 – 80${NB}%, len s hodnotou</small></h3>
     ${tipsHtml}
     ${r.cupNote ? `<p class="faint small" data-cup-note>${escapeHtml(r.cupNote)}</p>` : ""}
     <div class="save-msg" data-save-msg></div>
@@ -1270,14 +1270,14 @@ const STRICT_CHECK_ON = true;
 function strictCheck(bet, odd) {
   const p = bet.strictProbability;
   if (typeof p !== "number" || !(odd > 1)) return { pass: true, p: null };
-  return { pass: p >= 68 && p <= 80 && (p / 100) * odd >= 1.05, p };
+  return { pass: p >= WATCH_BELOW && p <= 80 && (p / 100) * odd >= 1.05, p };
 }
 
 /** Text pri tipe do sledovaných kvôli 60 / 40: aký kurz treba, aby prešiel ku klientom. */
 function strictHint(bet) {
   const p = bet.strictProbability;
   if (typeof p !== "number") return "Pri kurze zo stávkoviek neprejde kontrolou 60 / 40.";
-  if (p < 68 || p > 80) return `Pri 60 / 40 má dôveru ${fmtNum(p, 0)}${NB}% – mimo pásma 68 – 80${NB}%, ku klientom nepôjde pri žiadnom kurze.`;
+  if (p < WATCH_BELOW || p > 80) return `Pri 60 / 40 má dôveru ${fmtNum(p, 0)}${NB}% – mimo pásma 70 – 80${NB}%, ku klientom nepôjde pri žiadnom kurze.`;
   const need = Math.ceil((1.05 / (p / 100)) * 100) / 100;
   return `Pri 60 / 40 má dôveru ${fmtNum(p, 0)}${NB}% – ku klientom prejde pri kurze aspoň ${fmtOdds(need)}, inak len sledovať.`;
 }
@@ -1450,9 +1450,9 @@ function renderCalcRows(out, r, market, rows) {
   rows.forEach((x) => {
     if (x.odds != null) {
       x.ev = (x.probability / 100) * x.odds;
-      x.ok = x.probability >= 68 && x.probability <= 80 && x.odds >= MIN_ODDS && x.ev >= 1.05 && x.ev <= 1.25;
+      x.ok = x.probability >= WATCH_BELOW && x.probability <= 80 && x.odds >= MIN_ODDS && x.ev >= 1.05 && x.ev <= 1.25;
     } else {
-      x.ok = x.probability >= 68 && x.probability <= 80;
+      x.ok = x.probability >= WATCH_BELOW && x.probability <= 80;
     }
   });
   const good = rows.filter((x) => x.ok);
@@ -1461,7 +1461,7 @@ function renderCalcRows(out, r, market, rows) {
     rows.forEach((x) => { x.ok = x === best; });
   }
   const whyNot = (x) => {
-    if (x.probability < 68 || x.probability > 80) return `Mimo pásma 68 – 80${NB}% – neodporúčame.`;
+    if (x.probability < WATCH_BELOW || x.probability > 80) return `Mimo pásma 70 – 80${NB}% – neodporúčame.`;
     if (x.odds < MIN_ODDS) return `Kurz pod ${fmtOdds(MIN_ODDS)} – neodporúčame.`;
     if (x.ev < 1.05) return `Kurz je na túto šancu nízky (výhodnosť ${evPct(x.ev)}) – neodporúčame.`;
     if (x.ev > 1.25) return `Podozrivo vysoká výhodnosť (${evPct(x.ev)}), model sa asi mýli – neodporúčame.`;
@@ -1736,7 +1736,7 @@ async function showDayTips() {
     try {
       const r = await requestAnalysis(f);
       for (const bet of r?.bestBets || []) items.push({ r, bet });
-      // Skúšobné pásmo 65 – 67 % (28. 10. 2026): len do sledovaných, v zozname vlastná skupina.
+      // Skúšobné pásmo 65 – 69 % (28. 10. 2026): len do sledovaných, v zozname vlastná skupina.
       for (const bet of r?.watchBandBets || []) items.push({ r, bet });
     } catch (e) {
       failed++;
@@ -1811,7 +1811,7 @@ function farLineTip(t) {
   return raw > 73;
 }
 function lateTipForClients(t) {
-  if (t.strictFail || t.probability < 68 || t.probability > 80) return false;
+  if (t.strictFail || t.probability < WATCH_BELOW || t.probability > 80) return false;
   if (typeof t.odds !== "number" && farLineTip(t)) return false; // len bez kurzu z API
   if (typeof t.odds !== "number") return true; // trh bez kurzu v API – rozhodne kurz, ktorý zadá Michal
   const value = (t.probability / 100) * t.odds;
@@ -1888,7 +1888,7 @@ function renderDayTipsViewMain() {
     const n = currentFixtures.filter((f) => !matchHasStarted(f)).length;
     dayTipsPaneEl.innerHTML = `${dayTipsTimeBarHtml()}<div class="card intro-card">
       <h3 class="sh" style="margin-top:0">Všetky odporúčané tipy dňa naraz</h3>
-      <p class="muted">Appka prejde všetky zápasy vybraného dňa pred výkopom${fixturesLoading ? "" : ` (${plural(n, "zápas", "zápasy", "zápasov")})`} a ukáže všetky tipy, ktoré prešli pravidlami (68 – 80${NB}% a kontrola kurzu), zoradené od najvyššej dôvery. Tipy 65 – 67${NB}% ukáže zvlášť – idú len do sledovaných.${dayTipsTimeBarHtml() ? " Hore si môžeš vybrať len jeden čas výkopu, napríklad len zápasy o 15:00." : ""}</p>
+      <p class="muted">Appka prejde všetky zápasy vybraného dňa pred výkopom${fixturesLoading ? "" : ` (${plural(n, "zápas", "zápasy", "zápasov")})`} a ukáže všetky tipy, ktoré prešli pravidlami (70 – 80${NB}% a kontrola kurzu), zoradené od najvyššej dôvery. Tipy 65 – 69${NB}% ukáže zvlášť – idú len do sledovaných.${dayTipsTimeBarHtml() ? " Hore si môžeš vybrať len jeden čas výkopu, napríklad len zápasy o 15:00." : ""}</p>
       <button type="button" class="btn" data-dt-start>Spustiť analýzu</button>
     </div>`;
     dayTipsPaneEl.querySelector("[data-dt-start]").onclick = () => { dayTipsTime = ""; showDayTips(); };
@@ -1934,7 +1934,7 @@ function renderDayTipsViewMain() {
   const groups = [
     { key: "klienti", title: "Pre klientov", note: "", idx: [] },
     { key: "sledovane", title: "Do sledovaných", note: "neprešli pri 60 / 40; s dobrým kurzom môže tip prejsť aj ku klientom", idx: [] },
-    { key: "pasmo65", title: `Pásmo 65 – 67${NB}% – len sledovať`, note: "skúška do kontroly 1. 12.: klientom nejdú, len sa vyhodnotia (História tipov → Pásmo 65 – 67 %)", idx: [] },
+    { key: "pasmo65", title: `Pásmo 65 – 69${NB}% – len sledovať`, note: "skúška do kontroly 1. 12.: klientom nejdú, len sa vyhodnotia (História tipov → Pásmo 65 – 67 %)", idx: [] },
   ];
   dayTips.items.forEach(({ bet }, i) => groups[bet.watchBand ? 2 : bet.strictFail ? 1 : 0].idx.push(i));
   let shown = 0;
@@ -1965,7 +1965,7 @@ function renderDayTipsViewMain() {
         <label class="small">Telegram <select id="dtBulkTg"><option value="premium">◆ Členský kanál</option><option value="free">★ FREE kanál</option><option value="">Neposielať</option></select></label>
         <button type="button" class="btn" id="dtBulkSave" disabled>Uložiť všetky s kurzom</button>
       </div>
-    </div>${rows}` : `<div class="empty-card">${dayTips.time ? `Pri zápasoch o ${escapeHtml(dayTips.time)}` : "V tento deň"} nie je žiadny tip, ktorý by prešiel pravidlami (68 – 80${NB}% a kontrola kurzu).</div>`}`;
+    </div>${rows}` : `<div class="empty-card">${dayTips.time ? `Pri zápasoch o ${escapeHtml(dayTips.time)}` : "V tento deň"} nie je žiadny tip, ktorý by prešiel pravidlami (70 – 80${NB}% a kontrola kurzu).</div>`}`;
 
   bindDayTipsTimeBar();
   // − / + pri každom tipe: zbalený tip ukáže len zápas, tip a dôveru.
@@ -2582,8 +2582,8 @@ function drawAutoTips() {
     (allList.length ? leagueTable : "") +
     (list.length ? marketTable : "") +
     `<h4 class="ct">Po dňoch</h4>${dayHtml}` +
-    `<p class="faint small">Server každý zápas zo všetkých súťaží prejde sám, asi hodinu pred výkopom, a zapíše všetky tipy, ktoré by model odporučil (pásmo 68 – 80${NB}%, hodnota +5 až +25${NB}%, kurz aspoň 1,60, najviac 1 tip z typu). Kurz je zo stávkoviek v tom čase. Klientom nejdú, nie sú na webe a nerátajú sa do úspešnosti – sú len pre teba, aby si videl, ako model funguje na veľkom množstve zápasov.</p>` +
-    `<p class="faint small">Zabudol si tip uložiť? Ťukni na „+ Pridať“ – tip pôjde do Histórie tipov ako ostatné, aj keď sa zápas už hrá alebo je po zápase. Berie sa dôvera a kurz, ktoré server zapísal pred výkopom, a platia rovnaké pravidlá (68 – 80${NB}%, kurz aspoň 1,60, kontrola 60 / 40) – čo by klientom nešlo, pôjde do sledovaných. Tip pridaný po výkope má značku „⏱ doplnené po výkope“ a do Telegramu sa neposiela. Po spustení predaja sa takéto tipy na webe nerátajú.</p>`;
+    `<p class="faint small">Server každý zápas zo všetkých súťaží prejde sám, asi hodinu pred výkopom, a zapíše všetky tipy, ktoré by model odporučil (pásmo 70 – 80${NB}%, hodnota +5 až +25${NB}%, kurz aspoň 1,50, najviac 1 tip z typu). Kurz je zo stávkoviek v tom čase. Klientom nejdú, nie sú na webe a nerátajú sa do úspešnosti – sú len pre teba, aby si videl, ako model funguje na veľkom množstve zápasov.</p>` +
+    `<p class="faint small">Zabudol si tip uložiť? Ťukni na „+ Pridať“ – tip pôjde do Histórie tipov ako ostatné, aj keď sa zápas už hrá alebo je po zápase. Berie sa dôvera a kurz, ktoré server zapísal pred výkopom, a platia rovnaké pravidlá (70 – 80${NB}%, kurz aspoň 1,60, kontrola 60 / 40) – čo by klientom nešlo, pôjde do sledovaných. Tip pridaný po výkope má značku „⏱ doplnené po výkope“ a do Telegramu sa neposiela. Po spustení predaja sa takéto tipy na webe nerátajú.</p>`;
   el.querySelectorAll("[data-auto-league]").forEach((b) => {
     b.onclick = () => {
       autoLeague = b.dataset.autoLeague;
@@ -2612,7 +2612,7 @@ function drawAutoTips() {
 
 const CALIBRATION_STEP = 2.5;
 /**
- * Skúšobné pásmo 65 – 67 % (28. 10. 2026, Michal): tipy tesne pod pásmom pre klientov majú v Histórii tipov
+ * Skúšobné pásmo 65 – 69 % (28. 10. 2026, Michal): tipy tesne pod pásmom pre klientov majú v Histórii tipov
  * vlastnú skupinu. Patria sem aj staršie sledované tipy 65 – 67 % z modelu (skúška 21. – 24. 10. 2026).
  */
 const WATCH_BAND_FROM = 65;
@@ -2623,7 +2623,7 @@ function renderWatchBand(list) {
   const el = document.getElementById("watchBandResult");
   if (!el) return;
   el.innerHTML =
-    watchListHtml(list, `Zatiaľ žiadne. Tipy 65 – 67${NB}% sa ukážu v Tipoch dňa v skupine „Pásmo 65 – 67${NB}%“ – keď ich uložíš s kurzom, pribudnú sem.`) +
+    watchListHtml(list, `Zatiaľ žiadne. Tipy 65 – 69${NB}% sa ukážu v Tipoch dňa v skupine „Pásmo 65 – 69${NB}%“ – keď ich uložíš s kurzom, pribudnú sem.`) +
     `<p class="faint small">Klientom nejdú, nie sú na webe a nerátajú sa do úspešnosti – len sa vyhodnocujú. Pri kontrole 1. 12. sa podľa nich rozhodne, či pásmo pre klientov rozšíriť na 65 – 80${NB}% (pri dôvere 65${NB}% treba kurz aspoň 1,62).</p>`;
 }
 /** Sledované tipy: tipy „len sledovať“ (pásmo 65 – 67 % má od 28. 10. 2026 vlastnú skupinu – renderWatchBand). */
@@ -2711,7 +2711,7 @@ async function renderWatchOverview(watchTips, statTips = []) {
   const band = watchTips.filter(isWatchBandTip);
   const marked = watchTips.filter((t) => !t.softConflict && !t.strictFail && !t.manualEntry && !isWatchBandTip(t));
   const rows = [
-    watchGroupRow(`Pásmo 65 – 67${NB}% (skúška)`, band),
+    watchGroupRow(`Pásmo 65 – 69${NB}% (skúška)`, band),
     watchGroupRow("Šedá zóna – slabší rozpor so stávkovkami", soft),
     watchGroupRow("Prešli pri 70 / 30, nie pri 60 / 40", strict),
     watchGroupRow("Ručne pridané mimo pravidiel", manual),
@@ -3196,7 +3196,7 @@ document.getElementById("strict6040Btn")?.addEventListener("click", () => {
       ${moved.length ? `<tr><td class="faint">Už presunuté do sledovaných</td><td class="num">${moved.length}</td><td class="num">${sum(moved)}</td></tr>` : ""}
     </tbody></table></div>
     ${table}
-    <p class="faint small">Šanca pri 60 / 40 sa dopočíta z uloženej dôvery a šance stávkoviek v čase tipu (odhad). Tip prejde, ak má pri 60 / 40 dôveru 68 – 80${NB}% a hodnotu aspoň +5${NB}% pri uloženom kurze. Presúvajú sa vždy všetky naraz – výherné aj prehraté – a dá sa to vrátiť.</p>
+    <p class="faint small">Šanca pri 60 / 40 sa dopočíta z uloženej dôvery a šance stávkoviek v čase tipu (odhad). Tip prejde, ak má pri 60 / 40 dôveru 70 – 80${NB}% a hodnotu aspoň +5${NB}% pri uloženom kurze. Presúvajú sa vždy všetky naraz – výherné aj prehraté – a dá sa to vrátiť.</p>
     <div class="modal-actions">
       ${fail.length ? `<button type="button" class="btn" id="s64Move">Presunúť ${fail.length} do sledovaných</button>` : ""}
       ${moved.length ? `<button type="button" class="btn ghost" id="s64Undo">Vrátiť presunuté (${moved.length})</button>` : ""}
@@ -3381,7 +3381,7 @@ let manualLastDate = "";
 /** Pravidlá odporúčaného tipu pre ručne doplnený tip – vráti dôvod zamietnutia alebo "". */
 function manualTipProblem(p, odds) {
   if (!(p > 0) || !(odds > 1)) return "";
-  if (p < 68) return `dôvera ${fmtNum(p, 0)}${NB}% je pod 68${NB}%`;
+  if (p < WATCH_BELOW) return `dôvera ${fmtNum(p, 0)}${NB}% je pod ${WATCH_BELOW}${NB}%`;
   if (p > 80) return `dôvera ${fmtNum(p, 0)}${NB}% je nad 80${NB}%`;
   const need = minOddsFor({ probability: p });
   if (odds < need) return `pri dôvere ${fmtNum(p, 0)}${NB}% treba kurz aspoň ${fmtOdds(need)}, zadaný je ${fmtOdds(odds)}`;
@@ -3422,13 +3422,13 @@ function openManualTip() {
     const why = manualTipProblem(p, odds);
     const box = q("watch");
     if (!(odds > 1) || !(p > 0)) { q("check").textContent = ""; box.disabled = false; return; }
-    // Skúšobné pásmo 65 – 67 %: kurz sa kontroluje rovnako, ale tip ide aj tak len medzi sledované.
+    // Skúšobné pásmo 65 – 69 %: kurz sa kontroluje rovnako, ale tip ide aj tak len medzi sledované.
     const trial = !why && p < WATCH_BELOW;
     const need = `pri ${fmtNum(p, 0)}${NB}% treba kurz aspoň ${fmtOdds(minOddsFor({ probability: p }))}`;
     q("check").textContent = why
       ? `✗ Model by tip nepustil: ${why}. Uloží sa len medzi sledované.`
       : trial
-        ? `✓ Kurz je v poriadku (${need}). Dôvera je v skúšobnom pásme 65 – 67${NB}%, tip sa uloží medzi sledované.`
+        ? `✓ Kurz je v poriadku (${need}). Dôvera je v skúšobnom pásme 65 – 69${NB}%, tip sa uloží medzi sledované.`
         : `✓ Tip prešiel kontrolou modelu (${need}).`;
     q("check").className = `small ${why ? "loss" : "win"}`;
     box.checked = !!why || trial;
@@ -3806,7 +3806,7 @@ const SHADOW_REASON_LABEL = {
   ev_low: "nízka hodnota (pod +5 %)",
   min_odds: `kurz pod ${fmtNum(MIN_ODDS, 2)}`,
   one_bookmaker: "kurz len od jednej stávkovky",
-  band_low: "dôvera pod pásmom (pod 68 %, 21. 10. a 23. – 24. 10. pod 65 %)",
+  band_low: "dôvera pod pásmom (pod 70 %, do 2. 11. pod 68 %, 21. 10. a 23. – 24. 10. pod 65 %)",
   band_high: "dôvera nad 80 %",
   category_lower_ev: "iná hranica trhu mala vyššiu hodnotu",
   neighbor_no_value: "hodnota len na jednej hranici, susedná bez hodnoty",
@@ -3814,7 +3814,7 @@ const SHADOW_REASON_LABEL = {
   market_disabled: "trh dočasne vypnutý (slabé výsledky)",
   market_excluded: "trh neodporúčame",
   line_too_high: "príliš vysoká hranica rohov",
-  manual_far_line: "rohy/karty bez kurzu – 1,60 sa nedá dostať",
+  manual_far_line: "rohy/karty bez kurzu – minimálny kurz sa nedá dostať",
   few_games: "málo odohraných zápasov",
   no_market_odds: "trh bez kurzu",
   no_odds: "zápas bez kurzov",
@@ -3844,7 +3844,7 @@ function conflictDetailHtml(c) {
     .map((x) => `<tr><td style="white-space:nowrap">${escapeHtml(new Date(x.matchDate).toLocaleDateString("sk-SK", { day: "numeric", month: "numeric" }))}</td><td>${escapeHtml(translateTeamName(x.homeTeam))} – ${escapeHtml(translateTeamName(x.awayTeam))}<br><span class="faint">${escapeHtml(x.market)}: ${escapeHtml(translateNamesInText(x.selection, x.homeTeam, x.awayTeam))}</span></td><td class="num">${p(x.model)}</td><td class="num">${p(x.bookmakers)}</td><td class="num">${typeof x.odds === "number" ? fmtOdds(x.odds) : "–"}</td><td>${res[x.status] || x.status}</td></tr>`)
     .join("");
   return `<details class="inner-details"><summary>Rozpor so stávkovkami – rozbor (kontrola pred zmenou filtra)</summary>
-    ${passing ? `<p class="small"><b>Tipy, ktoré by bez rozporu prešli všetkými pravidlami</b> (68 – 80${NB}%, kurz aspoň ${fmtNum(MIN_ODDS, 2)}, hodnota +5 až +25${NB}%): ${passing.settled ? `vyšlo <b>${passing.won} z ${passing.settled}</b> (${p(passing.hitRate)}), zisk <b class="${passing.profit >= 0 ? "g" : "l"}">${signed(passing.profit, 1)}${NB}j.</b>` : "zatiaľ žiadny vyhodnotený"}${passing.count > passing.settled ? `, čaká ${passing.count - passing.settled}` : ""}.</p>` : `<p class="small">Žiadny tip s rozporom by inak neprešiel pravidlami.</p>`}
+    ${passing ? `<p class="small"><b>Tipy, ktoré by bez rozporu prešli všetkými pravidlami</b> (70 – 80${NB}%, kurz aspoň ${fmtNum(MIN_ODDS, 2)}, hodnota +5 až +25${NB}%): ${passing.settled ? `vyšlo <b>${passing.won} z ${passing.settled}</b> (${p(passing.hitRate)}), zisk <b class="${passing.profit >= 0 ? "g" : "l"}">${signed(passing.profit, 1)}${NB}j.</b>` : "zatiaľ žiadny vyhodnotený"}${passing.count > passing.settled ? `, čaká ${passing.count - passing.settled}` : ""}.</p>` : `<p class="small">Žiadny tip s rozporom by inak neprešiel pravidlami.</p>`}
     ${(c.passingByPeriod || []).length ? shadowTableHtml(c.passingByPeriod, "Prešli by – obdobie", (k) => CONFLICT_PERIOD_LABEL[k] || k) : ""}
     ${shadowTableHtml(c.byPeriod || [], "Všetky – obdobie", (k) => CONFLICT_PERIOD_LABEL[k] || k)}
     ${shadowTableHtml(c.byMarket || [], "Trh", (k) => k)}
@@ -4565,7 +4565,7 @@ function renderBacktest(job) {
   }
   const b = r.bandOverall || {};
   const summary = b.count
-    ? `<div class="bt-summary">Tipy v pásme 68 – 80${NB}% (tie, ktoré by appka odporučila): <strong>${b.count}</strong>, model v priemere <strong>${pct(b.avgPredicted)}</strong>, reálne vyšlo <strong class="${b.hitRate < b.avgPredicted - 5 ? "bt-bad" : "bt-good"}">${pct(b.hitRate)}</strong>.</div>`
+    ? `<div class="bt-summary">Tipy v pásme 70 – 80${NB}% (tie, ktoré by appka odporučila): <strong>${b.count}</strong>, model v priemere <strong>${pct(b.avgPredicted)}</strong>, reálne vyšlo <strong class="${b.hitRate < b.avgPredicted - 5 ? "bt-bad" : "bt-good"}">${pct(b.hitRate)}</strong>.</div>`
     : "";
   const buckets = (r.buckets || []).filter((x) => x.count > 0).map((x) =>
     `<tr><td>${escapeHtml(x.label)}</td><td class="num">${x.count}</td><td class="num">${pct(x.avgPredicted)}</td><td class="num">${pct(x.hitRate)}</td>${diffCell(x.avgPredicted, x.hitRate)}</tr>`).join("");
@@ -4651,7 +4651,7 @@ function renderBacktestComparison(r, old, newModel = false) {
   const ob = old.bandOverall, nb = r.bandOverall;
   return `
     <h4>${newModel ? "Nový model (xG, únava, doma / vonku) oproti súčasnému" : "Nový model oproti pôvodnému"} (tie isté zápasy)</h4>
-    <div class="bt-summary">Pásmo 68 – 80${NB}%: ${names[0]} model <strong>${ob.count}</strong> tipov, vyšlo <strong>${pct(ob.hitRate)}</strong> · ${names[1]} model <strong>${nb.count}</strong> tipov, vyšlo <strong>${pct(nb.hitRate)}</strong>.</div>
+    <div class="bt-summary">Pásmo 70 – 80${NB}%: ${names[0]} model <strong>${ob.count}</strong> tipov, vyšlo <strong>${pct(ob.hitRate)}</strong> · ${names[1]} model <strong>${nb.count}</strong> tipov, vyšlo <strong>${pct(nb.hitRate)}</strong>.</div>
     <div class="table-wrap"><table class="bt-table"><thead><tr><th>Trh</th><th class="num">Model → realita – ${names[0]}</th><th class="num">Model → realita – ${names[1]}</th><th class="num">Chyba – ${names[0]}</th><th class="num">Chyba – ${names[1]}</th><th class="num">V pásme – ${names[0]}</th><th class="num">V pásme – ${names[1]}</th></tr></thead><tbody>${rows}</tbody></table></div>
     <p class="muted small">Chyba = ako ďaleko boli percentá modelu od skutočnosti (Brierovo skóre × 100). <strong>Nižšia je lepšia.</strong> Zelená: ${names[1]} model je presnejší, červená: horší. ${newModel
       ? "Nový model (21. 10. 2026) = súčasný model + xG (kvalita šancí), únava a rotácia (dni voľna, zápasy za 14 dní) a rohy, karty, strely a fauly zvlášť doma a vonku. Spätný test je bez kurzov stávkoviek."

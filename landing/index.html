@@ -905,7 +905,7 @@ html { scrollbar-color: rgba(214,182,118,.35) #070708; }
       <div class="rv">
         <div class="eyebrow">Hodnota</div>
         <h2 class="h2">Kedy má tip <em>hodnotu</em></h2>
-        <p class="lead">Keď model dáva výsledku 68&nbsp;% a kurz je 1,75, z každého eura sa v priemere vráti 0,68 × 1,75 = 1,19 €. To je hodnota +19&nbsp;%. Pri kurze 1,45 by to bolo 0,68 × 1,45 = 0,99 €, teda −1&nbsp;%, a tip by sme neposlali.</p>
+        <p class="lead">Keď model dáva výsledku 70&nbsp;% a kurz je 1,70, z každého eura sa v priemere vráti 0,70 × 1,70 = 1,19 €. To je hodnota +19&nbsp;%. Pri kurze 1,45 by to bolo 0,70 × 1,45 = 1,02 €, teda len +2&nbsp;%, a tip by sme neposlali.</p>
         <p class="calc-math">Skúste si to sami – posuňte <b>šancu modelu</b> a <b>kurz</b> alebo vyberte ukážkový trh.</p>
         <div class="presets" role="group" aria-label="Ukážkové trhy">
           <button type="button" data-p="72" data-o="1.62" aria-pressed="false">Rohy nad 9,5</button>
@@ -924,13 +924,13 @@ html { scrollbar-color: rgba(214,182,118,.35) #070708; }
           <circle cx="260" cy="260" r="4" fill="#F6E7BE"/>
         </svg>
         <div class="gauge-read">
-          <div class="gm"><small>Šanca podľa modelu</small><b class="num" id="gP">68&nbsp;%</b></div>
+          <div class="gm"><small>Šanca podľa modelu</small><b class="num" id="gP">70&nbsp;%</b></div>
           <div class="gv">vs.</div>
-          <div><small>Šanca podľa kurzu <span id="gOdds">1,75</span></small><b class="num" id="gI">57&nbsp;%</b></div>
+          <div><small>Šanca podľa kurzu <span id="gOdds">1,70</span></small><b class="num" id="gI">59&nbsp;%</b></div>
         </div>
         <div class="sliders">
-          <label><span>Model</span><input type="range" id="inP" min="50" max="90" step="1" value="68" aria-label="Šanca podľa modelu" /><output id="oP">68 %</output></label>
-          <label><span>Kurz</span><input type="range" id="inO" min="1.2" max="2.6" step="0.01" value="1.75" aria-label="Kurz stávkovej kancelárie" /><output id="oO">1,75</output></label>
+          <label><span>Model</span><input type="range" id="inP" min="50" max="90" step="1" value="70" aria-label="Šanca podľa modelu" /><output id="oP">70 %</output></label>
+          <label><span>Kurz</span><input type="range" id="inO" min="1.2" max="2.6" step="0.01" value="1.70" aria-label="Kurz stávkovej kancelárie" /><output id="oO">1,70</output></label>
         </div>
         <ul class="checks" id="checks"></ul>
         <div class="verdict" id="verdict"></div>
@@ -1318,7 +1318,7 @@ html { scrollbar-color: rgba(214,182,118,.35) #070708; }
   fetch("/api/public/vip-seats", { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
     if (!d) return;
     if (typeof d.freeChannelUrl === "string" && /^https:\/\/t\.me\//.test(d.freeChannelUrl)) document.querySelectorAll("[data-free]").forEach(function (a) { a.href = d.freeChannelUrl; });
-    window.__sales = { open: !!d.salesOpen, pay: d.salesOpen && d.payOpen === true, minOdds: Number(d.minOdds) || 1.6 };
+    window.__sales = { open: !!d.salesOpen, pay: d.salesOpen && d.payOpen === true, minOdds: Number(d.minOdds) || 1.5 };
     if (window.__applySales) window.__applySales();
   }).catch(function () {});
 
@@ -1413,7 +1413,7 @@ html { scrollbar-color: rgba(214,182,118,.35) #070708; }
     var a0 = pt(50, R + 22), a1 = pt(90, R + 22);
     ticks = '<path d="M' + a0[0] + ' ' + a0[1] + ' A' + (R + 22) + ' ' + (R + 22) + ' 0 0 1 ' + a1[0] + ' ' + a1[1] + '" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="14"/>' + ticks;
     $("gTicks").innerHTML = ticks;
-    var b0 = pt(68, R + 22), b1 = pt(80, R + 22);
+    var b0 = pt(70, R + 22), b1 = pt(80, R + 22);
     $("gBand").setAttribute("d", "M" + b0[0].toFixed(1) + " " + b0[1].toFixed(1) + " A" + (R + 22) + " " + (R + 22) + " 0 0 1 " + b1[0].toFixed(1) + " " + b1[1].toFixed(1));
     var rot = function (v) { return "rotate(" + (90 - ang(v)) + "deg)"; };
     var btns = document.querySelectorAll(".presets button");
@@ -1424,9 +1424,9 @@ html { scrollbar-color: rgba(214,182,118,.35) #070708; }
       $("oP").textContent = p + " %"; $("oO").textContent = fmt(o, 2);
       $("gP").textContent = p + " %"; $("gI").textContent = Math.round(imp) + " %"; $("gOdds").textContent = fmt(o, 2);
       $("gNeedleP").style.transform = rot(p); $("gNeedleO").style.transform = rot(imp);
-      var c1 = p >= 68 && p <= 80, c2 = val >= 5, c3 = o >= 1.6 - 1e-9;
+      var c1 = p >= 70 && p <= 80, c2 = val >= 5, c3 = o >= 1.5 - 1e-9;
       var li = function (ok, t, v) { return '<li class="' + (ok ? "ok" : "no") + '"><i>' + (ok ? "✓" : "✕") + "</i>" + t + "<b>" + v + "</b></li>"; };
-      $("checks").innerHTML = li(c1, "šanca v pásme 68 – 80 %", p + " %") + li(c2, "hodnota aspoň +5 %", signed(val, 0) + " %") + li(c3, "kurz aspoň 1,60", fmt(o, 2));
+      $("checks").innerHTML = li(c1, "šanca v pásme 70 – 80 %", p + " %") + li(c2, "hodnota aspoň +5 %", signed(val, 0) + " %") + li(c3, "kurz aspoň 1,50", fmt(o, 2));
       var ok = c1 && c2 && c3, v = $("verdict");
       v.className = "verdict " + (ok ? "ok" : "no");
       v.innerHTML = '<span class="stamp">' + (ok ? "✓" : "✕") + "</span><div>" + (ok ? "Taký tip by sme poslali." : "Taký tip by sme neposlali.") + "<small>" + fmt(p / 100, 2) + " × " + fmt(o, 2) + " = " + fmt((p / 100) * o, 2) + " · hodnota " + signed(val, 0) + " %</small></div>";
