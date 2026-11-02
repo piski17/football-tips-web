@@ -515,8 +515,8 @@ const TIER_PERKS: { min: number; max?: number; text: string }[] = [
 function perksFor(tips: number): string {
   return TIER_PERKS.filter((p) => tips >= p.min && (p.max == null || tips <= p.max)).map((p) => `• ${p.text}`).join("\n");
 }
-/** Garancia: prvých 20 tipov bez rizika (peniaze späť) + členstvo v mínuse = 1 mesiac zadarmo. */
-const GUARANTEE_LINE = `🛡 <b>Prvých 20 tipov bez rizika:</b> ak bude vaše prvé členstvo po 20 tipoch v mínuse, vrátime vám celú sumu. A ak členstvo skončí v mínuse, dostanete 1 mesiac zadarmo.`;
+/** Garancia (od 2. 11. 2026): členstvo v mínuse = 1 mesiac zadarmo (vracanie peňazí po 20 tipoch zrušené). */
+const GUARANTEE_LINE = `🛡 <b>Garancia:</b> ak vaše členstvo skončí v mínuse, dostanete 1 mesiac tipov zadarmo.`;
 const BANK_LINE = `💼 Odporúčame vklad 2 – 3 % banku na tip, nikdy nad 5 %.`;
 const eur2 = (n: number) => n.toFixed(2).replace(".", ",");
 const TIER_ICON: Record<SellableTerm, string> = { p50: "🥉", p100: "🥈", p150: "⭐" };

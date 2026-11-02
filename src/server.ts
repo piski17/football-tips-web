@@ -102,7 +102,19 @@ function statsTips(tips: SavedTip[]): SavedTip[] {
   // ako ostatné. Po spustení predaja (SALES_OPEN=true) sa na webe a v súhrnoch pre klientov neráta –
   // klientom nikdy neprišiel.
   const salesOpen = process.env.SALES_OPEN === "true";
-  return dedupeTips(tips).filter((t) => !EXCLUDED_STATS_MARKETS.includes(t.market) && !t.watchOnly && !(salesOpen && t.lateAdd));
+  return dedupeTips(tips).filter((t) => !EXCLUDED_STATS_MARKETS.includes(t.market) && !t.watchOnly && !(salesOpen && t.lateAdd) && !isRemovedLeagueTip(t));
+}
+
+/**
+ * 2. 11. 2026 (Michal): tipy zo súťaží, ktoré už nie sú v LEAGUE_PRESETS (Eredivisie, Portugalsko, Belgicko,
+ * Turecko, Dánsko, Škótsko, Rumunsko, staršie Európska liga, Chance Liga…), sa nerátajú do štatistík,
+ * na web ani do súhrnov. V Histórii tipov ostávajú so značkou „vyradená súťaž“ – nič sa nemaže,
+ * stačí vrátiť ligu do LEAGUE_PRESETS a tipy sa znova rátajú. Tikety (legs) sa nevyraďujú.
+ */
+function isRemovedLeagueTip(t: SavedTip): boolean {
+  if (t.legs && t.legs.length) return false;
+  if (!t.leagueId) return false;
+  return !LEAGUE_PRESETS.some((l) => l.id === t.leagueId);
 }
 
 /**
@@ -162,6 +174,8 @@ function monthlyResults(tips: SavedTip[]) {
 const CUP_LEAGUE_IDS = [2, 3]; // Liga majstrov, Európska liga
 
 const LEAGUE_PRESETS: LeaguePreset[] = [
+  // 2. 11. 2026 (Michal): 10 súťaží – 5 najvyšších líg + 4 druhé ligy + Liga majstrov. Vyradené: Eredivisie,
+  // Primeira Liga, Belgicko, Turecko, Dánsko, Škótsko, Rumunsko.
   // 30. 10. 2026 večer (Michal): 17 súťaží – pribudlo 5 najvyšších líg Belgicko, Turecko, Dánsko,
   // Škótsko, Rumunsko (v Trhoch v ligách 5/7 trhov), tipy normálne medzi odporúčané.
   // 30. 10. 2026 dopoludnia (Michalovo rozhodnutie, podľa nástroja Trhy v ligách): 12 súťaží – 7 najvyšších líg,
@@ -173,13 +187,6 @@ const LEAGUE_PRESETS: LeaguePreset[] = [
   { id: 135, name: "Serie A", country: "Taliansko" },
   { id: 78, name: "Bundesliga", country: "Nemecko" },
   { id: 61, name: "Ligue 1", country: "Francúzsko" },
-  { id: 88, name: "Eredivisie", country: "Holandsko" },
-  { id: 94, name: "Primeira Liga", country: "Portugalsko" },
-  { id: 144, name: "Jupiler Pro League", country: "Belgicko" },
-  { id: 203, name: "Süper Lig", country: "Turecko" },
-  { id: 119, name: "Superliga", country: "Dánsko" },
-  { id: 179, name: "Premiership", country: "Škótsko" },
-  { id: 283, name: "Liga I", country: "Rumunsko" },
   { id: 40, name: "Championship", country: "Anglicko" },
   { id: 79, name: "2. Bundesliga", country: "Nemecko" },
   { id: 141, name: "Segunda División", country: "Španielsko" },
@@ -311,8 +318,10 @@ async function termSeats(): Promise<TermSeats> {
 }
 /** Riadok pod tipom v bezplatnom kanáli (členstvá sú bez obmedzenia miest). */
 async function freeSeatsLine(): Promise<string | undefined> {
-  return `🎯 Členstvo: Štart · Premium · VIP, od 39 € · 🛡 prvých 20 tipov bez rizika`;
+  return `🎯 Členstvo: Štart · Premium · VIP, od 39 € · 🛡 v mínuse = mesiac zadarmo`;
 }
+/** Vracanie peňazí po prvých 20 tipoch (zrušené 2. 11. 2026). */
+const REFUND_ON = false;
 const BOT_USERNAME = process.env.TELEGRAM_BOT_USERNAME || "TipRadarAiBot";
 
 // tipradar.eu/zaplatit?term=p50|p100|p150|p200|p250 (&c=Telegram ID z bota; staré odkazy prevedie sellableTerm) → založí platbu a presmeruje na stránku s QR kódom.
@@ -1027,7 +1036,7 @@ app.post("/api/tips", async (req, res) => {
 
 app.get("/api/tips", async (_req, res) => {
   try {
-    res.json(await listTips());
+    res.json((await listTips()).map((t) => (isRemovedLeagueTip(t) ? { ...t, removedLeague: true } : t)));
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
@@ -3393,7 +3402,8 @@ async function guaranteeRows() {
         eligible: u.ended && u.pending === 0 && inLoss && !free && !applied && !s.refund,
         applied,
         refundProfit,
-        refundEligible: refundProfit !== null && refundProfit < 0 && !refunded && !applied && !s.refund,
+        // Vracanie peňazí po 20 tipoch zrušené 2. 11. 2026 (Michal) – ostáva len mesiac zadarmo.
+        refundEligible: REFUND_ON && refundProfit !== null && refundProfit < 0 && !refunded && !applied && !s.refund,
         refunded,
         refundAmount: Number(s.priceEur) || PAY_TERMS[term].price,
       });

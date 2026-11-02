@@ -69,13 +69,13 @@ const LEAGUE_ORDER = [
   ["Serie A", "Taliansko", 0],
   ["Bundesliga", "Nemecko", 0],
   ["Ligue 1", "Francúzsko", 0],
-  ["Eredivisie", "Holandsko", 0],
-  ["Primeira Liga", "Portugalsko", 0],
-  ["Jupiler Pro League", "Belgicko", 0],
-  ["Süper Lig", "Turecko", 0],
-  ["Superliga", "Dánsko", 0],
-  ["Premiership", "Škótsko", 0],
-  ["Liga I", "Rumunsko", 0],
+  ["Eredivisie", "Holandsko", 3],
+  ["Primeira Liga", "Portugalsko", 3],
+  ["Jupiler Pro League", "Belgicko", 3],
+  ["Süper Lig", "Turecko", 3],
+  ["Superliga", "Dánsko", 3],
+  ["Premiership", "Škótsko", 3],
+  ["Liga I", "Rumunsko", 3],
   ["Championship", "Anglicko", 1],
   ["2. Bundesliga", "Nemecko", 1],
   ["Segunda División", "Španielsko", 1],
@@ -2218,7 +2218,8 @@ function renderTipsList(rawTips) {
   // Tipy „len sledovať“ sa nerátajú do štatistík ani sa nezobrazujú.
   const tips = allTips.filter((t) => !t.watchOnly);
   // Tipy na trhy, ktoré appka už neponúka, ostávajú v zozname, ale nerátajú sa do štatistík.
-  const statTips = tips.filter((t) => !EXCLUDED_STATS_MARKETS.includes(t.market));
+  // Tipy z vyradených súťaží (2. 11. 2026) ostávajú v zozname so značkou, ale nerátajú sa do štatistík.
+  const statTips = tips.filter((t) => !EXCLUDED_STATS_MARKETS.includes(t.market) && !t.removedLeague);
   lastStatTips = statTips;
   renderTipsKpis(statTips);
   renderOverrideLine(statTips);
@@ -2928,6 +2929,7 @@ function tipBadges(t) {
   let b = "";
   if (isOverrideTip(t)) b += ` <span class="tag warn" title="Vyradené kontrolou kurzu, pridané ručne">⚠️ mimo filtra</span>`;
   if (t.manualEntry) b += ` <span class="tag" title="Tip doplnený ručne po zápase">✍ doplnené ručne</span>`;
+  if (t.removedLeague) b += ` <span class="tag" title="Súťaž bola vyradená 2. 11. 2026 – tip sa neráta do štatistík ani na web.">vyradená súťaž · nerátá sa</span>`;
   if (t.lateAdd) b += ` <span class="tag" title="Doplnené po výkope zo Všetkých zápasov – automaticky (dôvera a kurz zapísané asi hodinu pred výkopom). Klientom nešiel.">⏱ doplnené po výkope</span>`;
   if (t.edited) b += ` <span class="tag" title="Výsledok alebo kurz bol ručne opravený">✎ upravené</span>`;
   if (t.strongOfDay) b += ` <span class="tag gold" title="Silný tip dňa">⭐ silný tip dňa</span>`;
