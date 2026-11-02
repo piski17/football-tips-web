@@ -3920,7 +3920,7 @@ async function renderBlendSummary() {
 // ČLENOVIA (platba beží mimo appky, napr. bankovým prevodom)
 // =====================================================================
 // Ceny musia sedieť s členstvom na tipradar.eu (landing/index.html) a PAY_TERMS v src/payments.ts.
-// Členstvo od 1. 11. 2026: len Štart p50 39 €, Premium p100 75 €, VIP p150 109 € (Gold a Platinum zrušené).
+// Členstvo od 1. 11. 2026: len Štart p50 39 €, Premium p100 75 €, VIP p150 109 € (Gold a Platinum zrušené). VIP od 2. 11. 2026 aj mentoring 1 na 1 počas celého členstva.
 // Predtým (31. 10. 2026 večer): posuvník 50 – 250 tipov po 50 – Štart p50 39 €, Premium p100 75 €, VIP p150 109 €, Gold p200 139 €, Platinum p250 169 €
 // (Gold a Platinum mentoring 1 na 1). Garancia: prvých 20 tipov bez rizika. Bez časového limitu (tipy počíta server v poli pkg).
 // Garancia: členstvo v mínuse → 1 mesiac zadarmo (všetky tipy počas mesiaca).
