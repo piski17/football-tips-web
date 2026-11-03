@@ -182,6 +182,7 @@ const $ = (id) => document.getElementById(id);
 const num = (s) => { const n = parseFloat(String(s || "").replace(/\s/g, "").replace(",", ".")); return isFinite(n) ? n : NaN; };
 const fmt = (n, d = 2) => n.toLocaleString("sk-SK", { minimumFractionDigits: d, maximumFractionDigits: d });
 const eur = (n, d = 2) => fmt(n, d) + " €";
+const pc = (m) => fmt(m * 100) + " %"; // 3. 11. 2026 (Michal): popri eurách aj percentá zisku
 const pct = (m) => fmt(m * 100, 1) + " %";
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 let roundTo = 1;
@@ -197,7 +198,7 @@ function calc() {
   if (sum >= 1) {
     const needB = 1 / (1 - 1 / a);
     box.className = "res no";
-    box.innerHTML = `<div class="res-top">Nie je to surebet (${eur(margin * 100)} zo 100 €)</div>
+    box.innerHTML = `<div class="res-top">Nie je to surebet (${eur(margin * 100)} zo 100 € · ${pc(margin)})</div>
       <div class="muted">Pri kurze ${fmt(a)} by druhá stávka potrebovala kurz aspoň <b>${fmt(Math.ceil(needB * 100 + 0.0001) / 100)}</b>.</div>`;
     return;
   }
@@ -208,12 +209,12 @@ function calc() {
   const winA = sA * a - spent, winB = sB * b - spent;
   const worst = Math.min(winA, winB);
   box.className = "res " + (worst >= 0 ? "ok" : "no");
-  box.innerHTML = `<div class="res-top">${worst >= 0 ? "Surebet" : "Surebet, ale zaokrúhlenie ho zjedlo"} · +${eur(margin * 100)} zo 100 €</div>
+  box.innerHTML = `<div class="res-top">${worst >= 0 ? "Surebet" : "Surebet, ale zaokrúhlenie ho zjedlo"} · +${eur(margin * 100)} zo 100 € · +${pc(margin)}</div>
     <div class="stakes">
       <div class="stake"><span class="muted small">${esc(nA)} · kurz ${fmt(a)}</span><b>${eur(sA, roundTo < 1 ? 2 : 0)}</b><span class="small">ak vyjde: ${winA >= 0 ? "+" : ""}${eur(winA)}</span></div>
       <div class="stake"><span class="muted small">${esc(nB)} · kurz ${fmt(b)}</span><b>${eur(sB, roundTo < 1 ? 2 : 0)}</b><span class="small">ak vyjde: ${winB >= 0 ? "+" : ""}${eur(winB)}</span></div>
     </div>
-    <div class="muted small" style="margin-top:10px">Spolu vsadíte ${eur(spent)}. Istý zisk aspoň <b style="color:var(--text)">${eur(worst)}</b>, nech zápas skončí akokoľvek.</div>`;
+    <div class="muted small" style="margin-top:10px">Spolu vsadíte ${eur(spent)}. Istý zisk aspoň <b style="color:var(--text)">${eur(worst)}</b> (${spent > 0 ? pc(worst / spent) : "–"} z vkladu), nech zápas skončí akokoľvek.</div>`;
 }
 ["oddA", "oddB", "total", "nmA", "nmB"].forEach((id) => $(id).addEventListener("input", calc));
 $("roundChips").addEventListener("click", (e) => {
@@ -266,7 +267,7 @@ function renderList(list) {
     lastDay = d;
     return head + `
     <div class="sb${s.suspicious ? " sus" : ""}">
-      <div class="sb-top"><b>${esc(s.home)} – ${esc(s.away)}</b><span class="pct">+${fmt(s.margin * 100)} €<small>istý zisk zo 100 €</small></span></div>
+      <div class="sb-top"><b>${esc(s.home)} – ${esc(s.away)}</b><span class="pct">+${fmt(s.margin * 100)} € · ${pc(s.margin)}<small>istý zisk zo 100 €</small></span></div>
       <div class="muted small">${esc(s.league)}${s.country ? " (" + esc(s.country) + ")" : ""} · ${when(s.date)} · ${esc(s.market)}</div>
       <div class="legs">${s.sides.map((x) => `<div class="leg">${esc(x.label)} · <b>${fmt(x.odd)}</b> <span class="muted">v ${esc(x.book)}</span></div>`).join("")}</div>
       <div class="sb-foot">${s.suspicious ? '<span class="warn">Podozrivo vysoký zisk – takmer určite chyba v kurze.</span>' : /kart/i.test(s.market) ? '<span class="warn">Karty: overte, či obe stávkovky rátajú karty rovnako (červená = 1 alebo 2 karty).</span>' : "<span></span>"}<button type="button" class="btn ghost" data-i="${i}">Do kalkulačky</button></div>
@@ -332,8 +333,8 @@ function renderLog() {
   const lasting = list.filter((e) => e.seen >= 2).length;
   $("logKpis").innerHTML = `
     <div class="kpi"><span>Surebetov spolu</span><b>${n}</b></div>
-    <div class="kpi"><span>Priemerný istý zisk zo 100 €</span><b>${n ? eur(avg * 100) : "–"}</b></div>
-    <div class="kpi"><span>Zisk pri 100 € na každý</span><b>${eur(profit, 0)}</b></div>
+    <div class="kpi"><span>Priemerný istý zisk zo 100 €</span><b>${n ? eur(avg * 100) : "–"}</b><span>${n ? "+" + pc(avg) + " na surebet" : ""}</span></div>
+    <div class="kpi"><span>Zisk pri 100 € na každý</span><b>${eur(profit, 0)}</b><span>${n ? "z vkladu " + eur(n * 100, 0) + " = +" + pc(avg) : ""}</span></div>
     <div class="kpi"><span>Vydržali aspoň hodinu</span><b>${n ? lasting : "–"}</b></div>`;
   const byDay = {};
   for (const e of list) (byDay[dayKey(e.date)] ??= []).push(e);
@@ -341,8 +342,8 @@ function renderLog() {
   $("logDays").innerHTML = days.length ? days.map((d) => {
     const l = byDay[d].sort((x, y) => y.maxMargin - x.maxMargin);
     const a = l.reduce((s, e) => s + e.maxMargin, 0) / l.length;
-    return `<details class="day"><summary><b>${dayName(d)}</b><span>${l.length} ${plural(l.length)} · priemerne +${eur(a * 100)} zo 100 €</span><span class="hide-m muted">+${eur(a * 100 * l.length, 0)} pri 100 €</span></summary>
-      ${l.map((e) => `<div class="lrow" data-k="${esc(e.scope + "|" + e.key)}"><div class="t"><b>${esc(e.home)} – ${esc(e.away)}</b><span style="color:var(--good);white-space:nowrap">+${fmt(e.maxMargin * 100)} € zo 100 €</span></div>
+    return `<details class="day"><summary><b>${dayName(d)}</b><span>${l.length} ${plural(l.length)} · priemerne +${eur(a * 100)} zo 100 € · +${pc(a)}</span><span class="hide-m muted">+${eur(a * 100 * l.length, 0)} pri 100 €</span></summary>
+      ${l.map((e) => `<div class="lrow" data-k="${esc(e.scope + "|" + e.key)}"><div class="t"><b>${esc(e.home)} – ${esc(e.away)}</b><span style="color:var(--good);white-space:nowrap">+${fmt(e.maxMargin * 100)} € zo 100 € · +${pc(e.maxMargin)}</span></div>
         <div class="muted small">${esc(e.league)} · ${new Date(e.date).toLocaleTimeString("sk-SK", { hour: "2-digit", minute: "2-digit" })} · ${esc(e.market)}</div>
         <div class="small">${e.sides.map((x) => `${esc(x.label)} <b style="color:var(--gold-hi)">${fmt(x.odd)}</b> <span class="muted">v ${esc(x.book)}</span>`).join(" &nbsp;·&nbsp; ")}</div>
         <div class="sb-foot" style="margin-top:4px"><span class="faint small">Videný ${e.seen}× · prvýkrát ${new Date(e.firstSeen).toLocaleString("sk-SK", { day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" })}, naposledy ${new Date(e.lastSeen).toLocaleString("sk-SK", { day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" })}</span><button type="button" class="btn ghost" data-k="${esc(e.scope + "|" + e.key)}">Do kalkulačky</button></div></div>`).join("")}
