@@ -63,6 +63,7 @@ input:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outl
 .sb-top b { font: 600 17px var(--display); }
 .pct { font: 700 20px var(--display); color: var(--good); white-space: nowrap; }
 .sb.sus .pct { color: var(--warn); }
+.pct small { display: block; font: 400 11.5px var(--body); color: var(--muted); text-align: right; }
 .legs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0 8px; }
 @media (max-width: 520px) { .legs { grid-template-columns: 1fr; } }
 .leg { background: var(--section); border-radius: 9px; padding: 8px 10px; font-size: 14px; }
@@ -114,7 +115,7 @@ details p, details li { color: var(--muted); font-size: 14px; }
   <section class="panel">
     <div class="explain">
       <div><b>Férový kurz</b>Kurz bez marže stávkovky. Berie sa z Pinnaclu (najpresnejšia stávkovka), a ak ho nemá, z priemeru aspoň 4 stávkoviek.</div>
-      <div><b>Hodnota</b>O koľko je ponúkaný kurz lepší ako férový. Napr. kurz 2,12 pri férovom 2,00 = +6 %. Zapisuje sa od +3 %, nad +15 % je to skoro vždy chyba v kurze.</div>
+      <div><b>Hodnota (číslo vpravo hore)</b>Koľko by ste v priemere zarobili na každých 100 € vsadených, keby ste takúto stávku hrali veľakrát. Napr. kurz 2,12 pri férovom 2,00 = +6 € zo 100 €. Jedna stávka pritom môže prehrať. Zapisuje sa od +3 €, nad +15 € je to skoro vždy chyba v kurze.</div>
       <div><b>Vklad</b>Vždy rovnaký, ideálne 1 – 2 % banku. Výsledky sa rátajú v jednotkách: 1 jednotka = váš vklad na jednu stávku.</div>
     </div>
   </section>
@@ -196,7 +197,7 @@ function renderList(list) {
     const head = d !== last ? `<div class="day-h">${dayName(d)}<span>${n} ${plural(n)}</span></div>` : "";
     last = d;
     return head + `<div class="sb${v.suspicious ? " sus" : ""}">
-      <div class="sb-top"><b>${esc(v.home)} – ${esc(v.away)}</b><span class="pct">+${pct(v.ev)}</span></div>
+      <div class="sb-top"><b>${esc(v.home)} – ${esc(v.away)}</b><span class="pct">+${fmt(v.ev * 100)} €<small>v priemere zo 100 €</small></span></div>
       <div class="muted small">${esc(v.league)} · ${time(v.date)} · ${esc(v.market)}</div>
       <div class="legs">
         <div class="leg">${esc(v.label)} · <b>${fmt(v.odd)}</b> <span class="muted">v ${esc(v.book)}</span></div>
@@ -242,7 +243,7 @@ function renderLog() {
     <div class="kpi"><span>Vyhodnotené</span><b>${decided.length ? won + " z " + decided.length : "–"}</b><span>${pending} čaká na zápas</span></div>
     <div class="kpi"><span>Zisk</span><b class="${profit > 0 ? "g" : profit < 0 ? "l" : ""}">${done.length ? units(profit) : "–"}</b><span>pri vklade 10 €: ${done.length ? (profit >= 0 ? "+" : "−") + fmt(Math.abs(profit * 10)) + " €" : "–"}</span></div>
     <div class="kpi"><span>Priemerný kurz</span><b>${decided.length ? fmt(avgOdd) : "–"}</b><span>úspešnosť ${decided.length ? pct(won / decided.length, 0) : "–"}</span></div>
-    <div class="kpi"><span>Priemerná hodnota</span><b>${list.length ? "+" + pct(avgEv) : "–"}</b><span>${list.length} ${plural(list.length)} spolu</span></div>`;
+    <div class="kpi"><span>Priemerná hodnota zo 100 €</span><b>${list.length ? "+" + fmt(avgEv * 100) + " €" : "–"}</b><span>${list.length} ${plural(list.length)} spolu</span></div>`;
   const byDay = {};
   for (const e of list) (byDay[dayKey(e.date)] ??= []).push(e);
   const days = Object.keys(byDay).sort().reverse();
@@ -253,7 +254,7 @@ function renderLog() {
     return `<details class="day"><summary><b>${dayName(d)}</b><span>${l.length} ${plural(l.length)}${fin.length ? " · " + fin.filter((e) => e.status === "won").length + " z " + fin.length + " vyšlo" : ""}</span><span class="${p > 0 ? "g" : p < 0 ? "l" : "muted"}">${l.some((e) => e.status !== "pending") ? units(p) : "čaká"}</span></summary>
       ${l.map((e) => `<div class="lrow"><div class="t"><b>${esc(e.home)} – ${esc(e.away)}</b><span><span class="st ${e.status}">${ST[e.status] || "?"}</span> ${e.status === "pending" ? "" : `<span class="${e.profit > 0 ? "g" : e.profit < 0 ? "l" : "muted"}">${units(e.profit || 0)}</span>`}</span></div>
         <div class="muted small">${esc(e.league)} · ${time(e.date)} · ${esc(e.market)}${e.result ? " · " + esc(e.result) : ""}</div>
-        <div class="small">${esc(e.label)} <b style="color:var(--gold-hi)">${fmt(e.odd)}</b> <span class="muted">v ${esc(e.book)} · férový ${fmt(e.fairOdd)} · +${pct(e.ev)}</span></div></div>`).join("")}
+        <div class="small">${esc(e.label)} <b style="color:var(--gold-hi)">${fmt(e.odd)}</b> <span class="muted">v ${esc(e.book)} · férový ${fmt(e.fairOdd)} · v priemere +${fmt(e.ev * 100)} € zo 100 €</span></div></div>`).join("")}
     </details>`;
   }).join("") : `<p class="empty">${logScope === "mine" && !myBooks.length ? "Najprv si na stránke Surebety vyberte svoje stávkovky." : "Zatiaľ nič zapísané. Prvé valuebety pribudnú po najbližšom prehľadaní kurzov."}</p>`;
 }
