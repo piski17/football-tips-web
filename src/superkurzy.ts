@@ -82,6 +82,32 @@ function fair1x2(f: FixtureOdds): { p: [number, number, number]; source: string;
   return { p: [m[0] / s, m[1] / s, m[2] / s], source: `priemer ${rows.length} stávkoviek`, best };
 }
 
+/** Polčas/zápas (API „HT/FT Double“, 9 možností) – férové šance: Pinnacle bez marže, inak medián ≥4 stávkoviek. */
+const HTFT = ["Home/Home", "Home/Draw", "Home/Away", "Draw/Home", "Draw/Draw", "Draw/Away", "Away/Home", "Away/Draw", "Away/Away"];
+function fairHtFt(f: FixtureOdds): { betId: string; betName: string; p: number[]; source: string; best: (BookOdd | undefined)[] } | null {
+  const entry = Object.entries(f.bets).find(([, b]) => /^ht\/ft double$/i.test(b.name.trim()));
+  if (!entry) return null;
+  const [betId, bet] = entry;
+  const lists = HTFT.map((k) => find(bet.values, k.toLowerCase()));
+  if (lists.some((l) => !l)) return null;
+  const rows: { book: string; p: number[] }[] = [];
+  for (const x of lists[0]!) {
+    const odds = lists.map((l) => l!.find((o) => o.book === x.book)?.odd);
+    if (odds.some((o) => !o)) continue;
+    const inv = odds.map((o) => 1 / o!);
+    const s = inv.reduce((a, b) => a + b, 0);
+    if (s < 1) continue;
+    rows.push({ book: x.book, p: inv.map((v) => v / s) });
+  }
+  const best = lists.map((l) => l!.reduce((m, o) => (o.odd > m.odd ? o : m), l![0]));
+  const pin = rows.find((r) => /pinnacle/i.test(r.book));
+  if (pin) return { betId, betName: bet.name, p: pin.p, source: "Pinnacle", best };
+  if (rows.length < MIN_BOOKS) return null;
+  const m = HTFT.map((_, i) => median(rows.map((r) => r.p[i])));
+  const s = m.reduce((a, b) => a + b, 0);
+  return { betId, betName: bet.name, p: m.map((v) => v / s), source: `priemer ${rows.length} stávkoviek`, best };
+}
+
 /** Všetky dnešné zápasy, ktoré sa ešte nezačali, s férovými kurzami (1X2, dvojitá šanca + dvojcestné trhy). */
 export function boostMarkets(): BoostFixture[] {
   const now = Date.now();
@@ -101,7 +127,32 @@ export function boostMarkets(): BoostFixture[] {
         side("1X", `${f.home} alebo remíza (1X)`, p1 + px), side("12", `${f.home} alebo ${f.away} (12)`, p1 + p2), side("X2", `Remíza alebo ${f.away} (X2)`, px + p2),
       ] });
     }
-    for (const m of two.get(Number(f.fixtureId))?.markets ?? []) {
+    const hf = fairHtFt(f);
+    if (hf) {
+      const nm = (k: string) => (k === "Home" ? f.home : k === "Away" ? f.away : "remíza");
+      markets.push({ betId: "htft", betName: "HT/FT Double", market: "Polčas / zápas", source: hf.source, sides: HTFT.map((k, i) => {
+        const [h, t] = k.split("/");
+        const lab = `Polčas ${nm(h)}, zápas ${nm(t)}`;
+        return { value: k, label: lab.charAt(0).toUpperCase() + lab.slice(1), fairOdd: r2(1 / hf.p[i]), best: hf.best[i]?.odd ?? 0, bestBook: hf.best[i]?.book ?? "" };
+      }) });
+    }
+    // Každý tím dá 2 a viac gólov – ODHAD z férových kurzov „Góly domácich nad 1,5“ × „Góly hostí nad 1,5“
+    // (Tipsport to často zvyšuje; skutočná šanca býva o trochu vyššia, lebo góly oboch tímov spolu súvisia).
+    const tm = two.get(Number(f.fixtureId))?.markets ?? [];
+    const over15 = (name: string) => {
+      const m = tm.find((x) => f.bets[x.betId]?.name.trim().toLowerCase() === name && x.sides.some((sd) => /^over 1\.5$/i.test(sd.value)));
+      const sd = m?.sides.find((x) => /^over 1\.5$/i.test(x.value));
+      return m && sd ? { p: 1 / sd.fairOdd, source: m.source } : null;
+    };
+    const oh = over15("total - home"), oa = over15("total - away");
+    if (oh && oa) {
+      const p = oh.p * oa.p;
+      markets.push({ betId: "both2", betName: "Both Teams 2+", market: "Každý tím dá 2 a viac gólov (odhad)", source: oh.source === oa.source ? oh.source : "Pinnacle / priemer stávkoviek", sides: [
+        { value: "Yes", label: "Áno", fairOdd: r2(1 / p), best: 0, bestBook: "" },
+        { value: "No", label: "Nie", fairOdd: r2(1 / (1 - p)), best: 0, bestBook: "" },
+      ] });
+    }
+    for (const m of tm) {
       markets.push({ betId: m.betId, betName: f.bets[m.betId]?.name ?? "", market: m.market, source: m.source, sides: m.sides });
     }
     if (markets.length) out.push({ fixtureId: Number(f.fixtureId), league: f.league, date: f.date, home: f.home, away: f.away, markets });
@@ -193,6 +244,12 @@ function settleBoost(e: BoostEntry, ftH: number, ftA: number, r: Parameters<type
   const res = ftH > ftA ? "1" : ftH < ftA ? "2" : "X";
   if (e.betId === "1x2") return ({ Home: "1", Draw: "X", Away: "2" } as Record<string, string>)[e.value] === res ? "won" : "lost";
   if (e.betId === "dc") return e.value.includes(res) ? "won" : "lost";
+  if (e.betId === "both2") return (ftH >= 2 && ftA >= 2) === (e.value === "Yes") ? "won" : "lost";
+  if (e.betId === "htft") {
+    if (r.htH == null || r.htA == null) return null;
+    const code = (h: number, a: number) => (h > a ? "Home" : h < a ? "Away" : "Draw");
+    return e.value === `${code(r.htH, r.htA)}/${code(ftH, ftA)}` ? "won" : "lost";
+  }
   return settleOne(e, r);
 }
 
