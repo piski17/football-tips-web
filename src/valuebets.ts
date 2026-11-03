@@ -91,6 +91,12 @@ export interface ValuebetLogEntry extends Valuebet {
   myBook?: string;
 }
 
+/** Deň v slovenskom čase (YYYY-MM-DD). Od 3. 11. 2026 (Michal): valuebety len zo zápasov DNEŠNÉHO dňa. */
+function skDay(d: string | number | Date): string {
+  return new Date(d).toLocaleDateString("sv-SE", { timeZone: "Europe/Bratislava" });
+}
+const isToday = (date: string) => skDay(date) === skDay(Date.now());
+
 function median(xs: number[]): number {
   const s = [...xs].sort((a, b) => a - b);
   const m = Math.floor(s.length / 2);
@@ -164,7 +170,7 @@ export function fairOdds(): FairFixture[] {
   const now = Date.now();
   const out: FairFixture[] = [];
   for (const f of scannedFixtures()) {
-    if (new Date(f.date).getTime() <= now) continue;
+    if (new Date(f.date).getTime() <= now || !isToday(f.date)) continue;
     const markets: FairMarket[] = [];
     for (const [betId, bet] of Object.entries(f.bets)) {
       if (!SETTLEABLE.has(bet.name.trim().toLowerCase())) continue;
@@ -215,7 +221,7 @@ export function computeValuebets(allowedBooks: string[] | null): Valuebet[] {
   const now = Date.now();
   const out: Valuebet[] = [];
   for (const f of scannedFixtures()) {
-    if (new Date(f.date).getTime() <= now) continue;
+    if (new Date(f.date).getTime() <= now || !isToday(f.date)) continue;
     for (const v of valuebetsOf(f, true)) if (!allowed || allowed.has(v.book)) out.push(v);
   }
   return out.sort((a, b) => b.ev - a.ev);
@@ -270,7 +276,7 @@ async function logValuebets(): Promise<void> {
   const now = Date.now();
   const found: Valuebet[] = [];
   for (const f of scannedFixtures()) {
-    if (new Date(f.date).getTime() <= now) continue;
+    if (new Date(f.date).getTime() <= now || !isToday(f.date)) continue;
     found.push(...valuebetsOf(f, false));
   }
   if (!found.length) return;
@@ -345,9 +351,12 @@ export async function setMyBet(key: string, stake: number, odd: number, book = "
 export async function valuebetLog(): Promise<ValuebetLogEntry[]> {
   const list = parseAll(await hgetall());
   const limit = Date.now() - KEEP_DAYS * 86400000;
-  const old = list.filter((e) => new Date(e.date).getTime() < limit).map((e) => e.key);
+  // Záznamy zápasov ďalších dní (zapísané pred 3. 11. 15:40) sa mažú – rátajú sa len dnešné. Vlastné stávky ostávajú.
+  const today = skDay(Date.now());
+  const old = list.filter((e) => new Date(e.date).getTime() < limit || (skDay(e.date) > today && !e.myStake)).map((e) => e.key);
   if (old.length) await hdel(old).catch(() => {});
-  return list.filter((e) => new Date(e.date).getTime() >= limit);
+  const gone = new Set(old);
+  return list.filter((e) => !gone.has(e.key));
 }
 
 // ---------- Vyhodnotenie ----------

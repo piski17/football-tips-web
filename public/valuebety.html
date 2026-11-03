@@ -127,7 +127,7 @@ select { width: 100%; font: 500 15px var(--body); color: var(--text); background
 <div class="wrap">
   <a class="back" href="/">‹ Späť do appky</a> &nbsp;·&nbsp; <a class="back" href="/surebety">Surebety</a>
   <h1>Value<span>bety</span></h1>
-  <p class="lead">Valuebet = stávkovka dáva vyšší kurz, než zodpovedá skutočnej šanci. Nie každý vyjde, ale pri veľa stávkach by mal byť súčet v pluse. Server ich hľadá v zápasoch 17 súťaží TipRadaru, sám ich zapisuje a po zápase vyhodnocuje. S tipmi TipRadaru nesúvisí.</p>
+  <p class="lead">Valuebet = stávkovka dáva vyšší kurz, než zodpovedá skutočnej šanci. Nie každý vyjde, ale pri veľa stávkach by mal byť súčet v pluse. Server ich hľadá len v dnešných zápasoch 17 súťaží TipRadaru, sám ich zapisuje a po zápase vyhodnocuje. S tipmi TipRadaru nesúvisí.</p>
 
   <section class="panel">
     <div class="explain">
@@ -154,7 +154,7 @@ select { width: 100%; font: 500 15px var(--body); color: var(--text); background
   <!-- AKTUÁLNE -->
   <section class="panel">
     <div class="head">
-      <div><h2>Aktuálne valuebety</h2><div class="muted small" id="scanInfo">Načítavam…</div></div>
+      <div><h2>Dnešné valuebety</h2><div class="muted small" id="scanInfo">Načítavam…</div></div>
       <button type="button" class="btn ghost" id="reloadBtn">Obnoviť</button>
     </div>
     <div class="chips" id="scopeChips" style="margin-bottom:12px">
@@ -309,7 +309,7 @@ function renderList(list) {
   const byKey = logByKey();
   list = [...list].sort((a, b) => dayKey(a.date).localeCompare(dayKey(b.date)) || b.ev - a.ev);
   if (!list.length) {
-    $("vbList").innerHTML = `<p class="empty">${scope === "mine" && !myBooks.length ? "Najprv si na stránke Surebety vyberte svoje stávkovky." : "Teraz žiadny valuebet. Server kurzy prehľadáva každú hodinu."}</p>`;
+    $("vbList").innerHTML = `<p class="empty">${scope === "mine" && !myBooks.length ? "Najprv si na stránke Surebety vyberte svoje stávkovky." : "Dnes teraz žiadny valuebet. Server kurzy dnešných zápasov prehľadáva každú hodinu."}</p>`;
     return;
   }
   let last = "";
@@ -402,7 +402,7 @@ async function loadFair() {
     const j = await api("/api/valuebets/fair");
     fair = j.fixtures || [];
     const prev = $("ckFixture").value;
-    $("ckFixture").innerHTML = fair.length ? fair.map((f) => `<option value="${f.fixtureId}">${new Date(f.date).toLocaleDateString("sk-SK", { day: "numeric", month: "numeric" })} ${time(f.date)} · ${esc(f.home)} – ${esc(f.away)} (${esc(f.league)})</option>`).join("") : "<option>Zatiaľ žiadne zápasy – server ešte neprehľadával kurzy</option>";
+    $("ckFixture").innerHTML = fair.length ? fair.map((f) => `<option value="${f.fixtureId}">${new Date(f.date).toLocaleDateString("sk-SK", { day: "numeric", month: "numeric" })} ${time(f.date)} · ${esc(f.home)} – ${esc(f.away)} (${esc(f.league)})</option>`).join("") : "<option>Dnes už nie sú zápasy na overenie</option>";
     if (fair.some((f) => String(f.fixtureId) === prev)) $("ckFixture").value = prev;
     ckRenderMarkets();
   } catch (err) { $("ckRes").innerHTML = `<span class="err">${esc(err.message)}</span>`; }
