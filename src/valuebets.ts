@@ -5,7 +5,7 @@ import { scannedFixtures, lastScanAt, setOnScan, pairsOf, marketName, sideLabel,
 import { getFixtureCornersAndCards } from "./apiClient";
 
 // Valuebety – hodnotné stávky (3. 11. 2026, Michalov vedľajší projekt popri surebetoch, SKÚŠKA).
-// Z tých istých kurzov ako surebety (API-Football, 17 súťaží TipRadaru, 7 dní dopredu, každú hodinu)
+// Z tých istých kurzov ako surebety (API-Football, 17 súťaží TipRadaru, len dnešné zápasy, každú hodinu)
 // sa pre každý dvojcestný trh vypočíta „férová“ šanca bez marže stávkovky:
 //   – ak trh ponúka Pinnacle (najpresnejšia stávkovka), berie sa jeho kurz bez marže,
 //   – inak medián všetkých stávkoviek bez marže (aspoň 4 stávkovky).

@@ -6,7 +6,7 @@ import axios from "axios";
 // Server z kurzov API-Football hľadá zápasy, kde dve stávkovky ponúkajú opačné
 // stávky (nad / pod, áno / nie, párny / nepárny, víťaz bez remízy) s takými kurzami,
 // že vsadením na obe strany je zisk istý. Len dve stávkovky, len dvojcestné trhy.
-// Nedotýka sa tipov, štatistík ani klientov. Každú hodinu prehľadá zápasy 17 súťaží TipRadaru na 7 dní dopredu
+// Nedotýka sa tipov, štatistík ani klientov. Každú hodinu prehľadá DNEŠNÉ zápasy 17 súťaží TipRadaru (od 3. 11. 2026 večer, predtým 7 dní dopredu)
 // a nájdené surebety zapíše do evidencie (Upstash hash), aby sa po skúške dalo
 // vyhodnotiť, koľko ich bolo a aký by bol zisk.
 
@@ -20,7 +20,7 @@ const KEEP_DAYS = 45;
 /** Najviac strán kurzov na jednu súťaž (1 strana = 10 zápasov = 1 požiadavka). */
 const MAX_PAGES_PER_LEAGUE = 6;
 /** Koľko dní dopredu sa surebety hľadajú (stávkovky vypisujú kurzy zvyčajne týždeň vopred). */
-export const DAYS_AHEAD = 7;
+export const DAYS_AHEAD = 0; // 3. 11. 2026 (Michal): len zápasy DNEŠNÉHO dňa (predtým 7 dní dopredu)
 /** Surebet s väčším ziskom je takmer vždy chyba v kurzoch (preklep, iné pravidlá trhu). */
 export const SUSPICIOUS_MARGIN = 0.08;
 /** Menší zisk nemá zmysel – zaokrúhlenie vkladov a zmena kurzu ho zjedia. */
@@ -349,7 +349,9 @@ export async function surebetLog(): Promise<SurebetLogEntry[]> {
   for (const [k, v] of Object.entries(all)) {
     try {
       const e = JSON.parse(v) as SurebetLogEntry;
-      if (new Date(e.date).getTime() < limit) old.push(k);
+      // Záznamy zápasov ďalších dní (zapísané pred 3. 11. 2026 večer) sa mažú – rátajú sa len dnešné.
+      const day = new Date(e.date).toLocaleDateString("sv-SE", { timeZone: "Europe/Bratislava" });
+      if (new Date(e.date).getTime() < limit || day > skDate(0)) old.push(k);
       else if (!names.size || names.has(e.league)) out.push({ ...e, market: marketName(e.market) /* staré záznamy majú anglický názov */ });
     } catch { /* poškodený záznam */ }
   }
