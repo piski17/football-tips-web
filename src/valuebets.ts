@@ -81,6 +81,12 @@ export interface ValuebetLogEntry extends Valuebet {
   profit?: number;
   result?: string;
   settledAt?: string;
+  /** Michalova skutočná stávka (3. 11. 2026): vklad v €, kurz, ktorý naozaj dostal, a kedy. */
+  myStake?: number;
+  myOdd?: number;
+  myAt?: string;
+  /** Zadané ručne cez „Overiť kurz“ (kurz z mojej stávkovky) – nerátá sa do výsledkov skúšky. */
+  manual?: boolean;
 }
 
 function median(xs: number[]): number {
@@ -147,6 +153,56 @@ function valuebetsOf(f: FixtureOdds, includeSuspicious: boolean): Valuebet[] {
     }
   }
   return out;
+}
+
+/** Férové kurzy všetkých trhov (pre „Overiť kurz“): zápas → trhy → dve strany s férovým kurzom. */
+export interface FairMarket { betId: string; market: string; sides: { value: string; label: string; fairOdd: number; best: number; bestBook: string }[]; source: string }
+export interface FairFixture { fixtureId: number; league: string; date: string; home: string; away: string; markets: FairMarket[] }
+export function fairOdds(): FairFixture[] {
+  const now = Date.now();
+  const out: FairFixture[] = [];
+  for (const f of scannedFixtures()) {
+    if (new Date(f.date).getTime() <= now) continue;
+    const markets: FairMarket[] = [];
+    for (const [betId, bet] of Object.entries(f.bets)) {
+      if (!SETTLEABLE.has(bet.name.trim().toLowerCase())) continue;
+      for (const [va, vb] of pairsOf(bet.name, bet.values)) {
+        const fair = fairProbability(bet.values[va], bet.values[vb]);
+        if (!fair) continue;
+        const side = (v: string, p: number) => {
+          const b = bet.values[v].reduce((m, o) => (o.odd > m.odd ? o : m), bet.values[v][0]);
+          return { value: v, label: sideLabel(v, f), fairOdd: Math.round((1 / p) * 100) / 100, best: b.odd, bestBook: b.book };
+        };
+        markets.push({ betId, market: marketName(bet.name), sides: [side(va, fair.p), side(vb, 1 - fair.p)], source: fair.source });
+      }
+    }
+    if (markets.length) out.push({ fixtureId: Number(f.fixtureId), league: f.league, date: f.date, home: f.home, away: f.away, markets });
+  }
+  return out.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/** Ručne zadaná stávka z vlastnej stávkovky („Overiť kurz“ → Zahral som). Vyhodnotí sa ako ostatné. */
+export async function addManualBet(fixtureId: number, betId: string, value: string, odd: number, stake: number, book: string): Promise<ValuebetLogEntry> {
+  const f = scannedFixtures().find((x) => Number(x.fixtureId) === fixtureId);
+  const bet = f?.bets[betId];
+  if (!f || !bet || !bet.values[value]) throw new Error("Zápas alebo trh sa nenašiel – obnovte stránku.");
+  const pair = pairsOf(bet.name, bet.values).find((pr) => pr.includes(value));
+  const fair = pair ? fairProbability(bet.values[pair[0]], bet.values[pair[1]]) : null;
+  if (!pair || !fair) throw new Error("Pre tento trh nie je férový kurz.");
+  const p = pair[0] === value ? fair.p : 1 - fair.p;
+  if (!(odd > 1 && odd < 100) || !(stake > 0)) throw new Error("Zadajte vklad aj kurz.");
+  const key = `${f.fixtureId}|${betId}|${value}|ručne`;
+  const at = new Date().toISOString();
+  const e: ValuebetLogEntry = {
+    key, fixtureId: Number(f.fixtureId), league: f.league, date: f.date, home: f.home, away: f.away,
+    betName: bet.name, market: marketName(bet.name), value, label: sideLabel(value, f),
+    book: book.trim().slice(0, 40) || "Moja stávkovka", odd, fairOdd: Math.round((1 / p) * 100) / 100, fairProb: Math.round(p * 10000) / 10000,
+    ev: Math.round((odd * p - 1) * 10000) / 10000, source: fair.source, suspicious: false,
+    firstSeen: at, lastSeen: at, seen: 1, maxOdd: odd, status: "pending",
+    myStake: Math.round(stake * 100) / 100, myOdd: Math.round(odd * 100) / 100, myAt: at, manual: true,
+  };
+  await hsetMany({ [key]: JSON.stringify(e) });
+  return e;
 }
 
 /** Aktuálne valuebety z posledného prehľadania (len zápasy, ktoré sa ešte nezačali). */
@@ -226,6 +282,28 @@ async function logValuebets(): Promise<void> {
     updates[v.key] = JSON.stringify(entry);
   }
   await hsetMany(updates);
+}
+
+/** Zapíše (alebo pri vklade 0 zruší) vlastnú stávku k valuebetu. Vyhodnotí sa spolu s ním. */
+export async function setMyBet(key: string, stake: number, odd: number): Promise<ValuebetLogEntry> {
+  let raw: string | null;
+  if (!useUpstash) raw = readFile()[key] ?? null;
+  else raw = (await redis(["HGET", LOG_KEY, key])) ?? null;
+  if (!raw) throw new Error("Tento valuebet sa nenašiel v zázname.");
+  const e = JSON.parse(raw) as ValuebetLogEntry;
+  if (stake > 0) {
+    if (!(odd > 1 && odd < 100)) throw new Error("Zadajte kurz, napr. 2,10.");
+    e.myStake = Math.round(stake * 100) / 100;
+    e.myOdd = Math.round(odd * 100) / 100;
+    e.myAt = new Date().toISOString();
+  } else if (e.manual) {
+    await hdel([key]); // ručne zadaná stávka sa pri zrušení zmaže celá
+    return e;
+  } else {
+    delete e.myStake; delete e.myOdd; delete e.myAt;
+  }
+  await hsetMany({ [key]: JSON.stringify(e) });
+  return e;
 }
 
 export async function valuebetLog(): Promise<ValuebetLogEntry[]> {

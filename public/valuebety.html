@@ -104,6 +104,23 @@ details p, details li { color: var(--muted); font-size: 14px; }
 @media (max-width: 760px) { .explain { grid-template-columns: 1fr; } }
 .explain div { background: var(--card); border: 1px solid var(--line2); border-radius: 12px; padding: 12px; font-size: 14px; color: var(--muted); }
 .explain b { display: block; color: var(--text); font: 600 15px var(--display); margin-bottom: 4px; }
+.play { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line2); }
+.play input { width: 92px; font: 600 15px var(--body); padding: 7px 9px; }
+.play label { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.play .btn { padding: 7px 14px; font-size: 13px; }
+.played { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 10px; padding: 8px 10px; border-radius: 9px; background: rgba(201,165,92,.10); border: 1px solid var(--line); font-size: 14px; }
+.played b { color: var(--gold-hi); }
+.linkbtn { background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; font: inherit; font-size: 13px; padding: 0; }
+.err { color: var(--bad); font-size: 13px; }
+select { width: 100%; font: 500 15px var(--body); color: var(--text); background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.chk { display: grid; grid-template-columns: 1.4fr 1.2fr; gap: 12px; }
+.chk2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; margin-top: 12px; }
+@media (max-width: 760px) { .chk, .chk2 { grid-template-columns: 1fr; } }
+.res { margin-top: 14px; border-radius: 12px; padding: 14px; border: 1px solid var(--line2); background: var(--card); }
+.res.ok { border-color: rgba(127,191,154,.5); background: rgba(127,191,154,.07); }
+.res.no { border-color: rgba(192,112,124,.45); background: rgba(192,112,124,.07); }
+.res-top { font: 700 20px/1.25 var(--display); margin-bottom: 4px; }
+.res.ok .res-top { color: var(--good); } .res.no .res-top { color: var(--bad); }
 </style>
 </head>
 <body>
@@ -120,6 +137,20 @@ details p, details li { color: var(--muted); font-size: 14px; }
     </div>
   </section>
 
+  <!-- OVERIŤ KURZ -->
+  <section class="panel" id="checkPanel">
+    <div class="head"><div><h2>Overiť kurz z mojej stávkovky</h2><div class="muted small">Vyberte zápas a stávku, napíšte kurz z vašej stávkovky (Tipsport, Fortuna, Niké…) a uvidíte, či je to valuebet.</div></div></div>
+    <div class="chk">
+      <label><span class="f-l muted small">Zápas</span><select id="ckFixture"><option>Načítavam…</option></select></label>
+      <label><span class="f-l muted small">Stávka</span><select id="ckMarket"></select></label>
+    </div>
+    <div class="chk2">
+      <div><span class="muted small">Strana</span><div class="chips" id="ckSide" style="margin-top:6px"></div></div>
+      <label><span class="muted small">Kurz vo vašej stávkovke</span><input type="text" id="ckOdd" inputmode="decimal" placeholder="napr. 2,10" autocomplete="off"></label>
+    </div>
+    <div class="res" id="ckRes"><span class="muted">Vyberte zápas, stávku a napíšte kurz.</span></div>
+  </section>
+
   <!-- AKTUÁLNE -->
   <section class="panel">
     <div class="head">
@@ -132,6 +163,13 @@ details p, details li { color: var(--muted); font-size: 14px; }
     </div>
     <p class="warn" style="margin:0 0 12px">Kurzy sú zo zahraničných stávkoviek (API-Football, obnova každú hodinu). Pred stávkou overte, že kurz v stávkovke stále je aspoň taký, ako tu. Svoje stávkovky si nastavíte na stránke <a href="/surebety" style="color:var(--gold)">Surebety</a>.</p>
     <div class="sb-list" id="vbList"></div>
+  </section>
+
+  <!-- MOJE STÁVKY -->
+  <section class="panel">
+    <div class="head"><div><h2>Moje stávky</h2><div class="muted small">Valuebety, pri ktorých ste klikli „Zahral som“. Po zápase sa vyhodnotia s vaším vkladom a kurzom.</div></div></div>
+    <div class="kpis" id="myKpis"></div>
+    <div id="myDays"></div>
   </section>
 
   <!-- VÝSLEDKY -->
@@ -184,7 +222,48 @@ async function api(url, opts) {
 
 // ---------- Aktuálne ----------
 let scope = "all", myBooks = [];
+let logEntries = [];
+const logByKey = () => Object.fromEntries(logEntries.map((e) => [e.key, e]));
+const eur = (n) => (n > 0 ? "+" : n < 0 ? "−" : "") + fmt(Math.abs(n)) + " €";
+const num = (s) => { const n = parseFloat(String(s || "").replace(/\s/g, "").replace(",", ".")); return isFinite(n) ? n : NaN; };
+/** Výsledok mojej stávky v € (null = ešte čaká). */
+function myResult(e) {
+  if (!e.myStake || e.status === "pending") return null;
+  return e.status === "won" ? e.myStake * (e.myOdd - 1) : e.status === "lost" ? -e.myStake : 0;
+}
+/** Políčko „Zahral som“ alebo info o zahranej stávke. */
+function playBox(key, odd, entry, open) {
+  if (entry && entry.myStake) {
+    const r = myResult(entry);
+    return `<div class="played">Zahrané: <b>${fmt(entry.myStake)} €</b> pri kurze <b>${fmt(entry.myOdd)}</b>${r === null ? ` · možná výhra ${fmt(entry.myStake * entry.myOdd)} €` : ` · <span class="${r > 0 ? "g" : r < 0 ? "l" : "muted"}">${eur(r)}</span>`}${entry.status === "pending" ? ` <button type="button" class="linkbtn" data-cancel="${esc(key)}">Zrušiť</button>` : ""}</div>`;
+  }
+  if (!entry || !open) return "";
+  return `<div class="play" data-k="${esc(key)}">
+    <label>Vklad <input type="text" inputmode="decimal" data-f="stake" placeholder="10 €"></label>
+    <label>Kurz <input type="text" inputmode="decimal" data-f="odd" value="${fmt(odd)}"></label>
+    <button type="button" class="btn" data-play="${esc(key)}">Zahral som</button>
+    <span class="err"></span></div>`;
+}
+document.addEventListener("click", async (ev) => {
+  const play = ev.target.closest("[data-play]");
+  const cancel = ev.target.closest("[data-cancel]");
+  if (!play && !cancel) return;
+  const key = (play || cancel).dataset.play || (play || cancel).dataset.cancel;
+  const box = play ? play.closest(".play") : null;
+  const stake = box ? num(box.querySelector("[data-f=stake]").value) : 0;
+  const odd = box ? num(box.querySelector("[data-f=odd]").value) : 0;
+  if (box && !(stake > 0)) { box.querySelector(".err").textContent = "Zadajte vklad v eurách."; return; }
+  if (box && !(odd > 1)) { box.querySelector(".err").textContent = "Zadajte kurz, napr. 2,10."; return; }
+  try {
+    await api("/api/valuebets/my", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key, stake, odd }) });
+    await loadLog();
+    renderList(lastList);
+  } catch (err) { if (box) box.querySelector(".err").textContent = err.message; }
+});
+let lastList = [];
 function renderList(list) {
+  lastList = list;
+  const byKey = logByKey();
   list = [...list].sort((a, b) => dayKey(a.date).localeCompare(dayKey(b.date)) || b.ev - a.ev);
   if (!list.length) {
     $("vbList").innerHTML = `<p class="empty">${scope === "mine" && !myBooks.length ? "Najprv si na stránke Surebety vyberte svoje stávkovky." : "Teraz žiadny valuebet. Server kurzy prehľadáva každú hodinu."}</p>`;
@@ -204,6 +283,7 @@ function renderList(list) {
         <div class="leg"><span class="muted">Férový kurz</span> <b>${fmt(v.fairOdd)}</b> <span class="muted">(${esc(v.source)})</span></div>
       </div>
       ${v.suspicious ? '<span class="warn">Podozrivo vysoká hodnota – takmer určite chyba v kurze. Nezapisuje sa.</span>' : `<span class="faint small">Hrať len pri kurze aspoň ${fmt(Math.ceil(v.fairOdd * 1.03 * 100) / 100)}.</span>`}
+      ${v.suspicious ? "" : playBox(v.key, v.odd, byKey[v.key], true)}
     </div>`;
   }).join("");
 }
@@ -226,12 +306,95 @@ $("scopeChips").addEventListener("click", (e) => {
   load();
 });
 
+// ---------- Overiť kurz ----------
+let fair = [], ckSideIdx = 0;
+function ckFix() { return fair.find((f) => String(f.fixtureId) === $("ckFixture").value); }
+function ckMk() { const f = ckFix(); return f ? f.markets[Number($("ckMarket").value)] : null; }
+function ckRenderMarkets() {
+  const f = ckFix();
+  $("ckMarket").innerHTML = f ? f.markets.map((m, i) => `<option value="${i}">${esc(m.market)} · ${esc(m.sides.map((x) => x.label).join(" / "))}</option>`).join("") : "";
+  ckSideIdx = 0; ckRenderSides();
+}
+function ckRenderSides() {
+  const m = ckMk();
+  $("ckSide").innerHTML = m ? m.sides.map((x, i) => `<button type="button" class="chip${i === ckSideIdx ? " on" : ""}" data-i="${i}">${esc(x.label)}</button>`).join("") : "";
+  ckCalc();
+}
+function ckCalc() {
+  const m = ckMk(), f = ckFix(), box = $("ckRes");
+  if (!m || !f) { box.className = "res"; box.innerHTML = '<span class="muted">Vyberte zápas a stávku.</span>'; return; }
+  const sd = m.sides[ckSideIdx];
+  const need = Math.ceil(sd.fairOdd * 1.03 * 100) / 100;
+  const odd = num($("ckOdd").value);
+  const info = `<div class="muted small">Férový kurz <b style="color:var(--text)">${fmt(sd.fairOdd)}</b> (${esc(m.source)}) · valuebet od kurzu <b style="color:var(--text)">${fmt(need)}</b> · najvyšší kurz v zahraničí ${fmt(sd.best)} (${esc(sd.bestBook)})</div>`;
+  if (!(odd > 1)) { box.className = "res"; box.innerHTML = `<div class="res-top" style="color:var(--text)">${esc(sd.label)} · napíšte kurz</div>${info}`; return; }
+  const ev = odd / sd.fairOdd - 1;
+  const ok = ev >= 0.03;
+  box.className = "res " + (ok ? "ok" : "no");
+  box.innerHTML = `<div class="res-top">${ok ? (ev > 0.15 ? "Valuebet, ale podozrivo vysoký – overte kurz" : "Áno, je to valuebet") : ev > 0 ? "Hraničné – hodnota je príliš malá" : "Nie je to valuebet"}</div>
+    <div>${ev >= 0 ? "V priemere +" : "V priemere −"}${fmt(Math.abs(ev * 100))} € zo 100 €</div>${info}
+    ${ok ? `<div class="play" id="ckPlay"><label>Vklad <input type="text" inputmode="decimal" id="ckStake" placeholder="10 €"></label><label>Stávkovka <input type="text" id="ckBook" placeholder="napr. Tipsport" style="width:130px"></label><button type="button" class="btn" id="ckPlayBtn">Zahral som</button><span class="err" id="ckErr"></span></div>` : ""}`;
+  try { const b = localStorage.getItem("vb-book"); if (b && $("ckBook")) $("ckBook").value = b; } catch {}
+}
+$("ckFixture").addEventListener("change", ckRenderMarkets);
+$("ckMarket").addEventListener("change", () => { ckSideIdx = 0; ckRenderSides(); });
+$("ckSide").addEventListener("click", (e) => { const c = e.target.closest(".chip"); if (!c) return; ckSideIdx = Number(c.dataset.i); ckRenderSides(); });
+$("ckOdd").addEventListener("input", ckCalc);
+$("ckRes").addEventListener("click", async (e) => {
+  if (!e.target.closest("#ckPlayBtn")) return;
+  const f = ckFix(), m = ckMk(), sd = m.sides[ckSideIdx];
+  const stake = num($("ckStake").value), odd = num($("ckOdd").value), book = $("ckBook").value;
+  if (!(stake > 0)) { $("ckErr").textContent = "Zadajte vklad v eurách."; return; }
+  try { localStorage.setItem("vb-book", book); } catch {}
+  try {
+    await api("/api/valuebets/manual", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fixtureId: f.fixtureId, betId: m.betId, value: sd.value, odd, stake, book }) });
+    $("ckRes").innerHTML = `<div class="res-top" style="color:var(--good)">Zapísané do Mojich stávok</div><div class="muted small">${esc(f.home)} – ${esc(f.away)} · ${esc(sd.label)} · ${fmt(stake)} € pri kurze ${fmt(odd)}. Po zápase sa vyhodnotí samo.</div>`;
+    $("ckOdd").value = "";
+    loadLog();
+  } catch (err) { $("ckErr").textContent = err.message; }
+});
+async function loadFair() {
+  try {
+    const j = await api("/api/valuebets/fair");
+    fair = j.fixtures || [];
+    const prev = $("ckFixture").value;
+    $("ckFixture").innerHTML = fair.length ? fair.map((f) => `<option value="${f.fixtureId}">${new Date(f.date).toLocaleDateString("sk-SK", { day: "numeric", month: "numeric" })} ${time(f.date)} · ${esc(f.home)} – ${esc(f.away)} (${esc(f.league)})</option>`).join("") : "<option>Zatiaľ žiadne zápasy – server ešte neprehľadával kurzy</option>";
+    if (fair.some((f) => String(f.fixtureId) === prev)) $("ckFixture").value = prev;
+    ckRenderMarkets();
+  } catch (err) { $("ckRes").innerHTML = `<span class="err">${esc(err.message)}</span>`; }
+}
+
 // ---------- Výsledky ----------
-let logScope = "all", logEntries = [];
+let logScope = "all";
 const ST = { won: "✓", lost: "✕", void: "↺", pending: "…" };
+function renderMine() {
+  const mine = logEntries.filter((e) => e.myStake > 0);
+  const done = mine.filter((e) => e.status !== "pending");
+  const staked = mine.reduce((s, e) => s + e.myStake, 0);
+  const res = done.reduce((s, e) => s + myResult(e), 0);
+  const won = done.filter((e) => e.status === "won").length, lost = done.filter((e) => e.status === "lost").length;
+  $("myKpis").innerHTML = `
+    <div class="kpi"><span>Zahraných stávok</span><b>${mine.length}</b><span>${mine.length - done.length} čaká na zápas</span></div>
+    <div class="kpi"><span>Vsadené spolu</span><b>${fmt(staked)} €</b><span>${won + lost ? won + " z " + (won + lost) + " vyšlo" : "–"}</span></div>
+    <div class="kpi"><span>Výsledok</span><b class="${res > 0 ? "g" : res < 0 ? "l" : ""}">${done.length ? eur(res) : "–"}</b><span>z vyhodnotených stávok</span></div>
+    <div class="kpi"><span>Možná výhra (čakajúce)</span><b>${fmt(mine.filter((e) => e.status === "pending").reduce((s, e) => s + e.myStake * e.myOdd, 0))} €</b><span>ak by všetky vyšli</span></div>`;
+  const byDay = {};
+  for (const e of mine) (byDay[dayKey(e.date)] ??= []).push(e);
+  const days = Object.keys(byDay).sort().reverse();
+  $("myDays").innerHTML = days.length ? days.map((d) => {
+    const l = byDay[d].sort((a, b) => a.date.localeCompare(b.date));
+    const r = l.reduce((s, e) => s + (myResult(e) || 0), 0);
+    return `<details class="day" open><summary><b>${dayName(d)}</b><span>${l.length} ${l.length === 1 ? "stávka" : l.length <= 4 ? "stávky" : "stávok"}</span><span class="${r > 0 ? "g" : r < 0 ? "l" : "muted"}">${l.some((e) => e.status !== "pending") ? eur(r) : "čaká"}</span></summary>
+      ${l.map((e) => `<div class="lrow"><div class="t"><b>${esc(e.home)} – ${esc(e.away)}</b><span class="st ${e.status}">${ST[e.status] || "?"}</span></div>
+        <div class="muted small">${esc(e.league)} · ${time(e.date)} · ${esc(e.market)}${e.result ? " · " + esc(e.result) : ""}</div>
+        <div class="small">${esc(e.label)} <span class="muted">· ${esc(e.book)}</span></div>${playBox(e.key, e.odd, e, false)}</div>`).join("")}
+    </details>`;
+  }).join("") : `<p class="empty">Zatiaľ žiadna. Pri valuebete zadajte vklad a kliknite „Zahral som“.</p>`;
+}
 function renderLog() {
+  renderMine();
   const set = new Set(myBooks);
-  const list = logEntries.filter((e) => logScope === "all" || set.has(e.book));
+  const list = logEntries.filter((e) => !e.manual && (logScope === "all" || set.has(e.book)));
   const done = list.filter((e) => e.status !== "pending");
   const decided = done.filter((e) => e.status !== "void");
   const won = decided.filter((e) => e.status === "won").length;
@@ -254,12 +417,12 @@ function renderLog() {
     return `<details class="day"><summary><b>${dayName(d)}</b><span>${l.length} ${plural(l.length)}${fin.length ? " · " + fin.filter((e) => e.status === "won").length + " z " + fin.length + " vyšlo" : ""}</span><span class="${p > 0 ? "g" : p < 0 ? "l" : "muted"}">${l.some((e) => e.status !== "pending") ? units(p) : "čaká"}</span></summary>
       ${l.map((e) => `<div class="lrow"><div class="t"><b>${esc(e.home)} – ${esc(e.away)}</b><span><span class="st ${e.status}">${ST[e.status] || "?"}</span> ${e.status === "pending" ? "" : `<span class="${e.profit > 0 ? "g" : e.profit < 0 ? "l" : "muted"}">${units(e.profit || 0)}</span>`}</span></div>
         <div class="muted small">${esc(e.league)} · ${time(e.date)} · ${esc(e.market)}${e.result ? " · " + esc(e.result) : ""}</div>
-        <div class="small">${esc(e.label)} <b style="color:var(--gold-hi)">${fmt(e.odd)}</b> <span class="muted">v ${esc(e.book)} · férový ${fmt(e.fairOdd)} · v priemere +${fmt(e.ev * 100)} € zo 100 €</span></div></div>`).join("")}
+        <div class="small">${esc(e.label)} <b style="color:var(--gold-hi)">${fmt(e.odd)}</b> <span class="muted">v ${esc(e.book)} · férový ${fmt(e.fairOdd)} · v priemere +${fmt(e.ev * 100)} € zo 100 €</span></div>${playBox(e.key, e.odd, e, e.status === "pending")}</div>`).join("")}
     </details>`;
   }).join("") : `<p class="empty">${logScope === "mine" && !myBooks.length ? "Najprv si na stránke Surebety vyberte svoje stávkovky." : "Zatiaľ nič zapísané. Prvé valuebety pribudnú po najbližšom prehľadaní kurzov."}</p>`;
 }
 async function loadLog() {
-  try { const j = await api("/api/valuebets/log"); logEntries = j.entries || []; myBooks = j.myBooks || myBooks; renderLog(); }
+  try { const j = await api("/api/valuebets/log"); logEntries = j.entries || []; myBooks = j.myBooks || myBooks; renderLog(); if (lastList.length) renderList(lastList); }
   catch (err) { $("logDays").innerHTML = `<p class="empty">${esc(err.message)}</p>`; }
 }
 $("logScope").addEventListener("click", (e) => {
@@ -274,7 +437,7 @@ $("settleBtn").addEventListener("click", async () => {
   $("settleBtn").disabled = false;
   loadLog();
 });
-load(); loadLog();
+loadLog().then(load); loadFair();
 </script>
 </body>
 </html>

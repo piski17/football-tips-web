@@ -9,7 +9,7 @@ import { startBacktest, getBacktest } from "./backtest";
 import { applyCupGoals } from "./cupAdjust";
 import { getDay, getAllDays, setDay } from "./dailyStore";
 import { saveSlip, deleteSlip, listSlipIds, getSlipImage, MAX_SLIP_CHARS } from "./slipStore";
-import { computeValuebets, valuebetLog, settleValuebets, valuebetStatus, startValuebets } from "./valuebets";
+import { computeValuebets, valuebetLog, setMyBet, fairOdds, addManualBet, settleValuebets, valuebetStatus, startValuebets } from "./valuebets";
 import { scanSurebets, computeSurebets, surebetStatus, surebetLog, getMyBooks, setMyBooks, startSurebetScanner } from "./surebets";
 import { recordAutoFixture, listAuto, listAutoFixtures, autoFixtureDone, updateAuto, pruneAuto, AutoEntry } from "./autoStore";
 import "dotenv/config";
@@ -2024,6 +2024,28 @@ app.get("/api/valuebets/log", async (_req, res) => {
     res.json({ entries: await valuebetLog(), myBooks: await getMyBooks() });
   } catch (err: any) {
     res.status(500).json({ error: err.message ?? String(err) });
+  }
+});
+app.post("/api/valuebets/my", async (req, res) => {
+  try {
+    const num = (v: any) => Number(String(v ?? "").replace(",", "."));
+    const entry = await setMyBet(String(req.body?.key ?? ""), num(req.body?.stake) || 0, num(req.body?.odd));
+    res.json({ entry });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message ?? String(err) });
+  }
+});
+app.get("/api/valuebets/fair", (_req, res) => {
+  res.json({ fixtures: fairOdds() });
+});
+app.post("/api/valuebets/manual", async (req, res) => {
+  try {
+    const num = (v: any) => Number(String(v ?? "").replace(",", "."));
+    const b = req.body ?? {};
+    const entry = await addManualBet(Number(b.fixtureId), String(b.betId ?? ""), String(b.value ?? ""), num(b.odd), num(b.stake), String(b.book ?? ""));
+    res.json({ entry });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message ?? String(err) });
   }
 });
 app.post("/api/valuebets/settle", async (_req, res) => {
