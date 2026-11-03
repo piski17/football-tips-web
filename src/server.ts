@@ -9,6 +9,7 @@ import { startBacktest, getBacktest } from "./backtest";
 import { applyCupGoals } from "./cupAdjust";
 import { getDay, getAllDays, setDay } from "./dailyStore";
 import { saveSlip, deleteSlip, listSlipIds, getSlipImage, MAX_SLIP_CHARS } from "./slipStore";
+import { boostMarkets, boostLog, addBoost, deleteBoost, settleBoosts, startSuperkurzy } from "./superkurzy";
 import { computeValuebets, valuebetLog, setMyBet, setMyBets, fairOdds, addManualBet, settleValuebets, valuebetStatus, startValuebets } from "./valuebets";
 import { scanSurebets, computeSurebets, surebetStatus, surebetLog, getMyBooks, setMyBooks, startSurebetScanner } from "./surebets";
 import { recordAutoFixture, listAuto, listAutoFixtures, autoFixtureDone, updateAuto, pruneAuto, AutoEntry } from "./autoStore";
@@ -2067,6 +2068,44 @@ app.post("/api/valuebets/settle", async (_req, res) => {
   }
 });
 startValuebets();
+
+// ---- Superkurzy (/superkurzy) – overenie zvýšených kurzov slovenských stávkoviek, od 3. 11. 2026 (src/superkurzy.ts) ----
+app.get(["/superkurzy", "/superkurzy/"], (_req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  res.sendFile(path.join(__dirname, "..", "public", "superkurzy.html"));
+});
+app.get("/api/superkurzy", async (_req, res) => {
+  try {
+    res.json({ fixtures: boostMarkets(), entries: await boostLog() });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message ?? String(err) });
+  }
+});
+app.post("/api/superkurzy", async (req, res) => {
+  try {
+    const num = (v: any) => Number(String(v ?? "").replace(/\s/g, "").replace(",", ".")) || 0;
+    const b = req.body ?? {};
+    res.json({ entry: await addBoost(Number(b.fixtureId), String(b.betId ?? ""), String(b.value ?? ""), num(b.odd), num(b.stake), String(b.book ?? "")) });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message ?? String(err) });
+  }
+});
+app.post("/api/superkurzy/delete", async (req, res) => {
+  try {
+    await deleteBoost(String(req.body?.id ?? ""));
+    res.json({ ok: true });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message ?? String(err) });
+  }
+});
+app.post("/api/superkurzy/settle", async (_req, res) => {
+  try {
+    res.json({ settled: await settleBoosts() });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message ?? String(err) });
+  }
+});
+startSuperkurzy();
 
 app.get("/api/daily", async (_req, res) => {
   try {
