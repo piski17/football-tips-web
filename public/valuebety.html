@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TipRadar – valuebety</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Valuebety (3. 11. 2026) – skúška, samostatná stránka appky (vzhľad ako /surebety). */
+:root {
+  --bg: #0B0B0C; --section: #141416; --card: #1A1A1E; --line: rgba(201,165,92,.24); --line2: rgba(201,165,92,.12);
+  --gold: #C9A55C; --gold-hi: #E8D3A0; --gold-lo: #A8823E;
+  --text: #EDE6D6; --muted: #B8B0A2; --faint: #857E72; --good: #7FBF9A; --bad: #C0707C; --warn: #D9BE7A;
+  --display: "Bricolage Grotesque", system-ui, sans-serif;
+  --body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 var(--body); font-variant-numeric: tabular-nums; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 28px 20px 56px; }
+@media (max-width: 620px) { .wrap { padding: 20px 16px 44px; } }
+a.back { color: var(--muted); text-decoration: none; font-size: 13.5px; }
+a.back:hover { color: var(--gold); }
+h1, h2, h3 { font-family: var(--display); letter-spacing: -0.02em; margin: 0; }
+h1 { font-size: 32px; margin: 10px 0 6px; }
+h1 span { color: var(--gold); }
+h2 { font-size: 22px; margin: 0 0 4px; }
+.lead { color: var(--muted); margin: 0 0 22px; max-width: 74ch; }
+.muted { color: var(--muted); } .faint { color: var(--faint); } .small { font-size: 13px; }
+.panel { background: var(--section); border: 1px solid var(--line); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+@media (max-width: 620px) { .panel { padding: 14px; } }
+.head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+label.f { display: block; font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; font-weight: 600; }
+input[type=text], input[type=number] { width: 100%; font: 600 20px/1.2 var(--display); color: var(--text); background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+input:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.calc { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+@media (max-width: 760px) { .calc { grid-template-columns: 1fr; } }
+.side-in { background: var(--card); border: 1px solid var(--line2); border-radius: 12px; padding: 12px; }
+.side-in input.nm { font: 500 14px var(--body); padding: 7px 10px; margin-bottom: 8px; }
+.res { margin-top: 16px; border-radius: 12px; padding: 16px; border: 1px solid var(--line2); background: var(--card); }
+.res.ok { border-color: rgba(127,191,154,.5); background: rgba(127,191,154,.07); }
+.res.no { border-color: rgba(192,112,124,.45); background: rgba(192,112,124,.07); }
+.res-top { font: 700 22px/1.2 var(--display); margin-bottom: 10px; }
+.res.ok .res-top { color: var(--good); } .res.no .res-top { color: var(--bad); }
+.stakes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 520px) { .stakes { grid-template-columns: 1fr; } }
+.stake { background: var(--section); border-radius: 10px; padding: 10px 12px; }
+.stake b { display: block; font: 700 24px var(--display); color: var(--gold-hi); }
+.btn { font: 600 14px var(--body); color: #120E06; background: linear-gradient(135deg, var(--gold-hi), var(--gold)); border: 0; border-radius: 999px; padding: 9px 18px; cursor: pointer; }
+.btn.ghost { color: var(--gold); background: transparent; border: 1px solid var(--line); }
+.btn:disabled { opacity: .5; cursor: default; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 13px var(--body); color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; cursor: pointer; }
+.chip.on { color: #120E06; background: var(--gold); border-color: var(--gold); }
+.books { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 12px; max-height: 220px; overflow: auto; }
+.sb-list { display: grid; gap: 10px; }
+.sb { background: var(--card); border: 1px solid var(--line2); border-radius: 12px; padding: 14px; }
+.sb.sus { border-color: rgba(217,190,122,.45); }
+.sb-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.sb-top b { font: 600 17px var(--display); }
+.pct { font: 700 20px var(--display); color: var(--good); white-space: nowrap; }
+.sb.sus .pct { color: var(--warn); }
+.legs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0 8px; }
+@media (max-width: 520px) { .legs { grid-template-columns: 1fr; } }
+.leg { background: var(--section); border-radius: 9px; padding: 8px 10px; font-size: 14px; }
+.leg b { color: var(--gold-hi); }
+.sb-foot { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; }
+.warn { color: var(--warn); font-size: 13px; }
+.empty { color: var(--muted); padding: 10px 0; }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+@media (max-width: 760px) { .kpis { grid-template-columns: 1fr 1fr; } }
+.kpi { background: var(--card); border: 1px solid var(--line2); border-radius: 12px; padding: 12px; }
+.kpi span { display: block; font-size: 12px; color: var(--muted); }
+.kpi b { font: 700 24px var(--display); color: var(--gold-hi); }
+.tbl { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 420px; font-size: 14px; }
+th { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 6px; text-align: right; }
+td { padding: 7px 6px; text-align: right; border-top: 1px solid var(--line2); }
+th:first-child, td:first-child { text-align: left; }
+details summary { cursor: pointer; color: var(--gold); font-weight: 600; }
+.day-h { font: 600 15px var(--display); color: var(--gold); margin: 14px 0 8px; display: flex; justify-content: space-between; gap: 10px; }
+.day-h:first-child { margin-top: 0; }
+.day-h span { color: var(--muted); font: 400 13px var(--body); }
+details.day { background: var(--card); border: 1px solid var(--line2); border-radius: 12px; margin-bottom: 8px; }
+details.day > summary { list-style: none; display: grid; grid-template-columns: 1fr auto auto; gap: 14px; align-items: baseline; padding: 12px 14px; color: var(--text); font-weight: 500; }
+details.day > summary::-webkit-details-marker { display: none; }
+details.day > summary b { font: 600 15px var(--display); }
+details.day > summary::before { content: "›"; display: none; }
+details.day[open] > summary { border-bottom: 1px solid var(--line2); }
+.lrow { padding: 10px 14px; border-top: 1px solid var(--line2); font-size: 14px; }
+.lrow:first-of-type { border-top: 0; }
+.lrow .t { display: flex; justify-content: space-between; gap: 10px; }
+.lrow .t b { font-weight: 600; }
+@media (max-width: 520px) { details.day > summary { grid-template-columns: 1fr auto; } details.day > summary .hide-m { display: none; } }
+details p, details li { color: var(--muted); font-size: 14px; }
+.st { display: inline-block; min-width: 22px; text-align: center; font-weight: 700; border-radius: 6px; padding: 0 6px; font-size: 13px; }
+.st.won { color: #0B0B0C; background: var(--good); } .st.lost { color: #0B0B0C; background: var(--bad); } .st.void { color: var(--muted); border: 1px solid var(--line); } .st.pending { color: var(--muted); border: 1px dashed var(--line); }
+.g { color: var(--good); } .l { color: var(--bad); }
+.explain { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+@media (max-width: 760px) { .explain { grid-template-columns: 1fr; } }
+.explain div { background: var(--card); border: 1px solid var(--line2); border-radius: 12px; padding: 12px; font-size: 14px; color: var(--muted); }
+.explain b { display: block; color: var(--text); font: 600 15px var(--display); margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/">‹ Späť do appky</a> &nbsp;·&nbsp; <a class="back" href="/surebety">Surebety</a>
+  <h1>Value<span>bety</span></h1>
+  <p class="lead">Valuebet = stávkovka dáva vyšší kurz, než zodpovedá skutočnej šanci. Nie každý vyjde, ale pri veľa stávkach by mal byť súčet v pluse. Server ich hľadá v zápasoch 17 súťaží TipRadaru, sám ich zapisuje a po zápase vyhodnocuje. S tipmi TipRadaru nesúvisí.</p>
+
+  <section class="panel">
+    <div class="explain">
+      <div><b>Férový kurz</b>Kurz bez marže stávkovky. Berie sa z Pinnaclu (najpresnejšia stávkovka), a ak ho nemá, z priemeru aspoň 4 stávkoviek.</div>
+      <div><b>Hodnota</b>O koľko je ponúkaný kurz lepší ako férový. Napr. kurz 2,12 pri férovom 2,00 = +6 %. Zapisuje sa od +3 %, nad +15 % je to skoro vždy chyba v kurze.</div>
+      <div><b>Vklad</b>Vždy rovnaký, ideálne 1 – 2 % banku. Výsledky sa rátajú v jednotkách: 1 jednotka = váš vklad na jednu stávku.</div>
+    </div>
+  </section>
+
+  <!-- AKTUÁLNE -->
+  <section class="panel">
+    <div class="head">
+      <div><h2>Aktuálne valuebety</h2><div class="muted small" id="scanInfo">Načítavam…</div></div>
+      <button type="button" class="btn ghost" id="reloadBtn">Obnoviť</button>
+    </div>
+    <div class="chips" id="scopeChips" style="margin-bottom:12px">
+      <button type="button" class="chip" data-s="mine">Len moje stávkovky</button>
+      <button type="button" class="chip on" data-s="all">Všetky stávkovky</button>
+    </div>
+    <p class="warn" style="margin:0 0 12px">Kurzy sú zo zahraničných stávkoviek (API-Football, obnova každú hodinu). Pred stávkou overte, že kurz v stávkovke stále je aspoň taký, ako tu. Svoje stávkovky si nastavíte na stránke <a href="/surebety" style="color:var(--gold)">Surebety</a>.</p>
+    <div class="sb-list" id="vbList"></div>
+  </section>
+
+  <!-- VÝSLEDKY -->
+  <section class="panel">
+    <div class="head">
+      <div><h2>Výsledky skúšky</h2><div class="muted small">Každý valuebet sa zapíše s kurzom, pri ktorom sa objavil prvýkrát, a po zápase sa sám vyhodnotí (vklad 1 jednotka).</div></div>
+      <button type="button" class="btn ghost" id="settleBtn">Vyhodnotiť teraz</button>
+    </div>
+    <div class="chips" id="logScope" style="margin-bottom:12px">
+      <button type="button" class="chip" data-s="mine">Len moje stávkovky</button>
+      <button type="button" class="chip on" data-s="all">Všetky stávkovky</button>
+    </div>
+    <div class="kpis" id="logKpis"></div>
+    <div id="logDays"></div>
+  </section>
+
+  <section class="panel">
+    <details>
+      <summary>Na čo si dať pozor</summary>
+      <ul>
+        <li><b>Rozhoduje veľa stávok.</b> Aj pri dobrej hodnote príde séria prehier. O tom, či to funguje, sa dá hovoriť až po 200 – 300 stávkach.</li>
+        <li><b>Kurz musí ostať.</b> Keď stávkovka kurz medzitým znížila, hodnota zmizla. Hrajte len pri kurze aspoň takom, ako je uvedený.</li>
+        <li><b>Obmedzenie účtu.</b> Stávkovky obmedzujú hráčov, ktorí stále berú „najlepší kurz na trhu“. Hrajte rozumné sumy, zaokrúhlené na celé eurá.</li>
+        <li><b>Pravidlá trhu.</b> Všetko je na riadny hrací čas (90 minút). Víťaz bez remízy: pri remíze sa vklad vracia.</li>
+      </ul>
+    </details>
+  </section>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const fmt = (n, d = 2) => Number(n).toLocaleString("sk-SK", { minimumFractionDigits: d, maximumFractionDigits: d });
+const pct = (m, d = 1) => fmt(m * 100, d) + " %";
+const units = (n) => (n > 0 ? "+" : n < 0 ? "−" : "") + fmt(Math.abs(n)) + " j.";
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+function dayKey(iso) { return new Date(iso).toLocaleDateString("sv-SE", { timeZone: "Europe/Bratislava" }); }
+function dayName(d) {
+  const k = (ms) => dayKey(new Date(Date.now() + ms).toISOString());
+  const base = new Date(d + "T12:00:00").toLocaleDateString("sk-SK", { weekday: "long", day: "numeric", month: "numeric" });
+  return d === k(0) ? "Dnes · " + base : d === k(86400000) ? "Zajtra · " + base : d === k(-86400000) ? "Včera · " + base : base.charAt(0).toUpperCase() + base.slice(1);
+}
+const time = (iso) => new Date(iso).toLocaleTimeString("sk-SK", { hour: "2-digit", minute: "2-digit" });
+function plural(n) { return n === 1 ? "valuebet" : n >= 2 && n <= 4 ? "valuebety" : "valuebetov"; }
+async function api(url, opts) {
+  const r = await fetch(url, opts);
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || "Chyba servera");
+  return j;
+}
+
+// ---------- Aktuálne ----------
+let scope = "all", myBooks = [];
+function renderList(list) {
+  list = [...list].sort((a, b) => dayKey(a.date).localeCompare(dayKey(b.date)) || b.ev - a.ev);
+  if (!list.length) {
+    $("vbList").innerHTML = `<p class="empty">${scope === "mine" && !myBooks.length ? "Najprv si na stránke Surebety vyberte svoje stávkovky." : "Teraz žiadny valuebet. Server kurzy prehľadáva každú hodinu."}</p>`;
+    return;
+  }
+  let last = "";
+  $("vbList").innerHTML = list.map((v) => {
+    const d = dayKey(v.date);
+    const n = list.filter((x) => dayKey(x.date) === d).length;
+    const head = d !== last ? `<div class="day-h">${dayName(d)}<span>${n} ${plural(n)}</span></div>` : "";
+    last = d;
+    return head + `<div class="sb${v.suspicious ? " sus" : ""}">
+      <div class="sb-top"><b>${esc(v.home)} – ${esc(v.away)}</b><span class="pct">+${pct(v.ev)}</span></div>
+      <div class="muted small">${esc(v.league)} · ${time(v.date)} · ${esc(v.market)}</div>
+      <div class="legs">
+        <div class="leg">${esc(v.label)} · <b>${fmt(v.odd)}</b> <span class="muted">v ${esc(v.book)}</span></div>
+        <div class="leg"><span class="muted">Férový kurz</span> <b>${fmt(v.fairOdd)}</b> <span class="muted">(${esc(v.source)})</span></div>
+      </div>
+      ${v.suspicious ? '<span class="warn">Podozrivo vysoká hodnota – takmer určite chyba v kurze. Nezapisuje sa.</span>' : `<span class="faint small">Hrať len pri kurze aspoň ${fmt(Math.ceil(v.fairOdd * 1.03 * 100) / 100)}.</span>`}
+    </div>`;
+  }).join("");
+}
+async function load() {
+  try {
+    const j = await api("/api/valuebets?scope=" + scope);
+    myBooks = j.myBooks || [];
+    const st = j.status.scan || {};
+    $("scanInfo").textContent = st.at
+      ? `Naposledy ${new Date(st.at).toLocaleString("sk-SK", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "numeric" })} · ${st.fixtures} zápasov · ${(st.books || []).length} stávkoviek${st.error ? " · chyba: " + st.error : ""}`
+      : "Server ešte neprehľadával (prvýkrát minútu po spustení, potom každú hodinu).";
+    renderList(j.valuebets || []);
+  } catch (err) { $("scanInfo").textContent = err.message; }
+}
+$("reloadBtn").addEventListener("click", load);
+$("scopeChips").addEventListener("click", (e) => {
+  const c = e.target.closest(".chip"); if (!c) return;
+  scope = c.dataset.s;
+  for (const x of $("scopeChips").children) x.classList.toggle("on", x === c);
+  load();
+});
+
+// ---------- Výsledky ----------
+let logScope = "all", logEntries = [];
+const ST = { won: "✓", lost: "✕", void: "↺", pending: "…" };
+function renderLog() {
+  const set = new Set(myBooks);
+  const list = logEntries.filter((e) => logScope === "all" || set.has(e.book));
+  const done = list.filter((e) => e.status !== "pending");
+  const decided = done.filter((e) => e.status !== "void");
+  const won = decided.filter((e) => e.status === "won").length;
+  const profit = done.reduce((s, e) => s + (e.profit || 0), 0);
+  const avgOdd = decided.length ? decided.reduce((s, e) => s + e.odd, 0) / decided.length : 0;
+  const avgEv = list.length ? list.reduce((s, e) => s + e.ev, 0) / list.length : 0;
+  const pending = list.length - done.length;
+  $("logKpis").innerHTML = `
+    <div class="kpi"><span>Vyhodnotené</span><b>${decided.length ? won + " z " + decided.length : "–"}</b><span>${pending} čaká na zápas</span></div>
+    <div class="kpi"><span>Zisk</span><b class="${profit > 0 ? "g" : profit < 0 ? "l" : ""}">${done.length ? units(profit) : "–"}</b><span>pri vklade 10 €: ${done.length ? (profit >= 0 ? "+" : "−") + fmt(Math.abs(profit * 10)) + " €" : "–"}</span></div>
+    <div class="kpi"><span>Priemerný kurz</span><b>${decided.length ? fmt(avgOdd) : "–"}</b><span>úspešnosť ${decided.length ? pct(won / decided.length, 0) : "–"}</span></div>
+    <div class="kpi"><span>Priemerná hodnota</span><b>${list.length ? "+" + pct(avgEv) : "–"}</b><span>${list.length} ${plural(list.length)} spolu</span></div>`;
+  const byDay = {};
+  for (const e of list) (byDay[dayKey(e.date)] ??= []).push(e);
+  const days = Object.keys(byDay).sort().reverse();
+  $("logDays").innerHTML = days.length ? days.map((d) => {
+    const l = byDay[d].sort((a, b) => a.date.localeCompare(b.date) || b.ev - a.ev);
+    const p = l.reduce((s, e) => s + (e.profit || 0), 0);
+    const fin = l.filter((e) => e.status === "won" || e.status === "lost");
+    return `<details class="day"><summary><b>${dayName(d)}</b><span>${l.length} ${plural(l.length)}${fin.length ? " · " + fin.filter((e) => e.status === "won").length + " z " + fin.length + " vyšlo" : ""}</span><span class="${p > 0 ? "g" : p < 0 ? "l" : "muted"}">${l.some((e) => e.status !== "pending") ? units(p) : "čaká"}</span></summary>
+      ${l.map((e) => `<div class="lrow"><div class="t"><b>${esc(e.home)} – ${esc(e.away)}</b><span><span class="st ${e.status}">${ST[e.status] || "?"}</span> ${e.status === "pending" ? "" : `<span class="${e.profit > 0 ? "g" : e.profit < 0 ? "l" : "muted"}">${units(e.profit || 0)}</span>`}</span></div>
+        <div class="muted small">${esc(e.league)} · ${time(e.date)} · ${esc(e.market)}${e.result ? " · " + esc(e.result) : ""}</div>
+        <div class="small">${esc(e.label)} <b style="color:var(--gold-hi)">${fmt(e.odd)}</b> <span class="muted">v ${esc(e.book)} · férový ${fmt(e.fairOdd)} · +${pct(e.ev)}</span></div></div>`).join("")}
+    </details>`;
+  }).join("") : `<p class="empty">${logScope === "mine" && !myBooks.length ? "Najprv si na stránke Surebety vyberte svoje stávkovky." : "Zatiaľ nič zapísané. Prvé valuebety pribudnú po najbližšom prehľadaní kurzov."}</p>`;
+}
+async function loadLog() {
+  try { const j = await api("/api/valuebets/log"); logEntries = j.entries || []; myBooks = j.myBooks || myBooks; renderLog(); }
+  catch (err) { $("logDays").innerHTML = `<p class="empty">${esc(err.message)}</p>`; }
+}
+$("logScope").addEventListener("click", (e) => {
+  const c = e.target.closest(".chip"); if (!c) return;
+  logScope = c.dataset.s;
+  for (const x of $("logScope").children) x.classList.toggle("on", x === c);
+  renderLog();
+});
+$("settleBtn").addEventListener("click", async () => {
+  $("settleBtn").disabled = true;
+  try { await api("/api/valuebets/settle", { method: "POST" }); } catch (err) { /* ukáže sa pri ďalšom načítaní */ }
+  $("settleBtn").disabled = false;
+  loadLog();
+});
+load(); loadLog();
+</script>
+</body>
+</html>

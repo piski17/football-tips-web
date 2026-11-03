@@ -27,8 +27,8 @@ export const SUSPICIOUS_MARGIN = 0.08;
 export const MIN_MARGIN = 0.005;
 const SCAN_EVERY_MS = 60 * 60 * 1000; // každú hodinu
 
-interface BookOdd { book: string; odd: number }
-interface FixtureOdds {
+export interface BookOdd { book: string; odd: number }
+export interface FixtureOdds {
   fixtureId: number;
   league: string;
   country: string;
@@ -63,6 +63,12 @@ export interface SurebetLogEntry extends Surebet {
 
 let lastScan: { at: string; fixtures: FixtureOdds[]; requests: number; books: string[]; error?: string } | null = null;
 let scanning = false;
+/** Zápis valuebetov po každom prehľadaní (nastaví valuebets.ts). */
+let onScan: (() => Promise<void>) | null = null;
+export function setOnScan(fn: () => Promise<void>): void { onScan = fn; }
+/** Zápasy a kurzy z posledného prehľadania (pre valuebety). */
+export function scannedFixtures(): FixtureOdds[] { return lastScan?.fixtures ?? []; }
+export function lastScanAt(): string | null { return lastScan?.at ?? null; }
 
 function api() {
   const key = process.env.API_FOOTBALL_KEY;
@@ -150,6 +156,7 @@ export async function scanSurebets(): Promise<void> {
     for (const f of out.values()) for (const b of Object.values(f.bets)) for (const list of Object.values(b.values)) for (const o of list) books.add(o.book);
     lastScan = { at: new Date().toISOString(), fixtures: [...out.values()], requests: counter.n, books: [...books].sort((a, b) => a.localeCompare(b)), ...(failed.length ? { error: failed.join(" · ").slice(0, 300) } : {}) };
     await logCurrent();
+    if (onScan) await onScan().catch((err) => console.error("Valuebety – zápis zlyhal:", err));
   } catch (err: any) {
     lastScan = { at: new Date().toISOString(), fixtures: lastScan?.fixtures ?? [], requests: counter.n, books: lastScan?.books ?? [], error: String(err?.message ?? err) };
   } finally {
@@ -173,10 +180,10 @@ const MARKET_SK: Record<string, string> = {
   "total - home": "Góly domácich",
   "total - away": "Góly hostí",
 };
-function marketName(raw: string): string {
+export function marketName(raw: string): string {
   return MARKET_SK[raw.trim().toLowerCase()] ?? raw;
 }
-function sideLabel(value: string, f: FixtureOdds): string {
+export function sideLabel(value: string, f: FixtureOdds): string {
   const v = value.trim();
   let m = /^over\s+([\d.]+)$/i.exec(v);
   if (m) return "Nad " + m[1].replace(".", ",");
@@ -189,7 +196,7 @@ function sideLabel(value: string, f: FixtureOdds): string {
 const SKIP_BET = /handicap|player|scorer|exact|correct|interval|race|minute|first\s*(team|goal|corner|card)|last|to qualify|method|which team|winning margin/i;
 
 /** Dvojice opačných stávok v jednom trhu. */
-function pairsOf(name: string, values: Record<string, BookOdd[]>): [string, string][] {
+export function pairsOf(name: string, values: Record<string, BookOdd[]>): [string, string][] {
   if (SKIP_BET.test(name)) return [];
   const keys = Object.keys(values);
   const has = (k: string) => keys.find((x) => x.toLowerCase() === k);

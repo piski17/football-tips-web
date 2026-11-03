@@ -9,6 +9,7 @@ import { startBacktest, getBacktest } from "./backtest";
 import { applyCupGoals } from "./cupAdjust";
 import { getDay, getAllDays, setDay } from "./dailyStore";
 import { saveSlip, deleteSlip, listSlipIds, getSlipImage, MAX_SLIP_CHARS } from "./slipStore";
+import { computeValuebets, valuebetLog, settleValuebets, valuebetStatus, startValuebets } from "./valuebets";
 import { scanSurebets, computeSurebets, surebetStatus, surebetLog, getMyBooks, setMyBooks, startSurebetScanner } from "./surebets";
 import { recordAutoFixture, listAuto, listAutoFixtures, autoFixtureDone, updateAuto, pruneAuto, AutoEntry } from "./autoStore";
 import "dotenv/config";
@@ -2002,6 +2003,37 @@ app.get("/api/surebets/log", async (_req, res) => {
   }
 });
 startSurebetScanner(LEAGUE_PRESETS);
+
+// ---- Valuebety (/valuebety) – hodnotné stávky, skúška od 3. 11. 2026 (src/valuebets.ts) ----
+app.get(["/valuebety", "/valuebety/"], (_req, res) => {
+  res.set("Cache-Control", "no-cache");
+  res.sendFile(path.join(__dirname, "..", "public", "valuebety.html"));
+});
+app.get("/api/valuebets", async (req, res) => {
+  try {
+    const mine = await getMyBooks();
+    const scope = req.query.scope === "mine" ? "mine" : "all";
+    const list = computeValuebets(scope === "mine" ? (mine.length ? mine : ["-"]) : null);
+    res.json({ status: { ...valuebetStatus(), scan: surebetStatus() }, myBooks: mine, scope, valuebets: list.slice(0, 300) });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message ?? String(err) });
+  }
+});
+app.get("/api/valuebets/log", async (_req, res) => {
+  try {
+    res.json({ entries: await valuebetLog(), myBooks: await getMyBooks() });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message ?? String(err) });
+  }
+});
+app.post("/api/valuebets/settle", async (_req, res) => {
+  try {
+    res.json({ settled: await settleValuebets() });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message ?? String(err) });
+  }
+});
+startValuebets();
 
 app.get("/api/daily", async (_req, res) => {
   try {
