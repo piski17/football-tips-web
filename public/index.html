@@ -40,6 +40,16 @@
     </aside>
 
     <main class="main">
+      <!-- DNES (3. 11. 2026, Michal): všetko podstatné na jednom mieste – tipy na dnes, včerajší výsledok, mesiac, členovia -->
+      <section class="view" data-view="dnes" id="viewDnes" hidden>
+        <header class="top">
+          <h2>Dnes</h2>
+          <span class="muted small top-sub" id="dnesDate"></span>
+          <div class="top-actions"><button type="button" class="btn ghost sm" id="dnesReloadBtn">Obnoviť</button><button type="button" class="btn sm" id="dnesSendBtn">Poslať tipy dňa</button></div>
+        </header>
+        <div class="page dnes" id="dnesPane"><p class="empty">Načítavam…</p></div>
+      </section>
+
       <!-- ZÁPASY -->
       <section class="view" data-view="zapasy" id="viewZapasy">
         <div class="zap-grid">
@@ -97,7 +107,7 @@
       <section class="view" data-view="historia" id="viewHistoria" hidden>
         <header class="top">
           <h2>História <em>tipov</em></h2>
-          <div class="top-actions"><button type="button" class="btn ghost sm" id="sendDayTipsBtn" title="Poslať všetky tipy vybraného dňa do Telegramu naraz">Poslať tipy dňa</button><button type="button" class="btn ghost sm" id="auditTipsBtn" title="Znova vyhodnotí vyhodnotené tipy z dát API a ukáže tie, kde výsledok nesedí">Overiť vyhodnotenie</button><button type="button" class="btn ghost sm" id="strict6040Btn" title="Prepočíta zverejnené tipy pri 60 % model / 40 % stávkovky a ukáže tie, ktoré by neprešli">Skontrolovať cez 60 / 40</button><button type="button" class="btn sm" id="checkResultsBtn">Skontrolovať výsledky</button></div>
+          <div class="top-actions"><button type="button" class="btn ghost sm" id="sendDayTipsBtn" title="Poslať všetky tipy vybraného dňa do Telegramu naraz">Poslať tipy dňa</button></div>
         </header>
         <!-- História tipov (29. 10. 2026): prehľad hore, potom štyri karty – Tipy, Štatistiky, Sledované, Ďalšie akcie -->
         <div class="page hist">
@@ -106,7 +116,7 @@
           <div class="chips hist-tabs" id="histTabs" role="tablist">
             <button type="button" class="chip on" data-ht="tipy">Tipy</button>
             <button type="button" class="chip" data-ht="stat">Štatistiky</button>
-            <button type="button" class="chip" data-ht="sled">Sledované</button>
+            <button type="button" class="chip" data-ht="sled">Na mesačnú kontrolu</button>
             <button type="button" class="chip" data-ht="akcie">Ďalšie akcie</button>
           </div>
 
@@ -128,9 +138,6 @@
           <div class="fold-grid" data-fold-group="stat">
             <button type="button" class="fold-tile" data-fold="trhy" aria-expanded="false"><span class="ft-t">Podľa trhov</span><span class="ft-s" data-fold-sum="trhy">Úspešnosť a zisk v každom trhu</span><i aria-hidden="true">›</i></button>
             <button type="button" class="fold-tile" data-fold="ligy" aria-expanded="false"><span class="ft-t">Podľa líg</span><span class="ft-s" data-fold-sum="ligy">Kde model zarába a kde prerába</span><i aria-hidden="true">›</i></button>
-            <button type="button" class="fold-tile" data-fold="hodnota" aria-expanded="false"><span class="ft-t">Podľa hodnoty</span><span class="ft-s" data-fold-sum="hodnota">Malá vs. veľká hodnota tipu</span><i aria-hidden="true">›</i></button>
-            <button type="button" class="fold-tile" data-fold="kalib" aria-expanded="false"><span class="ft-t">Kalibrácia</span><span class="ft-s" data-fold-sum="kalib">Sľub modelu vs. realita</span><i aria-hidden="true">›</i></button>
-            <button type="button" class="fold-tile" data-fold="bank" aria-expanded="false"><span class="ft-t">Bankroll simulátor</span><span class="ft-s" data-fold-sum="bank">Ako by rástol bank</span><i aria-hidden="true">›</i></button>
           </div>
           <div class="fold-sec" data-fold-sec="trhy" hidden>
           <h3 class="sh">Podľa trhov <small>zisk pri vklade 1 jednotky na tip</small><button type="button" class="fold-close" data-fold-close aria-label="Zavrieť">× Zavrieť</button></h3>
@@ -142,44 +149,17 @@
               <p class="muted small">V ktorých súťažiach model zarába a kde prerába.</p>
               <div id="leagueResult"></div></div>
           </div>
-          <div class="fold-sec" data-fold-sec="hodnota" hidden>
-          <h3 class="sh">Podľa hodnoty<button type="button" class="fold-close" data-fold-close aria-label="Zavrieť">× Zavrieť</button></h3>
-<div class="card">
-              <p class="muted small">Ktoré tipy zarábajú najviac – s malou alebo veľkou hodnotou. Podľa toho sa dá posunúť hranica +5 %.</p>
-              <div id="valueResult"></div></div>
-          </div>
-          <div class="fold-sec" data-fold-sec="kalib" hidden>
-          <h3 class="sh">Kalibrácia<button type="button" class="fold-close" data-fold-close aria-label="Zavrieť">× Zavrieť</button></h3>
-<div class="card">
-              <p class="muted small">Porovnanie predpovedanej pravdepodobnosti s tým, ako často tipy reálne vyšli.</p>
-              <div id="calibrationResult"></div></div>
-          </div>
-          <div class="fold-sec" data-fold-sec="bank" hidden>
-          <h3 class="sh">Bankroll simulátor<button type="button" class="fold-close" data-fold-close aria-label="Zavrieť">× Zavrieť</button></h3>
-
-          <div class="card">
-              <p class="muted small">Na každý tip ide zvolené percento z aktuálneho bankrollu. Počíta sa so skutočným kurzom, ak je uložený, inak s „fér“ kurzom z pravdepodobnosti modelu.</p>
-              <div class="bk-controls">
-                <label class="inline-field">Počiatočný bankroll <input type="number" id="bankrollStartInput" value="1000" min="1" step="50" /> €</label>
-                <div class="chips" id="bankrollPct" role="group" aria-label="Vklad na tip">
-                  <span class="faint small">Vklad na tip</span>
-                  <button type="button" class="chip" data-pct="1">1&nbsp;%</button>
-                  <button type="button" class="chip on" data-pct="2">2&nbsp;%</button>
-                  <button type="button" class="chip" data-pct="3">3&nbsp;%</button>
-                  <button type="button" class="chip" data-pct="5">5&nbsp;%</button>
-                </div>
-              </div>
-              <div id="bankrollResult"></div></div>
-          </div>
           </div>
 
           <div class="hist-pane" data-hp="sled" hidden>
-          <p class="muted small hist-note">Všetko na tejto karte sa vyhodnocuje potichu: nejde to členom ani na web a neráta sa do štatistík. Kliknite na kolónku a otvorí sa.</p>
+          <p class="muted small hist-note">Rozbory na mesačnú kontrolu (najbližšie 1. 12.). Denne ich netreba pozerať. Sledované tipy sa vyhodnocujú potichu: nejdú členom ani na web a nerátajú sa do štatistík. Kliknite na kolónku a otvorí sa.</p>
           <div class="fold-grid" data-fold-group="sled">
             <button type="button" class="fold-tile" data-fold="auto" aria-expanded="false"><span class="ft-t">Všetky zápasy – automaticky</span><span class="ft-s" data-fold-sum="auto">Model sám prejde každý zápas</span><i aria-hidden="true">›</i></button>
             <button type="button" class="fold-tile" data-fold="k6040" aria-expanded="false"><span class="ft-t">Prehľad a kontrola 60 / 40</span><span class="ft-s" data-fold-sum="k6040">Všetky skupiny sledovaných tipov</span><i aria-hidden="true">›</i></button>
             <button type="button" class="fold-tile" data-fold="pasmo" aria-expanded="false"><span class="ft-t">Pásmo 65 – 67&nbsp;%</span><span class="ft-s" data-fold-sum="pasmo">Tipy tesne pod pásmom</span><i aria-hidden="true">›</i></button>
             <button type="button" class="fold-tile" data-fold="zoznam" aria-expanded="false"><span class="ft-t">Zoznam sledovaných</span><span class="ft-s" data-fold-sum="zoznam">Všetky sledované tipy</span><i aria-hidden="true">›</i></button>
+            <button type="button" class="fold-tile" data-fold="hodnota" aria-expanded="false"><span class="ft-t">Podľa hodnoty</span><span class="ft-s" data-fold-sum="hodnota">Malá vs. veľká hodnota tipu</span><i aria-hidden="true">›</i></button>
+            <button type="button" class="fold-tile" data-fold="kalib" aria-expanded="false"><span class="ft-t">Kalibrácia</span><span class="ft-s" data-fold-sum="kalib">Sľub modelu vs. realita</span><i aria-hidden="true">›</i></button>
             <button type="button" class="fold-tile" data-fold="ticho" aria-expanded="false"><span class="ft-t">Tiché sledovanie</span><span class="ft-s" data-fold-sum="ticho">Vyradené tipy, CLV, zmiešanie</span><i aria-hidden="true">›</i></button>
           </div>
           <div class="fold-sec" data-fold-sec="auto" hidden>
@@ -205,20 +185,27 @@
               <div class="track-line muted small" id="clvSummary"></div>
               <div class="track-line muted small" id="blendSummary"></div></div>
           </div>
+          <div class="fold-sec" data-fold-sec="hodnota" hidden>
+          <h3 class="sh">Podľa hodnoty<button type="button" class="fold-close" data-fold-close aria-label="Zavrieť">× Zavrieť</button></h3>
+<div class="card">
+              <p class="muted small">Ktoré tipy zarábajú najviac – s malou alebo veľkou hodnotou. Podľa toho sa dá posunúť hranica +5 %.</p>
+              <div id="valueResult"></div></div>
+          </div>
+          <div class="fold-sec" data-fold-sec="kalib" hidden>
+          <h3 class="sh">Kalibrácia<button type="button" class="fold-close" data-fold-close aria-label="Zavrieť">× Zavrieť</button></h3>
+<div class="card">
+              <p class="muted small">Porovnanie predpovedanej pravdepodobnosti s tým, ako často tipy reálne vyšli.</p>
+              <div id="calibrationResult"></div></div>
+          </div>
           </div>
 
           <div class="hist-pane" data-hp="akcie" hidden>
           <div class="card hist-actions">
-            <button type="button" class="btn ghost sm" id="tipsComingBtn" title="Poslať do Telegramu oznam, že tipy prídu o pár minút">Tipy o pár minút</button>
-            <button type="button" class="btn ghost sm" id="noTipTodayBtn">Dnes bez tipu</button>
-            <button type="button" class="btn ghost sm" id="monthlyReportBtn" title="Súhrn všetkých tipov za mesiac s možnosťou odoslať ho do Telegramu">Mesačný report</button>
+            <button type="button" class="btn ghost sm" id="checkResultsBtn" title="Server výsledky kontroluje sám – toto len skontroluje hneď">Skontrolovať výsledky</button>
+            <button type="button" class="btn ghost sm" id="auditTipsBtn" title="Znova vyhodnotí vyhodnotené tipy z dát API a ukáže tie, kde výsledok nesedí">Overiť vyhodnotenie</button>
+            <button type="button" class="btn ghost sm" id="strict6040Btn" title="Prepočíta zverejnené tipy pri 60 % model / 40 % stávkovky a ukáže tie, ktoré by neprešli">Skontrolovať cez 60 / 40</button>
             <button type="button" class="btn ghost sm" id="manualTipBtn" title="Zapísať tip na už odohraný zápas aj s výsledkom">+ Doplniť odohraný tip</button>
             <button type="button" class="btn ghost sm" id="archiveResolvedBtn" title="Skryť vyhodnotené tipy z histórie – na prezentácii a v štatistikách ostanú">Skryť vyhodnotené</button>
-            <button type="button" class="btn ghost sm" id="restoreDailyBtn" title="Vrátiť do histórie tipy z denného súhrnu (/suhrn), ktoré v histórii chýbajú">Obnoviť z denného súhrnu</button>
-          </div>
-          <div class="danger-zone">
-            <span class="muted small">Natrvalo zmaže všetky uložené tipy aj ich správy v Telegrame.</span>
-            <button type="button" class="btn danger sm" id="clearAllTipsBtn">Vymazať všetky tipy</button>
           </div>
           </div>
         </div>
@@ -285,15 +272,15 @@
             <button type="button" class="tool" id="openBacktestBtn"><b>Spätný test</b><span>Overenie presnosti modelu na odohraných zápasoch.</span></button>
             <button type="button" class="tool" id="openCoverageBtn"><b>Trhy v ligách</b><span>Ktoré naše druhy stávok (góly, rohy, karty, strely, fauly) stávkovky v každej lige naozaj ponúkajú.</span></button>
             <button type="button" class="tool" id="openVisitsBtn"><b>Návštevnosť</b><span>Koľko ľudí navštívilo tipradar.eu a odkiaľ prišli.</span></button>
-            <button type="button" class="tool" id="openMonthlyBtn2"><b>Mesačný report</b><span>Súhrn tipov za mesiac s odoslaním do Telegramu.</span></button>
-            <a class="tool" href="/suhrn"><b>Denný súhrn</b><span>Denný prehľad tipov a výsledkov.</span></a>
-            <a class="tool" href="/instagram"><b>Instagram</b><span>Obrázky tipov a výsledkov na Instagram.</span></a>
-            <a class="tool" href="/surebety"><b>Surebety</b><span>Kalkulačka vkladov na surebet a hľadanie surebetov v kurzoch stávkoviek. Skúška, s tipmi nesúvisí.</span></a>
-            <a class="tool" href="/valuebety"><b>Valuebety</b><span>Hodnotné stávky: stávkovka dáva vyšší kurz, než zodpovedá férovej šanci. Server ich sám zapisuje a po zápase vyhodnocuje. Skúška, s tipmi nesúvisí.</span></a>
-            <a class="tool" href="/superkurzy"><b>Superkurzy</b><span>Overte superkurz (boost) z Tipsportu, Fortuny či Niké: má hodnotu, alebo nie? Zapísané superkurzy sa po zápase samy vyhodnotia.</span></a>
             
             <a class="tool" href="/navratnost.html"><b>Návratnosť – kalkulačka</b><span>Zadáte vlastný bank (napr. 200 €) aj počet tipov mesačne (30, 45, 60…) a hneď vidíte, koľko tipov musí vyjsť za mesiac a zo 100 tipov celkovo. Ukáže aj čistý zisk za mesiac. Dá sa uložiť ako PDF.</span></a>
             
+          </div>
+          <h3 class="sh">Skúška – stávkovky <small>vedľajší projekt, s tipmi TipRadaru nesúvisí</small></h3>
+          <div class="tools-grid">
+            <a class="tool" href="/surebety"><b>Surebety</b><span>Kalkulačka vkladov na surebet a hľadanie surebetov v kurzoch stávkoviek. Skúška, s tipmi nesúvisí.</span></a>
+            <a class="tool" href="/valuebety"><b>Valuebety</b><span>Hodnotné stávky: stávkovka dáva vyšší kurz, než zodpovedá férovej šanci. Server ich sám zapisuje a po zápase vyhodnocuje. Skúška, s tipmi nesúvisí.</span></a>
+            <a class="tool" href="/superkurzy"><b>Superkurzy</b><span>Overte superkurz (boost) z Tipsportu, Fortuny či Niké: má hodnotu, alebo nie? Zapísané superkurzy sa po zápase samy vyhodnotia.</span></a>
           </div>
         </div>
       </section>

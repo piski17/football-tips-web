@@ -252,6 +252,7 @@ function betOddsHtml(bet) {
 
 // ---- Ikony ----
 const ICON = {
+  dnes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 11.5 12 5l8 6.5"/><path d="M6 10v9h12v-9"/><path d="M10 19v-5h4v5"/></svg>',
   zapasy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 7l4 3-1.5 5h-5L8 10z"/></svg>',
   tipy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>',
   historia: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16M8 15l4-4 3 3 5-6"/></svg>',
@@ -462,13 +463,14 @@ async function maybeOfferTelegram(tipId, tip) {
 
 // ---- Navigácia (obrazovky) ----
 const VIEWS = [
+  { id: "dnes", label: "Dnes", short: "Dnes" },
   { id: "zapasy", label: "Zápasy", short: "Zápasy" },
   { id: "tipy", label: "Tipy dňa", short: "Tipy dňa" },
   { id: "historia", label: "História tipov", short: "História" },
   { id: "clenovia", label: "Členovia", short: "Členovia" },
   { id: "nastroje", label: "Nástroje", short: "Nástroje" },
 ];
-let currentView = "zapasy";
+let currentView = "dnes";
 
 function renderNav() {
   const count = fixtureTotalCount ? `<span class="cnt">${fixtureTotalCount}</span>` : "";
@@ -481,12 +483,13 @@ function renderNav() {
 }
 
 function showView(id) {
-  if (!VIEWS.some((v) => v.id === id)) id = "zapasy";
+  if (!VIEWS.some((v) => v.id === id)) id = "dnes";
   const changed = id !== currentView;
   currentView = id;
   document.querySelectorAll(".view").forEach((s) => { s.hidden = s.dataset.view !== id; });
   renderNav();
   if (changed) window.scrollTo(0, 0);
+  if (id === "dnes") void renderDnes();
   if (id === "historia") openTipsHistory();
   if (id === "clenovia") openSubscribers();
   if (id === "tipy") { renderDayTipsView(); void syncDayTipSaved(); }
@@ -614,7 +617,7 @@ async function init() {
   syncMemberPrice();
   document.getElementById("subStart").value = todayIso();
   updateSubEndPreview();
-  showView(location.hash.slice(1) || "zapasy");
+  showView(location.hash.slice(1) || "dnes");
   loadSeats();
   try {
     const leagues = await fetchJson("/api/leagues");
@@ -2383,6 +2386,7 @@ function renderMarketBreakdown(tips) {
 
 function renderBankrollSimulation(tips) {
   const el = document.getElementById("bankrollResult");
+  if (!el) return; // 3. 11. 2026: bankroll simulátor odstránený z appky (Michal)
   const resolved = tips
     .filter((t) => t.status === "won" || t.status === "lost")
     .sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime());
@@ -2918,8 +2922,8 @@ function renderLeagueReport(tips) {
   el.innerHTML = `<div class="table-wrap"><table class="bt-table"><thead><tr><th>Súťaž</th><th class="num">Tipy</th><th class="num">Vyšlo</th><th class="num">Zisk</th><th class="num">Návratnosť</th></tr></thead><tbody>${body}</tbody></table></div>
     <p class="faint small">Liga s ${LEAGUE_WARN_MIN_TIPS}+ tipmi a návratnosťou pod −5${NB}% je označená. Pri menšom počte tipov je výsledok ešte prevažne náhoda. „Vyradené súťaže“ sa už netipujú, ich staré tipy ostávajú v štatistikách.</p>`;
 }
-bankrollStartInput.addEventListener("input", () => renderBankrollSimulation(lastStatTips));
-document.getElementById("bankrollPct").addEventListener("click", (e) => {
+bankrollStartInput?.addEventListener("input", () => renderBankrollSimulation(lastStatTips));
+document.getElementById("bankrollPct")?.addEventListener("click", (e) => {
   const b = e.target.closest("[data-pct]");
   if (!b) return;
   bankrollPct = Number(b.dataset.pct);
@@ -3237,7 +3241,7 @@ checkResultsBtn.addEventListener("click", async () => {
   }
 });
 
-document.getElementById("clearAllTipsBtn").addEventListener("click", async (e) => {
+document.getElementById("clearAllTipsBtn")?.addEventListener("click", async (e) => {
   const btn = e.currentTarget;
   if (!window.confirm("Naozaj chceš vymazať ÚPLNE VŠETKY uložené tipy (aj už vyhodnotené)? Táto akcia sa nedá vrátiť späť.")) return;
   btn.disabled = true;
@@ -3254,6 +3258,7 @@ document.getElementById("clearAllTipsBtn").addEventListener("click", async (e) =
 /** Jednoduché oznamy do Telegramu: najprv výber kanála, potom odoslanie. */
 function wireTelegramNotice(btnId, url) {
   const btn = document.getElementById(btnId);
+  if (!btn) return; // 3. 11. 2026: tlačidlá Tipy o pár minút / Dnes bez tipu odstránené (Michal)
   btn.addEventListener("click", async () => {
     const target = await askTelegramTarget();
     if (!target) return;
@@ -3292,7 +3297,7 @@ async function restoreFromDaily() {
   }
   openTipsHistory();
 }
-document.getElementById("restoreDailyBtn").addEventListener("click", () => restoreFromDaily());
+document.getElementById("restoreDailyBtn")?.addEventListener("click", () => restoreFromDaily());
 
 // ---- Oprava tipu v histórii (výsledok, kurz, pri tikete výsledky zápasov) ----
 const STATUS_OPTIONS = [
@@ -3751,8 +3756,8 @@ async function renderModelHealth(el) {
     el.innerHTML = `<p class="faint small">Stav modelu sa nepodarilo načítať.</p>`;
   }
 }
-document.getElementById("monthlyReportBtn").addEventListener("click", () => openMonthlyReport());
-document.getElementById("openMonthlyBtn2").addEventListener("click", () => openMonthlyReport());
+document.getElementById("monthlyReportBtn")?.addEventListener("click", () => openMonthlyReport());
+document.getElementById("openMonthlyBtn2")?.addEventListener("click", () => openMonthlyReport());
 
 // ---- Uzatvárací kurz (CLV): bol kurz pri zverejnení tipu lepší ako tesne pred výkopom? ----
 async function renderClvSummary() {
@@ -4847,3 +4852,104 @@ document.getElementById("openCoverageBtn").addEventListener("click", () => openC
 
 // ---- Štart ----
 init();
+
+
+// =====================================================================
+// DNES (3. 11. 2026, Michal): úvodná obrazovka – tipy na dnes (najviac 3 pre klientov), včera, mesiac, členovia
+// =====================================================================
+var dnesLoading = false; // var: init() beží skôr, než sa sem skript dostane
+async function renderDnes() {
+  const pane = document.getElementById("dnesPane");
+  if (!pane || dnesLoading) return;
+  dnesLoading = true;
+  const now = new Date();
+  document.getElementById("dnesDate").textContent = now.toLocaleDateString("sk-SK", { weekday: "long", day: "numeric", month: "numeric" });
+  try {
+    const [tipsRaw, auto, subs, pays] = await Promise.all([
+      fetchJson("/api/tips").catch(() => null),
+      fetchJson("/api/auto-tips").catch(() => null),
+      fetchJson("/api/subscribers").catch(() => null),
+      fetchJson("/api/payments").catch(() => null),
+      loadSavedTipKeys().catch(() => null),
+    ]);
+    const today = tipDayKey(now.toISOString());
+    const yesterday = tipDayKey(new Date(now.getTime() - 86400000).toISOString());
+    const month = today.slice(0, 7);
+    const all = Array.isArray(tipsRaw) ? dedupeTips(tipsRaw) : [];
+    if (all.length) currentHistoryTips = all; // pre „Poslať tipy dňa“
+    const client = all.filter((t) => !t.watchOnly);
+    const stat = client.filter((t) => !EXCLUDED_STATS_MARKETS.includes(t.market) && !t.removedLeague);
+    const units = (l) => l.filter((t) => (t.status === "won" || t.status === "lost") && typeof t.odds === "number" && t.odds > 1).reduce((s, t) => s + (t.status === "won" ? t.odds - 1 : -1), 0);
+    const sumUp = (l) => { const won = l.filter((t) => t.status === "won").length, lost = l.filter((t) => t.status === "lost").length; return { won, lost, done: won + lost, profit: units(l) }; };
+    const byTime = (a, b) => new Date(a.matchDate) - new Date(b.matchDate);
+    const todayTips = client.filter((t) => tipDayKey(t.matchDate) === today).sort(byTime);
+    const yTips = stat.filter((t) => tipDayKey(t.matchDate) === yesterday).sort(byTime);
+    const mTips = stat.filter((t) => tipDayKey(t.matchDate).slice(0, 7) === month);
+    const y = sumUp(yTips), m = sumUp(mTips);
+    const sent = todayTips.filter((t) => t.telegramMessages && t.telegramMessages.length).length;
+    const autoToday = (auto && auto.entries ? auto.entries : [])
+      .filter((t) => tipDayKey(t.matchDate) === today && new Date(t.matchDate) > now && lateTipForClients(t) && !autoInHistory(t))
+      .sort((a, b) => b.probability - a.probability)
+      .slice(0, Math.max(0, 3 - todayTips.length));
+    const subsList = Array.isArray(subs) ? subs : [];
+    const active = subsList.filter(memberActive);
+    const ending = active.filter((s) => (s.pkg && s.pkg.left != null && s.pkg.left <= 10) || daysUntil((s.pkg && s.pkg.validUntil) || s.nextPaymentDue) <= 7);
+    const payPending = Array.isArray(pays) ? pays.filter((p) => p.status === "pending").length : 0;
+    const j = (n) => `${signed(n, 1)}${NB}j.`;
+    const st = { won: '<span class="res-b w">✓ vyšiel</span>', lost: '<span class="res-b l">✕ nevyšiel</span>', void: '<span class="res-b v">vrátený</span>' };
+    const tipRow = (t, extra) => `<div class="dn-row">
+        <span class="dn-time">${escapeHtml(timeHm(new Date(t.matchDate)))}</span>
+        <span class="dn-main"><b>${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))}</b>
+          <span class="muted small">${escapeHtml(t.market)}: <b>${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}</b> · dôvera ${probTxt(t.probability)}${NB}%${typeof t.odds === "number" ? ` · kurz ${fmtOdds(t.odds)}` : ""}${strongTipBadge(t.probability)}</span></span>
+        <span class="dn-st">${extra}</span>
+      </div>`;
+    const todayHtml = todayTips.length
+      ? todayTips.map((t) => tipRow(t, st[t.status] || (t.telegramMessages && t.telegramMessages.length ? '<span class="res-b v">✓ poslaný</span>' : '<span class="res-b p">neposlaný</span>'))).join("")
+      : "";
+    const autoHtml = autoToday.length
+      ? `<p class="faint small dn-note">Server našiel ${autoToday.length === 1 ? "tento tip" : "tieto tipy"} asi hodinu pred výkopom – pridajte ho do histórie a potom pošlite.</p>` +
+        autoToday.map((t) => tipRow(t, `<button type="button" class="btn sm" data-dn-add="${escapeHtml(t.id)}">+ Pridať</button>`)).join("")
+      : "";
+    pane.innerHTML = `
+      <div class="kpis dn-kpis">
+        <div class="kpi"><small>Tipy dnes</small><b>${todayTips.length}</b><span>${todayTips.length ? `${sent} ${sent === 1 ? "poslaný" : sent >= 2 && sent <= 4 ? "poslané" : "poslaných"}` : "zatiaľ žiadny"}</span></div>
+        <div class="kpi"><small>Včera</small><b class="${y.profit > 0 ? "g" : y.profit < 0 ? "l" : ""}">${y.done ? j(y.profit) : "–"}</b><span>${y.done ? `${y.won} z ${y.done} vyšlo` : yTips.length ? "čaká na výsledky" : "bez tipu"}</span></div>
+        <div class="kpi"><small>Tento mesiac</small><b class="${m.profit > 0 ? "g" : m.profit < 0 ? "l" : ""}">${m.done ? j(m.profit) : "–"}</b><span>${m.done ? `${m.won} z ${m.done} vyšlo` : "zatiaľ bez výsledkov"}</span></div>
+        <div class="kpi${ending.length || payPending ? " warn" : ""}"><small>Členovia</small><b>${active.length}</b><span>${ending.length ? `${ending.length} čoskoro končí` : "aktívnych"}${payPending ? ` · ${payPending} čaká platba` : ""}</span></div>
+      </div>
+
+      <h3 class="sh">Tipy na dnes <small>najviac 3 najsilnejšie</small></h3>
+      <div class="card dn-card">
+        ${todayHtml}${autoHtml}
+        ${!todayHtml && !autoHtml ? `<p class="empty">Na dnes zatiaľ žiadny tip.</p>` : ""}
+        <div class="dn-actions"><button type="button" class="btn ${todayTips.length ? "ghost " : ""}sm" data-dn-go="tipy">Nájsť tipy dňa</button>${todayTips.length > 3 ? `<span class="warn small">Dnes je ${todayTips.length} tipov – klientom posielate najviac 3.</span>` : ""}</div>
+      </div>
+
+      <h3 class="sh">Včera</h3>
+      <div class="card dn-card">
+        ${yTips.length ? yTips.map((t) => tipRow(t, st[t.status] || '<span class="res-b v">čaká</span>')).join("") : `<p class="empty">Včera bez tipu.</p>`}
+      </div>
+
+      <h3 class="sh">Členovia</h3>
+      <div class="card dn-card">
+        ${ending.length ? ending.map((s) => `<div class="dn-row dn-m"><span class="dn-main"><b>${escapeHtml(s.name)}</b><span class="muted small">${escapeHtml(MEMBER_NAME[s.length] || "")}${s.pkg && s.pkg.left != null ? ` · ostáva ${plural(s.pkg.left, "tip", "tipy", "tipov")}` : ""}</span></span><span class="dn-st"><span class="res-b p">končí</span></span></div>`).join("") : `<p class="empty">Nikomu členstvo čoskoro nekončí.</p>`}
+        ${payPending ? `<p class="small warn" style="margin:10px 0 0">${plural(payPending, "platba čaká", "platby čakajú", "platieb čaká")} na potvrdenie.</p>` : ""}
+        <div class="dn-actions"><button type="button" class="btn ghost sm" data-dn-go="clenovia">Otvoriť členov</button></div>
+      </div>`;
+    pane.querySelectorAll("[data-dn-go]").forEach((b) => (b.onclick = () => goTo(b.dataset.dnGo)));
+    pane.querySelectorAll("[data-dn-add]").forEach((b) => {
+      b.onclick = async () => {
+        const t = autoToday.find((x) => x.id === b.dataset.dnAdd);
+        if (!t) return;
+        b.disabled = true;
+        if (await addAutoTip(t)) { dnesLoading = false; void renderDnes(); } else b.disabled = false;
+      };
+    });
+  } catch (err) {
+    pane.innerHTML = `<p class="empty">Nepodarilo sa načítať: ${escapeHtml(err.message)}</p>`;
+  } finally {
+    dnesLoading = false;
+  }
+}
+document.getElementById("dnesReloadBtn")?.addEventListener("click", () => void renderDnes());
+document.getElementById("dnesSendBtn")?.addEventListener("click", () => openSendDayTips());
