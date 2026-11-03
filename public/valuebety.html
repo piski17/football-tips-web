@@ -162,12 +162,20 @@ select { width: 100%; font: 500 15px var(--body); color: var(--text); background
       <button type="button" class="chip on" data-s="all">Všetky stávkovky</button>
     </div>
     <p class="warn" style="margin:0 0 12px">Kurzy sú zo zahraničných stávkoviek (API-Football, obnova každú hodinu). Pred stávkou overte, že kurz v stávkovke stále je aspoň taký, ako tu. Svoje stávkovky si nastavíte na stránke <a href="/surebety" style="color:var(--gold)">Surebety</a>.</p>
+    <div class="played" style="margin:0 0 14px;background:var(--card)">
+      <label class="small muted">Vklad na každú stávku <input type="text" inputmode="decimal" id="bulkStake" placeholder="10" style="width:80px;font:600 15px var(--body);padding:7px 9px"> €</label>
+      <label class="small muted">Stávkovka <input type="text" id="bulkBook" placeholder="napr. Tipsport" style="width:130px;font:600 15px var(--body);padding:7px 9px"></label>
+      <button type="button" class="btn" id="bulkBtn" disabled>Pridať všetky (0)</button>
+      <div id="bulkMsg" class="small" style="flex-basis:100%"></div>
+      <div id="bulkWarn" class="small" style="flex-basis:100%"></div>
+    </div>
+    <p class="muted small" style="margin:-6px 0 12px">Pri valuebetoch, ktoré chcete hrať, napíšte kurz z vašej stávkovky. Pridajú sa len tie, ktoré sú pri vašom kurze naozaj valuebet.</p>
     <div class="sb-list" id="vbList"></div>
   </section>
 
   <!-- MOJE STÁVKY -->
   <section class="panel">
-    <div class="head"><div><h2>Moje stávky</h2><div class="muted small">Valuebety, pri ktorých ste klikli „Zahral som“. Po zápase sa vyhodnotia s vaším vkladom a kurzom.</div></div></div>
+    <div class="head"><div><h2>Moje stávky</h2><div class="muted small">Stávky, ktoré ste pridali (hromadne alebo cez Overiť kurz). Po zápase sa vyhodnotia s vaším vkladom a kurzom.</div></div></div>
     <div class="kpis" id="myKpis"></div>
     <div id="myDays"></div>
   </section>
@@ -232,34 +240,69 @@ function myResult(e) {
   return e.status === "won" ? e.myStake * (e.myOdd - 1) : e.status === "lost" ? -e.myStake : 0;
 }
 /** Políčko „Zahral som“ alebo info o zahranej stávke. */
-function playBox(key, odd, entry, open) {
-  if (entry && entry.myStake) {
-    const r = myResult(entry);
-    return `<div class="played">Zahrané: <b>${fmt(entry.myStake)} €</b> pri kurze <b>${fmt(entry.myOdd)}</b>${r === null ? ` · možná výhra ${fmt(entry.myStake * entry.myOdd)} €` : ` · <span class="${r > 0 ? "g" : r < 0 ? "l" : "muted"}">${eur(r)}</span>`}${entry.status === "pending" ? ` <button type="button" class="linkbtn" data-cancel="${esc(key)}">Zrušiť</button>` : ""}</div>`;
-  }
-  if (!entry || !open) return "";
-  return `<div class="play" data-k="${esc(key)}">
-    <label>Vklad <input type="text" inputmode="decimal" data-f="stake" placeholder="10 €"></label>
-    <label>Kurz <input type="text" inputmode="decimal" data-f="odd" value="${fmt(odd)}"></label>
-    <button type="button" class="btn" data-play="${esc(key)}">Zahral som</button>
-    <span class="err"></span></div>`;
+function playBox(key, odd, entry) {
+  if (!entry || !entry.myStake) return "";
+  const r = myResult(entry);
+  return `<div class="played">Zahrané: <b>${fmt(entry.myStake)} €</b> pri kurze <b>${fmt(entry.myOdd)}</b>${entry.myBook ? " v " + esc(entry.myBook) : ""}${r === null ? ` · možná výhra ${fmt(entry.myStake * entry.myOdd)} €` : ` · <span class="${r > 0 ? "g" : r < 0 ? "l" : "muted"}">${eur(r)}</span>`}${entry.status === "pending" ? ` <button type="button" class="linkbtn" data-cancel="${esc(key)}">Zrušiť</button>` : ""}</div>`;
 }
-document.addEventListener("click", async (ev) => {
-  const play = ev.target.closest("[data-play]");
-  const cancel = ev.target.closest("[data-cancel]");
-  if (!play && !cancel) return;
-  const key = (play || cancel).dataset.play || (play || cancel).dataset.cancel;
-  const box = play ? play.closest(".play") : null;
-  const stake = box ? num(box.querySelector("[data-f=stake]").value) : 0;
-  const odd = box ? num(box.querySelector("[data-f=odd]").value) : 0;
-  if (box && !(stake > 0)) { box.querySelector(".err").textContent = "Zadajte vklad v eurách."; return; }
-  if (box && !(odd > 1)) { box.querySelector(".err").textContent = "Zadajte kurz, napr. 2,10."; return; }
-  try {
-    await api("/api/valuebets/my", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key, stake, odd }) });
-    await loadLog();
-    renderList(lastList);
-  } catch (err) { if (box) box.querySelector(".err").textContent = err.message; }
+/** Políčko „Váš kurz“ pri aktuálnom valuebete (pridáva sa hromadne tlačidlom hore). */
+const typed = {};
+const needOdd = (fairOdd) => Math.ceil(fairOdd * 1.03 * 100) / 100;
+function oddBox(v) {
+  return `<div class="play"><label>Váš kurz <input type="text" inputmode="decimal" data-bulk="${esc(v.key)}" data-fair="${v.fairOdd}" data-m="${esc(v.home + v.away)}" value="${esc(typed[v.key] || "")}" placeholder="napr. ${fmt(v.odd)}"></label><span class="small" data-st="${esc(v.key)}">${oddStatus(v.fairOdd, typed[v.key])}</span></div>`;
+}
+function oddStatus(fairOdd, raw) {
+  const odd = num(raw);
+  if (!(odd > 1)) return `<span class="faint">Napíšte kurz z vašej stávkovky – valuebet od ${fmt(needOdd(fairOdd))}.</span>`;
+  const ev = odd / fairOdd - 1;
+  return ev >= 0.03 ? `<span class="g">✓ valuebet · v priemere +${fmt(ev * 100)} € zo 100 €</span>` : `<span class="l">✕ nie je valuebet – treba kurz aspoň ${fmt(needOdd(fairOdd))}</span>`;
+}
+function bulkReady() {
+  return [...document.querySelectorAll("[data-bulk]")].filter((i) => { const o = num(i.value); return o > 1 && o / Number(i.dataset.fair) - 1 >= 0.03; });
+}
+function updateBulk() {
+  const ready = bulkReady();
+  $("bulkBtn").textContent = `Pridať všetky (${ready.length})`;
+  $("bulkBtn").disabled = !ready.length;
+  const per = {};
+  for (const i of ready) per[i.dataset.m] = (per[i.dataset.m] || 0) + 1;
+  const dup = Object.values(per).filter((n) => n > 1).length;
+  $("bulkWarn").innerHTML = dup ? `<span class="warn">Pozor: ${dup} ${dup === 1 ? "zápas má" : "zápasy majú"} viac stávok. Odporúčam z jedného zápasu len jednu.</span>` : "";
+}
+document.addEventListener("input", (ev) => {
+  const i = ev.target.closest("[data-bulk]");
+  if (!i) return;
+  typed[i.dataset.bulk] = i.value;
+  const st = document.querySelector(`[data-st="${CSS.escape(i.dataset.bulk)}"]`);
+  if (st) st.innerHTML = oddStatus(Number(i.dataset.fair), i.value);
+  updateBulk();
 });
+document.addEventListener("click", async (ev) => {
+  const cancel = ev.target.closest("[data-cancel]");
+  if (!cancel) return;
+  try {
+    await api("/api/valuebets/my", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: cancel.dataset.cancel, stake: 0 }) });
+    await loadLog();
+  } catch (err) { alertMsg(err.message); }
+});
+function alertMsg(t) { $("bulkMsg").innerHTML = `<span class="err">${esc(t)}</span>`; }
+async function addAll() {
+  const stake = num($("bulkStake").value);
+  const book = $("bulkBook").value.trim();
+  if (!(stake > 0)) { alertMsg("Zadajte vklad na jednu stávku v eurách."); return; }
+  const items = bulkReady().map((i) => ({ key: i.dataset.bulk, odd: num(i.value) }));
+  if (!items.length) return;
+  try { localStorage.setItem("vb-book", book); localStorage.setItem("vb-stake", String(stake)); } catch {}
+  $("bulkBtn").disabled = true;
+  try {
+    const j = await api("/api/valuebets/my/bulk", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items, stake, book }) });
+    for (const k of j.added) delete typed[k];
+    await loadLog();
+    $("bulkMsg").innerHTML = `<span class="g">Pridané ${j.added.length} ${j.added.length === 1 ? "stávka" : j.added.length <= 4 ? "stávky" : "stávok"} po ${fmt(stake)} € do Mojich stávok.</span>` +
+      (j.rejected.length ? `<br><span class="err">Nepridané: ${j.rejected.map((r) => esc(r.reason)).join(" · ")}</span>` : "");
+  } catch (err) { alertMsg(err.message); }
+  updateBulk();
+}
 let lastList = [];
 function renderList(list) {
   lastList = list;
@@ -283,9 +326,10 @@ function renderList(list) {
         <div class="leg"><span class="muted">Férový kurz</span> <b>${fmt(v.fairOdd)}</b> <span class="muted">(${esc(v.source)})</span></div>
       </div>
       ${v.suspicious ? '<span class="warn">Podozrivo vysoká hodnota – takmer určite chyba v kurze. Nezapisuje sa.</span>' : `<span class="faint small">Hrať len pri kurze aspoň ${fmt(Math.ceil(v.fairOdd * 1.03 * 100) / 100)}.</span>`}
-      ${v.suspicious ? "" : playBox(v.key, v.odd, byKey[v.key], true)}
+      ${v.suspicious ? "" : byKey[v.key] && byKey[v.key].myStake ? playBox(v.key, v.odd, byKey[v.key]) : byKey[v.key] ? oddBox(v) : ""}
     </div>`;
   }).join("");
+  updateBulk();
 }
 async function load() {
   try {
@@ -387,9 +431,9 @@ function renderMine() {
     return `<details class="day" open><summary><b>${dayName(d)}</b><span>${l.length} ${l.length === 1 ? "stávka" : l.length <= 4 ? "stávky" : "stávok"}</span><span class="${r > 0 ? "g" : r < 0 ? "l" : "muted"}">${l.some((e) => e.status !== "pending") ? eur(r) : "čaká"}</span></summary>
       ${l.map((e) => `<div class="lrow"><div class="t"><b>${esc(e.home)} – ${esc(e.away)}</b><span class="st ${e.status}">${ST[e.status] || "?"}</span></div>
         <div class="muted small">${esc(e.league)} · ${time(e.date)} · ${esc(e.market)}${e.result ? " · " + esc(e.result) : ""}</div>
-        <div class="small">${esc(e.label)} <span class="muted">· ${esc(e.book)}</span></div>${playBox(e.key, e.odd, e, false)}</div>`).join("")}
+        <div class="small">${esc(e.label)} <span class="muted">· ${esc(e.book)}</span></div>${playBox(e.key, e.odd, e)}</div>`).join("")}
     </details>`;
-  }).join("") : `<p class="empty">Zatiaľ žiadna. Pri valuebete zadajte vklad a kliknite „Zahral som“.</p>`;
+  }).join("") : `<p class="empty">Zatiaľ žiadna. Pri valuebetoch hore napíšte kurz z vašej stávkovky a kliknite „Pridať všetky“.</p>`;
 }
 function renderLog() {
   renderMine();
@@ -417,7 +461,7 @@ function renderLog() {
     return `<details class="day"><summary><b>${dayName(d)}</b><span>${l.length} ${plural(l.length)}${fin.length ? " · " + fin.filter((e) => e.status === "won").length + " z " + fin.length + " vyšlo" : ""}</span><span class="${p > 0 ? "g" : p < 0 ? "l" : "muted"}">${l.some((e) => e.status !== "pending") ? units(p) : "čaká"}</span></summary>
       ${l.map((e) => `<div class="lrow"><div class="t"><b>${esc(e.home)} – ${esc(e.away)}</b><span><span class="st ${e.status}">${ST[e.status] || "?"}</span> ${e.status === "pending" ? "" : `<span class="${e.profit > 0 ? "g" : e.profit < 0 ? "l" : "muted"}">${units(e.profit || 0)}</span>`}</span></div>
         <div class="muted small">${esc(e.league)} · ${time(e.date)} · ${esc(e.market)}${e.result ? " · " + esc(e.result) : ""}</div>
-        <div class="small">${esc(e.label)} <b style="color:var(--gold-hi)">${fmt(e.odd)}</b> <span class="muted">v ${esc(e.book)} · férový ${fmt(e.fairOdd)} · v priemere +${fmt(e.ev * 100)} € zo 100 €</span></div>${playBox(e.key, e.odd, e, e.status === "pending")}</div>`).join("")}
+        <div class="small">${esc(e.label)} <b style="color:var(--gold-hi)">${fmt(e.odd)}</b> <span class="muted">v ${esc(e.book)} · férový ${fmt(e.fairOdd)} · v priemere +${fmt(e.ev * 100)} € zo 100 €</span></div>${playBox(e.key, e.odd, e)}</div>`).join("")}
     </details>`;
   }).join("") : `<p class="empty">${logScope === "mine" && !myBooks.length ? "Najprv si na stránke Surebety vyberte svoje stávkovky." : "Zatiaľ nič zapísané. Prvé valuebety pribudnú po najbližšom prehľadaní kurzov."}</p>`;
 }
@@ -437,6 +481,8 @@ $("settleBtn").addEventListener("click", async () => {
   $("settleBtn").disabled = false;
   loadLog();
 });
+$("bulkBtn").addEventListener("click", addAll);
+try { $("bulkBook").value = localStorage.getItem("vb-book") || ""; $("bulkStake").value = localStorage.getItem("vb-stake") || ""; } catch {}
 loadLog().then(load); loadFair();
 </script>
 </body>

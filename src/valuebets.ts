@@ -87,6 +87,8 @@ export interface ValuebetLogEntry extends Valuebet {
   myAt?: string;
   /** Zadané ručne cez „Overiť kurz“ (kurz z mojej stávkovky) – nerátá sa do výsledkov skúšky. */
   manual?: boolean;
+  /** V ktorej stávkovke som stávku naozaj podal (napr. Tipsport). */
+  myBook?: string;
 }
 
 function median(xs: number[]): number {
@@ -191,6 +193,8 @@ export async function addManualBet(fixtureId: number, betId: string, value: stri
   if (!pair || !fair) throw new Error("Pre tento trh nie je férový kurz.");
   const p = pair[0] === value ? fair.p : 1 - fair.p;
   if (!(odd > 1 && odd < 100) || !(stake > 0)) throw new Error("Zadajte vklad aj kurz.");
+  if (new Date(f.date).getTime() <= Date.now()) throw new Error("Zápas sa už začal.");
+  assertValue(odd, p);
   const key = `${f.fixtureId}|${betId}|${value}|ručne`;
   const at = new Date().toISOString();
   const e: ValuebetLogEntry = {
@@ -285,7 +289,36 @@ async function logValuebets(): Promise<void> {
 }
 
 /** Zapíše (alebo pri vklade 0 zruší) vlastnú stávku k valuebetu. Vyhodnotí sa spolu s ním. */
-export async function setMyBet(key: string, stake: number, odd: number): Promise<ValuebetLogEntry> {
+/** Aktuálna férová šanca strany (z posledného prehľadania), inak tá zapísaná pri objavení. */
+function currentFairProb(e: Pick<ValuebetLogEntry, "fixtureId" | "key" | "value" | "fairProb">): number {
+  const betId = e.key.split("|")[1];
+  const f = scannedFixtures().find((x) => Number(x.fixtureId) === Number(e.fixtureId));
+  const bet = f?.bets[betId];
+  if (bet && bet.values[e.value]) {
+    const pair = pairsOf(bet.name, bet.values).find((pr) => pr.includes(e.value));
+    const fair = pair ? fairProbability(bet.values[pair[0]], bet.values[pair[1]]) : null;
+    if (pair && fair) return pair[0] === e.value ? fair.p : 1 - fair.p;
+  }
+  return e.fairProb;
+}
+/** Kontrola pred zápisom vlastnej stávky: kurz musí byť valuebet (aspoň +3 %). */
+function assertValue(odd: number, p: number): void {
+  const need = Math.ceil((1 + MIN_VALUE) / p * 100) / 100;
+  if (odd * p - 1 < MIN_VALUE - 1e-9) throw new Error(`Pri kurze ${odd.toFixed(2).replace(".", ",")} to nie je valuebet – treba kurz aspoň ${need.toFixed(2).replace(".", ",")}.`);
+}
+
+/** Viac stávok naraz (Pridať všetky): každá s vlastným kurzom, spoločný vklad. Vráti pridané aj odmietnuté. */
+export async function setMyBets(items: { key: string; odd: number }[], stake: number, book: string): Promise<{ added: string[]; rejected: { key: string; reason: string }[] }> {
+  const added: string[] = [];
+  const rejected: { key: string; reason: string }[] = [];
+  for (const it of items.slice(0, 50)) {
+    try { await setMyBet(it.key, stake, it.odd, book); added.push(it.key); }
+    catch (err: any) { rejected.push({ key: it.key, reason: String(err?.message ?? err) }); }
+  }
+  return { added, rejected };
+}
+
+export async function setMyBet(key: string, stake: number, odd: number, book = ""): Promise<ValuebetLogEntry> {
   let raw: string | null;
   if (!useUpstash) raw = readFile()[key] ?? null;
   else raw = (await redis(["HGET", LOG_KEY, key])) ?? null;
@@ -293,6 +326,9 @@ export async function setMyBet(key: string, stake: number, odd: number): Promise
   const e = JSON.parse(raw) as ValuebetLogEntry;
   if (stake > 0) {
     if (!(odd > 1 && odd < 100)) throw new Error("Zadajte kurz, napr. 2,10.");
+    if (e.status !== "pending" || new Date(e.date).getTime() <= Date.now()) throw new Error("Zápas sa už začal.");
+    assertValue(odd, currentFairProb(e));
+    if (book.trim()) e.myBook = book.trim().slice(0, 40);
     e.myStake = Math.round(stake * 100) / 100;
     e.myOdd = Math.round(odd * 100) / 100;
     e.myAt = new Date().toISOString();

@@ -9,7 +9,7 @@ import { startBacktest, getBacktest } from "./backtest";
 import { applyCupGoals } from "./cupAdjust";
 import { getDay, getAllDays, setDay } from "./dailyStore";
 import { saveSlip, deleteSlip, listSlipIds, getSlipImage, MAX_SLIP_CHARS } from "./slipStore";
-import { computeValuebets, valuebetLog, setMyBet, fairOdds, addManualBet, settleValuebets, valuebetStatus, startValuebets } from "./valuebets";
+import { computeValuebets, valuebetLog, setMyBet, setMyBets, fairOdds, addManualBet, settleValuebets, valuebetStatus, startValuebets } from "./valuebets";
 import { scanSurebets, computeSurebets, surebetStatus, surebetLog, getMyBooks, setMyBooks, startSurebetScanner } from "./surebets";
 import { recordAutoFixture, listAuto, listAutoFixtures, autoFixtureDone, updateAuto, pruneAuto, AutoEntry } from "./autoStore";
 import "dotenv/config";
@@ -2029,8 +2029,19 @@ app.get("/api/valuebets/log", async (_req, res) => {
 app.post("/api/valuebets/my", async (req, res) => {
   try {
     const num = (v: any) => Number(String(v ?? "").replace(",", "."));
-    const entry = await setMyBet(String(req.body?.key ?? ""), num(req.body?.stake) || 0, num(req.body?.odd));
+    const entry = await setMyBet(String(req.body?.key ?? ""), num(req.body?.stake) || 0, num(req.body?.odd), String(req.body?.book ?? ""));
     res.json({ entry });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message ?? String(err) });
+  }
+});
+app.post("/api/valuebets/my/bulk", async (req, res) => {
+  try {
+    const num = (v: any) => Number(String(v ?? "").replace(",", "."));
+    const items = Array.isArray(req.body?.items) ? req.body.items.map((x: any) => ({ key: String(x?.key ?? ""), odd: num(x?.odd) })) : [];
+    const stake = num(req.body?.stake);
+    if (!(stake > 0)) throw new Error("Zadajte vklad v eurách.");
+    res.json(await setMyBets(items, stake, String(req.body?.book ?? "")));
   } catch (err: any) {
     res.status(400).json({ error: err.message ?? String(err) });
   }
