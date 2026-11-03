@@ -215,6 +215,18 @@ export async function addManualBet(fixtureId: number, betId: string, value: stri
   return e;
 }
 
+/** 3. 11. 2026 (Michal): z jedného trhu v zápase len JEDEN valuebet – ten s najvyššou hodnotou
+ *  (napr. karty pod 3,5 aj pod 2,5 → ostane len lepší). */
+function bestPerMarket(list: Valuebet[]): Valuebet[] {
+  const best = new Map<string, Valuebet>();
+  for (const v of list) {
+    const k = `${v.fixtureId}|${v.key.split("|")[1]}`;
+    const cur = best.get(k);
+    if (!cur || v.ev > cur.ev) best.set(k, v);
+  }
+  return [...best.values()];
+}
+
 /** Aktuálne valuebety z posledného prehľadania (len zápasy, ktoré sa ešte nezačali). */
 export function computeValuebets(allowedBooks: string[] | null): Valuebet[] {
   const allowed = allowedBooks && allowedBooks.length ? new Set(allowedBooks) : null;
@@ -222,7 +234,7 @@ export function computeValuebets(allowedBooks: string[] | null): Valuebet[] {
   const out: Valuebet[] = [];
   for (const f of scannedFixtures()) {
     if (new Date(f.date).getTime() <= now || !isToday(f.date)) continue;
-    for (const v of valuebetsOf(f, true)) if (!allowed || allowed.has(v.book)) out.push(v);
+    out.push(...bestPerMarket(valuebetsOf(f, true).filter(v => !allowed || allowed.has(v.book))));
   }
   return out.sort((a, b) => b.ev - a.ev);
 }
@@ -277,7 +289,7 @@ async function logValuebets(): Promise<void> {
   const found: Valuebet[] = [];
   for (const f of scannedFixtures()) {
     if (new Date(f.date).getTime() <= now || !isToday(f.date)) continue;
-    found.push(...valuebetsOf(f, false));
+    found.push(...bestPerMarket(valuebetsOf(f, false)));
   }
   if (!found.length) return;
   const existing = await hgetall();
