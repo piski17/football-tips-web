@@ -169,6 +169,7 @@ details p, details li { color: var(--muted); font-size: 14px; }
         <li><b>Vsaďte najprv vyšší kurz.</b> Ten sa mení najrýchlejšie. Druhú stranu vsaďte hneď potom a ak sa kurz medzitým zmenil, prepočítajte to v kalkulačke.</li>
         <li><b>Rovnaké pravidlá.</b> Obe stávky musia byť na ten istý trh a čas (zvyčajne len riadny hrací čas, bez predĺženia).</li>
         <li><b>Obmedzenie účtu.</b> Stávkovky surebetárov spoznajú podľa nepárnych súm a stávok len na „čudné“ kurzy. Zaokrúhľujte vklady na celé eurá a občas vsaďte aj bežnú stávku.</li>
+        <li><b>Karty</b> sú najčastejší „falošný“ surebet. Stávkovky ich rátajú rôzne (žltá + červená pre toho istého hráča, karty po zápase, trénerovi). Rohy a góly sú bezpečnejšie.</li>
         <li><b>Zisk nad 8 %</b> je skoro vždy chyba v kurze. Stávkovka môže takú stávku zrušiť a vy ostanete s jednou stranou.</li>
       </ul>
     </details>
@@ -267,7 +268,7 @@ function renderList(list) {
       <div class="sb-top"><b>${esc(s.home)} – ${esc(s.away)}</b><span class="pct">+${pct(s.margin)}</span></div>
       <div class="muted small">${esc(s.league)}${s.country ? " (" + esc(s.country) + ")" : ""} · ${when(s.date)} · ${esc(s.market)}</div>
       <div class="legs">${s.sides.map((x) => `<div class="leg">${esc(x.label)} · <b>${fmt(x.odd)}</b> <span class="muted">v ${esc(x.book)}</span></div>`).join("")}</div>
-      <div class="sb-foot">${s.suspicious ? '<span class="warn">Podozrivo vysoký zisk – takmer určite chyba v kurze.</span>' : "<span></span>"}<button type="button" class="btn ghost" data-i="${i}">Do kalkulačky</button></div>
+      <div class="sb-foot">${s.suspicious ? '<span class="warn">Podozrivo vysoký zisk – takmer určite chyba v kurze.</span>' : /kart/i.test(s.market) ? '<span class="warn">Karty: overte, či obe stávkovky rátajú karty rovnako (červená = 1 alebo 2 karty).</span>' : "<span></span>"}<button type="button" class="btn ghost" data-i="${i}">Do kalkulačky</button></div>
     </div>`;
   }).join("");
   $("sbList").onclick = (e) => {

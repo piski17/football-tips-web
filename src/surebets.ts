@@ -179,6 +179,17 @@ const MARKET_SK: Record<string, string> = {
   "cards over/under": "Karty v zápase",
   "total - home": "Góly domácich",
   "total - away": "Góly hostí",
+  // 3. 11. 2026: ďalšie trhy, ktoré API vracia po anglicky
+  "home corners over/under": "Rohy domácich",
+  "away corners over/under": "Rohy hostí",
+  "total corners (1st half)": "Rohy v 1. polčase",
+  "total corners (2nd half)": "Rohy v 2. polčase",
+  "home team total cards": "Karty domácich",
+  "away team total cards": "Karty hostí",
+  "cards over/under 1st half": "Karty v 1. polčase",
+  "corners over under 1st half": "Rohy v 1. polčase",
+  "home team total goals(1st half)": "Góly domácich v 1. polčase",
+  "away team total goals(1st half)": "Góly hostí v 1. polčase",
 };
 export function marketName(raw: string): string {
   return MARKET_SK[raw.trim().toLowerCase()] ?? raw;
@@ -330,6 +341,8 @@ async function logCurrent(): Promise<void> {
 
 export async function surebetLog(): Promise<SurebetLogEntry[]> {
   const all = await hgetall(LOG_KEY);
+  // Len súťaže TipRadaru (prvé hľadanie 2. 11. večer bralo všetky ligy sveta).
+  const names = new Set(LEAGUES.map((l) => l.name));
   const out: SurebetLogEntry[] = [];
   const limit = Date.now() - KEEP_DAYS * 86400000;
   const old: string[] = [];
@@ -337,7 +350,7 @@ export async function surebetLog(): Promise<SurebetLogEntry[]> {
     try {
       const e = JSON.parse(v) as SurebetLogEntry;
       if (new Date(e.date).getTime() < limit) old.push(k);
-      else out.push(e);
+      else if (!names.size || names.has(e.league)) out.push({ ...e, market: marketName(e.market) /* staré záznamy majú anglický názov */ });
     } catch { /* poškodený záznam */ }
   }
   if (old.length && useUpstash) await redis(["HDEL", LOG_KEY, ...old]).catch(() => {});
