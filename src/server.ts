@@ -9,6 +9,7 @@ import { startBacktest, getBacktest } from "./backtest";
 import { applyCupGoals } from "./cupAdjust";
 import { getDay, getAllDays, setDay } from "./dailyStore";
 import { saveSlip, deleteSlip, listSlipIds, getSlipImage, MAX_SLIP_CHARS } from "./slipStore";
+import { recordMarketPredictions, settleMarketPredictions, marketSummary } from "./marketTracker";
 import { boostMarkets, boostLog, addBoost, deleteBoost, settleBoosts, startSuperkurzy } from "./superkurzy";
 import { computeValuebets, valuebetLog, setMyBet, setMyBets, fairOdds, addManualBet, settleValuebets, valuebetStatus, startValuebets } from "./valuebets";
 import { scanSurebets, computeSurebets, surebetStatus, surebetLog, getMyBooks, setMyBooks, startSurebetScanner } from "./surebets";
@@ -3170,6 +3171,11 @@ async function runAutoAnalysis(): Promise<void> {
           recordedAt,
           status: "pending" as const,
         }));
+        // Všetky trhy (4. 11. 2026): z každého trhu jedna predpoveď modelu, vyhodnotí sa bez ohľadu na pravidlá.
+        await recordMarketPredictions(
+          { fixtureId: fixture.fixtureId, matchDate: fixture.date, homeTeam: fixture.homeTeam.name, awayTeam: fixture.awayTeam.name, league: String(fixture.league.name ?? "") },
+          (result as any).allCandidates ?? []
+        ).catch((err) => console.error("Zápis predpovedí všetkých trhov zlyhal:", err));
         const isNew = await recordAutoFixture({ fixtureId: fixture.fixtureId, matchDate: fixture.date, tips: entries.length, league: String(fixture.league.name ?? "") }, entries);
         if (isNew) await notifyAdminClientTips(fixture, (result as any).bestBets ?? []).catch(() => {});
       } catch (err) {
@@ -3188,6 +3194,21 @@ async function runAutoAnalysis(): Promise<void> {
 }
 setInterval(() => void runAutoAnalysis().catch((err) => console.error("Automatická analýza zlyhala:", err)), 15 * 60 * 1000);
 setTimeout(() => void runAutoAnalysis().catch(() => {}), 60 * 1000);
+setInterval(() => void settleMarketPredictions().catch(() => {}), 15 * 60 * 1000);
+app.get("/api/markets-all", async (_req, res) => {
+  try {
+    res.json(await marketSummary());
+  } catch (err: any) {
+    res.status(500).json({ error: err.message ?? String(err) });
+  }
+});
+app.post("/api/markets-all/settle", async (_req, res) => {
+  try {
+    res.json({ settled: await settleMarketPredictions() });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message ?? String(err) });
+  }
+});
 
 /** Vyhodnotenie automaticky zapísaných tipov – výsledok zápasu sa načíta raz pre všetky jeho tipy. */
 async function settleAutoEntries(): Promise<void> {

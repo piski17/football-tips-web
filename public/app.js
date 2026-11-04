@@ -2171,6 +2171,7 @@ const checkResultsBtn = document.getElementById("checkResultsBtn");
 
 async function openTipsHistory() {
   void renderAutoTips();
+  void renderAllMarkets();
   void renderShadowSummary();
   void renderBlendSummary();
   void renderClvSummary();
@@ -4953,3 +4954,35 @@ async function renderDnes() {
 }
 document.getElementById("dnesReloadBtn")?.addEventListener("click", () => void renderDnes());
 document.getElementById("dnesSendBtn")?.addEventListener("click", () => openSendDayTips());
+
+
+// =====================================================================
+// VŠETKY TRHY (4. 11. 2026, Michal): z každého trhu jedna predpoveď modelu (najvyššia šanca do 80 %),
+// server ju po zápase vyhodnotí bez ohľadu na pravidlá pre klientov. Ukazuje, v ktorých trhoch model sedí.
+// =====================================================================
+async function renderAllMarkets() {
+  const box = document.getElementById("allMarketsResult");
+  if (!box) return;
+  let d;
+  try { d = await fetchJson("/api/markets-all"); }
+  catch (err) { box.innerHTML = `<p class="faint small">Nepodarilo sa načítať: ${escapeHtml(err.message)}</p>`; return; }
+  const rows = Object.entries(d.markets || {}).map(([market, m]) => ({ market, ...m, pct: m.n ? (m.won / m.n) * 100 : null, exp: m.n ? m.sumP / m.n : null }))
+    .sort((a, b) => b.n - a.n || a.market.localeCompare(b.market));
+  const sumEl = document.querySelector('[data-fold-sum="vsetkytrhy"]');
+  const totalN = rows.reduce((s, r) => s + r.n, 0);
+  if (sumEl) sumEl.textContent = totalN ? `${d.fixtures} zápasov · ${totalN} predpovedí` : "Predpoveď modelu v každom trhu";
+  const fmtP = (v) => (v == null ? "–" : `${Math.round(v)}${NB}%`);
+  const diffCls = (r) => (r.pct == null || r.n < 10 ? "faint" : r.pct - r.exp >= -3 ? "g" : r.pct - r.exp <= -8 ? "l" : "");
+  const band = (r, k) => { const b = r.bands && r.bands[k]; return b && b.n ? `${b.won}/${b.n} <span class="faint">(${Math.round((b.won / b.n) * 100)}${NB}%)</span>` : "–"; };
+  const ST = { won: '<b class="g">✓</b>', lost: '<b class="l">✕</b>', void: '<span class="faint">↺</span>' };
+  box.innerHTML = `
+    <p class="muted small">Pri každom zápase, ktorý server prejde asi hodinu pred výkopom, sa z každého trhu zapíše jedna predpoveď (hranica s najvyššou šancou do 80${NB}%) a po zápase sa vyhodnotí. Klientom nejde a do štatistík sa neráta. Začalo ${escapeHtml(new Date(d.since).toLocaleDateString("sk-SK"))} · ${d.fixtures} vyhodnotených zápasov · ${d.pending} čaká.</p>
+    ${rows.length ? `<div class="table-wrap"><table class="bt-table">
+      <thead><tr><th>Trh</th><th>Vyšlo</th><th>Model čakal</th><th>Skutočne</th><th>70 – 80${NB}%</th><th>60 – 69${NB}%</th><th>Vrátené</th></tr></thead>
+      <tbody>${rows.map((r) => `<tr><td>${escapeHtml(r.market)}</td><td>${r.won}/${r.n}</td><td>${fmtP(r.exp)}</td><td class="${diffCls(r)}">${fmtP(r.pct)}</td><td>${band(r, "70 – 80 %")}</td><td>${band(r, "60 – 69 %")}</td><td>${r.void || "–"}</td></tr>`).join("")}</tbody>
+    </table></div>
+    <p class="faint small">Zelená = model sedí (rozdiel najviac 3 body), červená = model preceňuje o 8 a viac bodov. Hodnotiť až pri aspoň 30 predpovediach v trhu. „Vrátené“ = API po zápase nemalo štatistiku (napr. fauly v niektorých ligách) alebo predĺženie.</p>
+    <details><summary class="small">Posledné vyhodnotené predpovede</summary>
+      <div class="table-wrap"><table class="bt-table"><tbody>${(d.recent || []).slice(0, 60).map((x) => `<tr><td class="faint small">${escapeHtml(new Date(x.matchDate).toLocaleDateString("sk-SK", { day: "numeric", month: "numeric" }))}</td><td>${escapeHtml(translateTeamName(x.match.split(" – ")[0] || ""))} – ${escapeHtml(translateTeamName(x.match.split(" – ")[1] || ""))}</td><td>${escapeHtml(x.market)}: ${escapeHtml(translateNamesInText(x.selection, "", ""))}</td><td>${probTxt(x.probability)}${NB}%</td><td>${ST[x.status] || ""}</td></tr>`).join("")}</tbody></table></div>
+    </details>` : `<p class="empty">Zatiaľ nič vyhodnotené. Prvé výsledky budú po dnešných zápasoch (server zapisuje asi hodinu pred výkopom).</p>`}`;
+}

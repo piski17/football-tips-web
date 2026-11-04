@@ -155,6 +155,7 @@
           <p class="muted small hist-note">Rozbory na mesačnú kontrolu (najbližšie 1. 12.). Denne ich netreba pozerať. Sledované tipy sa vyhodnocujú potichu: nejdú členom ani na web a nerátajú sa do štatistík. Kliknite na kolónku a otvorí sa.</p>
           <div class="fold-grid" data-fold-group="sled">
             <button type="button" class="fold-tile" data-fold="auto" aria-expanded="false"><span class="ft-t">Všetky zápasy – automaticky</span><span class="ft-s" data-fold-sum="auto">Model sám prejde každý zápas</span><i aria-hidden="true">›</i></button>
+            <button type="button" class="fold-tile" data-fold="vsetkytrhy" aria-expanded="false"><span class="ft-t">Všetky trhy</span><span class="ft-s" data-fold-sum="vsetkytrhy">Predpoveď modelu v každom trhu</span><i aria-hidden="true">›</i></button>
             <button type="button" class="fold-tile" data-fold="k6040" aria-expanded="false"><span class="ft-t">Prehľad a kontrola 60 / 40</span><span class="ft-s" data-fold-sum="k6040">Všetky skupiny sledovaných tipov</span><i aria-hidden="true">›</i></button>
             <button type="button" class="fold-tile" data-fold="pasmo" aria-expanded="false"><span class="ft-t">Pásmo 65 – 67&nbsp;%</span><span class="ft-s" data-fold-sum="pasmo">Tipy tesne pod pásmom</span><i aria-hidden="true">›</i></button>
             <button type="button" class="fold-tile" data-fold="zoznam" aria-expanded="false"><span class="ft-t">Zoznam sledovaných</span><span class="ft-s" data-fold-sum="zoznam">Všetky sledované tipy</span><i aria-hidden="true">›</i></button>
@@ -165,6 +166,10 @@
           <div class="fold-sec" data-fold-sec="auto" hidden>
           <h3 class="sh">Všetky zápasy – automaticky <small>model sám prejde každý zápas zo všetkých súťaží</small><button type="button" class="fold-close" data-fold-close aria-label="Zavrieť">× Zavrieť</button></h3>
 <div class="card" id="autoResult"><p class="empty">Načítavam…</p></div>
+          </div>
+          <div class="fold-sec" data-fold-sec="vsetkytrhy" hidden>
+          <h3 class="sh">Všetky trhy <small>z každého trhu jedna predpoveď modelu, bez ohľadu na pravidlá pre klientov</small><button type="button" class="fold-close" data-fold-close aria-label="Zavrieť">× Zavrieť</button></h3>
+          <div class="card" id="allMarketsResult"><p class="empty">Načítavam…</p></div>
           </div>
           <div class="fold-sec" data-fold-sec="k6040" hidden>
           <h3 class="sh">Prehľad a kontrola 60 / 40<button type="button" class="fold-close" data-fold-close aria-label="Zavrieť">× Zavrieť</button></h3>
