@@ -4,7 +4,7 @@ import * as crypto from "crypto";
 import axios from "axios";
 import { ibanValid } from "./payBySquare";
 
-// Platby za členstvo TipRadar (Štart / VIP = 50 / 100 tipov, od 39 €): bankový prevod cez QR kód (PAY by square), bez poplatkov.
+// Platby za členstvo TipRadar (Štart / VIP = 75 / 150 tipov, od 65 €): bankový prevod cez QR kód (PAY by square), bez poplatkov.
 // Zapne sa, keď sú na Renderi nastavené SALES_OPEN=true, PAY_IBAN a PAY_NAME.
 // Platbu potvrdíš jedným klikom v appke alebo v Telegrame, bot potom pošle pozvánku.
 
@@ -51,9 +51,12 @@ export function addActiveMonths(from: Date, months: number, days?: number): Date
   return calEnd;
 }
 
-// Od 4. 11. 2026 (Michal: 75 / 150 € je veľa, zmierniť): Štart 50 tipov 39 €, VIP 100 tipov 69 € (VIP hovor + mentoring + kurz zadarmo).
+// Od 4. 11. 2026 19:12 (Michal: „75 tipov za 59 a to druhé uprav podľa toho“): Štart p75 75 tipov 59 €, VIP p150 150 tipov 99 €;
+// 19:15 Michal „ceny daj od 65 €“ → Štart 75 tipov 65 €, VIP 150 tipov 109 €; 19:16 „VIP daj za 110“ → VIP 110 €
+// (VIP hovor + mentoring 1 na 1; kurz do členstiev nedávať). p50 / p100 odvtedy staré.
+// Krátko (4. 11. 19:05): Štart 50 tipov 39 €, VIP 100 tipov 69 €.
 // Predtým (2. 11. 2026 večer): Štart 50 tipov 29 €, VIP 100 tipov 55 €.
-// Ceny tak, aby sa členstvo vrátilo pri bežnom zisku modelu už pri banku 500 € a vklade 3 %. p150 (VIP 150 tipov 109 €) sa už nepredáva.
+// Ceny tak, aby sa členstvo vrátilo pri bežnom zisku modelu už pri banku 500 € a vklade 3 %. (Komentár z 2. 11.; od 4. 11. sa p150 znova predáva ako VIP.)
 // Predtým (1. 11. 2026): Štart 50 tipov 39 €, Premium 100 tipov 75 €, VIP 150 tipov 109 €.
 // Gold (p200) a Platinum (p250) sa už nepredávajú, ostávajú len kvôli prípadným starším záznamom.
 // Predtým (31. 10. 2026 večer): posuvník 50 – 250 tipov, vždy po 50, každý počet má vlastný názov a výhody:
@@ -64,18 +67,18 @@ export function addActiveMonths(from: Date, months: number, days?: number): Date
 // Bez časovej platnosti: členstvo platí, kým sa neminú tipy (NO_EXPIRY_MONTHS je len technický dátum, nikde sa neukazuje).
 // Garancia: prvých 20 tipov bez rizika; ak členstvo skončí v strate (v jednotkách), člen dostane 1 mesiac zadarmo.
 export const NO_EXPIRY_MONTHS = 1200;
-export type SellableTerm = "p50" | "p100";
-export type Term = SellableTerm | "p150" | "p200" | "p250" | "p300" | "p75" | "t75" | "t150" | "t300" | "m1" | "m3" | "season";
-export const SELLABLE_TERMS: SellableTerm[] = ["p50", "p100"];
+export type SellableTerm = "p75" | "p150";
+export type Term = SellableTerm | "p50" | "p100" | "p200" | "p250" | "p300" | "t75" | "t150" | "t300" | "m1" | "m3" | "season";
+export const SELLABLE_TERMS: SellableTerm[] = ["p75", "p150"];
 const pk = (price: number, tips: number) => ({ price, name: `${tips} tipov`, tips, months: NO_EXPIRY_MONTHS });
 export const PAY_TERMS: Record<Term, { price: number; name: string; months?: number; days?: number; tips?: number }> = {
   p50: pk(39, 50),
   p100: pk(69, 100),
-  p150: pk(109, 150),
+  p150: pk(110, 150),
   p200: pk(139, 200),
   p250: pk(169, 250),
   p300: pk(199, 300),
-  p75: pk(49, 75),
+  p75: pk(65, 75),
   t75: pk(89, 100),
   t150: pk(179, 250),
   t300: pk(299, 500),
@@ -85,13 +88,13 @@ export const PAY_TERMS: Record<Term, { price: number; name: string; months?: num
 };
 /** Názov členstva: Štart / Gold / Platinum (staré balíčky a časové členstvá majú v názve „starý / staré“). */
 export const TIER_NAMES: Record<Term, string> = {
-  p50: "Štart",
-  p100: "VIP",
-  p150: "VIP (staré, 150 tipov)",
+  p50: "Štart (staré, 50 tipov)",
+  p100: "VIP (staré, 100 tipov)",
+  p150: "VIP",
   p200: "Gold (staré, 200 tipov)",
   p250: "Platinum (staré, 250 tipov)",
   p300: "Platinum (staré, 300 tipov)",
-  p75: "Štart (staré, 75 tipov)",
+  p75: "Štart",
   t75: "Štart (starý balíček)",
   t150: "Gold (starý balíček)",
   t300: "Onyx (starý balíček)",
@@ -100,7 +103,7 @@ export const TIER_NAMES: Record<Term, string> = {
   season: "Platinum (6 mesiacov, staré)",
 };
 export function tierName(term: Term): string {
-  return TIER_NAMES[term] ?? TIER_NAMES.p50;
+  return TIER_NAMES[term] ?? TIER_NAMES.p75;
 }
 /** Názov členstva s počtom tipov, napríklad „Platinum · 200 tipov“. */
 export function termLabel(term: Term): string {
@@ -120,7 +123,7 @@ const REAL_ROI = 0.042;
 // Od 4. 11. 2026: odporúčaný bank od – do. „Od“ = pri bežnom zisku modelu (4,2 % na tip) a vklade 3 % zarobí člen
 // aspoň 1,5× cenu členstva (cena sa vráti a ešte je v pluse). „Do“ = horná hranica, pri ktorej je vklad 3 % stále rozumný (75 – 90 €).
 const BANK_MARGIN = 1.5;
-const BANK_MAX: Partial<Record<Term, number>> = { p50: 2500, p100: 3000 };
+const BANK_MAX: Partial<Record<Term, number>> = { p75: 2500, p150: 3000 };
 export function memberBank(term: Term): number {
   const t = PAY_TERMS[term];
   const tips = t.tips || 50;
@@ -129,22 +132,21 @@ export function memberBank(term: Term): number {
 export function memberBankMax(term: Term): number {
   return BANK_MAX[term] ?? memberBank(term) * 3;
 }
-/** Koľko ušetrí oproti 50-tipovým členstvám (rovnaký počet tipov za cenu Štartu). */
+/** Koľko ušetrí oproti Štartu (rovnaký počet tipov za cenu Štartu 75 tipov). */
 export function memberSaving(term: Term): number {
   const t = PAY_TERMS[term];
-  return Math.round(((t.tips || 50) / 50) * PAY_TERMS.p50.price - t.price);
+  return Math.round(((t.tips || 75) / 75) * PAY_TERMS.p75.price - t.price);
 }
-/** Členstvo podľa počtu tipov (50 alebo 100). */
+/** Členstvo podľa počtu tipov (do 100 Štart 75, inak VIP 150). */
 export function termForTips(tips: number): SellableTerm {
-  const n = Math.min(100, Math.max(50, Math.round((Number(tips) || 50) / 50) * 50));
-  return ("p" + n) as SellableTerm;
+  return (Number(tips) || 75) > 100 ? "p150" : "p75";
 }
 /** Staré odkazy vedú na nové členstvá: Štart 75 / 50 dní → Štart, Štart 100 → Premium, Gold 250 / Onyx 500 / 300 tipov / 6 mesiacov → Platinum. */
 export function sellableTerm(v: unknown): SellableTerm | null {
   if (isSellableTerm(v)) return v;
-  if (v === "p75" || v === "m1") return "p50";
-  if (v === "t75") return "p100";
-  if (v === "p150" || v === "p200" || v === "p250" || v === "t150" || v === "p300" || v === "t300" || v === "m3" || v === "season") return "p100";
+  if (v === "p50" || v === "m1") return "p75";
+  if (v === "p100" || v === "t75") return "p150";
+  if (v === "p200" || v === "p250" || v === "t150" || v === "p300" || v === "t300" || v === "m3" || v === "season") return "p150";
   return null;
 }
 
