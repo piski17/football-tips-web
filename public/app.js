@@ -3003,7 +3003,6 @@ function historyRowHtml(t) {
 function renderTipRows(tips) {
   // 2. 11. 2026 (Michal): tipy z vyradených súťaží sa v Histórii tipov neukazujú vôbec (ani medzi skrytými).
   // Na serveri ostávajú uložené – keď sa liga vráti do LEAGUE_PRESETS, znova sa ukážu aj zarátajú.
-  tips = tips.filter((t) => !t.removedLeague);
   const archivedCount = tips.filter((t) => t.archived).length;
   const toggle = document.getElementById("showArchivedToggle");
   toggle.checked = showArchivedTips;

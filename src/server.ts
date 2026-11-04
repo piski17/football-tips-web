@@ -124,7 +124,7 @@ function isFarLineTip(market: string, probability: number): boolean {
 }
 
 // 2. 11. 2026 15:15 (Michal): všetky súťaže vrátené a staré tipy sa majú rátať ako predtým → vypnuté.
-const HIDE_REMOVED_LEAGUE_TIPS = false;
+const HIDE_REMOVED_LEAGUE_TIPS = true;
 function isRemovedLeagueTip(t: SavedTip): boolean {
   if (!HIDE_REMOVED_LEAGUE_TIPS) return false;
   if (t.legs && t.legs.length) return false;
