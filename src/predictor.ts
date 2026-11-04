@@ -1503,56 +1503,47 @@ export function predictMatch(
 
     // Appka ukáže VŠETKY tipy zápasu, ktoré spadajú do pásma - najviac jeden
     // z každej kategórie (trhu). Z viacerých hraníc toho istého trhu (napr. rohy
-    // 8,5 / 9,5 / 10,5) vyberie tú s najväčšou hodnotou. Zoradené od najvyššej pravdepodobnosti.
+    // 8,5 / 9,5 / 10,5) vyberie tú s najvyššou dôverou (od 4. 11. 2026). Zoradené od najvyššej pravdepodobnosti.
     const bestInCategory = new Map<string, MarketPick>();
+    const catKey = (b: MarketPick) => `${b.category}|${b.market}`; // 4. 11. 2026: domáci / hostia zvlášť
     for (const bet of pickPool) {
-      const cur = bestInCategory.get(bet.category);
+      const cur = bestInCategory.get(catKey(bet));
       const ev = rankValue(bet), curEv = cur ? rankValue(cur) : 0;
       // Držanie lopty (bez kurzu): hranica s dôverou najbližšie k spodku pásma má najväčšiu
       // šancu, že kurz v stávkovke dosiahne minimum.
       const better = typeof bet.minOdds === "number" && ev === curEv ? bet.probability < (cur?.probability ?? 101) : bet.probability > (cur?.probability ?? -1);
       // Tip, ktorý prejde aj pri 60 / 40, má prednosť pred tipom len pre sledované.
-      if (cur && !!bet.strictFail !== !!cur.strictFail) { if (cur.strictFail) bestInCategory.set(bet.category, bet); continue; }
-      if (!cur || ev > curEv || (ev === curEv && better)) bestInCategory.set(bet.category, bet);
+      if (cur && !!bet.strictFail !== !!cur.strictFail) { if (cur.strictFail) bestInCategory.set(catKey(bet), bet); continue; }
+      // 4. 11. 2026 (Michal): z trhu ide hranica s NAJVYŠŠOU DÔVEROU (predtým s najväčšou hodnotou);
+      // držanie lopty (bez kurzu) ostáva podľa pravidla vyššie.
+      const manualPoss = typeof bet.minOdds === "number" && bet.category === "drzanie_lopty";
+      const wins = !cur || (manualPoss ? ev > curEv || (ev === curEv && better) : bet.probability > cur.probability || (bet.probability === cur.probability && ev > curEv));
+      if (wins) bestInCategory.set(catKey(bet), bet);
     }
     const diversifiedPicks = Array.from(bestInCategory.values()).sort((a, b) => b.probability - a.probability);
     // Meranie (20. 10. 2026): ostatné hranice toho istého trhu dostanú len kód dôvodu
     // pre tichú evidenciu (medzi neodporúčané sa nepresúvajú, výber sa nemení).
-    for (const bet of pickPool) if (bestInCategory.get(bet.category) !== bet) bet.rejectCode = "category_lower_ev";
+    for (const bet of pickPool) if (bestInCategory.get(catKey(bet)) !== bet) bet.rejectCode = "category_lower_ev";
 
-    // Viac tipov na zápas (26. 10. 2026, Michalovo rozhodnutie): z jedného zápasu môže ísť
-    // viac odporúčaných tipov, ale najviac jeden z každého typu (góly, rohy, karty, strely,
-    // fauly, držanie lopty). Góly zápasu, góly tímu aj góly v polčase sú jeden typ „góly“ –
-    // ostane ten, ktorému model najviac dôveruje. Ostatné idú medzi neodporúčané s dôvodom.
-    const bestInType = new Map<string, MarketPick>();
-    for (const b of diversifiedPicks) {
-      const t = marketType(b.category);
-      const cur = bestInType.get(t);
-      if (cur && !!b.strictFail !== !!cur.strictFail) { if (cur.strictFail) bestInType.set(t, b); continue; }
-      if (!cur || b.probability > cur.probability || (b.probability === cur.probability && rankValue(b) > rankValue(cur))) bestInType.set(t, b);
-    }
-    for (const b of diversifiedPicks) {
-      if (bestInType.get(marketType(b.category)) === b) continue;
-      b.rejectReason = "iný tip rovnakého typu z tohto zápasu má vyššiu dôveru";
-      b.rejectCode = "match_lower_ev";
-      lowValueBets.push(b);
-    }
-    return diversifiedPicks.filter((b) => bestInType.get(marketType(b.category)) === b);
+    // Viac tipov na zápas (4. 11. 2026, Michalovo rozhodnutie – nahrádza „najviac 1 z typu“ z 26. 10.):
+    // klientom idú VŠETKY tipy zápasu v pásme, ktoré prejdú kontrolami, ale z každého trhu len jeden
+    // (napr. Rohy, Rohy domácich a Rohy hostí môžu ísť spolu; Rohy nad 8,5 a nad 9,5 nie).
+    // Jeden tip z trhu zabezpečí bestInCategory vyššie (kľúč = trh).
+    return diversifiedPicks;
   };
-  const marketType = (category: string) => category.split("_")[0];
   const bestBets = selectPicks(inBand, lowValueBets, false);
 
   // Skúšobné pásmo 65 – 67 % (28. 10. 2026, Michalovo rozhodnutie): tipy tesne pod pásmom prejdú
   // rovnakými pravidlami, ale klientom nejdú – appka ich ukáže zvlášť a uložia sa len do sledovaných
   // (vlastná skupina v Histórii tipov). Kópie, aby sa nezmenili dôvody v tichej evidencii.
   // Typ, z ktorého už zápas má tip v pásme 68 – 80 %, sa nepridáva (najviac 1 tip z typu).
-  const bandTypes = new Set(bestBets.map((b) => marketType(b.category)));
+  const bandTypes = new Set(bestBets.map((b) => b.market)); // 4. 11. 2026: podľa trhu, nie typu
   const watchBandBets = selectPicks(
     sortedBets.filter((b) => b.probability >= WATCH_BAND_MIN_PROBABILITY && b.probability < MIN_PROBABILITY).map((b) => ({ ...b })),
     [],
     true
   )
-    .filter((b) => !bandTypes.has(marketType(b.category)))
+    .filter((b) => !bandTypes.has(b.market))
     .map((b) => ({ ...b, watchBand: true }));
 
   const homeTopScorer = homePlayers
