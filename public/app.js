@@ -4897,44 +4897,91 @@ async function renderDnes() {
     const payPending = Array.isArray(pays) ? pays.filter((p) => p.status === "pending").length : 0;
     const j = (n) => `${signed(n, 1)}${NB}j.`;
     const st = { won: '<span class="res-b w">✓ vyšiel</span>', lost: '<span class="res-b l">✕ nevyšiel</span>', void: '<span class="res-b v">vrátený</span>' };
+    // Privé (4. 11. 2026): úvod ako „radar dňa“ + tipy ako vstupenky (funkcie rovnaké ako predtým)
     const tipRow = (t, extra) => `<div class="dn-row">
         <span class="dn-time">${escapeHtml(timeHm(new Date(t.matchDate)))}</span>
-        <span class="dn-main"><b>${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))}</b>
-          <span class="muted small">${escapeHtml(t.market)}: <b>${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}</b> · dôvera ${probTxt(t.probability)}${NB}%${typeof t.odds === "number" ? ` · kurz ${fmtOdds(t.odds)}` : ""}${strongTipBadge(t.probability)}</span></span>
+        <span class="dn-main"><b>${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))}${t.actualHomeGoals != null && t.actualAwayGoals != null ? ` <span class="dn-score">${t.actualHomeGoals}:${t.actualAwayGoals}</span>` : ""}</b>
+          <span class="muted small">${escapeHtml(t.market)}: <b>${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}</b> · dôvera ${probTxt(t.probability)}${NB}%${typeof t.odds === "number" ? ` · kurz ${fmtOdds(t.odds)}` : ""}</span></span>
         <span class="dn-st">${extra}</span>
       </div>`;
+    const ticket = (t, extra, isAuto) => `<article class="dn-ticket${isAuto ? " auto" : ""}">
+        <header><span class="dn-t-time">${escapeHtml(timeHm(new Date(t.matchDate)))}</span><span class="dn-t-lg">${escapeHtml(translateLeagueName(t.leagueName || ""))}</span><span class="dn-t-st">${extra}</span></header>
+        <div class="dn-t-teams">
+          <div>${crest(t.homeTeamLogo, "crest dn-crest")}<b>${escapeHtml(translateTeamName(t.homeTeam))}</b></div>
+          <div>${crest(t.awayTeamLogo, "crest dn-crest")}<b>${escapeHtml(translateTeamName(t.awayTeam))}</b></div>
+        </div>
+        <div class="dn-t-pick"><small>${escapeHtml(t.market)}</small><b>${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}</b></div>
+        <footer>
+          ${ring(t.probability, 46)}
+          <span class="dn-t-k"><small>Dôvera</small><b>${probTxt(t.probability)}${NB}%</b></span>
+          <span class="dn-t-k"><small>Kurz</small><b>${typeof t.odds === "number" ? fmtOdds(t.odds) : "–"}</b></span>
+        </footer>
+      </article>`;
     const todayHtml = todayTips.length
-      ? todayTips.map((t) => tipRow(t, st[t.status] || (t.telegramMessages && t.telegramMessages.length ? '<span class="res-b v">✓ poslaný</span>' : '<span class="res-b p">neposlaný</span>'))).join("")
+      ? todayTips.map((t) => ticket(t, st[t.status] || (t.telegramMessages && t.telegramMessages.length ? '<span class="res-b v">✓ poslaný</span>' : '<span class="res-b p">neposlaný</span>'))).join("")
       : "";
     const autoHtml = autoToday.length
-      ? `<p class="faint small dn-note">Server našiel ${autoToday.length === 1 ? "tento tip" : "tieto tipy"} asi hodinu pred výkopom – pridajte ho do histórie a potom pošlite.</p>` +
-        autoToday.map((t) => tipRow(t, `<button type="button" class="btn sm" data-dn-add="${escapeHtml(t.id)}">+ Pridať</button>`)).join("")
+      ? autoToday.map((t) => ticket(t, `<button type="button" class="btn xs" data-dn-add="${escapeHtml(t.id)}">+ Pridať</button>`, true)).join("")
       : "";
+    // Radar dňa: ciferník 24 hodín, bodka = tip v čase výkopu (bližšie k stredu = vyššia dôvera), ručička = teraz
+    const dial = (() => {
+      const pos = (d, r) => { const h = d.getHours() + d.getMinutes() / 60; const a = (h / 24) * 2 * Math.PI - Math.PI / 2; return [100 + r * Math.cos(a), 100 + r * Math.sin(a)]; };
+      const rOf = (p) => 78 - Math.max(0, Math.min(1, (Number(p) - 65) / 20)) * 46;
+      const ticks = Array.from({ length: 24 }, (_, i) => { const a = (i / 24) * 2 * Math.PI - Math.PI / 2; const r1 = i % 6 === 0 ? 86 : 90; return `<line x1="${(100 + r1 * Math.cos(a)).toFixed(1)}" y1="${(100 + r1 * Math.sin(a)).toFixed(1)}" x2="${(100 + 95 * Math.cos(a)).toFixed(1)}" y2="${(100 + 95 * Math.sin(a)).toFixed(1)}" class="${i % 6 === 0 ? "tk6" : ""}"/>`; }).join("");
+      const labels = [[0, "0"], [6, "6"], [12, "12"], [18, "18"]].map(([h, l]) => { const a = (h / 24) * 2 * Math.PI - Math.PI / 2; return `<text x="${(100 + 76 * Math.cos(a)).toFixed(1)}" y="${(100 + 76 * Math.sin(a) + 3).toFixed(1)}">${l}</text>`; }).join("");
+      const dots = [...todayTips.map((t) => [t, "tip"]), ...autoToday.map((t) => [t, "auto"])].map(([t, k]) => {
+        const [x, yy] = pos(new Date(t.matchDate), rOf(t.probability));
+        const cls = t.status === "won" ? "won" : t.status === "lost" ? "lost" : k;
+        return `<g class="dot ${cls}"><circle cx="${x.toFixed(1)}" cy="${yy.toFixed(1)}" r="9" class="halo"/><circle cx="${x.toFixed(1)}" cy="${yy.toFixed(1)}" r="4"/></g>`;
+      }).join("");
+      const [hx, hy] = pos(now, 92);
+      return `<svg viewBox="0 0 200 200" class="dn-dial" aria-hidden="true">
+        <circle cx="100" cy="100" r="96" class="rim"/><circle cx="100" cy="100" r="62" class="in"/><circle cx="100" cy="100" r="32" class="in"/>
+        <g class="tks">${ticks}</g><g class="lbl">${labels}</g>
+        <g class="sweep"><path d="M100 100 L100 8 A92 92 0 0 1 165 35 Z"/></g>
+        <line x1="100" y1="100" x2="${hx.toFixed(1)}" y2="${hy.toFixed(1)}" class="hand"/>
+        ${dots}<circle cx="100" cy="100" r="3.5" class="hub"/></svg>`;
+    })();
+    const hr = now.getHours();
+    const hello = hr < 10 ? "Dobré ráno" : hr < 18 ? "Dobrý deň" : "Dobrý večer";
+    const nextTip = todayTips.find((t) => new Date(t.matchDate) > now);
+    const pctRing = (won, done) => { const v = done ? (won / done) * 100 : 0; const C = 2 * Math.PI * 20; return `<svg viewBox="0 0 48 48" class="dn-pr" aria-hidden="true"><circle cx="24" cy="24" r="20"/><circle cx="24" cy="24" r="20" class="v" stroke-dasharray="${((C * v) / 100).toFixed(1)} 999"/></svg><i>${done ? Math.round(v) + NB + "%" : "–"}</i>`; };
     pane.innerHTML = `
-      <div class="kpis dn-kpis">
-        <div class="kpi"><small>Tipy dnes</small><b>${todayTips.length}</b><span>${todayTips.length ? `${sent} ${sent === 1 ? "poslaný" : sent >= 2 && sent <= 4 ? "poslané" : "poslaných"}` : "zatiaľ žiadny"}</span></div>
-        <div class="kpi"><small>Včera</small><b class="${y.profit > 0 ? "g" : y.profit < 0 ? "l" : ""}">${y.done ? j(y.profit) : "–"}</b><span>${y.done ? `${y.won} z ${y.done} vyšlo` : yTips.length ? "čaká na výsledky" : "bez tipu"}</span></div>
-        <div class="kpi"><small>Tento mesiac</small><b class="${m.profit > 0 ? "g" : m.profit < 0 ? "l" : ""}">${m.done ? j(m.profit) : "–"}</b><span>${m.done ? `${m.won} z ${m.done} vyšlo` : "zatiaľ bez výsledkov"}</span></div>
-        <div class="kpi${ending.length || payPending ? " warn" : ""}"><small>Členovia</small><b>${active.length}</b><span>${ending.length ? `${ending.length} čoskoro končí` : "aktívnych"}${payPending ? ` · ${payPending} čaká platba` : ""}</span></div>
+      <section class="dn-hero">
+        <div class="dn-hero-txt">
+          <span class="dn-hello">${hello}, Michal</span>
+          <h3 class="dn-big">${todayTips.length ? `${plural(todayTips.length, "tip", "tipy", "tipov")} <em>na dnes</em>` : `Dnes zatiaľ <em>bez tipu</em>`}</h3>
+          <p class="dn-lead">${todayTips.length ? `${sent} ${sent === 1 ? "poslaný" : sent >= 2 && sent <= 4 ? "poslané" : "poslaných"} členom${nextTip ? ` · najbližší výkop o ${escapeHtml(timeHm(new Date(nextTip.matchDate)))}` : " · všetky zápasy už začali"}` : autoToday.length ? `Server našiel ${plural(autoToday.length, "tip", "tipy", "tipov")} – pridajte ${autoToday.length === 1 ? "ho" : "ich"} nižšie.` : "Spustite analýzu a model prejde všetky zápasy dňa."}</p>
+          <div class="dn-hero-act"><button type="button" class="btn" data-dn-go="tipy">Nájsť tipy dňa</button><button type="button" class="btn ghost" data-dn-go="zapasy">Zápasy</button></div>
+          ${todayTips.length > 3 ? `<p class="warn small">Dnes je ${todayTips.length} tipov – klientom posielate najviac 3.</p>` : ""}
+        </div>
+        <div class="dn-radar">${dial}<span class="dn-radar-cap">Radar dňa · bodka = tip v čase výkopu</span></div>
+      </section>
+
+      <div class="dn-stats">
+        <div class="dn-stat"><div class="dn-ring-w">${pctRing(y.won, y.done)}</div><div><small>Včera</small><b class="${y.profit > 0 ? "g" : y.profit < 0 ? "l" : ""}">${y.done ? j(y.profit) : "–"}</b><span>${y.done ? `${y.won} z ${y.done} vyšlo` : yTips.length ? "čaká na výsledky" : "bez tipu"}</span></div></div>
+        <div class="dn-stat"><div class="dn-ring-w">${pctRing(m.won, m.done)}</div><div><small>Tento mesiac</small><b class="${m.profit > 0 ? "g" : m.profit < 0 ? "l" : ""}">${m.done ? j(m.profit) : "–"}</b><span>${m.done ? `${m.won} z ${m.done} vyšlo` : "zatiaľ bez výsledkov"}</span></div></div>
+        <button type="button" class="dn-stat dn-stat-m${ending.length || payPending ? " warn" : ""}" data-dn-go="clenovia"><div class="dn-ring-w dn-mem">${ICON.clenovia}</div><div><small>Členovia</small><b>${active.length}</b><span>${ending.length ? `${ending.length} čoskoro končí` : "aktívnych"}${payPending ? ` · ${payPending} čaká platba` : ""}</span></div></button>
       </div>
 
       <h3 class="sh">Tipy na dnes <small>najviac 3 najsilnejšie</small></h3>
-      <div class="card dn-card">
-        ${todayHtml}${autoHtml}
-        ${!todayHtml && !autoHtml ? `<p class="empty">Na dnes zatiaľ žiadny tip.</p>` : ""}
-        <div class="dn-actions"><button type="button" class="btn ${todayTips.length ? "ghost " : ""}sm" data-dn-go="tipy">Nájsť tipy dňa</button>${todayTips.length > 3 ? `<span class="warn small">Dnes je ${todayTips.length} tipov – klientom posielate najviac 3.</span>` : ""}</div>
-      </div>
+      ${todayHtml || autoHtml ? `<div class="dn-tickets">${todayHtml}${autoHtml}</div>${autoHtml ? `<p class="faint small dn-note">Tipy so značkou „+ Pridať“ našiel server asi hodinu pred výkopom – pridajte ich do histórie a potom pošlite.</p>` : ""}` : `<div class="card dn-card"><p class="empty">Na dnes zatiaľ žiadny tip.</p></div>`}
 
-      <h3 class="sh">Včera</h3>
-      <div class="card dn-card">
-        ${yTips.length ? yTips.map((t) => tipRow(t, st[t.status] || '<span class="res-b v">čaká</span>')).join("") : `<p class="empty">Včera bez tipu.</p>`}
-      </div>
-
-      <h3 class="sh">Členovia</h3>
-      <div class="card dn-card">
-        ${ending.length ? ending.map((s) => `<div class="dn-row dn-m"><span class="dn-main"><b>${escapeHtml(s.name)}</b><span class="muted small">${escapeHtml(MEMBER_NAME[s.length] || "")}${s.pkg && s.pkg.left != null ? ` · ostáva ${plural(s.pkg.left, "tip", "tipy", "tipov")}` : ""}</span></span><span class="dn-st"><span class="res-b p">končí</span></span></div>`).join("") : `<p class="empty">Nikomu členstvo čoskoro nekončí.</p>`}
-        ${payPending ? `<p class="small warn" style="margin:10px 0 0">${plural(payPending, "platba čaká", "platby čakajú", "platieb čaká")} na potvrdenie.</p>` : ""}
-        <div class="dn-actions"><button type="button" class="btn ghost sm" data-dn-go="clenovia">Otvoriť členov</button></div>
+      <div class="dn-two">
+        <div>
+          <h3 class="sh">Včera</h3>
+          <div class="card dn-card">
+            ${yTips.length ? yTips.map((t) => tipRow(t, st[t.status] || '<span class="res-b v">čaká</span>')).join("") : `<p class="empty">Včera bez tipu.</p>`}
+          </div>
+        </div>
+        <div>
+          <h3 class="sh">Členovia</h3>
+          <div class="card dn-card">
+            ${ending.length ? ending.map((s) => `<div class="dn-row dn-m"><span class="dn-main"><b>${escapeHtml(s.name)}</b><span class="muted small">${escapeHtml(MEMBER_NAME[s.length] || "")}${s.pkg && s.pkg.left != null ? ` · ostáva ${plural(s.pkg.left, "tip", "tipy", "tipov")}` : ""}</span></span><span class="dn-st"><span class="res-b p">končí</span></span></div>`).join("") : `<p class="empty">Nikomu členstvo čoskoro nekončí.</p>`}
+            ${payPending ? `<p class="small warn" style="margin:10px 0 0">${plural(payPending, "platba čaká", "platby čakajú", "platieb čaká")} na potvrdenie.</p>` : ""}
+            <div class="dn-actions"><button type="button" class="btn ghost sm" data-dn-go="clenovia">Otvoriť členov</button></div>
+          </div>
+        </div>
       </div>`;
     pane.querySelectorAll("[data-dn-go]").forEach((b) => (b.onclick = () => goTo(b.dataset.dnGo)));
     pane.querySelectorAll("[data-dn-add]").forEach((b) => {
