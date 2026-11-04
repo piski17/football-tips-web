@@ -273,3 +273,32 @@ export async function restoreBelow160AndBand70Once(minProb = 70): Promise<{ rest
     return { restored: restore.length, moved };
   });
 }
+
+/**
+ * 4. 11. 2026 (Michal): tipy „doplnené po výkope“ (lateAdd) klient nemohol dostať – raz pri štarte sa presunú
+ * do sledovaných (watchOnly + lateMoved), aby sa nerátali do štatistík. Nič sa nemaže.
+ * Návrat: tipom s lateMoved zrušiť watchOnly.
+ */
+const LATE_DONE_KEY = "tipradar_migr_late_done";
+export async function moveLateAddsOnce(): Promise<number> {
+  if (!useUpstash) return 0;
+  const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };
+  const done = (await upstashClient().get(`${UPSTASH_URL}/get/${LATE_DONE_KEY}`, auth)).data?.result;
+  if (done) return 0;
+  return withWriteLock(async () => {
+    const tips = await readAll();
+    let moved = 0;
+    for (const t of tips) {
+      if (!t.lateAdd || t.watchOnly) continue;
+      t.watchOnly = true;
+      t.lateMoved = true;
+      t.strongOfDay = undefined;
+      moved++;
+    }
+    if (moved) await writeAll(tips);
+    await upstashClient().post(`${UPSTASH_URL}/set/${LATE_DONE_KEY}`, new Date().toISOString(), {
+      headers: { ...auth.headers, "Content-Type": "text/plain" },
+    });
+    return moved;
+  });
+}

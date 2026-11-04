@@ -335,6 +335,8 @@ export interface SavedTip {
   retroStrict?: boolean;
   /** Zverejnený tip s dôverou pod 70 % presunutý do sledovaných pri prechode na pásmo 70 – 80 % (2. 11. 2026). */
   band70Moved?: boolean;
+  /** 4. 11. 2026: tip doplnený po výkope presunutý do sledovaných (klientom nešiel, do štatistík sa neráta). */
+  lateMoved?: boolean;
   /** Tip skrytý z histórie tipov - naďalej sa ráta do štatistík a zobrazuje na prezentačnej stránke. */
   archived?: boolean;
   /** Výsledok alebo kurz bol ručne opravený v histórii. */

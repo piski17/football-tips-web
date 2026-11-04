@@ -44,7 +44,7 @@ import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, Market
 import { newModelInputs } from "./newModel";
 import { computeMarketHealth, marketChangesText, clvOf, CLV_TIE } from "./marketHealth";
 import { LeaguePreset, SavedTip } from "./types";
-import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once } from "./tipsStore";
+import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once, moveLateAddsOnce } from "./tipsStore";
 import { computeTicketStatus, settleBet, settleFixtureBets, tipHasStartedMatch, MATCH_STARTED_MESSAGE, buildTipEdit } from "./tipEvaluator";
 import {
   sendTipToTelegram,
@@ -102,11 +102,9 @@ const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté kont
 function statsTips(tips: SavedTip[]): SavedTip[] {
   // Tipy „Len sledovať“ (napr. Liga majstrov na skúšku) sa vyhodnocujú, ale nerátajú sa
   // do štatistík, na web ani do vyhodnotení pre členov.
-  // Tip doplnený po výkope zo „Všetkých zápasov – automaticky“ (31. 10. 2026): kým sa nepredáva, ráta sa
-  // ako ostatné. Po spustení predaja (SALES_OPEN=true) sa na webe a v súhrnoch pre klientov neráta –
-  // klientom nikdy neprišiel.
-  const salesOpen = process.env.SALES_OPEN === "true";
-  return dedupeTips(tips).filter((t) => !EXCLUDED_STATS_MARKETS.includes(t.market) && !t.watchOnly && !(salesOpen && t.lateAdd) && !isRemovedLeagueTip(t));
+  // Tip doplnený po výkope zo „Všetkých zápasov – automaticky“: klientom nikdy neprišiel, od 4. 11. 2026
+  // (Michal) sa do štatistík neráta vôbec (predtým len pri SALES_OPEN=true).
+  return dedupeTips(tips).filter((t) => !EXCLUDED_STATS_MARKETS.includes(t.market) && !t.watchOnly && !t.lateAdd /* 4. 11. 2026: doplnené po výkope sa nerátajú nikdy */ && !isRemovedLeagueTip(t));
 }
 
 /**
@@ -3310,6 +3308,8 @@ app.post("/api/auto-tips/:id/add", async (req, res) => {
     else if (odds < MIN_ODDS) reason = `kurz pod ${String(MIN_ODDS).replace(".", ",")}`;
     else if (ev < MIN_EXPECTED_VALUE) reason = "hodnota pod +5 %";
     else if (ev > SUSPICIOUS_EXPECTED_VALUE) reason = "hodnota nad +25 %";
+    // 4. 11. 2026 (Michal): tip doplnený po výkope klientom nešiel – len do sledovaných.
+    if (!reason && tip.lateAdd) { reason = "doplnené po výkope – len sledovať"; tip.lateMoved = true; }
     if (reason) tip.watchOnly = true;
     await saveTip(tip);
     // Odohraný zápas sa vyhodnotí hneď (inak do 15 minút sám).
@@ -3789,4 +3789,8 @@ app.listen(PORT, () => {
   void restoreBelow160AndBand70Once(MIN_PROBABILITY)
     .then((r) => { if (r.restored || r.moved) console.log(`Pásmo 70 – 80 %: vrátené ${r.restored}, presunuté do sledovaných ${r.moved}`); })
     .catch((err) => console.error("Prechod na pásmo 70 – 80 % zlyhal:", err));
+  // 4. 11. 2026: tipy doplnené po výkope raz presunie do sledovaných.
+  void moveLateAddsOnce()
+    .then((n) => { if (n) console.log(`Doplnené po výkope: presunuté do sledovaných ${n}`); })
+    .catch((err) => console.error("Presun tipov doplnených po výkope zlyhal:", err));
 });
