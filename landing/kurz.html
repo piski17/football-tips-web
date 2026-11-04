@@ -5,7 +5,7 @@
 <script>document.documentElement.setAttribute("data-page", "kurz");</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="dark" />
-<meta name="theme-color" content="#070708" />
+<meta name="theme-color" content="#09090A" />
 <title>Kurz – Škola stávkovania | TipRadar</title>
 <meta name="description" content="Škola stávkovania – kurz o bankrolle, hodnote stávky a psychológii. 48 strán, 10 kapitol." />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="/favicon-256.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Instrument+Serif:ital@0;1&amp;family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Mrs+Saint+Delafield&amp;text=Michal&amp;display=swap" rel="stylesheet" />
 <style>
 /* ==========================================================================
@@ -776,6 +776,91 @@ html { scrollbar-color: rgba(214,182,118,.35) #070708; }
   .mem-under { grid-template-columns: 1fr; max-width: 520px; margin-inline: auto; }
 }
 
+
+/* ==========================================================================
+   PRIVÉ (4. 11. 2026) – tipradar.eu v rovnakom vzhľade ako app.tipradar.eu:
+   písmo Manrope, obsidiánová čierna, šampanské zlato a slonovinová,
+   gilošovaný radar namiesto reflektorov, tenké veľké čísla, zlaté slová
+   bez kurzívy. Obsah a funkcie stránky sa nemenia.
+   ========================================================================== */
+:root {
+  --bg: #09090A; --bg2: #0E0E10; --card: #121214; --card2: #18181B;
+  --line: rgba(255, 255, 255, .075); --line2: rgba(222, 200, 156, .24);
+  --gold: #D8BF8C; --gold-hi: #F2E5C6; --gold-lo: #9E8152;
+  --foil: linear-gradient(135deg, #F5EBD2 0%, #DEC593 46%, #B8955E 100%);
+  --ivory: #EFE9DD; --ink: #141210;
+  --text: #F3EFE8; --muted: #A5A097; --faint: #706C65;
+  --win: #8FD1B0; --loss: #E8968B;
+  --display: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --serif: var(--display);
+  --sans: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --r: 24px; --r-sm: 14px;
+}
+body { background: var(--bg); font: 400 15.5px/1.65 var(--sans); letter-spacing: -.003em; }
+body::after { content: none !important; }
+::selection { background: rgba(216, 191, 140, .32); color: #fff; }
+
+/* pozadie: gilošovaný radar (ako v appke) */
+.lights { background: radial-gradient(55% 45% at 50% -8%, rgba(216, 191, 140, .11), transparent 70%), radial-gradient(40% 40% at 0% 100%, rgba(216, 191, 140, .035), transparent 70%), var(--bg) !important; }
+.lights i { display: none !important; }
+.lights::before { content: ""; position: absolute; width: 1400px; height: 1400px; left: 50%; top: -700px; margin-left: -700px; opacity: .85;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1100 1100'><g fill='none' stroke='%23D8BF8C'><circle cx='550' cy='550' r='540' stroke-opacity='.10'/><circle cx='550' cy='550' r='470' stroke-opacity='.08'/><circle cx='550' cy='550' r='400' stroke-opacity='.07'/><circle cx='550' cy='550' r='330' stroke-opacity='.06'/><circle cx='550' cy='550' r='260' stroke-opacity='.05'/><circle cx='550' cy='550' r='190' stroke-opacity='.045'/><path d='M550 10V1090M10 550H1090' stroke-opacity='.05'/></g></svg>") center / contain no-repeat;
+  -webkit-mask-image: radial-gradient(closest-side, #000 45%, transparent); mask-image: radial-gradient(closest-side, #000 45%, transparent); }
+.lights::after { content: "" !important; position: absolute; width: 1400px; height: 1400px; left: 50%; top: -700px; margin-left: -700px; border-radius: 50%; opacity: .5; inset: auto; mix-blend-mode: normal; background-size: auto;
+  background: conic-gradient(from 0deg, rgba(216, 191, 140, .14), rgba(216, 191, 140, 0) 14%, transparent 100%) !important;
+  -webkit-mask-image: radial-gradient(closest-side, #000 30%, transparent); mask-image: radial-gradient(closest-side, #000 30%, transparent);
+  animation: pvSweep 16s linear infinite; }
+@keyframes pvSweep { to { transform: rotate(360deg); } }
+
+/* písmo a nadpisy */
+h1, h2, h3, h4, .brand { font-family: var(--display); }
+h1, h2 { font-weight: 300; letter-spacing: -.05em; }
+h3, h4 { font-weight: 700; letter-spacing: -.025em; }
+.hero h1 { font-weight: 300; letter-spacing: -.055em; line-height: .95; }
+h1 em, h2 em, .h2 em, .hero h1 em, .page-head h1 em { font-family: var(--display) !important; font-style: normal !important; font-weight: 700 !important; font-size: 1em !important; letter-spacing: -.05em; padding: 0 !important;
+  background: var(--foil) !important; background-size: 100% 100% !important; -webkit-background-clip: text !important; background-clip: text !important; color: transparent !important; -webkit-text-fill-color: transparent; animation: none !important; }
+.foil { background: var(--foil); background-size: 100% 100%; animation: none; }
+.eyebrow { font: 600 11px/1 var(--sans); letter-spacing: .32em; color: var(--gold); }
+.page-head .big-n { font-family: var(--display); font-weight: 200; -webkit-text-stroke: 1px rgba(216, 191, 140, .22); }
+.marquee span { font-family: var(--display); font-weight: 800; letter-spacing: -.02em; }
+
+/* horná lišta ako v appke */
+.nav-in { border-radius: 22px; height: 60px; }
+html.scrolled .nav-in, html[data-page]:not([data-page="home"]) .nav-in { background: rgba(16, 16, 18, .78); border-color: rgba(255, 255, 255, .08); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), 0 24px 60px -30px rgba(0, 0, 0, .95); }
+.brand { font-weight: 700; letter-spacing: -.02em; }
+.brand small { font: 500 9.5px/1 var(--sans); letter-spacing: .3em; color: var(--faint); }
+.links { padding: 4px; border-radius: 999px; background: rgba(255, 255, 255, .035); border: 1px solid rgba(255, 255, 255, .05); }
+.links a { font-size: 13.5px; padding: 7px 14px; }
+.links a.active { background: var(--ivory); color: var(--ink); font-weight: 600; box-shadow: 0 8px 22px -12px rgba(239, 233, 221, .6); }
+.links a.active::after { content: none; }
+.ic { border-color: rgba(255, 255, 255, .09); background: rgba(255, 255, 255, .03); }
+
+/* tlačidlá a prepínače */
+.btn { font-family: var(--sans); font-weight: 600; letter-spacing: -.005em; color: var(--ink); background: var(--foil); background-size: 100% 100%;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 -1px 0 rgba(0, 0, 0, .15), 0 12px 28px -14px rgba(216, 191, 140, .7); }
+.btn:hover { filter: brightness(1.07); background-position: 0 0; }
+.btn.ghost { color: var(--text); background: rgba(255, 255, 255, .03); border: 1px solid rgba(255, 255, 255, .13); }
+.btn.ghost:hover { color: var(--gold-hi); border-color: rgba(216, 191, 140, .5); }
+.tabs { background: rgba(255, 255, 255, .035); border-color: rgba(255, 255, 255, .07); }
+.tab[aria-pressed="true"], .tab.on { background: var(--ivory) !important; color: var(--ink) !important; font-weight: 600; box-shadow: 0 6px 18px -10px rgba(239, 233, 221, .5); }
+.chip { border-color: rgba(216, 191, 140, .25); background: rgba(216, 191, 140, .06); font-family: var(--sans); }
+
+/* karty: matné sklo s jemnou hornou linkou */
+.panel { border-radius: var(--r); border-color: rgba(255, 255, 255, .075); background: linear-gradient(180deg, rgba(255, 255, 255, .035), rgba(255, 255, 255, .008)), var(--card); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), 0 30px 60px -40px rgba(0, 0, 0, .95); }
+.panel::before { content: none !important; }
+.panel::after { content: ""; position: absolute; left: 32px; right: 32px; top: -1px; height: 1px; pointer-events: none; background: linear-gradient(90deg, transparent, rgba(216, 191, 140, .45), transparent); }
+.plan-tips b, .plan-price b { font-family: var(--display); font-weight: 300; letter-spacing: -.05em; }
+.plan-price b { font-weight: 600; }
+.plan.feat { background: radial-gradient(120% 70% at 50% 0%, rgba(216, 191, 140, .15), transparent 60%), linear-gradient(180deg, rgba(255, 255, 255, .035), rgba(255, 255, 255, .008)), var(--card); }
+.plan.on { box-shadow: 0 0 0 1px rgba(216, 191, 140, .7), 0 30px 60px -30px rgba(216, 191, 140, .35); }
+.plan-badge { background: var(--ivory); color: var(--ink); }
+.plan-per span { border-color: rgba(255, 255, 255, .1); color: var(--muted); }
+
+/* čísla: tenké a veľké */
+.n, .big, .stat b, .kpi b { font-family: var(--display); }
+.foot { background: rgba(10, 10, 11, .85); border-top-color: rgba(255, 255, 255, .07); }
+@media (prefers-reduced-motion: reduce) { .lights::after { animation: none; } }
+@media (max-width: 899px) { .lights::before, .lights::after { width: 900px; height: 900px; top: -450px; margin-left: -450px; } .links { background: none; border: 0; padding: 0; } }
 </style>
 </head>
 <body>
