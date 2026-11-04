@@ -4918,7 +4918,8 @@ async function renderDnes() {
         </footer>
       </article>`;
     const todayHtml = todayTips.length
-      ? todayTips.map((t) => ticket(t, st[t.status] || (t.telegramMessages && t.telegramMessages.length ? '<span class="res-b v">✓ poslaný</span>' : '<span class="res-b p">neposlaný</span>'))).join("")
+      // 4. 11. 2026 (Michal): dnešné tipy sa vyhodnotia až po skončení dňa – tu sa „vyšiel / nevyšiel“ neukazuje (výsledok je zajtra vo „Včera“).
+      ? todayTips.map((t) => ticket(t, t.telegramMessages && t.telegramMessages.length ? '<span class="res-b v">✓ poslaný</span>' : '<span class="res-b p">neposlaný</span>')).join("")
       : "";
     const autoHtml = autoToday.length
       ? autoToday.map((t) => ticket(t, `<button type="button" class="btn xs" data-dn-add="${escapeHtml(t.id)}">+ Pridať</button>`, true)).join("")
@@ -4931,7 +4932,7 @@ async function renderDnes() {
       const labels = [[0, "0"], [6, "6"], [12, "12"], [18, "18"]].map(([h, l]) => { const a = (h / 24) * 2 * Math.PI - Math.PI / 2; return `<text x="${(100 + 76 * Math.cos(a)).toFixed(1)}" y="${(100 + 76 * Math.sin(a) + 3).toFixed(1)}">${l}</text>`; }).join("");
       const dots = [...todayTips.map((t) => [t, "tip"]), ...autoToday.map((t) => [t, "auto"])].map(([t, k]) => {
         const [x, yy] = pos(new Date(t.matchDate), rOf(t.probability));
-        const cls = t.status === "won" ? "won" : t.status === "lost" ? "lost" : k;
+        const cls = k; // výsledok až po skončení dňa
         return `<g class="dot ${cls}"><circle cx="${x.toFixed(1)}" cy="${yy.toFixed(1)}" r="9" class="halo"/><circle cx="${x.toFixed(1)}" cy="${yy.toFixed(1)}" r="4"/></g>`;
       }).join("");
       const [hx, hy] = pos(now, 92);
@@ -4964,8 +4965,8 @@ async function renderDnes() {
         <button type="button" class="dn-stat dn-stat-m${ending.length || payPending ? " warn" : ""}" data-dn-go="clenovia"><div class="dn-ring-w dn-mem">${ICON.clenovia}</div><div><small>Členovia</small><b>${active.length}</b><span>${ending.length ? `${ending.length} čoskoro končí` : "aktívnych"}${payPending ? ` · ${payPending} čaká platba` : ""}</span></div></button>
       </div>
 
-      <h3 class="sh">Tipy na dnes <small>najviac 3 najsilnejšie</small></h3>
-      ${todayHtml || autoHtml ? `<div class="dn-tickets">${todayHtml}${autoHtml}</div>${autoHtml ? `<p class="faint small dn-note">Tipy so značkou „+ Pridať“ našiel server asi hodinu pred výkopom – pridajte ich do histórie a potom pošlite.</p>` : ""}` : `<div class="card dn-card"><p class="empty">Na dnes zatiaľ žiadny tip.</p></div>`}
+      <h3 class="sh">Tipy na dnes <small>najviac 3 najsilnejšie · vyhodnotenie po skončení dňa</small></h3>
+      ${todayHtml || autoHtml ? `<div class="dn-tickets">${todayHtml}${autoHtml}</div>${autoHtml ? `<p class="faint small dn-note">„+ Pridať“ – tip, ktorý server našiel hodinu pred výkopom. Pridajte ho do histórie a pošlite členom.</p>` : ""}` : `<div class="card dn-card"><p class="empty">Na dnes zatiaľ žiadny tip.</p></div>`}
 
       <div class="dn-two">
         <div>
