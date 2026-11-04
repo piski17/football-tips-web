@@ -503,7 +503,7 @@ const TELEGRAM_CONTACT_USERNAME = process.env.TELEGRAM_CONTACT_USERNAME || "im_m
 
 // ---- Členstvo TipRadar (od 31. 10. 2026 večer) – rovnaké texty ako na tipradar.eu ----
 // Posuvník 50 – 250 tipov po 50, každý počet má vlastný názov a výhody (každé vyššie má všetko z nižšieho):
-// Od 4. 11. 2026 večer len 2: Štart 75 tipov 65 €, VIP 150 tipov 110 € (VIP úvodný hovor + mentoring 1 na 1).
+// Od 4. 11. 2026 večer len 2: Štart 75 tipov 65 €, VIP 150 tipov 110 € (obe úvodný hovor 1 na 1, VIP navyše mentoring).
 // Predtým (1. 11. 2026) 3: Štart 50 tipov 39 €, Premium 100 tipov 75 €, VIP 150 tipov 110 € (Premium a VIP úvodný hovor 1 na 1, VIP od 2. 11. aj mentoring 1 na 1 počas celého členstva). Gold a Platinum zrušené.
 // Bez časovej platnosti, počet tipov denne sa neuvádza. Garancia: prvých 20 tipov bez rizika (inak peniaze späť) a členstvo v mínuse = 1 mesiac zadarmo.
 const BENEFITS_BASE =
@@ -513,12 +513,13 @@ const BENEFITS_BASE =
 /** Výhody navyše podľa členstva (od koľkých tipov platia). Rovnaké sú na webe (landing/index.html, #feats – zdroj zip nocny-zapas/zdroj). */
 const TIER_PERKS: { min: number; max?: number; text: string }[] = [
   // 4. 11. 2026 (Michal): kurz Škola stávkovania do členstiev NEDÁVAŤ – je to samostatný produkt.
-  // 4. 11. 2026 večer (Michal: „iné ponuky, čo fakt zaujmú“): odporúčanie kamaráta a vernostná zľava (rieši Michal ručne v app.tipradar.eu → Členovia).
-  { min: 1, max: 100, text: `🎁 <b>Odporučte kamaráta</b> – keď si kúpi členstvo, obaja dostanete +10 tipov zadarmo` },
+  // 4. 11. 2026 večer (Michal): vernostná zľava (rieši Michal ručne v app.tipradar.eu → Členovia); úvodný hovor má aj Štart; „Odporučte kamaráta“ zrušené.
+  // Špeciálna výhoda každého členstva (4. 11. 2026 večer, Michal: „pridaj niečo špeciálne každému členstvu“) – rieši Michal ručne.
+  { min: 1, max: 100, text: `★ <b>Len v Štarte: povýšenie na VIP s doplatkom</b> – kedykoľvek prejdete na VIP a zaplatíte len rozdiel v cene` },
+  { min: 101, text: `★ <b>Len vo VIP: číslovaná VIP karta a hlas pri nových ligách</b> – hlasujete, ktoré ligy a trhy model pridá` },
   { min: 1, max: 100, text: `🔁 <b>Vernostná zľava</b> – ďalšie členstvo o 10 % lacnejšie` },
-  { min: 101, text: `🎁 <b>Odporučte kamaráta</b> – keď si kúpi členstvo, obaja dostanete +15 tipov zadarmo` },
   { min: 101, text: `🔁 <b>Vernostná zľava</b> – ďalšie členstvo o 20 % lacnejšie` },
-  { min: 101, text: `📞 <b>Úvodný hovor 1 na 1</b> (30 min) – nastavenie banku, vkladu a ako tipy hrať` },
+  { min: 1, text: `📞 <b>Úvodný hovor 1 na 1</b> (30 min) – nastavenie banku, vkladu a ako tipy hrať` },
   // 2. 11. 2026 (Michal): VIP navyše mentoring 1 na 1 počas celého členstva (od 2. 11. večer je VIP 100 tipov).
   { min: 101, text: `🎓 <b>Mentoring 1 na 1 počas celého členstva</b> – kedykoľvek sa ma opýtate na bank, vklad či konkrétny tip` },
 ];
@@ -547,8 +548,8 @@ function planText(t: SellableTerm): string {
 const PRICE_LIST = SELLABLE_TERMS.map(priceLine).join("\n");
 const PERKS_SHORT =
   `<b>Všetci členovia:</b> rovnaké tipy a súkromný chat členov\n` +
-  `<b>Štart:</b> za odporúčaného kamaráta +10 tipov, ďalšie členstvo −10 %\n` +
-  `<b>VIP:</b> úvodný hovor a mentoring 1 na 1 počas celého členstva, za kamaráta +15 tipov, ďalšie členstvo −20 %`;
+  `<b>Štart:</b> úvodný hovor 1 na 1, ďalšie členstvo −10 %, ★ povýšenie na VIP len s doplatkom rozdielu\n` +
+  `<b>VIP:</b> úvodný hovor a mentoring 1 na 1 počas celého členstva, ďalšie členstvo −20 %, ★ číslovaná VIP karta a hlas pri nových ligách`;
 const ALL_PLANS = `Na výber sú dve členstvá: Štart 75 tipov alebo VIP 150 tipov. Pri VIP je tip lacnejší.\n\n${PRICE_LIST}\n\n${PERKS_SHORT}`;
 
 const FAQ_ANSWERS: Record<string, string> = {
