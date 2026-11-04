@@ -3925,14 +3925,14 @@ async function renderBlendSummary() {
 // ČLENOVIA (platba beží mimo appky, napr. bankovým prevodom)
 // =====================================================================
 // Ceny musia sedieť s členstvom na tipradar.eu (landing/index.html) a PAY_TERMS v src/payments.ts.
-// Členstvo od 2. 11. 2026 večer: len Štart p50 29 €, VIP p100 55 € (VIP úvodný hovor + mentoring 1 na 1). p150 = staré VIP 150 tipov.
+// Členstvo od 4. 11. 2026: Štart p50 39 €, VIP p100 69 € (predtým od 2. 11. večer 29 € / 55 €) (VIP úvodný hovor + mentoring 1 na 1). p150 = staré VIP 150 tipov.
 // Predtým (1. 11. 2026): Štart p50 39 €, Premium p100 75 €, VIP p150 109 € (Gold a Platinum zrušené). VIP od 2. 11. 2026 aj mentoring 1 na 1 počas celého členstva.
 // Predtým (31. 10. 2026 večer): posuvník 50 – 250 tipov po 50 – Štart p50 39 €, Premium p100 75 €, VIP p150 109 €, Gold p200 139 €, Platinum p250 169 €
 // (Gold a Platinum mentoring 1 na 1). Garancia: prvých 20 tipov bez rizika. Bez časového limitu (tipy počíta server v poli pkg).
 // Garancia: členstvo v mínuse → 1 mesiac zadarmo (všetky tipy počas mesiaca).
 // Staré p75 (Štart 75), staré balíčky tipov t75 / t150 / t300 (Štart 100, Gold 250, Onyx 500; tipy počíta server v poli pkg) a ešte staršie
 // časové členstvá m1 (Gold 50 dní), m3 (Onyx 6 mesiacov) a season sa nepredávajú, ostávajú pre staršie záznamy.
-const MEMBER_PRICES = { p50: 29, p100: 55, p150: 109, p200: 139, p250: 169, p300: 199, p75: 49, t75: 89, t150: 179, t300: 299, m1: 69, m3: 199, season: 219 };
+const MEMBER_PRICES = { p50: 39, p100: 69, p150: 109, p200: 139, p250: 169, p300: 199, p75: 49, t75: 89, t150: 179, t300: 299, m1: 69, m3: 199, season: 219 };
 const MEMBER_NAME = { p50: "Štart", p100: "VIP", p150: "VIP (staré)", p200: "Gold (staré)", p250: "Platinum (staré)", p300: "Platinum (staré)", p75: "Štart (staré)", t75: "Štart (starý)", t150: "Gold (starý)", t300: "Onyx (starý)", m1: "Gold (staré)", m3: "Onyx (staré)", season: "Platinum (staré)" };
 const MEMBER_LENGTH_LABEL = { p50: "50 tipov", p100: "100 tipov", p150: "150 tipov", p200: "200 tipov", p250: "250 tipov", p300: "300 tipov", p75: "75 tipov", t75: "100 tipov", t150: "250 tipov", t300: "500 tipov", m1: "50 dní", m3: "6 mesiacov", season: "6 mesiacov" };
 const MEMBER_TIPS = { p50: 50, p100: 100, p150: 150, p200: 200, p250: 250, p300: 300, p75: 75, t75: 100, t150: 250, t300: 500 };

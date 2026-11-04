@@ -4,7 +4,7 @@ import * as crypto from "crypto";
 import axios from "axios";
 import { ibanValid } from "./payBySquare";
 
-// Platby za členstvo TipRadar (Štart / VIP = 50 / 100 tipov, od 29 €): bankový prevod cez QR kód (PAY by square), bez poplatkov.
+// Platby za členstvo TipRadar (Štart / VIP = 50 / 100 tipov, od 39 €): bankový prevod cez QR kód (PAY by square), bez poplatkov.
 // Zapne sa, keď sú na Renderi nastavené SALES_OPEN=true, PAY_IBAN a PAY_NAME.
 // Platbu potvrdíš jedným klikom v appke alebo v Telegrame, bot potom pošle pozvánku.
 
@@ -51,7 +51,8 @@ export function addActiveMonths(from: Date, months: number, days?: number): Date
   return calEnd;
 }
 
-// Od 2. 11. 2026 večer (Michal): len 2 členstvá – Štart 50 tipov 29 €, VIP 100 tipov 55 € (VIP úvodný hovor + mentoring 1 na 1).
+// Od 4. 11. 2026 (Michal: 75 / 150 € je veľa, zmierniť): Štart 50 tipov 39 €, VIP 100 tipov 69 € (VIP hovor + mentoring + kurz zadarmo).
+// Predtým (2. 11. 2026 večer): Štart 50 tipov 29 €, VIP 100 tipov 55 €.
 // Ceny tak, aby sa členstvo vrátilo pri bežnom zisku modelu už pri banku 500 € a vklade 3 %. p150 (VIP 150 tipov 109 €) sa už nepredáva.
 // Predtým (1. 11. 2026): Štart 50 tipov 39 €, Premium 100 tipov 75 €, VIP 150 tipov 109 €.
 // Gold (p200) a Platinum (p250) sa už nepredávajú, ostávajú len kvôli prípadným starším záznamom.
@@ -68,8 +69,8 @@ export type Term = SellableTerm | "p150" | "p200" | "p250" | "p300" | "p75" | "t
 export const SELLABLE_TERMS: SellableTerm[] = ["p50", "p100"];
 const pk = (price: number, tips: number) => ({ price, name: `${tips} tipov`, tips, months: NO_EXPIRY_MONTHS });
 export const PAY_TERMS: Record<Term, { price: number; name: string; months?: number; days?: number; tips?: number }> = {
-  p50: pk(29, 50),
-  p100: pk(55, 100),
+  p50: pk(39, 50),
+  p100: pk(69, 100),
   p150: pk(109, 150),
   p200: pk(139, 200),
   p250: pk(169, 250),
@@ -116,10 +117,17 @@ export function isSellableTerm(v: unknown): v is SellableTerm {
 export const MEMBER_STAKE_PCT = 3;
 const REAL_ROI = 0.042;
 /** Odporúčaný bank pre členstvo: aby sa cena vrátila pri bežnom zisku modelu (zaokrúhlené hore na 50 €). Rovnaký výpočet je na webe. */
+// Od 4. 11. 2026: odporúčaný bank od – do. „Od“ = pri bežnom zisku modelu (4,2 % na tip) a vklade 3 % zarobí člen
+// aspoň 1,5× cenu členstva (cena sa vráti a ešte je v pluse). „Do“ = horná hranica, pri ktorej je vklad 3 % stále rozumný (75 – 90 €).
+const BANK_MARGIN = 1.5;
+const BANK_MAX: Partial<Record<Term, number>> = { p50: 2500, p100: 3000 };
 export function memberBank(term: Term): number {
   const t = PAY_TERMS[term];
   const tips = t.tips || 50;
-  return Math.ceil(t.price / tips / (MEMBER_STAKE_PCT / 100) / REAL_ROI / 50) * 50;
+  return Math.ceil((BANK_MARGIN * t.price) / tips / (MEMBER_STAKE_PCT / 100) / REAL_ROI / 50) * 50;
+}
+export function memberBankMax(term: Term): number {
+  return BANK_MAX[term] ?? memberBank(term) * 3;
 }
 /** Koľko ušetrí oproti 50-tipovým členstvám (rovnaký počet tipov za cenu Štartu). */
 export function memberSaving(term: Term): number {

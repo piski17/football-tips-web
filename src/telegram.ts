@@ -1,6 +1,6 @@
 import { recordLead, listLeads, updateLead, Lead } from "./leadsStore";
 import { addSubscriber, listSubscribers, updateSubscriber } from "./subscribersStore";
-import { paymentsEnabled, savePayment, getPayment, confirmBankPayment, cancelPayment, paidUntil, PAY_TERMS, PUBLIC_URL, Payment, Term, SellableTerm, SELLABLE_TERMS, termLabel, tierName, isTerm, memberBank, memberSaving, MEMBER_STAKE_PCT } from "./payments";
+import { paymentsEnabled, savePayment, getPayment, confirmBankPayment, cancelPayment, paidUntil, PAY_TERMS, PUBLIC_URL, Payment, Term, SellableTerm, SELLABLE_TERMS, termLabel, tierName, isTerm, memberBank, memberBankMax, memberSaving, MEMBER_STAKE_PCT } from "./payments";
 import axios from "axios";
 import { sendAdminEmail } from "./mailer";
 import { newPeriodUpdates } from "./guarantee";
@@ -503,7 +503,7 @@ const TELEGRAM_CONTACT_USERNAME = process.env.TELEGRAM_CONTACT_USERNAME || "im_m
 
 // ---- Členstvo TipRadar (od 31. 10. 2026 večer) – rovnaké texty ako na tipradar.eu ----
 // Posuvník 50 – 250 tipov po 50, každý počet má vlastný názov a výhody (každé vyššie má všetko z nižšieho):
-// Od 2. 11. 2026 večer len 2: Štart 50 tipov 29 €, VIP 100 tipov 55 € (VIP úvodný hovor + mentoring 1 na 1 počas celého členstva).
+// Od 4. 11. 2026 len 2: Štart 50 tipov 39 €, VIP 100 tipov 69 € (VIP úvodný hovor + mentoring 1 na 1 + kurz zadarmo; Štart kurz -50 %).
 // Predtým (1. 11. 2026) 3: Štart 50 tipov 39 €, Premium 100 tipov 75 €, VIP 150 tipov 109 € (Premium a VIP úvodný hovor 1 na 1, VIP od 2. 11. aj mentoring 1 na 1 počas celého členstva). Gold a Platinum zrušené.
 // Bez časovej platnosti, počet tipov denne sa neuvádza. Garancia: prvých 20 tipov bez rizika (inak peniaze späť) a členstvo v mínuse = 1 mesiac zadarmo.
 const BENEFITS_BASE =
@@ -512,6 +512,9 @@ const BENEFITS_BASE =
   `• <b>Súkromný chat členov</b>`;
 /** Výhody navyše podľa členstva (od koľkých tipov platia). Rovnaké sú na webe (landing/index.html, #feats – zdroj zip nocny-zapas/zdroj). */
 const TIER_PERKS: { min: number; max?: number; text: string }[] = [
+  // 4. 11. 2026 (Michal: „sprav iné výhody“): kurz Škola stávkovania (tipradar.eu/kurz, 99 €) – Štart polovica, VIP zadarmo.
+  { min: 50, max: 99, text: `📚 <b>Kurz Škola stávkovania so zľavou 50 %</b> – 49 € namiesto 99 €` },
+  { min: 100, text: `📚 <b>Kurz Škola stávkovania zadarmo</b> (v hodnote 99 €)` },
   { min: 100, text: `📞 <b>Úvodný hovor 1 na 1</b> (30 min) – nastavenie banku, vkladu a ako tipy hrať` },
   // 2. 11. 2026 (Michal): VIP navyše mentoring 1 na 1 počas celého členstva (od 2. 11. večer je VIP 100 tipov).
   { min: 100, text: `🎓 <b>Mentoring 1 na 1 počas celého členstva</b> – kedykoľvek sa ma opýtate na bank, vklad či konkrétny tip` },
@@ -531,16 +534,18 @@ function priceLine(t: SellableTerm): string {
 }
 /** Text zvoleného členstva (cena, odporúčaný bank a vklad, čo dostane). */
 function planText(t: SellableTerm): string {
-  const bank = memberBank(t);
-  const stake = (bank * MEMBER_STAKE_PCT) / 100;
+  const bank = memberBank(t), bankMax = memberBankMax(t);
+  const sk = (n: number) => n.toLocaleString("sk-SK").replace(/\s/g, " ");
+  const stake = (bank * MEMBER_STAKE_PCT) / 100, stakeMax = (bankMax * MEMBER_STAKE_PCT) / 100;
   const perks = perksFor(PAY_TERMS[t].tips || 50);
-  return `<b>${priceLine(t)}</b>\n<i>Odporúčaný bank aspoň ${bank} € · vklad ${MEMBER_STAKE_PCT} % = ${eur2(stake)} € na tip</i>\n${BENEFITS_BASE}` + (perks ? `\n${perks}` : "");
+  return `<b>${priceLine(t)}</b>\n<i>Odporúčaný bank ${sk(bank)} – ${sk(bankMax)} € · vklad ${MEMBER_STAKE_PCT} % = ${eur2(stake)} – ${eur2(stakeMax)} € na tip</i>\n${BENEFITS_BASE}` + (perks ? `\n${perks}` : "");
 }
 /** Celý cenník: Štart / VIP (od 2. 11. 2026 večer len dve). */
 const PRICE_LIST = SELLABLE_TERMS.map(priceLine).join("\n");
 const PERKS_SHORT =
   `<b>Všetci členovia:</b> rovnaké tipy a súkromný chat členov\n` +
-  `<b>VIP navyše:</b> úvodný hovor 1 na 1 a mentoring 1 na 1 počas celého členstva`;
+  `<b>Štart:</b> kurz Škola stávkovania so zľavou 50 %\n` +
+  `<b>VIP navyše:</b> úvodný hovor 1 na 1, mentoring 1 na 1 počas celého členstva a kurz Škola stávkovania zadarmo`;
 const ALL_PLANS = `Na výber sú dve členstvá: Štart 50 tipov alebo VIP 100 tipov. Pri VIP je tip lacnejší.\n\n${PRICE_LIST}\n\n${PERKS_SHORT}`;
 
 const FAQ_ANSWERS: Record<string, string> = {
