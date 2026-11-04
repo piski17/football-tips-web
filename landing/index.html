@@ -1205,7 +1205,7 @@ html.scrolled .nav-in, html[data-page]:not([data-page="home"]) .nav-in { backgro
             <div class="pk-lab">Váš bank <b data-o="bank"></b></div>
             <input type="range" min="200" max="5000" step="50" value="1000" data-in="bank" aria-label="Bank v eurách">
             <div class="pk-out two">
-              <div class="pk-res"><small>Na zaplatenie členstva treba</small><b data-o="roi"></b></div>
+              <div class="pk-res"><small>Čistý zisk za celé členstvo</small><b data-o="roi"></b></div>
               <div><small>Vklad na tip</small><b data-o="stake"></b></div>
             </div>
             <div class="pk-verdict" data-o="verdict"></div>
@@ -1232,7 +1232,7 @@ html.scrolled .nav-in, html[data-page]:not([data-page="home"]) .nav-in { backgro
             <div class="pk-lab">Váš bank <b data-o="bank"></b></div>
             <input type="range" min="200" max="5000" step="50" value="1000" data-in="bank" aria-label="Bank v eurách">
             <div class="pk-out two">
-              <div class="pk-res"><small>Na zaplatenie členstva treba</small><b data-o="roi"></b></div>
+              <div class="pk-res"><small>Čistý zisk za celé členstvo</small><b data-o="roi"></b></div>
               <div><small>Vklad na tip</small><b data-o="stake"></b></div>
             </div>
             <div class="pk-verdict" data-o="verdict"></div>
@@ -1775,16 +1775,19 @@ html.scrolled .nav-in, html[data-page]:not([data-page="home"]) .nav-in { backgro
       var o = function (k) { return c.querySelector('[data-o="' + k + '"]'); };
       bI.value = t.bank;
       function draw() {
+        // Čistý zisk = bežný zisk modelu (4,2 % zo vkladu na tip) za všetky tipy mínus cena členstva – v eurách, aby to pochopil každý.
         var bank = +bI.value, stake = (bank * pct) / 100, roi = (t.price / t.tips / stake) * 100;
+        var gross = t.tips * stake * 0.042, net = Math.round(gross - t.price);
         fill(bI);
         o("bank").textContent = f(bank, 0) + " €";
         o("stake").textContent = f(stake, stake % 1 ? 2 : 0) + " €";
-        o("roi").innerHTML = "+" + f(t.price / stake, 1) + " <span>jednotky</span>";
+        var rb = o("roi"); rb.textContent = (net >= 0 ? "+" : "−") + f(Math.abs(net), 0) + " €"; rb.style.color = net >= 0 ? "" : "var(--loss)";
         var v = o("verdict");
+        var expl = " Pri " + t.tips + " tipoch po " + f(stake, stake % 1 ? 2 : 0) + " € zarobíte asi " + f(Math.round(gross), 0) + " €, členstvo stojí " + t.price + " €.";
         if (pct > 3 && bank >= 1000) { v.className = "pk-verdict mid"; v.textContent = "Pri takomto banku stačí vklad 2 – 3 %."; return; }
         if (pct > 3) { v.className = "pk-verdict mid"; v.textContent = "Vklad 5 % je riskantnejší – séria prehier bank rýchlo minie."; return; }
-        v.className = "pk-verdict " + (roi <= 4.2 ? "ok" : roi <= 6 ? "mid" : "bad");
-        v.textContent = roi <= 4.2 ? "Reálne – členstvo sa vám vráti pri bežnom zisku modelu." : roi <= 6 ? "Náročnejšie – zvážte väčší bank." : "Príliš malý vklad – členstvo sa ťažko vráti.";
+        v.className = "pk-verdict " + (net > 0 ? "ok" : net > -t.price / 2 ? "mid" : "bad");
+        v.textContent = (net > 0 ? "Oplatí sa – po zaplatení členstva vám ostane v pluse." : "Neoplatí sa – pri takom malom vklade zje cena členstva celý zisk. Zvýšte bank.") + expl;
       }
       bI.addEventListener("input", draw);
       c.querySelectorAll("[data-pct]").forEach(function (btn) {
