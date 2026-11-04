@@ -514,9 +514,6 @@ const BENEFITS_BASE =
 const TIER_PERKS: { min: number; max?: number; text: string }[] = [
   // 4. 11. 2026 (Michal): kurz Škola stávkovania do členstiev NEDÁVAŤ – je to samostatný produkt.
   // 4. 11. 2026 večer (Michal): vernostná zľava (rieši Michal ručne v app.tipradar.eu → Členovia); úvodný hovor má aj Štart; „Odporučte kamaráta“ zrušené.
-  // Špeciálna výhoda každého členstva (4. 11. 2026 večer, Michal: „pridaj niečo špeciálne každému členstvu“) – rieši Michal ručne.
-  { min: 1, max: 100, text: `★ <b>Povýšenie na VIP s doplatkom</b> – kedykoľvek prejdete na VIP a zaplatíte len rozdiel v cene` },
-  { min: 101, text: `★ <b>Číslovaná VIP karta a hlas pri nových ligách</b> – hlasujete, ktoré ligy a trhy model pridá` },
   { min: 1, max: 100, text: `🔁 <b>Vernostná zľava</b> – ďalšie členstvo o 10 % lacnejšie` },
   { min: 101, text: `🔁 <b>Vernostná zľava</b> – ďalšie členstvo o 20 % lacnejšie` },
   { min: 1, text: `📞 <b>Úvodný hovor 1 na 1</b> (30 min) – nastavenie banku, vkladu a ako tipy hrať` },
@@ -548,8 +545,8 @@ function planText(t: SellableTerm): string {
 const PRICE_LIST = SELLABLE_TERMS.map(priceLine).join("\n");
 const PERKS_SHORT =
   `<b>Všetci členovia:</b> rovnaké tipy a súkromný chat členov\n` +
-  `<b>Štart:</b> úvodný hovor 1 na 1, ďalšie členstvo −10 %, ★ povýšenie na VIP len s doplatkom rozdielu\n` +
-  `<b>VIP:</b> úvodný hovor a mentoring 1 na 1 počas celého členstva, ďalšie členstvo −20 %, ★ číslovaná VIP karta a hlas pri nových ligách`;
+  `<b>Štart:</b> úvodný hovor 1 na 1, ďalšie členstvo −10 %\n` +
+  `<b>VIP:</b> úvodný hovor a mentoring 1 na 1 počas celého členstva, ďalšie členstvo −20 %`;
 const ALL_PLANS = `Na výber sú dve členstvá: Štart 75 tipov alebo VIP 150 tipov. Pri VIP je tip lacnejší.\n\n${PRICE_LIST}\n\n${PERKS_SHORT}`;
 
 const FAQ_ANSWERS: Record<string, string> = {
