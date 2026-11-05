@@ -10,7 +10,6 @@ import { applyCupGoals } from "./cupAdjust";
 import { getDay, getAllDays, setDay } from "./dailyStore";
 import { saveSlip, deleteSlip, listSlipIds, getSlipImage, MAX_SLIP_CHARS } from "./slipStore";
 import { recordMarketPredictions, settleMarketPredictions, marketSummary } from "./marketTracker";
-import { boostMarkets, boostLog, addBoost, deleteBoost, settleBoosts, startSuperkurzy } from "./superkurzy";
 import { computeValuebets, valuebetLog, setMyBet, setMyBets, fairOdds, addManualBet, settleValuebets, valuebetStatus, startValuebets } from "./valuebets";
 import { scanSurebets, computeSurebets, surebetStatus, surebetLog, getMyBooks, setMyBooks, startSurebetScanner } from "./surebets";
 import { recordAutoFixture, listAuto, listAutoFixtures, autoFixtureDone, updateAuto, pruneAuto, AutoEntry } from "./autoStore";
@@ -2086,43 +2085,79 @@ app.post("/api/valuebets/settle", async (_req, res) => {
 });
 startValuebets();
 
-// ---- Superkurzy (/superkurzy) – overenie zvýšených kurzov slovenských stávkoviek, od 3. 11. 2026 (src/superkurzy.ts) ----
-app.get(["/superkurzy", "/superkurzy/"], (_req, res) => {
+// ---- Superkurzy odstránené z appky (5. 11. 2026, Michal). Staré záznamy ostávajú v Upstash. ----
+app.get(["/superkurzy", "/superkurzy/"], (_req, res) => res.redirect("/"));
+
+// ---- Analýza zápasu (/analyza) – skúška podľa fairside, od 5. 11. 2026, len pre Michala ----
+// Len číta: analyzeFixture(record = false) nič nezapisuje do tipov, štatistík, tichej evidencie ani na Telegram.
+const analyzaFixtureCache = new Map<string, { at: number; fixtures: any[] }>();
+const analyzaResultCache = new Map<number, { at: number; payload: any }>();
+const analyzaRunning = new Map<number, Promise<any>>();
+app.get(["/analyza", "/analyza/"], (_req, res) => {
   res.setHeader("Cache-Control", "no-store");
-  res.sendFile(path.join(__dirname, "..", "public", "superkurzy.html"));
+  res.sendFile(path.join(__dirname, "..", "public", "analyza.html"));
 });
-app.get("/api/superkurzy", async (_req, res) => {
+app.get("/api/analyza/fixtures", async (req, res) => {
   try {
-    res.json({ fixtures: boostMarkets(), entries: await boostLog() });
+    const day = String(req.query.date ?? "");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) {
+      res.status(400).json({ error: "Chýba dátum." });
+      return;
+    }
+    const out: any[] = [];
+    await Promise.all(
+      LEAGUE_PRESETS.map(async (league) => {
+        const key = `${league.id}|${day}`;
+        const cached = analyzaFixtureCache.get(key);
+        if (cached && Date.now() - cached.at < 2 * 60 * 60 * 1000) {
+          out.push(...cached.fixtures);
+          return;
+        }
+        try {
+          const fixtures = await getFixturesByLeague(league.id, seasonOfDate(day), 60, day, true);
+          analyzaFixtureCache.set(key, { at: Date.now(), fixtures });
+          out.push(...fixtures);
+        } catch {
+          if (cached) out.push(...cached.fixtures);
+        }
+      })
+    );
+    for (const [k, v] of analyzaFixtureCache) if (Date.now() - v.at > 24 * 60 * 60 * 1000) analyzaFixtureCache.delete(k);
+    out.sort((a, b) => a.timestamp - b.timestamp);
+    res.json({ fixtures: out, leagues: LEAGUE_PRESETS });
   } catch (err: any) {
-    res.status(500).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: err.message ?? String(err) });
   }
 });
-app.post("/api/superkurzy", async (req, res) => {
+app.post("/api/analyza", async (req, res) => {
   try {
-    const num = (v: any) => Number(String(v ?? "").replace(/\s/g, "").replace(",", ".")) || 0;
-    const b = req.body ?? {};
-    res.json({ entry: await addBoost(Number(b.fixtureId), String(b.betId ?? ""), String(b.value ?? ""), num(b.odd), num(b.stake), String(b.book ?? "")) });
+    const fixture = req.body?.fixture;
+    const fixtureId = Number(fixture?.fixtureId);
+    if (!fixture || !fixtureId || !fixture.league?.id || !fixture.homeTeam?.id || !fixture.awayTeam?.id) {
+      res.status(400).json({ error: "Chýbajú údaje zápasu." });
+      return;
+    }
+    const fresh = req.body?.fresh === true;
+    const cached = analyzaResultCache.get(fixtureId);
+    if (!fresh && cached && Date.now() - cached.at < 20 * 60 * 1000) {
+      res.json(cached.payload);
+      return;
+    }
+    let job = analyzaRunning.get(fixtureId);
+    if (!job) {
+      const season = Number(fixture.league.season) || seasonOfDate(String(fixture.date).slice(0, 10));
+      job = analyzeFixture(fixture, fixture.league.id, season, false).finally(() => analyzaRunning.delete(fixtureId));
+      analyzaRunning.set(fixtureId, job);
+    }
+    const { result, cupNote } = await job;
+    const payload = { ...result, cupNote, analyzedAt: new Date().toISOString() };
+    analyzaResultCache.set(fixtureId, { at: Date.now(), payload });
+    for (const [k, v] of analyzaResultCache) if (Date.now() - v.at > 3 * 60 * 60 * 1000) analyzaResultCache.delete(k);
+    res.json(payload);
   } catch (err: any) {
-    res.status(400).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: err.message ?? String(err) });
   }
 });
-app.post("/api/superkurzy/delete", async (req, res) => {
-  try {
-    await deleteBoost(String(req.body?.id ?? ""));
-    res.json({ ok: true });
-  } catch (err: any) {
-    res.status(400).json({ error: err.message ?? String(err) });
-  }
-});
-app.post("/api/superkurzy/settle", async (_req, res) => {
-  try {
-    res.json({ settled: await settleBoosts() });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message ?? String(err) });
-  }
-});
-startSuperkurzy();
 
 app.get("/api/daily", async (_req, res) => {
   try {
