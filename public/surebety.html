@@ -268,7 +268,7 @@ function renderList(list) {
     lastDay = d;
     return head + `
     <div class="sb${s.suspicious ? " sus" : ""}">
-      <div class="sb-top"><b>${esc(s.home)} – ${esc(s.away)}</b><span class="pct">+${pc(s.margin)}<small>istý zisk +${eur(s.margin * 100)} pri vklade 100 €</small></span></div>
+      <div class="sb-top"><b>${esc(s.home)} – ${esc(s.away)}</b><span class="pct">+${eur(s.margin * 100)}<small>+${pc(s.margin)} · istý zisk pri vklade 100 €</small></span></div>
       <div class="muted small">${esc(s.league)}${s.country ? " (" + esc(s.country) + ")" : ""} · ${when(s.date)} · ${esc(s.market)}</div>
       <div class="legs">${s.sides.map((x) => `<div class="leg">${esc(x.label)} · <b>${fmt(x.odd)}</b> <span class="muted">v ${esc(x.book)}</span></div>`).join("")}</div>
       <div class="sb-foot">${s.suspicious ? '<span class="warn">Podozrivo vysoký zisk – takmer určite chyba v kurze.</span>' : /kart/i.test(s.market) ? '<span class="warn">Karty: overte, či obe stávkovky rátajú karty rovnako (červená = 1 alebo 2 karty).</span>' : "<span></span>"}<button type="button" class="btn ghost" data-i="${i}">Do kalkulačky</button></div>

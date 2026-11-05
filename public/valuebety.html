@@ -213,7 +213,9 @@ const $ = (id) => document.getElementById(id);
 const fmt = (n, d = 2) => Number(n).toLocaleString("sk-SK", { minimumFractionDigits: d, maximumFractionDigits: d });
 const pct = (m, d = 1) => fmt(m * 100, d) + " %";
 // 5. 11. 2026 (Michal): percentá aj eurá pri vklade 100 €
-const pe = (m) => "+" + fmt(m * 100, 1) + " % · +" + fmt(m * 100) + " € pri vklade 100 €";
+const pe = (m) => "+" + fmt(m * 100) + " € pri vklade 100 € (+" + fmt(m * 100, 1) + " %)";
+/** Zisk v € pri vklade 100 € a v % zo vsadeného: u = zisk v jednotkách, n = počet stávok. */
+const eurPct = (u, n) => eur(u * 100) + (n ? " · " + (u > 0 ? "+" : u < 0 ? "−" : "") + fmt(Math.abs(u / n) * 100, 1) + " %" : "");
 const units = (n) => (n > 0 ? "+" : n < 0 ? "−" : "") + fmt(Math.abs(n)) + " j.";
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 function dayKey(iso) { return new Date(iso).toLocaleDateString("sv-SE", { timeZone: "Europe/Bratislava" }); }
@@ -322,7 +324,7 @@ function renderList(list) {
     const head = d !== last ? `<div class="day-h">${dayName(d)}<span>${n} ${plural(n)}</span></div>` : "";
     last = d;
     return head + `<div class="sb${v.suspicious ? " sus" : ""}">
-      <div class="sb-top"><b>${esc(v.home)} – ${esc(v.away)}</b><span class="pct">+${fmt(v.ev * 100, 1)} %<small>v priemere +${fmt(v.ev * 100)} € pri vklade 100 €</small></span></div>
+      <div class="sb-top"><b>${esc(v.home)} – ${esc(v.away)}</b><span class="pct">+${fmt(v.ev * 100)} €<small>+${fmt(v.ev * 100, 1)} % · v priemere pri vklade 100 €</small></span></div>
       <div class="muted small">${esc(v.league)} · ${time(v.date)} · ${esc(v.market)}</div>
       <div class="legs">
         <div class="leg">${esc(v.label)} · <b>${fmt(v.odd)}</b> <span class="muted">v ${esc(v.book)}</span></div>
@@ -379,7 +381,7 @@ function ckCalc() {
   const ok = ev >= 0.03;
   box.className = "res " + (ok ? "ok" : "no");
   box.innerHTML = `<div class="res-top">${ok ? (ev > 0.15 ? "Valuebet, ale podozrivo vysoký – overte kurz" : "Áno, je to valuebet") : ev > 0 ? "Hraničné – hodnota je príliš malá" : "Nie je to valuebet"}</div>
-    <div>V priemere ${ev >= 0 ? "+" : "−"}${fmt(Math.abs(ev * 100), 1)} % · ${ev >= 0 ? "+" : "−"}${fmt(Math.abs(ev * 100))} € pri vklade 100 €</div>${info}
+    <div>V priemere ${ev >= 0 ? "+" : "−"}${fmt(Math.abs(ev * 100))} € pri vklade 100 € (${ev >= 0 ? "+" : "−"}${fmt(Math.abs(ev * 100), 1)} %)</div>${info}
     ${ok ? `<div class="play" id="ckPlay"><label>Vklad <input type="text" inputmode="decimal" id="ckStake" placeholder="10 €"></label><label>Stávkovka <input type="text" id="ckBook" placeholder="napr. Tipsport" style="width:130px"></label><button type="button" class="btn" id="ckPlayBtn">Zahral som</button><span class="err" id="ckErr"></span></div>` : ""}`;
   try { const b = localStorage.getItem("vb-book"); if (b && $("ckBook")) $("ckBook").value = b; } catch {}
 }
@@ -423,7 +425,7 @@ function renderMine() {
   $("myKpis").innerHTML = `
     <div class="kpi"><span>Zahraných stávok</span><b>${mine.length}</b><span>${mine.length - done.length} čaká na zápas</span></div>
     <div class="kpi"><span>Vsadené spolu</span><b>${fmt(staked)} €</b><span>${won + lost ? won + " z " + (won + lost) + " vyšlo" : "–"}</span></div>
-    <div class="kpi"><span>Výsledok</span><b class="${res > 0 ? "g" : res < 0 ? "l" : ""}">${done.length ? eur(res) : "–"}</b><span>z vyhodnotených stávok</span></div>
+    <div class="kpi"><span>Výsledok</span><b class="${res > 0 ? "g" : res < 0 ? "l" : ""}">${done.length ? eur(res) : "–"}</b><span>${done.length ? "spolu " + (res > 0 ? "+" : res < 0 ? "−" : "") + fmt(Math.abs(res / done.reduce((s, e) => s + e.myStake, 0)) * 100, 1) + " % zo vsadeného" : "z vyhodnotených stávok"}</span></div>
     <div class="kpi"><span>Možná výhra (čakajúce)</span><b>${fmt(mine.filter((e) => e.status === "pending").reduce((s, e) => s + e.myStake * e.myOdd, 0))} €</b><span>ak by všetky vyšli</span></div>`;
   const byDay = {};
   for (const e of mine) (byDay[dayKey(e.date)] ??= []).push(e);
@@ -451,9 +453,9 @@ function renderLog() {
   const pending = list.length - done.length;
   $("logKpis").innerHTML = `
     <div class="kpi"><span>Vyhodnotené</span><b>${decided.length ? won + " z " + decided.length : "–"}</b><span>${pending} čaká na zápas</span></div>
-    <div class="kpi"><span>Zisk</span><b class="${profit > 0 ? "g" : profit < 0 ? "l" : ""}">${done.length ? units(profit) : "–"}</b><span>pri vklade 100 €: ${done.length ? (profit >= 0 ? "+" : "−") + fmt(Math.abs(profit * 100)) + " €" : "–"}</span></div>
+    <div class="kpi"><span>Zisk pri vklade 100 €</span><b class="${profit > 0 ? "g" : profit < 0 ? "l" : ""}">${done.length ? eur(profit * 100) : "–"}</b><span>${done.length ? "spolu " + (profit > 0 ? "+" : profit < 0 ? "−" : "") + fmt(Math.abs(profit / done.length) * 100, 1) + " % zo vsadeného · " + units(profit) : "–"}</span></div>
     <div class="kpi"><span>Priemerný kurz</span><b>${decided.length ? fmt(avgOdd) : "–"}</b><span>úspešnosť ${decided.length ? pct(won / decided.length, 0) : "–"}</span></div>
-    <div class="kpi"><span>Priemerná hodnota</span><b>${list.length ? "+" + fmt(avgEv * 100, 1) + " %" : "–"}</b><span>${list.length ? "+" + fmt(avgEv * 100) + " € pri vklade 100 € · " : ""}${list.length} ${plural(list.length)} spolu</span></div>`;
+    <div class="kpi"><span>Priemerná hodnota pri vklade 100 €</span><b>${list.length ? "+" + fmt(avgEv * 100) + " €" : "–"}</b><span>${list.length ? "+" + fmt(avgEv * 100, 1) + " % · " : ""}${list.length} ${plural(list.length)} spolu</span></div>`;
   const byDay = {};
   for (const e of list) (byDay[dayKey(e.date)] ??= []).push(e);
   const days = Object.keys(byDay).sort().reverse();
@@ -461,8 +463,8 @@ function renderLog() {
     const l = byDay[d].sort((a, b) => a.date.localeCompare(b.date) || b.ev - a.ev);
     const p = l.reduce((s, e) => s + (e.profit || 0), 0);
     const fin = l.filter((e) => e.status === "won" || e.status === "lost");
-    return `<details class="day"><summary><b>${dayName(d)}</b><span>${l.length} ${plural(l.length)}${fin.length ? " · " + fin.filter((e) => e.status === "won").length + " z " + fin.length + " vyšlo" : ""}</span><span class="${p > 0 ? "g" : p < 0 ? "l" : "muted"}">${l.some((e) => e.status !== "pending") ? units(p) : "čaká"}</span></summary>
-      ${l.map((e) => `<div class="lrow"><div class="t"><b>${esc(e.home)} – ${esc(e.away)}</b><span><span class="st ${e.status}">${ST[e.status] || "?"}</span> ${e.status === "pending" ? "" : `<span class="${e.profit > 0 ? "g" : e.profit < 0 ? "l" : "muted"}">${units(e.profit || 0)}</span>`}</span></div>
+    return `<details class="day"><summary><b>${dayName(d)}</b><span>${l.length} ${plural(l.length)}${fin.length ? " · " + fin.filter((e) => e.status === "won").length + " z " + fin.length + " vyšlo" : ""}</span><span class="${p > 0 ? "g" : p < 0 ? "l" : "muted"}">${l.some((e) => e.status !== "pending") ? eurPct(p, l.filter((e) => e.status !== "pending").length) : "čaká"}</span></summary>
+      ${l.map((e) => `<div class="lrow"><div class="t"><b>${esc(e.home)} – ${esc(e.away)}</b><span><span class="st ${e.status}">${ST[e.status] || "?"}</span> ${e.status === "pending" ? "" : `<span class="${e.profit > 0 ? "g" : e.profit < 0 ? "l" : "muted"}">${eur((e.profit || 0) * 100)}</span>`}</span></div>
         <div class="muted small">${esc(e.league)} · ${time(e.date)} · ${esc(e.market)}${e.result ? " · " + esc(e.result) : ""}</div>
         <div class="small">${esc(e.label)} <b style="color:var(--gold-hi)">${fmt(e.odd)}</b> <span class="muted">v ${esc(e.book)} · férový ${fmt(e.fairOdd)} · v priemere ${pe(e.ev)}</span></div>${playBox(e.key, e.odd, e)}</div>`).join("")}
     </details>`;
