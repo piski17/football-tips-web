@@ -133,7 +133,7 @@ select { width: 100%; font: 500 15px var(--body); color: var(--text); background
   <section class="panel">
     <div class="explain">
       <div><b>Férový kurz</b>Kurz bez marže stávkovky. Berie sa z Pinnaclu (najpresnejšia stávkovka), a ak ho nemá, z priemeru aspoň 4 stávkoviek.</div>
-      <div><b>Hodnota (číslo vpravo hore)</b>Koľko by ste v priemere zarobili na každých 100 € vsadených, keby ste takúto stávku hrali veľakrát. Napr. kurz 2,12 pri férovom 2,00 = +6 € zo 100 €. Jedna stávka pritom môže prehrať. Zapisuje sa od +3 €, nad +15 € je to skoro vždy chyba v kurze.</div>
+      <div><b>Hodnota (číslo vpravo hore)</b>V percentách a v eurách: koľko by ste v priemere zarobili pri vklade 100 €, keby ste takúto stávku hrali veľakrát. Napr. kurz 2,12 pri férovom 2,00 = +6 € zo 100 €. Jedna stávka pritom môže prehrať. Zapisuje sa od +3 €, nad +15 € je to skoro vždy chyba v kurze.</div>
       <div><b>Vklad</b>Vždy rovnaký, ideálne 1 – 2 % banku. Výsledky sa rátajú v jednotkách: 1 jednotka = váš vklad na jednu stávku.</div>
     </div>
   </section>
@@ -212,6 +212,8 @@ select { width: 100%; font: 500 15px var(--body); color: var(--text); background
 const $ = (id) => document.getElementById(id);
 const fmt = (n, d = 2) => Number(n).toLocaleString("sk-SK", { minimumFractionDigits: d, maximumFractionDigits: d });
 const pct = (m, d = 1) => fmt(m * 100, d) + " %";
+// 5. 11. 2026 (Michal): percentá aj eurá pri vklade 100 €
+const pe = (m) => "+" + fmt(m * 100, 1) + " % · +" + fmt(m * 100) + " € pri vklade 100 €";
 const units = (n) => (n > 0 ? "+" : n < 0 ? "−" : "") + fmt(Math.abs(n)) + " j.";
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 function dayKey(iso) { return new Date(iso).toLocaleDateString("sv-SE", { timeZone: "Europe/Bratislava" }); }
@@ -256,7 +258,7 @@ function oddStatus(fairOdd, raw) {
   const odd = num(raw);
   if (!(odd > 1)) return `<span class="faint">Napíšte kurz z vašej stávkovky – valuebet od ${fmt(needOdd(fairOdd))}.</span>`;
   const ev = odd / fairOdd - 1;
-  return ev >= 0.03 ? `<span class="g">✓ valuebet · v priemere +${fmt(ev * 100)} € zo 100 €</span>` : `<span class="l">✕ nie je valuebet – treba kurz aspoň ${fmt(needOdd(fairOdd))}</span>`;
+  return ev >= 0.03 ? `<span class="g">✓ valuebet · v priemere ${pe(ev)}</span>` : `<span class="l">✕ nie je valuebet – treba kurz aspoň ${fmt(needOdd(fairOdd))}</span>`;
 }
 function bulkReady() {
   return [...document.querySelectorAll("[data-bulk]")].filter((i) => { const o = num(i.value); return o > 1 && o / Number(i.dataset.fair) - 1 >= 0.03; });
@@ -320,7 +322,7 @@ function renderList(list) {
     const head = d !== last ? `<div class="day-h">${dayName(d)}<span>${n} ${plural(n)}</span></div>` : "";
     last = d;
     return head + `<div class="sb${v.suspicious ? " sus" : ""}">
-      <div class="sb-top"><b>${esc(v.home)} – ${esc(v.away)}</b><span class="pct">+${fmt(v.ev * 100)} €<small>v priemere zo 100 €</small></span></div>
+      <div class="sb-top"><b>${esc(v.home)} – ${esc(v.away)}</b><span class="pct">+${fmt(v.ev * 100, 1)} %<small>v priemere +${fmt(v.ev * 100)} € pri vklade 100 €</small></span></div>
       <div class="muted small">${esc(v.league)} · ${time(v.date)} · ${esc(v.market)}</div>
       <div class="legs">
         <div class="leg">${esc(v.label)} · <b>${fmt(v.odd)}</b> <span class="muted">v ${esc(v.book)}</span></div>
@@ -377,7 +379,7 @@ function ckCalc() {
   const ok = ev >= 0.03;
   box.className = "res " + (ok ? "ok" : "no");
   box.innerHTML = `<div class="res-top">${ok ? (ev > 0.15 ? "Valuebet, ale podozrivo vysoký – overte kurz" : "Áno, je to valuebet") : ev > 0 ? "Hraničné – hodnota je príliš malá" : "Nie je to valuebet"}</div>
-    <div>${ev >= 0 ? "V priemere +" : "V priemere −"}${fmt(Math.abs(ev * 100))} € zo 100 €</div>${info}
+    <div>V priemere ${ev >= 0 ? "+" : "−"}${fmt(Math.abs(ev * 100), 1)} % · ${ev >= 0 ? "+" : "−"}${fmt(Math.abs(ev * 100))} € pri vklade 100 €</div>${info}
     ${ok ? `<div class="play" id="ckPlay"><label>Vklad <input type="text" inputmode="decimal" id="ckStake" placeholder="10 €"></label><label>Stávkovka <input type="text" id="ckBook" placeholder="napr. Tipsport" style="width:130px"></label><button type="button" class="btn" id="ckPlayBtn">Zahral som</button><span class="err" id="ckErr"></span></div>` : ""}`;
   try { const b = localStorage.getItem("vb-book"); if (b && $("ckBook")) $("ckBook").value = b; } catch {}
 }
@@ -449,9 +451,9 @@ function renderLog() {
   const pending = list.length - done.length;
   $("logKpis").innerHTML = `
     <div class="kpi"><span>Vyhodnotené</span><b>${decided.length ? won + " z " + decided.length : "–"}</b><span>${pending} čaká na zápas</span></div>
-    <div class="kpi"><span>Zisk</span><b class="${profit > 0 ? "g" : profit < 0 ? "l" : ""}">${done.length ? units(profit) : "–"}</b><span>pri vklade 10 €: ${done.length ? (profit >= 0 ? "+" : "−") + fmt(Math.abs(profit * 10)) + " €" : "–"}</span></div>
+    <div class="kpi"><span>Zisk</span><b class="${profit > 0 ? "g" : profit < 0 ? "l" : ""}">${done.length ? units(profit) : "–"}</b><span>pri vklade 100 €: ${done.length ? (profit >= 0 ? "+" : "−") + fmt(Math.abs(profit * 100)) + " €" : "–"}</span></div>
     <div class="kpi"><span>Priemerný kurz</span><b>${decided.length ? fmt(avgOdd) : "–"}</b><span>úspešnosť ${decided.length ? pct(won / decided.length, 0) : "–"}</span></div>
-    <div class="kpi"><span>Priemerná hodnota zo 100 €</span><b>${list.length ? "+" + fmt(avgEv * 100) + " €" : "–"}</b><span>${list.length} ${plural(list.length)} spolu</span></div>`;
+    <div class="kpi"><span>Priemerná hodnota</span><b>${list.length ? "+" + fmt(avgEv * 100, 1) + " %" : "–"}</b><span>${list.length ? "+" + fmt(avgEv * 100) + " € pri vklade 100 € · " : ""}${list.length} ${plural(list.length)} spolu</span></div>`;
   const byDay = {};
   for (const e of list) (byDay[dayKey(e.date)] ??= []).push(e);
   const days = Object.keys(byDay).sort().reverse();
@@ -462,7 +464,7 @@ function renderLog() {
     return `<details class="day"><summary><b>${dayName(d)}</b><span>${l.length} ${plural(l.length)}${fin.length ? " · " + fin.filter((e) => e.status === "won").length + " z " + fin.length + " vyšlo" : ""}</span><span class="${p > 0 ? "g" : p < 0 ? "l" : "muted"}">${l.some((e) => e.status !== "pending") ? units(p) : "čaká"}</span></summary>
       ${l.map((e) => `<div class="lrow"><div class="t"><b>${esc(e.home)} – ${esc(e.away)}</b><span><span class="st ${e.status}">${ST[e.status] || "?"}</span> ${e.status === "pending" ? "" : `<span class="${e.profit > 0 ? "g" : e.profit < 0 ? "l" : "muted"}">${units(e.profit || 0)}</span>`}</span></div>
         <div class="muted small">${esc(e.league)} · ${time(e.date)} · ${esc(e.market)}${e.result ? " · " + esc(e.result) : ""}</div>
-        <div class="small">${esc(e.label)} <b style="color:var(--gold-hi)">${fmt(e.odd)}</b> <span class="muted">v ${esc(e.book)} · férový ${fmt(e.fairOdd)} · v priemere +${fmt(e.ev * 100)} € zo 100 €</span></div>${playBox(e.key, e.odd, e)}</div>`).join("")}
+        <div class="small">${esc(e.label)} <b style="color:var(--gold-hi)">${fmt(e.odd)}</b> <span class="muted">v ${esc(e.book)} · férový ${fmt(e.fairOdd)} · v priemere ${pe(e.ev)}</span></div>${playBox(e.key, e.odd, e)}</div>`).join("")}
     </details>`;
   }).join("") : `<p class="empty">${logScope === "mine" && !myBooks.length ? "Najprv si na stránke Surebety vyberte svoje stávkovky." : "Zatiaľ nič zapísané. Prvé valuebety pribudnú po najbližšom prehľadaní kurzov."}</p>`;
 }
