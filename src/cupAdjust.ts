@@ -1,4 +1,4 @@
-import { getLeagueAverages, getRecentGoalsAnyCompetition, TeamExtendedStatsAverages } from "./apiClient";
+import { getLeagueAverages, getRecentGoalsAnyCompetition, getTeamExtendedStatsAverages, TeamExtendedStatsAverages, VenueStats } from "./apiClient";
 import { LeagueAverages, TeamStatistics } from "./types";
 
 /**
@@ -136,6 +136,35 @@ export async function applyCupGoals(
     as = b.stats;
     ae = { ...awayExt, goalsFor: b.forT, goalsAgainst: b.agT, goalsGames: ag.played.total };
   }
+  // Rohy a karty v pohároch (5. 11. 2026, Michalovo rozhodnutie): z posledných 10 zápasov tímu v domácej
+  // lige (nie z pár pohárových zápasov), rohy prepočítané silou líg – silnejší tím má viac rohov a súperovi
+  // ich dovolí menej. Karty bez prepočtu. Ak domácu ligu nepoznáme, ostáva pôvodný výpočet.
+  const domExt = (teamId: number, g: Goals | null) =>
+    g?.domesticLeagueId ? getTeamExtendedStatsAverages(g.domesticLeagueId, season, teamId, 10, asOf).catch(() => null) : Promise.resolve(null);
+  const [hd, ad] = await Promise.all([domExt(homeId, hg), domExt(awayId, ag)]);
+  const mul = (x: number | null | undefined, k: number) => (x == null ? x ?? null : x * k);
+  const venue = (v: VenueStats | undefined, d: VenueStats | undefined, k: number): VenueStats | undefined =>
+    v && d && d.games > 0
+      ? { ...v, corners: mul(d.corners, k), cornersAgainst: mul(d.cornersAgainst, 1 / k), cards: d.cards, cardsAgainst: d.cardsAgainst }
+      : v;
+  const cornersCards = (e: TeamExtendedStatsAverages, d: TeamExtendedStatsAverages | null, k: number): TeamExtendedStatsAverages => {
+    if (!d) return e;
+    const out = { ...e };
+    if (d.corners != null) {
+      out.corners = d.corners * k;
+      out.cornersAgainst = mul(d.cornersAgainst, 1 / k);
+    }
+    if (d.cards != null) {
+      out.cards = d.cards;
+      out.cardsAgainst = d.cardsAgainst ?? null;
+    }
+    out.venueHome = venue(e.venueHome, d.venueHome, k);
+    out.venueAway = venue(e.venueAway, d.venueAway, k);
+    return out;
+  };
+  he = cornersCards(he, hd, f);
+  ae = cornersCards(ae, ad, 1 / f);
+
   const pct = (x: number) => `${x >= 1 ? "+" : "−"}${Math.abs(Math.round((x - 1) * 100))} %`;
   const note = hg && ag && f !== 1
     ? `Sila líg: domáci ${sh}, hostia ${sa} (Anglicko = 100) – góly domácich ${pct(f * f)}, hostí ${pct(1 / (f * f))}.`
