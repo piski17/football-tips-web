@@ -315,6 +315,8 @@ export interface SavedTip {
   manualEntry?: boolean;
   /** Tip doplnený zo „Všetkých zápasov – automaticky“ až po výkope (31. 10. 2026) – klientom nešiel, do Telegramu sa neposiela. */
   lateAdd?: boolean;
+  /** 5. 11. 2026: doplnené po výkope priamo z analýzy zápasu (pred výkopom server nič nezapísal). */
+  lateFromAnalysis?: boolean;
   /** Id automatického tipu, z ktorého bol tip doplnený. */
   autoId?: string;
   /** Tip obnovený z denného súhrnu (18. 10. 2026) – dôvera modelu nie je známa, ak nebola v texte tipu. */

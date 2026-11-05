@@ -1091,9 +1091,15 @@ function renderAnalysis(r, root, opts = {}) {
     };
   }
   if (started) {
-    root.querySelectorAll("[data-bet-idx], [data-poss]").forEach((b) => {
+    root.querySelectorAll("[data-poss]").forEach((b) => {
       b.disabled = true;
       b.title = MATCH_STARTED_TEXT;
+    });
+    // 5. 11. 2026 (Michal): tip z analýzy sa dá pridať aj po výkope – ako zabudnutý, len do sledovaných.
+    root.querySelectorAll("[data-bet-idx]").forEach((b) => {
+      if (b.dataset.saved === "1") return;
+      b.textContent = "+ Pridať (po výkope)";
+      b.title = "Zápas už začal – tip sa pridá do sledovaných so značkou „doplnené po výkope“, klientom nejde.";
     });
     void renderLateAdd(f, root.querySelector("[data-late-add]"));
   }
@@ -1111,7 +1117,7 @@ async function renderLateAdd(f, box) {
     entries = (data.entries || []).sort((a, b) => b.probability - a.probability);
     if (Array.isArray(tips)) for (const t of tips) { if (t.autoId) autoSavedKeys.add(t.autoId); autoSavedKeys.add(`${t.fixtureId}|${t.market}|${t.selection}`); }
     if (!(data.fixtures || []).length) {
-      box.innerHTML = `<p class="faint small">Tento zápas server pred výkopom neprešiel (súťaž nie je medzi automaticky sledovanými alebo bol zápas pridaný neskoro), takže tip sa doplniť nedá.</p>`;
+      box.innerHTML = `<p class="faint small">Tento zápas server pred výkopom neprešiel. Tip z analýzy nižšie môžeš pridať tlačidlom „+ Pridať (po výkope)“ – pôjde do sledovaných so značkou „doplnené po výkope“.</p>`;
       return;
     }
   } catch (err) {
@@ -1119,7 +1125,7 @@ async function renderLateAdd(f, box) {
     return;
   }
   if (!entries.length) {
-    box.innerHTML = `<p class="faint small">Model pred výkopom v tomto zápase nenašiel tip, ktorý by odporučil – nie je čo doplniť.</p>`;
+    box.innerHTML = `<p class="faint small">Pred výkopom model v tomto zápase tip neodporučil. Tip z analýzy nižšie (počítaný teraz) môžeš pridať tlačidlom „+ Pridať (po výkope)“ – pôjde do sledovaných so značkou „doplnené po výkope“.</p>`;
     return;
   }
   const res = { won: `<b class="g">vyšiel</b>`, lost: `<b class="l">nevyšiel</b>`, void: "vrátený", pending: `<span class="faint">čaká</span>` };
@@ -1211,7 +1217,7 @@ function wireSaveTipButtons(r, root) {
   const msgEl = root.querySelector("[data-save-msg]");
   root.querySelectorAll("[data-bet-idx]").forEach((btn) => {
     btn.onclick = async () => {
-      if (matchHasStarted(r.fixture)) { showToast(MATCH_STARTED_TEXT); return; }
+      const late = matchHasStarted(r.fixture);
       const bet = (r.bestBets || [])[parseInt(btn.dataset.betIdx ?? "0", 10)];
       if (!bet) return;
       // 31. 10. 2026 (Michal): ako v Tipoch dňa – ak má tip kurz z API (aspoň minimálny), uloží sa s ním bez pýtania.
@@ -1220,15 +1226,16 @@ function wireSaveTipButtons(r, root) {
       if (api != null && !confirmHighValue(bet, api)) return;
       const realOdds = api ?? (await askRealOdds(bet));
       if (realOdds == null) return;
-      const tip = buildTip(r, bet, realOdds);
+      // 5. 11. 2026 (Michal): po výkope sa tip z analýzy pridá ako zabudnutý – len do sledovaných.
+      const tip = buildTip(r, bet, realOdds, late ? { lateAdd: true } : {});
       btn.disabled = true;
       try {
         await postJson("/api/tips", tip);
         btn.textContent = "✓ Uložené";
         btn.dataset.saved = "1";
         autoSavedKeys.add(tipKey(r, bet));
-        msgEl.innerHTML = `✓ Tip uložený (${escapeHtml(bet.market)}: ${escapeHtml(translateNamesInText(bet.selection, r.fixture.homeTeam.name, r.fixture.awayTeam.name))})`;
-        await maybeOfferTelegram(tip.id, tip);
+        msgEl.innerHTML = `✓ ${late ? "Pridané medzi sledované tipy · doplnené po výkope" : "Tip uložený"} (${escapeHtml(bet.market)}: ${escapeHtml(translateNamesInText(bet.selection, r.fixture.homeTeam.name, r.fixture.awayTeam.name))})`;
+        if (!late) await maybeOfferTelegram(tip.id, tip);
       } catch (err) {
         msgEl.innerHTML = `<span class="loss">Uloženie zlyhalo: ${escapeHtml(err.message)}</span>`;
         btn.disabled = false;
@@ -2948,7 +2955,9 @@ function tipBadges(t) {
   if (isOverrideTip(t)) b += ` <span class="tag warn" title="Vyradené kontrolou kurzu, pridané ručne">⚠️ mimo filtra</span>`;
   if (t.manualEntry) b += ` <span class="tag" title="Tip doplnený ručne po zápase">✍ doplnené ručne</span>`;
   if (t.removedLeague) b += ` <span class="tag" title="Súťaž bola vyradená 2. 11. 2026 – tip sa neráta do štatistík ani na web.">vyradená súťaž · nerátá sa</span>`;
-  if (t.lateAdd) b += ` <span class="tag" title="Doplnené po výkope zo Všetkých zápasov – automaticky (dôvera a kurz zapísané asi hodinu pred výkopom). Klientom nešiel.">⏱ doplnené po výkope</span>`;
+  if (t.lateAdd) b += t.lateFromAnalysis
+    ? ` <span class="tag" title="Doplnené po výkope priamo z analýzy zápasu (pred výkopom server nič nezapísal). Klientom nešiel, len sledovať.">⏱ doplnené po výkope</span>`
+    : ` <span class="tag" title="Doplnené po výkope zo Všetkých zápasov – automaticky (dôvera a kurz zapísané asi hodinu pred výkopom). Klientom nešiel.">⏱ doplnené po výkope</span>`;
   if (t.edited) b += ` <span class="tag" title="Výsledok alebo kurz bol ručne opravený">✎ upravené</span>`;
   if (t.strongOfDay) b += ` <span class="tag gold" title="Silný tip dňa">⭐ silný tip dňa</span>`;
   if (t.archived) b += ` <span class="tag" title="Skrytý tip – v štatistikách aj na prezentácii ostáva">skrytý</span>`;

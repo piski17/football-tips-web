@@ -1006,7 +1006,11 @@ app.post("/api/tips", async (req, res) => {
     const tip: SavedTip = req.body;
     // Ručne doplnený odohraný tip (už s výsledkom) smie mať dátum v minulosti.
     const isManualResult = tip.manualEntry === true && ["won", "lost", "void"].includes(tip.status);
-    if (!isManualResult && tipHasStartedMatch(tip)) {
+    // 5. 11. 2026 (Michal): zabudnutý tip k začatému/odohranému zápasu sa dá pridať aj priamo z analýzy
+    // (keď server pred výkopom nič nezapísal). Ide len do sledovaných so značkou lateAdd + lateFromAnalysis.
+    const lateFromAnalysis = !isManualResult && tip.lateAdd === true && !(tip.legs && tip.legs.length) && tipHasStartedMatch(tip);
+    if (!lateFromAnalysis) { tip.lateAdd = undefined; tip.lateFromAnalysis = undefined; }
+    if (!isManualResult && !lateFromAnalysis && tipHasStartedMatch(tip)) {
       res.status(400).json({ error: MATCH_STARTED_MESSAGE });
       return;
     }
@@ -1021,7 +1025,7 @@ app.post("/api/tips", async (req, res) => {
       const taken = !!tip.legs?.length || (await listTips()).some((t) => t.id !== tip.id && t.strongOfDay && t.status !== "void" && dayKeySk(new Date(t.matchDate)) === day);
       tip.strongOfDay = taken ? undefined : true;
     }
-    if (!isManualResult) await addMeasurement(tip);
+    if (!isManualResult && !lateFromAnalysis) await addMeasurement(tip);
     // Skúšobné pásmo 65 – 67 %: tip sa automaticky uloží len na sledovanie (bez Telegramu a štatistík).
     // Od 28. 10. 2026 má v Histórii tipov vlastnú skupinu (watchBand).
     if (!(tip.legs && tip.legs.length) && !tip.manualEntry && typeof tip.probability === "number" && tip.probability < WATCH_BELOW_PROBABILITY) {
@@ -1056,8 +1060,17 @@ app.post("/api/tips", async (req, res) => {
     if (!(tip.legs && tip.legs.length) && typeof tip.odds === "number" && tip.odds > 1 && tip.odds < MIN_ODDS - 1e-9) {
       tip.watchOnly = true;
     }
+    if (lateFromAnalysis) {
+      tip.lateAdd = true;
+      tip.lateFromAnalysis = true;
+      tip.lateMoved = true;
+      tip.watchOnly = true;
+      tip.strongOfDay = undefined;
+    }
     await saveTip(tip);
-    res.json({ ok: true, telegramAvailable: isTelegramEnabled(), watchOnly: tip.watchOnly === true });
+    // Odohraný zápas sa vyhodnotí hneď (inak do 15 minút sám).
+    if (lateFromAnalysis) await checkPendingResults().catch(() => {});
+    res.json({ ok: true, telegramAvailable: isTelegramEnabled() && !lateFromAnalysis, watchOnly: tip.watchOnly === true, lateAdd: lateFromAnalysis });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
