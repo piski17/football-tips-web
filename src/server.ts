@@ -104,7 +104,9 @@ function statsTips(tips: SavedTip[]): SavedTip[] {
   // do štatistík, na web ani do vyhodnotení pre členov.
   // Tip doplnený po výkope zo „Všetkých zápasov – automaticky“: klientom nikdy neprišiel, od 4. 11. 2026
   // (Michal) sa do štatistík neráta vôbec (predtým len pri SALES_OPEN=true).
-  return dedupeTips(tips).filter((t) => !EXCLUDED_STATS_MARKETS.includes(t.market) && !t.watchOnly && !t.lateAdd /* 4. 11. 2026: doplnené po výkope sa nerátajú nikdy */ && !isRemovedLeagueTip(t));
+  // 5. 11. 2026 (Michal): znova sa ráta normálne, ak prejde pravidlami – nerátá sa až po spustení predaja (SALES_OPEN=true).
+  const salesOpen = process.env.SALES_OPEN === "true";
+  return dedupeTips(tips).filter((t) => !EXCLUDED_STATS_MARKETS.includes(t.market) && !t.watchOnly && !(t.lateAdd && salesOpen) && !isRemovedLeagueTip(t));
 }
 
 /**
@@ -1007,7 +1009,7 @@ app.post("/api/tips", async (req, res) => {
     // Ručne doplnený odohraný tip (už s výsledkom) smie mať dátum v minulosti.
     const isManualResult = tip.manualEntry === true && ["won", "lost", "void"].includes(tip.status);
     // 5. 11. 2026 (Michal): zabudnutý tip k začatému/odohranému zápasu sa dá pridať aj priamo z analýzy
-    // (keď server pred výkopom nič nezapísal). Ide len do sledovaných so značkou lateAdd + lateFromAnalysis.
+    // (keď server pred výkopom nič nezapísal). Rovnaké pravidlá ako ostatné tipy, značka lateAdd + lateFromAnalysis.
     const lateFromAnalysis = !isManualResult && tip.lateAdd === true && !(tip.legs && tip.legs.length) && tipHasStartedMatch(tip);
     if (!lateFromAnalysis) { tip.lateAdd = undefined; tip.lateFromAnalysis = undefined; }
     if (!isManualResult && !lateFromAnalysis && tipHasStartedMatch(tip)) {
@@ -1061,10 +1063,9 @@ app.post("/api/tips", async (req, res) => {
       tip.watchOnly = true;
     }
     if (lateFromAnalysis) {
+      // Rovnaké pravidlá ako pri ostatných tipoch (vyššie); ak prejde, ide normálne do Histórie tipov.
       tip.lateAdd = true;
       tip.lateFromAnalysis = true;
-      tip.lateMoved = true;
-      tip.watchOnly = true;
       tip.strongOfDay = undefined;
     }
     await saveTip(tip);
@@ -3325,8 +3326,8 @@ app.post("/api/auto-tips/:id/add", async (req, res) => {
     else if (odds < MIN_ODDS) reason = `kurz pod ${String(MIN_ODDS).replace(".", ",")}`;
     else if (ev < MIN_EXPECTED_VALUE) reason = "hodnota pod +5 %";
     else if (ev > SUSPICIOUS_EXPECTED_VALUE) reason = "hodnota nad +25 %";
-    // 4. 11. 2026 (Michal): tip doplnený po výkope klientom nešiel – len do sledovaných.
-    if (!reason && tip.lateAdd) { reason = "doplnené po výkope – len sledovať"; tip.lateMoved = true; }
+    // 4. 11. 2026 (Michal): tip doplnený po výkope len do sledovaných – 5. 11. 2026 (Michal) ZRUŠENÉ:
+    // ak prejde pravidlami, pridá sa normálne do Histórie tipov (so značkou lateAdd).
     if (reason) tip.watchOnly = true;
     await saveTip(tip);
     // Odohraný zápas sa vyhodnotí hneď (inak do 15 minút sám).

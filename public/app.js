@@ -1099,7 +1099,7 @@ function renderAnalysis(r, root, opts = {}) {
     root.querySelectorAll("[data-bet-idx]").forEach((b) => {
       if (b.dataset.saved === "1") return;
       b.textContent = "+ Pridať (po výkope)";
-      b.title = "Zápas už začal – tip sa pridá do sledovaných so značkou „doplnené po výkope“, klientom nejde.";
+      b.title = "Zápas už začal – tip prejde rovnakými pravidlami ako ostatné a dostane značku „doplnené po výkope“.";
     });
     void renderLateAdd(f, root.querySelector("[data-late-add]"));
   }
@@ -1117,7 +1117,7 @@ async function renderLateAdd(f, box) {
     entries = (data.entries || []).sort((a, b) => b.probability - a.probability);
     if (Array.isArray(tips)) for (const t of tips) { if (t.autoId) autoSavedKeys.add(t.autoId); autoSavedKeys.add(`${t.fixtureId}|${t.market}|${t.selection}`); }
     if (!(data.fixtures || []).length) {
-      box.innerHTML = `<p class="faint small">Tento zápas server pred výkopom neprešiel. Tip z analýzy nižšie môžeš pridať tlačidlom „+ Pridať (po výkope)“ – pôjde do sledovaných so značkou „doplnené po výkope“.</p>`;
+      box.innerHTML = `<p class="faint small">Tento zápas server pred výkopom neprešiel. Tip z analýzy nižšie môžeš pridať tlačidlom „+ Pridať (po výkope)“ – platia rovnaké pravidlá ako pri ostatných tipoch, dostane značku „doplnené po výkope“.</p>`;
       return;
     }
   } catch (err) {
@@ -1125,7 +1125,7 @@ async function renderLateAdd(f, box) {
     return;
   }
   if (!entries.length) {
-    box.innerHTML = `<p class="faint small">Pred výkopom model v tomto zápase tip neodporučil. Tip z analýzy nižšie (počítaný teraz) môžeš pridať tlačidlom „+ Pridať (po výkope)“ – pôjde do sledovaných so značkou „doplnené po výkope“.</p>`;
+    box.innerHTML = `<p class="faint small">Pred výkopom model v tomto zápase tip neodporučil. Tip z analýzy nižšie (počítaný teraz) môžeš pridať tlačidlom „+ Pridať (po výkope)“ – platia rovnaké pravidlá ako pri ostatných tipoch, dostane značku „doplnené po výkope“.</p>`;
     return;
   }
   const res = { won: `<b class="g">vyšiel</b>`, lost: `<b class="l">nevyšiel</b>`, void: "vrátený", pending: `<span class="faint">čaká</span>` };
@@ -1230,11 +1230,11 @@ function wireSaveTipButtons(r, root) {
       const tip = buildTip(r, bet, realOdds, late ? { lateAdd: true } : {});
       btn.disabled = true;
       try {
-        await postJson("/api/tips", tip);
+        const saved = await postJson("/api/tips", tip);
         btn.textContent = "✓ Uložené";
         btn.dataset.saved = "1";
         autoSavedKeys.add(tipKey(r, bet));
-        msgEl.innerHTML = `✓ ${late ? "Pridané medzi sledované tipy · doplnené po výkope" : "Tip uložený"} (${escapeHtml(bet.market)}: ${escapeHtml(translateNamesInText(bet.selection, r.fixture.homeTeam.name, r.fixture.awayTeam.name))})`;
+        msgEl.innerHTML = `✓ ${late ? (saved && saved.watchOnly ? "Pridané medzi sledované tipy (nespĺňa pravidlá) · doplnené po výkope" : "Pridané do Histórie tipov · doplnené po výkope") : "Tip uložený"} (${escapeHtml(bet.market)}: ${escapeHtml(translateNamesInText(bet.selection, r.fixture.homeTeam.name, r.fixture.awayTeam.name))})`;
         if (!late) await maybeOfferTelegram(tip.id, tip);
       } catch (err) {
         msgEl.innerHTML = `<span class="loss">Uloženie zlyhalo: ${escapeHtml(err.message)}</span>`;
@@ -2956,7 +2956,7 @@ function tipBadges(t) {
   if (t.manualEntry) b += ` <span class="tag" title="Tip doplnený ručne po zápase">✍ doplnené ručne</span>`;
   if (t.removedLeague) b += ` <span class="tag" title="Súťaž bola vyradená 2. 11. 2026 – tip sa neráta do štatistík ani na web.">vyradená súťaž · nerátá sa</span>`;
   if (t.lateAdd) b += t.lateFromAnalysis
-    ? ` <span class="tag" title="Doplnené po výkope priamo z analýzy zápasu (pred výkopom server nič nezapísal). Klientom nešiel, len sledovať.">⏱ doplnené po výkope</span>`
+    ? ` <span class="tag" title="Doplnené po výkope priamo z analýzy zápasu (pred výkopom server nič nezapísal). Klientom nešiel.">⏱ doplnené po výkope</span>`
     : ` <span class="tag" title="Doplnené po výkope zo Všetkých zápasov – automaticky (dôvera a kurz zapísané asi hodinu pred výkopom). Klientom nešiel.">⏱ doplnené po výkope</span>`;
   if (t.edited) b += ` <span class="tag" title="Výsledok alebo kurz bol ručne opravený">✎ upravené</span>`;
   if (t.strongOfDay) b += ` <span class="tag gold" title="Silný tip dňa">⭐ silný tip dňa</span>`;
