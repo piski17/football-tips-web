@@ -62,7 +62,7 @@ function translateLeagueName(name) {
  * najvyššie ligy, druhé ligy, Liga majstrov; staré súťaže (už sa netipujú) na koniec ako „Vyradené“.
  * Kľúč je názov ligy z API (tak, ako je uložený pri tipe).
  */
-const LEAGUE_GROUPS = ["Najvyššie ligy", "Druhé ligy", "Európske poháre", "Vyradené súťaže"];
+const LEAGUE_GROUPS = ["Najvyššie ligy", "Druhé ligy", "Liga majstrov", "Vyradené súťaže"];
 const LEAGUE_ORDER = [
   ["Premier League", "Anglicko", 0],
   ["La Liga", "Španielsko", 0],
@@ -81,9 +81,6 @@ const LEAGUE_ORDER = [
   ["Segunda División", "Španielsko", 1],
   ["Ligue 2", "Francúzsko", 1],
   ["UEFA Champions League", "", 2],
-  ["UEFA Europa League", "", 2],
-  ["UEFA Europa Conference League", "", 2],
-  ["UEFA Conference League", "", 2],
 ];
 const LEAGUE_INFO = new Map(LEAGUE_ORDER.map(([name, country, group], i) => [name, { country, group, order: i }]));
 // Aj podľa slovenského názvu (časť tipov má uložený už preložený názov).
