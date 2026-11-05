@@ -339,6 +339,8 @@ export interface SavedTip {
   band70Moved?: boolean;
   /** 4. 11. 2026: tip doplnený po výkope presunutý do sledovaných (klientom nešiel, do štatistík sa neráta). */
   lateMoved?: boolean;
+  /** 5. 11. 2026: vrátený zo sledovaných do štatistík (prešiel by klientom). */
+  lateRestored?: boolean;
   /** Tip skrytý z histórie tipov - naďalej sa ráta do štatistík a zobrazuje na prezentačnej stránke. */
   archived?: boolean;
   /** Výsledok alebo kurz bol ručne opravený v histórii. */

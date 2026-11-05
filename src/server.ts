@@ -44,7 +44,7 @@ import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, Market
 import { newModelInputs } from "./newModel";
 import { computeMarketHealth, marketChangesText, clvOf, CLV_TIE } from "./marketHealth";
 import { LeaguePreset, SavedTip } from "./types";
-import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once, moveLateAddsOnce } from "./tipsStore";
+import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once, moveLateAddsOnce, restoreLateMovedOnce } from "./tipsStore";
 import { computeTicketStatus, settleBet, settleFixtureBets, tipHasStartedMatch, MATCH_STARTED_MESSAGE, buildTipEdit } from "./tipEvaluator";
 import {
   sendTipToTelegram,
@@ -3810,5 +3810,14 @@ app.listen(PORT, () => {
   // 4. 11. 2026: tipy doplnené po výkope raz presunie do sledovaných.
   void moveLateAddsOnce()
     .then((n) => { if (n) console.log(`Doplnené po výkope: presunuté do sledovaných ${n}`); })
-    .catch((err) => console.error("Presun tipov doplnených po výkope zlyhal:", err));
+    .catch((err) => console.error("Presun tipov doplnených po výkope zlyhal:", err))
+    // 5. 11. 2026 (Michal): tie, ktoré by prešli klientom, raz vráti späť do štatistík.
+    .then(() => restoreLateMovedOnce((t) => {
+      if (t.legs?.length || t.strictFail || t.watchBand || typeof t.probability !== "number" || typeof t.odds !== "number") return false;
+      const ev = (t.probability / 100) * t.odds;
+      return t.probability >= MIN_PROBABILITY && t.probability <= MAX_PROBABILITY && t.odds >= MIN_ODDS - 1e-9
+        && ev >= MIN_EXPECTED_VALUE && ev <= SUSPICIOUS_EXPECTED_VALUE && (!STRICT_CHECK_ON || passesStrict(t, t.odds));
+    }))
+    .then((r) => { if (r && (r.restored || r.kept)) console.log(`Doplnené po výkope: vrátené do štatistík ${r.restored}, ostáva v sledovaných ${r.kept}`); })
+    .catch((err) => console.error("Návrat tipov doplnených po výkope zlyhal:", err));
 });

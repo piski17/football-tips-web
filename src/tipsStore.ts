@@ -280,6 +280,37 @@ export async function restoreBelow160AndBand70Once(minProb = 70): Promise<{ rest
  * Návrat: tipom s lateMoved zrušiť watchOnly.
  */
 const LATE_DONE_KEY = "tipradar_migr_late_done";
+
+/**
+ * 5. 11. 2026 (Michal): návrat – tipy, ktoré 4. 11. presunul moveLateAddsOnce (lateMoved), sa raz vrátia do štatistík,
+ * ale LEN ak by prešli klientom podľa dnešných pravidiel (pass). Ostatné ostávajú v sledovaných. Nič sa nemaže.
+ */
+const LATE_RESTORE_KEY = "tipradar_migr_late_restore_done";
+export async function restoreLateMovedOnce(pass: (t: SavedTip) => boolean): Promise<{ restored: number; kept: number }> {
+  if (!useUpstash) return { restored: 0, kept: 0 };
+  const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };
+  const done = (await upstashClient().get(`${UPSTASH_URL}/get/${LATE_RESTORE_KEY}`, auth)).data?.result;
+  if (done) return { restored: 0, kept: 0 };
+  return withWriteLock(async () => {
+    const tips = await readAll();
+    let restored = 0;
+    let kept = 0;
+    for (const t of tips) {
+      if (!t.lateMoved || !t.lateAdd || !t.watchOnly) continue;
+      if (pass(t)) {
+        t.watchOnly = undefined;
+        t.lateMoved = undefined;
+        t.lateRestored = true;
+        restored++;
+      } else kept++;
+    }
+    if (restored) await writeAll(tips);
+    await upstashClient().post(`${UPSTASH_URL}/set/${LATE_RESTORE_KEY}`, new Date().toISOString(), {
+      headers: { ...auth.headers, "Content-Type": "text/plain" },
+    });
+    return { restored, kept };
+  });
+}
 export async function moveLateAddsOnce(): Promise<number> {
   if (!useUpstash) return 0;
   const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };
