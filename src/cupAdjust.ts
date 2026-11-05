@@ -46,8 +46,8 @@ export function leagueStrength(leagueId: number | null): number | null {
   return LEAGUE_STRENGTH[leagueId] ?? UNKNOWN_LEAGUE_STRENGTH;
 }
 
-/** Liga majstrov, Európska liga */
-export const CUP_LEAGUE_IDS = [2, 3];
+/** Liga majstrov, Európska liga, Konferenčná liga (od 5. 11. 2026) */
+export const CUP_LEAGUE_IDS = [2, 3, 848];
 
 type Goals = NonNullable<Awaited<ReturnType<typeof getRecentGoalsAnyCompetition>>>;
 

@@ -204,7 +204,7 @@ const EARLY_SEASON_CALIBRATION: Record<string, number> = {
  * Góly v 2. polčase sedeli, tie ostávajú.
  */
 const CUP_GOAL_CALIBRATION: Record<string, number> = { goly: 0.85, goly_timu: 0.85, goly_1p: 0.85 };
-const CUP_LEAGUE_IDS = [2, 3];
+const CUP_LEAGUE_IDS = [2, 3, 848]; // LM, EL, Konferenčná liga
 /** Koeficient kalibrácie pre trh pri danom počte odohraných zápasov v sezóne. */
 function calibrationFactor(category: string, gamesPlayed: number, leagueId?: number): number {
   const early = clamp((15 - gamesPlayed) / 10, 0, 1);

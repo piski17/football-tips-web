@@ -8,7 +8,7 @@ import { getFixtureCornersAndCards } from "./apiClient";
 // Superkurzy / boosty (3. 11. 2026, Michal): slovenské stávkovky (Tipsport, Fortuna, Niké…) dávajú denne
 // „zvýšené kurzy“. Tu sa superkurz porovná s férovým kurzom (Pinnacle bez marže, inak medián stávkoviek)
 // – hrať sa oplatí len ten, ktorý je nad férovým kurzom. Zapísané superkurzy sa po zápase samy vyhodnotia.
-// Len dnešné zápasy 17 súťaží TipRadaru (tie isté kurzy ako surebety a valuebety).
+// Len dnešné zápasy 19 súťaží TipRadaru (tie isté kurzy ako surebety a valuebety).
 // Kombinované superkurzy (výhra + góly, strelec…) sa overiť nedajú – API na ne nemá férový kurz.
 
 const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL;
