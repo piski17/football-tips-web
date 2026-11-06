@@ -169,8 +169,8 @@ const MARKET_BLEND = 0.3;
  */
 const STRICT_BLEND = 0.4;
 /** 31. 10. 2026 (Michal): kontrola 60 / 40 VYPNUTÁ – tipy, ktoré by neprešli, idú klientom normálne a len sa označia (strictWouldFail) na porovnanie. */
-// 6. 11. 2026 18:14 (Michal): klientom stačí 70 / 30, kontrola 60 / 40 sa len zapisuje (strictWouldFail) – porovnanie 1. 12.
-export const STRICT_CHECK_ON = false;
+// 6. 11. 2026 18:14 krátko vypnutá, 18:23 (Michal) ZNOVA ZAPNUTÁ: tip musí prejsť aj 60 / 40.
+export const STRICT_CHECK_ON = true;
 /** Prejde tip aj pri 60 / 40? Rovnaké pravidlá: pásmo dôvery a hodnota aspoň +5 % pri danom kurze. */
 export function passesStrict(t: { strictProbability?: number }, odds: number | null | undefined): boolean {
   if (typeof t.strictProbability !== "number" || typeof odds !== "number" || !(odds > 1)) return true;

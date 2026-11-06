@@ -369,3 +369,35 @@ export async function returnStrictFailedOnce(pass: (t: SavedTip) => boolean): Pr
     return { returned, kept };
   });
 }
+
+/**
+ * 6. 11. 2026 18:23 (Michal): kontrola 60 / 40 znova zapnutá. Beží raz pri štarte: tipy vrátené pri jej vypnutí
+ * (strictReturned) a zverejnené tipy uložené počas vypnutia, ktoré by 60 / 40 neprešli (strictWouldFail),
+ * idú späť do sledovaných (skupina 60 / 40). Nič sa nemaže.
+ */
+const STRICT_ON_KEY = "tipradar_migr_strict_on_done";
+export async function moveStrictFailedBackOnce(): Promise<number> {
+  if (!useUpstash) return 0;
+  const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };
+  const done = (await upstashClient().get(`${UPSTASH_URL}/get/${STRICT_ON_KEY}`, auth)).data?.result;
+  if (done) return 0;
+  return withWriteLock(async () => {
+    const tips = await readAll();
+    let moved = 0;
+    for (const t of tips) {
+      if ((t.legs && t.legs.length) || t.watchOnly) continue;
+      if (!t.strictReturned && !t.strictWouldFail) continue;
+      t.watchOnly = true;
+      t.strictFail = true;
+      t.strictReturned = undefined;
+      t.strictWouldFail = undefined;
+      t.strongOfDay = undefined;
+      moved++;
+    }
+    if (moved) await writeAll(tips);
+    await upstashClient().post(`${UPSTASH_URL}/set/${STRICT_ON_KEY}`, new Date().toISOString(), {
+      headers: { ...auth.headers, "Content-Type": "text/plain" },
+    });
+    return moved;
+  });
+}

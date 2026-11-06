@@ -43,7 +43,7 @@ import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, Market
 import { newModelInputs } from "./newModel";
 import { computeMarketHealth, marketChangesText, clvOf, CLV_TIE } from "./marketHealth";
 import { LeaguePreset, SavedTip } from "./types";
-import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once, moveLateAddsOnce, restoreLateMovedOnce, returnStrictFailedOnce } from "./tipsStore";
+import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once, moveLateAddsOnce, restoreLateMovedOnce, returnStrictFailedOnce, moveStrictFailedBackOnce } from "./tipsStore";
 import { computeTicketStatus, settleBet, settleFixtureBets, tipHasStartedMatch, MATCH_STARTED_MESSAGE, buildTipEdit } from "./tipEvaluator";
 import {
   sendTipToTelegram,
@@ -3860,5 +3860,9 @@ app.listen(PORT, () => {
         && ev >= MIN_EXPECTED_VALUE && ev <= SUSPICIOUS_EXPECTED_VALUE;
     }))
     .then((r) => { if (r && (r.returned || r.kept)) console.log(`Kontrola 60 / 40 vypnutá: vrátené do štatistík ${r.returned}, ostáva v sledovaných ${r.kept}`); })
-    .catch((err) => console.error("Návrat tipov vyradených 60 / 40 zlyhal:", err));
+    .catch((err) => console.error("Návrat tipov vyradených 60 / 40 zlyhal:", err))
+    // 6. 11. 2026 18:23 (Michal): 60 / 40 znova zapnutá – vrátené tipy raz presunie späť do sledovaných.
+    .then(() => STRICT_CHECK_ON ? moveStrictFailedBackOnce() : 0)
+    .then((n) => { if (n) console.log(`Kontrola 60 / 40 zapnutá: presunuté do sledovaných ${n}`); })
+    .catch((err) => console.error("Presun tipov neprešlých 60 / 40 zlyhal:", err));
 });

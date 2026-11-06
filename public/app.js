@@ -1276,7 +1276,7 @@ function softConflictCheck(bet, odd) {
  * (pásmo dôvery a hodnota +5 % s Michalovým kurzom). Rovnaké pravidlo ako passesStrict na serveri.
  */
 // 31. 10. 2026 (Michal): kontrola 60 / 40 vypnutá – tipy idú klientom, len sa označia. strictCheck ostáva pre rozbory.
-const STRICT_CHECK_ON = false; // 6. 11. 2026 (Michal): klientom stačí 70 / 30, 60 / 40 sa len zapisuje
+const STRICT_CHECK_ON = true; // 6. 11. 2026 18:23 (Michal): kontrola 60 / 40 znova zapnutá
 function strictCheck(bet, odd) {
   const p = bet.strictProbability;
   if (typeof p !== "number" || !(odd > 1)) return { pass: true, p: null };
