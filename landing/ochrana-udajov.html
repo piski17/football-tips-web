@@ -3,86 +3,38 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="color-scheme" content="dark" />
-<meta name="theme-color" content="#0A0A0B" />
+<meta name="color-scheme" content="light" />
+<meta name="theme-color" content="#F3F4EF" />
 <title>Ochrana osobných údajov – TipRadar</title>
 <meta name="robots" content="noindex" />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400..800&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap" rel="stylesheet" />
 <style>
-  /* rovnaké farby a písmo ako tipradar.eu */
-  :root { --bg: #0B0B0C; --line: rgba(201,165,92,.16); --gold: #C9A55C; --gold-hi: #E8D3A0; --text: #EDE6D6; --muted: #C9BFAE; --faint: #8C8476; --gold-grad: linear-gradient(135deg, #F1DFAE 0%, #E8D3A0 35%, #C9A55C 55%, #A8823E 100%); --panel: linear-gradient(180deg, rgba(40,40,44,.92), rgba(26,26,30,.92)); }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: radial-gradient(60% 40% at 88% 0%, rgba(201,165,92,.12), transparent 70%), var(--bg); color: var(--text); font: 400 16px/1.7 "Figtree", "Helvetica Neue", Arial, sans-serif; -webkit-font-smoothing: antialiased; }
-  .wrap { width: min(760px, 100% - 48px); margin-inline: auto; padding: 48px 0 80px; }
-  @media (max-width: 640px) { .wrap { width: calc(100% - 32px); padding-top: 32px; } }
-  a { color: var(--gold-hi); text-decoration-color: rgba(201,165,92,.4); text-underline-offset: 4px; }
-  .back { display: inline-block; padding: 7px 14px; border: 1px solid var(--line); border-radius: 999px; font-size: 13px; text-decoration: none; color: var(--muted); }
-  .back:hover { color: var(--gold-hi); border-color: rgba(201,165,92,.4); }
-  h1, h2 { font-family: "Figtree", Georgia, serif; font-weight: 600; text-transform: none; letter-spacing: -0.01em; font-variant-numeric: lining-nums; line-height: 1.1; }
-  h1 { font-size: clamp(30px, 3.4vw, 46px); margin: 28px 0 6px; }
-  h2 { font-size: 22px; margin: 36px 0 10px; padding-top: 24px; border-top: 1px solid var(--line); color: var(--gold-hi); }
-  p, li { color: var(--muted); }
-  p { margin: 0 0 12px; }
-  ul { padding-left: 20px; margin: 0 0 12px; }
-  li::marker { color: var(--gold); }
-  strong { color: var(--text); font-weight: 600; }
-  .date { font-size: 14px; color: var(--faint); }
-
-  /* luxusný futbalový klub (21. 10. 2026) – ako tipradar.eu */
-  :root { --muted: #B8B0A2; --faint: #8E877B; --line: rgba(201,165,92,.3); }
-  body { background: repeating-linear-gradient(90deg, rgba(201,165,92,.035) 0 1px, transparent 1px 64px), #0B0B0C; font: 500 16.5px/1.7 "Figtree", "Helvetica Neue", Arial, sans-serif; }
-  h1, h2 { font-family: "Figtree", "Arial Narrow", sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: .01em; line-height: 1; }
-  h1 { font-size: clamp(40px, 5vw, 64px); }
-  h2 { font-size: 26px; color: var(--gold); }
-  .back { border-color: var(--gold); color: var(--gold); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; font-size: 12px; padding: 9px 18px; }
-  .back:hover { background: var(--gold); color: #0B0B0C; }
-  .date::before { content: "★  "; color: var(--gold); }
-/* ===== LUXUS (29. 10. 2026): onyx a šampanské – ako tipradar.eu ===== */
-:root { --bg: #0A0A0B; --text: #EFE8D8; --muted: #A59D8F; --faint: #7F786C; --line: rgba(201,165,92,.16); }
-body { background: radial-gradient(ellipse 50% 40% at 50% 0%, rgba(201,165,92,.1), transparent 70%), #0A0A0B !important; font: 300 16.5px/1.8 "Figtree", system-ui, sans-serif !important; }
-.wrap { padding-top: 80px; }
-h1, h2 { font-family: "Figtree", Georgia, serif !important; font-weight: 400 !important; text-transform: none !important; letter-spacing: 0 !important; line-height: 1.1 !important; }
-h1 { font-size: clamp(42px, 5.4vw, 70px) !important; margin: 34px 0 10px !important; }
-h2 { font-size: 28px !important; color: var(--text) !important; }
-strong { font-weight: 600; }
-.back { border: 1px solid rgba(201,165,92,.34) !important; border-radius: 0 !important; color: #C9A55C !important; background: none !important; font: 500 11px/1 "Figtree", sans-serif !important; letter-spacing: .3em !important; text-transform: uppercase; padding: 13px 20px !important; }
-.back:hover { border-color: #C9A55C !important; color: #F1E2B8 !important; }
-.date { font: 500 11px/1.6 "Figtree", sans-serif; letter-spacing: .3em; text-transform: uppercase; color: #C9A55C; }
-.date::before { content: none !important; }
-
-/* ===== PRESTÍŽ (29. 10. 2026): ako tipradar.eu ===== */
-:root { --bg: #0A0A0B; --text: #F3EEE4; --muted: #A9A397; --faint: #75706A; --line: rgba(243,238,228,.08); }
-body { background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(200,169,106,.1), transparent 70%), #0A0A0B !important; font: 300 16.5px/1.85 "Figtree", system-ui, sans-serif !important; color: #F3EEE4; }
-h1, h2 { font-family: "Space Grotesk", "Times New Roman", serif !important; font-stretch: normal !important; font-weight: 500 !important; text-transform: none !important; letter-spacing: .015em !important; line-height: 1.15 !important; }
-h1 { font-size: clamp(36px, 4.6vw, 58px) !important; }
-h2 { font-size: 22px !important; color: #EBD9AE !important; }
-.back { border: 1px solid rgba(200,169,106,.5) !important; border-radius: 0 !important; color: #C8A96A !important; background: none !important; font: 600 11px/1 "Figtree", sans-serif !important; letter-spacing: .24em !important; text-transform: uppercase !important; padding: 12px 20px !important; }
-.back:hover { background: #C8A96A !important; color: #0A0A0B !important; }
-.date { font: 600 11px/1.6 "Figtree", sans-serif !important; color: #C8A96A; letter-spacing: .3em !important; text-transform: uppercase; }
-
-/* NOIR WEB (31. 10. 2026) */
-:root { --bg: #06080D; --gold: #D6BE8C; --gold-hi: #F5E9CC; --text: #F4EFE6; --muted: #A7ADB9; --faint: #6E7786; --line: rgba(255,255,255,.065); }
-body { background: radial-gradient(900px 520px at 88% -8%, rgba(214,190,140,.085), transparent 70%), #06080D !important; background-attachment: fixed !important; }
-h1, h2 { font-family: "Space Grotesk", system-ui, sans-serif !important; }
-.back { border-color: rgba(214,190,140,.3) !important; color: #F5E9CC !important; background: rgba(255,255,255,.025); }
-  /* NOČNÝ ZÁPAS (1. 11. 2026) – rovnaký vzhľad ako tipradar.eu */
-  :root { --bg: #070708; --gold: #D6B676; --gold-hi: #F3E2B3; --text: #F3EEE3; --muted: #ABA396; --faint: #6F695F; --line: rgba(222,196,140,.18); }
-  body { background: radial-gradient(60% 40% at 50% -10%, rgba(214,182,118,.12), transparent 70%), #070708; font: 400 16.5px/1.7 "Instrument Sans", "Helvetica Neue", Arial, sans-serif; color: var(--text); }
-  h1, h2 { font-family: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif; font-weight: 700; text-transform: none; letter-spacing: -.02em; line-height: 1.05; }
-  h1 { font-size: clamp(38px, 6vw, 64px); }
-  h2 { font-size: 24px; color: var(--gold-hi); }
-  .back { border: 1px solid var(--line); color: var(--muted); border-radius: 999px; text-transform: none; letter-spacing: 0; font-weight: 500; font-size: 13.5px; padding: 8px 16px; }
-  .back:hover { color: var(--gold-hi); border-color: var(--gold); }
+/* ANALYTIKA (6. 11. 2026) – rovnaké farby a písmo ako tipradar.eu */
+:root { --paper: #F3F4EF; --ink: #0C1116; --muted: #545D66; --faint: #858D95; --line: #DFE2DA; --volt: #C8F33C; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 500 16.5px/1.7 "Manrope", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+.wrap { width: min(780px, 100% - 48px); margin-inline: auto; padding: 48px 0 90px; }
+@media (max-width: 640px) { .wrap { width: calc(100% - 32px); padding-top: 28px; } }
+a { color: var(--ink); font-weight: 700; text-decoration: underline; text-decoration-color: var(--volt); text-decoration-thickness: 3px; text-underline-offset: 4px; }
+.back { display: inline-flex; align-items: center; gap: 12px; padding: 6px 18px 6px 6px; border-radius: 999px; background: #fff; border: 1px solid var(--line); font-size: 14px; text-decoration: none; }
+.back svg { width: 32px; height: 32px; }
+h1, h2 { font-weight: 800; letter-spacing: -.035em; line-height: 1.05; }
+h1 { font-size: clamp(38px, 6vw, 64px); margin: 40px 0 8px; }
+h2 { font-size: 22px; margin: 40px 0 12px; padding-top: 28px; border-top: 1px solid var(--line); }
+p, li { color: var(--muted); }
+p { margin: 0 0 12px; }
+ul { padding-left: 20px; margin: 0 0 12px; }
+li::marker { color: var(--ink); }
+strong { color: var(--ink); font-weight: 700; }
+.date { font: 600 12px/1.6 "JetBrains Mono", monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
 </style>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&amp;display=swap" rel="stylesheet" />
-<style>/* PRIVÉ (4. 11. 2026): písmo Manrope ako appka */ body, p, li, a { font-family: "Manrope", system-ui, sans-serif !important; } h1, h2, h3 { font-family: "Manrope", system-ui, sans-serif !important; font-weight: 600 !important; letter-spacing: -.03em !important; }</style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back" href="/">← TipRadar</a>
+  <a class="back" href="/"><svg aria-hidden="true" viewBox="0 0 40 40"><rect x=".5" y=".5" width="39" height="39" rx="11" fill="#0C1116"/><g fill="none" stroke="#C8F33C"><circle cx="20" cy="20" r="12.5" stroke-width="1.5" opacity=".4"/><circle cx="20" cy="20" r="6.5" stroke-width="1.5" opacity=".7"/></g><path d="M20 20 31.2 14" stroke="#C8F33C" stroke-width="2.2" stroke-linecap="round"/><circle cx="20" cy="20" r="2.4" fill="#C8F33C"/></svg>← Späť na TipRadar</a>
   <h1>Ochrana osobných údajov</h1>
   <p class="date">Platné od 5. 10. 2026</p>
 
