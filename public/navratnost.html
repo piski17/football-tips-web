@@ -7,13 +7,13 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300..800&amp;family=JetBrains+Mono:wght@500;600;700&amp;display=swap" rel="stylesheet" />
 <style>
 :root {
-  --bg: #0B0B0C; --section: #141416; --card: #1A1A1E; --line: rgba(201,165,92,.28);
-  --gold: #C9A55C; --gold-hi: #E8D3A0; --gold-lo: #A8823E;
-  --text: #EDE6D6; --muted: #B8B0A2; --good: #7FBF9A; --bad: #C0707C; --warn: #D9BE7A;
-  --good-bg: rgba(127,191,154,.10); --warn-bg: rgba(217,190,122,.10); --bad-bg: rgba(192,112,124,.12);
+  --bg: #0C1116; --section: #151C24; --card: #1B242D; --line: rgba(200, 243, 60,.28);
+  --gold: #C8F33C; --gold-hi: #E4FF8A; --gold-lo: #8FB31F;
+  --text: #F1F3EC; --muted: #A2ABB3; --good: #3ADB86; --bad: #FF6B70; --warn: #C8F33C;
+  --good-bg: rgba(58, 219, 134,.10); --warn-bg: rgba(200, 243, 60,.10); --bad-bg: rgba(255, 107, 112,.12);
   --display: "Playfair Display", Georgia, serif;
   --body: "Plus Jakarta Sans", "Helvetica Neue", Arial, system-ui, sans-serif;
 }
@@ -39,7 +39,7 @@ label.f { display: block; font-size: 11.5px; letter-spacing: .12em; text-transfo
 input:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .chip { font: 500 13px var(--body); color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 4px 11px; cursor: pointer; }
-.chip:hover, .chip.on { color: #17130A; background: var(--gold); border-color: var(--gold); }
+.chip:hover, .chip.on { color: #0C1116; background: var(--gold); border-color: var(--gold); }
 .odds { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 16px; }
 .odds input { width: 100%; font: 600 16px var(--display); text-align: center; color: var(--text); background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 9px 4px; }
 .hint { color: var(--muted); font-size: 12.5px; margin-top: 6px; }
@@ -55,7 +55,7 @@ input:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outl
 table { width: 100%; border-collapse: separate; border-spacing: 0 4px; min-width: 560px; }
 th { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 4px 6px; text-align: center; }
 th:first-child, td:first-child { text-align: left; }
-td { padding: 7px 6px; text-align: center; border-top: 1px solid rgba(201,165,92,.10); }
+td { padding: 7px 6px; text-align: center; border-top: 1px solid rgba(200, 243, 60,.10); }
 td:first-child { font-weight: 600; white-space: nowrap; }
 td:first-child span { color: var(--muted); font-weight: 400; font-size: 12.5px; }
 td.c { border-radius: 8px; }
@@ -73,7 +73,7 @@ td.no b { color: var(--bad); font-size: 13px; }
 .legend .g::before { background: var(--good); } .legend .w::before { background: var(--warn); } .legend .b::before { background: var(--bad); } .legend .z::before { display: none; } .legend .z { color: var(--gold-hi); }
 .note { color: var(--muted); font-size: 12.5px; }
 .actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 6px 0 18px; }
-.btn { font: 600 14px var(--body); color: #17130A; background: linear-gradient(135deg, var(--gold-hi), var(--gold-lo)); border: 0; border-radius: 999px; padding: 10px 18px; cursor: pointer; text-decoration: none; }
+.btn { font: 600 14px var(--body); color: #0C1116; background: linear-gradient(135deg, var(--gold-hi), var(--gold-lo)); border: 0; border-radius: 999px; padding: 10px 18px; cursor: pointer; text-decoration: none; }
 .btn.ghost { color: var(--gold); background: transparent; border: 1px solid var(--line); }
 
 @media print {
@@ -102,9 +102,9 @@ td.no b { color: var(--bad); font-size: 13px; }
 .how .note { margin: 0 0 8px; }
 .printinfo { display: none; color: var(--muted); margin: 0 0 12px; }
 /* ===== PRESTÍŽ (29. 10. 2026): ako tipradar.eu ===== */
-:root { --bg: #0A0A0B; --section: #111113; --card: #141416; --line: rgba(200,169,106,.25); --gold: #C8A96A; --gold-hi: #EBD9AE; --gold-lo: #9A7B3F; --text: #F3EEE4; --muted: #A9A397; --good: #8CC7A1; --bad: #D08A8A;
+:root { --bg: #0C1116; --section: #121920; --card: #151C24; --line: rgba(200, 243, 60,.25); --gold: #C8F33C; --gold-hi: #E4FF8A; --gold-lo: #8FB31F; --text: #F1F3EC; --muted: #A2ABB3; --good: #3ADB86; --bad: #FF6B70;
   --display: "Space Grotesk", "Times New Roman", serif; --body: "Figtree", system-ui, sans-serif; }
-body { background: radial-gradient(ellipse 50% 40% at 85% -5%, rgba(200,169,106,.09), transparent 70%), #0A0A0B !important; -webkit-font-smoothing: antialiased; }
+body { background: radial-gradient(ellipse 50% 40% at 85% -5%, rgba(200, 243, 60,.09), transparent 70%), #0C1116 !important; -webkit-font-smoothing: antialiased; }
 h1, h2, h3 { font-weight: 500 !important; letter-spacing: .02em !important; }
 *, *::before, *::after { border-radius: 0 !important; }
 button, .btn, a.btn { letter-spacing: .08em; }

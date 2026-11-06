@@ -7,13 +7,13 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300..800&amp;family=JetBrains+Mono:wght@500;600;700&amp;display=swap" rel="stylesheet">
 <style>
 /* Valuebety (3. 11. 2026) – skúška, samostatná stránka appky (vzhľad ako /surebety). */
 :root {
-  --bg: #0B0B0C; --section: #141416; --card: #1A1A1E; --line: rgba(201,165,92,.24); --line2: rgba(201,165,92,.12);
-  --gold: #C9A55C; --gold-hi: #E8D3A0; --gold-lo: #A8823E;
-  --text: #EDE6D6; --muted: #B8B0A2; --faint: #857E72; --good: #7FBF9A; --bad: #C0707C; --warn: #D9BE7A;
+  --bg: #0C1116; --section: #151C24; --card: #1B242D; --line: rgba(200, 243, 60,.24); --line2: rgba(200, 243, 60,.12);
+  --gold: #C8F33C; --gold-hi: #E4FF8A; --gold-lo: #8FB31F;
+  --text: #F1F3EC; --muted: #A2ABB3; --faint: #6E7781; --good: #3ADB86; --bad: #FF6B70; --warn: #C8F33C;
   --display: "Bricolage Grotesque", system-ui, sans-serif;
   --body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   color-scheme: dark;
@@ -41,24 +41,24 @@ input:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outl
 .side-in { background: var(--card); border: 1px solid var(--line2); border-radius: 12px; padding: 12px; }
 .side-in input.nm { font: 500 14px var(--body); padding: 7px 10px; margin-bottom: 8px; }
 .res { margin-top: 16px; border-radius: 12px; padding: 16px; border: 1px solid var(--line2); background: var(--card); }
-.res.ok { border-color: rgba(127,191,154,.5); background: rgba(127,191,154,.07); }
-.res.no { border-color: rgba(192,112,124,.45); background: rgba(192,112,124,.07); }
+.res.ok { border-color: rgba(58, 219, 134,.5); background: rgba(58, 219, 134,.07); }
+.res.no { border-color: rgba(255, 107, 112,.45); background: rgba(255, 107, 112,.07); }
 .res-top { font: 700 22px/1.2 var(--display); margin-bottom: 10px; }
 .res.ok .res-top { color: var(--good); } .res.no .res-top { color: var(--bad); }
 .stakes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 @media (max-width: 520px) { .stakes { grid-template-columns: 1fr; } }
 .stake { background: var(--section); border-radius: 10px; padding: 10px 12px; }
 .stake b { display: block; font: 700 24px var(--display); color: var(--gold-hi); }
-.btn { font: 600 14px var(--body); color: #120E06; background: linear-gradient(135deg, var(--gold-hi), var(--gold)); border: 0; border-radius: 999px; padding: 9px 18px; cursor: pointer; }
+.btn { font: 600 14px var(--body); color: #0C1116; background: linear-gradient(135deg, var(--gold-hi), var(--gold)); border: 0; border-radius: 999px; padding: 9px 18px; cursor: pointer; }
 .btn.ghost { color: var(--gold); background: transparent; border: 1px solid var(--line); }
 .btn:disabled { opacity: .5; cursor: default; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { font: 500 13px var(--body); color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; cursor: pointer; }
-.chip.on { color: #120E06; background: var(--gold); border-color: var(--gold); }
+.chip.on { color: #0C1116; background: var(--gold); border-color: var(--gold); }
 .books { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 12px; max-height: 220px; overflow: auto; }
 .sb-list { display: grid; gap: 10px; }
 .sb { background: var(--card); border: 1px solid var(--line2); border-radius: 12px; padding: 14px; }
-.sb.sus { border-color: rgba(217,190,122,.45); }
+.sb.sus { border-color: rgba(200, 243, 60,.45); }
 .sb-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; flex-wrap: wrap; }
 .sb-top b { font: 600 17px var(--display); }
 .pct { font: 700 20px var(--display); color: var(--good); white-space: nowrap; }
@@ -98,7 +98,7 @@ details.day[open] > summary { border-bottom: 1px solid var(--line2); }
 @media (max-width: 520px) { details.day > summary { grid-template-columns: 1fr auto; } details.day > summary .hide-m { display: none; } }
 details p, details li { color: var(--muted); font-size: 14px; }
 .st { display: inline-block; min-width: 22px; text-align: center; font-weight: 700; border-radius: 6px; padding: 0 6px; font-size: 13px; }
-.st.won { color: #0B0B0C; background: var(--good); } .st.lost { color: #0B0B0C; background: var(--bad); } .st.void { color: var(--muted); border: 1px solid var(--line); } .st.pending { color: var(--muted); border: 1px dashed var(--line); }
+.st.won { color: #0C1116; background: var(--good); } .st.lost { color: #0C1116; background: var(--bad); } .st.void { color: var(--muted); border: 1px solid var(--line); } .st.pending { color: var(--muted); border: 1px dashed var(--line); }
 .g { color: var(--good); } .l { color: var(--bad); }
 .explain { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 @media (max-width: 760px) { .explain { grid-template-columns: 1fr; } }
@@ -108,7 +108,7 @@ details p, details li { color: var(--muted); font-size: 14px; }
 .play input { width: 92px; font: 600 15px var(--body); padding: 7px 9px; }
 .play label { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
 .play .btn { padding: 7px 14px; font-size: 13px; }
-.played { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 10px; padding: 8px 10px; border-radius: 9px; background: rgba(201,165,92,.10); border: 1px solid var(--line); font-size: 14px; }
+.played { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 10px; padding: 8px 10px; border-radius: 9px; background: rgba(200, 243, 60,.10); border: 1px solid var(--line); font-size: 14px; }
 .played b { color: var(--gold-hi); }
 .linkbtn { background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; font: inherit; font-size: 13px; padding: 0; }
 .err { color: var(--bad); font-size: 13px; }
@@ -117,8 +117,8 @@ select { width: 100%; font: 500 15px var(--body); color: var(--text); background
 .chk2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; margin-top: 12px; }
 @media (max-width: 760px) { .chk, .chk2 { grid-template-columns: 1fr; } }
 .res { margin-top: 14px; border-radius: 12px; padding: 14px; border: 1px solid var(--line2); background: var(--card); }
-.res.ok { border-color: rgba(127,191,154,.5); background: rgba(127,191,154,.07); }
-.res.no { border-color: rgba(192,112,124,.45); background: rgba(192,112,124,.07); }
+.res.ok { border-color: rgba(58, 219, 134,.5); background: rgba(58, 219, 134,.07); }
+.res.no { border-color: rgba(255, 107, 112,.45); background: rgba(255, 107, 112,.07); }
 .res-top { font: 700 20px/1.25 var(--display); margin-bottom: 4px; }
 .res.ok .res-top { color: var(--good); } .res.no .res-top { color: var(--bad); }
 </style>
