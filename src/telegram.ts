@@ -6,6 +6,7 @@ import { sendAdminEmail } from "./mailer";
 import { newPeriodUpdates } from "./guarantee";
 import { SavedTip } from "./types";
 import { MIN_ODDS } from "./oddsMatcher";
+import { STRICT_CHECK_ON } from "./predictor";
 
 /** Slovenský tvar podľa počtu: plural(3, "tip", "tipy", "tipov") -> "3 tipy". */
 /** Číslo so slovenskou desatinnou čiarkou: fmtNum(1.845, 2) -> "1,85". */
@@ -278,11 +279,11 @@ function buildMessageText(tip: SavedTip, headerOverride?: string, vip = false, s
 
 /**
  * Minimálny kurz pre klienta (31. 10. 2026, Michal): tip ide s kurzom z API bez prepisovania,
- * klient si ho podá len pri kurze aspoň X – vždy aspoň 1,60 a hodnota +5 % (aj pri kontrole 60 / 40).
+ * klient si ho podá len pri kurze aspoň X – vždy aspoň 1,60 a hodnota +5 % (pri zapnutej kontrole 60 / 40 aj pri nej; od 6. 11. 2026 vypnutá).
  */
 function minOddsLine(tip: SavedTip): string {
   const need = (p: number | undefined) => (typeof p === "number" && p > 0 ? 1.05 / (p / 100) : 0);
-  const min = Math.ceil(Math.max(1.5, need(tip.probability), need(tip.strictProbability)) * 100) / 100;
+  const min = Math.ceil(Math.max(1.5, need(tip.probability), STRICT_CHECK_ON ? need(tip.strictProbability) : 0) * 100) / 100;
   return `✅ Minimálny kurz, pri ktorom tip odporúčam hrať: <b>${fmtNum(min, 2)}</b>\n`;
 }
 

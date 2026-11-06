@@ -333,3 +333,39 @@ export async function moveLateAddsOnce(): Promise<number> {
     return moved;
   });
 }
+
+/**
+ * 6. 11. 2026 (Michal): klientom stačí 70 / 30, kontrola 60 / 40 sa len zapisuje. Beží raz pri štarte:
+ * tipy v sledovaných, ktoré tam boli LEN kvôli 60 / 40 (strictFail / retroStrict, nie pásmo 65 – 69 %) a podľa
+ * dnešných pravidiel by prešli klientom (pass), sa vrátia do štatistík. Ostanú označené strictWouldFail
+ * (porovnanie 1. 12.) a strictReturned. Nič sa nemaže. Návrat: tipom so strictReturned dať watchOnly + strictFail.
+ */
+const STRICT_OFF_KEY = "tipradar_migr_strict_off_done";
+export async function returnStrictFailedOnce(pass: (t: SavedTip) => boolean): Promise<{ returned: number; kept: number }> {
+  if (!useUpstash) return { returned: 0, kept: 0 };
+  const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };
+  const done = (await upstashClient().get(`${UPSTASH_URL}/get/${STRICT_OFF_KEY}`, auth)).data?.result;
+  if (done) return { returned: 0, kept: 0 };
+  return withWriteLock(async () => {
+    const tips = await readAll();
+    let returned = 0;
+    let kept = 0;
+    for (const t of tips) {
+      if (!t.watchOnly || !(t.strictFail || t.retroStrict) || t.watchBand || t.manualEntry || (t.legs && t.legs.length)) continue;
+      if (pass(t)) {
+        t.watchOnly = undefined;
+        t.strictFail = undefined;
+        t.retroStrict = undefined;
+        t.lateMoved = undefined;
+        t.strictWouldFail = true;
+        t.strictReturned = true;
+        returned++;
+      } else kept++;
+    }
+    if (returned) await writeAll(tips);
+    await upstashClient().post(`${UPSTASH_URL}/set/${STRICT_OFF_KEY}`, new Date().toISOString(), {
+      headers: { ...auth.headers, "Content-Type": "text/plain" },
+    });
+    return { returned, kept };
+  });
+}

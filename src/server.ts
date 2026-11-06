@@ -43,7 +43,7 @@ import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, Market
 import { newModelInputs } from "./newModel";
 import { computeMarketHealth, marketChangesText, clvOf, CLV_TIE } from "./marketHealth";
 import { LeaguePreset, SavedTip } from "./types";
-import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once, moveLateAddsOnce, restoreLateMovedOnce } from "./tipsStore";
+import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once, moveLateAddsOnce, restoreLateMovedOnce, returnStrictFailedOnce } from "./tipsStore";
 import { computeTicketStatus, settleBet, settleFixtureBets, tipHasStartedMatch, MATCH_STARTED_MESSAGE, buildTipEdit } from "./tipEvaluator";
 import {
   sendTipToTelegram,
@@ -3851,5 +3851,14 @@ app.listen(PORT, () => {
         && ev >= MIN_EXPECTED_VALUE && ev <= SUSPICIOUS_EXPECTED_VALUE && (!STRICT_CHECK_ON || passesStrict(t, t.odds));
     }))
     .then((r) => { if (r && (r.restored || r.kept)) console.log(`Doplnené po výkope: vrátené do štatistík ${r.restored}, ostáva v sledovaných ${r.kept}`); })
-    .catch((err) => console.error("Návrat tipov doplnených po výkope zlyhal:", err));
+    .catch((err) => console.error("Návrat tipov doplnených po výkope zlyhal:", err))
+    // 6. 11. 2026 (Michal): kontrola 60 / 40 len zapisuje – tipy vyradené len kvôli nej, ktoré prejdú 70 / 30, raz vráti do štatistík.
+    .then(() => STRICT_CHECK_ON ? null : returnStrictFailedOnce((t) => {
+      if (typeof t.probability !== "number" || typeof t.odds !== "number") return false;
+      const ev = (t.probability / 100) * t.odds;
+      return t.probability >= MIN_PROBABILITY && t.probability <= MAX_PROBABILITY && t.odds >= MIN_ODDS - 1e-9
+        && ev >= MIN_EXPECTED_VALUE && ev <= SUSPICIOUS_EXPECTED_VALUE;
+    }))
+    .then((r) => { if (r && (r.returned || r.kept)) console.log(`Kontrola 60 / 40 vypnutá: vrátené do štatistík ${r.returned}, ostáva v sledovaných ${r.kept}`); })
+    .catch((err) => console.error("Návrat tipov vyradených 60 / 40 zlyhal:", err));
 });
