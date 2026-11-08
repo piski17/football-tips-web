@@ -260,6 +260,8 @@ const POSSESSION_FAVORITE_LINES = Array.from({ length: 26 }, (_, i) => 50.5 + i)
 
 // Hranice, ktoré model skúša, keď stávkovky k zápasu ešte nemajú kurzy (a v spätnom
 // teste). Keď kurzy sú, model vyhodnotí presne tie hranice, ktoré stávkovky ponúkajú.
+/** Trhy faulov – hranice podľa očakávaných faulov zápasu (8. 11. 2026), kurz len ručne. */
+const FOUL_MARKETS = ["Fauly", "Fauly domácich", "Fauly hostí"];
 const DEFAULT_LINES: Record<string, number[]> = {
   "Góly": [1.5, 2.5, 3.5],
   "Góly domácich": [0.5, 1.5, 2.5],
@@ -1051,7 +1053,17 @@ export function predictMatch(
   // predvolené hranice). Pri každej hranici ide do úvahy strana, ktorú model vidí ako
   // pravdepodobnejšiu; z jednej kategórie sa nakoniec vyberie hranica s najväčšou hodnotou.
   const hasOdds = !!marketOdds && marketOdds.length > 0;
-  const linesFor = (market: string): number[] => {
+  const linesFor = (market: string, mean?: number): number[] => {
+    // Fauly (8. 11. 2026, Michal): API-Football kurzy na fauly nemá, takže pri zápase s kurzami model fauly
+    // vôbec nepočítal. Hranice sa teraz určia podľa očakávaných faulov v TOMTO zápase (priemery tímov v ich
+    // lige, súper aj rozhodca) – v zápase ±4, pri tíme ±3 fauly okolo očakávania. Kurz sa zadáva ručne.
+    if (FOUL_MARKETS.includes(market) && mean != null && isFinite(mean) && mean > 0) {
+      const span = market === "Fauly" ? 4 : 3;
+      const base = Math.floor(mean);
+      const out: number[] = [];
+      for (let d = -span; d < span; d++) if (base + d + 0.5 > 0) out.push(base + d + 0.5);
+      return out;
+    }
     // Keď stávkovky k zápasu kurzy majú, počítame LEN hranice, ktoré ponúkajú
     // (17. 10. 2026) – pevné hranice nižšie sú len pre analýzu bez kurzov a spätný test.
     if (hasOdds) return offeredLines(marketOdds, market);
@@ -1068,7 +1080,7 @@ export function predictMatch(
     model?: { mean: number; varRatio?: number }
   ) => {
     if (model && isFinite(model.mean)) lineModels.push({ market, category, mean: model.mean, varRatio: model.varRatio ?? 1, calibration: 1 });
-    for (const line of linesFor(market)) {
+    for (const line of linesFor(market, model?.mean)) {
       const { over, under } = dist(line);
       const isOver = over >= under;
       candidates.push({
@@ -1526,7 +1538,8 @@ export function predictMatch(
       if (cur && !!bet.strictFail !== !!cur.strictFail) { if (cur.strictFail) bestInCategory.set(catKey(bet), bet); continue; }
       // 4. 11. 2026 (Michal): z trhu ide hranica s NAJVYŠŠOU DÔVEROU (predtým s najväčšou hodnotou);
       // držanie lopty (bez kurzu) ostáva podľa pravidla vyššie.
-      const manualPoss = typeof bet.minOdds === "number" && bet.category === "drzanie_lopty";
+      // 8. 11. 2026: rovnako fauly (kurz len ručne) – hranica najbližšie k spodku pásma má najlepší kurz.
+      const manualPoss = typeof bet.minOdds === "number" && (bet.category === "drzanie_lopty" || bet.category === "fauly" || bet.category === "fauly_timu");
       const wins = !cur || (manualPoss ? ev > curEv || (ev === curEv && better) : bet.probability > cur.probability || (bet.probability === cur.probability && ev > curEv));
       if (wins) bestInCategory.set(catKey(bet), bet);
     }
