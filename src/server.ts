@@ -190,6 +190,7 @@ function monthlyResults(tips: SavedTip[]) {
 const CUP_LEAGUE_IDS = [2, 3, 848]; // Liga majstrov, Európska liga, Konferenčná liga
 
 const LEAGUE_PRESETS: LeaguePreset[] = [
+  // 8. 11. 2026 22:16 (Michal): Rumunská Liga I ODSTRÁNENÁ – 16 súťaží; jej tipy sa nerátajú (HIDE_REMOVED_LEAGUE_TIPS).
   // 5. 11. 2026 19:45 (Michal): Európska liga a Konferenčná liga ODSTRÁNENÉ – späť 17 súťaží (ich tipy sa nerátajú, HIDE_REMOVED_LEAGUE_TIPS).
   // 2. 11. 2026 15:15 (Michal): vrátených všetkých 17 súťaží (ráno skúšobne 10).
   // 30. 10. 2026 večer (Michal): 17 súťaží – pribudlo 5 najvyšších líg Belgicko, Turecko, Dánsko,
@@ -209,7 +210,6 @@ const LEAGUE_PRESETS: LeaguePreset[] = [
   { id: 203, name: "Süper Lig", country: "Turecko" },
   { id: 119, name: "Superliga", country: "Dánsko" },
   { id: 179, name: "Premiership", country: "Škótsko" },
-  { id: 283, name: "Liga I", country: "Rumunsko" },
   { id: 40, name: "Championship", country: "Anglicko" },
   { id: 79, name: "2. Bundesliga", country: "Nemecko" },
   { id: 141, name: "Segunda División", country: "Španielsko" },

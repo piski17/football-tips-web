@@ -75,7 +75,6 @@ const LEAGUE_ORDER = [
   ["Süper Lig", "Turecko", 0],
   ["Superliga", "Dánsko", 0],
   ["Premiership", "Škótsko", 0],
-  ["Liga I", "Rumunsko", 0],
   ["Championship", "Anglicko", 1],
   ["2. Bundesliga", "Nemecko", 1],
   ["Segunda División", "Španielsko", 1],

@@ -7,7 +7,7 @@ import { cachedRedis } from "./upstashCache";
 // Server z kurzov API-Football hľadá zápasy, kde dve stávkovky ponúkajú opačné
 // stávky (nad / pod, áno / nie, párny / nepárny, víťaz bez remízy) s takými kurzami,
 // že vsadením na obe strany je zisk istý. Len dve stávkovky, len dvojcestné trhy.
-// Nedotýka sa tipov, štatistík ani klientov. Každú hodinu prehľadá DNEŠNÉ zápasy 17 súťaží TipRadaru (od 3. 11. 2026 večer, predtým 7 dní dopredu)
+// Nedotýka sa tipov, štatistík ani klientov. Každú hodinu prehľadá DNEŠNÉ zápasy 16 súťaží TipRadaru (od 3. 11. 2026 večer, predtým 7 dní dopredu)
 // a nájdené surebety zapíše do evidencie (Upstash hash), aby sa po skúške dalo
 // vyhodnotiť, koľko ich bolo a aký by bol zisk.
 
