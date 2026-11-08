@@ -755,6 +755,45 @@ html.menu-open .jump { display: none; }
 .mail-toast.show { opacity: 1; translate: -50% 0; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; } }
 
+/* ---------- úvod: živý graf zisku (8. 11. 2026 – namiesto karty Analýza zápasu) ---------- */
+.eq { position: relative; z-index: 2; margin: 0; width: min(560px, 100%); }
+.eq-card { position: relative; padding: 30px 30px 24px; border-radius: 30px; background: linear-gradient(160deg, rgba(32, 35, 43, .88), rgba(12, 13, 17, .95) 60%); border: 1px solid var(--line2); box-shadow: 0 60px 120px -40px rgba(0, 0, 0, .95), 0 0 120px -30px rgba(125, 139, 255, .35); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); overflow: hidden; }
+.eq-card::before { content: ""; position: absolute; left: 30px; right: 30px; top: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .6), transparent); }
+.eq-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; font: 600 11px/1 var(--display); letter-spacing: .22em; text-transform: uppercase; color: var(--faint); white-space: nowrap; }
+.eq-top b { display: inline-flex; align-items: center; gap: 9px; color: var(--text); font-weight: 700; }
+.eq-top b::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--win); animation: pulse 2.2s infinite; }
+.eq-big { display: flex; align-items: baseline; gap: 12px; margin-top: 22px; }
+.eq-big b { font: 300 clamp(64px, 8vw, 96px)/.9 var(--display); letter-spacing: -.05em; background: var(--plat); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.eq-big b.neg { background: none; -webkit-text-fill-color: currentColor; }
+.eq-big span { font: 600 16px/1 var(--display); color: var(--muted); }
+.eq-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.eq-meta span { padding: 7px 12px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--line2); font: 600 13px/1 var(--display); color: var(--muted); }
+.eq-meta b { color: var(--text); font-weight: 700; }
+.eq-chart { display: block; width: calc(100% + 60px); height: 170px; margin: 22px -30px 0; overflow: visible; }
+.eq-grid path { stroke: rgba(255, 255, 255, .05); stroke-dasharray: 3 5; }
+.eq-zero { stroke: rgba(255, 255, 255, .18); stroke-dasharray: 2 4; }
+.eq-area { fill: url(#eqFill); opacity: 0; animation: eqFade 1.2s var(--ease) 1.2s forwards; }
+.eq-line { fill: none; stroke: url(#eqStroke); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; stroke-dasharray: 1; stroke-dashoffset: 1; filter: drop-shadow(0 0 8px rgba(217, 221, 228, .55)); animation: eqDraw 2.2s var(--ease) .3s forwards; }
+@keyframes eqDraw { to { stroke-dashoffset: 0; } }
+@keyframes eqFade { to { opacity: 1; } }
+.eq-dot { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 5px rgba(255, 255, 255, .15), 0 0 24px rgba(255, 255, 255, .8); display: none; opacity: 0; animation: eqFade .5s ease 2.4s forwards; }
+.eq-dot.on { display: block; }
+.eq-axis { display: flex; justify-content: space-between; margin-top: 10px; font: 600 10.5px/1 var(--display); letter-spacing: .2em; text-transform: uppercase; color: var(--faint); }
+.eq-form { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line); }
+.eq-form:empty { display: none; }
+.eq-form i { aspect-ratio: 1; display: grid; place-items: center; border-radius: 50%; font: 700 11px/1 var(--display); font-style: normal; opacity: 0; transform: scale(.6); animation: eqPop .5s var(--ease) forwards; animation-delay: calc(1.6s + var(--k) * .08s); }
+.eq-form i.won { background: rgba(94, 224, 160, .14); color: var(--win); box-shadow: inset 0 0 0 1px rgba(94, 224, 160, .45); }
+.eq-form i.lost { background: rgba(255, 123, 134, .1); color: var(--loss); box-shadow: inset 0 0 0 1px rgba(255, 123, 134, .35); }
+@keyframes eqPop { to { opacity: 1; transform: none; } }
+.an-float.tk b { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: rgba(94, 224, 160, .12); color: var(--win); font: 700 18px/1 var(--display); box-shadow: inset 0 0 0 1px rgba(94, 224, 160, .35); }
+.an-float.tk.lost b { background: rgba(255, 123, 134, .1); color: var(--loss); box-shadow: inset 0 0 0 1px rgba(255, 123, 134, .35); }
+.stage .an-float { max-width: 300px; }
+.stage .an-float.fl2 { top: 110px; right: -30px; }
+.stage .an-float.fl1 { bottom: 120px; left: -30px; }
+@media (max-width: 1280px) and (min-width: 981px) { .stage .an-float.fl2 { right: 0; top: 30px; } .stage .an-float.fl1 { left: 0; bottom: 40px; } }
+@media (max-width: 980px) { .stage .an-float { max-width: none; } .stage .an-float.fl2 { top: 0; right: 0; } .stage .an-float.fl1 { bottom: 0; left: 0; } }
+@media (max-width: 560px) { .eq-card { padding: 22px 20px 20px; border-radius: 24px; } .eq-chart { width: calc(100% + 40px); margin: 18px -20px 0; height: 130px; } .eq-form { gap: 4px; } .an-float.tk b { width: 32px; height: 32px; font-size: 15px; border-radius: 10px; } }
+
 .value-grid > *, .how > *, .me-grid > *, .faq-grid > *, .form-grid > *, .kurz-grid > *, .head > * { min-width: 0; }
 </style>
 </head>
@@ -823,33 +862,27 @@ html.menu-open .jump { display: none; }
             <g fill="#fff" opacity=".55"><circle cx="525" cy="340" r="4"/><circle cx="120" cy="340" r="3"/><circle cx="930" cy="340" r="3"/></g>
             <g class="pings"><circle cx="300" cy="220" r="6"/><circle cx="700" cy="470" r="6"/><circle cx="820" cy="190" r="6"/><circle cx="420" cy="520" r="6"/></g>
           </svg></div>
-        <figure class="an rv">
-          <div class="an-card">
-            <div class="an-top"><b>Analýza zápasu</b><span>Serie A · 20:45</span></div>
-            <div class="an-match">
-              <div class="an-team"><span class="an-crest">INT</span>Inter</div>
-              <div class="an-vs"><b>vs</b>dnes</div>
-              <div class="an-team away">Juventus<span class="an-crest">JUV</span></div>
-            </div>
-            <div class="an-market">
-              <div><small>Trh</small><b>Rohy nad 9,5</b></div>
-              <div class="odd"><small>Kurz</small><b>1,62</b></div>
-            </div>
-            <div class="an-bars">
-              <div class="an-bar model"><div><span>Šanca podľa modelu</span><b>72&nbsp;%</b></div><i style="--w:72%"></i></div>
-              <div class="an-bar"><div><span>Šanca podľa kurzu 1,62</span><b>62&nbsp;%</b></div><i style="--w:62%"></i></div>
-            </div>
-            <div class="an-kpis">
-              <div><small>Model</small><b>10,8 rohu</b></div>
-              <div><small>Vzájomné</small><b>5 zápasov</b></div>
-              <div><small>Hodnota</small><b class="pos">+17&nbsp;%</b></div>
-            </div>
-            <div class="an-ok"><i>✓</i>Tip prešiel všetkými pravidlami</div>
+        <figure class="eq rv" aria-label="Zisk všetkých tipov od začiatku">
+          <div class="eq-card">
+            <div class="eq-top"><b>Zisk od začiatku</b><span id="eqRange">všetky tipy</span></div>
+            <div class="eq-big"><b class="num" id="eqProfit">–</b><span>jednotiek</span></div>
+            <div class="eq-meta"><span><b id="eqTips">–</b> vyhodnotených tipov</span><span><b id="eqRate">–</b> vyšlo</span></div>
+            <svg class="eq-chart" viewBox="0 0 400 170" preserveAspectRatio="none" aria-hidden="true">
+              <defs><linearGradient id="eqFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D9DDE4" stop-opacity=".28"/><stop offset="1" stop-color="#D9DDE4" stop-opacity="0"/></linearGradient>
+              <linearGradient id="eqStroke" x1="0" x2="1"><stop offset="0" stop-color="#8D94A2"/><stop offset=".6" stop-color="#EEF0F4"/><stop offset="1" stop-color="#FFFFFF"/></linearGradient></defs>
+              <g class="eq-grid"><path d="M0 42.5H400M0 85H400M0 127.5H400"/></g>
+              <path class="eq-zero" id="eqZero" d="M0 150H400"/>
+              <path class="eq-area" id="eqArea" d="M0 150 L40 140 L80 146 L120 120 L160 112 L200 118 L240 90 L280 72 L320 80 L360 44 L400 30 L400 170 L0 170Z"/>
+              <path class="eq-line" id="eqLine" pathLength="1" d="M0 150 L40 140 L80 146 L120 120 L160 112 L200 118 L240 90 L280 72 L320 80 L360 44 L400 30"/>
+            </svg>
+            <i class="eq-dot" id="eqDot"></i>
+            <div class="eq-axis"><span id="eqFrom">začiatok</span><span>dnes</span></div>
+            <div class="eq-form" id="eqForm" aria-label="Posledné tipy"></div>
           </div>
-          <figcaption class="an-cap">Ilustrácia</figcaption>
+          <figcaption class="an-cap" id="eqCap">Ilustrácia</figcaption>
         </figure>
         <div class="an-float fl1"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-tg"/></svg><span>Tip príde do Telegramu<small>1 – 2 hodiny pred výkopom</small></span></div>
-        <div class="an-float fl2"><b>+17&nbsp;%</b><span>hodnota tipu<small>model 72 % vs. kurz 62 %</small></span></div>
+        <div class="an-float fl2 tk" id="eqLast"><b>✓</b><span>Každý tip zverejnený<small>výhry aj prehry</small></span></div>
       </div>
       <ul class="trust">
         <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5 9 17.5 20 6.5"/></svg>Každý tip zverejnený</li>
@@ -982,7 +1015,7 @@ html.menu-open .jump { display: none; }
       <div class="crumb"><a href="/">Úvod</a><span>/</span><span>Členstvo</span></div>
       <div class="eyebrow">Členstvo</div>
       <h1>Členstvo s&nbsp;<em>garanciou</em></h1>
-      <p class="lead">Dve členstvá: Štart 75 tipov za 65&nbsp;€ a&nbsp;VIP 150 tipov za 110&nbsp;€. Všetci členovia dostávajú rovnaké tipy a&nbsp;úvodný hovor 1&nbsp;na&nbsp;1, VIP navyše mentoring 1&nbsp;na&nbsp;1 počas celého členstva. Ďalšie členstvo máte so zľavou.</p>
+      <p class="lead">Dve členstvá: Štart 30 tipov za 29&nbsp;€ a&nbsp;VIP 100 tipov za 89&nbsp;€. Všetci členovia dostávajú rovnaké tipy a&nbsp;úvodný hovor 1&nbsp;na&nbsp;1, VIP navyše mentoring 1&nbsp;na&nbsp;1 počas celého členstva a&nbsp;ďalšie členstvo so zľavou.</p>
       <span class="big-n" aria-hidden="true">02</span>
     </div>
   </header>
@@ -1066,23 +1099,23 @@ html.menu-open .jump { display: none; }
   <!-- ================= ČLENSTVO ================= -->
   <section class="sub" id="clenstvo" data-pages="clenstvo">
     <div class="wrap">
-      <!-- 4. 11. 2026 večer (Michal): Štart 75 tipov 65 €, VIP 150 tipov 110 €, odporúčaný bank od – do (predtým 50 / 100 tipov za 29 / 55 €) -->
+      <!-- 8. 11. 2026 23:15 (Michal): Štart 30 tipov 29 € (bez vernostnej zľavy), VIP 100 tipov 89 €. Predtým 4. 11.: Štart 75 tipov 65 €, VIP 150 tipov 110 €, odporúčaný bank od – do (predtým 50 / 100 tipov za 29 / 55 €) -->
       <div class="plans two">
-        <article class="plan panel" data-plan="p75">
+        <article class="plan panel" data-plan="p30">
           
           <div class="plan-name">Štart</div>
-          <div class="plan-tips"><b class="num">75</b> tipov</div>
-          <div class="plan-price"><b class="num">65&nbsp;€</b><span>jednorazovo</span></div>
-          <p class="plan-per"><span>0,87&nbsp;€ za tip</span></p>
+          <div class="plan-tips"><b class="num">30</b> tipov</div>
+          <div class="plan-price"><b class="num">29&nbsp;€</b><span>jednorazovo</span></div>
+          <p class="plan-per"><span>0,97&nbsp;€ za tip</span></p>
           <ul class="plan-feats">
             <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-ok"/></svg>Tipy na Telegram 1 – 2 h pred výkopom</li>
             <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-ok"/></svg>Súkromný chat členov</li>
             <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-ok"/></svg><span><b>Úvodný hovor 1 na 1</b> (30 min)</span></li>
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-ok"/></svg><span><b>Vernostná zľava</b> – ďalšie členstvo −10&nbsp;%</span></li>
             <li class="off"><span class="dash" aria-hidden="true">–</span>Mentoring 1 na 1 počas celého členstva</li>
+            <li class="off"><span class="dash" aria-hidden="true">–</span>Vernostná zľava na ďalšie členstvo</li>
           </ul>
-          <p class="plan-bank"><small>Odporúčaný bank</small><b>1&nbsp;050 – 2&nbsp;500&nbsp;€</b><span>vklad 3&nbsp;% = 31,50 – 75&nbsp;€ na tip</span></p>
-          <div class="pk-mini" data-calc="p75">
+          <p class="plan-bank"><small>Odporúčaný bank</small><b>1&nbsp;200 – 2&nbsp;500&nbsp;€</b><span>vklad 3&nbsp;% = 36 – 75&nbsp;€ na tip</span></p>
+          <div class="pk-mini" data-calc="p30">
             <div class="pk-mtop"><span>Prepočítajte si to</span><div class="seg sm" role="group" aria-label="Vklad na tip"><button type="button" data-pct="1" aria-pressed="false">1&nbsp;%</button><button type="button" data-pct="2" aria-pressed="false">2&nbsp;%</button><button type="button" data-pct="3" aria-pressed="true">3&nbsp;%</button><button type="button" data-pct="5" aria-pressed="false">5&nbsp;%</button></div></div>
             <div class="pk-lab">Váš bank <b data-o="bank"></b></div>
             <input type="range" min="200" max="5000" step="50" value="1000" data-in="bank" aria-label="Bank v eurách">
@@ -1091,14 +1124,14 @@ html.menu-open .jump { display: none; }
               <div><small>Vklad na tip</small><b data-o="stake"></b></div>
             </div>
           </div>
-          <a class="btn ghost plan-cta" data-plan-cta="p75" href="https://t.me/TipRadarAiBot?start=c75" target="_blank" rel="noopener">Zapísať sa do poradovníka</a>
+          <a class="btn ghost plan-cta" data-plan-cta="p30" href="https://t.me/TipRadarAiBot?start=c30" target="_blank" rel="noopener">Zapísať sa do poradovníka</a>
         </article>
-        <article class="plan panel feat" data-plan="p150">
+        <article class="plan panel feat" data-plan="p100">
           <span class="plan-badge">Najvýhodnejšie</span>
           <div class="plan-name">VIP</div>
-          <div class="plan-tips"><b class="num">150</b> tipov</div>
-          <div class="plan-price"><b class="num">110&nbsp;€</b><span>jednorazovo</span></div>
-          <p class="plan-per"><span>0,73&nbsp;€ za tip</span><span class="save">ušetríte 20&nbsp;€</span></p>
+          <div class="plan-tips"><b class="num">100</b> tipov</div>
+          <div class="plan-price"><b class="num">89&nbsp;€</b><span>jednorazovo</span></div>
+          <p class="plan-per"><span>0,89&nbsp;€ za tip</span><span class="save">ušetríte 8&nbsp;€</span></p>
           <ul class="plan-feats">
             <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-ok"/></svg>Tipy na Telegram 1 – 2 h pred výkopom</li>
             <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-ok"/></svg>Súkromný chat členov</li>
@@ -1106,8 +1139,8 @@ html.menu-open .jump { display: none; }
             <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-ok"/></svg><span><b>Mentoring 1 na 1</b> počas celého členstva</span></li>
             <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-ok"/></svg><span><b>Vernostná zľava</b> – ďalšie členstvo −20&nbsp;%</span></li>
           </ul>
-          <p class="plan-bank"><small>Odporúčaný bank</small><b>900 – 3&nbsp;000&nbsp;€</b><span>vklad 3&nbsp;% = 27 – 90&nbsp;€ na tip</span></p>
-          <div class="pk-mini" data-calc="p150">
+          <p class="plan-bank"><small>Odporúčaný bank</small><b>1&nbsp;100 – 3&nbsp;000&nbsp;€</b><span>vklad 3&nbsp;% = 33 – 90&nbsp;€ na tip</span></p>
+          <div class="pk-mini" data-calc="p100">
             <div class="pk-mtop"><span>Prepočítajte si to</span><div class="seg sm" role="group" aria-label="Vklad na tip"><button type="button" data-pct="1" aria-pressed="false">1&nbsp;%</button><button type="button" data-pct="2" aria-pressed="false">2&nbsp;%</button><button type="button" data-pct="3" aria-pressed="true">3&nbsp;%</button><button type="button" data-pct="5" aria-pressed="false">5&nbsp;%</button></div></div>
             <div class="pk-lab">Váš bank <b data-o="bank"></b></div>
             <input type="range" min="200" max="5000" step="50" value="1000" data-in="bank" aria-label="Bank v eurách">
@@ -1116,7 +1149,7 @@ html.menu-open .jump { display: none; }
               <div><small>Vklad na tip</small><b data-o="stake"></b></div>
             </div>
           </div>
-          <a class="btn plan-cta" data-plan-cta="p150" href="https://t.me/TipRadarAiBot?start=c150" target="_blank" rel="noopener">Zapísať sa do poradovníka</a>
+          <a class="btn plan-cta" data-plan-cta="p100" href="https://t.me/TipRadarAiBot?start=c100" target="_blank" rel="noopener">Zapísať sa do poradovníka</a>
         </article>
       </div>
       <p class="pay-note small" id="payNote" hidden>Bankovým prevodom cez QR kód · bez poplatkov</p>
@@ -1178,8 +1211,8 @@ html.menu-open .jump { display: none; }
         <details><summary>Zaručujete výhru?</summary><p>Nie. Žiadny model nevie zaručiť výsledok zápasu. TipRadar vyberá stávky, pri ktorých je šanca podľa štatistík vyššia, než naznačuje kurz. Rozhoduje dlhodobý výsledok, preto zverejňujeme aj prehraté tipy. Ak vaše členstvo skončí v mínuse, dostanete mesiac zadarmo (pozrite garanciu nižšie).</p></details>
         <details id="garancia"><summary>Ako funguje garancia?</summary><p><strong>Mesiac zadarmo:</strong> ak vaše členstvo skončí v&nbsp;mínuse, dostanete 1 mesiac zadarmo – počas neho vám chodia všetky tipy do toho istého kanála a&nbsp;dáme vám vedieť na Telegrame. Počíta sa zo všetkých tipov vášho členstva s&nbsp;výsledkom, pri rovnakom vklade na každý tip (1 jednotka). Ak je súčet záporný, členstvo skončilo v&nbsp;mínuse. Na samotný mesiac zadarmo sa garancia už nevzťahuje, na ďalšie zaplatené členstvo áno.</p></details>
         <details><summary>Ako overujete, že model funguje?</summary><p>Spätným testom na odohraných zápasoch a mesačnou kontrolou, či tipy s dôverou 70&nbsp;% naozaj vychádzajú zhruba v 70&nbsp;% prípadov. Tipy vyradené pre veľký rozpor s kurzami si zapisujeme a porovnávame, kto mal pravdu.</p></details>
-        <details><summary>Ako funguje členstvo?</summary><p>Vyberiete si jedno z&nbsp;dvoch členstiev: Štart 75 tipov 65&nbsp;€ alebo VIP 150 tipov 110&nbsp;€. Tipy sa vám rátajú odo dňa nákupu, každý poslaný tip sa odpočíta (zrušený zápas sa neráta). Členstvo nemá časový limit – skončí, až keď dostanete posledný tip. Keď vám budú tipy dochádzať, dám vám vedieť. Obe členstvá majú úvodný hovor 1&nbsp;na&nbsp;1 (30 min), VIP navyše mentoring 1&nbsp;na&nbsp;1 počas celého členstva – kedykoľvek sa ma môžete opýtať na bank, vklad či konkrétny tip. Ďalšie členstvo máte lacnejšie (Štart −10&nbsp;%, VIP −20&nbsp;%). Odporúčaný bank: Štart 1&nbsp;050 – 2&nbsp;500&nbsp;€, VIP 900 – 3&nbsp;000&nbsp;€ (vklad 3&nbsp;% na tip).</p></details>
-        <details><summary>Aký bank a vklad odporúčate?</summary><p>Vklad 2&nbsp;–&nbsp;3&nbsp;% banku na tip. Pri vklade 3&nbsp;% stačí bank 500&nbsp;€ pri Štarte a&nbsp;450&nbsp;€ pri VIP – vtedy sa cena členstva vráti pri bežnom zisku modelu. Pri vklade 2&nbsp;% je potrebný väčší bank (približne 1&nbsp;000&nbsp;€). Vklad nikdy nad 5&nbsp;% banku a&nbsp;vždy z&nbsp;aktuálneho banku. Pri členstve si to môžete prepočítať.</p></details>
+        <details><summary>Ako funguje členstvo?</summary><p>Vyberiete si jedno z&nbsp;dvoch členstiev: Štart 30 tipov 29&nbsp;€ alebo VIP 100 tipov 89&nbsp;€. Tipy sa vám rátajú odo dňa nákupu, každý poslaný tip sa odpočíta (zrušený zápas sa neráta). Členstvo nemá časový limit – skončí, až keď dostanete posledný tip. Keď vám budú tipy dochádzať, dám vám vedieť. Obe členstvá majú úvodný hovor 1&nbsp;na&nbsp;1 (30 min), VIP navyše mentoring 1&nbsp;na&nbsp;1 počas celého členstva – kedykoľvek sa ma môžete opýtať na bank, vklad či konkrétny tip. VIP má aj ďalšie členstvo o&nbsp;20&nbsp;% lacnejšie. Odporúčaný bank: Štart 1&nbsp;200 – 2&nbsp;500&nbsp;€, VIP 1&nbsp;100 – 3&nbsp;000&nbsp;€ (vklad 3&nbsp;% na tip).</p></details>
+        <details><summary>Aký bank a vklad odporúčate?</summary><p>Vklad 2&nbsp;–&nbsp;3&nbsp;% banku na tip. Pri vklade 3&nbsp;% sa cena členstva vráti pri bežnom zisku modelu od banku približne 800&nbsp;€ pri Štarte a&nbsp;750&nbsp;€ pri VIP. Pri vklade 2&nbsp;% je potrebný väčší bank (približne 1&nbsp;000&nbsp;€). Vklad nikdy nad 5&nbsp;% banku a&nbsp;vždy z&nbsp;aktuálneho banku. Pri členstve si to môžete prepočítať.</p></details>
         <details><summary>Musím členstvo rušiť?</summary><p>Nie. Členstvo sa samo nepredlžuje – skončí po poslednom tipe. Ak chcete pokračovať, jednoducho si kúpite ďalšie.</p></details>
       </div>
     </div>
@@ -1610,6 +1643,29 @@ html.menu-open .jump { display: none; }
         $("bdForm").innerHTML = rec.slice(0, 10).reverse().map(function (r) { return '<i class="' + r.status + '" title="' + esc(r.match) + '">' + (r.status === "won" ? "✓" : "✕") + "</i>"; }).join("");
         if (mNum && m.withOdds > 0) $("bdMonth").innerHTML = "Posledných 10 · " + MONTHS[mNum - 1] + ' <b class="' + cls(m.profit) + '">' + signed(m.profit, 1) + " j.</b>";
       }
+      // úvod (8. 11. 2026): živý graf zisku z kalendára + posledný vyhodnotený tip
+      (function () {
+        var cal = (d.calendar || []).filter(function (x) { return x.total > 0; }).sort(function (a, b) { return a.day < b.day ? -1 : 1; });
+        if (!$("eqLine") || cal.length < 3 || d.withOdds <= 0) return;
+        var pts = [0], run = 0; cal.forEach(function (x) { run += Number(x.profit) || 0; pts.push(run); });
+        var lo = Math.min.apply(null, pts), hi = Math.max.apply(null, pts); if (hi - lo < 1) hi = lo + 1;
+        var W = 400, H = 170, pad = 14, X = function (i) { return (i / (pts.length - 1)) * W; }, Y = function (v) { return pad + (1 - (v - lo) / (hi - lo)) * (H - 2 * pad); };
+        var line = pts.map(function (v, i) { return (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(v).toFixed(1); }).join(" ");
+        $("eqLine").setAttribute("d", line); $("eqArea").setAttribute("d", line + " L" + W + " " + H + " L0 " + H + "Z");
+        $("eqZero").setAttribute("d", "M0 " + Y(0).toFixed(1) + "H" + W);
+        var dot = $("eqDot"); dot.classList.add("on");
+        var ch = document.querySelector(".eq-chart"); var place = function () { var r = ch.getBoundingClientRect(), c = ch.parentNode.getBoundingClientRect(); dot.style.left = (r.right - c.left) + "px"; dot.style.top = (r.top - c.top + (Y(pts[pts.length - 1]) / H) * r.height) + "px"; }; place(); window.addEventListener("resize", place);
+        var pr = d.profit, big = $("eqProfit"); big.className = "num" + (pr < 0 ? " neg" : ""); big.textContent = signed(pr, 1);
+        whenSeen(big, function () { count(big, pr, 1, function (v) { return signed(v, 1); }); });
+        $("eqTips").textContent = fmt(d.totalResolved || 0, 0);
+        $("eqRate").innerHTML = (d.winRate != null ? Math.round(d.winRate) : Math.round((d.won / Math.max(1, d.totalResolved)) * 100)) + "&nbsp;%";
+        $("eqFrom").textContent = dayLabel(cal[0].day) + " " + cal[0].day.slice(0, 4);
+        $("eqCap").textContent = "Skutočné výsledky všetkých tipov";
+        var rec = (d.recent || []).filter(function (r) { return r.status === "won" || r.status === "lost"; });
+        $("eqForm").innerHTML = rec.slice(0, 10).reverse().map(function (r, k) { return '<i class="' + r.status + '" style="--k:' + k + '" title="' + esc(r.match) + '">' + (r.status === "won" ? "✓" : "✕") + "</i>"; }).join("");
+        var last = rec[0], el = $("eqLast");
+        if (last && el) { el.classList.toggle("lost", last.status === "lost"); el.innerHTML = "<b>" + (last.status === "won" ? "✓" : "✕") + "</b><span>" + esc(last.bet) + (last.odds ? " · kurz " + fmt(last.odds, 2) : "") + "<small>Posledný tip · " + esc(last.match) + " · " + (last.status === "won" ? "vyšiel" : "nevyšiel") + "</small></span>"; }
+      })();
       // členstvo: posledných 7 dní
       var l7 = d.last7, el7 = $("last7");
       if (el7 && l7 && l7.totalResolved > 0) {
@@ -1629,12 +1685,12 @@ html.menu-open .jump { display: none; }
   }
 
   /* ---------------- ČLENSTVO (od 2. 11. 2026 večer: len Štart / VIP, bez členských kariet) ----------------
-     Ceny musia sedieť s PAY_TERMS v src/payments.ts: Štart 75 = 65 €, VIP 150 = 110 € (od 4. 11. 2026 večer).
+     Ceny musia sedieť s PAY_TERMS v src/payments.ts: Štart 30 = 29 €, VIP 100 = 89 € (od 8. 11. 2026).
      Výhody v stĺpcoch musia sedieť s TIER_PERKS v src/telegram.ts. Bank od = zisk aspoň 1,5× cena pri bežnom zisku modelu (4,2 % na tip) a vklade 3 % (memberBank v payments.ts). */
   (function () {
     var box = $("clenstvo"); if (!box) return;
     var f = function (n, d) { return n.toLocaleString("sk-SK", { minimumFractionDigits: d, maximumFractionDigits: d }); };
-    var MEMBER_STEPS = [[75, 65, "Štart"], [150, 110, "VIP"]];
+    var MEMBER_STEPS = [[30, 29, "Štart"], [100, 89, "VIP"]]; // 8. 11. 2026 (predtým 75 / 65 € a 150 / 110 €)
     var TERMS = {};
     MEMBER_STEPS.forEach(function (s) {
       var tips = s[0], price = s[1];
@@ -1642,7 +1698,7 @@ html.menu-open .jump { display: none; }
     });
     // 4. 11. 2026 (Michal): prepočet je pri každom členstve zvlášť (spodná kalkulačka zrušená).
     var qa = function (sel) { return box.querySelectorAll(sel); };
-    var cur = "p150";
+    var cur = "p100";
     qa("[data-calc]").forEach(function (c) {
       var t = TERMS[c.dataset.calc]; if (!t) return;
       var bI = c.querySelector('[data-in="bank"]'), pct = 3;
@@ -1680,7 +1736,7 @@ html.menu-open .jump { display: none; }
       $("payNote").hidden = !pay;
     }
     function apply(term) {
-      if (!TERMS[term]) term = "p150";
+      if (!TERMS[term]) term = "p100";
       cur = term;
       qa("[data-plan]").forEach(function (c) { c.classList.toggle("on", c.dataset.plan === term); });
       root.dataset.term = term;
@@ -1690,7 +1746,7 @@ html.menu-open .jump { display: none; }
     // Odkaz /clenstvo#vip (alebo #start, #premium, #150 …) rovno nastaví členstvo; staré #gold / #platinum vedú na VIP.
     var h = location.hash.slice(1).toLowerCase();
     ctas();
-    apply(TERMS["p" + h] ? "p" + h : { start: "p75", stat: "p75", silver: "p75", premium: "p150", vip: "p150", "50": "p75", "100": "p150" }[h] || "p150");
+    apply(TERMS["p" + h] ? "p" + h : { start: "p30", stat: "p30", silver: "p30", premium: "p100", vip: "p100", "50": "p30", "75": "p30", "150": "p100" }[h] || "p100");
     var openG = function () { var d = $("garancia"); if (d) d.open = true; };
     document.querySelectorAll('a[href="#garancia"]').forEach(function (a) { a.addEventListener("click", openG); });
     if (location.hash === "#garancia") openG();

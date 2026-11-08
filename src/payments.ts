@@ -52,6 +52,8 @@ export function addActiveMonths(from: Date, months: number, days?: number): Date
   return calEnd;
 }
 
+// Od 8. 11. 2026 23:15 (Michal): len 2 členstvá – Štart p30 30 tipov 29 €, VIP p100 100 tipov 89 €. Štart bez vernostnej zľavy.
+// p75 / p150 (Štart 75 tipov 65 €, VIP 150 tipov 110 €) odvtedy staré.
 // Od 4. 11. 2026 19:12 (Michal: „75 tipov za 59 a to druhé uprav podľa toho“): Štart p75 75 tipov 59 €, VIP p150 150 tipov 99 €;
 // 19:15 Michal „ceny daj od 65 €“ → Štart 75 tipov 65 €, VIP 150 tipov 109 €; 19:16 „VIP daj za 110“ → VIP 110 €
 // (VIP hovor + mentoring 1 na 1; kurz do členstiev nedávať). p50 / p100 odvtedy staré.
@@ -68,13 +70,14 @@ export function addActiveMonths(from: Date, months: number, days?: number): Date
 // Bez časovej platnosti: členstvo platí, kým sa neminú tipy (NO_EXPIRY_MONTHS je len technický dátum, nikde sa neukazuje).
 // Garancia: prvých 20 tipov bez rizika; ak členstvo skončí v strate (v jednotkách), člen dostane 1 mesiac zadarmo.
 export const NO_EXPIRY_MONTHS = 1200;
-export type SellableTerm = "p75" | "p150";
-export type Term = SellableTerm | "p50" | "p100" | "p200" | "p250" | "p300" | "t75" | "t150" | "t300" | "m1" | "m3" | "season";
-export const SELLABLE_TERMS: SellableTerm[] = ["p75", "p150"];
+export type SellableTerm = "p30" | "p100";
+export type Term = SellableTerm | "p50" | "p75" | "p150" | "p200" | "p250" | "p300" | "t75" | "t150" | "t300" | "m1" | "m3" | "season";
+export const SELLABLE_TERMS: SellableTerm[] = ["p30", "p100"];
 const pk = (price: number, tips: number) => ({ price, name: `${tips} tipov`, tips, months: NO_EXPIRY_MONTHS });
 export const PAY_TERMS: Record<Term, { price: number; name: string; months?: number; days?: number; tips?: number }> = {
+  p30: pk(29, 30),
   p50: pk(39, 50),
-  p100: pk(69, 100),
+  p100: pk(89, 100),
   p150: pk(110, 150),
   p200: pk(139, 200),
   p250: pk(169, 250),
@@ -89,13 +92,14 @@ export const PAY_TERMS: Record<Term, { price: number; name: string; months?: num
 };
 /** Názov členstva: Štart / Gold / Platinum (staré balíčky a časové členstvá majú v názve „starý / staré“). */
 export const TIER_NAMES: Record<Term, string> = {
+  p30: "Štart",
   p50: "Štart (staré, 50 tipov)",
-  p100: "VIP (staré, 100 tipov)",
-  p150: "VIP",
+  p100: "VIP",
+  p150: "VIP (staré, 150 tipov)",
   p200: "Gold (staré, 200 tipov)",
   p250: "Platinum (staré, 250 tipov)",
   p300: "Platinum (staré, 300 tipov)",
-  p75: "Štart",
+  p75: "Štart (staré, 75 tipov)",
   t75: "Štart (starý balíček)",
   t150: "Gold (starý balíček)",
   t300: "Onyx (starý balíček)",
@@ -104,7 +108,7 @@ export const TIER_NAMES: Record<Term, string> = {
   season: "Platinum (6 mesiacov, staré)",
 };
 export function tierName(term: Term): string {
-  return TIER_NAMES[term] ?? TIER_NAMES.p75;
+  return TIER_NAMES[term] ?? TIER_NAMES.p30;
 }
 /** Názov členstva s počtom tipov, napríklad „Platinum · 200 tipov“. */
 export function termLabel(term: Term): string {
@@ -124,7 +128,7 @@ const REAL_ROI = 0.042;
 // Od 4. 11. 2026: odporúčaný bank od – do. „Od“ = pri bežnom zisku modelu (4,2 % na tip) a vklade 3 % zarobí člen
 // aspoň 1,5× cenu členstva (cena sa vráti a ešte je v pluse). „Do“ = horná hranica, pri ktorej je vklad 3 % stále rozumný (75 – 90 €).
 const BANK_MARGIN = 1.5;
-const BANK_MAX: Partial<Record<Term, number>> = { p75: 2500, p150: 3000 };
+const BANK_MAX: Partial<Record<Term, number>> = { p30: 2500, p100: 3000, p75: 2500, p150: 3000 };
 export function memberBank(term: Term): number {
   const t = PAY_TERMS[term];
   const tips = t.tips || 50;
@@ -133,21 +137,21 @@ export function memberBank(term: Term): number {
 export function memberBankMax(term: Term): number {
   return BANK_MAX[term] ?? memberBank(term) * 3;
 }
-/** Koľko ušetrí oproti Štartu (rovnaký počet tipov za cenu Štartu 75 tipov). */
+/** Koľko ušetrí oproti Štartu (rovnaký počet tipov za cenu Štartu 30 tipov). */
 export function memberSaving(term: Term): number {
   const t = PAY_TERMS[term];
-  return Math.round(((t.tips || 75) / 75) * PAY_TERMS.p75.price - t.price);
+  return Math.round(((t.tips || 30) / 30) * PAY_TERMS.p30.price - t.price);
 }
-/** Členstvo podľa počtu tipov (do 100 Štart 75, inak VIP 150). */
+/** Členstvo podľa počtu tipov (do 50 Štart 30, inak VIP 100). */
 export function termForTips(tips: number): SellableTerm {
-  return (Number(tips) || 75) > 100 ? "p150" : "p75";
+  return (Number(tips) || 30) > 50 ? "p100" : "p30";
 }
 /** Staré odkazy vedú na nové členstvá: Štart 75 / 50 dní → Štart, Štart 100 → Premium, Gold 250 / Onyx 500 / 300 tipov / 6 mesiacov → Platinum. */
 export function sellableTerm(v: unknown): SellableTerm | null {
   if (isSellableTerm(v)) return v;
-  if (v === "p50" || v === "m1") return "p75";
-  if (v === "p100" || v === "t75") return "p150";
-  if (v === "p200" || v === "p250" || v === "t150" || v === "p300" || v === "t300" || v === "m3" || v === "season") return "p150";
+  if (v === "p50" || v === "p75" || v === "m1") return "p30";
+  if (v === "p150" || v === "t75") return "p100";
+  if (v === "p200" || v === "p250" || v === "t150" || v === "p300" || v === "t300" || v === "m3" || v === "season") return "p100";
   return null;
 }
 
