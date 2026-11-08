@@ -456,3 +456,34 @@ export async function moveSameTypeOnce(typeOf: (market: string) => string | null
     return moved;
   });
 }
+
+/**
+ * 8. 11. 2026 (Michal): staré tipy na fauly (pred novým nastavením hraníc faulov podľa zápasu) sa nerátajú do štatistík –
+ * raz pri štarte idú do sledovaných so značkou oldFoulsMoved. Týka sa len tipov so zápasom pred 8. 11. 2026. Nič sa nemaže.
+ */
+const OLD_FOULS_KEY = "tipradar_migr_old_fouls_done";
+export async function moveOldFoulTipsOnce(): Promise<number> {
+  if (!useUpstash) return 0;
+  const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };
+  const done = (await upstashClient().get(`${UPSTASH_URL}/get/${OLD_FOULS_KEY}`, auth)).data?.result;
+  if (done) return 0;
+  return withWriteLock(async () => {
+    const tips = await readAll();
+    const cutoff = new Date("2026-11-08T00:00:00Z").getTime();
+    let moved = 0;
+    for (const t of tips) {
+      if ((t.legs && t.legs.length) || t.watchOnly || !String(t.market || "").startsWith("Fauly")) continue;
+      const d = new Date(t.matchDate).getTime();
+      if (!(d < cutoff)) continue;
+      t.watchOnly = true;
+      t.oldFoulsMoved = true;
+      t.strongOfDay = undefined;
+      moved++;
+    }
+    if (moved) await writeAll(tips);
+    await upstashClient().post(`${UPSTASH_URL}/set/${OLD_FOULS_KEY}`, new Date().toISOString(), {
+      headers: { ...auth.headers, "Content-Type": "text/plain" },
+    });
+    return moved;
+  });
+}

@@ -345,6 +345,8 @@ export interface SavedTip {
   lateRestored?: boolean;
   /** 8. 11. 2026: druhý (a ďalší) tip toho istého typu v zápase presunutý do sledovaných (najviac 1 tip z typu). */
   sameTypeMoved?: boolean;
+  /** 8. 11. 2026: starý tip na fauly (pred hranicami podľa zápasu) presunutý do sledovaných. */
+  oldFoulsMoved?: boolean;
   /** Tip skrytý z histórie tipov - naďalej sa ráta do štatistík a zobrazuje na prezentačnej stránke. */
   archived?: boolean;
   /** Výsledok alebo kurz bol ručne opravený v histórii. */
