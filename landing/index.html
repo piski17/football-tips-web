@@ -756,35 +756,45 @@ html.menu-open .jump { display: none; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; } }
 
 /* ---------- úvod: živý graf zisku (8. 11. 2026 – namiesto karty Analýza zápasu) ---------- */
-.eq { position: relative; z-index: 2; margin: 0; width: min(560px, 100%); }
-.eq-card { position: relative; padding: 30px 30px 24px; border-radius: 30px; background: linear-gradient(160deg, rgba(32, 35, 43, .88), rgba(12, 13, 17, .95) 60%); border: 1px solid var(--line2); box-shadow: 0 60px 120px -40px rgba(0, 0, 0, .95), 0 0 120px -30px rgba(125, 139, 255, .35); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); overflow: hidden; }
-.eq-card::before { content: ""; position: absolute; left: 30px; right: 30px; top: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .6), transparent); }
-.eq-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; font: 600 11px/1 var(--display); letter-spacing: .22em; text-transform: uppercase; color: var(--faint); white-space: nowrap; }
-.eq-top b { display: inline-flex; align-items: center; gap: 9px; color: var(--text); font-weight: 700; }
-.eq-top b::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--win); animation: pulse 2.2s infinite; }
-.eq-big { display: flex; align-items: baseline; gap: 12px; margin-top: 22px; }
-.eq-big b { font: 300 clamp(64px, 8vw, 96px)/.9 var(--display); letter-spacing: -.05em; background: var(--plat); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.eq-big b.neg { background: none; -webkit-text-fill-color: currentColor; }
-.eq-big span { font: 600 16px/1 var(--display); color: var(--muted); }
-.eq-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
-.eq-meta span { padding: 7px 12px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--line2); font: 600 13px/1 var(--display); color: var(--muted); }
-.eq-meta b { color: var(--text); font-weight: 700; }
-.eq-chart { display: block; width: calc(100% + 60px); height: 170px; margin: 22px -30px 0; overflow: visible; }
-.eq-grid path { stroke: rgba(255, 255, 255, .05); stroke-dasharray: 3 5; }
-.eq-zero { stroke: rgba(255, 255, 255, .18); stroke-dasharray: 2 4; }
-.eq-area { fill: url(#eqFill); opacity: 0; animation: eqFade 1.2s var(--ease) 1.2s forwards; }
-.eq-line { fill: none; stroke: url(#eqStroke); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; stroke-dasharray: 1; stroke-dashoffset: 1; filter: drop-shadow(0 0 8px rgba(217, 221, 228, .55)); animation: eqDraw 2.2s var(--ease) .3s forwards; }
-@keyframes eqDraw { to { stroke-dashoffset: 0; } }
-@keyframes eqFade { to { opacity: 1; } }
-.eq-dot { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 5px rgba(255, 255, 255, .15), 0 0 24px rgba(255, 255, 255, .8); display: none; opacity: 0; animation: eqFade .5s ease 2.4s forwards; }
-.eq-dot.on { display: block; }
-.eq-axis { display: flex; justify-content: space-between; margin-top: 10px; font: 600 10.5px/1 var(--display); letter-spacing: .2em; text-transform: uppercase; color: var(--faint); }
-.eq-form { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line); }
-.eq-form:empty { display: none; }
-.eq-form i { aspect-ratio: 1; display: grid; place-items: center; border-radius: 50%; font: 700 11px/1 var(--display); font-style: normal; opacity: 0; transform: scale(.6); animation: eqPop .5s var(--ease) forwards; animation-delay: calc(1.6s + var(--k) * .08s); }
-.eq-form i.won { background: rgba(94, 224, 160, .14); color: var(--win); box-shadow: inset 0 0 0 1px rgba(94, 224, 160, .45); }
-.eq-form i.lost { background: rgba(255, 123, 134, .1); color: var(--loss); box-shadow: inset 0 0 0 1px rgba(255, 123, 134, .35); }
-@keyframes eqPop { to { opacity: 1; transform: none; } }
+/* úvod (9. 11. 2026): balík platinových tiketov – skutočné posledné vyhodnotené tipy, každé 4 s sa vymenia */
+.deck { position: relative; z-index: 2; margin: 0; width: min(540px, 100%); display: grid; justify-items: center; }
+.deck-cards { position: relative; width: 100%; height: 400px; perspective: 1400px; }
+.tk3 { position: absolute; left: 0; right: 0; top: 30px; margin: 0 auto; width: min(460px, 92%); border-radius: 28px; transform-origin: 50% 120%; transition: transform 1s var(--ease), opacity 1s var(--ease), filter 1s var(--ease); will-change: transform; }
+.tk3-in { position: relative; overflow: hidden; padding: 24px 26px 0; border-radius: inherit; background: linear-gradient(160deg, rgba(36, 39, 48, .96), rgba(14, 15, 19, .98) 65%); border: 1px solid var(--line2); box-shadow: 0 60px 120px -40px rgba(0, 0, 0, .95); color: var(--text); transition: color .8s; }
+.tk3-in::before { content: ""; position: absolute; inset: 0; background: var(--metal); opacity: 0; transition: opacity .9s var(--ease); }
+.tk3-in::after { content: ""; position: absolute; inset: -40% -60%; background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, .75) 50%, transparent 58%); transform: translateX(-60%); pointer-events: none; opacity: 0; }
+.tk3-in > * { position: relative; z-index: 1; }
+.tk3.p0 { z-index: 3; transform: translate3d(0, 0, 0) rotate(-2deg); }
+.tk3.p0 .tk3-in { color: #0B0C10; border-color: transparent; box-shadow: 0 70px 120px -40px rgba(0, 0, 0, .95), 0 0 140px -30px rgba(125, 139, 255, .45), 0 1px 0 rgba(255, 255, 255, .9) inset; }
+.tk3.p0 .tk3-in::before { opacity: 1; }
+.tk3.p0 .tk3-in::after { opacity: 1; animation: tkSheen 4s var(--ease) .4s infinite; }
+.tk3.p1 { z-index: 2; transform: translate3d(70px, -26px, -80px) rotate(7deg); opacity: .85; filter: brightness(.8); }
+.tk3.p2 { z-index: 1; transform: translate3d(-70px, -40px, -160px) rotate(-10deg); opacity: .6; filter: brightness(.6); }
+.tk3.out { z-index: 4; transform: translate3d(-40px, 160px, 60px) rotate(-16deg); opacity: 0; transition-duration: .7s; }
+@keyframes tkSheen { 0% { transform: translateX(-60%); } 45%, 100% { transform: translateX(60%); } }
+.tk3-top { display: flex; justify-content: space-between; gap: 12px; font: 700 10.5px/1 var(--display); letter-spacing: .22em; text-transform: uppercase; opacity: .62; white-space: nowrap; }
+.tk3-top span:last-child { overflow: hidden; text-overflow: ellipsis; }
+.tk3-match { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 14px; margin: 24px 0 22px; }
+.tk3-match b { font: 700 clamp(22px, 3vw, 30px)/1.05 var(--display); letter-spacing: -.035em; overflow-wrap: anywhere; }
+.tk3-match b:last-child { text-align: right; }
+.tk3-match i { font: 300 clamp(34px, 4.4vw, 46px)/1 var(--display); font-style: normal; letter-spacing: -.04em; padding: 0 4px; }
+.tk3-row { display: grid; grid-template-columns: 1fr auto auto; gap: 18px; padding: 16px 0 20px; border-top: 1px solid currentColor; border-color: rgba(127, 127, 127, .25); font: 700 14.5px/1.3 var(--display); }
+.tk3-row small { display: block; margin-bottom: 6px; font: 700 10px/1 var(--display); letter-spacing: .2em; text-transform: uppercase; opacity: .55; }
+.tk3-row em { font-style: normal; font-size: 20px; letter-spacing: -.02em; }
+.tk3-stub { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 0 -26px; padding: 18px 26px 20px; border-top: 2px dashed rgba(127, 127, 127, .35); }
+.tk3-stub::before, .tk3-stub::after { content: ""; position: absolute; top: -12px; width: 22px; height: 22px; border-radius: 50%; background: var(--bg); }
+.tk3-stub::before { left: -11px; } .tk3-stub::after { right: -11px; }
+.tk3-stamp { display: inline-flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 10px; border: 2px solid currentColor; color: var(--win); font: 800 13px/1 var(--display); letter-spacing: .16em; text-transform: uppercase; transform: rotate(-4deg); }
+.tk3.p0 .tk3-stamp { color: #0B7F4D; }
+.tk3.lost .tk3-stamp { color: var(--loss); } .tk3.p0.lost .tk3-stamp { color: #C2283A; }
+.tk3-pl { text-align: right; font: 700 22px/1 var(--display); letter-spacing: -.03em; }
+.tk3-pl small { display: block; margin-bottom: 5px; font: 700 10px/1 var(--display); letter-spacing: .2em; text-transform: uppercase; opacity: .55; }
+.deck-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 6px; }
+.deck-bar span { padding: 9px 14px; border-radius: 999px; background: rgba(16, 18, 23, .7); box-shadow: inset 0 0 0 1px var(--line2); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); font: 600 13.5px/1 var(--display); color: var(--muted); }
+.deck-bar b { color: var(--text); font-weight: 800; }
+.deck-bar b.pos { color: var(--win); } .deck-bar b.neg { color: var(--loss); }
+@media (prefers-reduced-motion: reduce) { .tk3, .tk3-in::before { transition: none; } .tk3.p0 .tk3-in::after { animation: none; opacity: 0; } }
+@media (max-width: 560px) { .deck-cards { height: 340px; } .tk3 { top: 34px; border-radius: 22px; } .tk3-in { padding: 20px 20px 0; } .tk3-stub { margin: 0 -20px; padding: 14px 20px 16px; } .tk3-match { margin: 18px 0 16px; gap: 10px; } .tk3-row { gap: 12px; font-size: 13px; } .tk3.p1 { transform: translate3d(34px, -22px, -80px) rotate(6deg); } .tk3.p2 { transform: translate3d(-34px, -34px, -160px) rotate(-8deg); } }
 .an-float.tk b { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: rgba(94, 224, 160, .12); color: var(--win); font: 700 18px/1 var(--display); box-shadow: inset 0 0 0 1px rgba(94, 224, 160, .35); }
 .an-float.tk.lost b { background: rgba(255, 123, 134, .1); color: var(--loss); box-shadow: inset 0 0 0 1px rgba(255, 123, 134, .35); }
 .stage .an-float { max-width: 300px; }
@@ -855,34 +865,39 @@ html.menu-open .jump { display: none; }
           <a class="btn ghost" href="/vysledky">Overené výsledky</a>
         </div>
       </div>
-      <div class="stage" aria-label="Ukážka: takto model posudzuje jeden trh">
+      <div class="stage" aria-label="Posledné vyhodnotené tipy">
         <div class="pitch-wrap" aria-hidden="true"><svg class="pitch" viewBox="0 0 1050 680" aria-hidden="true"><defs><radialGradient id="pgG"><stop offset="0" stop-color="#9AA6FF" stop-opacity=".22"/><stop offset="1" stop-color="#9AA6FF" stop-opacity="0"/></radialGradient></defs>
             <ellipse cx="525" cy="340" rx="520" ry="330" fill="url(#pgG)"/>
             <g fill="none" stroke="#E6E9EE" stroke-opacity=".3" stroke-width="2"><rect x="10" y="10" width="1030" height="660"/><path d="M525 10v660"/><circle cx="525" cy="340" r="91.5"/><rect x="10" y="138.4" width="165" height="403.2"/><rect x="10" y="248.4" width="55" height="183.2"/><rect x="875" y="138.4" width="165" height="403.2"/><rect x="985" y="248.4" width="55" height="183.2"/><path d="M175 267a91.5 91.5 0 0 1 0 146M875 267a91.5 91.5 0 0 0 0 146"/></g>
             <g fill="#fff" opacity=".55"><circle cx="525" cy="340" r="4"/><circle cx="120" cy="340" r="3"/><circle cx="930" cy="340" r="3"/></g>
             <g class="pings"><circle cx="300" cy="220" r="6"/><circle cx="700" cy="470" r="6"/><circle cx="820" cy="190" r="6"/><circle cx="420" cy="520" r="6"/></g>
           </svg></div>
-        <figure class="eq rv" aria-label="Zisk všetkých tipov od začiatku">
-          <div class="eq-card">
-            <div class="eq-top"><b>Zisk od začiatku</b><span id="eqRange">všetky tipy</span></div>
-            <div class="eq-big"><b class="num" id="eqProfit">–</b><span>jednotiek</span></div>
-            <div class="eq-meta"><span><b id="eqTips">–</b> vyhodnotených tipov</span><span><b id="eqRate">–</b> vyšlo</span></div>
-            <svg class="eq-chart" viewBox="0 0 400 170" preserveAspectRatio="none" aria-hidden="true">
-              <defs><linearGradient id="eqFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D9DDE4" stop-opacity=".28"/><stop offset="1" stop-color="#D9DDE4" stop-opacity="0"/></linearGradient>
-              <linearGradient id="eqStroke" x1="0" x2="1"><stop offset="0" stop-color="#8D94A2"/><stop offset=".6" stop-color="#EEF0F4"/><stop offset="1" stop-color="#FFFFFF"/></linearGradient></defs>
-              <g class="eq-grid"><path d="M0 42.5H400M0 85H400M0 127.5H400"/></g>
-              <path class="eq-zero" id="eqZero" d="M0 150H400"/>
-              <path class="eq-area" id="eqArea" d="M0 150 L40 140 L80 146 L120 120 L160 112 L200 118 L240 90 L280 72 L320 80 L360 44 L400 30 L400 170 L0 170Z"/>
-              <path class="eq-line" id="eqLine" pathLength="1" d="M0 150 L40 140 L80 146 L120 120 L160 112 L200 118 L240 90 L280 72 L320 80 L360 44 L400 30"/>
-            </svg>
-            <i class="eq-dot" id="eqDot"></i>
-            <div class="eq-axis"><span id="eqFrom">začiatok</span><span>dnes</span></div>
-            <div class="eq-form" id="eqForm" aria-label="Posledné tipy"></div>
+        <figure class="deck rv" aria-label="Posledné vyhodnotené tipy">
+          <div class="deck-cards" id="deck">
+            <article class="tk3 p0"><div class="tk3-in">
+              <div class="tk3-top"><span>TipRadar · tip</span><span>Premier League</span></div>
+              <div class="tk3-match"><b>Arsenal</b><i>2:1</i><b>Chelsea</b></div>
+              <div class="tk3-row"><span><small>Tip</small>Rohy: viac ako 9,5</span><span><small>Kurz</small><em>1,85</em></span><span><small>Šanca</small>74 %</span></div>
+              <div class="tk3-stub"><span class="tk3-stamp">Vyšiel ✓</span><span class="tk3-pl"><small>Zisk</small>+0,85 j.</span></div>
+            </div></article>
+            <article class="tk3 p1"><div class="tk3-in">
+              <div class="tk3-top"><span>TipRadar · tip</span><span>La Liga</span></div>
+              <div class="tk3-match"><b>Sevilla</b><i>1:1</i><b>Betis</b></div>
+              <div class="tk3-row"><span><small>Tip</small>Karty: viac ako 4,5</span><span><small>Kurz</small><em>1,72</em></span><span><small>Šanca</small>71 %</span></div>
+              <div class="tk3-stub"><span class="tk3-stamp">Vyšiel ✓</span><span class="tk3-pl"><small>Zisk</small>+0,72 j.</span></div>
+            </div></article>
+            <article class="tk3 p2"><div class="tk3-in">
+              <div class="tk3-top"><span>TipRadar · tip</span><span>Serie A</span></div>
+              <div class="tk3-match"><b>Inter</b><i>3:0</i><b>Lecce</b></div>
+              <div class="tk3-row"><span><small>Tip</small>Strely na bránu: Inter viac ako 5,5</span><span><small>Kurz</small><em>1,64</em></span><span><small>Šanca</small>76 %</span></div>
+              <div class="tk3-stub"><span class="tk3-stamp">Vyšiel ✓</span><span class="tk3-pl"><small>Zisk</small>+0,64 j.</span></div>
+            </div></article>
           </div>
+          <div class="deck-bar"><span><b class="num" id="dkRate">–</b> vyšlo</span><span><b class="num" id="dkTips">–</b> vyhodnotených tipov</span><span><b class="num" id="dkProfit">–</b> jednotiek</span></div>
           <figcaption class="an-cap" id="eqCap">Ilustrácia</figcaption>
         </figure>
         <div class="an-float fl1"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-tg"/></svg><span>Tip príde do Telegramu<small>1 – 2 hodiny pred výkopom</small></span></div>
-        <div class="an-float fl2 tk" id="eqLast"><b>✓</b><span>Každý tip zverejnený<small>výhry aj prehry</small></span></div>
+        <div class="an-float fl2 tk"><b>3</b><span>Najviac 3 tipy denne<small>kvalita pred kvantitou</small></span></div>
       </div>
       <ul class="trust">
         <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5 9 17.5 20 6.5"/></svg>Každý tip zverejnený</li>
@@ -1643,28 +1658,36 @@ html.menu-open .jump { display: none; }
         $("bdForm").innerHTML = rec.slice(0, 10).reverse().map(function (r) { return '<i class="' + r.status + '" title="' + esc(r.match) + '">' + (r.status === "won" ? "✓" : "✕") + "</i>"; }).join("");
         if (mNum && m.withOdds > 0) $("bdMonth").innerHTML = "Posledných 10 · " + MONTHS[mNum - 1] + ' <b class="' + cls(m.profit) + '">' + signed(m.profit, 1) + " j.</b>";
       }
-      // úvod (8. 11. 2026): živý graf zisku z kalendára + posledný vyhodnotený tip
+      // úvod (9. 11. 2026): balík tiketov zo skutočných posledných vyhodnotených tipov
       (function () {
-        var cal = (d.calendar || []).filter(function (x) { return x.total > 0; }).sort(function (a, b) { return a.day < b.day ? -1 : 1; });
-        if (!$("eqLine") || cal.length < 3 || d.withOdds <= 0) return;
-        var pts = [0], run = 0; cal.forEach(function (x) { run += Number(x.profit) || 0; pts.push(run); });
-        var lo = Math.min.apply(null, pts), hi = Math.max.apply(null, pts); if (hi - lo < 1) hi = lo + 1;
-        var W = 400, H = 170, pad = 14, X = function (i) { return (i / (pts.length - 1)) * W; }, Y = function (v) { return pad + (1 - (v - lo) / (hi - lo)) * (H - 2 * pad); };
-        var line = pts.map(function (v, i) { return (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(v).toFixed(1); }).join(" ");
-        $("eqLine").setAttribute("d", line); $("eqArea").setAttribute("d", line + " L" + W + " " + H + " L0 " + H + "Z");
-        $("eqZero").setAttribute("d", "M0 " + Y(0).toFixed(1) + "H" + W);
-        var dot = $("eqDot"); dot.classList.add("on");
-        var ch = document.querySelector(".eq-chart"); var place = function () { var r = ch.getBoundingClientRect(), c = ch.parentNode.getBoundingClientRect(); dot.style.left = (r.right - c.left) + "px"; dot.style.top = (r.top - c.top + (Y(pts[pts.length - 1]) / H) * r.height) + "px"; }; place(); window.addEventListener("resize", place);
-        var pr = d.profit, big = $("eqProfit"); big.className = "num" + (pr < 0 ? " neg" : ""); big.textContent = signed(pr, 1);
-        whenSeen(big, function () { count(big, pr, 1, function (v) { return signed(v, 1); }); });
-        $("eqTips").textContent = fmt(d.totalResolved || 0, 0);
-        $("eqRate").innerHTML = (d.winRate != null ? Math.round(d.winRate) : Math.round((d.won / Math.max(1, d.totalResolved)) * 100)) + "&nbsp;%";
-        $("eqFrom").textContent = dayLabel(cal[0].day) + " " + cal[0].day.slice(0, 4);
-        $("eqCap").textContent = "Skutočné výsledky všetkých tipov";
-        var rec = (d.recent || []).filter(function (r) { return r.status === "won" || r.status === "lost"; });
-        $("eqForm").innerHTML = rec.slice(0, 10).reverse().map(function (r, k) { return '<i class="' + r.status + '" style="--k:' + k + '" title="' + esc(r.match) + '">' + (r.status === "won" ? "✓" : "✕") + "</i>"; }).join("");
-        var last = rec[0], el = $("eqLast");
-        if (last && el) { el.classList.toggle("lost", last.status === "lost"); el.innerHTML = "<b>" + (last.status === "won" ? "✓" : "✕") + "</b><span>" + esc(last.bet) + (last.odds ? " · kurz " + fmt(last.odds, 2) : "") + "<small>Posledný tip · " + esc(last.match) + " · " + (last.status === "won" ? "vyšiel" : "nevyšiel") + "</small></span>"; }
+        var deck = $("deck"); if (!deck) return;
+        var rec = (d.recent || []).filter(function (r) { return (r.status === "won" || r.status === "lost") && r.match && r.match.indexOf("Tiket") !== 0; }).slice(0, 12);
+        if (d.totalResolved > 0) {
+          $("dkTips").textContent = fmt(d.totalResolved, 0);
+          $("dkRate").innerHTML = Math.round((d.won / Math.max(1, d.totalResolved)) * 100) + "&nbsp;%";
+          var pb = $("dkProfit"); pb.textContent = signed(Number(d.profit) || 0, 1); pb.className = "num " + cls(Number(d.profit) || 0);
+        }
+        if (rec.length < 3) return;
+        var card = function (r) {
+          var teams = String(r.match).split(" – "), won = r.status === "won", pl = won ? (r.odds ? r.odds - 1 : null) : -1;
+          var bet = String(r.bet || ""); var ci = bet.indexOf(": "); if (ci > 0 && ci < 40) bet = bet.slice(0, ci) + ": " + bet.slice(ci + 2);
+          return '<div class="tk3-in"><div class="tk3-top"><span>' + dayLabel(r.day) + (r.time ? " · " + esc(r.time) : "") + "</span><span>" + esc(r.league || "TipRadar") + "</span></div>" +
+            '<div class="tk3-match"><b>' + esc(teams[0] || r.match) + "</b><i>" + esc(r.score || "vs") + "</i><b>" + esc(teams[1] || "") + "</b></div>" +
+            '<div class="tk3-row"><span><small>Tip</small>' + esc(bet) + "</span><span><small>Kurz</small><em>" + (r.odds ? fmt(r.odds, 2) : "–") + "</em></span><span><small>Šanca</small>" + (r.probability ? r.probability + " %" : "–") + "</span></div>" +
+            '<div class="tk3-stub"><span class="tk3-stamp">' + (won ? "Vyšiel ✓" : "Nevyšiel ✕") + '</span><span class="tk3-pl"><small>' + (won ? "Zisk" : "Strata") + "</small>" + (pl == null ? "–" : signed(pl, 2) + " j.") + "</span></div></div>";
+        };
+        var els = Array.prototype.slice.call(deck.querySelectorAll(".tk3")), i = Math.max(0, rec.findIndex(function (r) { return r.status === "won"; }));
+        var paint = function () { els.forEach(function (el, k) { var r = rec[(i + k) % rec.length]; el.innerHTML = card(r); el.classList.toggle("lost", r.status === "lost"); }); };
+        paint(); $("eqCap").textContent = "Skutočné posledné tipy · výhry aj prehry";
+        if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        var order = els.slice();
+        setInterval(function () {
+          if (document.hidden) return;
+          var front = order.shift(); front.className = "tk3 out" + (front.classList.contains("lost") ? " lost" : "");
+          order.push(front); i++;
+          order.forEach(function (el, k) { if (el !== front) el.className = "tk3 p" + k + (el.classList.contains("lost") ? " lost" : ""); });
+          setTimeout(function () { var r = rec[(i + 2) % rec.length]; front.innerHTML = card(r); front.className = "tk3 p2" + (r.status === "lost" ? " lost" : ""); }, 700);
+        }, 4200);
       })();
       // členstvo: posledných 7 dní
       var l7 = d.last7, el7 = $("last7");

@@ -7,13 +7,13 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300..800&amp;family=JetBrains+Mono:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300..800&amp;family=Manrope:wght@400..800&amp;display=swap" rel="stylesheet">
 <style>
 /* Analýza zápasu (5. 11. 2026) – skúška podľa fairside, vzhľad ako /valuebety. */
 :root {
-  --bg: #0C1116; --section: #151C24; --card: #1B242D; --line: rgba(200, 243, 60,.24); --line2: rgba(200, 243, 60,.12);
-  --gold: #C8F33C; --gold-hi: #E4FF8A; --gold-lo: #8FB31F;
-  --text: #F1F3EC; --muted: #A2ABB3; --faint: #6E7781; --good: #3ADB86; --bad: #FF6B70; --warn: #C8F33C;
+  --bg: #07080A; --section: #121419; --card: #181B21; --line: rgba(217, 221, 228,.24); --line2: rgba(217, 221, 228,.12);
+  --gold: #D9DDE4; --gold-hi: #FFFFFF; --gold-lo: #8D94A2;
+  --text: #EEF0F4; --muted: #9AA0AD; --faint: #646B78; --good: #5EE0A0; --bad: #FF7B86; --warn: #D9DDE4;
   --display: "Bricolage Grotesque", system-ui, sans-serif;
   --body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   color-scheme: dark;
@@ -49,16 +49,16 @@ input:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outl
 @media (max-width: 520px) { .stakes { grid-template-columns: 1fr; } }
 .stake { background: var(--section); border-radius: 10px; padding: 10px 12px; }
 .stake b { display: block; font: 700 24px var(--display); color: var(--gold-hi); }
-.btn { font: 600 14px var(--body); color: #0C1116; background: linear-gradient(135deg, var(--gold-hi), var(--gold)); border: 0; border-radius: 999px; padding: 9px 18px; cursor: pointer; }
+.btn { font: 600 14px var(--body); color: #07080A; background: linear-gradient(135deg, var(--gold-hi), var(--gold)); border: 0; border-radius: 999px; padding: 9px 18px; cursor: pointer; }
 .btn.ghost { color: var(--gold); background: transparent; border: 1px solid var(--line); }
 .btn:disabled { opacity: .5; cursor: default; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { font: 500 13px var(--body); color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; cursor: pointer; }
-.chip.on { color: #0C1116; background: var(--gold); border-color: var(--gold); }
+.chip.on { color: #07080A; background: var(--gold); border-color: var(--gold); }
 .books { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 12px; max-height: 220px; overflow: auto; }
 .sb-list { display: grid; gap: 10px; }
 .sb { background: var(--card); border: 1px solid var(--line2); border-radius: 12px; padding: 14px; }
-.sb.sus { border-color: rgba(200, 243, 60,.45); }
+.sb.sus { border-color: rgba(217, 221, 228,.45); }
 .sb-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; flex-wrap: wrap; }
 .sb-top b { font: 600 17px var(--display); }
 .pct { font: 700 20px var(--display); color: var(--good); white-space: nowrap; }
@@ -98,7 +98,7 @@ details.day[open] > summary { border-bottom: 1px solid var(--line2); }
 @media (max-width: 520px) { details.day > summary { grid-template-columns: 1fr auto; } details.day > summary .hide-m { display: none; } }
 details p, details li { color: var(--muted); font-size: 14px; }
 .st { display: inline-block; min-width: 22px; text-align: center; font-weight: 700; border-radius: 6px; padding: 0 6px; font-size: 13px; }
-.st.won { color: #0C1116; background: var(--good); } .st.lost { color: #0C1116; background: var(--bad); } .st.void { color: var(--muted); border: 1px solid var(--line); } .st.pending { color: var(--muted); border: 1px dashed var(--line); }
+.st.won { color: #07080A; background: var(--good); } .st.lost { color: #07080A; background: var(--bad); } .st.void { color: var(--muted); border: 1px solid var(--line); } .st.pending { color: var(--muted); border: 1px dashed var(--line); }
 .g { color: var(--good); } .l { color: var(--bad); }
 .explain { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 @media (max-width: 760px) { .explain { grid-template-columns: 1fr; } }
@@ -108,7 +108,7 @@ details p, details li { color: var(--muted); font-size: 14px; }
 .play input { width: 92px; font: 600 15px var(--body); padding: 7px 9px; }
 .play label { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
 .play .btn { padding: 7px 14px; font-size: 13px; }
-.played { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 10px; padding: 8px 10px; border-radius: 9px; background: rgba(200, 243, 60,.10); border: 1px solid var(--line); font-size: 14px; }
+.played { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 10px; padding: 8px 10px; border-radius: 9px; background: rgba(217, 221, 228,.10); border: 1px solid var(--line); font-size: 14px; }
 .played b { color: var(--gold-hi); }
 .linkbtn { background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; font: inherit; font-size: 13px; padding: 0; }
 .err { color: var(--bad); font-size: 13px; }
@@ -171,6 +171,7 @@ select { width: 100%; font: 500 15px var(--body); color: var(--text); background
 .load { color: var(--muted); padding: 24px 0; text-align: center; }
 </style>
 <style>/* PRIVÉ (4. 11. 2026): písmo Manrope ako appka */ body, button, input, select, textarea, h1, h2, h3, h4, b, strong, td, th { font-family: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif !important; } em, i { font-style: normal; }</style>
+<style>/* PLATINUM (8. 11. 2026): nadpisy a čísla Urbanist ako web */ h1, h2, h3, h4 { font-family: "Urbanist", "Manrope", system-ui, sans-serif !important; letter-spacing: -.025em; } html, body { background-color: #07080A; }</style>
 </head>
 <body>
 <div class="wrap">
