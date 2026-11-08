@@ -1,5 +1,6 @@
 import * as crypto from "crypto";
 import axios from "axios";
+import { cachedRedis } from "./upstashCache";
 
 // Jednoduchá návštevnosť verejných stránok (tipradar.eu, /kurz) – bez cookies.
 // Pre každý deň: počet zobrazení, počet rôznych návštevníkov, odkiaľ prišli
@@ -11,6 +12,9 @@ const useUpstash = Boolean(UPSTASH_URL && UPSTASH_TOKEN);
 const KEEP_DAYS = 400;
 
 async function redis(command: (string | number)[]): Promise<any> {
+  return cachedRedis(command, redisRaw); // 8. 11. 2026: šetrí prenos dát z Upstash
+}
+async function redisRaw(command: (string | number)[]): Promise<any> {
   const res = await axios.post(UPSTASH_URL!, command, { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` }, timeout: 20000 });
   return res.data?.result;
 }

@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import axios from "axios";
 import { settleFixtureBets } from "./tipEvaluator";
+import { cachedRedis } from "./upstashCache";
 
 // Vyhodnocovanie VŠETKÝCH trhov (4. 11. 2026, Michal: „nech sa dajú vyhodnocovať všetky tipy stávok, čo mám nastavené“).
 // Pri automatickej analýze zápasu (asi hodinu pred výkopom) sa z každého trhu (góly, góly tímu, rohy, rohy tímu,
@@ -34,6 +35,9 @@ const BANDS: [string, number, number][] = [["pod 60 %", 0, 60], ["60 – 69 %", 
 const bandOf = (p: number) => (BANDS.find(([, lo, hi]) => p >= lo && p < hi) ?? BANDS[0])[0];
 
 async function redis(command: (string | number)[]): Promise<any> {
+  return cachedRedis(command, redisRaw); // 8. 11. 2026: šetrí prenos dát z Upstash
+}
+async function redisRaw(command: (string | number)[]): Promise<any> {
   const res = await axios.post(UPSTASH_URL!, command, { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` }, timeout: 20000 });
   return res.data?.result;
 }

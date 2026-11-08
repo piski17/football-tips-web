@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import axios from "axios";
 import { MIN_PROBABILITY, MAX_PROBABILITY, MIN_ODDS, MIN_EXPECTED_VALUE, SUSPICIOUS_EXPECTED_VALUE } from "./oddsMatcher";
+import { cachedRedis } from "./upstashCache";
 
 /** Trhy, ktoré sa neodporúčajú (rovnaký zoznam ako v predictor.ts). */
 const NOT_RECOMMENDED_MARKETS = ["Ofsajdy", "Výsledok zápasu", "Oba tímy skórujú", "Obaja tímy skórujú"];
@@ -48,6 +49,9 @@ export interface BlendFixture {
 }
 
 async function redis(command: (string | number)[]): Promise<any> {
+  return cachedRedis(command, redisRaw); // 8. 11. 2026: šetrí prenos dát z Upstash
+}
+async function redisRaw(command: (string | number)[]): Promise<any> {
   const res = await axios.post(UPSTASH_URL!, command, { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` }, timeout: 20000 });
   return res.data?.result;
 }

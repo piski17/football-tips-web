@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import axios from "axios";
+import { cachedRedis } from "./upstashCache";
 
 // Záujemcovia o členstvo (poradovník) – zapisuje ich Telegram bot, keď niekto
 // príde z tlačidla na tipradar.eu. Jeden záznam na človeka (Telegram ID).
@@ -25,6 +26,9 @@ export interface Lead {
 }
 
 async function redis(command: (string | number)[]): Promise<any> {
+  return cachedRedis(command, redisRaw); // 8. 11. 2026: šetrí prenos dát z Upstash
+}
+async function redisRaw(command: (string | number)[]): Promise<any> {
   const res = await axios.post(UPSTASH_URL!, command, { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` }, timeout: 20000 });
   return res.data?.result;
 }

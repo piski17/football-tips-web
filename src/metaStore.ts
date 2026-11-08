@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import axios from "axios";
+import { cachedRedis } from "./upstashCache";
 
 // Drobné trvalé hodnoty servera (napr. kedy naposledy prebehla kontrola platieb),
 // aby prežili reštart servera na Renderi. Upstash, bez neho súbor data/meta.json.
@@ -11,6 +12,9 @@ const KEY = "tipradar_meta";
 const FILE = path.join(__dirname, "..", "data", "meta.json");
 
 async function redis(command: (string | number)[]): Promise<any> {
+  return cachedRedis(command, redisRaw); // 8. 11. 2026: šetrí prenos dát z Upstash
+}
+async function redisRaw(command: (string | number)[]): Promise<any> {
   const res = await axios.post(UPSTASH_URL!, command, { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` }, timeout: 20000 });
   return res.data?.result;
 }

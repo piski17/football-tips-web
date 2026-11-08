@@ -3,6 +3,7 @@ import * as path from "path";
 import axios from "axios";
 import { scannedFixtures, lastScanAt, setOnScan, pairsOf, marketName, sideLabel, FixtureOdds, BookOdd } from "./surebets";
 import { getFixtureCornersAndCards } from "./apiClient";
+import { cachedRedis } from "./upstashCache";
 
 // Valuebety – hodnotné stávky (3. 11. 2026, Michalov vedľajší projekt popri surebetoch, SKÚŠKA).
 // Z tých istých kurzov ako surebety (API-Football, 17 súťaží TipRadaru, len dnešné zápasy, každú hodinu)
@@ -242,6 +243,9 @@ export function computeValuebets(allowedBooks: string[] | null): Valuebet[] {
 // ---------- Evidencia ----------
 
 async function redis(command: (string | number)[]): Promise<any> {
+  return cachedRedis(command, redisRaw); // 8. 11. 2026: šetrí prenos dát z Upstash
+}
+async function redisRaw(command: (string | number)[]): Promise<any> {
   const res = await axios.post(UPSTASH_URL!, command, { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` }, timeout: 20000 });
   return res.data?.result;
 }

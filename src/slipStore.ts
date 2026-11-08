@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import axios from "axios";
+import { cachedRedis } from "./upstashCache";
 
 // Podané tikety: snímky obrazovky tiketov, ktoré Michal sám podal na tipy z Histórie tipov.
 // Na webe (tipradar.eu/vysledky) sa ukazujú až po vyhodnotení tipu, aby neprezradili čakajúci tip.
@@ -23,6 +24,9 @@ export interface Slip {
 }
 
 async function redis(command: (string | number)[]): Promise<any> {
+  return cachedRedis(command, redisRaw); // 8. 11. 2026: šetrí prenos dát z Upstash
+}
+async function redisRaw(command: (string | number)[]): Promise<any> {
   const res = await axios.post(UPSTASH_URL!, command, { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` }, timeout: 20000 });
   return res.data?.result;
 }

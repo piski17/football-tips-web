@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import axios from "axios";
+import { cachedRedis } from "./upstashCache";
 
 // Denný súhrn (stránka /suhrn): pre každý deň zoznam tipov zapísaných ručne.
 // Ukladá sa do toho istého Upstash Redis ako história tipov (hash: deň -> JSON),
@@ -18,6 +19,9 @@ export interface DailyEntry {
 }
 
 async function redis(command: (string | number)[]): Promise<any> {
+  return cachedRedis(command, redisRaw); // 8. 11. 2026: šetrí prenos dát z Upstash
+}
+async function redisRaw(command: (string | number)[]): Promise<any> {
   const res = await axios.post(UPSTASH_URL!, command, {
     headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
     timeout: 20000,

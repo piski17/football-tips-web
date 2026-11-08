@@ -3,6 +3,7 @@ import * as path from "path";
 import * as crypto from "crypto";
 import axios from "axios";
 import { ibanValid } from "./payBySquare";
+import { cachedRedis } from "./upstashCache";
 
 // Platby za členstvo TipRadar (Štart / VIP = 75 / 150 tipov, od 65 €): bankový prevod cez QR kód (PAY by square), bez poplatkov.
 // Zapne sa, keď sú na Renderi nastavené SALES_OPEN=true, PAY_IBAN a PAY_NAME.
@@ -187,6 +188,9 @@ export interface Payment {
 }
 
 async function redis(command: (string | number)[]): Promise<any> {
+  return cachedRedis(command, redisRaw); // 8. 11. 2026: šetrí prenos dát z Upstash
+}
+async function redisRaw(command: (string | number)[]): Promise<any> {
   const res = await axios.post(UPSTASH_URL!, command, { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` }, timeout: 20000 });
   return res.data?.result;
 }

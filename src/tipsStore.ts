@@ -35,11 +35,20 @@ function upstashClient() {
  * nie potichu vrátiť prázdny zoznam - inak by pri ukladaní nového tipu mohla
  * appka omylom prepísať celú existujúcu históriu prázdnym/neúplným zoznamom.
  */
+// 8. 11. 2026: zoznam tipov sa drží v pamäti (ako text) – predtým sa celý sťahoval z Upstash pri každej
+// akcii a minul sa mesačný prenos dát. Zapisuje len tento server, takže pri zápise sa pamäť obnoví.
+let rawCache: { at: number; raw: string | null } | null = null;
+const RAW_TTL = 30 * 60 * 1000;
 async function readAllRemote(): Promise<SavedTip[]> {
-  const res = await upstashClient().get(`${UPSTASH_URL}/get/${TIPS_KEY}`, {
-    headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
-  });
-  const raw = res.data?.result;
+  let raw: string | null;
+  if (rawCache && Date.now() - rawCache.at < RAW_TTL) raw = rawCache.raw;
+  else {
+    const res = await upstashClient().get(`${UPSTASH_URL}/get/${TIPS_KEY}`, {
+      headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
+    });
+    raw = res.data?.result ?? null;
+    rawCache = { at: Date.now(), raw };
+  }
   if (!raw) return [];
   try {
     const parsed = JSON.parse(raw);
@@ -50,9 +59,12 @@ async function readAllRemote(): Promise<SavedTip[]> {
 }
 
 async function writeAllRemote(tips: SavedTip[]): Promise<void> {
-  await upstashClient().post(`${UPSTASH_URL}/set/${TIPS_KEY}`, JSON.stringify(tips), {
+  const raw = JSON.stringify(tips);
+  rawCache = null;
+  await upstashClient().post(`${UPSTASH_URL}/set/${TIPS_KEY}`, raw, {
     headers: { Authorization: `Bearer ${UPSTASH_TOKEN}`, "Content-Type": "text/plain" },
   });
+  rawCache = { at: Date.now(), raw };
 }
 
 // ---- Lokálne úložisko (záloha, ak Upstash nie je nastavený - napr. pri lokálnom vývoji) ----

@@ -521,7 +521,7 @@ app.get("/api/stats/visits", async (req, res) => {
   try {
     res.json({ days: await readStats(Number(req.query.days) || 30) });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -675,7 +675,7 @@ app.get("/api/fixtures", async (req, res) => {
     const fixtures = await getFixturesByLeague(league, season, 30, date, true);
     res.json(fixtures);
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -899,7 +899,7 @@ app.post("/api/analyze", async (req, res) => {
     const { result, marketProbs, cupNote } = await analyzeFixture(fixture, leagueId, season);
     res.json({ ...result, marketProbs, cupNote });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -917,7 +917,7 @@ app.get("/api/squad", async (req, res) => {
     const squad = await getTeamSquad(teamId);
     res.json(squad);
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -948,7 +948,7 @@ app.post("/api/player-goal", async (req, res) => {
     );
     res.json(prediction);
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -997,6 +997,20 @@ async function addMeasurement(tip: SavedTip): Promise<void> {
   } catch {
     // meranie nesmie zablokovať uloženie tipu
   }
+}
+
+/**
+ * 8. 11. 2026: chybová správa aj s odpoveďou služby (Upstash, API-Football, Telegram), aby bolo vidieť príčinu –
+ * napr. „Request failed with status code 403 · ERR max requests limit exceeded“. Zapíše sa aj do Logs na Renderi.
+ */
+function errText(err: any): string {
+  const base = err?.message ?? String(err);
+  const d = err?.response?.data;
+  const detail = typeof d === "string" ? d.slice(0, 300) : d?.error ?? d?.description ?? d?.message;
+  const url = String(err?.config?.url ?? "").replace(/^https?:\/\/([^/]+).*$/, "$1");
+  const text = `${base}${detail ? ` · ${typeof detail === "string" ? detail : JSON.stringify(detail).slice(0, 300)}` : ""}${url ? ` (${url})` : ""}`;
+  console.error("Chyba API:", text);
+  return text;
 }
 
 /**
@@ -1091,7 +1105,7 @@ app.post("/api/tips", async (req, res) => {
     if (lateFromAnalysis) await checkPendingResults().catch(() => {});
     res.json({ ok: true, telegramAvailable: isTelegramEnabled() && !lateFromAnalysis, watchOnly: tip.watchOnly === true, sameTypeMoved: tip.sameTypeMoved === true, lateAdd: lateFromAnalysis });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -1099,7 +1113,7 @@ app.get("/api/tips", async (_req, res) => {
   try {
     res.json((await listTips()).map((t) => (isRemovedLeagueTip(t) ? { ...t, removedLeague: true } : t)));
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -1129,7 +1143,7 @@ app.post("/api/tips/:id/telegram", async (req, res) => {
     const sent = await sendSavedTip(tip, tips, target, req.body?.asStrongOfDay === true);
     res.json({ ok: sent > 0 });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -1185,7 +1199,7 @@ app.post("/api/telegram/send-tips", async (req, res) => {
     }
     res.json({ sent, failed, missing: ids.length - chosen.length });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -1228,7 +1242,7 @@ app.post("/api/tips/:id/telegram-result", async (req, res) => {
     }
     res.json({ ok: sent.length > 0 });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -1470,7 +1484,7 @@ app.get("/api/public/track-record", async (_req, res) => {
       months,
     });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -1504,7 +1518,7 @@ app.get("/api/slips", async (_req, res) => {
     const ids = await listSlipIds();
     res.json(Object.fromEntries(ids));
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -1537,7 +1551,7 @@ app.post("/api/tips/:id/slip", async (req, res) => {
     await saveSlip(tip.id, image, stake);
     res.json({ ok: true, stake });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -1546,7 +1560,7 @@ app.delete("/api/tips/:id/slip", async (req, res) => {
     await deleteSlip(req.params.id);
     res.json({ ok: true });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -1560,7 +1574,7 @@ app.get("/api/public/vip-seats", async (_req, res) => {
     const terms = await termSeats();
     res.json({ salesOpen: process.env.SALES_OPEN === "true", payOpen: paymentsEnabled(), minOdds: MIN_ODDS, freeChannelUrl, terms });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -1576,7 +1590,7 @@ app.get("/api/debug/odds/:fixtureId", async (req, res) => {
     const odds = await getFixtureOdds(fixtureId);
     res.json({ count: odds.length, bets: Array.from(new Set(odds.map((o) => o.bet))).sort(), odds });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -1586,7 +1600,7 @@ app.get("/api/debug/lineups/:fixtureId", async (req, res) => {
     const fixtureId = parseInt(req.params.fixtureId, 10);
     res.json(await getFixtureLineupsDebug(fixtureId));
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -1608,7 +1622,7 @@ app.post("/api/telegram/tips-coming", async (req, res) => {
     const sent = await sendCustomMessage(text, target);
     res.json({ ok: sent.length > 0 });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -1629,7 +1643,7 @@ app.post("/api/telegram/no-tip-today", async (req, res) => {
     const sent = await sendCustomMessage(text, target);
     res.json({ ok: sent.length > 0 });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -1713,7 +1727,7 @@ app.post("/api/telegram/daily-results", async (req, res) => {
     if (target === "free" && sent.length > 0) await setMeta(`freeDaySummary:${day}`, new Date().toISOString());
     res.json({ ok: sent.length > 0 });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -1789,7 +1803,7 @@ app.post("/api/telegram/weekly-report", async (req, res) => {
     const sent = await sendCustomMessage(text, target);
     res.json({ ok: sent.length > 0 });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -1892,7 +1906,7 @@ app.get("/api/reports/monthly", async (req, res) => {
   try {
     res.json(buildMonthlyReport(dedupeTips(await listTips()), reportMonth(req.query.month)));
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -1910,7 +1924,7 @@ app.post("/api/telegram/monthly-report", async (req, res) => {
     const sent = await sendCustomMessage(report.text, target);
     res.json({ ok: sent.length > 0 });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -1979,7 +1993,7 @@ app.post("/api/tips/:id/edit", async (req, res) => {
     await updateTip(tip.id, patch);
     res.json({ ok: true });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -2145,7 +2159,7 @@ app.get("/api/analyza/fixtures", async (req, res) => {
     out.sort((a, b) => a.timestamp - b.timestamp);
     res.json({ fixtures: out, leagues: LEAGUE_PRESETS });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 app.post("/api/analyza", async (req, res) => {
@@ -2174,7 +2188,7 @@ app.post("/api/analyza", async (req, res) => {
     for (const [k, v] of analyzaResultCache) if (Date.now() - v.at > 3 * 60 * 60 * 1000) analyzaResultCache.delete(k);
     res.json(payload);
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -2182,7 +2196,7 @@ app.get("/api/daily", async (_req, res) => {
   try {
     res.json({ days: await getAllDays() });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -2194,7 +2208,7 @@ app.get("/api/daily/:day", async (req, res) => {
   try {
     res.json((await getDay(req.params.day)) ?? { state: { tips: [] }, rev: 0 });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -2217,7 +2231,7 @@ app.put("/api/daily/:day", async (req, res) => {
     await setDay(day, entry);
     res.json(entry);
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -2303,7 +2317,7 @@ app.post("/api/tips/restore-from-daily", async (req, res) => {
       tips: found.map((t) => ({ day: dayKeySk(new Date(t.matchDate)), match: `${t.homeTeam} – ${t.awayTeam}`, tip: `${t.market}: ${t.selection}`, odds: t.odds, status: t.status })),
     });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -2324,7 +2338,7 @@ app.post("/api/daily/import", async (req, res) => {
     }
     res.json({ imported });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -2365,7 +2379,7 @@ app.post("/api/shadow/record", async (req, res) => {
     }
     res.json({ ok: true });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -2380,7 +2394,7 @@ app.get("/api/model/health", async (_req, res) => {
       homeCorners: homeCornersSummary(blend),
     });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -2391,7 +2405,7 @@ app.post("/api/model/new-model", async (req, res) => {
     newModelCache = { value: active, at: Date.now() };
     res.json({ ok: true, active });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -2399,7 +2413,7 @@ app.get("/api/blend/summary", async (_req, res) => {
   try {
     res.json(blendSummary(await listBlend()));
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -2544,7 +2558,7 @@ app.get("/api/shadow/summary", async (_req, res) => {
       invalidExcluded: raw.length - all.length,
     });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -2713,7 +2727,7 @@ app.get("/api/clv/summary", async (_req, res) => {
         .sort((a, b) => b.total - a.total),
     });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -2763,7 +2777,7 @@ app.get("/api/ticket-watch/summary", async (_req, res) => {
       tickets: tickets.slice(0, 60),
     });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -2772,7 +2786,7 @@ app.get("/api/leads", async (_req, res) => {
   try {
     res.json(await listLeads());
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 // „Otvoriť predaj": každý z poradovníka dostane od bota správu s tlačidlami na zaplatenie (každý len raz).
@@ -2784,7 +2798,7 @@ app.post("/api/leads/sales-open", async (_req, res) => {
   try {
     res.json(await sendSalesOpenToWaitlist());
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 // Platby prevodom: zoznam na potvrdenie v appke. Čakajúce (kto neoznámil „Zaplatil som", len 7 dní) + vybavené za 30 dní.
@@ -2796,7 +2810,7 @@ app.get("/api/payments", async (_req, res) => {
     );
     res.json(list.map((p) => ({ ...p, priceEur: PAY_TERMS[p.term].price, termName: PAY_TERMS[p.term].name })));
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 app.post("/api/payments/:token/confirm", async (req, res) => {
@@ -2808,7 +2822,7 @@ app.post("/api/payments/:token/confirm", async (req, res) => {
     }
     res.json(r);
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 app.post("/api/payments/:token/cancel", async (req, res) => {
@@ -2820,7 +2834,7 @@ app.post("/api/payments/:token/cancel", async (req, res) => {
     }
     res.json({ ok: true });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 app.delete("/api/payments/:token", async (req, res) => {
@@ -2828,7 +2842,7 @@ app.delete("/api/payments/:token", async (req, res) => {
     await deletePayment(String(req.params.token));
     res.json({ ok: true });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 app.delete("/api/leads/:chatId", async (req, res) => {
@@ -2836,7 +2850,7 @@ app.delete("/api/leads/:chatId", async (req, res) => {
     await deleteLead(req.params.chatId);
     res.json({ ok: true });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -2846,7 +2860,7 @@ app.post("/api/tips/:id/archive", async (req, res) => {
     await updateTip(req.params.id, { archived: req.body?.archived !== false });
     res.json({ ok: true });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -2861,7 +2875,7 @@ app.delete("/api/tips/:id", async (req, res) => {
     }
     res.json({ ok: true });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -2875,7 +2889,7 @@ app.delete("/api/tips", async (_req, res) => {
     }
     res.json({ ok: true });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -3310,7 +3324,7 @@ app.get("/api/auto-tips", async (req, res) => {
     const fixtures = only > 0 ? allFixtures.filter((f) => f.fixtureId === only) : allFixtures;
     res.json({ entries, fixtures: fixtures.map((f) => ({ matchDate: f.matchDate, tips: f.tips, league: f.league ?? null })) });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -3389,7 +3403,7 @@ app.post("/api/auto-tips/:id/add", async (req, res) => {
     if (tip.lateAdd) await checkPendingResults().catch(() => {});
     res.json({ ok: true, watchOnly: tip.watchOnly === true, reason, lateAdd: tip.lateAdd === true });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -3450,7 +3464,7 @@ app.post("/api/tips/audit", async (_req, res) => {
     if (!auditRun) auditRun = auditTips().finally(() => { auditRun = null; });
     res.json(await auditRun);
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -3459,7 +3473,7 @@ app.post("/api/tips/check-results", async (_req, res) => {
     await checkPendingResults();
     res.json(await listTips());
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -3535,7 +3549,7 @@ app.get("/api/subscribers", async (_req, res) => {
     const st = await memberStatuses(subs);
     res.json(subs.map((s) => ({ ...s, pkg: st.get(s.id) })));
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -3554,7 +3568,7 @@ app.post("/api/subscribers", async (req, res) => {
     await addSubscriber(subscriber);
     res.json({ ok: true });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -3573,7 +3587,7 @@ app.patch("/api/subscribers/:id", async (req, res) => {
     await updateSubscriber(req.params.id, body);
     res.json({ ok: true });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -3593,7 +3607,7 @@ app.post("/api/subscribers/:id/test-reminder", async (req, res) => {
     const ok = await sendPackageLowReminder(sub.telegramChatId, { tier: st.tier, left: st.left, total: st.total, validUntil: st.validUntil, profit: st.profit });
     res.json({ ok });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -3602,7 +3616,7 @@ app.delete("/api/subscribers/:id", async (req, res) => {
     await deleteSubscriber(req.params.id);
     res.json({ ok: true });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -3673,7 +3687,7 @@ app.get("/api/guarantee", async (_req, res) => {
   try {
     res.json(await guaranteeRows());
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   }
 });
 
@@ -3744,7 +3758,7 @@ app.post("/api/guarantee/apply", async (req, res) => {
     }
     res.json({ ok: true, id, freeUntil, freeTips: null, notified });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   } finally {
     guaranteeRunning.delete(id);
   }
@@ -3785,7 +3799,7 @@ app.post("/api/guarantee/refund", async (req, res) => {
     }
     res.json({ ok: true, id, amount: row.refundAmount, notified });
   } catch (err: any) {
-    res.status(502).json({ error: err.message ?? String(err) });
+    res.status(502).json({ error: errText(err) });
   } finally {
     guaranteeRunning.delete(id);
   }
