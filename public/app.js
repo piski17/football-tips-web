@@ -443,6 +443,10 @@ const WATCH_BELOW = 70; // 2. 11. 2026 20:50: pásmo pre klientov 70 – 80 % (p
 const isWatchTip = (tip) => !(tip.legs && tip.legs.length) && (tip.strictFail || (!tip.manualEntry && typeof tip.probability === "number" && tip.probability < WATCH_BELOW));
 
 async function maybeOfferTelegram(tipId, tip) {
+  if (tip && tip.sameTypeMoved) {
+    showToast("Zápas už má tip toho istého typu (napr. karty) – tento je uložený len na sledovanie, neposiela sa a nerátá do štatistík.");
+    return;
+  }
   if (tip && tip.strictFail) {
     showToast("Tip neprešiel kontrolou 60 / 40 – je uložený len na sledovanie, neposiela sa a nerátá do štatistík.");
     return;
@@ -1228,6 +1232,7 @@ function wireSaveTipButtons(r, root) {
       btn.disabled = true;
       try {
         const saved = await postJson("/api/tips", tip);
+        if (saved && saved.sameTypeMoved) { tip.watchOnly = true; tip.sameTypeMoved = true; }
         btn.textContent = "✓ Uložené";
         btn.dataset.saved = "1";
         autoSavedKeys.add(tipKey(r, bet));
@@ -1519,7 +1524,8 @@ function renderCalcRows(out, r, market, rows) {
       };
       b.disabled = true;
       try {
-        await postJson("/api/tips", tip);
+        const saved = await postJson("/api/tips", tip);
+        if (saved && saved.sameTypeMoved) { tip.watchOnly = true; tip.sameTypeMoved = true; }
         b.textContent = "✓ Uložené";
         await maybeOfferTelegram(tip.id, tip);
       } catch (err) {
@@ -2069,7 +2075,8 @@ function renderDayTipsViewMain() {
       ...(idx === strongIdx ? { strongOfDay: true } : {}),
       ...(dayTipBest[idx] && parseOddsInput(dayTipOdds[idx]) === realOdds ? { bookmaker: dayTipBest[idx] } : {}),
     });
-    await postJson("/api/tips", tip);
+    const saved = await postJson("/api/tips", tip);
+    if (saved && saved.sameTypeMoved) { tip.watchOnly = true; tip.sameTypeMoved = true; }
     dayTipSaved.add(idx);
     return tip;
   };
@@ -2111,7 +2118,7 @@ function renderDayTipsViewMain() {
       try {
         const tip = await saveOne(i, Math.round(oddsState(i).odd * 100) / 100);
         saved++;
-        if (target && !isWatchTip(tip)) { try { await postJson(`/api/tips/${tip.id}/telegram`, { target }); sent++; } catch { errs++; } }
+        if (target && !isWatchTip(tip) && !tip.sameTypeMoved) { try { await postJson(`/api/tips/${tip.id}/telegram`, { target }); sent++; } catch { errs++; } }
       } catch { errs++; }
     }
     showToast(`Uložené: ${saved}${target ? ` · do Telegramu: ${sent}` : ""}${errs ? ` · chyby: ${errs}` : ""}`);
@@ -2952,6 +2959,7 @@ function tipBadges(t) {
   if (isOverrideTip(t)) b += ` <span class="tag warn" title="Vyradené kontrolou kurzu, pridané ručne">⚠️ mimo filtra</span>`;
   if (t.manualEntry) b += ` <span class="tag" title="Tip doplnený ručne po zápase">✍ doplnené ručne</span>`;
   if (t.removedLeague) b += ` <span class="tag" title="Súťaž bola vyradená 2. 11. 2026 – tip sa neráta do štatistík ani na web.">vyradená súťaž · nerátá sa</span>`;
+  if (t.sameTypeMoved) b += ` <span class="tag" title="8. 11. 2026: zo zápasu ide najviac 1 tip z typu (napr. karty, karty domácich a karty hostí sú jeden typ) – tento je len v sledovaných.">2. tip z typu · sledovaný</span>`;
   if (t.lateAdd) b += t.lateFromAnalysis
     ? ` <span class="tag" title="Doplnené po výkope priamo z analýzy zápasu (pred výkopom server nič nezapísal). Klientom nešiel.">⏱ doplnené po výkope</span>`
     : ` <span class="tag" title="Doplnené po výkope zo Všetkých zápasov – automaticky (dôvera a kurz zapísané asi hodinu pred výkopom). Klientom nešiel.">⏱ doplnené po výkope</span>`;

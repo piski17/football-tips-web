@@ -39,11 +39,11 @@ import {
   getRestInfo,
   getFixtureCornersAndCards,
 } from "./apiClient";
-import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, MarketAdjustments, marketCategory, passesStrict, STRICT_CHECK_ON } from "./predictor";
+import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, MarketAdjustments, marketCategory, tipType, passesStrict, STRICT_CHECK_ON } from "./predictor";
 import { newModelInputs } from "./newModel";
 import { computeMarketHealth, marketChangesText, clvOf, CLV_TIE } from "./marketHealth";
 import { LeaguePreset, SavedTip } from "./types";
-import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once, moveLateAddsOnce, restoreLateMovedOnce, returnStrictFailedOnce, moveStrictFailedBackOnce } from "./tipsStore";
+import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once, moveLateAddsOnce, restoreLateMovedOnce, returnStrictFailedOnce, moveStrictFailedBackOnce, moveSameTypeOnce } from "./tipsStore";
 import { computeTicketStatus, settleBet, settleFixtureBets, tipHasStartedMatch, MATCH_STARTED_MESSAGE, buildTipEdit } from "./tipEvaluator";
 import {
   sendTipToTelegram,
@@ -999,6 +999,27 @@ async function addMeasurement(tip: SavedTip): Promise<void> {
   }
 }
 
+/**
+ * 8. 11. 2026 (Michal): najviac 1 tip z typu na zápas (karty / karty domácich / karty hostí = jeden typ).
+ * Ak už zápas má v štatistikách tip toho istého typu, nový tip sa uloží len do sledovaných (sameTypeMoved).
+ */
+async function applySameTypeRule(tip: SavedTip): Promise<boolean> {
+  if ((tip.legs && tip.legs.length) || tip.watchOnly || !(Number(tip.fixtureId) > 0)) return false;
+  const cat = marketCategory(tip.market);
+  if (!cat) return false;
+  const type = tipType(cat);
+  const taken = (await listTips()).some((t) => {
+    if (t.id === tip.id || t.watchOnly || (t.legs && t.legs.length) || t.fixtureId !== tip.fixtureId) return false;
+    const c = marketCategory(t.market);
+    return !!c && tipType(c) === type;
+  });
+  if (!taken) return false;
+  tip.watchOnly = true;
+  tip.sameTypeMoved = true;
+  tip.strongOfDay = undefined;
+  return true;
+}
+
 app.post("/api/tips", async (req, res) => {
   try {
     const tip: SavedTip = req.body;
@@ -1064,10 +1085,11 @@ app.post("/api/tips", async (req, res) => {
       tip.lateFromAnalysis = true;
       tip.strongOfDay = undefined;
     }
+    await applySameTypeRule(tip);
     await saveTip(tip);
     // Odohraný zápas sa vyhodnotí hneď (inak do 15 minút sám).
     if (lateFromAnalysis) await checkPendingResults().catch(() => {});
-    res.json({ ok: true, telegramAvailable: isTelegramEnabled() && !lateFromAnalysis, watchOnly: tip.watchOnly === true, lateAdd: lateFromAnalysis });
+    res.json({ ok: true, telegramAvailable: isTelegramEnabled() && !lateFromAnalysis, watchOnly: tip.watchOnly === true, sameTypeMoved: tip.sameTypeMoved === true, lateAdd: lateFromAnalysis });
   } catch (err: any) {
     res.status(502).json({ error: err.message ?? String(err) });
   }
@@ -3361,6 +3383,7 @@ app.post("/api/auto-tips/:id/add", async (req, res) => {
     // 4. 11. 2026 (Michal): tip doplnený po výkope len do sledovaných – 5. 11. 2026 (Michal) ZRUŠENÉ:
     // ak prejde pravidlami, pridá sa normálne do Histórie tipov (so značkou lateAdd).
     if (reason) tip.watchOnly = true;
+    if (await applySameTypeRule(tip)) reason = "zápas už má tip toho istého typu";
     await saveTip(tip);
     // Odohraný zápas sa vyhodnotí hneď (inak do 15 minút sám).
     if (tip.lateAdd) await checkPendingResults().catch(() => {});
@@ -3864,5 +3887,9 @@ app.listen(PORT, () => {
     // 6. 11. 2026 18:23 (Michal): 60 / 40 znova zapnutá – vrátené tipy raz presunie späť do sledovaných.
     .then(() => STRICT_CHECK_ON ? moveStrictFailedBackOnce() : 0)
     .then((n) => { if (n) console.log(`Kontrola 60 / 40 zapnutá: presunuté do sledovaných ${n}`); })
-    .catch((err) => console.error("Presun tipov neprešlých 60 / 40 zlyhal:", err));
+    .catch((err) => console.error("Presun tipov neprešlých 60 / 40 zlyhal:", err))
+    // 8. 11. 2026 (Michal): najviac 1 tip z typu na zápas – ďalšie tipy toho istého typu raz presunie do sledovaných.
+    .then(() => moveSameTypeOnce((market) => { const c = marketCategory(market); return c ? tipType(c) : null; }))
+    .then((n) => { if (n) console.log(`1 tip z typu: presunuté do sledovaných ${n}`); })
+    .catch((err) => console.error("Presun tipov rovnakého typu zlyhal:", err));
 });

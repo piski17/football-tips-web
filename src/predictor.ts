@@ -61,6 +61,14 @@ export interface MarketAdjustments {
   calibration?: Record<string, number>;
 }
 
+/**
+ * Typ tipu (8. 11. 2026): „karty“, „karty_timu“, „karty_1p“ → „karty“; rovnako góly, rohy, strely, fauly;
+ * „drzanie_lopty“ → „drzanie“. Zo zápasu ide klientom najviac 1 tip z typu.
+ */
+export function tipType(category: string | null | undefined): string {
+  return String(category || "").split("_")[0];
+}
+
 /** Kategória trhu podľa jeho názvu (rovnaká ako `category` pri tipoch modelu). */
 export function marketCategory(market: string): string | null {
   const m = String(market || "");
@@ -1386,7 +1394,7 @@ export function predictMatch(
     const x = ouParts(b.selection);
     return !x || plausibleLine(b.market, x.line);
   };
-  // Výber tipov podľa pravidiel (hodnota, kurz, rozpor, najviac 1 tip z trhu a z typu).
+  // Výber tipov podľa pravidiel (hodnota, kurz, rozpor, najviac 1 tip z typu).
   // Rovnaký postup ide aj pre skúšobné pásmo 65 – 67 % (len sledovať, 28. 10. 2026).
   const selectPicks = (pool: MarketPick[], lowValueBets: MarketPick[], watchBand: boolean): MarketPick[] => {
     const pickPool: MarketPick[] = [];
@@ -1502,11 +1510,12 @@ export function predictMatch(
       }
     }
 
-    // Appka ukáže VŠETKY tipy zápasu, ktoré spadajú do pásma - najviac jeden
-    // z každej kategórie (trhu). Z viacerých hraníc toho istého trhu (napr. rohy
-    // 8,5 / 9,5 / 10,5) vyberie tú s najvyššou dôverou (od 4. 11. 2026). Zoradené od najvyššej pravdepodobnosti.
+    // Appka ukáže tipy zápasu v pásme - NAJVIAC JEDEN Z KAŽDÉHO TYPU (8. 11. 2026, Michal:
+    // karty + karty domácich + karty hostí sú jeden typ, lebo spolu súvisia a prehrávajú spolu).
+    // Typy: góly (zápas, tím, polčasy), rohy, karty, strely, fauly, držanie lopty. V type vyhráva
+    // najvyššia dôvera, tip prešlý aj pri 60 / 40 má prednosť. Zoradené od najvyššej pravdepodobnosti.
     const bestInCategory = new Map<string, MarketPick>();
-    const catKey = (b: MarketPick) => `${b.category}|${b.market}`; // 4. 11. 2026: domáci / hostia zvlášť
+    const catKey = (b: MarketPick) => tipType(b.category); // 8. 11. 2026: kľúč = typ (predtým 4. 11. trh)
     for (const bet of pickPool) {
       const cur = bestInCategory.get(catKey(bet));
       const ev = rankValue(bet), curEv = cur ? rankValue(cur) : 0;
@@ -1526,10 +1535,8 @@ export function predictMatch(
     // pre tichú evidenciu (medzi neodporúčané sa nepresúvajú, výber sa nemení).
     for (const bet of pickPool) if (bestInCategory.get(catKey(bet)) !== bet) bet.rejectCode = "category_lower_ev";
 
-    // Viac tipov na zápas (4. 11. 2026, Michalovo rozhodnutie – nahrádza „najviac 1 z typu“ z 26. 10.):
-    // klientom idú VŠETKY tipy zápasu v pásme, ktoré prejdú kontrolami, ale z každého trhu len jeden
-    // (napr. Rohy, Rohy domácich a Rohy hostí môžu ísť spolu; Rohy nad 8,5 a nad 9,5 nie).
-    // Jeden tip z trhu zabezpečí bestInCategory vyššie (kľúč = trh).
+    // 8. 11. 2026 (Michal): späť na „najviac 1 tip z typu“ (nahrádza „1 z trhu“ zo 4. 11.) –
+    // napr. Karty pod 5,5 + Karty hostí pod 3,5 + Karty domácich pod 2,5 v jednom zápase už nejdú spolu.
     return diversifiedPicks;
   };
   const bestBets = selectPicks(inBand, lowValueBets, false);
@@ -1538,13 +1545,13 @@ export function predictMatch(
   // rovnakými pravidlami, ale klientom nejdú – appka ich ukáže zvlášť a uložia sa len do sledovaných
   // (vlastná skupina v Histórii tipov). Kópie, aby sa nezmenili dôvody v tichej evidencii.
   // Typ, z ktorého už zápas má tip v pásme 68 – 80 %, sa nepridáva (najviac 1 tip z typu).
-  const bandTypes = new Set(bestBets.map((b) => b.market)); // 4. 11. 2026: podľa trhu, nie typu
+  const bandTypes = new Set(bestBets.map((b) => tipType(b.category))); // 8. 11. 2026: podľa typu
   const watchBandBets = selectPicks(
     sortedBets.filter((b) => b.probability >= WATCH_BAND_MIN_PROBABILITY && b.probability < MIN_PROBABILITY).map((b) => ({ ...b })),
     [],
     true
   )
-    .filter((b) => !bandTypes.has(b.market))
+    .filter((b) => !bandTypes.has(tipType(b.category)))
     .map((b) => ({ ...b, watchBand: true }));
 
   const homeTopScorer = homePlayers

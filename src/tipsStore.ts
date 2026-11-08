@@ -401,3 +401,46 @@ export async function moveStrictFailedBackOnce(): Promise<number> {
     return moved;
   });
 }
+
+/**
+ * 8. 11. 2026 (Michal): späť na „najviac 1 tip z typu na zápas“ (karty + karty domácich + karty hostí = jeden typ).
+ * Beží raz pri štarte: zo zverejnených tipov (nie sledované, nie tikety) jedného zápasu a jedného typu ostane
+ * v štatistikách len tip s najvyššou dôverou (pri zhode vyššia hodnota, potom skôr uložený); ostatné idú do
+ * sledovaných so značkou sameTypeMoved. Nič sa nemaže. Návrat: tipom so sameTypeMoved zrušiť watchOnly.
+ */
+const SAME_TYPE_KEY = "tipradar_migr_same_type_done";
+export async function moveSameTypeOnce(typeOf: (market: string) => string | null): Promise<number> {
+  if (!useUpstash) return 0;
+  const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };
+  const done = (await upstashClient().get(`${UPSTASH_URL}/get/${SAME_TYPE_KEY}`, auth)).data?.result;
+  if (done) return 0;
+  return withWriteLock(async () => {
+    const tips = await readAll();
+    const groups = new Map<string, SavedTip[]>();
+    for (const t of tips) {
+      if ((t.legs && t.legs.length) || t.watchOnly || !t.fixtureId) continue;
+      const type = typeOf(t.market);
+      if (!type) continue;
+      const key = `${t.fixtureId}|${type}`;
+      const g = groups.get(key);
+      if (g) g.push(t); else groups.set(key, [t]);
+    }
+    const ev = (t: SavedTip) => (typeof t.probability === "number" && typeof t.odds === "number" ? (t.probability / 100) * t.odds : 0);
+    let moved = 0;
+    for (const g of groups.values()) {
+      if (g.length < 2) continue;
+      g.sort((a, b) => (b.probability ?? 0) - (a.probability ?? 0) || ev(b) - ev(a) || String(a.savedAt).localeCompare(String(b.savedAt)));
+      for (const t of g.slice(1)) {
+        t.watchOnly = true;
+        t.sameTypeMoved = true;
+        t.strongOfDay = undefined;
+        moved++;
+      }
+    }
+    if (moved) await writeAll(tips);
+    await upstashClient().post(`${UPSTASH_URL}/set/${SAME_TYPE_KEY}`, new Date().toISOString(), {
+      headers: { ...auth.headers, "Content-Type": "text/plain" },
+    });
+    return moved;
+  });
+}
