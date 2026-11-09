@@ -22,14 +22,19 @@ const SKIP_MARKETS = ["Strelec gólov"];
 const RECENT_MAX = 300;
 
 export interface MarketPrediction { market: string; selection: string; probability: number }
+export interface TopPick extends MarketPrediction { odds: number }
 interface PendingFixture {
   fixtureId: number; matchDate: string; homeTeam: string; awayTeam: string; league: string;
   picks: MarketPrediction[];
+  /** Najsilnejší tip zápasu (9. 11. 2026) – pozri pickTop. */
+  top?: TopPick;
 }
 export interface BandStats { n: number; won: number; sumP: number }
 export interface MarketStats { n: number; won: number; lost: number; void: number; sumP: number; bands: Record<string, BandStats> }
 export interface RecentResult { fixtureId: number; matchDate: string; match: string; league: string; market: string; selection: string; probability: number; status: "won" | "lost" | "void" }
-export interface MarketSummary { since: string; fixtures: number; markets: Record<string, MarketStats>; recent: RecentResult[] }
+export interface TopResult { fixtureId: number; matchDate: string; match: string; league: string; market: string; selection: string; probability: number; odds: number; status: "won" | "lost" | "void" }
+export interface TopStats { since: string; n: number; won: number; lost: number; void: number; sumP: number; profit: number; leagues: Record<string, { n: number; won: number; profit: number }>; recent: TopResult[] }
+export interface MarketSummary { since: string; fixtures: number; markets: Record<string, MarketStats>; recent: RecentResult[]; top?: TopStats }
 
 const BANDS: [string, number, number][] = [["pod 60 %", 0, 60], ["60 – 69 %", 60, 70], ["70 – 80 %", 70, 80.01]];
 const bandOf = (p: number) => (BANDS.find(([, lo, hi]) => p >= lo && p < hi) ?? BANDS[0])[0];
@@ -73,10 +78,28 @@ async function removePending(fixtureId: number): Promise<void> {
   await redis(["HDEL", PENDING_KEY, String(fixtureId)]);
 }
 
+// Najsilnejší tip z každého zápasu (9. 11. 2026, Michal: „z každého zápasu v každej súťaži vždy najsilnejší tip
+// a poslať ho do histórie“). Najsilnejší = najvyššia šanca modelu do 80 % spomedzi tipov, na ktoré stávkovky
+// dávajú kurz aspoň 1,50 (inak by vyhral napr. „Over 0,5 gólu“ pri kurze 1,05). Pri zhode vyšší kurz.
+// Pravidlá pre klientov (hodnota, 60/40, rozpor, typy) sa NEuplatňujú – je to čistý test „najistejšieho“ tipu.
+// Zisk v jednotkách: výhra = kurz − 1, prehra = −1. Klientom nejde, do štatistík sa neráta.
+const TOP_MIN_ODDS = 1.5;
+const TOP_RECENT_MAX = 300;
+function pickTop(candidates: { market: string; selection: string; probability: number; odds?: number | null }[]): TopPick | undefined {
+  let best: TopPick | undefined;
+  for (const c of candidates ?? []) {
+    const p = Number(c.probability), o = Number(c.odds);
+    if (!c.market || SKIP_MARKETS.includes(c.market) || !isFinite(p) || p > MAX_PROB || !isFinite(o) || o < TOP_MIN_ODDS) continue;
+    if (!best || p > best.probability || (p === best.probability && o > best.odds))
+      best = { market: c.market, selection: String(c.selection), probability: Math.round(p * 10) / 10, odds: Math.round(o * 100) / 100 };
+  }
+  return best;
+}
+
 /** Z kandidátov modelu vyberie z každého trhu jednu predpoveď (najvyššia šanca do 80 %) a zapíše zápas. */
 export async function recordMarketPredictions(
   fixture: { fixtureId: number; matchDate: string; homeTeam: string; awayTeam: string; league: string },
-  candidates: { market: string; selection: string; probability: number }[]
+  candidates: { market: string; selection: string; probability: number; odds?: number | null }[]
 ): Promise<void> {
   const best = new Map<string, MarketPrediction>();
   for (const c of candidates ?? []) {
@@ -85,8 +108,9 @@ export async function recordMarketPredictions(
     const cur = best.get(c.market);
     if (!cur || p > cur.probability) best.set(c.market, { market: c.market, selection: String(c.selection), probability: Math.round(p * 10) / 10 });
   }
-  if (!best.size) return;
-  const entry: PendingFixture = { ...fixture, picks: [...best.values()] };
+  const top = pickTop(candidates);
+  if (!best.size && !top) return;
+  const entry: PendingFixture = { ...fixture, picks: [...best.values()], ...(top ? { top } : {}) };
   if (!useUpstash) { const d = readFile(); d.pending[String(fixture.fixtureId)] = entry; writeFile(d); return; }
   await redis(["HSET", PENDING_KEY, String(fixture.fixtureId), JSON.stringify(entry)]);
 }
@@ -103,10 +127,25 @@ export async function settleMarketPredictions(): Promise<number> {
     const summary = await readSummary();
     for (const f of due.slice(0, 25)) {
       try {
-        let outcomes = await settleFixtureBets(f, f.picks);
+        const all = f.top ? [...f.picks, f.top] : f.picks;
+        let outcomes = await settleFixtureBets(f, all);
         if (!outcomes) {
           if (Date.now() < new Date(f.matchDate).getTime() + 3 * 24 * 3600 * 1000) continue;
-          outcomes = f.picks.map(() => "void" as const);
+          outcomes = all.map(() => "void" as const);
+        }
+        if (f.top) {
+          const st = outcomes[f.picks.length];
+          const t = (summary.top ??= { since: new Date().toISOString(), n: 0, won: 0, lost: 0, void: 0, sumP: 0, profit: 0, leagues: {}, recent: [] });
+          const gain = st === "won" ? f.top.odds - 1 : st === "lost" ? -1 : 0;
+          if (st === "void") t.void++;
+          else {
+            t.n++; t.sumP += f.top.probability; t.profit = Math.round((t.profit + gain) * 100) / 100;
+            if (st === "won") t.won++; else t.lost++;
+            const lg = (t.leagues[f.league || "?"] ??= { n: 0, won: 0, profit: 0 });
+            lg.n++; if (st === "won") lg.won++; lg.profit = Math.round((lg.profit + gain) * 100) / 100;
+          }
+          t.recent.unshift({ fixtureId: f.fixtureId, matchDate: f.matchDate, match: `${f.homeTeam} – ${f.awayTeam}`, league: f.league, market: f.top.market, selection: f.top.selection, probability: f.top.probability, odds: f.top.odds, status: st });
+          t.recent = t.recent.slice(0, TOP_RECENT_MAX);
         }
         summary.fixtures++;
         f.picks.forEach((p, i) => {

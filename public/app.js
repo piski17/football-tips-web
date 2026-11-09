@@ -5025,12 +5025,43 @@ document.getElementById("dnesSendBtn")?.addEventListener("click", () => openSend
 // VŠETKY TRHY (4. 11. 2026, Michal): z každého trhu jedna predpoveď modelu (najvyššia šanca do 80 %),
 // server ju po zápase vyhodnotí bez ohľadu na pravidlá pre klientov. Ukazuje, v ktorých trhoch model sedí.
 // =====================================================================
+// Najsilnejší tip z každého zápasu (9. 11. 2026, Michal) – server ho zapíše pri automatickej analýze
+// (asi hodinu pred výkopom) a vyhodnotí po zápase. Klientom nejde, do štatistík sa neráta.
+function renderTopPicks(t) {
+  const box = document.getElementById("topPickResult");
+  if (!box) return;
+  const sumEl = document.querySelector('[data-fold-sum="najsilnejsi"]');
+  const fmt2 = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(2).replace(".", ",");
+  if (!t || !(t.n + t.void)) {
+    if (sumEl) sumEl.textContent = "Z každého zápasu jeden tip";
+    box.innerHTML = `<p class="muted small">Pri každom zápase všetkých súťaží server asi hodinu pred výkopom vyberie jeden tip – ten s najvyššou dôverou modelu (do 80${NB}%), na ktorý stávkovky dávajú kurz aspoň 1,50 – a po zápase ho vyhodnotí. Pravidlá pre klientov (hodnota, 60 / 40) sa tu neuplatňujú. Klientom nejde a do štatistík sa neráta.</p><p class="empty">Zatiaľ nič vyhodnotené. Prvé výsledky budú po dnešných zápasoch.</p>`;
+    return;
+  }
+  const pct = t.n ? Math.round((t.won / t.n) * 100) : 0;
+  const exp = t.n ? Math.round(t.sumP / t.n) : 0;
+  if (sumEl) sumEl.textContent = `${t.n} tipov · ${pct}${NB}% · ${fmt2(t.profit)} j.`;
+  const ST = { won: '<b class="g">✓</b>', lost: '<b class="l">✕</b>', void: '<span class="faint">↺</span>' };
+  const lg = Object.entries(t.leagues || {}).sort((a, b) => b[1].n - a[1].n);
+  box.innerHTML = `
+    <p class="muted small">Z každého zápasu jeden tip s najvyššou dôverou modelu (do 80${NB}%) pri kurze stávkoviek aspoň 1,50, bez pravidiel pre klientov. Zisk pri vklade 1 jednotka na tip. Začalo ${escapeHtml(new Date(t.since).toLocaleDateString("sk-SK"))}. Klientom nejde a do štatistík sa neráta.</p>
+    <div class="table-wrap"><table class="bt-table"><tbody>
+      <tr><td>Vyhodnotené tipy</td><td><b>${t.n}</b>${t.void ? ` <span class="faint">(+${t.void} vrátené)</span>` : ""}</td></tr>
+      <tr><td>Vyšlo</td><td><b>${t.won}</b> z ${t.n} · ${pct}${NB}% <span class="faint">(model čakal ${exp}${NB}%)</span></td></tr>
+      <tr><td>Zisk</td><td><b class="${t.profit >= 0 ? "g" : "l"}">${fmt2(t.profit)} j.</b></td></tr>
+    </tbody></table></div>
+    ${lg.length ? `<details><summary class="small">Podľa súťaží</summary><div class="table-wrap"><table class="bt-table"><thead><tr><th>Súťaž</th><th>Vyšlo</th><th>Zisk</th></tr></thead><tbody>${lg.map(([name, x]) => `<tr><td>${escapeHtml(name)}</td><td>${x.won}/${x.n}</td><td class="${x.profit >= 0 ? "g" : "l"}">${fmt2(x.profit)} j.</td></tr>`).join("")}</tbody></table></div></details>` : ""}
+    <details open><summary class="small">Posledné tipy</summary>
+      <div class="table-wrap"><table class="bt-table"><tbody>${(t.recent || []).slice(0, 100).map((x) => `<tr><td class="faint small">${escapeHtml(new Date(x.matchDate).toLocaleDateString("sk-SK", { day: "numeric", month: "numeric" }))}</td><td>${escapeHtml(translateTeamName(x.match.split(" – ")[0] || ""))} – ${escapeHtml(translateTeamName(x.match.split(" – ")[1] || ""))}<br><span class="faint small">${escapeHtml(x.league || "")}</span></td><td>${escapeHtml(x.market)}: ${escapeHtml(translateNamesInText(x.selection, "", ""))}</td><td>${probTxt(x.probability)}${NB}%</td><td>${x.odds.toFixed(2).replace(".", ",")}</td><td>${ST[x.status] || ""}</td></tr>`).join("")}</tbody></table></div>
+    </details>`;
+}
+
 async function renderAllMarkets() {
   const box = document.getElementById("allMarketsResult");
   if (!box) return;
   let d;
   try { d = await fetchJson("/api/markets-all"); }
   catch (err) { box.innerHTML = `<p class="faint small">Nepodarilo sa načítať: ${escapeHtml(err.message)}</p>`; return; }
+  renderTopPicks(d.top);
   const rows = Object.entries(d.markets || {}).map(([market, m]) => ({ market, ...m, pct: m.n ? (m.won / m.n) * 100 : null, exp: m.n ? m.sumP / m.n : null }))
     .sort((a, b) => b.n - a.n || a.market.localeCompare(b.market));
   const sumEl = document.querySelector('[data-fold-sum="vsetkytrhy"]');
