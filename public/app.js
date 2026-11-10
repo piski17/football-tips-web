@@ -613,7 +613,7 @@ matchDateInput.addEventListener("change", () => setMatchDate(matchDateInput.valu
 async function init() {
   document.body.insertAdjacentHTML(
     "afterbegin",
-    `<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#C7A56E"/></linearGradient></defs></svg>`
+    `<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#6FD3FF"/></linearGradient></defs></svg>`
   );
   matchDateInput.value = localToday();
   syncDayChips();
@@ -4726,12 +4726,12 @@ async function saveBacktestImage(e) {
   // celý výsledok (bez rolovania) do jedného širokého obrázka
   const box = document.createElement("div");
   box.className = "bt-export";
-  box.style.cssText = "position:absolute;left:-10000px;top:0;width:1200px;padding:28px;background:#060912;color:#F6F0E4;";
+  box.style.cssText = "position:absolute;left:-10000px;top:0;width:1200px;padding:28px;background:#0A0614;color:#F4F0FF;";
   box.innerHTML = `<h3 style="margin:0 0 12px;font-size:20px;">${escapeHtml(btExportTitle())}</h3>${document.getElementById("btReport").innerHTML}`;
   document.body.appendChild(box);
   try {
     const h2c = await loadHtml2canvas();
-    const canvas = await h2c(box, { backgroundColor: "#060912", scale: 1.5 });
+    const canvas = await h2c(box, { backgroundColor: "#0A0614", scale: 1.5 });
     const p = (btLastJob && btLastJob.params) || {};
     const a = document.createElement("a");
     a.href = canvas.toDataURL("image/png");
