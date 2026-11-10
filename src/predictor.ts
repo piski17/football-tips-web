@@ -185,6 +185,8 @@ export function passesStrict(t: { strictProbability?: number }, odds: number | n
   const p = t.strictProbability;
   return p >= MIN_PROBABILITY && p <= MAX_PROBABILITY && (p / 100) * odds >= MIN_EXPECTED_VALUE;
 }
+/** Koniec štítku šedej zóny (ide klientom, ak prejde aj kontrolou 60 / 40). */
+const SOFT_CONFLICT_TO_CLIENTS = "– šedá zóna, od 1. 11. 2026 ide klientom (ak prejde aj kontrolou 60 / 40).";
 const GOALS_UNDER_CONFLICT_LIMIT = 12;
 const isGoalsUnder = (c: { category: string; selection: string }) =>
   (c.category === "goly" || c.category === "goly_timu" || c.category === "goly_1p" || c.category === "goly_2p") && c.selection.startsWith("Under");
@@ -1331,7 +1333,7 @@ export function predictMatch(
           c.marketProbability = pMarket * 100;
         } else if (!isGoalsUnder(c) && Math.abs(modelPct - pMarket * 100) >= conflictLimit - 5) {
           // Prešiel len vďaka zmierneniu filtra (22. 10. 2026) – šedá zóna, od 1. 11. 2026 ide klientom (Michal).
-          c.valueWarning = `Rozpor so stávkovkami ${Math.abs(modelPct - pMarket * 100).toFixed(0)} bodov (model ${modelPct.toFixed(0)} %, stávkovky ${(pMarket * 100).toFixed(0)} %) – šedá zóna, od 1. 11. 2026 ide klientom.`;
+          c.valueWarning = `Rozpor so stávkovkami ${Math.abs(modelPct - pMarket * 100).toFixed(0)} bodov (model ${modelPct.toFixed(0)} %, stávkovky ${(pMarket * 100).toFixed(0)} %) ${SOFT_CONFLICT_TO_CLIENTS}`;
           c.softConflict = true;
           c.conflictModel = modelPct;
           c.conflictLimit = conflictLimit - 5;
@@ -1531,6 +1533,10 @@ export function predictMatch(
         // Dvojitá kontrola 60 / 40: tip ostáva vo výbere, ale ak neprejde, uloží sa len do sledovaných.
         // (Pásmo 65 – 67 % ide celé len do sledovaných, kontrola 60 / 40 sa pri ňom nerobí.)
         if (!watchBand && !passesStrict(b, b.odds)) { if (STRICT_CHECK_ON) b.strictFail = true; else b.strictWouldFail = true; }
+        // 10. 11. 2026 (Michal): štítok šedej zóny nesmie tvrdiť „ide klientom“, keď tip zastaví kontrola 60 / 40.
+        if (b.softConflict && b.strictFail && b.valueWarning) {
+          b.valueWarning = b.valueWarning.replace(SOFT_CONFLICT_TO_CLIENTS, "– šedá zóna. Tento tip však pri kurze zo stávkoviek neprejde kontrolou 60 / 40, preto klientom nepôjde, uloží sa len do sledovaných.");
+        }
         pickPool.push(b);
       }
     }
