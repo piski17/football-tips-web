@@ -383,6 +383,8 @@ export interface LeaguePreset {
   id: number; // ID ligy v API-Football, napr. 39 pre Premier League
   name: string;
   country: string;
+  /** Súťaž vrátená do projektu: tipy so zápasom pred týmto dňom (RRRR-MM-DD) sa nerátajú. */
+  since?: string;
 }
 
 /** Hráč zo súpisky tímu. */

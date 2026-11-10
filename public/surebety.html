@@ -156,7 +156,7 @@ details p, details li { color: var(--muted); font-size: 14px; }
 
   <!-- SKÚŠKA -->
   <section class="panel">
-    <div class="head"><div><h2>Skúška – prehľad</h2><div class="muted small">Server každú hodinu prehľadá dnešné zápasy 16 súťaží TipRadaru a zapíše každý surebet so ziskom aspoň 0,5 % (bez podozrivých nad 8 %). Kliknutím na deň uvidíte, ktoré surebety to boli.</div></div></div>
+    <div class="head"><div><h2>Skúška – prehľad</h2><div class="muted small">Server každú hodinu prehľadá dnešné zápasy 18 súťaží TipRadaru a zapíše každý surebet so ziskom aspoň 0,5 % (bez podozrivých nad 8 %). Kliknutím na deň uvidíte, ktoré surebety to boli.</div></div></div>
     <div class="chips" id="logScope" style="margin-bottom:12px">
       <button type="button" class="chip" data-s="mine">Len moje stávkovky</button>
       <button type="button" class="chip on" data-s="all">Všetky stávkovky</button>
@@ -259,7 +259,7 @@ function renderList(list) {
   // Zoradiť podľa dňa a v rámci dňa od najvyššieho zisku.
   list = [...list].sort((a, b) => dayKey(a.date).localeCompare(dayKey(b.date)) || b.margin - a.margin);
   if (!list.length) {
-    $("sbList").innerHTML = `<p class="empty">${scope === "mine" && myBooks.length < 2 ? "Najprv nižšie vyberte aspoň 2 svoje stávkovky." : "V dnešných zápasoch 16 súťaží teraz nie je žiadny surebet. Server to skúša každú hodinu."}</p>`;
+    $("sbList").innerHTML = `<p class="empty">${scope === "mine" && myBooks.length < 2 ? "Najprv nižšie vyberte aspoň 2 svoje stávkovky." : "V dnešných zápasoch 18 súťaží teraz nie je žiadny surebet. Server to skúša každú hodinu."}</p>`;
     return;
   }
   let lastDay = "";
@@ -312,7 +312,7 @@ async function load() {
   } catch (err) { $("scanInfo").textContent = err.message; }
 }
 $("scanBtn").addEventListener("click", async () => {
-  $("scanBtn").disabled = true; $("scanInfo").textContent = "Prehľadávam dnešné zápasy 16 súťaží, trvá to asi minútu…";
+  $("scanBtn").disabled = true; $("scanInfo").textContent = "Prehľadávam dnešné zápasy 18 súťaží, trvá to asi minútu…";
   try { await api("/api/surebets/scan", { method: "POST" }); } catch (err) { /* chyba sa ukáže v stave */ }
   $("scanBtn").disabled = false;
   load(); loadLog();

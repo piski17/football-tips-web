@@ -130,7 +130,11 @@ function isRemovedLeagueTip(t: SavedTip): boolean {
   if (!HIDE_REMOVED_LEAGUE_TIPS) return false;
   if (t.legs && t.legs.length) return false;
   if (!t.leagueId) return false;
-  return !LEAGUE_PRESETS.some((l) => l.id === t.leagueId);
+  const preset = LEAGUE_PRESETS.find((l) => l.id === t.leagueId);
+  if (!preset) return true;
+  // Súťaž vrátená do projektu – staré tipy z obdobia, keď vyradená bola, sa nerátajú (len nové od dátumu návratu).
+  if (preset.since && t.matchDate && t.matchDate.slice(0, 10) < preset.since) return true;
+  return false;
 }
 
 /**
@@ -190,6 +194,7 @@ function monthlyResults(tips: SavedTip[]) {
 const CUP_LEAGUE_IDS = [2, 3, 848]; // Liga majstrov, Európska liga, Konferenčná liga
 
 const LEAGUE_PRESETS: LeaguePreset[] = [
+  // 10. 11. 2026 (Michal): + ženská Liga majstrov (525) a Liga národov (5) – 18 súťaží.
   // 8. 11. 2026 22:16 (Michal): Rumunská Liga I ODSTRÁNENÁ – 16 súťaží; jej tipy sa nerátajú (HIDE_REMOVED_LEAGUE_TIPS).
   // 5. 11. 2026 19:45 (Michal): Európska liga a Konferenčná liga ODSTRÁNENÉ – späť 17 súťaží (ich tipy sa nerátajú, HIDE_REMOVED_LEAGUE_TIPS).
   // 2. 11. 2026 15:15 (Michal): vrátených všetkých 17 súťaží (ráno skúšobne 10).
@@ -215,7 +220,12 @@ const LEAGUE_PRESETS: LeaguePreset[] = [
   { id: 141, name: "Segunda División", country: "Španielsko" },
   { id: 62, name: "Ligue 2", country: "Francúzsko" },
   { id: 2, name: "UEFA Champions League", country: "Európa" },
-  // Liga národov (id 5) odstránená 6. 10. 2026 - reprezentácie majú málo zápasov, tipy nespoľahlivé.
+  // 10. 11. 2026 (Michal): pridaná ženská Liga majstrov a znova Liga národov – 18 súťaží.
+  // Liga národov bola 6. 10. 2026 odstránená; jej staré tipy (pred 10. 11.) sa nerátajú (since).
+  // Bežné pravidlá platia: tím s <3 zápasmi v sezóne súťaže sa neodporúča, pri <5 kurz aspoň od 2 stávkoviek,
+  // tip len so skutočným kurzom stávkoviek.
+  { id: 525, name: "UEFA Champions League Women", country: "Európa", since: "2026-11-10" },
+  { id: 5, name: "UEFA Nations League", country: "Európa", since: "2026-11-10" },
 ];
 
 /**

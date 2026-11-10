@@ -39,6 +39,7 @@ function translateTeamName(name) {
 const LEAGUE_NAME_SK = {
   "UEFA Nations League": "Liga národov UEFA",
   "UEFA Champions League": "Liga majstrov UEFA",
+  "UEFA Champions League Women": "Liga majstrov žien UEFA",
   "UEFA Europa League": "Európska liga UEFA",
   "UEFA Europa Conference League": "Konferenčná liga UEFA",
   "UEFA Conference League": "Konferenčná liga UEFA",
@@ -62,7 +63,7 @@ function translateLeagueName(name) {
  * najvyššie ligy, druhé ligy, Liga majstrov; staré súťaže (už sa netipujú) na koniec ako „Vyradené“.
  * Kľúč je názov ligy z API (tak, ako je uložený pri tipe).
  */
-const LEAGUE_GROUPS = ["Najvyššie ligy", "Druhé ligy", "Liga majstrov", "Vyradené súťaže"];
+const LEAGUE_GROUPS = ["Najvyššie ligy", "Druhé ligy", "Európske súťaže", "Vyradené súťaže"];
 const LEAGUE_ORDER = [
   ["Premier League", "Anglicko", 0],
   ["La Liga", "Španielsko", 0],
@@ -80,6 +81,9 @@ const LEAGUE_ORDER = [
   ["Segunda División", "Španielsko", 1],
   ["Ligue 2", "Francúzsko", 1],
   ["UEFA Champions League", "", 2],
+  // 10. 11. 2026 (Michal): ženská Liga majstrov a Liga národov.
+  ["UEFA Champions League Women", "", 2],
+  ["UEFA Nations League", "", 2],
 ];
 const LEAGUE_INFO = new Map(LEAGUE_ORDER.map(([name, country, group], i) => [name, { country, group, order: i }]));
 // Aj podľa slovenského názvu (časť tipov má uložený už preložený názov).
