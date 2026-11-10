@@ -454,7 +454,9 @@ canvas { border-radius: 20px !important; border-color: rgba(217,192,138,.3) !imp
   </div>
 </div>
 
+<script src="/team-names-sk.js"></script>
 <script>
+const tnm = (n) => (window.teamSk ? window.teamSk(n) : n);
 (function () {
   const $ = (id) => document.getElementById(id);
   const rowsEl = $('rows');
@@ -810,8 +812,8 @@ canvas { border-radius: 20px !important; border-color: rgba(217,192,138,.3) !imp
     const dates = legs.length ? legs.map((l) => l.matchDate) : [t.matchDate];
     const first = dates.slice().sort()[0], last = dates.slice().sort().pop();
     const odds = typeof t.odds === 'number' && t.odds > 1 ? t.odds.toFixed(2).replace('.', ',') : '';
-    const match = legs.length ? 'Tiket · ' + legs.length + (legs.length < 5 ? ' zápasy' : ' zápasov') : t.homeTeam + ' – ' + t.awayTeam;
-    const tip = legs.length ? legs.map((l) => l.homeTeam + ' – ' + l.awayTeam).join(', ') : skText(t.market + ': ' + t.selection);
+    const match = legs.length ? 'Tiket · ' + legs.length + (legs.length < 5 ? ' zápasy' : ' zápasov') : tnm(t.homeTeam) + ' – ' + tnm(t.awayTeam);
+    const tip = legs.length ? legs.map((l) => tnm(l.homeTeam) + ' – ' + tnm(l.awayTeam)).join(', ') : skText(t.market + ': ' + String(t.selection || '').split(t.homeTeam).join(tnm(t.homeTeam)).split(t.awayTeam).join(tnm(t.awayTeam)));
     return { day: skDay(last), row: { time: skTime(first), match, tip, odds, result: ['won', 'lost', 'void'].includes(t.status) ? t.status : '' } };
   }
   $('fromHistory').onclick = async () => {
@@ -1171,8 +1173,8 @@ canvas { border-radius: 20px !important; border-color: rgba(217,192,138,.3) !imp
     const result = ['won', 'lost', 'void'].includes(t.status) ? t.status : '';
     return {
       day: skDay(dates[dates.length - 1]), when: dates[0],
-      match: legs.length ? 'Tiket · ' + legs.length + (legs.length < 5 ? ' zápasy' : ' zápasov') : t.homeTeam + ' – ' + t.awayTeam,
-      tip: legs.length ? legs.map((l) => l.homeTeam + ' – ' + l.awayTeam).join(', ') : skText(t.market + ': ' + t.selection),
+      match: legs.length ? 'Tiket · ' + legs.length + (legs.length < 5 ? ' zápasy' : ' zápasov') : tnm(t.homeTeam) + ' – ' + tnm(t.awayTeam),
+      tip: legs.length ? legs.map((l) => tnm(l.homeTeam) + ' – ' + tnm(l.awayTeam)).join(', ') : skText(t.market + ': ' + String(t.selection || '').split(t.homeTeam).join(tnm(t.homeTeam)).split(t.awayTeam).join(tnm(t.awayTeam))),
       odds, result,
       profit: result === 'won' ? (odds ? odds - 1 : null) : result === 'lost' ? -1 : result === 'void' ? 0 : null,
     };

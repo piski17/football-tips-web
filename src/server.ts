@@ -1,4 +1,5 @@
 import { plausibleLine, offeredLines, MIN_BOOKMAKERS, MIN_ODDS, MAX_PROBABILITY, MIN_PROBABILITY, MIN_EXPECTED_VALUE, SUSPICIOUS_EXPECTED_VALUE, findOdds, marketProbabilityDetail, STRONG_TIP_MIN_PROBABILITY, WATCH_BELOW_PROBABILITY, WATCH_BAND_MIN_PROBABILITY } from "./oddsMatcher";
+import { teamNamesBrowserScript } from "./teamNamesSk";
 import { listLeads, deleteLead, recordLead } from "./leadsStore";
 import { getMeta, setMeta } from "./metaStore";
 import * as crypto from "crypto";
@@ -488,6 +489,13 @@ app.get(["/kurz", "/kurz/"], (_req, res) => {
 // Ikonka stránky a obrázok náhľadu pri zdieľaní musia byť dostupné aj bez hesla.
 app.get(["/favicon.svg", "/favicon-32.png", "/favicon-256.png", "/og-image.png"], (req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", req.path.slice(1)));
+});
+
+// Slovenské názvy tímov pre webové stránky (10. 11. 2026) – bez hesla, rovnaký slovník ako server a Telegram.
+const TEAM_NAMES_JS = teamNamesBrowserScript();
+app.get("/team-names-sk.js", (_req, res) => {
+  res.type("application/javascript").setHeader("Cache-Control", "public, max-age=3600");
+  res.send(TEAM_NAMES_JS);
 });
 
 // Ukážky z kurzu Škola stávkovania na tipradar.eu – bez hesla.

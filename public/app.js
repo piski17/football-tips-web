@@ -32,6 +32,8 @@ const COUNTRY_NAME_SK = {
 };
 
 function translateTeamName(name) {
+  // Kluby aj reprezentácie po slovensky (slovník zo servera /team-names-sk.js, 10. 11. 2026).
+  if (typeof window !== "undefined" && typeof window.teamSk === "function") return window.teamSk(name);
   return COUNTRY_NAME_SK[name] ?? name;
 }
 

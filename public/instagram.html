@@ -267,7 +267,9 @@ canvas { border-radius: 20px !important; }
   </div>
 </div>
 
+<script src="/team-names-sk.js"></script>
 <script>
+const tnm = (n) => (window.teamSk ? window.teamSk(n) : n);
 (function () {
   const $ = (id) => document.getElementById(id);
   const cv = $('cv'), ctx = cv.getContext('2d');
@@ -601,7 +603,7 @@ canvas { border-radius: 20px !important; }
 
   // ---------- tipy z Histórie ----------
   function fill(t) {
-    $('home').value = t.homeTeam || ''; $('away').value = t.awayTeam || ''; $('league').value = t.leagueName || '';
+    $('home').value = tnm(t.homeTeam || ''); $('away').value = tnm(t.awayTeam || ''); $('league').value = t.leagueName || '';
     $('date').value = t.matchDate ? skDay(t.matchDate) : ''; $('time').value = t.matchDate ? skTime(t.matchDate) : '';
     $('tip').value = skText((t.market ? t.market + ': ' : '') + (t.selection || ''));
     $('odds').value = typeof t.odds === 'number' && t.odds > 1 ? nf(t.odds, 2) : '';
@@ -619,7 +621,7 @@ canvas { border-radius: 20px !important; }
       const o0 = document.createElement('option'); o0.value = ''; o0.textContent = tips.length ? 'Vyber tip…' : 'V Histórii tipov nie sú žiadne tipy'; sel.appendChild(o0);
       for (const t of tips) {
         const o = document.createElement('option'); o.value = t.id;
-        o.textContent = skDay(t.matchDate).slice(5).split('-').reverse().join('.') + '. · ' + t.homeTeam + ' – ' + t.awayTeam + ' · ' + skText(t.selection) + (t.status === 'pending' ? '' : t.status === 'won' ? ' ✓' : t.status === 'lost' ? ' ✗' : '');
+        o.textContent = skDay(t.matchDate).slice(5).split('-').reverse().join('.') + '. · ' + tnm(t.homeTeam) + ' – ' + tnm(t.awayTeam) + ' · ' + skText(t.selection) + (t.status === 'pending' ? '' : t.status === 'won' ? ' ✓' : t.status === 'lost' ? ' ✗' : '');
         sel.appendChild(o);
       }
       const next = tips.filter((t) => t.status === 'pending').pop() || tips[0];

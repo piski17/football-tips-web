@@ -197,7 +197,9 @@ select { width: 100%; font: 500 15px var(--body); color: var(--text); background
   <section class="panel" id="out" hidden></section>
 </div>
 
+<script src="/team-names-sk.js"></script>
 <script>
+const tnm = (n) => (window.teamSk ? window.teamSk(n) : n);
 const $ = (id) => document.getElementById(id);
 const fmt = (n, d = 2) => Number(n).toLocaleString("sk-SK", { minimumFractionDigits: d, maximumFractionDigits: d });
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -266,7 +268,7 @@ function renderList(fx, withDay) {
     if (g !== lastGroup) { html += `<div class="lg-h">${esc(g)}</div>`; lastGroup = g; }
     const done = FINISHED.includes(f.status), live = !done && f.status !== "NS" && f.status !== "TBD";
     const right = done || live ? `<span class="sc">${f.goalsHome ?? 0}:${f.goalsAway ?? 0}${live ? " · " + (f.elapsed ?? "") + "′" : ""}</span>` : `<span class="tm">${withDay ? esc(f.league.name) : ""}</span>`;
-    html += `<button type="button" class="fxr${current && current.fixtureId === f.fixtureId ? " on" : ""}" data-id="${f.fixtureId}"><span class="tm">${time(f.date)}</span><span>${esc(f.homeTeam.name)} – ${esc(f.awayTeam.name)}</span>${right}</button>`;
+    html += `<button type="button" class="fxr${current && current.fixtureId === f.fixtureId ? " on" : ""}" data-id="${f.fixtureId}"><span class="tm">${time(f.date)}</span><span>${esc(tnm(f.homeTeam.name))} – ${esc(tnm(f.awayTeam.name))}</span>${right}</button>`;
   }
   $("list").innerHTML = html;
   $("list").onclick = (e) => {
@@ -291,7 +293,7 @@ async function search() {
     try { all.push(...(await fetchDay(d.k))); } catch {}
     if ($("q").value.trim().toLowerCase() !== q) return;
   }
-  const hit = all.filter((f) => (f.homeTeam.name + " " + f.awayTeam.name).toLowerCase().includes(q)).sort((a, b) => a.timestamp - b.timestamp);
+  const hit = all.filter((f) => (f.homeTeam.name + " " + f.awayTeam.name + " " + tnm(f.homeTeam.name) + " " + tnm(f.awayTeam.name)).toLowerCase().includes(q)).sort((a, b) => a.timestamp - b.timestamp);
   $("info").textContent = `Nájdené: ${hit.length} (včera až o 6 dní)`;
   renderList(hit, true);
 }
@@ -311,7 +313,7 @@ function negBinUnder(mean, line, varRatio) {
 }
 
 function marketName(r, m) {
-  const h = r.fixture.homeTeam.name, a = r.fixture.awayTeam.name;
+  const h = tnm(r.fixture.homeTeam.name), a = tnm(r.fixture.awayTeam.name);
   if (m.endsWith(" domácich")) return m.replace(/ domácich$/, "") + " – " + h;
   if (m.endsWith(" hostí")) return m.replace(/ hostí$/, "") + " – " + a;
   return m;
@@ -319,7 +321,7 @@ function marketName(r, m) {
 function selName(r, s) {
   const m = /^(Over|Under) ([\d.]+)$/.exec(s);
   if (m) return (m[1] === "Over" ? "Viac ako " : "Menej ako ") + m[2].replace(".", ",");
-  return String(s).replaceAll(r.fixture.homeTeam.name, r.fixture.homeTeam.name);
+  return String(s).replaceAll(r.fixture.homeTeam.name, tnm(r.fixture.homeTeam.name)).replaceAll(r.fixture.awayTeam.name, tnm(r.fixture.awayTeam.name));
 }
 const lineOf = (s) => { const m = /([\d.]+)$/.exec(s); return m ? Number(m[1]) : 0; };
 
@@ -328,7 +330,7 @@ async function analyze(f, fresh = false) {
   [...document.querySelectorAll(".fxr")].forEach((b) => b.classList.toggle("on", b.dataset.id === String(f.fixtureId)));
   const out = $("out");
   out.hidden = false;
-  out.innerHTML = `<div class="load">Model počíta zápas ${esc(f.homeTeam.name)} – ${esc(f.awayTeam.name)}…<br><span class="small faint">Prvýkrát to trvá 10 – 30 sekúnd.</span></div>`;
+  out.innerHTML = `<div class="load">Model počíta zápas ${esc(tnm(f.homeTeam.name))} – ${esc(tnm(f.awayTeam.name))}…<br><span class="small faint">Prvýkrát to trvá 10 – 30 sekúnd.</span></div>`;
   out.scrollIntoView({ behavior: "smooth", block: "start" });
   try {
     const r = await api("/api/analyza", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fixture: f, fresh }) });
@@ -341,7 +343,7 @@ async function analyze(f, fresh = false) {
 
 function render(r) {
   lastR = r;
-  const f = r.fixture, h = f.homeTeam.name, a = f.awayTeam.name;
+  const f = r.fixture, h = tnm(f.homeTeam.name), a = tnm(f.awayTeam.name);
   const p = r.probabilities || {};
   const best = new Set((r.bestBets || []).map((b) => b.market + "|" + b.selection));
   const cands = r.allCandidates || [];

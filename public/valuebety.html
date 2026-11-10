@@ -209,7 +209,9 @@ select { width: 100%; font: 500 15px var(--body); color: var(--text); background
   </section>
 </div>
 
+<script src="/team-names-sk.js"></script>
 <script>
+const tnm = (n) => (window.teamSk ? window.teamSk(n) : n);
 const $ = (id) => document.getElementById(id);
 const fmt = (n, d = 2) => Number(n).toLocaleString("sk-SK", { minimumFractionDigits: d, maximumFractionDigits: d });
 const pct = (m, d = 1) => fmt(m * 100, d) + " %";
@@ -325,7 +327,7 @@ function renderList(list) {
     const head = d !== last ? `<div class="day-h">${dayName(d)}<span>${n} ${plural(n)}</span></div>` : "";
     last = d;
     return head + `<div class="sb${v.suspicious ? " sus" : ""}">
-      <div class="sb-top"><b>${esc(v.home)} – ${esc(v.away)}</b><span class="pct">+${fmt(v.ev * 100)} €<small>+${fmt(v.ev * 100, 1)} % · v priemere pri vklade 100 €</small></span></div>
+      <div class="sb-top"><b>${esc(tnm(v.home))} – ${esc(tnm(v.away))}</b><span class="pct">+${fmt(v.ev * 100)} €<small>+${fmt(v.ev * 100, 1)} % · v priemere pri vklade 100 €</small></span></div>
       <div class="muted small">${esc(v.league)} · ${time(v.date)} · ${esc(v.market)}</div>
       <div class="legs">
         <div class="leg">${esc(v.label)} · <b>${fmt(v.odd)}</b> <span class="muted">v ${esc(v.book)}</span></div>
@@ -398,7 +400,7 @@ $("ckRes").addEventListener("click", async (e) => {
   try { localStorage.setItem("vb-book", book); } catch {}
   try {
     await api("/api/valuebets/manual", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fixtureId: f.fixtureId, betId: m.betId, value: sd.value, odd, stake, book }) });
-    $("ckRes").innerHTML = `<div class="res-top" style="color:var(--good)">Zapísané do Mojich stávok</div><div class="muted small">${esc(f.home)} – ${esc(f.away)} · ${esc(sd.label)} · ${fmt(stake)} € pri kurze ${fmt(odd)}. Po zápase sa vyhodnotí samo.</div>`;
+    $("ckRes").innerHTML = `<div class="res-top" style="color:var(--good)">Zapísané do Mojich stávok</div><div class="muted small">${esc(tnm(f.home))} – ${esc(tnm(f.away))} · ${esc(sd.label)} · ${fmt(stake)} € pri kurze ${fmt(odd)}. Po zápase sa vyhodnotí samo.</div>`;
     $("ckOdd").value = "";
     loadLog();
   } catch (err) { $("ckErr").textContent = err.message; }
@@ -408,7 +410,7 @@ async function loadFair() {
     const j = await api("/api/valuebets/fair");
     fair = j.fixtures || [];
     const prev = $("ckFixture").value;
-    $("ckFixture").innerHTML = fair.length ? fair.map((f) => `<option value="${f.fixtureId}">${new Date(f.date).toLocaleDateString("sk-SK", { day: "numeric", month: "numeric" })} ${time(f.date)} · ${esc(f.home)} – ${esc(f.away)} (${esc(f.league)})</option>`).join("") : "<option>Dnes už nie sú zápasy na overenie</option>";
+    $("ckFixture").innerHTML = fair.length ? fair.map((f) => `<option value="${f.fixtureId}">${new Date(f.date).toLocaleDateString("sk-SK", { day: "numeric", month: "numeric" })} ${time(f.date)} · ${esc(tnm(f.home))} – ${esc(tnm(f.away))} (${esc(f.league)})</option>`).join("") : "<option>Dnes už nie sú zápasy na overenie</option>";
     if (fair.some((f) => String(f.fixtureId) === prev)) $("ckFixture").value = prev;
     ckRenderMarkets();
   } catch (err) { $("ckRes").innerHTML = `<span class="err">${esc(err.message)}</span>`; }
@@ -435,7 +437,7 @@ function renderMine() {
     const l = byDay[d].sort((a, b) => a.date.localeCompare(b.date));
     const r = l.reduce((s, e) => s + (myResult(e) || 0), 0);
     return `<details class="day" open><summary><b>${dayName(d)}</b><span>${l.length} ${l.length === 1 ? "stávka" : l.length <= 4 ? "stávky" : "stávok"}</span><span class="${r > 0 ? "g" : r < 0 ? "l" : "muted"}">${l.some((e) => e.status !== "pending") ? eur(r) : "čaká"}</span></summary>
-      ${l.map((e) => `<div class="lrow"><div class="t"><b>${esc(e.home)} – ${esc(e.away)}</b><span class="st ${e.status}">${ST[e.status] || "?"}</span></div>
+      ${l.map((e) => `<div class="lrow"><div class="t"><b>${esc(tnm(e.home))} – ${esc(tnm(e.away))}</b><span class="st ${e.status}">${ST[e.status] || "?"}</span></div>
         <div class="muted small">${esc(e.league)} · ${time(e.date)} · ${esc(e.market)}${e.result ? " · " + esc(e.result) : ""}</div>
         <div class="small">${esc(e.label)} <span class="muted">· ${esc(e.book)}</span></div>${playBox(e.key, e.odd, e)}</div>`).join("")}
     </details>`;
@@ -465,7 +467,7 @@ function renderLog() {
     const p = l.reduce((s, e) => s + (e.profit || 0), 0);
     const fin = l.filter((e) => e.status === "won" || e.status === "lost");
     return `<details class="day"><summary><b>${dayName(d)}</b><span>${l.length} ${plural(l.length)}${fin.length ? " · " + fin.filter((e) => e.status === "won").length + " z " + fin.length + " vyšlo" : ""}</span><span class="${p > 0 ? "g" : p < 0 ? "l" : "muted"}">${l.some((e) => e.status !== "pending") ? eurPct(p, l.filter((e) => e.status !== "pending").length) : "čaká"}</span></summary>
-      ${l.map((e) => `<div class="lrow"><div class="t"><b>${esc(e.home)} – ${esc(e.away)}</b><span><span class="st ${e.status}">${ST[e.status] || "?"}</span> ${e.status === "pending" ? "" : `<span class="${e.profit > 0 ? "g" : e.profit < 0 ? "l" : "muted"}">${eur((e.profit || 0) * 100)}</span>`}</span></div>
+      ${l.map((e) => `<div class="lrow"><div class="t"><b>${esc(tnm(e.home))} – ${esc(tnm(e.away))}</b><span><span class="st ${e.status}">${ST[e.status] || "?"}</span> ${e.status === "pending" ? "" : `<span class="${e.profit > 0 ? "g" : e.profit < 0 ? "l" : "muted"}">${eur((e.profit || 0) * 100)}</span>`}</span></div>
         <div class="muted small">${esc(e.league)} · ${time(e.date)} · ${esc(e.market)}${e.result ? " · " + esc(e.result) : ""}</div>
         <div class="small">${esc(e.label)} <b style="color:var(--gold-hi)">${fmt(e.odd)}</b> <span class="muted">v ${esc(e.book)} · férový ${fmt(e.fairOdd)} · v priemere ${pe(e.ev)}</span></div>${playBox(e.key, e.odd, e)}</div>`).join("")}
     </details>`;
