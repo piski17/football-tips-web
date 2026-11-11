@@ -471,6 +471,8 @@ export interface Subscriber {
   // Členstvo (od 31. 10. 2026 večer): p50 – p300 = 50 – 300 tipov po 50 (50 Štart, 100 – 150 Gold, 200 – 300 Platinum). Staré: p75 = Štart 75. Staré balíčky: t75 = Štart (100), t150 = Gold (250), t300 = Onyx (500).
   // Staré časové členstvá: m1 = Gold 50 dní, m3 = Onyx 6 mesiacov, season (staršie záznamy bez dĺžky = m1).
   length?: "p100" | "p30" | "p50" | "p150" | "p200" | "p250" | "p300" | "p75" | "t75" | "t150" | "t300" | "m1" | "m3" | "season";
+  bankEur?: number; // 11. 11. 2026: bank klienta dohodnutý pri spolupráci (Nástroje → Spolupráca)
+  stakePct?: number; // vklad na tip v % banku (2 / 3 / 5)
   tips?: number; // počet tipov v aktuálnom členstve (staré balíčky: pri tipoch zadarmo podľa garancie 30)
   startDate?: string; // ISO dátum začiatku členstva
   periodStart?: string; // ISO začiatok aktuálneho obdobia (zaplateného alebo mesiaca zadarmo), koniec = nextPaymentDue

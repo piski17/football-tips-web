@@ -478,16 +478,18 @@ const VIEWS = [
   { id: "historia", label: "História tipov", short: "História" },
   { id: "clenovia", label: "Členovia", short: "Členovia" },
   { id: "nastroje", label: "Nástroje", short: "Nástroje" },
+  { id: "spolupraca", label: "Spolupráca", short: "Spolupráca", hidden: true, parent: "nastroje" }, // 11. 11. 2026: priečinok v Nástrojoch, nie v menu
 ];
 let currentView = "dnes";
 
 function renderNav() {
   const count = fixtureTotalCount ? `<span class="cnt">${fixtureTotalCount}</span>` : "";
-  document.getElementById("sideNav").innerHTML = VIEWS.map(
-    (v) => `<a href="#${v.id}" data-nav="${v.id}" class="${v.id === currentView ? "on" : ""}">${ICON[v.id]}<span>${v.label}</span>${v.id === "zapasy" ? count : ""}</a>`
+  const navOn = (v) => v.id === currentView || VIEWS.some((x) => x.id === currentView && x.parent === v.id);
+  document.getElementById("sideNav").innerHTML = VIEWS.filter((v) => !v.hidden).map(
+    (v) => `<a href="#${v.id}" data-nav="${v.id}" class="${navOn(v) ? "on" : ""}">${ICON[v.id]}<span>${v.label}</span>${v.id === "zapasy" ? count : ""}</a>`
   ).join("");
-  document.getElementById("tabBar").innerHTML = VIEWS.map(
-    (v) => `<a href="#${v.id}" data-nav="${v.id}" class="${v.id === currentView ? "on" : ""}">${ICON[v.id]}<span>${v.short}</span></a>`
+  document.getElementById("tabBar").innerHTML = VIEWS.filter((v) => !v.hidden).map(
+    (v) => `<a href="#${v.id}" data-nav="${v.id}" class="${navOn(v) ? "on" : ""}">${ICON[v.id]}<span>${v.short}</span></a>`
   ).join("");
 }
 
@@ -4017,26 +4019,51 @@ function syncMemberPrice() {
   subPriceInput.value = memberPriceFor(subTipsValue());
   updateSubEndPreview();
 }
+// 11. 11. 2026 (Michal): Nástroje → Spolupráca – plán pre klienta: počet tipov, jeho bank, vklad, cena.
+const subBankInput = document.getElementById("subBank");
+let subPct = 3;
+const COOP_ROI = 0.042; // bežný zisk modelu na tip (rovnako ako web a payments.ts)
 function updateSubEndPreview() {
   const start = subStartInput.value || todayIso();
   const tips = subTipsValue();
+  const bank = Math.max(0, Number(subBankInput.value) || 0);
+  const price = Number(subPriceInput.value) || 0;
+  const stake = (bank * subPct) / 100;
+  const model = tips * COOP_ROI; // jednotky
+  const need = stake > 0 ? price / stake : 0;
+  const net = model * stake - price;
+  const bankBreak = price > 0 ? Math.ceil(price / (model * subPct / 100) / 50) * 50 : 0;
+  const bankRec = price > 0 ? Math.ceil((1.5 * price) / (model * subPct / 100) / 50) * 50 : 0;
   document.querySelectorAll("#subTipsPick [data-tips]").forEach((b) => b.classList.toggle("on", Number(b.dataset.tips) === tips));
-  // Bežný zisk modelu 4,2 % na tip (rovnako ako na webe) – len orientačne, nie je zaručený.
+  document.querySelectorAll("#subPctPick [data-pct]").forEach((b) => b.classList.toggle("on", Number(b.dataset.pct) === subPct));
+  const eur = (n) => `${Math.round(n).toLocaleString("sk-SK")}${NB}€`;
+  const kpi = (label, val, sub, cls = "") => `<div class="kpi${cls}"><small>${label}</small><b>${val}</b>${sub ? `<span>${sub}</span>` : ""}</div>`;
+  document.getElementById("coopOut").innerHTML =
+    kpi("Vklad na tip", `${fmtNum(stake, stake % 1 ? 2 : 0)}${NB}€`, `${subPct}${NB}% z banku ${eur(bank)}`) +
+    kpi("Cena sa vráti pri", `+${fmtNum(need, 1)}${NB}j.`, `za ${tips} tipov`, need > model ? " warn" : "") +
+    kpi("Bežný zisk modelu", `+${fmtNum(model, 1)}${NB}j.`, `≈ ${eur(model * stake)} · po zaplatení ${net >= 0 ? "+" : "−"}${eur(Math.abs(net))}`, net < 0 ? " warn" : "") +
+    kpi("Odporúčaný bank", `od ${eur(bankRec)}`, `cena sa vráti od ${eur(bankBreak)}`, bank < bankRec ? " warn" : "");
   document.getElementById("subEndPreview").textContent =
-    `${tips} tipov od ${new Date(start).toLocaleDateString("sk-SK")}, bez časového limitu · bežný zisk modelu ≈ +${fmtNum(tips * 0.042, 1)} j.` +
+    `${tips} tipov za ${eur(price)} od ${new Date(start).toLocaleDateString("sk-SK")}, bez časového limitu · bank ${eur(bank)}, vklad ${fmtNum(stake, stake % 1 ? 2 : 0)}${NB}€` +
     (Number(subTipsInput.value) < MEMBER_MIN_TIPS ? ` · najmenej ${MEMBER_MIN_TIPS} tipov` : "");
 }
 subTipsInput.addEventListener("input", syncMemberPrice);
+subBankInput.addEventListener("input", updateSubEndPreview);
+subPriceInput.addEventListener("input", updateSubEndPreview);
 document.getElementById("subTipsPick").addEventListener("click", (e) => {
   const b = e.target.closest("[data-tips]");
   if (!b) return;
   subTipsInput.value = b.dataset.tips;
   syncMemberPrice();
 });
-document.getElementById("goSetMemberBtn").addEventListener("click", () => {
-  goTo("nastroje");
-  setTimeout(() => { document.getElementById("setMemberCard").scrollIntoView({ behavior: "smooth", block: "start" }); document.getElementById("subName").focus(); }, 50);
+document.getElementById("subPctPick").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-pct]");
+  if (!b) return;
+  subPct = Number(b.dataset.pct);
+  updateSubEndPreview();
 });
+document.getElementById("goSetMemberBtn").addEventListener("click", () => goTo("spolupraca"));
+document.getElementById("openCoopBtn").addEventListener("click", () => goTo("spolupraca"));
 subStartInput.value = todayIso();
 syncMemberPrice();
 subStartInput.addEventListener("change", updateSubEndPreview);
@@ -4206,6 +4233,7 @@ function renderSubscribersList(subs) {
         escapeHtml(s.contact || ""),
         tipsInfo,
         `${s.tips ? `${s.tips} tipov` : MEMBER_LENGTH_LABEL[length] || length} · ${Number(s.priceEur) || 0}${NB}€`,
+        s.bankEur ? `bank ${Number(s.bankEur).toLocaleString("sk-SK")}${NB}€ · vklad ${fmtNum((s.bankEur * (s.stakePct || 3)) / 100, 0)}${NB}€` : "",
         k && k.total != null ? (startDate ? `od ${startDate}` : "") : startDate ? `${startDate} – ${endDate}` : `do ${endDate}`,
         s.note ? escapeHtml(s.note) : "",
       ].filter(Boolean).join(" · ");
@@ -4313,6 +4341,8 @@ document.getElementById("addSubscriberBtn").addEventListener("click", async (e) 
     priceEur,
     length,
     tips,
+    bankEur: Math.max(0, Number(subBankInput.value) || 0) || undefined,
+    stakePct: subPct,
     startDate: new Date(`${start}T12:00:00`).toISOString(),
     periodStart: new Date(`${start}T12:00:00`).toISOString(),
     nextPaymentDue: end.toISOString(),
@@ -4324,7 +4354,8 @@ document.getElementById("addSubscriberBtn").addEventListener("click", async (e) 
     await postJson("/api/subscribers", subscriber);
     ["subName", "subContact", "subTelegramChatId", "subNote"].forEach((id) => { document.getElementById(id).value = ""; });
     subStartInput.value = todayIso();
-    subTipsInput.value = 100;
+    subTipsInput.value = 50;
+    subBankInput.value = 1000;
     syncMemberPrice();
     memberFilter = "active";
     showToast(`${name}: členstvo ${tips} tipov za ${priceEur} € nastavené.`);
@@ -4462,8 +4493,7 @@ async function renderLeads() {
         document.getElementById("subContact").value = l.email || (l.username ? "@" + l.username : "");
         document.getElementById("subTelegramChatId").value = l.email ? "" : l.chatId;
         syncMemberPrice();
-        goTo("nastroje");
-        setTimeout(() => document.getElementById("setMemberCard").scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+        goTo("spolupraca");
         showToast("Údaje sú vyplnené – nastav počet tipov a cenu a klikni na „Nastaviť členstvo“.");
       };
     });

@@ -229,7 +229,7 @@
           <p class="muted small">Všetci, ktorí si kúpili členstvo VIP Klub (pri platbe cez QR kód sa zapíšu sami). Server každému ráta tipy poslané do členského kanála od nákupu; keď ostane 5 tipov, upozorní teba aj člena. Ak je prvé členstvo po 30 tipoch v mínuse, v karte Garancia mu vrátiš peniaze; ak členstvo skončí v mínuse, pridáš mesiac zadarmo.</p>
           <div class="kpis kpis-members" id="subscribersSummary"></div>
 
-          <div class="sales-row"><button type="button" class="btn sm" id="goSetMemberBtn">+ Nastaviť členstvo</button><span class="muted small">Nového člena (počet tipov od 50, cena) nastavíš v Nástrojoch.</span></div>
+          <div class="sales-row"><button type="button" class="btn sm" id="goSetMemberBtn">+ Nová spolupráca</button><span class="muted small">Nového člena (počet tipov od 50, bank, cena) nastavíš v Nástroje → Spolupráca.</span></div>
 
           <div id="paymentsBox" hidden>
             <h3 class="sh">Čakajúce platby prevodom</h3>
@@ -254,27 +254,44 @@
         </div>
       </section>
 
-      <!-- NÁSTROJE -->
-      <section class="view" data-view="nastroje" id="viewNastroje" hidden>
-        <header class="top"><h2>Nástroje</h2></header>
+      <!-- SPOLUPRÁCA (11. 11. 2026, Michal): samostatný priečinok v Nástrojoch – počet tipov od 50, bank klienta, vklad, cena, zápis člena. -->
+      <section class="view" data-view="spolupraca" id="viewSpolupraca" hidden>
+        <header class="top"><h2>Spolupráca</h2></header>
         <div class="page">
-          <!-- 11. 11. 2026 (Michal): členstvo na mieru – počet tipov sa s každým členom dohodne osobne, od 50 tipov, 0,75 € za tip. -->
-          <div class="card" id="setMemberCard" style="margin-bottom:18px">
-            <h4 class="ct">Nastaviť členstvo <small class="muted">VIP Klub na mieru · od 50 tipov · 0,75&nbsp;€ za tip</small></h4>
+          <p class="muted small" style="margin-bottom:14px"><a href="#nastroje" class="link">← Nástroje</a> · Spoluprácu dohodneš s klientom osobne (na webe nie sú ceny). Tu nastavíš počet tipov, jeho bank a cenu a uložíš ho medzi členov.</p>
+
+          <div class="card" style="margin-bottom:18px">
+            <h4 class="ct">1 · Plán spolupráce</h4>
+            <div class="form-grid">
+              <label class="fld">Počet tipov (od 50)<input type="number" id="subTips" min="50" step="10" value="50" inputmode="numeric" /></label>
+              <label class="fld">Bank klienta (€)<input type="number" id="subBank" min="0" step="50" value="1000" inputmode="numeric" /></label>
+              <label class="fld">Cena (€)<input type="number" id="subPrice" min="0" step="1" inputmode="decimal" /></label>
+              <div class="fld fld-wide">Rýchly výber tipov<div class="chips" id="subTipsPick"><button type="button" class="chip on" data-tips="50">50</button><button type="button" class="chip" data-tips="100">100</button><button type="button" class="chip" data-tips="150">150</button><button type="button" class="chip" data-tips="200">200</button><button type="button" class="chip" data-tips="300">300</button></div></div>
+              <div class="fld">Vklad na tip<div class="chips" id="subPctPick"><button type="button" class="chip" data-pct="2">2 %</button><button type="button" class="chip on" data-pct="3">3 %</button><button type="button" class="chip" data-pct="5">5 %</button></div></div>
+            </div>
+            <div class="kpis" id="coopOut" style="margin-top:16px"></div>
+            <p class="faint small" style="margin-top:10px">Cena sa predvyplní 0,75&nbsp;€ za tip, môžeš ju prepísať. Bežný zisk modelu = 4,2&nbsp;% zo vkladu na tip (odhad, nie je zaručený). Odporúčaný bank = pri bežnom zisku modelu zarobí klient aspoň 1,5× cenu.</p>
+          </div>
+
+          <div class="card" id="setMemberCard">
+            <h4 class="ct">2 · Klient</h4>
             <div class="form-grid">
               <label class="fld">Meno<input type="text" id="subName" placeholder="Meno" /></label>
               <label class="fld">Kontakt<input type="text" id="subContact" placeholder="E-mail, Telegram…" /></label>
               <label class="fld">Telegram chat ID<input type="text" id="subTelegramChatId" placeholder="voliteľné" /></label>
-              <label class="fld">Počet tipov (od 50)<input type="number" id="subTips" min="50" step="10" value="100" inputmode="numeric" /></label>
-              <label class="fld">Cena (€)<input type="number" id="subPrice" min="0" step="1" inputmode="decimal" /></label>
               <label class="fld">Od<input type="date" id="subStart" /></label>
-              <div class="fld fld-wide">Rýchly výber<div class="chips" id="subTipsPick"><button type="button" class="chip" data-tips="50">50</button><button type="button" class="chip on" data-tips="100">100</button><button type="button" class="chip" data-tips="150">150</button><button type="button" class="chip" data-tips="200">200</button><button type="button" class="chip" data-tips="300">300</button></div></div>
-              <label class="fld">Poznámka<input type="text" id="subNote" placeholder="voliteľné" /></label>
+              <label class="fld fld-wide">Poznámka<input type="text" id="subNote" placeholder="voliteľné" /></label>
             </div>
-            <div class="form-foot"><span class="muted small" id="subEndPreview"></span><button type="button" class="btn sm" id="addSubscriberBtn">Nastaviť členstvo</button></div>
+            <div class="form-foot"><span class="muted small" id="subEndPreview"></span><button type="button" class="btn sm" id="addSubscriberBtn">Uložiť spoluprácu</button></div>
           </div>
-
+        </div>
+      </section>
+      <!-- NÁSTROJE -->
+      <section class="view" data-view="nastroje" id="viewNastroje" hidden>
+        <header class="top"><h2>Nástroje</h2></header>
+        <div class="page">
           <div class="tools-grid">
+            <button type="button" class="tool" id="openCoopBtn"><b>Spolupráca</b><span>Nastavenie spolupráce s klientom: počet tipov (od 50), jeho bank a vklad, cena a zápis medzi členov.</span></button>
             <button type="button" class="tool" id="openBacktestBtn"><b>Spätný test</b><span>Overenie presnosti modelu na odohraných zápasoch.</span></button>
             <button type="button" class="tool" id="openCoverageBtn"><b>Trhy v ligách</b><span>Ktoré naše druhy stávok (góly, rohy, karty, strely, fauly) stávkovky v každej lige naozaj ponúkajú.</span></button>
             <button type="button" class="tool" id="openVisitsBtn"><b>Návštevnosť</b><span>Koľko ľudí navštívilo tipradar.eu a odkiaľ prišli.</span></button>
