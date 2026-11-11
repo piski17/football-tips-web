@@ -471,6 +471,9 @@ async function maybeOfferTelegram(tipId, tip) {
 }
 
 // ---- Navigácia (obrazovky) ----
+let coopLinks = []; // Spolupráca – osobné odkazy pre klientov (nižšie loadCoopLinks)
+let coopNew = 0;
+let coopUsing = null; // odkaz, z ktorého sa práve zapisuje člen
 const VIEWS = [
   { id: "dnes", label: "Dnes", short: "Dnes" },
   { id: "zapasy", label: "Zápasy", short: "Zápasy" },
@@ -486,7 +489,7 @@ function renderNav() {
   const count = fixtureTotalCount ? `<span class="cnt">${fixtureTotalCount}</span>` : "";
   const navOn = (v) => v.id === currentView || VIEWS.some((x) => x.id === currentView && x.parent === v.id);
   document.getElementById("sideNav").innerHTML = VIEWS.filter((v) => !v.hidden).map(
-    (v) => `<a href="#${v.id}" data-nav="${v.id}" class="${navOn(v) ? "on" : ""}">${ICON[v.id]}<span>${v.label}</span>${v.id === "zapasy" ? count : ""}</a>`
+    (v) => `<a href="#${v.id}" data-nav="${v.id}" class="${navOn(v) ? "on" : ""}">${ICON[v.id]}<span>${v.label}</span>${v.id === "zapasy" ? count : v.id === "nastroje" && coopNew ? `<span class="cnt">${coopNew}</span>` : ""}</a>`
   ).join("");
   document.getElementById("tabBar").innerHTML = VIEWS.filter((v) => !v.hidden).map(
     (v) => `<a href="#${v.id}" data-nav="${v.id}" class="${navOn(v) ? "on" : ""}">${ICON[v.id]}<span>${v.short}</span></a>`
@@ -503,6 +506,7 @@ function showView(id) {
   if (id === "dnes") void renderDnes();
   if (id === "historia") openTipsHistory();
   if (id === "clenovia") openSubscribers();
+  if (id === "spolupraca") void loadCoopLinks();
   if (id === "tipy") { renderDayTipsView(); void syncDayTipSaved(); }
 }
 window.addEventListener("hashchange", () => showView(location.hash.slice(1)));
@@ -4358,6 +4362,7 @@ document.getElementById("addSubscriberBtn").addEventListener("click", async (e) 
     subBankInput.value = 1000;
     syncMemberPrice();
     memberFilter = "active";
+    if (coopUsing) { fetchJson(`/api/coop-links/${coopUsing}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ done: true, seen: true }) }).catch(() => {}); coopUsing = null; void loadCoopLinks(); }
     showToast(`${name}: členstvo ${tips} tipov za ${priceEur} € nastavené.`);
     goTo("clenovia");
   } catch (err) {
@@ -4366,6 +4371,107 @@ document.getElementById("addSubscriberBtn").addEventListener("click", async (e) 
     btn.disabled = false;
   }
 });
+
+// ---- Spolupráca: osobné odkazy pre klientov (11. 11. 2026, Michal) ----
+// Michal vytvorí odkaz tipradar.eu/spolupraca/KÓD, pošle ho klientovi na Telegrame, klient si vyberie počet tipov.
+// Výber príde Michalovi na Telegram a tu (Nástroje → Spolupráca, číslo pri Nástrojoch, upozornenie na obrazovke Dnes).
+const coopUrl = (l) => `https://tipradar.eu/spolupraca/${l.token}`;
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); showToast("Odkaz skopírovaný – pošli ho klientovi na Telegram."); }
+  catch { window.prompt("Skopíruj odkaz:", text); }
+}
+function renderCoopAlert() {
+  const box = document.getElementById("coopAlert");
+  const fresh = coopLinks.filter((l) => l.choice && !l.seen && !l.done);
+  coopNew = fresh.length;
+  renderNav();
+  if (!box) return;
+  box.hidden = !fresh.length;
+  box.innerHTML = fresh.length
+    ? `<div class="card" style="border-color:rgba(207,196,180,.55)"><b>🤝 ${fresh.length === 1 ? "Nový výber spolupráce" : `Nové výbery spolupráce (${fresh.length})`}</b>
+        <p class="muted small" style="margin:6px 0 10px">${fresh.map((l) => `${escapeHtml(l.name)}: <b>${l.choice.tips} tipov</b> (${l.choice.price}${NB}€)`).join(" · ")}</p>
+        <button type="button" class="btn sm" data-go-coop>Otvoriť Spoluprácu</button></div>`
+    : "";
+  box.querySelector("[data-go-coop]")?.addEventListener("click", () => goTo("spolupraca"));
+}
+function renderCoopList() {
+  const el = document.getElementById("coopList");
+  if (!el) return;
+  if (!coopLinks.length) { el.innerHTML = `<p class="empty">Zatiaľ žiadne odkazy. Vytvor odkaz a pošli ho klientovi.</p>`; return; }
+  el.innerHTML = coopLinks.map((l) => {
+    const c = l.choice;
+    const st = l.done ? `<span class="res-b won">Zapísaný</span>` : c ? `<span class="res-b ${l.seen ? "pending" : "won"}">${l.seen ? "Vybral" : "NOVÉ"}</span>` : `<span class="res-b pending">Čaká</span>`;
+    const info = c
+      ? `<b>${c.tips} tipov · ${c.price}${NB}€</b> · ${new Date(c.at).toLocaleString("sk-SK", { day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" })}${c.contact ? ` · ${escapeHtml(c.contact)}` : ""}${c.note ? ` · „${escapeHtml(c.note)}“` : ""}`
+      : `čaká na výber · ${fmtNum(l.perTip, 2)}${NB}€ za tip`;
+    return `<div class="mrow"><span class="mt"><b>${escapeHtml(l.name)}</b><span>${info}</span></span>${st}
+      <span class="ic">
+        <button type="button" class="btn ghost xs" data-coop-copy="${l.token}">Kopírovať odkaz</button>
+        ${c && !l.done ? `<button type="button" class="btn xs" data-coop-use="${l.token}">Zapísať</button>` : ""}
+        <button type="button" class="ib danger" data-coop-del="${l.token}" title="Zmazať odkaz" aria-label="Zmazať odkaz">${ICON.trash}</button>
+      </span></div>`;
+  }).join("");
+}
+async function loadCoopLinks() {
+  try {
+    coopLinks = await fetchJson("/api/coop-links");
+  } catch { return; }
+  renderCoopList();
+  renderCoopAlert();
+  if (currentView === "spolupraca") {
+    // Na obrazovke Spolupráca sa nové výbery označia ako videné.
+    for (const l of coopLinks.filter((x) => x.choice && !x.seen)) {
+      l.seen = true;
+      fetchJson(`/api/coop-links/${l.token}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ seen: true }) }).catch(() => {});
+    }
+    renderCoopAlert();
+    renderCoopList();
+  }
+}
+document.getElementById("coopCreateBtn").addEventListener("click", async (e) => {
+  const name = document.getElementById("coopName").value.trim();
+  if (!name) { showToast("Zadaj meno klienta."); document.getElementById("coopName").focus(); return; }
+  const perTip = Number(String(document.getElementById("coopPerTip").value).replace(",", ".")) || 0.7;
+  e.currentTarget.disabled = true;
+  try {
+    const l = await postJson("/api/coop-links", { name, perTip });
+    document.getElementById("coopName").value = "";
+    document.getElementById("coopNewLink").innerHTML = `Odkaz pre ${escapeHtml(l.name)}: <b>${escapeHtml(coopUrl(l))}</b>`;
+    await copyText(coopUrl(l));
+    loadCoopLinks();
+  } catch (err) {
+    showToast(`Odkaz sa nepodarilo vytvoriť: ${err.message}`);
+  } finally {
+    e.currentTarget.disabled = false;
+  }
+});
+document.getElementById("coopList").addEventListener("click", async (e) => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  const l = coopLinks.find((x) => x.token === (b.dataset.coopCopy || b.dataset.coopUse || b.dataset.coopDel));
+  if (!l) return;
+  if (b.dataset.coopCopy) copyText(coopUrl(l));
+  else if (b.dataset.coopUse) {
+    // Predvyplní plán aj klienta – stačí doplniť bank a kliknúť na „Uložiť spoluprácu“.
+    coopUsing = l.token;
+    subTipsInput.value = l.choice.tips;
+    syncMemberPrice();
+    subPriceInput.value = l.choice.price;
+    document.getElementById("subName").value = l.name;
+    if (l.choice.contact) document.getElementById("subContact").value = l.choice.contact;
+    if (l.choice.note) document.getElementById("subNote").value = l.choice.note;
+    updateSubEndPreview();
+    document.getElementById("subBank").focus();
+    document.getElementById("subBank").scrollIntoView({ behavior: "smooth", block: "center" });
+    showToast("Údaje sú vyplnené – doplň bank a Telegram ID a klikni na „Uložiť spoluprácu“.");
+  } else if (b.dataset.coopDel) {
+    if (!window.confirm(`Zmazať odkaz pre ${l.name}? Klientovi prestane fungovať.`)) return;
+    await fetchJson(`/api/coop-links/${l.token}`, { method: "DELETE" }).catch(() => {});
+    loadCoopLinks();
+  }
+});
+void loadCoopLinks();
+setInterval(() => void loadCoopLinks(), 5 * 60 * 1000);
 
 // ---- Platby prevodom (QR kód) – potvrdenie ----
 function fmtDayTime(iso) {

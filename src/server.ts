@@ -2,6 +2,7 @@ import { plausibleLine, offeredLines, MIN_BOOKMAKERS, MIN_ODDS, MAX_PROBABILITY,
 import { teamNamesBrowserScript } from "./teamNamesSk";
 import { listLeads, deleteLead, recordLead } from "./leadsStore";
 import { getMeta, setMeta } from "./metaStore";
+import { listCoopLinks, getCoopLink, createCoopLink, updateCoopLink, deleteCoopLink, chooseCoop, coopPage } from "./coopLinks";
 import * as crypto from "crypto";
 import { recordShadow, listShadow, updateShadow, shadowEntriesFrom, shadowReasonCode, ShadowEntry } from "./shadowStore";
 import { recordBlend, listBlend, updateBlend, blendEntryFrom, blendSummary, newModelSummary, homeCornersSummary } from "./blendStore";
@@ -583,6 +584,33 @@ app.post("/api/public/waitlist", express.json({ limit: "10kb" }), async (req, re
     res.json({ ok: true });
   } catch {
     res.status(502).json({ error: "Zápis sa nepodaril. Skúste to, prosím, o chvíľu znova." });
+  }
+});
+
+// Osobný odkaz na výber dĺžky spolupráce (11. 11. 2026, Michal) – tipradar.eu/spolupraca/KÓD, bez hesla.
+app.get("/spolupraca/:token", async (req, res) => {
+  res.set("Cache-Control", "no-store");
+  const link = await getCoopLink(String(req.params.token)).catch(() => null);
+  res.status(link ? 200 : 404).send(coopPage(link));
+});
+app.post("/api/public/coop/:token", express.json({ limit: "10kb" }), async (req, res) => {
+  try {
+    const b = req.body ?? {};
+    const link = await chooseCoop(String(req.params.token), Number(b.tips), typeof b.contact === "string" ? b.contact : undefined, typeof b.note === "string" ? b.note : undefined);
+    if (!link || !link.choice) {
+      res.status(400).json({ error: "Výber sa nedá uložiť. Skontrolujte počet tipov (od 50) alebo mi napíšte na Telegram." });
+      return;
+    }
+    const c = link.choice;
+    const escT = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    void notifyAdmin(
+      `🤝 <b>Spolupráca – výber klienta</b>\n\n${escT(link.name)} si vybral(a) <b>${c.tips} tipov</b> (${c.price} €).` +
+        (c.contact ? `\nKontakt: ${escT(c.contact)}` : "") + (c.note ? `\nPoznámka: ${escT(c.note)}` : "") +
+        `\n\nZapíšeš v app.tipradar.eu → Nástroje → Spolupráca.`
+    ).catch(() => {});
+    res.json({ ok: true, tips: c.tips, price: c.price });
+  } catch {
+    res.status(502).json({ error: "Uloženie sa nepodarilo. Skúste to, prosím, o chvíľu znova." });
   }
 });
 
@@ -3561,6 +3589,29 @@ async function memberStatuses(subs: Subscriber[], tipsAll?: SavedTip[]): Promise
   }
   return out;
 }
+
+// ---- Spolupráca: osobné odkazy pre klientov (Nástroje → Spolupráca) ----
+app.get("/api/coop-links", async (_req, res) => {
+  try { res.json(await listCoopLinks()); } catch (err: any) { res.status(502).json({ error: errText(err) }); }
+});
+app.post("/api/coop-links", async (req, res) => {
+  try {
+    const link = await createCoopLink(String(req.body?.name ?? ""), Number(req.body?.perTip) || undefined);
+    res.json({ ...link, url: `${(process.env.PUBLIC_URL || "https://tipradar.eu").replace(/\/+$/, "")}/spolupraca/${link.token}` });
+  } catch (err: any) { res.status(502).json({ error: errText(err) }); }
+});
+app.patch("/api/coop-links/:token", async (req, res) => {
+  try {
+    const b = req.body ?? {};
+    const patch: Record<string, boolean> = {};
+    if (typeof b.seen === "boolean") patch.seen = b.seen;
+    if (typeof b.done === "boolean") patch.done = b.done;
+    res.json({ ok: !!(await updateCoopLink(String(req.params.token), patch)) });
+  } catch (err: any) { res.status(502).json({ error: errText(err) }); }
+});
+app.delete("/api/coop-links/:token", async (req, res) => {
+  try { await deleteCoopLink(String(req.params.token)); res.json({ ok: true }); } catch (err: any) { res.status(502).json({ error: errText(err) }); }
+});
 
 app.get("/api/subscribers", async (_req, res) => {
   try {
