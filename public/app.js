@@ -3973,7 +3973,7 @@ const subscribersListEl = document.getElementById("subscribersList");
 const subTipsInput = document.getElementById("subTips");
 // 11. 11. 2026 (Michal): členstvo na mieru – od 50 tipov, cena 0,75 € za tip (dá sa prepísať).
 const MEMBER_MIN_TIPS = 50;
-const MEMBER_TIP_PRICE = 0.75;
+const MEMBER_TIP_PRICE = 0.7; // 11. 11. 2026 19:26 Michal: 50 tipov od 35 €
 const memberPriceFor = (tips) => Math.round(tips * MEMBER_TIP_PRICE);
 const subTipsValue = () => Math.max(MEMBER_MIN_TIPS, Math.round(Number(subTipsInput.value) || 100));
 const subPriceInput = document.getElementById("subPrice");
