@@ -392,18 +392,17 @@ const TELEGRAM_CONTACT_USERNAME = process.env.TELEGRAM_CONTACT_USERNAME || "im_m
 // Predtým (1. 11. 2026) 3: Štart 50 tipov 39 €, Premium 100 tipov 75 €, VIP 150 tipov 110 € (Premium a VIP úvodný hovor 1 na 1, VIP od 2. 11. aj mentoring 1 na 1 počas celého členstva). Gold a Platinum zrušené.
 // Bez časovej platnosti, počet tipov denne sa neuvádza. Garancia: prvých 20 tipov bez rizika (inak peniaze späť) a členstvo v mínuse = 1 mesiac zadarmo.
 const BENEFITS_BASE =
-  `• <b>Denné tipy na Telegrame</b> v súkromnom kanáli, 1 – 2 hodiny pred výkopom – najviac 3 najsilnejšie denne\n` +
+  `• <b>Denné tipy na Telegrame</b> v súkromnom kanáli, 1 – 2 hodiny pred výkopom – len tipy, ktoré prejdú všetkými pravidlami modelu (najviac 3 naraz, v slabý deň radšej žiadny)\n` +
   `• <b>Pri každom tipe</b> kurz, šanca podľa modelu, dôvod a odporúčaná sadzba\n` +
   `• <b>Súkromný chat členov</b>`;
 /** Výhody navyše podľa členstva (od koľkých tipov platia). Rovnaké sú na webe (landing/index.html, #feats – zdroj zip nocny-zapas/zdroj). */
 const TIER_PERKS: { min: number; max?: number; text: string }[] = [
   // 4. 11. 2026 (Michal): kurz Škola stávkovania do členstiev NEDÁVAŤ – je to samostatný produkt.
-  // 11. 11. 2026 (Michal): jediné členstvo VIP Klub (120 tipov 59 €) má všetky výhody.
+  // 11. 11. 2026 (Michal): jediné členstvo VIP Klub (80 tipov 59 €) má všetky výhody; vernostná zľava zrušená („hlúposť“).
   { min: 1, text: `📞 <b>Úvodný hovor 1 na 1</b> (30 min) – bank a vklad nastavíme presne pre vás` },
   { min: 1, text: `🎓 <b>Mentoring 1 na 1 počas celého členstva</b> – kedykoľvek sa ma opýtate na bank, vklad či konkrétny tip` },
   { min: 1, text: `📊 <b>Váš výsledok v jednotkách</b> – keď vám ostane 5 tipov, pošlem vám, ako na tom vaše členstvo je` },
-  { min: 1, text: `⏳ <b>Tipy nevypršia</b> – 120 tipov platí, kým ich nedostanete, bez časového limitu` },
-  { min: 1, text: `🔁 <b>Vernostná zľava</b> – ďalšie členstvo o 20 % lacnejšie (47 €)` },
+  { min: 1, text: `⏳ <b>Tipy nevypršia</b> – 80 tipov platí, kým ich nedostanete, bez časového limitu` },
 ];
 function perksFor(tips: number): string {
   return TIER_PERKS.filter((p) => tips >= p.min && (p.max == null || tips <= p.max)).map((p) => `• ${p.text}`).join("\n");
@@ -412,8 +411,8 @@ function perksFor(tips: number): string {
 const GUARANTEE_LINE = `🛡 <b>Garancia:</b> ak vaše členstvo skončí v mínuse, dostanete 1 mesiac tipov zadarmo.`;
 const BANK_LINE = `💼 Odporúčame vklad 2 – 3 % banku na tip, nikdy nad 5 %.`;
 const eur2 = (n: number) => n.toFixed(2).replace(".", ",");
-const TIER_ICON: Record<SellableTerm, string> = { p120: "⭐" };
-/** Riadok cenníka: „⭐ VIP Klub · 120 tipov – 59 € (0,49 € za tip)“. */
+const TIER_ICON: Record<SellableTerm, string> = { p80: "⭐" };
+/** Riadok cenníka: „⭐ VIP Klub · 80 tipov – 59 € (0,74 € za tip)“. */
 function priceLine(t: SellableTerm): string {
   const p = PAY_TERMS[t], save = memberSaving(t);
   return `${TIER_ICON[t]} ${tierName(t)} · ${p.name} – ${p.price} € (${eur2(Math.round((p.price * 100) / (p.tips || 50)) / 100)} € za tip${save > 0 ? `, ušetríte ${save} €` : ""})`;
@@ -429,7 +428,7 @@ function planText(t: SellableTerm): string {
 /** Celý cenník (od 11. 11. 2026 jediné členstvo VIP Klub). */
 const PRICE_LIST = SELLABLE_TERMS.map(priceLine).join("\n");
 // 11. 11. 2026 (Michal): jediné členstvo VIP Klub – všetky výhody v jednom.
-const ALL_PLANS = `Jedno členstvo, všetko v ňom: VIP Klub.\n\n${planText("p120")}`;
+const ALL_PLANS = `Jedno členstvo, všetko v ňom: VIP Klub.\n\n${planText("p80")}`;
 
 const FAQ_ANSWERS: Record<string, string> = {
   faq_price:
@@ -479,7 +478,7 @@ const PAY_STEP =
 /** Odkaz z bota (t.me/…?start=…) → členstvo. Web posiela c50 … c250 (posuvník). Staré odkazy: stat / start = Štart, seria = Premium,
  *  vip = VIP, gold = Gold, platinum / onyx / sampion = Platinum. */
 // 11. 11. 2026: všetky odkazy (aj staré c30 / c100) vedú na jediné členstvo VIP Klub.
-const PLAN_TERM: Record<string, SellableTerm> = Object.fromEntries(["stat", "start", "seria", "vip", "gold", "platinum", "onyx", "sampion", "klub", "c30", "c50", "c75", "c100", "c150", "c200", "c250"].map((k) => [k, "p120"])) as Record<string, SellableTerm>;
+const PLAN_TERM: Record<string, SellableTerm> = Object.fromEntries(["stat", "start", "seria", "vip", "gold", "platinum", "onyx", "sampion", "klub", "c30", "c50", "c75", "c100", "c120", "c150", "c200", "c250"].map((k) => [k, "p80"])) as Record<string, SellableTerm>;
 for (const t of SELLABLE_TERMS) PLAN_TERM["c" + PAY_TERMS[t].tips] = t;
 const JOIN_MESSAGES: Record<string, string> = {
   clenstvo: `✨ <b>Členstvo TipRadar</b>\n\n${ALL_PLANS}\n\n${GUARANTEE_LINE}\n${BANK_LINE}\n\n${NEXT_STEP}`,
@@ -1044,7 +1043,7 @@ export async function sendSalesOpenToWaitlist(): Promise<{ sent: number; skipped
     const text =
       `Dobrý deň${first ? ", " + first : ""} 👋\n\n` +
       `Zapísali ste sa do poradovníka <b>TipRadaru</b>. Predaj členstva je práve otvorený a máte prednosť.\n\n` +
-      `${planText("p120")}\n\n` +
+      `${planText("p80")}\n\n` +
       `${GUARANTEE_LINE}\n\nZaplatiť môžete tu 👇`;
     try {
       await axios.post(

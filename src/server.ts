@@ -328,7 +328,7 @@ type TermSeats = Record<SellableTerm, { occupied: number; total: null; left: nul
 /** Plán z bota (t.me/…?start=…) → členstvo: c50 … c250 = posuvník na webe (Štart / Premium / VIP / Gold / Platinum). Staré odkazy:
  *  stat / start = Štart, seria = Premium, vip = VIP, gold = Gold, platinum / onyx / sampion = Platinum. Rovnako v src/telegram.ts (PLAN_TERM). */
 // 11. 11. 2026: všetky odkazy (aj staré c30 / c100) vedú na jediné členstvo VIP Klub.
-const LEAD_PLAN_TERM: Record<string, SellableTerm> = Object.fromEntries(["stat", "start", "seria", "vip", "gold", "platinum", "onyx", "sampion", "klub", "c30", "c50", "c75", "c100", "c150", "c200", "c250"].map((k) => [k, "p120"])) as Record<string, SellableTerm>;
+const LEAD_PLAN_TERM: Record<string, SellableTerm> = Object.fromEntries(["stat", "start", "seria", "vip", "gold", "platinum", "onyx", "sampion", "klub", "c30", "c50", "c75", "c100", "c120", "c150", "c200", "c250"].map((k) => [k, "p80"])) as Record<string, SellableTerm>;
 for (const t of SELLABLE_TERMS) LEAD_PLAN_TERM["c" + PAY_TERMS[t].tips] = t;
 for (const k of Object.keys(LEAD_PLAN_TERM)) LEAD_PLAN_TERM[k + "_waitlist"] = LEAD_PLAN_TERM[k];
 /** Aktívni členovia (členstvo ešte neskončilo) podľa členstva + záujemcovia v poradovníku (pred spustením predaja). */
@@ -353,7 +353,7 @@ async function termSeats(): Promise<TermSeats> {
 }
 /** Riadok pod tipom v bezplatnom kanáli (členstvá sú bez obmedzenia miest). */
 async function freeSeatsLine(): Promise<string | undefined> {
-  return `🎯 Členstvo: VIP Klub · 120 tipov 59 € · 🛡 v mínuse = mesiac zadarmo`;
+  return `🎯 Členstvo: VIP Klub · 80 tipov 59 € · 🛡 v mínuse = mesiac zadarmo`;
 }
 /** Vracanie peňazí po prvých 20 tipoch (zrušené 2. 11. 2026). */
 const REFUND_ON = false;
