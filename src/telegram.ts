@@ -399,9 +399,10 @@ const BENEFITS_BASE =
 const TIER_PERKS: { min: number; max?: number; text: string }[] = [
   // 4. 11. 2026 (Michal): kurz Škola stávkovania do členstiev NEDÁVAŤ – je to samostatný produkt.
   // 11. 11. 2026 (Michal): jediné členstvo VIP Klub (100 tipov 75 €) má všetky výhody; vernostná zľava zrušená („hlúposť“).
+  { min: 1, text: `📏 <b>Dĺžka na mieru</b> – počet tipov si nastavíme spolu, od 50 tipov` },
   { min: 1, text: `📞 <b>Úvodný hovor 1 na 1</b> (30 min) – bank a vklad nastavíme presne pre vás` },
   { min: 1, text: `🎓 <b>Mentoring 1 na 1 počas celého členstva</b> – kedykoľvek sa ma opýtate na bank, vklad či konkrétny tip` },
-  { min: 1, text: `⏳ <b>Tipy nevypršia</b> – 100 tipov platí, kým ich nedostanete, bez časového limitu` },
+  { min: 1, text: `⏳ <b>Tipy nevypršia</b> – platia, kým ich nedostanete, bez časového limitu` },
 ];
 function perksFor(tips: number): string {
   return TIER_PERKS.filter((p) => tips >= p.min && (p.max == null || tips <= p.max)).map((p) => `• ${p.text}`).join("\n");
@@ -413,8 +414,8 @@ const eur2 = (n: number) => n.toFixed(2).replace(".", ",");
 const TIER_ICON: Record<SellableTerm, string> = { p100: "⭐" };
 /** Riadok cenníka: „⭐ VIP Klub · 100 tipov – 75 € (0,75 € za tip)“. */
 function priceLine(t: SellableTerm): string {
-  const p = PAY_TERMS[t], save = memberSaving(t);
-  return `${TIER_ICON[t]} ${tierName(t)} · ${p.name} – ${p.price} € (${eur2(Math.round((p.price * 100) / (p.tips || 50)) / 100)} € za tip${save > 0 ? `, ušetríte ${save} €` : ""})`;
+  // 11. 11. 2026 (Michal): členstvo na mieru – dĺžku si s každým členom nastavíme osobne, od 50 tipov, 0,75 € za tip.
+  return `${TIER_ICON[t]} VIP Klub · na mieru, od 50 tipov – 0,75 € za tip (50 tipov 38 €, 100 tipov 75 €)`;
 }
 /** Text zvoleného členstva (cena, odporúčaný bank a vklad, čo dostane). */
 function planText(t: SellableTerm): string {
@@ -427,7 +428,7 @@ function planText(t: SellableTerm): string {
 /** Celý cenník (od 11. 11. 2026 jediné členstvo VIP Klub). */
 const PRICE_LIST = SELLABLE_TERMS.map(priceLine).join("\n");
 // 11. 11. 2026 (Michal): jediné členstvo VIP Klub – všetky výhody v jednom.
-const ALL_PLANS = `Jedno členstvo, všetko v ňom: VIP Klub.\n\n${planText("p100")}`;
+const ALL_PLANS = `Jedno členstvo – VIP Klub. Dĺžku (počet tipov) si s každým nastavíme osobne, od 50 tipov.\n\n${planText("p100")}`;
 
 const FAQ_ANSWERS: Record<string, string> = {
   faq_price:
@@ -469,7 +470,7 @@ async function callTelegramApi(method: string, body: Record<string, unknown>): P
 /** Spracuje jednu prichádzajúcu udalosť z Telegram webhooku (nová správa alebo stlačenie tlačidla). */
 // ---- Záujemcovia o členstvo z tipradar.eu ----
 const NEXT_STEP =
-  `<b>Ako pokračovať:</b> napíšte sem krátku správu (napríklad „Mám záujem o VIP Klub“). Pošleme vám platobné údaje a po platbe vás pridáme do súkromného kanála TipRadar.\n\n` +
+  `<b>Ako pokračovať:</b> napíšte sem krátku správu (napríklad „Mám záujem o VIP Klub na 100 tipov“). Pošleme vám platobné údaje a po platbe vás pridáme do súkromného kanála TipRadar.\n\n` +
   `Ozveme sa vám zvyčajne do 24 hodín. Bez viazanosti, členstvo sa samo nepredlžuje.`;
 const PAY_STEP =
   `Zaplatíte bankovým prevodom cez QR kód v appke vašej banky, bez poplatkov. Hneď ako platba príde na účet, pošlem vám sem pozvánku do súkromného kanála TipRadar.\n\n` +

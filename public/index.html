@@ -229,27 +229,7 @@
           <p class="muted small">Všetci, ktorí si kúpili členstvo VIP Klub (pri platbe cez QR kód sa zapíšu sami). Server každému ráta tipy poslané do členského kanála od nákupu; keď ostane 5 tipov, upozorní teba aj člena. Ak je prvé členstvo po 30 tipoch v mínuse, v karte Garancia mu vrátiš peniaze; ak členstvo skončí v mínuse, pridáš mesiac zadarmo.</p>
           <div class="kpis kpis-members" id="subscribersSummary"></div>
 
-          <div class="card">
-            <h4 class="ct">Pridať člena</h4>
-            <div class="form-grid">
-              <label class="fld">Meno<input type="text" id="subName" placeholder="Meno" /></label>
-              <label class="fld">Kontakt<input type="text" id="subContact" placeholder="E-mail, Telegram…" /></label>
-              <label class="fld">Telegram chat ID<input type="text" id="subTelegramChatId" placeholder="voliteľné" /></label>
-              <label class="fld">Členstvo
-                <select id="subLength">
-                  <option value="p100" selected>VIP Klub · 100 tipov (75 €)</option>
-                  <option value="p30">Štart (staré) · 30 tipov (29 €)</option>
-                  <option value="p75">Štart (staré) · 75 tipov (65 €)</option>
-                  <option value="p150">VIP (staré) · 150 tipov (110 €)</option>
-                </select>
-              </label>
-              <label class="fld">Od<input type="date" id="subStart" /></label>
-              <label class="fld">Cena (€)<input type="number" id="subPrice" min="0" step="1" inputmode="decimal" /></label>
-              <label class="fld fld-wide">Poznámka<input type="text" id="subNote" placeholder="voliteľné" /></label>
-              
-            </div>
-            <div class="form-foot"><span class="muted small" id="subEndPreview"></span><button type="button" class="btn sm" id="addSubscriberBtn">Pridať člena</button></div>
-          </div>
+          <div class="sales-row"><button type="button" class="btn sm" id="goSetMemberBtn">+ Nastaviť členstvo</button><span class="muted small">Nového člena (počet tipov od 50, cena) nastavíš v Nástrojoch.</span></div>
 
           <div id="paymentsBox" hidden>
             <h3 class="sh">Čakajúce platby prevodom</h3>
@@ -278,6 +258,22 @@
       <section class="view" data-view="nastroje" id="viewNastroje" hidden>
         <header class="top"><h2>Nástroje</h2></header>
         <div class="page">
+          <!-- 11. 11. 2026 (Michal): členstvo na mieru – počet tipov sa s každým členom dohodne osobne, od 50 tipov, 0,75 € za tip. -->
+          <div class="card" id="setMemberCard" style="margin-bottom:18px">
+            <h4 class="ct">Nastaviť členstvo <small class="muted">VIP Klub na mieru · od 50 tipov · 0,75&nbsp;€ za tip</small></h4>
+            <div class="form-grid">
+              <label class="fld">Meno<input type="text" id="subName" placeholder="Meno" /></label>
+              <label class="fld">Kontakt<input type="text" id="subContact" placeholder="E-mail, Telegram…" /></label>
+              <label class="fld">Telegram chat ID<input type="text" id="subTelegramChatId" placeholder="voliteľné" /></label>
+              <label class="fld">Počet tipov (od 50)<input type="number" id="subTips" min="50" step="10" value="100" inputmode="numeric" /></label>
+              <label class="fld">Cena (€)<input type="number" id="subPrice" min="0" step="1" inputmode="decimal" /></label>
+              <label class="fld">Od<input type="date" id="subStart" /></label>
+              <div class="fld fld-wide">Rýchly výber<div class="chips" id="subTipsPick"><button type="button" class="chip" data-tips="50">50</button><button type="button" class="chip on" data-tips="100">100</button><button type="button" class="chip" data-tips="150">150</button><button type="button" class="chip" data-tips="200">200</button><button type="button" class="chip" data-tips="300">300</button></div></div>
+              <label class="fld">Poznámka<input type="text" id="subNote" placeholder="voliteľné" /></label>
+            </div>
+            <div class="form-foot"><span class="muted small" id="subEndPreview"></span><button type="button" class="btn sm" id="addSubscriberBtn">Nastaviť členstvo</button></div>
+          </div>
+
           <div class="tools-grid">
             <button type="button" class="tool" id="openBacktestBtn"><b>Spätný test</b><span>Overenie presnosti modelu na odohraných zápasoch.</span></button>
             <button type="button" class="tool" id="openCoverageBtn"><b>Trhy v ligách</b><span>Ktoré naše druhy stávok (góly, rohy, karty, strely, fauly) stávkovky v každej lige naozaj ponúkajú.</span></button>

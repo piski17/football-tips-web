@@ -3968,7 +3968,12 @@ const SUMMER_PAUSE = { fromMonth: 6, toMonth: 7 };
 let memberFilter = "active";
 let lastSubs = [];
 const subscribersListEl = document.getElementById("subscribersList");
-const subLengthSelect = document.getElementById("subLength");
+const subTipsInput = document.getElementById("subTips");
+// 11. 11. 2026 (Michal): členstvo na mieru – od 50 tipov, cena 0,75 € za tip (dá sa prepísať).
+const MEMBER_MIN_TIPS = 50;
+const MEMBER_TIP_PRICE = 0.75;
+const memberPriceFor = (tips) => Math.round(tips * MEMBER_TIP_PRICE);
+const subTipsValue = () => Math.max(MEMBER_MIN_TIPS, Math.round(Number(subTipsInput.value) || 100));
 const subPriceInput = document.getElementById("subPrice");
 const subStartInput = document.getElementById("subStart");
 
@@ -4009,18 +4014,31 @@ function nextTerm(_length) {
   return "p100";
 }
 function syncMemberPrice() {
-  subPriceInput.value = MEMBER_PRICES[subLengthSelect.value];
+  subPriceInput.value = memberPriceFor(subTipsValue());
   updateSubEndPreview();
 }
 function updateSubEndPreview() {
   const start = subStartInput.value || todayIso();
-  const end = memberEnd(start, subLengthSelect.value);
-  const tips = MEMBER_TIPS[subLengthSelect.value];
-  document.getElementById("subEndPreview").textContent = tips
-    ? `${tips} tipov od ${new Date(start).toLocaleDateString("sk-SK")}, bez časového limitu.`
-    : `Členstvo potrvá do ${end.toLocaleDateString("sk-SK")} (jún a júl sa nepočítajú).`;
+  const tips = subTipsValue();
+  document.querySelectorAll("#subTipsPick [data-tips]").forEach((b) => b.classList.toggle("on", Number(b.dataset.tips) === tips));
+  // Bežný zisk modelu 4,2 % na tip (rovnako ako na webe) – len orientačne, nie je zaručený.
+  document.getElementById("subEndPreview").textContent =
+    `${tips} tipov od ${new Date(start).toLocaleDateString("sk-SK")}, bez časového limitu · bežný zisk modelu ≈ +${fmtNum(tips * 0.042, 1)} j.` +
+    (Number(subTipsInput.value) < MEMBER_MIN_TIPS ? ` · najmenej ${MEMBER_MIN_TIPS} tipov` : "");
 }
-subLengthSelect.addEventListener("change", syncMemberPrice);
+subTipsInput.addEventListener("input", syncMemberPrice);
+document.getElementById("subTipsPick").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-tips]");
+  if (!b) return;
+  subTipsInput.value = b.dataset.tips;
+  syncMemberPrice();
+});
+document.getElementById("goSetMemberBtn").addEventListener("click", () => {
+  goTo("nastroje");
+  setTimeout(() => { document.getElementById("setMemberCard").scrollIntoView({ behavior: "smooth", block: "start" }); document.getElementById("subName").focus(); }, 50);
+});
+subStartInput.value = todayIso();
+syncMemberPrice();
 subStartInput.addEventListener("change", updateSubEndPreview);
 
 /** Členstvo ešte beží (server počíta v `pkg`; bez neho podľa dátumu). */
@@ -4138,8 +4156,6 @@ async function openSubscribers() {
   void renderLeads();
   void renderPayments();
   loadSeats();
-  if (!subStartInput.value) subStartInput.value = todayIso();
-  if (!subPriceInput.value) syncMemberPrice();
   if (!lastSubs.length) subscribersListEl.innerHTML = skeletonHtml(2);
   try {
     const subs = await fetchJson("/api/subscribers");
@@ -4189,7 +4205,7 @@ function renderSubscribersList(subs) {
       const details = [
         escapeHtml(s.contact || ""),
         tipsInfo,
-        `${MEMBER_LENGTH_LABEL[length] || length} · ${Number(s.priceEur) || 0}${NB}€`,
+        `${s.tips ? `${s.tips} tipov` : MEMBER_LENGTH_LABEL[length] || length} · ${Number(s.priceEur) || 0}${NB}€`,
         k && k.total != null ? (startDate ? `od ${startDate}` : "") : startDate ? `${startDate} – ${endDate}` : `do ${endDate}`,
         s.note ? escapeHtml(s.note) : "",
       ].filter(Boolean).join(" · ");
@@ -4204,7 +4220,7 @@ function renderSubscribersList(subs) {
         <span class="res-b ${status.cls}">${status.label}</span>
         <span class="ic">
           ${s.telegramChatId ? `<button type="button" class="btn ghost xs" data-test-reminder-id="${escapeHtml(s.id)}" title="Poslať testovaciu pripomienku teraz">🔔 Test</button>` : ""}
-          <button type="button" class="btn ghost xs" data-extend-id="${escapeHtml(s.id)}" title="Zapísať ďalšie zaplatené členstvo (${MEMBER_NAME[nextTerm(length)]} · ${MEMBER_LENGTH_LABEL[nextTerm(length)]})">Ďalšie členstvo</button>
+          <button type="button" class="btn ghost xs" data-extend-id="${escapeHtml(s.id)}" title="Zapísať ďalšie zaplatené členstvo (počet tipov si zvolíš, od 50)">Ďalšie členstvo</button>
           <button type="button" class="ib danger" data-remove-id="${escapeHtml(s.id)}" title="Zmazať člena" aria-label="Zmazať člena">${ICON.trash}</button>
         </span>
       </div>`;
@@ -4221,15 +4237,22 @@ subscribersListEl.addEventListener("click", async (e) => {
     // Ďalšie členstvo (rovnaké, staré → Štart / Gold / Platinum): začína dnes, tipy idú najprv do starého členstva
     // (alebo mesiaca zadarmo), kým sa nemiňú (počíta server). Iné členstvo sa dá zadať do okna.
     const def = nextTerm(sub.length || "m1");
-    // 11. 11. 2026: jediné členstvo VIP Klub – netreba vyberať počet tipov.
+    // 11. 11. 2026: členstvo na mieru – počet tipov (od 50) a cena podľa dohody s členom.
     const term = def;
+    const pick = window.prompt(`Ďalšie členstvo pre ${sub.name}. Koľko tipov? (najmenej ${MEMBER_MIN_TIPS})`, String(sub.tips || 100));
+    if (pick === null) return;
+    const nTips = Math.round(Number(pick.replace(",", ".")));
+    if (!(nTips >= MEMBER_MIN_TIPS)) { showToast(`Zadaj aspoň ${MEMBER_MIN_TIPS} tipov.`); return; }
+    const priceIn = window.prompt(`Cena za ${nTips} tipov (€):`, String(memberPriceFor(nTips)));
+    if (priceIn === null) return;
+    const nPrice = Number(priceIn.replace(",", "."));
+    if (!(nPrice >= 0)) { showToast("Zadaj cenu v eurách."); return; }
     const end = memberEnd(todayIso(), term);
-    if (!window.confirm(`Zapísať ${sub.name} členstvo ${MEMBER_NAME[term]} · ${MEMBER_LENGTH_LABEL[term]} (${MEMBER_PRICES[term]} €)?`)) return;
     try {
       await fetchJson(`/api/subscribers/${sub.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nextPaymentDue: end.toISOString(), periodStart: new Date().toISOString(), length: term, tier: "individual", tips: MEMBER_TIPS[term], priceEur: MEMBER_PRICES[term] }),
+        body: JSON.stringify({ nextPaymentDue: end.toISOString(), periodStart: new Date().toISOString(), length: term, tier: "individual", tips: nTips, priceEur: nPrice }),
       });
       showToast("Ďalšie členstvo zapísané.");
       openSubscribers();
@@ -4270,11 +4293,13 @@ document.getElementById("addSubscriberBtn").addEventListener("click", async (e) 
   const nameEl = document.getElementById("subName");
   const name = nameEl.value.trim();
   if (!name) { showToast("Zadaj meno člena."); nameEl.focus(); return; }
-  const length = subLengthSelect.value;
+  const length = "p100"; // VIP Klub; počet tipov je pri každom členovi vlastný (pole tips)
+  const tips = Math.round(Number(subTipsInput.value) || 0);
+  if (tips < MEMBER_MIN_TIPS) { showToast(`Členstvo má najmenej ${MEMBER_MIN_TIPS} tipov.`); subTipsInput.focus(); return; }
   const tier = "individual";
   const start = subStartInput.value || todayIso();
   const priceRaw = subPriceInput.value.trim();
-  const priceEur = priceRaw === "" ? MEMBER_PRICES[length] : Number(priceRaw);
+  const priceEur = priceRaw === "" ? memberPriceFor(tips) : Number(priceRaw);
   const end = memberEnd(start, length);
   if (end.getTime() < Date.now()) {
     if (!window.confirm(`Toto členstvo by skončilo už ${end.toLocaleDateString("sk-SK")}. Pridať aj tak?`)) return;
@@ -4287,7 +4312,7 @@ document.getElementById("addSubscriberBtn").addEventListener("click", async (e) 
     tier,
     priceEur,
     length,
-    ...(MEMBER_TIPS[length] ? { tips: MEMBER_TIPS[length] } : {}),
+    tips,
     startDate: new Date(`${start}T12:00:00`).toISOString(),
     periodStart: new Date(`${start}T12:00:00`).toISOString(),
     nextPaymentDue: end.toISOString(),
@@ -4299,10 +4324,11 @@ document.getElementById("addSubscriberBtn").addEventListener("click", async (e) 
     await postJson("/api/subscribers", subscriber);
     ["subName", "subContact", "subTelegramChatId", "subNote"].forEach((id) => { document.getElementById(id).value = ""; });
     subStartInput.value = todayIso();
-    updateSubEndPreview();
+    subTipsInput.value = 100;
+    syncMemberPrice();
     memberFilter = "active";
-    showToast(`${name} pridaný medzi členov.`);
-    openSubscribers();
+    showToast(`${name}: členstvo ${tips} tipov za ${priceEur} € nastavené.`);
+    goTo("clenovia");
   } catch (err) {
     showToast(`Pridanie zlyhalo: ${err.message}`);
   } finally {
@@ -4435,10 +4461,10 @@ async function renderLeads() {
         document.getElementById("subName").value = l.name || "";
         document.getElementById("subContact").value = l.email || (l.username ? "@" + l.username : "");
         document.getElementById("subTelegramChatId").value = l.email ? "" : l.chatId;
-        subLengthSelect.value = LEAD_PLAN_TERM[String(l.plan).replace(/_waitlist$/, "")] || "p100";
         syncMemberPrice();
-        document.getElementById("subName").scrollIntoView({ behavior: "smooth", block: "center" });
-        showToast("Údaje sú vyplnené – skontroluj ich a klikni na „Pridať člena“.");
+        goTo("nastroje");
+        setTimeout(() => document.getElementById("setMemberCard").scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+        showToast("Údaje sú vyplnené – nastav počet tipov a cenu a klikni na „Nastaviť členstvo“.");
       };
     });
     el.querySelectorAll("[data-lead-del]").forEach((b) => {
