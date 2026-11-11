@@ -1157,13 +1157,13 @@ html.menu-open .jump { display: none; }
             <div class="coop">
               <small class="coop-eyebrow">Ako začneme</small>
               <ol class="coop-steps">
-                <li><b>01</b><span><strong>Ozvete sa mi</strong>Jedným klikom cez Telegram, bez záväzkov.</span></li>
+                <li><b>01</b><span><strong>Ozvete sa mi</strong>Jedným klikom priamo mne na Telegram, napíšeme si osobne. Bez záväzkov.</span></li>
                 <li><b>02</b><span><strong>Vyberiete si dĺžku</strong>Od 50 tipov vyššie – podľa toho, ako dlho chcete tipy dostávať.</span></li>
                 <li><b>03</b><span><strong>Nastavíme bank a vklad</strong>Podľa zvolenej dĺžky vám presne poviem, s akým bankom a vkladom hrať.</span></li>
                 <li><b>04</b><span><strong>Prvý tip</strong>Pridám vás do súkromného kanála. Tip príde, keď prejde všetkými pravidlami modelu.</span></li>
               </ol>
             </div>
-            <a class="btn plan-cta" data-plan-cta="p100" href="https://t.me/TipRadarAiBot?start=klub" target="_blank" rel="noopener">Mám záujem o spoluprácu</a>
+            <a class="btn plan-cta" data-plan-cta="p100" href="https://t.me/im_mishko?text=Dobr%C3%BD%20de%C5%88%2C%20m%C3%A1m%20z%C3%A1ujem%20o%20spolupr%C3%A1cu%20TipRadar." target="_blank" rel="noopener">Mám záujem o spoluprácu</a>
           </div>
         </article>
       </div>
@@ -1761,7 +1761,7 @@ html.menu-open .jump { display: none; }
       var S = window.__sales || { open: false }, pay = !!S.pay;
       qa("[data-plan-cta]").forEach(function (a) {
         var t = TERMS[a.dataset.planCta];
-        a.href = "https://t.me/TipRadarAiBot?start=klub";
+        a.href = "https://t.me/im_mishko?text=Dobr%C3%BD%20de%C5%88%2C%20m%C3%A1m%20z%C3%A1ujem%20o%20spolupr%C3%A1cu%20TipRadar."; // 11. 11. 2026 19:27 Michal: záujem → priamo jemu na Telegram (osobný chat @im_mishko), nie do bota
         a.target = "_blank";
         a.textContent = "Mám záujem o spoluprácu"; // 11. 11. 2026: bez cien, spoluprácu dohodne Michal osobne
       });
