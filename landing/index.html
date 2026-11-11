@@ -559,7 +559,7 @@ input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius
 .mon-list .w { color: var(--win); } .mon-list .l { color: var(--loss); }
 @media (max-width: 620px) { .mon-cols span:nth-child(3), .mon-list li > span:nth-child(3) { display: none; } .mon-cols, .mon-list li { grid-template-columns: 1.5fr .7fr .8fr 1fr; font-size: 14px; } }
 
-/* ---------- členstvo: Štart tmavá karta, VIP platinová karta ---------- */
+/* ---------- členstvo: od 11. 11. 2026 jediné VIP Klub (platinová karta) ---------- */
 .plans { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; max-width: 1040px; margin-inline: auto; align-items: start; }
 .plan { display: flex; flex-direction: column; padding: clamp(28px, 3.6vw, 44px); border-radius: 32px; cursor: pointer; transition: box-shadow .4s, border-color .4s; }
 .plan.on { border-color: rgba(255, 255, 255, .3); }
@@ -614,6 +614,14 @@ input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius
 .guar strong { display: block; color: var(--text); font: 600 19px/1.2 var(--display); margin-bottom: 4px; }
 .last7 { max-width: 1040px; margin: 16px auto 0; text-align: center; font-size: 14.5px; color: var(--muted); }
 .mem-foot { max-width: 760px; margin: 24px auto 0; text-align: center; font-size: 13.5px; color: var(--faint); }
+/* 11. 11. 2026: jediné členstvo VIP Klub – jedna široká karta, vľavo výhody, vpravo bank a prepočet */
+.plans.one { grid-template-columns: 1fr; }
+.plan.solo { display: grid; grid-template-columns: 1.05fr 1fr; gap: 0 clamp(28px, 4vw, 56px); cursor: default; }
+.plan-main, .plan-side { display: flex; flex-direction: column; }
+.plan.solo .plan-side { padding-top: 54px; }
+.plan.solo .plan-bank { margin-top: 0; }
+.pk-out .pk-model { grid-column: 1 / -1; }
+@media (max-width: 860px) { .plan.solo { grid-template-columns: 1fr; } .plan.solo .plan-side { padding-top: 0; } .plan.solo .plan-bank { margin-top: 28px; } }
 @media (max-width: 860px) { .plans { grid-template-columns: 1fr; } .plan.feat { order: -1; } .plan-tips b { font-size: 68px; } .plan-badge { top: 24px; right: 24px; } }
 
 /* ---------- o mne ---------- */
@@ -837,7 +845,7 @@ html.menu-open .jump { display: none; }
     <ul class="ov-links">
       <li><a href="/">Úvod<small>futbal podľa čísel</small></a></li>
       <li><a href="/vysledky">Výsledky<small>všetky tipy</small></a></li>
-      <li><a href="/clenstvo">Členstvo<small>Štart · VIP</small></a></li>
+      <li><a href="/clenstvo">Členstvo<small>VIP Klub · 59 €</small></a></li>
       <li><a href="/kurz">Kurz<small>Škola stávkovania</small></a></li>
       <li><a href="/o-mne">O mne<small>Michal</small></a></li>
       <li><a href="/otazky">Otázky<small>časté otázky</small></a></li>
@@ -1030,8 +1038,8 @@ html.menu-open .jump { display: none; }
     <div class="wrap">
       <div class="crumb"><a href="/">Úvod</a><span>/</span><span>Členstvo</span></div>
       <div class="eyebrow">Členstvo</div>
-      <h1>Členstvo s&nbsp;<em>garanciou</em></h1>
-      <p class="lead">Dve členstvá: Štart 30 tipov za 29&nbsp;€ a&nbsp;VIP 100 tipov za 89&nbsp;€. Všetci členovia dostávajú rovnaké tipy a&nbsp;úvodný hovor 1&nbsp;na&nbsp;1, VIP navyše mentoring 1&nbsp;na&nbsp;1 počas celého členstva a&nbsp;ďalšie členstvo so zľavou.</p>
+      <h1>Jedno členstvo, <em>všetko v&nbsp;ňom</em></h1>
+      <p class="lead">VIP Klub: 120 tipov za 59&nbsp;€, teda 0,49&nbsp;€ za tip. Žiadne nižšie a&nbsp;vyššie balíky – každý člen dostane rovnaké tipy aj všetky výhody: úvodný hovor a&nbsp;mentoring 1&nbsp;na&nbsp;1, váš výsledok v&nbsp;jednotkách a&nbsp;vernostnú zľavu.</p>
       <span class="big-n" aria-hidden="true">02</span>
     </div>
   </header>
@@ -1115,57 +1123,40 @@ html.menu-open .jump { display: none; }
   <!-- ================= ČLENSTVO ================= -->
   <section class="sub" id="clenstvo" data-pages="clenstvo">
     <div class="wrap">
-      <!-- 8. 11. 2026 23:15 (Michal): Štart 30 tipov 29 € (bez vernostnej zľavy), VIP 100 tipov 89 €. Predtým 4. 11.: Štart 75 tipov 65 €, VIP 150 tipov 110 €, odporúčaný bank od – do (predtým 50 / 100 tipov za 29 / 55 €) -->
-      <div class="plans two">
-        <article class="plan panel" data-plan="p30">
-          
-          <div class="plan-name">Štart</div>
-          <div class="plan-tips"><b class="num">30</b> tipov</div>
-          <div class="plan-price"><b class="num">29&nbsp;€</b><span>jednorazovo</span></div>
-          <p class="plan-per"><span>0,97&nbsp;€ za tip</span></p>
-          <ul class="plan-feats">
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-ok"/></svg>Tipy na Telegram 1 – 2 h pred výkopom</li>
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-ok"/></svg>Súkromný chat členov</li>
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-ok"/></svg><span><b>Úvodný hovor 1 na 1</b> (30 min)</span></li>
-            <li class="off"><span class="dash" aria-hidden="true">–</span>Mentoring 1 na 1 počas celého členstva</li>
-            <li class="off"><span class="dash" aria-hidden="true">–</span>Vernostná zľava na ďalšie členstvo</li>
-          </ul>
-          <p class="plan-bank"><small>Odporúčaný bank</small><b>1&nbsp;200 – 2&nbsp;500&nbsp;€</b><span>vklad 3&nbsp;% = 36 – 75&nbsp;€ na tip</span></p>
-          <div class="pk-mini" data-calc="p30">
+      <!-- 11. 11. 2026 (Michal: „jedno špeciálne členstvo“): jediné členstvo VIP Klub – 120 tipov 59 € (0,49 € za tip), všetky výhody.
+           Predtým 8. 11.: Štart 30 tipov 29 €, VIP 100 tipov 89 €; 4. 11.: Štart 75 tipov 65 €, VIP 150 tipov 110 €. -->
+      <div class="plans one">
+        <article class="plan panel feat solo on" data-plan="p120">
+          <span class="plan-badge">Jediné členstvo</span>
+          <div class="plan-main">
+            <div class="plan-name">VIP Klub</div>
+            <div class="plan-tips"><b class="num">120</b> tipov</div>
+            <div class="plan-price"><b class="num">59&nbsp;€</b><span>jednorazovo</span></div>
+            <p class="plan-per"><span>0,49&nbsp;€ za tip</span><span class="save">všetko v&nbsp;jednom</span></p>
+            <ul class="plan-feats">
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-ok"/></svg><span><b>Najviac 3 najsilnejšie tipy denne</b> na Telegram 1 – 2 h pred výkopom</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-ok"/></svg><span><b>Úvodný hovor 1 na 1</b> – bank a vklad nastavíme presne pre vás</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-ok"/></svg><span><b>Mentoring 1 na 1</b> počas celého členstva</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-ok"/></svg><span><b>Váš výsledok v jednotkách</b> – keď vám ostane 5 tipov, pošlem vám, ako na tom ste</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-ok"/></svg><span><b>Tipy nevypršia</b> – 120 tipov platí bez časového limitu</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-ok"/></svg><span><b>Vernostná zľava</b> – ďalšie členstvo −20&nbsp;% (47&nbsp;€)</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-ok"/></svg>Súkromný chat členov</li>
+            </ul>
+          </div>
+          <div class="plan-side">
+            <p class="plan-bank"><small>Odporúčaný bank</small><b>600 – 3&nbsp;000&nbsp;€</b><span>vklad 3&nbsp;% = 18 – 90&nbsp;€ na tip</span></p>
+          <div class="pk-mini" data-calc="p120">
             <div class="pk-mtop"><span>Prepočítajte si to</span><div class="seg sm" role="group" aria-label="Vklad na tip"><button type="button" data-pct="1" aria-pressed="false">1&nbsp;%</button><button type="button" data-pct="2" aria-pressed="false">2&nbsp;%</button><button type="button" data-pct="3" aria-pressed="true">3&nbsp;%</button><button type="button" data-pct="5" aria-pressed="false">5&nbsp;%</button></div></div>
             <div class="pk-lab">Váš bank <b data-o="bank"></b></div>
             <input type="range" min="200" max="5000" step="50" value="1000" data-in="bank" aria-label="Bank v eurách">
             <div class="pk-out two">
               <div class="pk-res"><small>Aby sa vám vrátila cena, stačí plus</small><b data-o="roi"></b></div>
               <div><small>Vklad na tip</small><b data-o="stake"></b></div>
+              <div class="pk-model"><small>Bežný zisk modelu za 120 tipov (nie je zaručený)</small><b data-o="model"></b></div>
             </div>
           </div>
-          <a class="btn ghost plan-cta" data-plan-cta="p30" href="https://t.me/TipRadarAiBot?start=c30" target="_blank" rel="noopener">Zapísať sa do poradovníka</a>
-        </article>
-        <article class="plan panel feat" data-plan="p100">
-          <span class="plan-badge">Najvýhodnejšie</span>
-          <div class="plan-name">VIP</div>
-          <div class="plan-tips"><b class="num">100</b> tipov</div>
-          <div class="plan-price"><b class="num">89&nbsp;€</b><span>jednorazovo</span></div>
-          <p class="plan-per"><span>0,89&nbsp;€ za tip</span><span class="save">ušetríte 8&nbsp;€</span></p>
-          <ul class="plan-feats">
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-ok"/></svg>Tipy na Telegram 1 – 2 h pred výkopom</li>
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-ok"/></svg>Súkromný chat členov</li>
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-ok"/></svg><span><b>Úvodný hovor 1 na 1</b> (30 min)</span></li>
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-ok"/></svg><span><b>Mentoring 1 na 1</b> počas celého členstva</span></li>
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-ok"/></svg><span><b>Vernostná zľava</b> – ďalšie členstvo −20&nbsp;%</span></li>
-          </ul>
-          <p class="plan-bank"><small>Odporúčaný bank</small><b>1&nbsp;100 – 3&nbsp;000&nbsp;€</b><span>vklad 3&nbsp;% = 33 – 90&nbsp;€ na tip</span></p>
-          <div class="pk-mini" data-calc="p100">
-            <div class="pk-mtop"><span>Prepočítajte si to</span><div class="seg sm" role="group" aria-label="Vklad na tip"><button type="button" data-pct="1" aria-pressed="false">1&nbsp;%</button><button type="button" data-pct="2" aria-pressed="false">2&nbsp;%</button><button type="button" data-pct="3" aria-pressed="true">3&nbsp;%</button><button type="button" data-pct="5" aria-pressed="false">5&nbsp;%</button></div></div>
-            <div class="pk-lab">Váš bank <b data-o="bank"></b></div>
-            <input type="range" min="200" max="5000" step="50" value="1000" data-in="bank" aria-label="Bank v eurách">
-            <div class="pk-out two">
-              <div class="pk-res"><small>Aby sa vám vrátila cena, stačí plus</small><b data-o="roi"></b></div>
-              <div><small>Vklad na tip</small><b data-o="stake"></b></div>
-            </div>
+            <a class="btn plan-cta" data-plan-cta="p120" href="https://t.me/TipRadarAiBot?start=c120" target="_blank" rel="noopener">Zapísať sa do poradovníka</a>
           </div>
-          <a class="btn plan-cta" data-plan-cta="p100" href="https://t.me/TipRadarAiBot?start=c100" target="_blank" rel="noopener">Zapísať sa do poradovníka</a>
         </article>
       </div>
       <p class="pay-note small" id="payNote" hidden>Bankovým prevodom cez QR kód · bez poplatkov</p>
@@ -1227,8 +1218,8 @@ html.menu-open .jump { display: none; }
         <details><summary>Zaručujete výhru?</summary><p>Nie. Žiadny model nevie zaručiť výsledok zápasu. TipRadar vyberá stávky, pri ktorých je šanca podľa štatistík vyššia, než naznačuje kurz. Rozhoduje dlhodobý výsledok, preto zverejňujeme aj prehraté tipy. Ak vaše členstvo skončí v mínuse, dostanete mesiac zadarmo (pozrite garanciu nižšie).</p></details>
         <details id="garancia"><summary>Ako funguje garancia?</summary><p><strong>Mesiac zadarmo:</strong> ak vaše členstvo skončí v&nbsp;mínuse, dostanete 1 mesiac zadarmo – počas neho vám chodia všetky tipy do toho istého kanála a&nbsp;dáme vám vedieť na Telegrame. Počíta sa zo všetkých tipov vášho členstva s&nbsp;výsledkom, pri rovnakom vklade na každý tip (1 jednotka). Ak je súčet záporný, členstvo skončilo v&nbsp;mínuse. Na samotný mesiac zadarmo sa garancia už nevzťahuje, na ďalšie zaplatené členstvo áno.</p></details>
         <details><summary>Ako overujete, že model funguje?</summary><p>Spätným testom na odohraných zápasoch a mesačnou kontrolou, či tipy s dôverou 70&nbsp;% naozaj vychádzajú zhruba v 70&nbsp;% prípadov. Tipy vyradené pre veľký rozpor s kurzami si zapisujeme a porovnávame, kto mal pravdu.</p></details>
-        <details><summary>Ako funguje členstvo?</summary><p>Vyberiete si jedno z&nbsp;dvoch členstiev: Štart 30 tipov 29&nbsp;€ alebo VIP 100 tipov 89&nbsp;€. Tipy sa vám rátajú odo dňa nákupu, každý poslaný tip sa odpočíta (zrušený zápas sa neráta). Členstvo nemá časový limit – skončí, až keď dostanete posledný tip. Keď vám budú tipy dochádzať, dám vám vedieť. Obe členstvá majú úvodný hovor 1&nbsp;na&nbsp;1 (30 min), VIP navyše mentoring 1&nbsp;na&nbsp;1 počas celého členstva – kedykoľvek sa ma môžete opýtať na bank, vklad či konkrétny tip. VIP má aj ďalšie členstvo o&nbsp;20&nbsp;% lacnejšie. Odporúčaný bank: Štart 1&nbsp;200 – 2&nbsp;500&nbsp;€, VIP 1&nbsp;100 – 3&nbsp;000&nbsp;€ (vklad 3&nbsp;% na tip).</p></details>
-        <details><summary>Aký bank a vklad odporúčate?</summary><p>Vklad 2&nbsp;–&nbsp;3&nbsp;% banku na tip. Pri vklade 3&nbsp;% sa cena členstva vráti pri bežnom zisku modelu od banku približne 800&nbsp;€ pri Štarte a&nbsp;750&nbsp;€ pri VIP. Pri vklade 2&nbsp;% je potrebný väčší bank (približne 1&nbsp;000&nbsp;€). Vklad nikdy nad 5&nbsp;% banku a&nbsp;vždy z&nbsp;aktuálneho banku. Pri členstve si to môžete prepočítať.</p></details>
+        <details><summary>Ako funguje členstvo?</summary><p>Je jedno členstvo – VIP Klub: 120 tipov za 59&nbsp;€ (0,49&nbsp;€ za tip). Tipy sa vám rátajú odo dňa nákupu, každý poslaný tip sa odpočíta (zrušený zápas sa neráta). Členstvo nemá časový limit – skončí, až keď dostanete posledný tip. Keď vám ostane 5 tipov, pošlem vám výsledok vášho členstva v&nbsp;jednotkách. Dostanete úvodný hovor 1&nbsp;na&nbsp;1 (30 min), mentoring 1&nbsp;na&nbsp;1 počas celého členstva – kedykoľvek sa ma môžete opýtať na bank, vklad či konkrétny tip – a&nbsp;ďalšie členstvo o&nbsp;20&nbsp;% lacnejšie (47&nbsp;€). Odporúčaný bank 600 – 3&nbsp;000&nbsp;€ (vklad 3&nbsp;% na tip).</p></details>
+        <details><summary>Aký bank a vklad odporúčate?</summary><p>Vklad 2&nbsp;–&nbsp;3&nbsp;% banku na tip. Pri vklade 3&nbsp;% sa cena členstva vráti pri bežnom zisku modelu už od banku približne 400&nbsp;€. Pri banku 1&nbsp;000&nbsp;€ (30&nbsp;€ na tip) je bežný zisk modelu za 120 tipov asi +5 jednotiek, teda približne +150&nbsp;€ – po zaplatení členstva asi +90&nbsp;€. Zisk nie je zaručený, rozhoduje dlhodobý výsledok. Pri vklade 2&nbsp;% je potrebný väčší bank (približne 600&nbsp;€). Vklad nikdy nad 5&nbsp;% banku a&nbsp;vždy z&nbsp;aktuálneho banku. Pri členstve si to môžete prepočítať.</p></details>
         <details><summary>Musím členstvo rušiť?</summary><p>Nie. Členstvo sa samo nepredlžuje – skončí po poslednom tipe. Ak chcete pokračovať, jednoducho si kúpite ďalšie.</p></details>
       </div>
     </div>
@@ -1708,13 +1699,13 @@ html.menu-open .jump { display: none; }
     });
   }
 
-  /* ---------------- ČLENSTVO (od 2. 11. 2026 večer: len Štart / VIP, bez členských kariet) ----------------
-     Ceny musia sedieť s PAY_TERMS v src/payments.ts: Štart 30 = 29 €, VIP 100 = 89 € (od 8. 11. 2026).
+  /* ---------------- ČLENSTVO (od 11. 11. 2026 jediné: VIP Klub 120 tipov 59 €) ----------------
+     Ceny musia sedieť s PAY_TERMS v src/payments.ts: VIP Klub 120 = 59 € (od 11. 11. 2026).
      Výhody v stĺpcoch musia sedieť s TIER_PERKS v src/telegram.ts. Bank od = zisk aspoň 1,5× cena pri bežnom zisku modelu (4,2 % na tip) a vklade 3 % (memberBank v payments.ts). */
   (function () {
     var box = $("clenstvo"); if (!box) return;
     var f = function (n, d) { return n.toLocaleString("sk-SK", { minimumFractionDigits: d, maximumFractionDigits: d }); };
-    var MEMBER_STEPS = [[30, 29, "Štart"], [100, 89, "VIP"]]; // 8. 11. 2026 (predtým 75 / 65 € a 150 / 110 €)
+    var MEMBER_STEPS = [[120, 59, "VIP Klub"]]; // 11. 11. 2026 jediné členstvo (predtým 30 / 29 € a 100 / 89 €)
     var TERMS = {};
     MEMBER_STEPS.forEach(function (s) {
       var tips = s[0], price = s[1];
@@ -1722,12 +1713,12 @@ html.menu-open .jump { display: none; }
     });
     // 4. 11. 2026 (Michal): prepočet je pri každom členstve zvlášť (spodná kalkulačka zrušená).
     var qa = function (sel) { return box.querySelectorAll(sel); };
-    var cur = "p100";
+    var cur = "p120";
     qa("[data-calc]").forEach(function (c) {
       var t = TERMS[c.dataset.calc]; if (!t) return;
       var bI = c.querySelector('[data-in="bank"]'), pct = 3;
       var o = function (k) { return c.querySelector('[data-o="' + k + '"]'); };
-      bI.value = t.bank;
+      bI.value = 1000; // 11. 11. 2026: ukážka pri ideálnom banku 1 000 € (odporúčaný bank je od 600 €)
       function draw() {
         // 4. 11. 2026 (Michal): v jednotkách – koľko jednotiek v pluse treba za celé členstvo, aby sa vrátila jeho cena.
         // 1 jednotka = vklad na tip. Bežný zisk modelu = 4,2 % zo vkladu na tip → za členstvo tipy × 0,042 jednotky.
@@ -1737,6 +1728,8 @@ html.menu-open .jump { display: none; }
         o("bank").textContent = f(bank, 0) + " €";
         o("stake").textContent = f(stake, stake % 1 ? 2 : 0) + " €";
         var rb = o("roi"); rb.innerHTML = "+" + f(need, 1) + " <span>jednotky</span>"; rb.style.color = need <= model ? "" : "var(--loss)";
+        // 11. 11. 2026: bežný zisk modelu za celé členstvo v jednotkách aj eurách pri zvolenom vklade (nie je zaručený).
+        var mb = o("model"); if (mb) mb.innerHTML = "+" + f(model, 1) + " <span>j. ≈ " + f(model * stake, 0) + " € (po zaplatení členstva " + (model * stake - t.price >= 0 ? "+" : "−") + f(Math.abs(model * stake - t.price), 0) + " €)</span>";
         // 4. 11. 2026 (Michal): vysvetľujúca veta pod prepočtom zrušená – nepridávať.
       }
       bI.addEventListener("input", draw);
@@ -1760,7 +1753,7 @@ html.menu-open .jump { display: none; }
       $("payNote").hidden = !pay;
     }
     function apply(term) {
-      if (!TERMS[term]) term = "p100";
+      if (!TERMS[term]) term = "p120";
       cur = term;
       qa("[data-plan]").forEach(function (c) { c.classList.toggle("on", c.dataset.plan === term); });
       root.dataset.term = term;
@@ -1770,7 +1763,7 @@ html.menu-open .jump { display: none; }
     // Odkaz /clenstvo#vip (alebo #start, #premium, #150 …) rovno nastaví členstvo; staré #gold / #platinum vedú na VIP.
     var h = location.hash.slice(1).toLowerCase();
     ctas();
-    apply(TERMS["p" + h] ? "p" + h : { start: "p30", stat: "p30", silver: "p30", premium: "p100", vip: "p100", "50": "p30", "75": "p30", "150": "p100" }[h] || "p100");
+    apply("p120"); // 11. 11. 2026: jediné členstvo, všetky staré odkazy (#vip, #start …) vedú sem
     var openG = function () { var d = $("garancia"); if (d) d.open = true; };
     document.querySelectorAll('a[href="#garancia"]').forEach(function (a) { a.addEventListener("click", openG); });
     if (location.hash === "#garancia") openG();

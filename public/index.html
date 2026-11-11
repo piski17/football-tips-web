@@ -35,7 +35,7 @@
     <aside class="side">
       <div class="logo lx-logo"><svg viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="apPlat" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".42" stop-color="#9D907D"/><stop offset=".68" stop-color="#E3DACD"/><stop offset="1" stop-color="#7F7362"/></linearGradient><radialGradient id="apCore" cx=".5" cy=".42" r=".6"><stop offset="0" stop-color="#1C1B19"/><stop offset="1" stop-color="#0E0D0C"/></radialGradient></defs><circle cx="20" cy="20" r="19.2" fill="url(#apCore)" stroke="url(#apPlat)" stroke-width="1.1"/><g stroke="url(#apPlat)" stroke-width="1" stroke-linecap="round" opacity=".8"><path d="M20.00 6.00 20.00 3.00"/><path d="M27.60 6.84 28.50 5.28"/><path d="M33.16 12.40 34.72 11.50"/><path d="M34.00 20.00 37.00 20.00"/><path d="M33.16 27.60 34.72 28.50"/><path d="M27.60 33.16 28.50 34.72"/><path d="M20.00 34.00 20.00 37.00"/><path d="M12.40 33.16 11.50 34.72"/><path d="M6.84 27.60 5.28 28.50"/><path d="M6.00 20.00 3.00 20.00"/><path d="M6.84 12.40 5.28 11.50"/><path d="M12.40 6.84 11.50 5.28"/></g><circle cx="20" cy="20" r="7" fill="none" stroke="#CFC4B4" stroke-opacity=".28"/><path d="M20 20 20.00 8.00A12 12 0 0 1 30.60 14.37Z" fill="url(#apPlat)" opacity=".22"/><path d="M20 20 30.60 14.37" stroke="url(#apPlat)" stroke-width="1.8" stroke-linecap="round"/><circle cx="20" cy="20" r="1.9" fill="#F2EFEA"/><circle cx="25.6" cy="24.4" r="1.6" fill="#9ED9B8"/></svg><span>Tip<em>Radar</em><small>Futbalová analytika</small></span></div>
       <nav class="nav" id="sideNav" aria-label="Hlavné menu"></nav>
-      <button type="button" class="seats" id="seatBox" title="Členstvo TipRadar: počet aktívnych členov Štart (50 tipov) a VIP (100 tipov). Kliknutím otvoríš sekciu Členovia."></button>
+      <button type="button" class="seats" id="seatBox" title="Členstvo TipRadar: počet aktívnych členov VIP Klubu (120 tipov). Kliknutím otvoríš sekciu Členovia."></button>
     </aside>
 
     <main class="main">
@@ -226,7 +226,7 @@
         <div class="page">
           <div class="card gar-card" id="guaranteeCard" hidden></div>
           <div class="seats seats-inline" id="seatBoxMobile"></div>
-          <p class="muted small">Všetci, ktorí si kúpili členstvo Štart alebo VIP (pri platbe cez QR kód sa zapíšu sami). Server každému ráta tipy poslané do členského kanála od nákupu; keď ostane 5 tipov, upozorní teba aj člena. Ak je prvé členstvo po 30 tipoch v mínuse, v karte Garancia mu vrátiš peniaze; ak členstvo skončí v mínuse, pridáš mesiac zadarmo.</p>
+          <p class="muted small">Všetci, ktorí si kúpili členstvo VIP Klub (pri platbe cez QR kód sa zapíšu sami). Server každému ráta tipy poslané do členského kanála od nákupu; keď ostane 5 tipov, upozorní teba aj člena. Ak je prvé členstvo po 30 tipoch v mínuse, v karte Garancia mu vrátiš peniaze; ak členstvo skončí v mínuse, pridáš mesiac zadarmo.</p>
           <div class="kpis kpis-members" id="subscribersSummary"></div>
 
           <div class="card">
@@ -237,8 +237,9 @@
               <label class="fld">Telegram chat ID<input type="text" id="subTelegramChatId" placeholder="voliteľné" /></label>
               <label class="fld">Členstvo
                 <select id="subLength">
-                  <option value="p30">Štart · 30 tipov (29 €)</option>
-                  <option value="p100" selected>VIP · 100 tipov (89 €)</option>
+                  <option value="p120" selected>VIP Klub · 120 tipov (59 €)</option>
+                  <option value="p30">Štart (staré) · 30 tipov (29 €)</option>
+                  <option value="p100">VIP (staré) · 100 tipov (89 €)</option>
                   <option value="p75">Štart (staré) · 75 tipov (65 €)</option>
                   <option value="p150">VIP (staré) · 150 tipov (110 €)</option>
                 </select>
