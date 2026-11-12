@@ -175,6 +175,10 @@ details p, details li { color: var(--muted); font-size: 14px; }
       <button type="button" class="chip" data-s="all">Všetky stávkovky</button>
       <button type="button" class="chip" data-s="mine">Len moje stávkovky</button>
     </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+      <button type="button" class="btn" id="igBulkBtn">Stiahnuť obrázky všetkých odohraných surebetov (zip)</button>
+      <span class="muted small" id="igBulkInfo">Vyhodnotené surebety od 1. 11. po anglicky – príspevky, príbehy a súhrn každého dňa.</span>
+    </div>
     <div class="kpis" id="logKpis"></div>
     <div id="logDays"></div>
   </section>
@@ -389,7 +393,7 @@ function renderLog() {
         <div class="small">${e.sides.map((x) => `${esc(x.label)} <b style="color:var(--gold-hi)">${fmt(x.odd)}</b> <span class="muted">v ${esc(x.book)}</span>`).join(" &nbsp;·&nbsp; ")}</div>
         ${e.alts && (e.alts[0].length || e.alts[1].length) ? `<div class="faint small">Aj v: ${e.sides.map((x, k) => e.alts[k].length ? esc(x.label) + " – " + e.alts[k].map((o) => esc(o.book) + " " + fmt(o.odd)).join(", ") : "").filter(Boolean).join(" · ")}</div>` : ""}
         <div class="sb-foot" style="margin-top:4px"><span class="faint small">Videný ${e.seen}× · prvýkrát ${new Date(e.firstSeen).toLocaleString("sk-SK", { day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" })}, naposledy ${new Date(e.lastSeen).toLocaleString("sk-SK", { day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" })}</span><span class="btns"><button type="button" class="btn ghost" data-igk="${esc(e.scope + "|" + e.key)}">Obrázok na IG</button> <button type="button" class="btn ghost" data-k="${esc(e.scope + "|" + e.key)}">Do kalkulačky</button></span></div></div>`).join("")}
-      <div class="lrow" style="text-align:right"><button type="button" class="btn" data-day="${d}">Súhrn dňa na IG</button></div>
+      <div class="lrow" style="display:flex;gap:8px;justify-content:flex-end;align-items:center;flex-wrap:wrap"><span class="muted small zip-info"></span><button type="button" class="btn ghost" data-day="${d}">Súhrn dňa na IG</button><button type="button" class="btn" data-zip="${d}">Zip obrázkov dňa</button></div>
     </details>`;
   }).join("") : `<p class="empty">${logScope === "mine" && myBooks.length < 2 ? "Vyberte aspoň 2 svoje stávkovky – evidencia začne od ďalšieho prehľadania." : "Zatiaľ nič zapísané."}</p>`;
 }
@@ -413,6 +417,7 @@ $("logScope").addEventListener("click", (e) => {
 });
 load(); loadLog();
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="/surebety-ig.js"></script>
 </body>
 </html>

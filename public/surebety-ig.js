@@ -372,6 +372,77 @@
     $("igModeWrap").style.display = "none";
     open(); render();
   };
+  // ---------- Všetky odohrané surebety naraz (zip) ----------
+  const slugT = (t) => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase();
+  const cvBlob = (cv) => new Promise((res) => cv.toBlob(res, "image/png"));
+  /** day = "YYYY-MM-DD" → len surebety toho dňa; bez dňa všetky odohrané od 1. 11. */
+  async function bulk(day, btn, info) {
+    if (!window.JSZip) { info.textContent = "Nepodarilo sa načítať knižnicu na zip, obnovte stránku."; return; }
+    btn.disabled = true;
+    try {
+      info.textContent = "Načítavam evidenciu surebetov…";
+      const j = await fetch("/api/surebets/log").then((x) => x.json());
+      // Každý surebet raz (evidencia ho môže mať pod „všetky“ aj „moje / známe“ stávkovky) – nechá sa záznam s najvyšším ziskom.
+      const byKey = new Map();
+      for (const e of j.entries || []) {
+        const prev = byKey.get(e.key);
+        if (!prev || e.maxMargin > prev.maxMargin || (!prev.alts && e.alts && e.maxMargin === prev.maxMargin)) byKey.set(e.key, e);
+      }
+      const from = new Date("2026-11-01T00:00:00+01:00").getTime();
+      const played = [...byKey.values()].filter((e) => { const t = new Date(e.date).getTime(); return t >= from && t + 115 * 60000 < Date.now() && (!day || dayKey(e.date) === day); })
+        .sort((a, b) => a.date.localeCompare(b.date) || b.maxMargin - a.maxMargin);
+      if (!played.length) { info.textContent = day ? "V tento deň ešte nie je žiadny odohraný surebet (obrázky sú až po skončení zápasu)." : "V evidencii zatiaľ nie je žiadny odohraný surebet."; return; }
+      await loadFonts();
+      const results = new Map();
+      const ids = [...new Set(played.map((e) => e.fixtureId))];
+      let done = 0; const total = ids.length;
+      const worker = async () => {
+        while (ids.length) {
+          const id = ids.shift();
+          try { results.set(id, await fetch("/api/surebets/result?fixture=" + id).then((x) => x.json())); } catch (e) { /* bez výsledku */ }
+          done++; info.textContent = `Načítavam výsledky zápasov… ${done} / ${total}`;
+        }
+      };
+      await Promise.all([worker(), worker(), worker(), worker()]);
+      const zip = new JSZip();
+      const handle = $("igHandle").value.trim();
+      const days = {};
+      let n = 0, nores = 0;
+      for (const e of played) {
+        const r = results.get(e.fixtureId);
+        const s = { ...e, margin: e.maxMargin };
+        const res = r && r.finished ? r : null;
+        if (!res) nores++;
+        const d = dayKey(e.date);
+        (days[d] ??= []).push(e);
+        const name = `${d}-${slugT(e.home)}-${slugT(e.away)}-${slugT(market(e.market))}-${slugT(label(e.sides[0].label))}`;
+        zip.file(`posts/${name}.png`, await cvBlob(drawSurebet(s, "post", res, handle)));
+        zip.file(`stories/${name}.png`, await cvBlob(drawSurebet(s, "story", res, handle)));
+        n++;
+        if (n % 5 === 0) info.textContent = `Kreslím obrázky… ${n} / ${played.length}`;
+      }
+      for (const [d, list] of Object.entries(days)) {
+        zip.file(`daily-summary/${d}-post.png`, await cvBlob(drawDay(d, list, "post", handle)));
+        zip.file(`daily-summary/${d}-story.png`, await cvBlob(drawDay(d, list, "story", handle)));
+      }
+      info.textContent = "Balím zip…";
+      const blobZip = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(blobZip);
+      const a = document.createElement("a"); a.href = url; a.download = day ? `surebets-${day}.zip` : `surebets-od-1-11-${dayKey(new Date().toISOString())}.zip`; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      const nd = Object.keys(days).length;
+      info.textContent = `Hotovo: ${played.length} ${plural(played.length)} (príspevok + príbeh) a ${nd} ${nd === 1 ? "súhrn" : nd <= 4 ? "súhrny" : "súhrnov"} dňa.` + (nores ? ` Pri ${nores} chýba výsledok zápasu – sú bez skóre.` : "");
+    } catch (err) {
+      info.textContent = "Chyba: " + (err && err.message ? err.message : err);
+    } finally { btn.disabled = false; }
+  }
+  $("igBulkBtn").addEventListener("click", () => bulk(null, $("igBulkBtn"), $("igBulkInfo")));
+  // Zip jedného dňa (tlačidlo v prehľade po dňoch)
+  $("logDays").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-zip]"); if (!b) return;
+    bulk(b.dataset.zip, b, b.parentElement.querySelector(".zip-info"));
+  });
+
   $("igFmt").addEventListener("click", (e) => { const c = e.target.closest(".chip"); if (!c) return; st.fmt = c.dataset.f; setChips("igFmt", "f", st.fmt); render(); });
   $("igMode").addEventListener("click", (e) => { const c = e.target.closest(".chip"); if (!c || c.disabled) return; st.mode = c.dataset.m; setChips("igMode", "m", st.mode); render(); });
   $("igHandle").addEventListener("change", () => { try { localStorage.setItem(HANDLE_KEY, $("igHandle").value.trim()); } catch (e) { /* bez úložiska */ } render(); });
