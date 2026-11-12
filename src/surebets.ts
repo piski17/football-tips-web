@@ -363,6 +363,50 @@ export async function surebetLog(): Promise<SurebetLogEntry[]> {
   return out;
 }
 
+// ---------- Výsledok zápasu (pre obrázok „Settled“ na Instagram, 12. 11. 2026) ----------
+
+export interface FixtureResult {
+  status: string;
+  finished: boolean;
+  goals: { home: number | null; away: number | null };
+  halftime: { home: number | null; away: number | null };
+  corners: { home: number | null; away: number | null };
+  cards: { home: number | null; away: number | null };
+}
+const resultCache = new Map<number, { at: number; r: FixtureResult }>();
+/** Skóre + rohy a karty zápasu z API-Football (1 požiadavka, odohrané zápasy sa pamätajú). */
+export async function fixtureResult(id: number): Promise<FixtureResult> {
+  const c = resultCache.get(id);
+  if (c && (c.r.finished || Date.now() - c.at < 10 * 60 * 1000)) return c.r;
+  const res = await api().get("/fixtures", { params: { id } });
+  const err = apiErrors(res.data);
+  if (err) throw new Error(err);
+  const f = res.data?.response?.[0];
+  if (!f) throw new Error("Zápas sa nenašiel.");
+  const status = String(f?.fixture?.status?.short ?? "");
+  const n = (v: any) => (v === null || v === undefined || v === "" ? null : Number(String(v).replace("%", "")) || 0);
+  const stat = (side: number, type: string) => {
+    const list = f?.statistics?.[side]?.statistics;
+    if (!Array.isArray(list)) return null;
+    const row = list.find((x: any) => String(x?.type).toLowerCase() === type.toLowerCase());
+    return row ? n(row.value) ?? 0 : null;
+  };
+  const cards = (side: number) => {
+    const y = stat(side, "Yellow Cards"), r = stat(side, "Red Cards");
+    return y === null && r === null ? null : (y ?? 0) + (r ?? 0);
+  };
+  const r: FixtureResult = {
+    status,
+    finished: ["FT", "AET", "PEN"].includes(status),
+    goals: { home: n(f?.score?.fulltime?.home ?? f?.goals?.home), away: n(f?.score?.fulltime?.away ?? f?.goals?.away) },
+    halftime: { home: n(f?.score?.halftime?.home), away: n(f?.score?.halftime?.away) },
+    corners: { home: stat(0, "Corner Kicks"), away: stat(1, "Corner Kicks") },
+    cards: { home: cards(0), away: cards(1) },
+  };
+  resultCache.set(id, { at: Date.now(), r });
+  return r;
+}
+
 export function surebetStatus() {
   return {
     at: lastScan?.at ?? null,
