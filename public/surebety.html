@@ -180,7 +180,7 @@ details p, details li { color: var(--muted); font-size: 14px; }
 
   <!-- SKÚŠKA -->
   <section class="panel">
-    <div class="head"><div><h2>Skúška – prehľad</h2><div class="muted small">Server každú hodinu prehľadá dnešné zápasy 18 súťaží TipRadaru a zapíše každý surebet; tu sa ukazujú a vyhodnocujú len tie so ziskom aspoň 3 % (bez podozrivých nad 8 %). Kliknutím na deň uvidíte, ktoré surebety to boli.</div></div></div>
+    <div class="head"><div><h2>Skúška – prehľad</h2><div class="muted small">Server každú hodinu prehľadá dnešné zápasy 18 súťaží TipRadaru a zapíše každý surebet; tu sa ukazujú a vyhodnocujú len tie so ziskom aspoň 5 % (bez podozrivých nad 8 %). Kliknutím na deň uvidíte, ktoré surebety to boli.</div></div></div>
     <div class="chips" id="logScope" style="margin-bottom:12px">
       <button type="button" class="chip on" data-s="top">Známe zahraničné stávkovky</button>
       <button type="button" class="chip" data-s="all">Všetky stávkovky</button>
@@ -406,8 +406,8 @@ $("scopeChips").addEventListener("click", (e) => {
 
 // ---------- Skúška – prehľad ----------
 let logScope = "top";
-/** 12. 11. 2026 (Michal): ukazovať a vyhodnocovať len surebety so ziskom od 3 %. Server zapisuje všetky, filter je len tu. */
-const ARB_MIN = 0.03;
+/** 12. 11. 2026 (Michal): ukazovať a vyhodnocovať len surebety so ziskom od 5 % (pôvodne 3 %, Michal 13. 11. zvýšil na 5 %). Server zapisuje všetky, filter je len tu. */
+const ARB_MIN = 0.05;
 /** 12. 11. 2026 (Michal): z jedného TYPU v zápase len jeden surebet s najvyšším ziskom – karty (celkovo, tímu, polčas) spolu, rohy spolu, góly spolu; karty a rohy toho istého zápasu môžu ostať. */
 const sbType = (market) => String(market || "").trim().split(/\s+/)[0].toLowerCase();
 function dedupeSame(list, mk) {
