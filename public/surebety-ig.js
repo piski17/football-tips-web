@@ -109,13 +109,16 @@
   }
   function header(ctx, W, y, tag, tagColor) {
     const X = 72;
-    // Znak: kruh radaru
-    ctx.strokeStyle = C.stone; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.arc(X + 18, y - 12, 18, 0, Math.PI * 2); ctx.stroke();
-    ctx.beginPath(); ctx.arc(X + 18, y - 12, 8, 0, Math.PI * 2); ctx.stroke();
-    ctx.fillStyle = C.stone; ctx.beginPath(); ctx.arc(X + 18, y - 12, 3, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = C.text; ctx.font = font(800, 34, H_FONT); ctx.textBaseline = "alphabetic";
-    spaced(ctx, "TIPRADAR", X + 50, y, 5);
+    // Značka ARBREX (12. 11. 2026, Michal) – znak koruna („rex“ = kráľ), pod názvom „SUREBETS“
+    const cx0 = X, cy0 = y - 30;
+    ctx.fillStyle = C.stone; ctx.beginPath();
+    ctx.moveTo(cx0, cy0 + 30); ctx.lineTo(cx0 + 2, cy0 + 4); ctx.lineTo(cx0 + 11, cy0 + 15); ctx.lineTo(cx0 + 19, cy0 - 2);
+    ctx.lineTo(cx0 + 27, cy0 + 15); ctx.lineTo(cx0 + 36, cy0 + 4); ctx.lineTo(cx0 + 38, cy0 + 30); ctx.closePath(); ctx.fill();
+    ctx.fillRect(cx0, cy0 + 34, 38, 5);
+    ctx.fillStyle = C.text; ctx.font = font(800, 40, H_FONT); ctx.textBaseline = "alphabetic";
+    spaced(ctx, "ARBREX", X + 54, y + 2, 6);
+    ctx.fillStyle = C.muted; ctx.font = font(700, 14, B_FONT);
+    spaced(ctx, "SUREBETS", X + 56, y + 24, 5);
     // Štítok vpravo
     ctx.font = font(800, 24, B_FONT);
     const tw = ctx.measureText(tag).width + tag.length * 3 + 44;
@@ -369,7 +372,7 @@
     lines.push(settled ? "Two bets, two bookmakers – profit whatever the result. 📈" : "⚠️ Odds move fast – check both odds before you place the bets.");
     lines.push("18+ · Bet responsibly.");
     lines.push("");
-    lines.push(`#surebet #arbitragebetting #sportsbetting #football ${tag(s.league)}`);
+    lines.push(`#arbrex #surebet #arbitragebetting #sportsbetting #football ${tag(s.league)}`);
     return lines.join("\n");
   }
   function dayCaption(day, list) {
@@ -379,13 +382,13 @@
     const lines = [`📅 SUREBETS OF THE DAY – ${dayEn(day)}`, "", `🔒 Surebets: ${n}`, `📈 Average profit: +${n2(avg * 100)}%`, `💰 €100 on each: +€${n2(avg * 100 * n)}`, ""];
     for (const e of list.slice(0, 15)) lines.push(`✅ ${e.home} – ${e.away} · ${market(e.market)} · +${n2(e.maxMargin * 100)}%`);
     if (n > 15) lines.push(`… and ${n - 15} more`);
-    lines.push("", "Two bets, two bookmakers – profit whatever the result.", "18+ · Bet responsibly.", "", "#surebet #arbitragebetting #sportsbetting #football");
+    lines.push("", "Two bets, two bookmakers – profit whatever the result.", "18+ · Bet responsibly.", "", "#arbrex #surebet #arbitragebetting #sportsbetting #football");
     return lines.join("\n");
   }
 
   // ---------- Okno ----------
   const st = { kind: "sb", s: null, day: null, list: null, fmt: "post", mode: "pre", result: null, cv: null };
-  const HANDLE_KEY = "tipradar_ig_handle";
+  const HANDLE_KEY = "arbrex_ig_handle";
   try { const h = localStorage.getItem(HANDLE_KEY); if (h) document.getElementById("igHandle").value = h; } catch (e) { /* bez úložiska */ }
   const $ = (id) => document.getElementById(id);
   let fontsReady = null;
