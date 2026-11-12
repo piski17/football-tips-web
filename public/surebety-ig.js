@@ -369,11 +369,10 @@
       if (combos.length > 8) lines.push(` • … and ${combos.length - 8} more`);
     }
     lines.push("");
-    if (!settled) lines.push("⚠️ Odds move fast – check both odds before you place the bets.");
     lines.push("👑 ARBREX – Profit. Whatever the score.");
     lines.push("18+ · Bet responsibly.");
     lines.push("");
-    lines.push(`#arbrex #surebet #arbitragebetting #sportsbetting #football ${tag(s.league)}`);
+    lines.push(`#arbrex #football ${tag(s.league)}`);
     return lines.join("\n");
   }
   function dayCaption(day, list) {
@@ -383,7 +382,7 @@
     const lines = [`📅 SUREBETS OF THE DAY – ${dayEn(day)}`, "", `🔒 Surebets: ${n}`, `📈 Average profit: +${n2(avg * 100)}%`, `💰 €100 on each: +€${n2(avg * 100 * n)}`, ""];
     for (const e of list.slice(0, 15)) lines.push(`✅ ${e.home} – ${e.away} · ${market(e.market)} · +${n2(e.maxMargin * 100)}%`);
     if (n > 15) lines.push(`… and ${n - 15} more`);
-    lines.push("", "👑 ARBREX – Profit. Whatever the score.", "18+ · Bet responsibly.", "", "#arbrex #surebet #arbitragebetting #sportsbetting #football");
+    lines.push("", "👑 ARBREX – Profit. Whatever the score.", "18+ · Bet responsibly.", "", "#arbrex #football");
     return lines.join("\n");
   }
 
