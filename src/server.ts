@@ -354,7 +354,7 @@ async function termSeats(): Promise<TermSeats> {
 }
 /** Riadok pod tipom v bezplatnom kanáli (členstvá sú bez obmedzenia miest). */
 async function freeSeatsLine(): Promise<string | undefined> {
-  return `🎯 Členstvo: VIP Klub na mieru · od 50 tipov za 35 € · 🛡 v mínuse = mesiac zadarmo`;
+  return `🎯 Členstvo: VIP Klub na mieru · od 50 tipov za 49 € · 🛡 v mínuse = mesiac zadarmo`;
 }
 /** Vracanie peňazí po prvých 20 tipoch (zrušené 2. 11. 2026). */
 const REFUND_ON = false;

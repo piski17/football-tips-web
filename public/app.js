@@ -3977,7 +3977,7 @@ const subscribersListEl = document.getElementById("subscribersList");
 const subTipsInput = document.getElementById("subTips");
 // 11. 11. 2026 (Michal): členstvo na mieru – od 50 tipov, cena 0,75 € za tip (dá sa prepísať).
 const MEMBER_MIN_TIPS = 50;
-const MEMBER_TIP_PRICE = 0.7; // 11. 11. 2026 19:26 Michal: 50 tipov od 35 €
+const MEMBER_TIP_PRICE = 0.98; // 12. 11. 2026 Michal: 50 tipov za 49 €
 const memberPriceFor = (tips) => Math.round(tips * MEMBER_TIP_PRICE);
 const subTipsValue = () => Math.max(MEMBER_MIN_TIPS, Math.round(Number(subTipsInput.value) || 100));
 const subPriceInput = document.getElementById("subPrice");
@@ -4431,7 +4431,7 @@ async function loadCoopLinks() {
 document.getElementById("coopCreateBtn").addEventListener("click", async (e) => {
   const name = document.getElementById("coopName").value.trim();
   if (!name) { showToast("Zadaj meno klienta."); document.getElementById("coopName").focus(); return; }
-  const perTip = Number(String(document.getElementById("coopPerTip").value).replace(",", ".")) || 0.7;
+  const perTip = Number(String(document.getElementById("coopPerTip").value).replace(",", ".")) || MEMBER_TIP_PRICE;
   e.currentTarget.disabled = true;
   try {
     const l = await postJson("/api/coop-links", { name, perTip });

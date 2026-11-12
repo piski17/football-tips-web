@@ -7,7 +7,7 @@ import { getMeta, setMeta } from "./metaStore";
 // Michalovi príde upozornenie na Telegram a v appke (Spolupráca → Odkazy pre klientov).
 
 export const COOP_MIN_TIPS = 50;
-export const COOP_TIP_PRICE = 0.7; // 50 tipov od 35 € (Michal 11. 11. 2026 19:26)
+export const COOP_TIP_PRICE = 0.98; // 50 tipov za 49 € (Michal 12. 11. 2026)
 export const COOP_OPTIONS = [50, 100, 150, 200, 300];
 
 export interface CoopChoice {

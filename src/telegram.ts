@@ -414,8 +414,8 @@ const eur2 = (n: number) => n.toFixed(2).replace(".", ",");
 const TIER_ICON: Record<SellableTerm, string> = { p100: "⭐" };
 /** Riadok cenníka: „⭐ VIP Klub · 100 tipov – 75 € (0,75 € za tip)“. */
 function priceLine(t: SellableTerm): string {
-  // 11. 11. 2026 (Michal): členstvo na mieru – dĺžku si s každým členom nastavíme osobne, od 50 tipov, 0,70 € za tip (50 tipov od 35 €).
-  return `${TIER_ICON[t]} VIP Klub · na mieru, od 50 tipov – 0,70 € za tip (50 tipov 35 €, 100 tipov 70 €)`;
+  // 11. 11. 2026 (Michal): členstvo na mieru – dĺžku si s každým členom nastavíme osobne, od 50 tipov, 0,98 € za tip (12. 11.: 50 tipov za 49 €).
+  return `${TIER_ICON[t]} VIP Klub · na mieru, od 50 tipov – 0,98 € za tip (50 tipov 49 €, 100 tipov 98 €)`;
 }
 /** Text zvoleného členstva (cena, odporúčaný bank a vklad, čo dostane). */
 function planText(t: SellableTerm): string {
