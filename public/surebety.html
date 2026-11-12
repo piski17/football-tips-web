@@ -180,7 +180,7 @@ details p, details li { color: var(--muted); font-size: 14px; }
 
   <!-- SKÚŠKA -->
   <section class="panel">
-    <div class="head"><div><h2>Skúška – prehľad</h2><div class="muted small">Server každú hodinu prehľadá dnešné zápasy 18 súťaží TipRadaru a zapíše každý surebet so ziskom aspoň 0,5 % (bez podozrivých nad 8 %). Kliknutím na deň uvidíte, ktoré surebety to boli.</div></div></div>
+    <div class="head"><div><h2>Skúška – prehľad</h2><div class="muted small">Server každú hodinu prehľadá dnešné zápasy 18 súťaží TipRadaru a zapíše každý surebet; tu sa ukazujú a vyhodnocujú len tie so ziskom aspoň 3 % (bez podozrivých nad 8 %). Kliknutím na deň uvidíte, ktoré surebety to boli.</div></div></div>
     <div class="chips" id="logScope" style="margin-bottom:12px">
       <button type="button" class="chip on" data-s="top">Známe zahraničné stávkovky</button>
       <button type="button" class="chip" data-s="all">Všetky stávkovky</button>
@@ -382,7 +382,7 @@ async function load() {
       : "Server ešte neprehľadával (prvýkrát minútu po spustení, potom každú hodinu).";
     const tb = st.topBooks || [];
     $("topInfo").textContent = tb.length ? "Známe zahraničné stávkovky v kurzoch: " + tb.join(", ") + ". Pri každom surebete sú aj ďalšie dvojice stávkoviek, v ktorých platí ten istý surebet." : "";
-    renderList(j.surebets);
+    renderList((j.surebets || []).filter((x) => x.margin >= ARB_MIN));
     renderBooks();
   } catch (err) { $("scanInfo").textContent = err.message; }
 }
@@ -406,6 +406,8 @@ $("scopeChips").addEventListener("click", (e) => {
 
 // ---------- Skúška – prehľad ----------
 let logScope = "top";
+/** 12. 11. 2026 (Michal): ukazovať a vyhodnocovať len surebety so ziskom od 3 %. Server zapisuje všetky, filter je len tu. */
+const ARB_MIN = 0.03;
 let logEntries = [];
 let topBooksAll = [];
 const normBook = (b) => String(b).toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -452,7 +454,7 @@ function renderLog() {
   }).join("") : `<p class="empty">${logScope === "mine" && myBooks.length < 2 ? "Vyberte aspoň 2 svoje stávkovky – evidencia začne od ďalšieho prehľadania." : "Zatiaľ nič zapísané."}</p>`;
 }
 async function loadLog() {
-  try { const j = await api("/api/surebets/log"); logEntries = j.entries || []; topBooksAll = j.topBooks || []; renderLog(); } catch (err) { $("logDays").innerHTML = `<p class="empty">${esc(err.message)}</p>`; }
+  try { const j = await api("/api/surebets/log"); logEntries = (j.entries || []).filter((x) => x.maxMargin >= ARB_MIN); topBooksAll = j.topBooks || []; renderLog(); } catch (err) { $("logDays").innerHTML = `<p class="empty">${esc(err.message)}</p>`; }
 }
 $("logDays").addEventListener("click", (e) => {
   const ig = e.target.closest("button[data-igk]");
