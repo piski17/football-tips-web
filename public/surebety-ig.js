@@ -319,6 +319,55 @@
     return cv;
   }
 
+  // ---------- Text k príspevku (ako správa s tipom na Telegrame, po anglicky) ----------
+  const tag = (t) => "#" + String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/gi, "").toLowerCase();
+  function caption(s, result) {
+    const settled = !!result;
+    const win = settled ? winner(s, result) : null;
+    const sum = 1 / s.sides[0].odd + 1 / s.sides[1].odd;
+    const profit = 100 * s.margin;
+    const score = settled && result.goals.home !== null ? ` · FT ${result.goals.home}:${result.goals.away}` : "";
+    const lines = [];
+    lines.push(settled ? "✅ SUREBET SETTLED" : "🔒 NEW SUREBET");
+    lines.push("");
+    lines.push(`⚽ ${s.home} – ${s.away}${score}`);
+    lines.push(`🏆 ${league(s)}`);
+    if (!settled) lines.push(`🕒 ${kickoff(s.date)}`);
+    lines.push(`📊 ${market(s.market)}`);
+    lines.push("");
+    s.sides.forEach((sd, k) => {
+      const stake = (100 * (1 / sd.odd)) / sum;
+      const icon = !settled || win === null ? (k === 0 ? "1️⃣" : "2️⃣") : win === -1 ? "↩️" : win === k ? "✅" : "❌";
+      const res = !settled || win === null ? "" : win === -1 ? " · void" : win === k ? " · WON" : " · lost";
+      lines.push(`${icon} ${label(sd.label)} @ ${n2(sd.odd)} – ${sd.book} · stake €${n2(stake)}${res}`);
+    });
+    lines.push("");
+    if (settled) lines.push(win === -1 ? "💰 Draw – both stakes refunded, no loss." : `💰 Profit locked in: +€${n2(profit)} on €100 (+${n2(profit)}%)`);
+    else lines.push(`💰 Guaranteed profit: +${n2(profit)}% (€${n2(profit)} on every €100), whatever the score`);
+    const alts = s.alts || [[], []];
+    if (alts[0].length || alts[1].length) {
+      lines.push("");
+      lines.push(settled ? "🔁 The same surebet also worked at:" : "🔁 Same surebet also at:");
+      s.sides.forEach((sd, k) => { if (alts[k].length) lines.push(` • ${label(sd.label)}: ${alts[k].map((o) => `${o.book} ${n2(o.odd)}`).join(", ")}`); });
+    }
+    lines.push("");
+    lines.push(settled ? "Two bets, two bookmakers – profit whatever the result. 📈" : "⚠️ Odds move fast – check both odds before you place the bets.");
+    lines.push("18+ · Bet responsibly.");
+    lines.push("");
+    lines.push(`#surebet #arbitragebetting #sportsbetting #football ${tag(s.league)}`);
+    return lines.join("\n");
+  }
+  function dayCaption(day, list) {
+    list = [...list].sort((a, b) => b.maxMargin - a.maxMargin);
+    const n = list.length;
+    const avg = n ? list.reduce((t, e) => t + e.maxMargin, 0) / n : 0;
+    const lines = [`📅 SUREBETS OF THE DAY – ${dayEn(day)}`, "", `🔒 Surebets: ${n}`, `📈 Average profit: +${n2(avg * 100)}%`, `💰 €100 on each: +€${n2(avg * 100 * n)}`, ""];
+    for (const e of list.slice(0, 15)) lines.push(`✅ ${e.home} – ${e.away} · ${market(e.market)} · +${n2(e.maxMargin * 100)}%`);
+    if (n > 15) lines.push(`… and ${n - 15} more`);
+    lines.push("", "Two bets, two bookmakers – profit whatever the result.", "18+ · Bet responsibly.", "", "#surebet #arbitragebetting #sportsbetting #football");
+    return lines.join("\n");
+  }
+
   // ---------- Okno ----------
   const st = { kind: "sb", s: null, day: null, list: null, fmt: "post", mode: "pre", result: null, cv: null };
   const HANDLE_KEY = "tipradar_ig_handle";
@@ -336,6 +385,7 @@
     const handle = $("igHandle").value.trim();
     st.cv = st.kind === "day" ? drawDay(st.day, st.list, st.fmt, handle) : drawSurebet(st.s, st.fmt, st.mode === "settled" ? st.result : null, handle);
     $("igImg").src = st.cv.toDataURL("image/png");
+    $("igText").value = st.kind === "day" ? dayCaption(st.day, st.list) : caption(st.s, st.mode === "settled" ? st.result : null);
   }
   function fileName() {
     const slug = (t) => String(t).normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase();
@@ -417,12 +467,14 @@
         const name = `${d}-${slugT(e.home)}-${slugT(e.away)}-${slugT(market(e.market))}-${slugT(label(e.sides[0].label))}`;
         zip.file(`posts/${name}.png`, await cvBlob(drawSurebet(s, "post", res, handle)));
         zip.file(`stories/${name}.png`, await cvBlob(drawSurebet(s, "story", res, handle)));
+        zip.file(`texts/${name}.txt`, caption(s, res));
         n++;
         if (n % 5 === 0) info.textContent = `Kreslím obrázky… ${n} / ${played.length}`;
       }
       for (const [d, list] of Object.entries(days)) {
         zip.file(`daily-summary/${d}-post.png`, await cvBlob(drawDay(d, list, "post", handle)));
         zip.file(`daily-summary/${d}-story.png`, await cvBlob(drawDay(d, list, "story", handle)));
+        zip.file(`daily-summary/${d}-text.txt`, dayCaption(d, list));
       }
       info.textContent = "Balím zip…";
       const blobZip = await zip.generateAsync({ type: "blob" });
@@ -446,6 +498,11 @@
   $("igMode").addEventListener("click", (e) => { const c = e.target.closest(".chip"); if (!c || c.disabled) return; st.mode = c.dataset.m; setChips("igMode", "m", st.mode); render(); });
   $("igHandle").addEventListener("change", () => { try { localStorage.setItem(HANDLE_KEY, $("igHandle").value.trim()); } catch (e) { /* bez úložiska */ } render(); });
   $("igClose").addEventListener("click", close);
+  $("igCopy").addEventListener("click", async () => {
+    const t = $("igText").value;
+    try { await navigator.clipboard.writeText(t); } catch (e) { $("igText").select(); document.execCommand("copy"); }
+    $("igCopy").textContent = "Skopírované ✓"; setTimeout(() => { $("igCopy").textContent = "Kopírovať text"; }, 1800);
+  });
   $("igModal").addEventListener("click", (e) => { if (e.target === $("igModal")) close(); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
   $("igDown").addEventListener("click", async () => {
