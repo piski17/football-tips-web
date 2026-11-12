@@ -153,11 +153,21 @@
     const home = s.home, away = s.away;
     const tsz = Math.min(fit(ctx, home, 800, story ? 84 : 70, IW, H_FONT), fit(ctx, away, 800, story ? 84 : 70, IW, H_FONT));
     ctx.font = font(800, tsz, H_FONT); ctx.fillStyle = C.text; ctx.fillText(home, X, y);
-    y += tsz * 0.82;
-    ctx.font = font(600, 30, B_FONT); ctx.fillStyle = C.stone; ctx.fillText("vs", X, y);
-    y += tsz * 1.0;
-    ctx.font = font(800, tsz, H_FONT); ctx.fillStyle = C.text; ctx.fillText(away, X, y);
-    y += story ? 70 : 58;
+    if (story) {
+      y += tsz * 0.82;
+      ctx.font = font(600, 30, B_FONT); ctx.fillStyle = C.stone; ctx.fillText("vs", X, y);
+      y += tsz * 1.0;
+      ctx.font = font(800, tsz, H_FONT); ctx.fillStyle = C.text; ctx.fillText(away, X, y);
+      y += 70;
+    } else {
+      // Príspevok: „vs Hostia“ v druhom riadku – viac miesta na ďalšie dvojice stávkoviek
+      y += tsz * 1.05;
+      ctx.font = font(600, 30, B_FONT); ctx.fillStyle = C.stone; ctx.fillText("vs", X, y);
+      const vw = ctx.measureText("vs  ").width;
+      const asz = Math.min(tsz, fit(ctx, away, 800, tsz, IW - vw, H_FONT));
+      ctx.font = font(800, asz, H_FONT); ctx.fillStyle = C.text; ctx.fillText(away, X + vw, y);
+      y += 58;
+    }
     // Čas alebo skóre
     ctx.font = font(600, 28, B_FONT);
     if (settled && result.goals.home !== null) {
@@ -180,7 +190,7 @@
 
     // Dve stávky
     const sum = 1 / s.sides[0].odd + 1 / s.sides[1].odd;
-    const gap = 24, cw = (IW - gap) / 2, ch = story ? 380 : 296;
+    const gap = 24, cw = (IW - gap) / 2, ch = story ? 340 : 274;
     s.sides.forEach((sd, k) => {
       const cx = X + k * (cw + gap);
       const won = win === k, lost = win !== null && win !== -1 && win !== k;
@@ -188,84 +198,88 @@
       ctx.fillStyle = won ? C.goodBg : C.card; ctx.fill();
       ctx.strokeStyle = won ? C.good : C.line; ctx.lineWidth = won ? 4 : 2; ctx.stroke();
       ctx.globalAlpha = lost ? 0.45 : 1;
-      let iy = y + (story ? 62 : 56);
+      let iy = y + (story ? 58 : 50);
       ctx.fillStyle = C.muted; ctx.font = font(700, 22, B_FONT); spaced(ctx, ("BET " + (k + 1)).toUpperCase(), cx + 30, iy, 3);
       if (won || lost || win === -1) {
         const t = won ? "WON ✓" : lost ? "LOST" : "VOID";
         ctx.font = font(800, 22, B_FONT); ctx.fillStyle = won ? C.good : C.muted; ctx.textAlign = "right"; ctx.fillText(t, cx + cw - 30, iy); ctx.textAlign = "left";
       }
-      iy += story ? 58 : 52;
+      iy += story ? 54 : 48;
       const lb = label(sd.label);
       const lsz = fit(ctx, lb, 800, 44, cw - 60, H_FONT, 26);
       ctx.font = font(800, lsz, H_FONT); ctx.fillStyle = C.text; ctx.fillText(lb, cx + 30, iy);
-      iy += story ? 108 : 90;
-      ctx.font = font(800, story ? 104 : 96, H_FONT); ctx.fillStyle = won ? C.good : C.stone; ctx.fillText(n2(sd.odd), cx + 28, iy);
-      iy += story ? 52 : 46;
+      iy += story ? 96 : 78;
+      ctx.font = font(800, story ? 96 : 80, H_FONT); ctx.fillStyle = won ? C.good : C.stone; ctx.fillText(n2(sd.odd), cx + 28, iy);
+      iy += story ? 50 : 42;
       ctx.font = font(700, 28, B_FONT); ctx.fillStyle = C.text;
       const bk = "at " + sd.book; fit(ctx, bk, 700, 28, cw - 60, B_FONT, 18); ctx.fillText(bk, cx + 30, iy);
-      iy += story ? 52 : 40;
+      iy += story ? 46 : 36;
       const stake = (100 * (1 / sd.odd)) / sum;
       ctx.font = font(600, 24, B_FONT); ctx.fillStyle = C.muted; ctx.fillText(`Stake €${n2(stake)} of €100`, cx + 30, iy);
       ctx.globalAlpha = 1;
     });
-    y += ch + (story ? 70 : 50);
+    y += ch + (story ? 64 : 46);
 
-    // Ďalšie stávkovky s tým istým surebetom
-    const alts = s.alts || [[], []];
-    if (alts[0].length || alts[1].length) {
+    // Ďalšie dvojice stávkoviek s tým istým surebetom (12. 11. 2026, Michal: v ktorej stávkovke a za aký kurz stranu 1, v ktorej stranu 2)
+    const footY = story ? H - 160 : H - 60;
+    const bh = story ? 240 : 150;
+    const boxTop = footY - 46 - 36 - bh;
+    const combos = window.sbCombos ? window.sbCombos(s) : [];
+    if (combos.length) {
+      const rowH = story ? 46 : 34, headH = story ? 86 : 72;
+      const fitRows = Math.max(1, Math.floor((boxTop - 16 - y - headH) / rowH));
+      const more = combos.length > fitRows;
+      const rows = combos.slice(0, more ? Math.max(1, fitRows - 1) : fitRows);
       ctx.font = font(700, 22, B_FONT); ctx.fillStyle = C.stone;
-      spaced(ctx, "SAME SUREBET ALSO AT", X, y, 2.5);
-      y += story ? 40 : 36;
-      ctx.font = font(500, 24, B_FONT);
-      const lines = story ? 2 : 1;
-      s.sides.forEach((sd, k) => {
-        if (!alts[k].length) return;
-        const pre = label(sd.label) + ":  ";
-        let txt = alts[k].map((o) => `${o.book} ${n2(o.odd)}`).join("  ·  ");
-        ctx.fillStyle = C.text; ctx.font = font(700, 24, B_FONT); ctx.fillText(pre, X, y);
-        const pw = ctx.measureText(pre).width;
-        ctx.font = font(500, 24, B_FONT); ctx.fillStyle = C.muted;
-        // Skrátiť, nech sa zmestí do riadku(ov)
-        const items = alts[k].map((o) => `${o.book} ${n2(o.odd)}`);
-        let shown = items.length;
-        while (shown > 1 && ctx.measureText(items.slice(0, shown).join("  ·  ") + (shown < items.length ? `  +${items.length - shown}` : "")).width > (IW - pw) * lines * 0.98) shown--;
-        txt = items.slice(0, shown).join("  ·  ") + (shown < items.length ? `  +${items.length - shown} more` : "");
-        if (lines === 2 && ctx.measureText(txt).width > IW - pw) {
-          // zalomenie na 2 riadky
-          let cut = shown; while (cut > 1 && ctx.measureText(items.slice(0, cut).join("  ·  ")).width > IW - pw) cut--;
-          ctx.fillText(items.slice(0, cut).join("  ·  "), X + pw, y); y += 34;
-          ctx.fillText(items.slice(cut, shown).join("  ·  ") + (shown < items.length ? `  +${items.length - shown} more` : ""), X + pw, y);
-        } else ctx.fillText(txt, X + pw, y);
-        y += story ? 38 : 34;
-      });
-      y += story ? 24 : 6;
+      spaced(ctx, "THE SAME SUREBET ALSO WORKS HERE", X, y, 2.5);
+      y += story ? 46 : 40;
+      const c2 = X + IW * 0.43;
+      ctx.font = font(700, 20, B_FONT); ctx.fillStyle = C.faint;
+      spaced(ctx, label(s.sides[0].label).toUpperCase(), X, y, 2);
+      spaced(ctx, label(s.sides[1].label).toUpperCase(), c2, y, 2);
+      spaced(ctx, "PROFIT", X + IW, y, 2, "right");
+      y += story ? 40 : 34;
+      const cell = (o, x, maxW) => {
+        ctx.font = font(700, story ? 28 : 24, B_FONT); ctx.fillStyle = C.text;
+        let bk = o.book;
+        while (ctx.measureText(bk + "  " + n2(o.odd)).width > maxW && bk.length > 4) bk = bk.slice(0, -2) + "…";
+        ctx.fillText(bk, x, y);
+        const w = ctx.measureText(bk + "  ").width;
+        ctx.font = font(800, story ? 28 : 24, H_FONT); ctx.fillStyle = C.stone; ctx.fillText(n2(o.odd), x + w, y);
+      };
+      for (const p of rows) {
+        cell(p.a, X, IW * 0.41);
+        cell(p.b, c2, IW * 0.38);
+        ctx.font = font(800, story ? 30 : 26, H_FONT); ctx.fillStyle = C.good; ctx.textAlign = "right";
+        ctx.fillText(`+${n2(p.margin * 100)}%`, X + IW, y); ctx.textAlign = "left";
+        y += rowH;
+      }
+      if (more) { ctx.font = font(600, 22, B_FONT); ctx.fillStyle = C.muted; ctx.fillText(`+ ${combos.length - rows.length} more combinations`, X, y); y += rowH; }
     }
 
     // Zisk
-    const footY = story ? H - 190 : H - 60;
-    const bh = story ? 260 : 176;
-    const by = Math.max(y + 4, footY - 46 - 36 - bh);
+    const by = Math.max(y + 4, boxTop);
     rr(ctx, X, by, IW, bh, 30);
     const gg = ctx.createLinearGradient(X, by, X + IW, by + bh);
     gg.addColorStop(0, "rgba(127,200,160,.20)"); gg.addColorStop(1, "rgba(127,200,160,.06)");
     ctx.fillStyle = gg; ctx.fill(); ctx.strokeStyle = "rgba(127,200,160,.55)"; ctx.lineWidth = 2; ctx.stroke();
     const profit = 100 * s.margin;
     ctx.fillStyle = C.good; ctx.font = font(800, 24, B_FONT);
-    spaced(ctx, settled ? (win === -1 ? "BOTH STAKES RETURNED" : "PROFIT LOCKED IN") : "GUARANTEED PROFIT", X + 40, by + (story ? 66 : 52), 3);
-    ctx.font = font(800, story ? 124 : 88, H_FONT);
+    spaced(ctx, settled ? (win === -1 ? "BOTH STAKES RETURNED" : "PROFIT LOCKED IN") : "GUARANTEED PROFIT", X + 40, by + (story ? 62 : 46), 3);
+    ctx.font = font(800, story ? 116 : 76, H_FONT);
     const big = settled && win !== -1 ? `+€${n2(profit)}` : win === -1 ? "€0.00" : `+${n2(profit)}%`;
-    ctx.fillText(big, X + 36, by + (story ? 182 : 136));
+    ctx.fillText(big, X + 36, by + (story ? 168 : 118));
     const bw = ctx.measureText(big).width;
     ctx.font = font(600, story ? 28 : 24, B_FONT); ctx.fillStyle = C.text;
     const sub1 = settled ? (win === -1 ? "Draw – no bet: both stakes refunded" : `+${n2(profit)}% on €100 staked`) : `€${n2(profit)} on every €100 staked`;
     const sub2 = settled ? (win === -1 ? "No loss, no risk" : "Whatever the score") : "Whatever the score";
     if (story) {
-      ctx.fillText(sub1, X + 40, by + 228);
-      ctx.fillStyle = C.muted; ctx.textAlign = "right"; ctx.fillText(sub2, X + IW - 40, by + 228); ctx.textAlign = "left";
+      ctx.fillText(sub1, X + 40, by + 212);
+      ctx.fillStyle = C.muted; ctx.textAlign = "right"; ctx.fillText(sub2, X + IW - 40, by + 212); ctx.textAlign = "left";
     } else {
       const tx = X + 36 + bw + 34;
-      ctx.fillText(sub1, tx, by + 102);
-      ctx.fillStyle = C.muted; ctx.fillText(sub2, tx, by + 138);
+      ctx.fillText(sub1, tx, by + 86);
+      ctx.fillStyle = C.muted; ctx.fillText(sub2, tx, by + 120);
     }
     footer(ctx, W, footY, handle);
     return cv;
@@ -344,11 +358,12 @@
     lines.push("");
     if (settled) lines.push(win === -1 ? "💰 Draw – both stakes refunded, no loss." : `💰 Profit locked in: +€${n2(profit)} on €100 (+${n2(profit)}%)`);
     else lines.push(`💰 Guaranteed profit: +${n2(profit)}% (€${n2(profit)} on every €100), whatever the score`);
-    const alts = s.alts || [[], []];
-    if (alts[0].length || alts[1].length) {
+    const combos = window.sbCombos ? window.sbCombos(s) : [];
+    if (combos.length) {
       lines.push("");
-      lines.push(settled ? "🔁 The same surebet also worked at:" : "🔁 Same surebet also at:");
-      s.sides.forEach((sd, k) => { if (alts[k].length) lines.push(` • ${label(sd.label)}: ${alts[k].map((o) => `${o.book} ${n2(o.odd)}`).join(", ")}`); });
+      lines.push(settled ? "🔁 The same surebet also worked here:" : "🔁 The same surebet also works here:");
+      for (const p of combos.slice(0, 8)) lines.push(` • ${p.a.book}: ${label(s.sides[0].label)} @ ${n2(p.a.odd)} + ${p.b.book}: ${label(s.sides[1].label)} @ ${n2(p.b.odd)} → +${n2(p.margin * 100)}%`);
+      if (combos.length > 8) lines.push(` • … and ${combos.length - 8} more`);
     }
     lines.push("");
     lines.push(settled ? "Two bets, two bookmakers – profit whatever the result. 📈" : "⚠️ Odds move fast – check both odds before you place the bets.");

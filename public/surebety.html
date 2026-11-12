@@ -307,7 +307,8 @@ function renderList(list) {
     <div class="sb${s.suspicious ? " sus" : ""}">
       <div class="sb-top"><b>${esc(tnm(s.home))} – ${esc(tnm(s.away))}</b><span class="pct">+${eur(s.margin * 100)}<small>+${pc(s.margin)} · istý zisk pri vklade 100 €</small></span></div>
       <div class="muted small">${esc(s.league)}${s.country ? " (" + esc(s.country) + ")" : ""} · ${when(s.date)} · ${esc(s.market)}</div>
-      <div class="legs">${s.sides.map((x, k) => `<div class="leg">${esc(x.label)} · <b>${fmt(x.odd)}</b> <span class="muted">v ${esc(x.book)}</span>${altsHtml(s, k)}</div>`).join("")}</div>
+      <div class="legs">${s.sides.map((x) => `<div class="leg">${esc(x.label)} · <b>${fmt(x.odd)}</b> <span class="muted">v ${esc(x.book)}</span></div>`).join("")}</div>
+      ${combosHtml(s)}
       <div class="sb-foot">${s.suspicious ? '<span class="warn">Podozrivo vysoký zisk – takmer určite chyba v kurze.</span>' : /kart/i.test(s.market) ? '<span class="warn">Karty: overte, či obe stávkovky rátajú karty rovnako (červená = 1 alebo 2 karty).</span>' : "<span></span>"}<span class="btns"><button type="button" class="btn ghost" data-ig="${i}">Obrázok na IG</button> <button type="button" class="btn ghost" data-i="${i}">Do kalkulačky</button></span></div>
     </div>`;
   }).join("");
@@ -317,10 +318,26 @@ function renderList(list) {
     toCalc(list[Number(btn.dataset.i)]);
   };
 }
-function altsHtml(s, k) {
-  const a = s.alts && s.alts[k];
-  if (!a || !a.length) return "";
-  return `<span class="alts">Ten istý surebet aj v: ${a.map((o) => esc(o.book) + " " + fmt(o.odd)).join(", ")}</span>`;
+/**
+ * 12. 11. 2026 (Michal): ďalšie možnosti ako celé dvojice – v ktorej stávkovke a za aký kurz stranu 1, v ktorej stranu 2, zisk.
+ * Z uložených `alts` (ďalšie stávkovky na každú stranu) sa poskladajú všetky dvojice z 2 rôznych stávkoviek, ktoré sú stále surebet.
+ */
+function sbCombos(s) {
+  const a = s.alts || [[], []];
+  const A = [s.sides[0], ...a[0]], B = [s.sides[1], ...a[1]];
+  const out = [];
+  for (const x of A) for (const y of B) {
+    if (x.book === y.book || (x === s.sides[0] && y === s.sides[1])) continue;
+    const sum = 1 / x.odd + 1 / y.odd;
+    if (sum < 1) out.push({ a: { book: x.book, odd: x.odd }, b: { book: y.book, odd: y.odd }, margin: 1 / sum - 1 });
+  }
+  return out.sort((p, q) => q.margin - p.margin);
+}
+window.sbCombos = sbCombos;
+function combosHtml(s, max = 6) {
+  const c = sbCombos(s);
+  if (!c.length) return "";
+  return `<div class="alts" style="margin:0 0 8px">Ten istý surebet aj takto:${c.slice(0, max).map((p) => `<br>· ${esc(s.sides[0].label)} v <b>${esc(p.a.book)}</b> za ${fmt(p.a.odd)} + ${esc(s.sides[1].label)} v <b>${esc(p.b.book)}</b> za ${fmt(p.b.odd)} = <span style="color:var(--good)">+${pc(p.margin)}</span>`).join("")}${c.length > max ? `<br>· a ďalšie ${c.length - max}` : ""}</div>`;
 }
 function renderBooks() {
   if (!allBooks.length) return;
@@ -350,7 +367,7 @@ async function load() {
       ? `Naposledy ${new Date(st.at).toLocaleString("sk-SK", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "numeric" })} · ${st.fixtures} zápasov · ${allBooks.length} stávkoviek${st.error ? " · chyba: " + st.error : ""}`
       : "Server ešte neprehľadával (prvýkrát minútu po spustení, potom každú hodinu).";
     const tb = st.topBooks || [];
-    $("topInfo").textContent = tb.length ? "Známe zahraničné stávkovky v kurzoch: " + tb.join(", ") + ". Pri každom surebete sú aj ďalšie stávkovky, v ktorých platí ten istý surebet." : "";
+    $("topInfo").textContent = tb.length ? "Známe zahraničné stávkovky v kurzoch: " + tb.join(", ") + ". Pri každom surebete sú aj ďalšie dvojice stávkoviek, v ktorých platí ten istý surebet." : "";
     renderList(j.surebets);
     renderBooks();
   } catch (err) { $("scanInfo").textContent = err.message; }
@@ -409,7 +426,7 @@ function renderLog() {
       ${l.map((e) => `<div class="lrow" data-k="${esc(e.scope + "|" + e.key)}"><div class="t"><b>${esc(tnm(e.home))} – ${esc(tnm(e.away))}</b><span style="color:var(--good);white-space:nowrap">+${fmt(e.maxMargin * 100)} € zo 100 € · +${pc(e.maxMargin)}</span></div>
         <div class="muted small">${esc(e.league)} · ${new Date(e.date).toLocaleTimeString("sk-SK", { hour: "2-digit", minute: "2-digit" })} · ${esc(e.market)}</div>
         <div class="small">${e.sides.map((x) => `${esc(x.label)} <b style="color:var(--gold-hi)">${fmt(x.odd)}</b> <span class="muted">v ${esc(x.book)}</span>`).join(" &nbsp;·&nbsp; ")}</div>
-        ${e.alts && (e.alts[0].length || e.alts[1].length) ? `<div class="faint small">Aj v: ${e.sides.map((x, k) => e.alts[k].length ? esc(x.label) + " – " + e.alts[k].map((o) => esc(o.book) + " " + fmt(o.odd)).join(", ") : "").filter(Boolean).join(" · ")}</div>` : ""}
+        ${combosHtml(e, 4)}
         <div class="sb-foot" style="margin-top:4px"><span class="faint small">Videný ${e.seen}× · prvýkrát ${new Date(e.firstSeen).toLocaleString("sk-SK", { day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" })}, naposledy ${new Date(e.lastSeen).toLocaleString("sk-SK", { day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" })}</span><span class="btns"><button type="button" class="btn ghost" data-igk="${esc(e.scope + "|" + e.key)}">Obrázok na IG</button> <button type="button" class="btn ghost" data-k="${esc(e.scope + "|" + e.key)}">Do kalkulačky</button></span></div></div>`).join("")}
       <div class="lrow" style="display:flex;gap:8px;justify-content:flex-end;align-items:center;flex-wrap:wrap"><span class="muted small zip-info"></span><button type="button" class="btn ghost" data-day="${d}">Súhrn dňa na IG</button><button type="button" class="btn" data-zip="${d}">Zip obrázkov dňa</button></div>
     </details>`;
