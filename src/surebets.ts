@@ -53,9 +53,11 @@ export interface Surebet {
   /** Istý zisk ako podiel celého vkladu (0,02 = 2 %). */
   margin: number;
   suspicious: boolean;
+  /** 12. 11. 2026 (Michal): ďalšie stávkovky, kde tá istá strana stále dáva surebet s druhou stranou. */
+  alts?: [BookOdd[], BookOdd[]];
 }
 export interface SurebetLogEntry extends Surebet {
-  scope: "mine" | "all";
+  scope: "mine" | "all" | "top";
   firstSeen: string;
   lastSeen: string;
   seen: number;
@@ -243,6 +245,28 @@ function bestPair(a: BookOdd[], b: BookOdd[], allowed: Set<string> | null): [Boo
   return res;
 }
 
+/**
+ * 12. 11. 2026 (Michal): surebety pre zahraničných klientov – najznámejšie medzinárodné stávkovky.
+ * Len dve stávkovky by surebet nedali takmer nikdy, preto širší zoznam veľkých, dôveryhodných značiek.
+ */
+export const TOP_BOOKS = ["Bet365", "Pinnacle", "Unibet", "William Hill", "Betfair", "Bwin", "Betway", "888Sport", "Betano", "1xBet", "Betsson", "Ladbrokes", "Marathonbet", "10Bet", "Betfred", "Tipico", "Interwetten", "NordicBet", "Superbet", "Coral"];
+const normBook = (b: string) => b.toLowerCase().replace(/[^a-z0-9]/g, "");
+const TOP_SET = new Set(TOP_BOOKS.map(normBook));
+export function isTopBook(b: string): boolean { return TOP_SET.has(normBook(b)); }
+/** Známe stávkovky, ktoré sú v posledných kurzoch (presné názvy z API). */
+export function topBooksPresent(): string[] {
+  return (lastScan?.books ?? []).filter(isTopBook);
+}
+/** Ďalšie stávkovky pre jednu stranu: s pevnou druhou stranou stále surebet. */
+function altsFor(list: BookOdd[], used: string[], otherOdd: number): BookOdd[] {
+  const seen = new Set(used);
+  return list
+    .filter((o) => !seen.has(o.book) && 1 / o.odd + 1 / otherOdd < 1)
+    .sort((x, y) => y.odd - x.odd)
+    .filter((o) => (seen.has(o.book) ? false : (seen.add(o.book), true)))
+    .slice(0, 8);
+}
+
 export function computeSurebets(allowedBooks: string[] | null, minMargin = MIN_MARGIN): Surebet[] {
   if (!lastScan) return [];
   const allowed = allowedBooks && allowedBooks.length ? new Set(allowedBooks) : null;
@@ -273,6 +297,10 @@ export function computeSurebets(allowedBooks: string[] | null, minMargin = MIN_M
           ],
           margin: Math.round(margin * 10000) / 10000,
           suspicious: margin >= SUSPICIOUS_MARGIN,
+          alts: [
+            altsFor(bet.values[va], [pair[0].book, pair[1].book], pair[1].odd),
+            altsFor(bet.values[vb], [pair[0].book, pair[1].book], pair[0].odd),
+          ],
         });
       }
     }
@@ -325,7 +353,9 @@ export async function setMyBooks(books: string[]): Promise<void> {
 
 async function logCurrent(): Promise<void> {
   const mine = await getMyBooks();
-  const found: { scope: "mine" | "all"; s: Surebet }[] = computeSurebets(null).filter((s) => !s.suspicious).map((s) => ({ scope: "all" as const, s }));
+  const found: { scope: "mine" | "all" | "top"; s: Surebet }[] = computeSurebets(null).filter((s) => !s.suspicious).map((s) => ({ scope: "all" as const, s }));
+  const top = topBooksPresent();
+  if (top.length >= 2) for (const s of computeSurebets(top).filter((x) => !x.suspicious)) found.push({ scope: "top", s });
   if (mine.length >= 2) for (const s of computeSurebets(mine).filter((x) => !x.suspicious)) found.push({ scope: "mine", s });
   if (!found.length) return;
   const existing = await hgetall(LOG_KEY);
@@ -336,7 +366,7 @@ async function logCurrent(): Promise<void> {
     let prev: SurebetLogEntry | null = null;
     try { prev = existing[id] ? JSON.parse(existing[id]) : null; } catch { prev = null; }
     const entry: SurebetLogEntry = prev
-      ? { ...prev, lastSeen: now, seen: prev.seen + 1, ...(s.margin > prev.maxMargin ? { sides: s.sides, maxMargin: s.margin } : {}), margin: s.margin }
+      ? { ...prev, lastSeen: now, seen: prev.seen + 1, ...(s.margin > prev.maxMargin ? { sides: s.sides, maxMargin: s.margin, alts: s.alts } : {}), margin: s.margin }
       : { ...s, scope, firstSeen: now, lastSeen: now, seen: 1, maxMargin: s.margin };
     updates[id] = JSON.stringify(entry);
   }
@@ -414,6 +444,7 @@ export function surebetStatus() {
     requests: lastScan?.requests ?? 0,
     fixtures: lastScan?.fixtures.length ?? 0,
     books: lastScan?.books ?? [],
+    topBooks: topBooksPresent(),
     leagues: LEAGUES.length,
     daysAhead: DAYS_AHEAD,
     error: lastScan?.error ?? null,

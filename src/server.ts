@@ -13,7 +13,7 @@ import { getDay, getAllDays, setDay } from "./dailyStore";
 import { saveSlip, deleteSlip, listSlipIds, getSlipImage, MAX_SLIP_CHARS } from "./slipStore";
 import { recordMarketPredictions, settleMarketPredictions, marketSummary } from "./marketTracker";
 import { computeValuebets, valuebetLog, setMyBet, setMyBets, fairOdds, addManualBet, settleValuebets, valuebetStatus, startValuebets } from "./valuebets";
-import { scanSurebets, computeSurebets, fixtureResult, surebetStatus, surebetLog, getMyBooks, setMyBooks, startSurebetScanner } from "./surebets";
+import { scanSurebets, computeSurebets, fixtureResult, topBooksPresent, surebetStatus, surebetLog, getMyBooks, setMyBooks, startSurebetScanner } from "./surebets";
 import { recordAutoFixture, listAuto, listAutoFixtures, autoFixtureDone, updateAuto, pruneAuto, AutoEntry } from "./autoStore";
 import "dotenv/config";
 import express, { NextFunction, Request, Response } from "express";
@@ -2076,8 +2076,9 @@ app.get(["/surebety", "/surebety/"], (_req, res) => {
 app.get("/api/surebets", async (req, res) => {
   try {
     const mine = await getMyBooks();
-    const scope = req.query.scope === "mine" ? "mine" : "all";
-    const list = computeSurebets(scope === "mine" ? (mine.length >= 2 ? mine : ["-"]) : null);
+    const scope = req.query.scope === "mine" ? "mine" : req.query.scope === "top" ? "top" : "all";
+    const top = topBooksPresent();
+    const list = computeSurebets(scope === "mine" ? (mine.length >= 2 ? mine : ["-"]) : scope === "top" ? (top.length >= 2 ? top : ["-"]) : null);
     res.json({ status: surebetStatus(), myBooks: mine, scope, surebets: list.slice(0, 200) });
   } catch (err: any) {
     res.status(500).json({ error: err.message ?? String(err) });
