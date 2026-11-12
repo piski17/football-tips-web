@@ -117,8 +117,9 @@
     ctx.fillRect(cx0, cy0 + 34, 38, 5);
     ctx.fillStyle = C.text; ctx.font = font(800, 40, H_FONT); ctx.textBaseline = "alphabetic";
     spaced(ctx, "ARBREX", X + 54, y + 2, 6);
-    ctx.fillStyle = C.muted; ctx.font = font(700, 14, B_FONT);
-    spaced(ctx, "SUREBETS", X + 56, y + 24, 5);
+    ctx.font = font(700, 13, B_FONT);
+    ctx.fillStyle = C.muted; const pw0 = spaced(ctx, "PROFIT. ", X + 56, y + 24, 3.5);
+    ctx.fillStyle = C.good; spaced(ctx, "WHATEVER THE SCORE.", X + 56 + pw0 + 6, y + 24, 3.5);
     // Štítok vpravo
     ctx.font = font(800, 24, B_FONT);
     const tw = ctx.measureText(tag).width + tag.length * 3 + 44;
