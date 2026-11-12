@@ -382,7 +382,7 @@ function render(r) {
     const body = list.map((c) => {
       const id = i++;
       const star = best.has(c.market + "|" + c.selection) ? ` <span class="star" title="Tip TipRadaru">★</span>` : "";
-      const hi = c.probability >= 65 && c.probability <= 80;
+      const hi = c.probability >= 70 && c.probability <= 80;
       return `<div class="mrow"><span>${esc(selName(r, c.selection))}${star}</span><span class="n ${hi ? "p-hi" : ""}">${pct(c.probability)}</span><span class="n">${fair(c.probability)}</span><span class="n api">${typeof c.odds === "number" && c.odds > 1 ? fmt(c.odds) : "–"}</span><span class="yo"><input type="text" inputmode="decimal" placeholder="váš kurz" data-p="${c.probability}" data-i="${id}"><span class="v" id="v${id}"></span></span></div>`;
     }).join("");
     return `<div class="mk"><h3>${esc(marketName(r, m))}${lm ? `<span>model čaká ${fmt(lm.mean, 1)}</span>` : ""}</h3><div class="mrow hd"><span>Stávka</span><span class="n">Šanca</span><span class="n">Férový</span><span class="n api">Kurz API</span><span>Váš kurz → hodnota</span></div>${body}</div>`;
@@ -416,7 +416,7 @@ function render(r) {
     <ul class="facts">${facts.map((x) => `<li>${x}</li>`).join("")}</ul>
 
     <h2 style="margin-top:22px">Trhy</h2>
-    <p class="muted small">Hranice, ktoré ponúkajú stávkovky (bez kurzov predvolené hranice, vtedy len so šancou do 80 %). Pri každej hranici je strana, ktorej model verí viac. Zelená šanca = pásmo TipRadaru 65 – 80 %. ★ = tip, ktorý by išiel podľa pravidiel TipRadaru.</p>
+    <p class="muted small">Hranice, ktoré ponúkajú stávkovky (bez kurzov predvolené hranice, vtedy len so šancou do 80 %). Pri každej hranici je strana, ktorej model verí viac. Zelená šanca = pásmo TipRadaru 70 – 80 %. ★ = tip, ktorý by išiel podľa pravidiel TipRadaru.</p>
     <p class="small" style="margin:0 0 10px">${showAll ? "Zobrazené všetky hranice." : `Len hranice s kurzom aspoň 1,50 (ako pri tipoch TipRadaru)${hidden ? `, skrytých ${hidden}` : ""}.`} <button type="button" class="linkbtn" id="allBtn">${showAll ? "Len od 1,50" : "Ukázať všetky"}</button></p>
     ${marketsHtml || `<div class="empty">Žiadna hranica s kurzom aspoň 1,50.</div>`}
 

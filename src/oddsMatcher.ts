@@ -71,7 +71,7 @@ export const MIN_GAMES_TO_RECOMMEND = 3;
 // (aj spätne), ale musia prejsť aj kontrolou 60 / 40 (tiež od 65 %).
 // NÁVRAT na 70 – 80 %: BAND_65_TRIAL = false (a v public/app.js WATCH_BELOW = 70) – server pri štarte
 // vráti tipy 65 – 69 % (band65Returned aj band65Trial) späť do sledovaných.
-export const BAND_65_TRIAL = true;
+export const BAND_65_TRIAL = false; // 12. 11. 2026 ~18:30 VRÁTENÉ (42 vrátených tipov 55 %, −4,1 j.)
 export const MIN_PROBABILITY = BAND_65_TRIAL ? 65 : 70;
 /**
  * Skúšobné pásmo (21. 10. 2026, Michalovo rozhodnutie): tipy s dôverou pod touto hranicou

@@ -446,7 +446,7 @@ function askTelegramTarget() {
 /** Skúšobné pásmo (21. 10. 2026): tipy pod 68 % sa ukladajú len na sledovanie (rovnako ako server). */
 // 2. 11. 2026 20:50: pásmo pre klientov 70 – 80 % (predtým 68).
 // 12. 11. 2026 (Michal, SKÚŠKA): 65 – 80 % – návrat: 70 (spolu s BAND_65_TRIAL = false v src/oddsMatcher.ts).
-const WATCH_BELOW = 65;
+const WATCH_BELOW = 70; // 12. 11. 2026 skúška 65 vrátená
 const isWatchTip = (tip) => !(tip.legs && tip.legs.length) && (tip.strictFail || (!tip.manualEntry && typeof tip.probability === "number" && tip.probability < WATCH_BELOW));
 
 async function maybeOfferTelegram(tipId, tip) {
@@ -2656,7 +2656,7 @@ function renderWatchBand(list) {
   if (!el) return;
   el.innerHTML =
     watchListHtml(list, `Zatiaľ žiadne. Tipy 65 – 69${NB}% sa ukážu v Tipoch dňa v skupine „Pásmo 65 – 69${NB}%“ – keď ich uložíš s kurzom, pribudnú sem.`) +
-    `<p class="faint small">Od 12. 11. 2026 (skúška) idú tipy 65 – 69${NB}% klientom a do štatistík, ak prejdú aj kontrolou 60 / 40. Tu ostávajú len tie, ktoré ňou neprešli alebo sa nedali overiť – vyhodnocujú sa, ale nerátajú sa do úspešnosti.</p>`;
+    `<p class="faint small">Klientom nejdú, nie sú na webe a nerátajú sa do úspešnosti – len sa vyhodnocujú. (Skúška 12. 11. 2026: tipy pásma, ktoré prešli aj 60 / 40, vyšli 22 zo 40, −4,1 j. – vrátené späť.)</p>`;
 }
 /** Sledované tipy: tipy „len sledovať“ (pásmo 65 – 67 % má od 28. 10. 2026 vlastnú skupinu – renderWatchBand). */
 function renderWatchReport(list) {
