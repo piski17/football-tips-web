@@ -3978,7 +3978,10 @@ const subTipsInput = document.getElementById("subTips");
 // 11. 11. 2026 (Michal): členstvo na mieru – od 50 tipov, cena 0,75 € za tip (dá sa prepísať).
 const MEMBER_MIN_TIPS = 50;
 const MEMBER_TIP_PRICE = 0.98; // 12. 11. 2026 Michal: 50 tipov za 49 €
-const memberPriceFor = (tips) => Math.round(tips * MEMBER_TIP_PRICE);
+// 12. 11. 2026 (Michal): malá množstevná zľava – rovnaká ako na odkaze pre klienta (src/coopLinks.ts COOP_DISCOUNTS).
+const MEMBER_DISCOUNTS = [[300, 0.1], [200, 0.08], [150, 0.06], [100, 0.03]];
+const memberDiscount = (tips) => { for (const [from, d] of MEMBER_DISCOUNTS) if (tips >= from) return d; return 0; };
+const memberPriceFor = (tips) => Math.round(tips * MEMBER_TIP_PRICE * (1 - memberDiscount(tips)));
 const subTipsValue = () => Math.max(MEMBER_MIN_TIPS, Math.round(Number(subTipsInput.value) || 100));
 const subPriceInput = document.getElementById("subPrice");
 const subStartInput = document.getElementById("subStart");

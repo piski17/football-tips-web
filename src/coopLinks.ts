@@ -9,6 +9,13 @@ import { getMeta, setMeta } from "./metaStore";
 export const COOP_MIN_TIPS = 50;
 export const COOP_TIP_PRICE = 0.98; // 50 tipov za 49 € (Michal 12. 11. 2026)
 export const COOP_OPTIONS = [50, 100, 150, 200, 300];
+// 12. 11. 2026 (Michal): malá množstevná zľava pri väčšom odbere – nie veľká, aby sa to oplatilo aj nám.
+// [od počtu tipov, zľava z ceny za tip]. 50 → 49 €, 100 → 95 €, 150 → 138 €, 200 → 180 €, 300 → 265 €.
+export const COOP_DISCOUNTS: [number, number][] = [[300, 0.1], [200, 0.08], [150, 0.06], [100, 0.03]];
+export function coopDiscount(tips: number): number {
+  for (const [from, d] of COOP_DISCOUNTS) if (tips >= from) return d;
+  return 0;
+}
 
 export interface CoopChoice {
   tips: number;
@@ -75,8 +82,9 @@ export async function deleteCoopLink(token: string): Promise<void> {
   await writeAll(all);
 }
 export function coopPrice(link: CoopLink, tips: number): number {
-  return Math.round(tips * link.perTip);
+  return Math.round(tips * link.perTip * (1 - coopDiscount(tips)));
 }
+const coopFull = (link: CoopLink, tips: number) => Math.round(tips * link.perTip);
 /** Klient si vybral dĺžku. Vráti uložený odkaz (alebo null, ak odkaz neexistuje / počet tipov je zlý). */
 export async function chooseCoop(token: string, tips: number, contact?: string, note?: string): Promise<CoopLink | null> {
   const all = await readAll();
@@ -116,11 +124,12 @@ p{color:var(--muted);font-size:15.5px;line-height:1.6;margin:0}
 .opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px;margin-top:24px}
 .opt{padding:16px 10px;border-radius:18px;border:1px solid var(--line2);background:transparent;color:var(--text);cursor:pointer;text-align:center;font:inherit}
 .opt b{display:block;font:500 28px/1 Urbanist,Arial,sans-serif}.opt span{display:block;margin-top:6px;font-size:12.5px;color:var(--muted)}
-.opt.on{background:var(--plat);color:#0E0D0C;border-color:transparent}.opt.on span{color:#3A352E}
+.opt i{display:block;margin-top:4px;font-style:normal;font-size:11.5px;color:#9FC79A}
+.opt.on{background:var(--plat);color:#0E0D0C;border-color:transparent}.opt.on span,.opt.on i{color:#3A352E}
 label{display:block;margin-top:18px;font-size:13px;color:var(--faint)}
 input,textarea{width:100%;margin-top:6px;padding:13px 14px;border-radius:14px;border:1px solid var(--line2);background:#0E0D0C;color:var(--text);font:inherit;font-size:15px}
 .sum{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-top:24px;padding:18px 20px;border-radius:18px;background:rgba(242,239,234,.04);border:1px solid var(--line)}
-.sum small{color:var(--muted);font-size:13.5px}.sum b{font:600 30px/1 Urbanist,Arial,sans-serif}
+.sum small{color:var(--muted);font-size:13.5px}.sum b{font:600 30px/1 Urbanist,Arial,sans-serif;white-space:nowrap}
 button.go{width:100%;margin-top:20px;padding:17px;border:0;border-radius:999px;background:var(--plat);color:#0E0D0C;font:700 15px/1 Manrope,Arial,sans-serif;cursor:pointer}
 button.go:disabled{opacity:.5}.msg{margin-top:12px;font-size:14px;color:#E0897A;min-height:1em}
 .done{text-align:center}.done .ok{width:64px;height:64px;margin:0 auto 16px;border-radius:50%;background:var(--plat);display:grid;place-items:center;color:#0E0D0C;font-size:30px;font-weight:700}
@@ -135,23 +144,26 @@ button.go:disabled{opacity:.5}.msg{margin-top:12px;font-size:14px;color:#E0897A;
   }
   const first = esc(link.name.split(" ")[0] || "");
   const cur = link.choice?.tips ?? 100;
-  const opts = COOP_OPTIONS.map((n) => `<button type="button" class="opt${n === cur ? " on" : ""}" data-t="${n}"><b>${n}</b><span>${coopPrice(link, n)} €</span></button>`).join("");
+  const opts = COOP_OPTIONS.map((n) => `<button type="button" class="opt${n === cur ? " on" : ""}" data-t="${n}"><b>${n}</b><span>${coopPrice(link, n)} €</span>${coopFull(link, n) > coopPrice(link, n) ? `<i>ušetríte ${coopFull(link, n) - coopPrice(link, n)} €</i>` : ""}</button>`).join("");
   return head + `<div class="card" id="form">
 <div class="lab">Spolupráca TipRadar</div>
 <h1>${first ? `${first}, vyberte si <em>dĺžku</em>` : `Vyberte si <em>dĺžku</em>`}</h1>
-<p>Koľko tipov chcete dostávať? Spolupráca je od ${COOP_MIN_TIPS} tipov, tipy nevypršia a odpočítavajú sa, až keď ich dostanete. Po výbere sa vám ozvem s platobnými údajmi a nastavíme bank a vklad.</p>
+<p>Koľko tipov chcete dostávať? Spolupráca je od ${COOP_MIN_TIPS} tipov, tipy nevypršia a odpočítavajú sa, až keď ich dostanete. Pri väčšom počte tipov máte nižšiu cenu za tip. Po výbere sa vám ozvem s platobnými údajmi a nastavíme bank a vklad.</p>
 <div class="opts">${opts}</div>
 <label>Iný počet tipov (od ${COOP_MIN_TIPS})<input type="number" id="tips" min="${COOP_MIN_TIPS}" step="10" value="${cur}" inputmode="numeric"></label>
 <label>Váš Telegram alebo e-mail (voliteľné)<input type="text" id="contact" maxlength="120" placeholder="@meno"></label>
 <label>Poznámka (voliteľné)<textarea id="note" rows="2" maxlength="400"></textarea></label>
-<div class="sum"><small><span id="sTips">${cur}</span> tipov · ${String(link.perTip.toFixed(2)).replace(".", ",")} € za tip</small><b id="sPrice">${coopPrice(link, cur)} €</b></div>
+<div class="sum"><small><span id="sTips">${cur}</span> tipov · <span id="sPer"></span> € za tip<span id="sSave"></span></small><b id="sPrice">${coopPrice(link, cur)} €</b></div>
 <button type="button" class="go" id="go">Potvrdiť výber</button><div class="msg" id="msg"></div>
 </div>
 <div class="card done" id="ok" hidden><div class="ok">✓</div><div class="lab">Hotovo</div><h1>Ďakujem, <em>mám to</em></h1><p id="okText"></p></div>
 <script>
-(function(){var per=${link.perTip},min=${COOP_MIN_TIPS},t=document.getElementById("tips");
-function price(n){return Math.round(n*per)}
-function draw(){var n=Math.round(+t.value||0);document.getElementById("sTips").textContent=n;document.getElementById("sPrice").textContent=(n>=min?price(n):"–")+" €";
+(function(){var per=${link.perTip},min=${COOP_MIN_TIPS},disc=${JSON.stringify(COOP_DISCOUNTS)},t=document.getElementById("tips");
+function dsc(n){for(var i=0;i<disc.length;i++)if(n>=disc[i][0])return disc[i][1];return 0}
+function price(n){return Math.round(n*per*(1-dsc(n)))}
+function draw(){var n=Math.round(+t.value||0),ok=n>=min,full=Math.round(n*per);document.getElementById("sTips").textContent=n;document.getElementById("sPrice").textContent=(ok?price(n):"–")+" €";
+document.getElementById("sPer").textContent=(ok?price(n)/n:per).toFixed(2).replace(".",",");
+document.getElementById("sSave").textContent=ok&&full>price(n)?" · ušetríte "+(full-price(n))+"\u00a0€":"";
 document.querySelectorAll(".opt").forEach(function(b){b.classList.toggle("on",+b.dataset.t===n)})}
 document.querySelectorAll(".opt").forEach(function(b){b.onclick=function(){t.value=b.dataset.t;draw()}});
 t.oninput=draw;draw();
