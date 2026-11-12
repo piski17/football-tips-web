@@ -109,12 +109,14 @@
   }
   function header(ctx, W, y, tag, tagColor) {
     const X = 72;
-    // Značka ARBREX (12. 11. 2026, Michal) – znak koruna („rex“ = kráľ), pod názvom „SUREBETS“
-    const cx0 = X, cy0 = y - 30;
-    ctx.fillStyle = C.stone; ctx.beginPath();
-    ctx.moveTo(cx0, cy0 + 30); ctx.lineTo(cx0 + 2, cy0 + 4); ctx.lineTo(cx0 + 11, cy0 + 15); ctx.lineTo(cx0 + 19, cy0 - 2);
-    ctx.lineTo(cx0 + 27, cy0 + 15); ctx.lineTo(cx0 + 36, cy0 + 4); ctx.lineTo(cx0 + 38, cy0 + 30); ctx.closePath(); ctx.fill();
-    ctx.fillRect(cx0, cy0 + 34, 38, 5);
+    // Značka ARBREX (12. 11. 2026, Michal) – kruh s dvoma opačnými šípkami (Over zelená, Under kameň = obe strany kryté)
+    const mx = X + 20, my = y - 12, mr = 20;
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    ctx.strokeStyle = C.stone; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(mx, my, mr, 0, Math.PI * 2); ctx.stroke();
+    ctx.lineWidth = 3.6;
+    ctx.strokeStyle = C.good; ctx.beginPath(); ctx.moveTo(mx - 5, my + 11); ctx.lineTo(mx - 5, my - 9); ctx.moveTo(mx - 11, my - 3); ctx.lineTo(mx - 5, my - 10); ctx.lineTo(mx + 1, my - 3); ctx.stroke();
+    ctx.strokeStyle = C.stone; ctx.beginPath(); ctx.moveTo(mx + 5, my - 11); ctx.lineTo(mx + 5, my + 9); ctx.moveTo(mx - 1, my + 3); ctx.lineTo(mx + 5, my + 10); ctx.lineTo(mx + 11, my + 3); ctx.stroke();
+    ctx.lineCap = "butt"; ctx.lineJoin = "miter";
     ctx.fillStyle = C.text; ctx.font = font(800, 40, H_FONT); ctx.textBaseline = "alphabetic";
     spaced(ctx, "ARBREX", X + 54, y + 2, 6);
     ctx.font = font(700, 13, B_FONT);
