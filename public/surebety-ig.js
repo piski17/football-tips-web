@@ -392,9 +392,12 @@
     const lines = [`📅 ${pre ? "TODAY'S SUREBETS" : "SUREBETS OF THE DAY"} – ${dayEn(day)}`, "", `🔒 Surebets: ${n}`, `📈 Average profit: +${n2(avg * 100)}%`, `💰 €100 on each: +€${n2(avg * 100 * n)}`, ""];
     for (const e of list) {
       const kt = pre ? new Date(e.date).toLocaleTimeString("en-GB", { timeZone: "Europe/Bratislava", hour: "2-digit", minute: "2-digit" }) + " · " : "";
-      lines.push(`${pre ? "🔒" : "✅"} ${kt}${e.home} – ${e.away} · ${market(e.market)} · +${n2(e.maxMargin * 100)}%`);
+      // 12. 11. 2026 (Michal): v texte aj celý tip – obe strany s kurzom a stávkovkou.
+      const [a, b] = e.sides;
+      lines.push(`${pre ? "🔒" : "✅"} ${kt}${e.home} – ${e.away} · ${market(e.market)}`,
+        `   ${label(a.label)} @ ${n2(a.odd)} ${a.book} + ${label(b.label)} @ ${n2(b.odd)} ${b.book} → +${n2(e.maxMargin * 100)}%`, "");
     }
-    lines.push("", "👑 ARBREX – Profit. Whatever the score.", "18+ · Bet responsibly.", "", "#arbrex #football");
+    lines.push("👑 ARBREX – Profit. Whatever the score.", "18+ · Bet responsibly.", "", "#arbrex #football");
     return lines.join("\n");
   }
 
