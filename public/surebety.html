@@ -167,6 +167,7 @@ details p, details li { color: var(--muted); font-size: 14px; }
     </div>
     <p class="muted small" id="topInfo" style="margin:0 0 8px"></p>
     <p class="warn" style="margin:0 0 12px">Kurzy sú z API-Football (zahraničné stávkovky, obnovujú sa raz za pár hodín). Pred stávkou vždy overte oba kurzy priamo v stávkovke a prepočítajte v kalkulačke hore.</p>
+    <div style="margin:0 0 12px"><button type="button" class="btn ghost" id="todayIgBtn">Dnešné surebety na IG (všetky)</button></div>
     <div class="sb-list" id="sbList"></div>
   </section>
 
@@ -213,11 +214,12 @@ details p, details li { color: var(--muted); font-size: 14px; }
     <div class="ig-side">
       <div><h2>Obrázok na IG</h2><div class="muted small">Celý obrázok je po anglicky.</div></div>
       <div><label class="f">Formát</label><div class="chips" id="igFmt"><button type="button" class="chip on" data-f="post">Príspevok 4:5</button><button type="button" class="chip" data-f="story">Príbeh 9:16</button></div></div>
+      <div id="igPageWrap" style="display:none"><label class="f">Obrázok č.</label><div class="chips" id="igPages"></div><div class="muted small" id="igPageInfo" style="margin-top:6px"></div></div>
       <div id="igModeWrap"><label class="f">Obrázok</label><div class="chips" id="igMode"><button type="button" class="chip on" data-m="pre">Pred zápasom</button><button type="button" class="chip" data-m="settled">Vyhodnotený</button></div><div class="muted small" id="igResInfo" style="margin-top:6px"></div></div>
       <div><label class="f">Podpis dole</label><input type="text" class="nm" id="igHandle" value="@arbrex" autocomplete="off" style="font:500 14px var(--body);padding:8px 10px"></div>
       <div><label class="f">Text k príspevku</label><textarea id="igText" readonly rows="9" style="width:100%;font:13px/1.45 var(--body);color:var(--text);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;resize:vertical"></textarea><button type="button" class="btn ghost" id="igCopy" style="margin-top:6px">Kopírovať text</button></div>
       <button type="button" class="btn" id="igShare">Zdieľať obrázok</button>
-      <button type="button" class="btn ghost" id="igDown">Stiahnuť obrázok</button>
+      <button type="button" class="btn ghost" id="igDown">Stiahnuť</button>
       <button type="button" class="btn ghost" id="igClose">Zavrieť</button>
     </div>
   </div>
@@ -301,7 +303,9 @@ function toCalc(s) {
   calc();
   $("calcPanel").scrollIntoView({ behavior: "smooth" });
 }
+let foundList = [];
 function renderList(list) {
+  foundList = list;
   // Zoradiť podľa dňa a v rámci dňa od najvyššieho zisku.
   list = [...list].sort((a, b) => dayKey(a.date).localeCompare(dayKey(b.date)) || b.margin - a.margin);
   if (!list.length) {
@@ -387,6 +391,11 @@ $("scanBtn").addEventListener("click", async () => {
   try { await api("/api/surebets/scan", { method: "POST" }); } catch (err) { /* chyba sa ukáže v stave */ }
   $("scanBtn").disabled = false;
   load(); loadLog();
+});
+$("todayIgBtn").addEventListener("click", () => {
+  const today = dayKey(new Date().toISOString());
+  const l = foundList.filter((s) => dayKey(s.date) === today && !s.suspicious).map((s) => ({ ...s, maxMargin: s.margin }));
+  openIgDay(today, l, true);
 });
 $("scopeChips").addEventListener("click", (e) => {
   const c = e.target.closest(".chip"); if (!c) return;

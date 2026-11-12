@@ -292,7 +292,11 @@
   }
 
   /** Súhrn dňa (vyhodnotenie skúšky). */
-  function drawDay(day, list, fmtKey, handle) {
+  /** 12. 11. 2026 (Michal): súhrn dňa na viac obrázkov – na každom najviac 5 (príbeh 8) surebetov, aby boli vidieť všetky. */
+  const dayPer = (fmtKey) => (fmtKey === "story" ? 8 : 5);
+  const dayPages = (list, fmtKey) => Math.max(1, Math.ceil(list.length / dayPer(fmtKey)));
+  /** pre = true: dnešné surebety pred zápasmi (bez výsledku). */
+  function drawDay(day, list, fmtKey, handle, page = 0, pre = false) {
     const W = 1080, H = fmtKey === "story" ? 1920 : 1350, story = fmtKey === "story";
     const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
     const ctx = cv.getContext("2d");
@@ -300,12 +304,14 @@
     list = [...list].sort((a, b) => b.maxMargin - a.maxMargin);
     background(ctx, W, H);
     let y = story ? 220 : 112;
-    header(ctx, W, y, "DAILY RESULTS", "good");
+    header(ctx, W, y, pre ? "TODAY'S SUREBETS" : "DAILY RESULTS", pre ? "stone" : "good");
     y += story ? 130 : 100;
     ctx.fillStyle = C.text; ctx.font = font(800, story ? 96 : 84, H_FONT);
     ctx.fillText("Surebets", X, y); y += story ? 92 : 80;
     ctx.fillStyle = C.stone; ctx.fillText("of the day", X, y); y += story ? 72 : 62;
     ctx.fillStyle = C.muted; ctx.font = font(600, 28, B_FONT); ctx.fillText(dayEn(day), X, y);
+    const pages = dayPages(list, fmtKey);
+    if (pages > 1) { ctx.fillStyle = C.stone; ctx.font = font(800, 28, B_FONT); ctx.textAlign = "right"; ctx.fillText(`${page + 1} / ${pages}`, X + IW, y); ctx.textAlign = "left"; }
     y += story ? 70 : 50;
     const n = list.length;
     const avg = n ? list.reduce((t, e) => t + e.maxMargin, 0) / n : 0;
@@ -319,21 +325,22 @@
       ctx.fillStyle = i === 2 ? C.good : C.text; fit(ctx, v, 800, story ? 64 : 58, kw - 48, H_FONT, 30); ctx.fillText(v, kx + 24, y + kh - 34);
     });
     y += kh + (story ? 50 : 36);
-    const maxRows = story ? 8 : 5, rh = story ? 112 : 96;
-    const footerTop = story ? H - 270 : H - 130;
-    const rows = list.slice(0, Math.min(maxRows, Math.floor((footerTop - y) / (rh + 12))));
+    const rh = story ? 112 : 96;
+    const per = dayPer(fmtKey);
+    const rows = list.slice(page * per, page * per + per);
     for (const e of rows) {
       rr(ctx, X, y, IW, rh, 20); ctx.fillStyle = C.card; ctx.fill();
       ctx.fillStyle = C.text; const tm = `${e.home} – ${e.away}`;
       fit(ctx, tm, 700, 30, IW - 260, B_FONT, 20); ctx.fillText(tm, X + 28, y + 44);
       ctx.fillStyle = C.muted; ctx.font = font(500, 22, B_FONT);
-      const det = `${market(e.market)} · ${label(e.sides[0].label)} ${n2(e.sides[0].odd)} ${e.sides[0].book} / ${label(e.sides[1].label)} ${n2(e.sides[1].odd)} ${e.sides[1].book}`;
+      const kt = pre ? new Date(e.date).toLocaleTimeString("en-GB", { timeZone: "Europe/Bratislava", hour: "2-digit", minute: "2-digit" }) + " · " : "";
+      const det = `${kt}${market(e.market)} · ${label(e.sides[0].label)} ${n2(e.sides[0].odd)} ${e.sides[0].book} / ${label(e.sides[1].label)} ${n2(e.sides[1].odd)} ${e.sides[1].book}`;
       fit(ctx, det, 500, 22, IW - 260, B_FONT, 16); ctx.fillText(det, X + 28, y + 78);
       ctx.fillStyle = C.good; ctx.font = font(800, 44, H_FONT); ctx.textAlign = "right";
       ctx.fillText(`+${n2(e.maxMargin * 100)}%`, X + IW - 28, y + rh / 2 + 16); ctx.textAlign = "left";
       y += rh + 12;
     }
-    if (list.length > rows.length) { ctx.fillStyle = C.muted; ctx.font = font(600, 24, B_FONT); ctx.fillText(`+ ${list.length - rows.length} more surebets`, X, y + 26); }
+    if (page < pages - 1) { ctx.fillStyle = C.muted; ctx.font = font(600, 24, B_FONT); ctx.fillText(`Swipe for more → (${list.length - (page + 1) * per} more)`, X, y + 26); }
     if (!list.length) { ctx.fillStyle = C.muted; ctx.font = font(600, 30, B_FONT); ctx.fillText("No surebets today.", X, y + 30); }
     footer(ctx, W, story ? H - 190 : H - 60, handle);
     return cv;
@@ -378,13 +385,15 @@
     lines.push(`#arbrex #football ${tag(s.league)}`);
     return lines.join("\n");
   }
-  function dayCaption(day, list) {
+  function dayCaption(day, list, pre = false) {
     list = [...list].sort((a, b) => b.maxMargin - a.maxMargin);
     const n = list.length;
     const avg = n ? list.reduce((t, e) => t + e.maxMargin, 0) / n : 0;
-    const lines = [`📅 SUREBETS OF THE DAY – ${dayEn(day)}`, "", `🔒 Surebets: ${n}`, `📈 Average profit: +${n2(avg * 100)}%`, `💰 €100 on each: +€${n2(avg * 100 * n)}`, ""];
-    for (const e of list.slice(0, 15)) lines.push(`✅ ${e.home} – ${e.away} · ${market(e.market)} · +${n2(e.maxMargin * 100)}%`);
-    if (n > 15) lines.push(`… and ${n - 15} more`);
+    const lines = [`📅 ${pre ? "TODAY'S SUREBETS" : "SUREBETS OF THE DAY"} – ${dayEn(day)}`, "", `🔒 Surebets: ${n}`, `📈 Average profit: +${n2(avg * 100)}%`, `💰 €100 on each: +€${n2(avg * 100 * n)}`, ""];
+    for (const e of list) {
+      const kt = pre ? new Date(e.date).toLocaleTimeString("en-GB", { timeZone: "Europe/Bratislava", hour: "2-digit", minute: "2-digit" }) + " · " : "";
+      lines.push(`${pre ? "🔒" : "✅"} ${kt}${e.home} – ${e.away} · ${market(e.market)} · +${n2(e.maxMargin * 100)}%`);
+    }
     lines.push("", "👑 ARBREX – Profit. Whatever the score.", "18+ · Bet responsibly.", "", "#arbrex #football");
     return lines.join("\n");
   }
@@ -404,13 +413,20 @@
   async function render() {
     await loadFonts();
     const handle = $("igHandle").value.trim();
-    st.cv = st.kind === "day" ? drawDay(st.day, st.list, st.fmt, handle) : drawSurebet(st.s, st.fmt, st.mode === "settled" ? st.result : null, handle);
+    if (st.kind === "day") {
+      const pages = dayPages(st.list, st.fmt);
+      if (st.page >= pages) st.page = pages - 1;
+      $("igPageWrap").style.display = pages > 1 ? "" : "none";
+      $("igPages").innerHTML = Array.from({ length: pages }, (_, i) => `<button type="button" class="chip${i === st.page ? " on" : ""}" data-p="${i}">${i + 1}</button>`).join("");
+      $("igPageInfo").textContent = pages > 1 ? `${st.list.length} surebetov na ${pages} obrázkoch. „Zdieľať“ pošle všetky naraz (na Instagram ako karusel), „Stiahnuť“ stiahne všetky.` : "";
+    } else $("igPageWrap").style.display = "none";
+    st.cv = st.kind === "day" ? drawDay(st.day, st.list, st.fmt, handle, st.page, st.pre) : drawSurebet(st.s, st.fmt, st.mode === "settled" ? st.result : null, handle);
     $("igImg").src = st.cv.toDataURL("image/png");
-    $("igText").value = st.kind === "day" ? dayCaption(st.day, st.list) : caption(st.s, st.mode === "settled" ? st.result : null);
+    $("igText").value = st.kind === "day" ? dayCaption(st.day, st.list, st.pre) : caption(st.s, st.mode === "settled" ? st.result : null);
   }
   function fileName() {
     const slug = (t) => String(t).normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase();
-    return st.kind === "day" ? `surebets-${st.day}-${st.fmt}.png` : `surebet-${slug(st.s.home)}-${slug(st.s.away)}-${st.mode === "settled" ? "settled" : "pre"}-${st.fmt}.png`;
+    return st.kind === "day" ? `surebets-${st.day}-${st.fmt}-${st.page + 1}.png` : `surebet-${slug(st.s.home)}-${slug(st.s.away)}-${st.mode === "settled" ? "settled" : "pre"}-${st.fmt}.png`;
   }
   function blob() { return new Promise((res) => st.cv.toBlob(res, "image/png")); }
   function open() { $("igModal").classList.add("on"); document.body.style.overflow = "hidden"; }
@@ -438,8 +454,19 @@
       } else $("igResInfo").textContent = r && r.error ? r.error : "Zápas ešte neskončil.";
     } catch (e) { $("igResInfo").textContent = "Výsledok sa nepodarilo načítať."; }
   };
-  window.openIgDay = function (day, list) {
-    Object.assign(st, { kind: "day", day, list });
+  /** Všetky strany súhrnu dňa ako súbory (na stiahnutie / zdieľanie naraz). */
+  async function dayFiles() {
+    const handle = $("igHandle").value.trim();
+    const out = [];
+    for (let i = 0; i < dayPages(st.list, st.fmt); i++) {
+      const b = await cvBlob(drawDay(st.day, st.list, st.fmt, handle, i, st.pre));
+      out.push(new File([b], `surebets-${st.day}-${st.fmt}-${i + 1}.png`, { type: "image/png" }));
+    }
+    return out;
+  }
+  window.openIgDay = function (day, list, pre = false) {
+    list = [...list].sort((a, b) => b.maxMargin - a.maxMargin);
+    Object.assign(st, { kind: "day", day, list, pre, page: 0 });
     $("igModeWrap").style.display = "none";
     open(); render();
   };
@@ -493,8 +520,8 @@
         if (n % 5 === 0) info.textContent = `Kreslím obrázky… ${n} / ${played.length}`;
       }
       for (const [d, list] of Object.entries(days)) {
-        zip.file(`daily-summary/${d}-post.png`, await cvBlob(drawDay(d, list, "post", handle)));
-        zip.file(`daily-summary/${d}-story.png`, await cvBlob(drawDay(d, list, "story", handle)));
+        const sorted = [...list].sort((a, b) => b.maxMargin - a.maxMargin);
+        for (const f of ["post", "story"]) for (let i = 0; i < dayPages(sorted, f); i++) zip.file(`daily-summary/${d}-${f}-${i + 1}.png`, await cvBlob(drawDay(d, sorted, f, handle, i)));
         zip.file(`daily-summary/${d}-text.txt`, dayCaption(d, list));
       }
       info.textContent = "Balím zip…";
@@ -526,15 +553,18 @@
   });
   $("igModal").addEventListener("click", (e) => { if (e.target === $("igModal")) close(); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
+  $("igPages").addEventListener("click", (e) => { const c = e.target.closest(".chip"); if (!c) return; st.page = Number(c.dataset.p); render(); });
+  const saveFile = (b, name) => { const url = URL.createObjectURL(b); const a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); };
   $("igDown").addEventListener("click", async () => {
+    if (st.kind === "day" && dayPages(st.list, st.fmt) > 1) { for (const f of await dayFiles()) { saveFile(f, f.name); await new Promise((r) => setTimeout(r, 400)); } return; }
     const b = await blob(); const url = URL.createObjectURL(b);
     const a = document.createElement("a"); a.href = url; a.download = fileName(); document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 4000);
   });
   $("igShare").addEventListener("click", async () => {
-    const b = await blob(); const file = new File([b], fileName(), { type: "image/png" });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try { await navigator.share({ files: [file] }); } catch (e) { /* zrušené */ }
+    const files = st.kind === "day" ? await dayFiles() : [new File([await blob()], fileName(), { type: "image/png" })];
+    if (navigator.canShare && navigator.canShare({ files })) {
+      try { await navigator.share({ files }); } catch (e) { /* zrušené */ }
     } else $("igDown").click();
   });
 })();
