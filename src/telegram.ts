@@ -399,7 +399,6 @@ const BENEFITS_BASE =
 const TIER_PERKS: { min: number; max?: number; text: string }[] = [
   // 4. 11. 2026 (Michal): kurz Škola stávkovania do členstiev NEDÁVAŤ – je to samostatný produkt.
   // 11. 11. 2026 (Michal): jediné členstvo VIP Klub (100 tipov 75 €) má všetky výhody; vernostná zľava zrušená („hlúposť“).
-  { min: 1, text: `📏 <b>Dĺžka na mieru</b> – počet tipov si nastavíme spolu, od 50 tipov` },
   { min: 1, text: `📞 <b>Úvodný hovor 1 na 1</b> (30 min) – bank a vklad nastavíme presne pre vás` },
   { min: 1, text: `🎓 <b>Mentoring 1 na 1 počas celého členstva</b> – kedykoľvek sa ma opýtate na bank, vklad či konkrétny tip` },
   { min: 1, text: `⏳ <b>Tipy nevypršia</b> – platia, kým ich nedostanete, bez časového limitu` },
@@ -409,7 +408,6 @@ function perksFor(tips: number): string {
 }
 /** Garancia (od 2. 11. 2026): členstvo v mínuse = 1 mesiac zadarmo (vracanie peňazí po 20 tipoch zrušené). */
 const GUARANTEE_LINE = `🛡 <b>Garancia:</b> ak vaše členstvo skončí v mínuse, dostanete 1 mesiac tipov zadarmo.`;
-const BANK_LINE = `💼 Odporúčame vklad 2 – 3 % banku na tip, nikdy nad 5 %.`;
 const eur2 = (n: number) => n.toFixed(2).replace(".", ",");
 const TIER_ICON: Record<SellableTerm, string> = { p100: "⭐" };
 /** Riadok cenníka: „⭐ VIP Klub · 100 tipov – 75 € (0,75 € za tip)“. */
@@ -425,39 +423,25 @@ function planText(t: SellableTerm): string {
   const perks = perksFor(PAY_TERMS[t].tips || 30);
   return `<b>${priceLine(t)}</b>\n<i>Odporúčaný bank ${sk(bank)} – ${sk(bankMax)} € · vklad ${MEMBER_STAKE_PCT} % = ${eur2(stake)} – ${eur2(stakeMax)} € na tip</i>\n${BENEFITS_BASE}` + (perks ? `\n${perks}` : "");
 }
-/** Celý cenník (od 11. 11. 2026 jediné členstvo VIP Klub). */
-const PRICE_LIST = SELLABLE_TERMS.map(priceLine).join("\n");
-// 11. 11. 2026 (Michal): jediné členstvo VIP Klub – všetky výhody v jednom.
-const ALL_PLANS = `Jedno členstvo – VIP Klub. Dĺžku (počet tipov) si s každým nastavíme osobne, od 50 tipov.\n\n${planText("p100")}`;
-
-const FAQ_ANSWERS: Record<string, string> = {
-  faq_price:
-    `💰 <b>Členstvo TipRadar</b>\n\nPosielam najviac 3 najsilnejšie tipy denne, niektoré dni žiadny – kvalita pred kvantitou. Je jedno členstvo – VIP Klub, so všetkými výhodami.\n\n` +
-    `${ALL_PLANS}\n\n${GUARANTEE_LINE}\n${BANK_LINE}\n\n` +
-    `Tipy sa vám rátajú odo dňa nákupu. Členstvo skončí po poslednom tipe a samo sa nepredlžuje.` +
-    (process.env.SALES_OPEN === "true" ? "" : `\n\n🗓 <b>Predaj členstva spúšťame čoskoro.</b> Napíšte sem „Mám záujem“ a ozveme sa vám ako prvým.`),
-  faq_how:
-    `❓ <b>Ako to funguje</b>\n\n` +
-    `TipRadar denne prepočíta desiatky zápasov cez vlastný štatistický model (Poissonovo rozdelenie gólov, vážená forma, vzájomné zápasy, historické dáta) a vyberie tipy s reálnou hodnotou naprieč trhmi góly, rohy, karty, strely na bránu, fauly a držanie lopty (v zápase aj pre každý tím) – s vysvetlením, prečo. Pri každom trhu vyskúša všetky hranice, ktoré stávkové kancelárie ponúkajú, a vyberie tú s najväčšou hodnotou.`,
-  faq_time:
-    `🕒 <b>Kedy prídu tipy</b>\n\n` +
-    `Tipy posielame v deň zápasu, <b>1 – 2 hodiny pred výkopom</b> – vtedy sú kurzy aj dáta najpresnejšie a zostane dosť času na stávku.\n\n` +
-    `📋 Večer, keď sa zápasy dohrajú, pošleme <b>vyhodnotenie dňa</b> – vrátane tipov, ktoré nevyšli.`,
-  faq_sample:
-    `📊 <b>Ukážka tipu</b>\n\n` +
-    `🎯 Góly: Nad 2,5\n📈 Dôvera: 71 %\n💰 Kurz: 1,75\n💵 Odporúčaná sadzba: 3 % bankrollu\n\n` +
-    `💡 Očakávané góly 1,6 : 1,3 – oba tímy strieľajú pravidelne a v posledných 5 vzájomných zápasoch padli v priemere 3 góly.`,
-};
-
-const MAIN_MENU_KEYBOARD = {
-  inline_keyboard: [
-    [{ text: "💰 Cenník", callback_data: "faq_price" }],
-    [{ text: "❓ Ako to funguje", callback_data: "faq_how" }],
-    [{ text: "📊 Ukážka tipu", callback_data: "faq_sample" }],
-    [{ text: "🕒 Kedy prídu tipy", callback_data: "faq_time" }],
-    [{ text: "✍️ Napísať priamo", url: `https://t.me/${TELEGRAM_CONTACT_USERNAME}` }],
-  ],
-};
+// ---- Bot pre ľudí (od 12. 11. 2026, Michal): žiadne dlhé texty ani cenník v bote, len odkazy na web ----
+// Ľudia vraveli, že v bote sú zbytočnosti. Bot preto pošle jednu krátku správu s odkazmi na web,
+// kanál zadarmo a Michalov osobný Telegram. Všetko ostatné (tipy do kanálov, výsledky, upozornenia,
+// pozvánky po platbe) robí bot ďalej na pozadí.
+const LANDING_URL = "https://tipradar.eu";
+const CONTACT_URL = `https://t.me/${TELEGRAM_CONTACT_USERNAME}`;
+const WELCOME_TEXT =
+  `👋 Ahoj, tu je <b>TipRadar</b> – futbalové tipy podložené štatistikou.\n\n` +
+  `Všetko podstatné nájdete na webe. Tipy a výsledky zadarmo posielam do kanála. S otázkou mi pokojne napíšte osobne.`;
+function mainMenuKeyboard() {
+  const freeUrl = normalizeTelegramUrl(process.env.TELEGRAM_FREE_CHANNEL_URL);
+  const rows: { text: string; url: string }[][] = [];
+  if (freeUrl) rows.push([{ text: "📢 Tipy zadarmo (Telegram kanál)", url: freeUrl }]);
+  rows.push([{ text: "📊 Výsledky tipov", url: `${LANDING_URL}/vysledky` }]);
+  rows.push([{ text: "⭐ Členstvo", url: `${LANDING_URL}/clenstvo` }]);
+  rows.push([{ text: "❓ Časté otázky", url: `${LANDING_URL}/otazky` }]);
+  rows.push([{ text: "✍️ Napísať Michalovi", url: CONTACT_URL }]);
+  return { inline_keyboard: rows };
+}
 
 async function callTelegramApi(method: string, body: Record<string, unknown>): Promise<void> {
   try {
@@ -469,24 +453,11 @@ async function callTelegramApi(method: string, body: Record<string, unknown>): P
 
 /** Spracuje jednu prichádzajúcu udalosť z Telegram webhooku (nová správa alebo stlačenie tlačidla). */
 // ---- Záujemcovia o členstvo z tipradar.eu ----
-const NEXT_STEP =
-  `<b>Ako pokračovať:</b> napíšte sem krátku správu (napríklad „Mám záujem o VIP Klub na 100 tipov“). Pošleme vám platobné údaje a po platbe vás pridáme do súkromného kanála TipRadar.\n\n` +
-  `Ozveme sa vám zvyčajne do 24 hodín. Bez viazanosti, členstvo sa samo nepredlžuje.`;
-const PAY_STEP =
-  `Zaplatíte bankovým prevodom cez QR kód v appke vašej banky, bez poplatkov. Hneď ako platba príde na účet, pošlem vám sem pozvánku do súkromného kanála TipRadar.\n\n` +
-  `Bez viazanosti, členstvo sa samo nepredlžuje.`;
 /** Odkaz z bota (t.me/…?start=…) → členstvo. Web posiela c50 … c250 (posuvník). Staré odkazy: stat / start = Štart, seria = Premium,
  *  vip = VIP, gold = Gold, platinum / onyx / sampion = Platinum. */
 // 11. 11. 2026: všetky odkazy (aj staré c30 / c100) vedú na jediné členstvo VIP Klub.
 const PLAN_TERM: Record<string, SellableTerm> = Object.fromEntries(["stat", "start", "seria", "vip", "gold", "platinum", "onyx", "sampion", "klub", "c30", "c50", "c75", "c80", "c100", "c120", "c150", "c200", "c250"].map((k) => [k, "p100"])) as Record<string, SellableTerm>;
 for (const t of SELLABLE_TERMS) PLAN_TERM["c" + PAY_TERMS[t].tips] = t;
-const JOIN_MESSAGES: Record<string, string> = {
-  clenstvo: `✨ <b>Členstvo TipRadar</b>\n\n${ALL_PLANS}\n\n${GUARANTEE_LINE}\n${BANK_LINE}\n\n${NEXT_STEP}`,
-};
-for (const [k, t] of Object.entries(PLAN_TERM)) JOIN_MESSAGES[k] = `✨ <b>Členstvo TipRadar</b>\n\n${planText(t)}\n\n${GUARANTEE_LINE}\n\n${NEXT_STEP}`;
-JOIN_MESSAGES.premium = JOIN_MESSAGES.clenstvo;
-// Členstvá sú bez obmedzenia miest; staré odkazy „…_waitlist“ ukážu bežnú ponuku.
-for (const k of Object.keys(PLAN_TERM)) JOIN_MESSAGES[k + "_waitlist"] = JOIN_MESSAGES[k];
 /** Tlačidlá na zaplatenie (vedú na tipradar.eu/zaplatit → stránka s QR kódom). */
 function payKeyboard(chatId: number | string, only?: SellableTerm) {
   const row = (t: SellableTerm, label: string) => [{ text: label, url: `${PUBLIC_URL}/zaplatit?term=${t}&c=${chatId}` }];
@@ -496,16 +467,6 @@ function payKeyboard(chatId: number | string, only?: SellableTerm) {
 /** Predaj členstva je spustený (premenná SALES_OPEN=true na Renderi). Dovtedy len poradovník. */
 function salesOpen(): boolean {
   return process.env.SALES_OPEN === "true";
-}
-/** Odpoveď pred spustením predaja: zvolené členstvo (alebo všetky) + zápis do poradovníka. */
-function PRELAUNCH_MESSAGE(plan: string): string {
-  const t = PLAN_TERM[plan.replace(/_waitlist$/, "")];
-  const benefits = t ? planText(t) : ALL_PLANS;
-  return (
-    `✨ <b>Ďakujeme za záujem o TipRadar!</b>\n\n${benefits}\n\n${GUARANTEE_LINE}\n\n` +
-    `🗓 <b>Predaj členstva spúšťame čoskoro.</b> Váš záujem sme si zapísali – keď začneme, ozveme sa vám <b>ako prvým</b>.\n\n` +
-    `Ak máte otázku, pokojne ju napíšte sem.`
-  );
 }
 
 const LEAD_LABEL: Record<string, string> = {
@@ -574,9 +535,9 @@ export async function handleTelegramUpdate(update: any): Promise<void> {
       return;
     }
     await callTelegramApi("answerCallbackQuery", { callback_query_id: update.callback_query.id });
-    const answer = FAQ_ANSWERS[data];
-    if (chatId && answer) {
-      await callTelegramApi("sendMessage", { chat_id: chatId, text: answer, parse_mode: "HTML", reply_markup: MAIN_MENU_KEYBOARD });
+    // Staré tlačidlá (Cenník, Ako to funguje …) v starších správach: ukážu nové krátke menu s odkazmi.
+    if (chatId && update.callback_query.message?.chat?.type === "private") {
+      await callTelegramApi("sendMessage", { chat_id: chatId, text: WELCOME_TEXT, parse_mode: "HTML", reply_markup: mainMenuKeyboard() });
     }
     return;
   }
@@ -594,23 +555,26 @@ export async function handleTelegramUpdate(update: any): Promise<void> {
     return;
   }
   const startParam = text.startsWith("/start ") ? text.slice(7).trim().toLowerCase() : "";
-  if (startParam && JOIN_MESSAGES[startParam]) {
-    const canPay = paymentsEnabled();
-    const reply = canPay
-      ? JOIN_MESSAGES[startParam].replace(NEXT_STEP, PAY_STEP)
-      : salesOpen() ? JOIN_MESSAGES[startParam] : PRELAUNCH_MESSAGE(startParam);
-    await callTelegramApi("sendMessage", {
-      chat_id: chatId,
-      text: reply,
-      parse_mode: "HTML",
-      reply_markup: canPay ? payKeyboard(chatId, PLAN_TERM[startParam.replace(/_waitlist$/, "")]) : MAIN_MENU_KEYBOARD,
-    });
+  // Odkaz na členstvo z webu (t.me/…?start=clenstvo, c50 …): zapíšeme záujemcu a dáme ti vedieť.
+  const planKey = startParam.replace(/_waitlist$/, "");
+  const plan = PLAN_TERM[planKey];
+  if (plan || planKey === "clenstvo" || planKey === "premium") {
+    if (paymentsEnabled()) {
+      await callTelegramApi("sendMessage", {
+        chat_id: chatId,
+        text: `⭐ <b>Členstvo TipRadar</b>\n\nVšetko o členstve nájdete na <a href="${LANDING_URL}/clenstvo">tipradar.eu/clenstvo</a>. Zaplatiť môžete tu 👇 Po platbe vám sem pošlem pozvánku do súkromného kanála.`,
+        parse_mode: "HTML",
+        reply_markup: payKeyboard(chatId, plan),
+      });
+    } else {
+      await callTelegramApi("sendMessage", { chat_id: chatId, text: WELCOME_TEXT, parse_mode: "HTML", reply_markup: mainMenuKeyboard() });
+    }
     await recordLead({ chatId: String(chatId), plan: startParam, name: personName(from), username: from?.username }).catch(() => {});
     await notifyAdminLead(startParam, from, chatId);
     return;
   }
 
-  // Bežná textová správa (nie príkaz): pošleme ju tebe a záujemcovi potvrdíme prijatie.
+  // Bežná textová správa (nie príkaz): pošleme ju tebe, aby sa nestratila, a človeka nasmerujeme na tvoj Telegram.
   if (text && !text.startsWith("/") && TELEGRAM_ADMIN_CHAT_ID && String(chatId) !== String(TELEGRAM_ADMIN_CHAT_ID)) {
     await callTelegramApi("forwardMessage", { chat_id: TELEGRAM_ADMIN_CHAT_ID, from_chat_id: chatId, message_id: update.message.message_id });
     await callTelegramApi("sendMessage", {
@@ -620,8 +584,8 @@ export async function handleTelegramUpdate(update: any): Promise<void> {
     });
     await callTelegramApi("sendMessage", {
       chat_id: chatId,
-      text: "Ďakujeme za správu 🙏 Ozveme sa vám čo najskôr, zvyčajne do 24 hodín.",
-      reply_markup: MAIN_MENU_KEYBOARD,
+      text: `Ďakujem za správu 🙏 Najrýchlejšie vám odpoviem osobne na @${TELEGRAM_CONTACT_USERNAME}.`,
+      reply_markup: mainMenuKeyboard(),
     });
     return;
   }
@@ -629,11 +593,11 @@ export async function handleTelegramUpdate(update: any): Promise<void> {
   await callTelegramApi("sendMessage", {
     chat_id: chatId,
     text:
-      `👋 Vitajte v <b>TipRadare</b>!\n\nVyberte si, čo vás zaujíma:` +
+      WELCOME_TEXT +
       // Telegram ID vidí len administrátor (alebo ktokoľvek po príkaze /id).
       (String(chatId) === String(TELEGRAM_ADMIN_CHAT_ID) || text === "/id" ? `\n\n<i>Tvoje Telegram ID: <code>${chatId}</code></i>` : ""),
     parse_mode: "HTML",
-    reply_markup: MAIN_MENU_KEYBOARD,
+    reply_markup: mainMenuKeyboard(),
   });
 }
 
