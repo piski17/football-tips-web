@@ -339,8 +339,6 @@ function parseStatValue(value: unknown): number | null {
 
 /** Z koľkých posledných zápasov tímu sa počítajú rohy, karty, strely, fauly (12. 11. 2026, Michal: 5). */
 export const STAT_GAMES = 5;
-/** Od koľkých zápasov v sezóne sa štatistiky berú len z tejto sezóny (12. 11. 2026, Michal: 3, predtým 5). */
-export const STAT_MIN_SEASON_GAMES = 3;
 
 export async function getTeamExtendedStatsAverages(
   leagueId: number,
@@ -349,7 +347,7 @@ export async function getTeamExtendedStatsAverages(
   lastN: number = 10,
   asOf?: string
 ): Promise<TeamExtendedStatsAverages> {
-  const cacheKey = `extStatsAvg7:${leagueId}:${season}:${teamId}:${lastN}:${asOf ?? ""}`;
+  const cacheKey = `extStatsAvg6:${leagueId}:${season}:${teamId}:${lastN}:${asOf ?? ""}`;
   // Pri spätnom teste načítame viac zápasov a ponecháme len tie spred výkopu.
   const extra = asOf ? 15 : 0;
   const cached = getCached<TeamExtendedStatsAverages>(cacheKey);
@@ -375,9 +373,6 @@ export async function getTeamExtendedStatsAverages(
     checkApiErrors(currentSeasonRes.data);
     let fixtures: any[] = (asOf ? newestFirst(beforeDate(currentSeasonRes.data?.response ?? [], asOf)) : beforeDate(currentSeasonRes.data?.response ?? [], asOf)).slice(0, lastN);
 
-    // 12. 11. 2026 (Michal): ak má tím v tejto sezóne aspoň 3 zápasy, rohy/karty/strely/fauly sa berú len z nich
-    // (z minulej sezóny sa dopĺňa až pri menej ako 3 zápasoch).
-    const currentIds = new Set(fixtures.map((f: any) => f.fixture?.id));
     if (fixtures.length < lastN) {
       const remaining = lastN - fixtures.length;
       try {
@@ -463,7 +458,6 @@ export async function getTeamExtendedStatsAverages(
           row.gf = gh == null || ga == null ? null : Number(row.isHome ? gh : ga);
           row.ga = gh == null || ga == null ? null : Number(row.isHome ? ga : gh);
           row.time = new Date(f.fixture?.date).getTime() || 0;
-          row.cur = currentIds.has(f.fixture?.id) ? 1 : 0;
           return row;
         } catch {
           return null;
@@ -489,9 +483,7 @@ export async function getTeamExtendedStatsAverages(
 
     // 12. 11. 2026 (Michal): rohy, karty, strely, fauly (aj doma / vonku) len z posledných 5 zápasov tímu.
     // Forma gólov a xG ostávajú z posledných lastN (10) zápasov.
-    const curRows = valid.filter((r) => r.cur === 1);
-    const statRows = (curRows.length >= STAT_MIN_SEASON_GAMES ? curRows : [...valid])
-      .sort((a, b) => (b.time ?? 0) - (a.time ?? 0)).slice(0, STAT_GAMES);
+    const statRows = [...valid].sort((a, b) => (b.time ?? 0) - (a.time ?? 0)).slice(0, STAT_GAMES);
     const average = (key: string): number | null => {
       const values = statRows.map((r) => r[key]).filter((v): v is number => v !== null);
       return values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : null;
