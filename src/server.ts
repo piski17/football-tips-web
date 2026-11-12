@@ -13,7 +13,7 @@ import { getDay, getAllDays, setDay } from "./dailyStore";
 import { saveSlip, deleteSlip, listSlipIds, getSlipImage, MAX_SLIP_CHARS } from "./slipStore";
 import { recordMarketPredictions, settleMarketPredictions, marketSummary } from "./marketTracker";
 import { computeValuebets, valuebetLog, setMyBet, setMyBets, fairOdds, addManualBet, settleValuebets, valuebetStatus, startValuebets } from "./valuebets";
-import { scanSurebets, computeSurebets, fixtureResult, topBooksPresent, surebetStatus, surebetLog, getMyBooks, setMyBooks, startSurebetScanner } from "./surebets";
+import { scanSurebets, computeSurebets, fixtureResult, topBooksPresent, TOP_BOOKS, surebetStatus, surebetLog, getMyBooks, setMyBooks, startSurebetScanner } from "./surebets";
 import { recordAutoFixture, listAuto, listAutoFixtures, autoFixtureDone, updateAuto, pruneAuto, AutoEntry } from "./autoStore";
 import "dotenv/config";
 import express, { NextFunction, Request, Response } from "express";
@@ -2095,7 +2095,7 @@ app.post("/api/surebets/books", async (req, res) => {
 });
 app.get("/api/surebets/log", async (_req, res) => {
   try {
-    res.json({ entries: await surebetLog(), myBooks: await getMyBooks() });
+    res.json({ entries: await surebetLog(), myBooks: await getMyBooks(), topBooks: TOP_BOOKS });
   } catch (err: any) {
     res.status(500).json({ error: err.message ?? String(err) });
   }

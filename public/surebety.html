@@ -177,7 +177,7 @@ details p, details li { color: var(--muted); font-size: 14px; }
     </div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
       <button type="button" class="btn" id="igBulkBtn">Stiahnuť obrázky všetkých odohraných surebetov (zip)</button>
-      <span class="muted small" id="igBulkInfo">Vyhodnotené surebety od 1. 11. po anglicky – príspevky, príbehy a súhrn každého dňa.</span>
+      <span class="muted small" id="igBulkInfo">Vyhodnotené surebety od 1. 11. podľa výberu stávkoviek vyššie, po anglicky – príspevky, príbehy a súhrn každého dňa.</span>
     </div>
     <div class="kpis" id="logKpis"></div>
     <div id="logDays"></div>
@@ -370,8 +370,25 @@ $("scopeChips").addEventListener("click", (e) => {
 // ---------- Skúška – prehľad ----------
 let logScope = "top";
 let logEntries = [];
+let topBooksAll = [];
+const normBook = (b) => String(b).toLowerCase().replace(/[^a-z0-9]/g, "");
+/** 12. 11. 2026: „Známe zahraničné“ = záznamy od 12. 11. + staršie záznamy (od 1. 11.), kde sú obe stávkovky známe. */
+function logListFor(sc) {
+  if (sc !== "top") return logEntries.filter((e) => e.scope === sc);
+  const top = new Set(topBooksAll.map(normBook));
+  const byKey = new Map();
+  for (const e of logEntries) {
+    const ok = e.scope === "top" || (e.scope === "all" && e.sides.every((x) => top.has(normBook(x.book))));
+    if (!ok) continue;
+    const prev = byKey.get(e.key);
+    if (!prev || (prev.scope !== "top" && e.scope === "top")) byKey.set(e.key, e);
+  }
+  return [...byKey.values()];
+}
+window.logListFor = logListFor;
+window.currentLogScope = () => logScope;
 function renderLog() {
-  const list = logEntries.filter((e) => e.scope === logScope);
+  const list = logListFor(logScope);
   const n = list.length;
   const avg = n ? list.reduce((s, e) => s + e.maxMargin, 0) / n : 0;
   const profit = list.reduce((s, e) => s + e.maxMargin * 100, 0);
@@ -398,13 +415,13 @@ function renderLog() {
   }).join("") : `<p class="empty">${logScope === "mine" && myBooks.length < 2 ? "Vyberte aspoň 2 svoje stávkovky – evidencia začne od ďalšieho prehľadania." : "Zatiaľ nič zapísané."}</p>`;
 }
 async function loadLog() {
-  try { const j = await api("/api/surebets/log"); logEntries = j.entries || []; renderLog(); } catch (err) { $("logDays").innerHTML = `<p class="empty">${esc(err.message)}</p>`; }
+  try { const j = await api("/api/surebets/log"); logEntries = j.entries || []; topBooksAll = j.topBooks || []; renderLog(); } catch (err) { $("logDays").innerHTML = `<p class="empty">${esc(err.message)}</p>`; }
 }
 $("logDays").addEventListener("click", (e) => {
   const ig = e.target.closest("button[data-igk]");
   if (ig) { const en = logEntries.find((x) => x.scope + "|" + x.key === ig.dataset.igk); if (en) openIg({ ...en, margin: en.maxMargin }); return; }
   const dy = e.target.closest("button[data-day]");
-  if (dy) { openIgDay(dy.dataset.day, logEntries.filter((x) => x.scope === logScope && dayKey(x.date) === dy.dataset.day)); return; }
+  if (dy) { openIgDay(dy.dataset.day, logListFor(logScope).filter((x) => dayKey(x.date) === dy.dataset.day)); return; }
   const btn = e.target.closest("button[data-k]"); if (!btn) return;
   const entry = logEntries.find((x) => x.scope + "|" + x.key === btn.dataset.k);
   if (entry) toCalc(entry);

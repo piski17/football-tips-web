@@ -381,10 +381,9 @@
     btn.disabled = true;
     try {
       info.textContent = "Načítavam evidenciu surebetov…";
-      const j = await fetch("/api/surebets/log").then((x) => x.json());
-      // Každý surebet raz (evidencia ho môže mať pod „všetky“ aj „moje / známe“ stávkovky) – nechá sa záznam s najvyšším ziskom.
+      // Rovnaký výber ako v prehľade (Známe zahraničné / Všetky / Moje), každý surebet raz.
       const byKey = new Map();
-      for (const e of j.entries || []) {
+      for (const e of window.logListFor(window.currentLogScope())) {
         const prev = byKey.get(e.key);
         if (!prev || e.maxMargin > prev.maxMargin || (!prev.alts && e.alts && e.maxMargin === prev.maxMargin)) byKey.set(e.key, e);
       }
