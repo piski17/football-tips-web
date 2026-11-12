@@ -1,4 +1,4 @@
-import { plausibleLine, offeredLines, MIN_BOOKMAKERS, MIN_ODDS, MAX_PROBABILITY, MIN_PROBABILITY, MIN_EXPECTED_VALUE, SUSPICIOUS_EXPECTED_VALUE, findOdds, marketProbabilityDetail, STRONG_TIP_MIN_PROBABILITY, WATCH_BELOW_PROBABILITY, WATCH_BAND_MIN_PROBABILITY } from "./oddsMatcher";
+import { plausibleLine, offeredLines, MIN_BOOKMAKERS, MIN_ODDS, MAX_PROBABILITY, MIN_PROBABILITY, MIN_EXPECTED_VALUE, SUSPICIOUS_EXPECTED_VALUE, findOdds, marketProbabilityDetail, STRONG_TIP_MIN_PROBABILITY, WATCH_BELOW_PROBABILITY, WATCH_BAND_MIN_PROBABILITY, BAND_65_TRIAL } from "./oddsMatcher";
 import { teamNamesBrowserScript } from "./teamNamesSk";
 import { listLeads, deleteLead, recordLead } from "./leadsStore";
 import { getMeta, setMeta } from "./metaStore";
@@ -45,7 +45,7 @@ import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, Market
 import { newModelInputs } from "./newModel";
 import { computeMarketHealth, marketChangesText, clvOf, CLV_TIE } from "./marketHealth";
 import { LeaguePreset, SavedTip } from "./types";
-import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once, moveLateAddsOnce, restoreLateMovedOnce, returnStrictFailedOnce, moveStrictFailedBackOnce, moveSameTypeOnce, moveOldFoulTipsOnce } from "./tipsStore";
+import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once, moveLateAddsOnce, restoreLateMovedOnce, returnStrictFailedOnce, moveStrictFailedBackOnce, moveSameTypeOnce, moveOldFoulTipsOnce, syncBand65Trial } from "./tipsStore";
 import { computeTicketStatus, settleBet, settleFixtureBets, tipHasStartedMatch, MATCH_STARTED_MESSAGE, buildTipEdit } from "./tipEvaluator";
 import {
   sendTipToTelegram,
@@ -1147,6 +1147,8 @@ app.post("/api/tips", async (req, res) => {
       tip.strongOfDay = undefined;
     }
     await applySameTypeRule(tip);
+    // 12. 11. 2026: skúška pásma 65 – 80 % – tip 65 – 69 %, ktorý ide klientom, dostane značku (na vyhodnotenie / návrat).
+    if (BAND_65_TRIAL && !tip.watchOnly && !(tip.legs && tip.legs.length) && typeof tip.probability === "number" && tip.probability < 70) tip.band65Trial = true;
     await saveTip(tip);
     // Odohraný zápas sa vyhodnotí hneď (inak do 15 minút sám).
     if (lateFromAnalysis) await checkPendingResults().catch(() => {});
@@ -3456,6 +3458,7 @@ app.post("/api/auto-tips/:id/add", async (req, res) => {
     // ak prejde pravidlami, pridá sa normálne do Histórie tipov (so značkou lateAdd).
     if (reason) tip.watchOnly = true;
     if (await applySameTypeRule(tip)) reason = "zápas už má tip toho istého typu";
+    if (BAND_65_TRIAL && !tip.watchOnly && typeof tip.probability === "number" && tip.probability < 70) tip.band65Trial = true;
     await saveTip(tip);
     // Odohraný zápas sa vyhodnotí hneď (inak do 15 minút sám).
     if (tip.lateAdd) await checkPendingResults().catch(() => {});
@@ -3990,5 +3993,17 @@ app.listen(PORT, () => {
     // 8. 11. 2026 (Michal): staré tipy na fauly raz presunie do sledovaných (fauly majú nové hranice podľa zápasu).
     .then(() => moveOldFoulTipsOnce())
     .then((n) => { if (n) console.log(`Staré tipy na fauly: presunuté do sledovaných ${n}`); })
-    .catch((err) => console.error("Presun starých tipov na fauly zlyhal:", err));
+    .catch((err) => console.error("Presun starých tipov na fauly zlyhal:", err))
+    // 12. 11. 2026 (Michal, skúška): pásmo 65 – 80 % – sledované tipy 65 – 69 %, ktoré prejdú aj 60 / 40, raz vráti do štatistík.
+    // Pri BAND_65_TRIAL = false ich (aj nové tipy 65 – 69 %) presunie späť do sledovaných.
+    .then(() => syncBand65Trial(BAND_65_TRIAL, (t) => {
+      if (typeof t.probability !== "number" || typeof t.odds !== "number" || typeof t.strictProbability !== "number") return false;
+      // Staré fauly (pred novými hranicami 8. – 9. 11. 2026) sa nevracajú.
+      if (/faul/i.test(t.market) && String(t.matchDate) < "2026-11-09") return false;
+      const ev = (t.probability / 100) * t.odds;
+      return t.probability >= MIN_PROBABILITY && t.probability <= MAX_PROBABILITY && t.odds >= MIN_ODDS - 1e-9
+        && ev >= MIN_EXPECTED_VALUE && ev <= SUSPICIOUS_EXPECTED_VALUE && passesStrict(t, t.odds);
+    }, (market) => { const c = marketCategory(market); return c ? tipType(c) : null; }))
+    .then((r) => { if (r.returned || r.kept || r.movedBack) console.log(`Pásmo 65 – 69 %: vrátené do štatistík ${r.returned}, ostáva v sledovaných ${r.kept}, späť do sledovaných ${r.movedBack}`); })
+    .catch((err) => console.error("Skúška pásma 65 – 80 % zlyhala:", err));
 });

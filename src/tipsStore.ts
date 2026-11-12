@@ -415,6 +415,64 @@ export async function moveStrictFailedBackOnce(): Promise<number> {
 }
 
 /**
+ * 12. 11. 2026 (Michal, skúška pásma 65 – 80 %): pri zapnutej skúške raz vráti sledované tipy z pásma 65 – 69 %
+ * (watchBand) do štatistík – len tie, ktoré prejdú všetkými pravidlami vrátane kontroly 60 / 40 (ok) a zápas
+ * ešte nemá v štatistikách tip rovnakého typu. Ostatné ostávajú v sledovaných. Značka band65Returned.
+ * Pri vypnutej skúške presunie band65Returned aj nové band65Trial späť do sledovaných (watchBand). Nič sa nemaže.
+ */
+const BAND65_KEY = "tipradar_migr_band65_done";
+export async function syncBand65Trial(
+  on: boolean,
+  ok: (t: SavedTip) => boolean,
+  typeOf: (market: string) => string | null,
+): Promise<{ returned: number; kept: number; movedBack: number }> {
+  const res = { returned: 0, kept: 0, movedBack: 0 };
+  if (!useUpstash) return res;
+  const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };
+  const done = (await upstashClient().get(`${UPSTASH_URL}/get/${BAND65_KEY}`, auth)).data?.result;
+  if (on && done) return res;
+  return withWriteLock(async () => {
+    const tips = await readAll();
+    if (on) {
+      const taken = new Set<string>();
+      for (const t of tips) {
+        if ((t.legs && t.legs.length) || t.watchOnly || !t.fixtureId) continue;
+        const type = typeOf(t.market);
+        if (type) taken.add(`${t.fixtureId}|${type}`);
+      }
+      const cands = tips
+        .filter((t) => !(t.legs && t.legs.length) && t.watchOnly && t.watchBand && !t.manualEntry && !t.strictFail && !t.retroStrict && !t.lateMoved)
+        .sort((a, b) => (b.probability ?? 0) - (a.probability ?? 0));
+      for (const t of cands) {
+        const type = t.fixtureId ? typeOf(t.market) : null;
+        const key = type ? `${t.fixtureId}|${type}` : "";
+        if (!ok(t) || (key && taken.has(key))) { res.kept++; continue; }
+        if (key) taken.add(key);
+        t.watchOnly = undefined;
+        t.band65Returned = true;
+        res.returned++;
+      }
+      if (res.returned) await writeAll(tips);
+      await upstashClient().post(`${UPSTASH_URL}/set/${BAND65_KEY}`, new Date().toISOString(), {
+        headers: { ...auth.headers, "Content-Type": "text/plain" },
+      });
+    } else {
+      for (const t of tips) {
+        if (!t.band65Returned && !t.band65Trial) continue;
+        if (t.watchOnly) continue;
+        t.watchOnly = true;
+        t.watchBand = true;
+        t.strongOfDay = undefined;
+        res.movedBack++;
+      }
+      if (res.movedBack) await writeAll(tips);
+      if (done) await upstashClient().get(`${UPSTASH_URL}/del/${BAND65_KEY}`, auth);
+    }
+    return res;
+  });
+}
+
+/**
  * 8. 11. 2026 (Michal): späť na „najviac 1 tip z typu na zápas“ (karty + karty domácich + karty hostí = jeden typ).
  * Beží raz pri štarte: zo zverejnených tipov (nie sledované, nie tikety) jedného zápasu a jedného typu ostane
  * v štatistikách len tip s najvyššou dôverou (pri zhode vyššia hodnota, potom skôr uložený); ostatné idú do

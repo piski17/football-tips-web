@@ -67,13 +67,18 @@ export const MIN_GAMES_TO_RECOMMEND = 3;
 // a minimálny kurz 1,60 (MIN_ODDS).
 // 2. 11. 2026 20:50 (Michalovo rozhodnutie, skúška): pásmo 70 – 80 % pri kurze od 1,50 (kontrola 60 / 40 tiež od 70 %).
 // Návrat: MIN_PROBABILITY 68, WATCH_BELOW_PROBABILITY 68, MIN_ODDS 1,6.
-export const MIN_PROBABILITY = 70;
+// 12. 11. 2026 (Michalovo rozhodnutie, SKÚŠKA): pásmo 65 – 80 % – tipy 65 – 69 % idú klientom a do štatistík
+// (aj spätne), ale musia prejsť aj kontrolou 60 / 40 (tiež od 65 %).
+// NÁVRAT na 70 – 80 %: BAND_65_TRIAL = false (a v public/app.js WATCH_BELOW = 70) – server pri štarte
+// vráti tipy 65 – 69 % (band65Returned aj band65Trial) späť do sledovaných.
+export const BAND_65_TRIAL = true;
+export const MIN_PROBABILITY = BAND_65_TRIAL ? 65 : 70;
 /**
  * Skúšobné pásmo (21. 10. 2026, Michalovo rozhodnutie): tipy s dôverou pod touto hranicou
  * (65 – 68 %) sa ukladajú len na sledovanie – vyhodnotia sa, ale neposielajú sa členom
  * a nerátajú sa do štatistík. Keď sa ukážu ako dobré, stačí hranicu znížiť na MIN_PROBABILITY.
  */
-export const WATCH_BELOW_PROBABILITY = 70;
+export const WATCH_BELOW_PROBABILITY = MIN_PROBABILITY;
 /**
  * Skúšobné pásmo 65 – 67 % (28. 10. 2026, Michalovo rozhodnutie): tipy od tejto dôvery po MIN_PROBABILITY
  * appka ukáže zvlášť a ukladajú sa len do sledovaných (vlastná skupina v Histórii tipov). Pri kontrole

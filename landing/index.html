@@ -966,7 +966,7 @@ html.menu-open .jump { display: none; }
         </div>
         <div class="scale" aria-hidden="true">
           <div class="sc-track"></div>
-          <div class="sc-band" id="scBand"><span>pásmo 70 – 80 %</span></div>
+          <div class="sc-band" id="scBand"><span>pásmo 65 – 80 %</span></div>
           <div class="sc-gap" id="scGap"></div>
           <div class="sc-mk o" id="mkO"><i></i></div>
           <div class="sc-mk p" id="mkP"><i></i></div>
@@ -1431,12 +1431,12 @@ html.menu-open .jump { display: none; }
     io.observe(el);
   };
 
-  /* ---------------- ÚVOD: Model vs. kurz – stupnica 30 – 90 % s pásmom 70 – 80 % ---------------- */
+  /* ---------------- ÚVOD: Model vs. kurz – stupnica 30 – 90 % s pásmom 65 – 80 % ---------------- */
   (function () {
     var P = $("inP"), O = $("inO"); if (!P || !O) return;
     var MIN = 30, MAX = 90;
     var pos = function (v) { return ((Math.max(MIN, Math.min(MAX, v)) - MIN) / (MAX - MIN)) * 100; };
-    var band = $("scBand"); band.style.left = pos(70) + "%"; band.style.width = pos(80) - pos(70) + "%";
+    var band = $("scBand"); band.style.left = pos(65) + "%"; band.style.width = pos(80) - pos(65) + "%";
     var tk = ""; for (var v = MIN; v <= MAX; v += 10) tk += '<span style="left:' + pos(v) + '%">' + v + "</span>";
     $("scTicks").innerHTML = tk;
     var btns = document.querySelectorAll(".presets button");
@@ -1449,9 +1449,9 @@ html.menu-open .jump { display: none; }
       $("mkP").style.left = pos(p) + "%"; $("mkO").style.left = pos(imp) + "%";
       var g = $("scGap"), x0 = Math.min(pos(p), pos(imp)), x1 = Math.max(pos(p), pos(imp));
       g.style.left = x0 + "%"; g.style.width = x1 - x0 + "%"; g.classList.toggle("bad", p < imp);
-      var c1 = p >= 70 && p <= 80, c2 = val >= 5, c3 = o >= 1.5 - 1e-9;
+      var c1 = p >= 65 && p <= 80, c2 = val >= 5, c3 = o >= 1.5 - 1e-9;
       var li = function (ok, t, v) { return '<li class="' + (ok ? "ok" : "no") + '"><i>' + (ok ? "✓" : "✕") + "</i>" + t + "<b>" + v + "</b></li>"; };
-      $("checks").innerHTML = li(c1, "šanca v pásme 70 – 80 %", p + " %") + li(c2, "hodnota aspoň +5 %", signed(val, 0) + " %") + li(c3, "kurz aspoň 1,50", fmt(o, 2));
+      $("checks").innerHTML = li(c1, "šanca v pásme 65 – 80 %", p + " %") + li(c2, "hodnota aspoň +5 %", signed(val, 0) + " %") + li(c3, "kurz aspoň 1,50", fmt(o, 2));
       var ok = c1 && c2 && c3, v = $("verdict");
       v.className = "verdict " + (ok ? "ok" : "no");
       v.innerHTML = '<span class="stamp">' + (ok ? "✓" : "✕") + "</span><div>" + (ok ? "Taký tip by sme poslali." : "Taký tip by sme neposlali.") + "<small>" + fmt(p / 100, 2) + " × " + fmt(o, 2) + " = " + fmt((p / 100) * o, 2) + " · hodnota " + signed(val, 0) + " %</small></div>";

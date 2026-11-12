@@ -339,6 +339,10 @@ export interface SavedTip {
   band70Moved?: boolean;
   /** Tip vyradený kontrolou 60 / 40, vrátený do štatistík po jej vypnutí (6. 11. 2026). */
   strictReturned?: boolean;
+  /** 12. 11. 2026 (skúška pásma 65 – 80 %): sledovaný tip 65 – 69 % vrátený do štatistík (prešiel aj 60 / 40). */
+  band65Returned?: boolean;
+  /** 12. 11. 2026 (skúška pásma 65 – 80 %): nový tip s dôverou 65 – 69 %, ktorý šiel klientom. */
+  band65Trial?: boolean;
   /** 4. 11. 2026: tip doplnený po výkope presunutý do sledovaných (klientom nešiel, do štatistík sa neráta). */
   lateMoved?: boolean;
   /** 5. 11. 2026: vrátený zo sledovaných do štatistík (prešiel by klientom). */
