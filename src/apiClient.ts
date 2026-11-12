@@ -337,6 +337,9 @@ function parseStatValue(value: unknown): number | null {
   return null;
 }
 
+/** Z koľkých posledných zápasov tímu sa počítajú rohy, karty, strely, fauly (12. 11. 2026, Michal: 5). */
+export const STAT_GAMES = 5;
+
 export async function getTeamExtendedStatsAverages(
   leagueId: number,
   season: number,
@@ -344,7 +347,7 @@ export async function getTeamExtendedStatsAverages(
   lastN: number = 10,
   asOf?: string
 ): Promise<TeamExtendedStatsAverages> {
-  const cacheKey = `extStatsAvg5:${leagueId}:${season}:${teamId}:${lastN}:${asOf ?? ""}`;
+  const cacheKey = `extStatsAvg6:${leagueId}:${season}:${teamId}:${lastN}:${asOf ?? ""}`;
   // Pri spätnom teste načítame viac zápasov a ponecháme len tie spred výkopu.
   const extra = asOf ? 15 : 0;
   const cached = getCached<TeamExtendedStatsAverages>(cacheKey);
@@ -478,8 +481,11 @@ export async function getTeamExtendedStatsAverages(
       return empty;
     }
 
+    // 12. 11. 2026 (Michal): rohy, karty, strely, fauly (aj doma / vonku) len z posledných 5 zápasov tímu.
+    // Forma gólov a xG ostávajú z posledných lastN (10) zápasov.
+    const statRows = [...valid].sort((a, b) => (b.time ?? 0) - (a.time ?? 0)).slice(0, STAT_GAMES);
     const average = (key: string): number | null => {
-      const values = valid.map((r) => r[key]).filter((v): v is number => v !== null);
+      const values = statRows.map((r) => r[key]).filter((v): v is number => v !== null);
       return values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : null;
     };
 
@@ -514,7 +520,7 @@ export async function getTeamExtendedStatsAverages(
       return Math.min(1.2, Math.max(0.8, Math.max(mixed, 0.3) / goals));
     };
     const venue = (home: 1 | 0): VenueStats => {
-      const list = valid.filter((r) => r.isHome === home);
+      const list = statRows.filter((r) => r.isHome === home);
       const avg = (key: string): number | null => {
         const values = list.map((r) => r[key]).filter((v): v is number => v != null);
         return values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
@@ -1261,15 +1267,14 @@ export async function getFixtureOdds(fixtureId: number, fresh = false): Promise<
  * Štatistiky posledných vzájomných zápasov (rohy, karty, strely, fauly, ofsajdy,
  * držanie lopty) – na spresnenie odhadu. Odohrané zápasy sa už nemenia, preto
  * sa ukladajú na 7 dní a pri ďalšom otvorení zápasu nestoja nič.
- * Berie len zápasy za posledných 5 rokov (5 sezón), najviac 5 najnovších.
+ * Berie posledných 5 vzájomných zápasov bez ohľadu na rok (12. 11. 2026, Michal; predtým len za 5 rokov).
  */
 export async function getHeadToHeadStats(
   h2h: HeadToHeadMatch[],
   currentHomeTeamName: string
 ): Promise<H2HStats[]> {
-  const since = Date.now() - 5 * 365 * 24 * 60 * 60 * 1000;
   const recent = h2h
-    .filter((m) => m.homeGoals !== null && m.awayGoals !== null && new Date(m.date).getTime() >= since)
+    .filter((m) => m.homeGoals !== null && m.awayGoals !== null)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
   const out: H2HStats[] = [];

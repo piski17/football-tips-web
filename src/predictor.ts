@@ -343,7 +343,8 @@ function overdispersedOverUnder(mean: number, line: number, varRatio: number): {
 const VAR_RATIO = { cards: 1.4, shotsOnGoal: 1.35, offsides: 1.3, fouls: 1.3, corners: 1.2 };
 
 /** Počet zápasov, z ktorých sa počítajú priemery štatistík (rohy, karty, strely, fauly). */
-const STAT_WINDOW_GAMES = 10;
+// 12. 11. 2026 (Michal): rohy, karty, strely, fauly z posledných 5 zápasov tímu (predtým 10).
+const STAT_WINDOW_GAMES = 5;
 function scaleVarRatio(v: typeof VAR_RATIO, k: number): typeof VAR_RATIO {
   return { cards: v.cards * k, shotsOnGoal: v.shotsOnGoal * k, offsides: v.offsides * k, fouls: v.fouls * k, corners: v.corners * k };
 }
@@ -731,7 +732,7 @@ function normalCdf(z: number): number {
 
 
 // ---- Vzájomné zápasy: doplnok k odhadu z dlhodobých priemerov ----
-// Váha rastie s počtom zápasov (za posledných 5 rokov, najviac 5 najnovších):
+// Váha rastie s počtom zápasov (posledných 5 vzájomných zápasov, bez ohľadu na rok – od 12. 11. 2026):
 // 3 zápasy = 15 %, 4 = 20 %, 5 = 25 %; menej ako 3 = nepoužijú sa.
 // Novšie zápasy majú väčšiu váhu (každý starší × 0,85).
 const H2H_MIN = 3;
@@ -748,12 +749,11 @@ function recencyAverage(values: (number | null)[]): { avg: number; n: number } |
   return n >= H2H_MIN ? { avg: sum / wsum, n } : null;
 }
 interface H2HGoals { n: number; weight: number; home: number; away: number; total: number }
-/** Vzájomné zápasy sa berú za posledných 5 rokov (5 sezón) – staršie už pre dnešné tímy veľa nehovoria (21. 10. 2026, Michalovo rozhodnutie). */
-const H2H_YEARS = 5;
+/** Vzájomné zápasy: posledných 5 vzájomných zápasov bez ohľadu na rok (12. 11. 2026, Michalovo rozhodnutie;
+ * predtým len za posledných 5 rokov). */
 function h2hRecent(h2h: HeadToHeadMatch[]): HeadToHeadMatch[] {
-  const since = Date.now() - H2H_YEARS * 365 * 24 * 60 * 60 * 1000;
   return h2h
-    .filter((m) => m.homeGoals !== null && m.awayGoals !== null && new Date(m.date).getTime() >= since)
+    .filter((m) => m.homeGoals !== null && m.awayGoals !== null)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
 }
