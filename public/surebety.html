@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>TipRadar – surebety</title>
+<title>ARBREX – surebety</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -97,6 +97,12 @@ details.day[open] > summary { border-bottom: 1px solid var(--line2); }
 .lrow .t b { font-weight: 600; }
 @media (max-width: 520px) { details.day > summary { grid-template-columns: 1fr auto; } details.day > summary .hide-m { display: none; } details.day > summary { grid-template-columns: 1fr; gap: 4px; } details.day > summary .dsum { text-align: left !important; } }
 details p, details li { color: var(--muted); font-size: 14px; }
+.arb-brand { display: flex; align-items: center; gap: 18px; margin: 14px 0 10px; }
+.arb-brand svg { width: 64px; height: 64px; flex: none; }
+.arb-brand h1 { margin: 0; font-size: 44px; font-weight: 900; letter-spacing: .08em; line-height: 1; color: var(--text); }
+.arb-slogan { margin-top: 6px; font-size: 12px; font-weight: 700; letter-spacing: .28em; text-transform: uppercase; color: var(--muted); }
+.arb-slogan b { color: var(--good); font-weight: 700; }
+@media (max-width: 520px) { .arb-brand svg { width: 48px; height: 48px; } .arb-brand h1 { font-size: 34px; } .arb-slogan { font-size: 10px; letter-spacing: .18em; } }
 .alts { display: block; margin-top: 4px; font-size: 12.5px; color: var(--muted); }
 .btns { display: inline-flex; gap: 6px; flex-wrap: wrap; }
 /* Obrázok na Instagram (12. 11. 2026) */
@@ -115,8 +121,12 @@ details p, details li { color: var(--muted); font-size: 14px; }
 <body>
 <div class="wrap">
   <a class="back" href="/">‹ Späť do appky</a>
-  <h1>Sure<span>bety</span></h1>
-  <p class="lead">Surebet = dve stávkovky ponúkajú opačné stávky (napr. nad a pod 2,5 gólu) s takými kurzami, že pri vsadení na obe strany zarobíte, nech zápas skončí akokoľvek. Táto stránka je len pre vás, s tipmi TipRadaru nesúvisí.</p>
+  <!-- ARBREX (12. 11. 2026, Michal): projekt surebetov ako podstránka TipRadaru -->
+  <div class="arb-brand">
+    <svg viewBox="0 0 200 200" aria-hidden="true"><defs><linearGradient id="arbS" gradientUnits="userSpaceOnUse" x1="0" y1="10" x2="0" y2="190"><stop offset="0" stop-color="#F4EFE7"/><stop offset="1" stop-color="#B9AC99"/></linearGradient><linearGradient id="arbG" gradientUnits="userSpaceOnUse" x1="0" y1="155" x2="0" y2="55"><stop offset="0" stop-color="#5FAE85"/><stop offset="1" stop-color="#9FE0BC"/></linearGradient></defs><circle cx="100" cy="100" r="88" fill="none" stroke="url(#arbS)" stroke-width="9"/><path d="M78 150 V66" stroke="url(#arbG)" stroke-width="16" stroke-linecap="round"/><path d="M52 88 L78 58 L104 88" fill="none" stroke="url(#arbG)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/><path d="M122 50 V134" stroke="url(#arbS)" stroke-width="16" stroke-linecap="round"/><path d="M96 112 L122 142 L148 112" fill="none" stroke="url(#arbS)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div><h1>ARBREX</h1><div class="arb-slogan">Profit. <b>Whatever the score.</b></div></div>
+  </div>
+  <p class="lead">Projekt surebetov pre zahraničných klientov (Instagram, Telegram @arbrex_surebets). Surebet = dve stávkovky ponúkajú opačné stávky (napr. nad a pod 2,5 gólu) s takými kurzami, že pri vsadení na obe strany zarobíte, nech zápas skončí akokoľvek. Táto stránka je len pre vás, s tipmi TipRadaru nesúvisí.</p>
 
   <!-- KALKULAČKA -->
   <section class="panel" id="calcPanel">

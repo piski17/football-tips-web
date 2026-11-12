@@ -2069,7 +2069,7 @@ app.get(["/instagram", "/instagram/"], (_req, res) => {
 
 // ---- Surebety (/surebety) – Michalov vedľajší projekt, skúška od 2. 11. 2026 ----
 // Nedotýka sa tipov, štatistík ani klientov. Logika v src/surebets.ts.
-app.get(["/surebety", "/surebety/"], (_req, res) => {
+app.get(["/surebety", "/surebety/", "/arbrex", "/arbrex/"], (_req, res) => { // 12. 11. 2026: ARBREX = projekt surebetov
   res.set("Cache-Control", "no-cache");
   res.sendFile(path.join(__dirname, "..", "public", "surebety.html"));
 });
