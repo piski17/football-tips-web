@@ -490,15 +490,13 @@ export async function getTeamExtendedStatsAverages(
     };
 
     // Forma podľa gólov: posledné zápasy tímu, každý starší zápas má váhu × 0,9.
-    // 12. 11. 2026 (Michal): aj forma gólov len z posledných 5 zápasov (sezónne priemery a 3 minulé sezóny bez zmeny).
     const goalRows = fixtures
       .filter((f: any) => f?.goals?.home != null && f?.goals?.away != null)
       .sort((a: any, b: any) => new Date(b.fixture?.date).getTime() - new Date(a.fixture?.date).getTime())
       .map((f: any) => {
         const isHome = f.teams?.home?.id === teamId;
         return { gf: Number(isHome ? f.goals.home : f.goals.away), ga: Number(isHome ? f.goals.away : f.goals.home) };
-      })
-      .slice(0, STAT_GAMES);
+      });
     let gw = 0, gfSum = 0, gaSum = 0;
     goalRows.forEach((r, i) => {
       const w = Math.pow(0.9, i);
