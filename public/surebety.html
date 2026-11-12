@@ -408,15 +408,15 @@ $("scopeChips").addEventListener("click", (e) => {
 let logScope = "top";
 /** 12. 11. 2026 (Michal): ukazovať a vyhodnocovať len surebety so ziskom od 3 %. Server zapisuje všetky, filter je len tu. */
 const ARB_MIN = 0.03;
-/** 12. 11. 2026: ten istý tip (zápas + trh + hranica) môže prísť z dvoch trhov API (napr. dva trhy rohov) – nechať len ten s vyšším ziskom. */
+/** 12. 11. 2026 (Michal): z jedného trhu v zápase len jeden surebet – hranica s najvyšším ziskom (rôzne trhy, napr. karty a rohy, môžu ostať). */
 function dedupeSame(list, mk) {
   const m = new Map();
   for (const e of list) {
-    const k = [e.scope || "", e.fixtureId, e.market, e.sides[0].label, e.sides[1].label].join("|");
+    const k = [e.scope || "", e.fixtureId, e.market].join("|");
     const p = m.get(k);
     if (!p || mk(e) > mk(p)) m.set(k, e);
   }
-  return list.filter((e) => m.get([e.scope || "", e.fixtureId, e.market, e.sides[0].label, e.sides[1].label].join("|")) === e);
+  return list.filter((e) => m.get([e.scope || "", e.fixtureId, e.market].join("|")) === e);
 }
 let logEntries = [];
 let topBooksAll = [];
@@ -429,9 +429,9 @@ function logListFor(sc) {
   for (const e of logEntries) {
     const ok = e.scope === "top" || (e.scope === "all" && e.sides.every((x) => top.has(normBook(x.book))));
     if (!ok) continue;
-    const k = [e.fixtureId, e.market, e.sides[0].label, e.sides[1].label].join("|");
+    const k = [e.fixtureId, e.market].join("|");
     const prev = byKey.get(k);
-    if (!prev || (prev.scope !== "top" && e.scope === "top")) byKey.set(k, e);
+    if (!prev || e.maxMargin > prev.maxMargin) byKey.set(k, e);
   }
   return [...byKey.values()];
 }
