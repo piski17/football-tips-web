@@ -293,7 +293,8 @@
 
   /** Súhrn dňa (vyhodnotenie skúšky). */
   /** 12. 11. 2026 (Michal): súhrn dňa na viac obrázkov – na každom najviac 5 (príbeh 8) surebetov, aby boli vidieť všetky. */
-  const dayPer = (fmtKey) => (fmtKey === "story" ? 8 : 5);
+  // 13. 11. 2026 (Michal): každý zápas ako karta BET 1 / BET 2 (ako pri jednom surebete) → príspevok 2 na obrázok, príbeh 3.
+  const dayPer = (fmtKey) => (fmtKey === "story" ? 3 : 2);
   const dayPages = (list, fmtKey) => Math.max(1, Math.ceil(list.length / dayPer(fmtKey)));
   /** 13. 11. 2026 (Michal): ďalšie stávkovky, kde ten istý surebet funguje – aj v súhrne dňa. */
   const dayCombos = (e) => (window.sbCombos ? window.sbCombos({ ...e, margin: e.maxMargin }) : []);
@@ -418,30 +419,35 @@
         ctx.fillStyle = C.good; ctx.font = font(800, pf, H_FONT); ctx.textAlign = "right";
         ctx.fillText(`+${n2(e.maxMargin * 100)}%`, cx + cw - 26, py + profH / 2 + pf * 0.35); ctx.textAlign = "left";
       } else if (rh >= 220) {
-        // Stredná karta: liga, zápas, trh a každá stávka na vlastnom riadku, zisk vpravo.
-        const sideW = IW - 300;
+        // Karta ako pri jednom surebete: liga · trh, zápas + zisk, dve stávky (tip, kurz, stávkovka, vklad zo 100 €).
+        const pad = 28, cx = X + pad, cw = IW - 2 * pad;
         const cbm = dayCombos(e);
-        const alsoL = cbm.slice(0, 2).map((c, k) => `${k ? "or" : "Also:"} ${c.a.book} ${n2(c.a.odd)} + ${c.b.book} ${n2(c.b.odd)} → +${n2(c.margin * 100)}%${k === 1 && cbm.length > 2 ? `  (+${cbm.length - 2} more)` : ""}`);
-        let yy = y + (rh - 196 - alsoL.length * 30) / 2;
+        const sum = 1 / e.sides[0].odd + 1 / e.sides[1].odd;
+        const showAlso = cbm.length && rh >= 300;
         ctx.fillStyle = C.muted; ctx.font = font(700, 18, B_FONT);
         const top = `${pre ? ktime(e) + " · " : ""}${league(e)} · ${market(e.market)}`.toUpperCase();
-        spaced(ctx, top.length > 52 ? top.slice(0, 50) + "…" : top, X + 32, yy + 16, 2);
+        spaced(ctx, top.length > 52 ? top.slice(0, 50) + "…" : top, cx, y + 42, 2);
+        ctx.fillStyle = C.good; ctx.font = font(800, 46, H_FONT); ctx.textAlign = "right";
+        const pt = `+${n2(e.maxMargin * 100)}%`; ctx.fillText(pt, cx + cw, y + 88); const pw = ctx.measureText(pt).width; ctx.textAlign = "left";
         ctx.fillStyle = C.text; const tm = `${e.home} – ${e.away}`;
-        fit(ctx, tm, 800, 40, sideW, H_FONT, 24); ctx.fillText(tm, X + 32, yy + 72);
-        e.sides.forEach((sd, i) => {
-          const ly = yy + 128 + i * 52;
-          rr(ctx, X + 32, ly - 32, sideW, 44, 12); ctx.fillStyle = C.card2; ctx.fill();
-          ctx.fillStyle = C.text; ctx.font = font(700, 24, B_FONT); ctx.fillText(label(sd.label), X + 48, ly - 2);
-          ctx.fillStyle = C.good; ctx.font = font(800, 26, H_FONT); ctx.textAlign = "right";
-          ctx.fillText(n2(sd.odd), X + 32 + sideW - 170, ly - 2);
-          ctx.fillStyle = C.stone; ctx.font = font(700, 22, B_FONT); ctx.textAlign = "left";
-          fit(ctx, sd.book, 700, 22, 150, B_FONT, 14); ctx.fillText(sd.book, X + 32 + sideW - 152, ly - 3);
+        fit(ctx, tm, 800, 38, cw - pw - 24, H_FONT, 22); ctx.fillText(tm, cx, y + 88);
+        const by = y + 110, bh = rh - 110 - pad + 6 - (showAlso ? 38 : 0);
+        const bw = (cw - 16) / 2;
+        e.sides.forEach((sd, k) => {
+          const bx = cx + k * (bw + 16);
+          rr(ctx, bx, by, bw, bh, 16); ctx.fillStyle = C.card2; ctx.fill(); ctx.strokeStyle = C.line; ctx.lineWidth = 2; ctx.stroke();
+          ctx.fillStyle = C.muted; ctx.font = font(700, 16, B_FONT); spaced(ctx, k ? "BET 2" : "BET 1", bx + 20, by + 30, 2);
+          ctx.font = font(600, 17, B_FONT); ctx.textAlign = "right"; ctx.fillText(`Stake €${n2((100 / sd.odd) / sum)}`, bx + bw - 20, by + 30); ctx.textAlign = "left";
+          ctx.fillStyle = C.text; fit(ctx, label(sd.label), 700, 26, bw - 40, B_FONT, 16); ctx.fillText(label(sd.label), bx + 20, by + bh / 2 + 12);
+          ctx.fillStyle = C.good; ctx.font = font(800, 40, H_FONT); ctx.fillText(n2(sd.odd), bx + 20, by + bh - 20);
+          const ow = ctx.measureText(n2(sd.odd)).width;
+          ctx.fillStyle = C.stone; fit(ctx, sd.book, 700, 22, bw - 56 - ow, B_FONT, 14); ctx.fillText(sd.book, bx + 34 + ow, by + bh - 22);
         });
-        alsoL.forEach((t, k) => { ctx.fillStyle = C.stone; fit(ctx, t, 600, 20, sideW, B_FONT, 14); ctx.fillText(t, X + 32, yy + 226 + k * 30); });
-        ctx.fillStyle = C.muted; ctx.font = font(700, 18, B_FONT); ctx.textAlign = "right";
-        ctx.fillText("PROFIT", X + IW - 32, y + rh / 2 - 34);
-        ctx.fillStyle = C.good; ctx.font = font(800, 60, H_FONT);
-        ctx.fillText(`+${n2(e.maxMargin * 100)}%`, X + IW - 32, y + rh / 2 + 30); ctx.textAlign = "left";
+        if (showAlso) {
+          const c = cbm[0];
+          const t = `Also: ${label(e.sides[0].label)} (${c.a.book} ${n2(c.a.odd)}) – ${label(e.sides[1].label)} (${c.b.book} ${n2(c.b.odd)}) · ${n2(c.margin * 100)}%${cbm.length > 1 ? `   +${cbm.length - 1} more` : ""}`;
+          ctx.fillStyle = C.stone; fit(ctx, t, 600, 21, cw, B_FONT, 14); ctx.fillText(t, cx, y + rh - pad + 2);
+        }
       } else {
         // Bežný riadok; pri väčšej výške navyše liga a väčšie písmo, obsah vycentrovaný.
         const tall = rh >= 150;
@@ -483,26 +489,19 @@
     const lines = [];
     lines.push(settled ? "✅ SUREBET SETTLED" : "🔒 NEW SUREBET");
     lines.push("");
-    lines.push(`⚽ ${s.home} – ${s.away}${score}`);
-    lines.push(`🏆 ${league(s)}`);
-    if (!settled) lines.push(`🕒 ${kickoff(s.date)}`);
-    lines.push(`📊 ${market(s.market)}`);
+    // 13. 11. 2026 (Michal): zápis ako na obrázku – „Zápas / trh“, „Over 4.5 (Betano 1.83) – Under 4.5 (Pinnacle 2.47)“.
+    lines.push(`⚽ ${s.home} – ${s.away}${score} / ${market(s.market)}`);
+    lines.push(`🏆 ${league(s)}${settled ? "" : " · 🕒 " + kickoff(s.date)}`);
     lines.push("");
-    s.sides.forEach((sd, k) => {
-      const stake = (100 * (1 / sd.odd)) / sum;
-      const icon = !settled || win === null ? (k === 0 ? "1️⃣" : "2️⃣") : win === -1 ? "↩️" : win === k ? "✅" : "❌";
-      const res = !settled || win === null ? "" : win === -1 ? " · void" : win === k ? " · WON" : " · lost";
-      lines.push(betLine(icon, sd, s.sides[1 - k].odd, res));
-    });
-    lines.push("");
-    if (settled) lines.push(win === -1 ? "💰 Draw – both stakes refunded, no loss." : `💰 Profit from €100: €${n2(profit)} (${n2(profit)}%)`);
-    else lines.push(`💰 Profit from €100: €${n2(profit)} (${n2(profit)}%), whatever the score`);
+    const [a, b] = s.sides;
+    lines.push(pairText(s, a, b));
+    lines.push(`💵 Stakes from €100: ${stakesText(a, b)}`);
+    if (settled && win !== null) lines.push(win === -1 ? "↩️ Void – both stakes refunded, no loss." : `✅ ${label(s.sides[win].label)} won (${s.sides[win].book})`);
+    if (!settled || win !== -1) lines.push(`💰 Profit: €${n2(profit)} (${n2(profit)}%)${settled ? "" : ", whatever the score"}`);
     const combos = window.sbCombos ? window.sbCombos(s) : [];
     if (combos.length) {
-      lines.push("");
-      lines.push(settled ? "The same surebet also worked at other bookmakers:" : "The same surebet also works at other bookmakers:");
-      // 13. 11. 2026 (Michal): všetky dvojice – stávkovka a kurz na jednu stranu + stávkovka a kurz na druhú.
-      combos.forEach((p, k) => { if (k) lines.push(""); lines.push(...altPair(s, p, k)); });
+      lines.push("", settled ? "🔁 Also worked at:" : "🔁 Also works at:");
+      for (const p of combos) lines.push(`${pairText(s, p.a, p.b)} · ${n2(p.margin * 100)}%`);
     }
     lines.push("");
     lines.push("👑 ARBREX – Profit. Whatever the score.");
@@ -521,8 +520,9 @@
     betLine("2️⃣", { book: c.b.book, label: s.sides[1].label, odd: c.b.odd }, c.a.odd),
     `💰 Profit from €100: €${n2(c.margin * 100)} (${n2(c.margin * 100)}%)`,
   ];
-  /** 13. 11. 2026 (Michal): krátky text súhrnu dňa – na surebet 3 riadky: zápas + zisk, potom stávkovka tip (kurz) vklad pre obe strany. */
-  const shortBet = (icon, book, lab, odd, other) => `${icon} ${book} ${label(lab)} (${n2(odd)}) €${n2(stakeOf(odd, other))}`;
+  /** 13. 11. 2026 (Michal): text ako obrázok – „Zápas / trh“ a „Over 4.5 (Betano 1.83) – Under 4.5 (Pinnacle 2.47)“. */
+  const pairText = (s, a, b) => `${label(s.sides[0].label)} (${a.book} ${n2(a.odd)}) – ${label(s.sides[1].label)} (${b.book} ${n2(b.odd)})`;
+  const stakesText = (a, b) => `€${n2(stakeOf(a.odd, b.odd))} – €${n2(stakeOf(b.odd, a.odd))}`;
   function dayCaption(day, list, pre = false) {
     list = [...list].sort((a, b) => b.maxMargin - a.maxMargin);
     const n = list.length;
@@ -531,9 +531,8 @@
     for (const e of list) {
       const kt = pre ? new Date(e.date).toLocaleTimeString("en-GB", { timeZone: "Europe/Bratislava", hour: "2-digit", minute: "2-digit" }) + " · " : "";
       const [a, b] = e.sides;
-      lines.push(`${pre ? "🔒" : "✅"} ${kt}${e.home} – ${e.away} · ${market(e.market)} · ${n2(e.maxMargin * 100)}%`,
-        shortBet("1️⃣", a.book, a.label, a.odd, b.odd), shortBet("2️⃣", b.book, b.label, b.odd, a.odd));
-      for (const c of dayCombos(e)) lines.push(`🔁 or ${c.a.book} (${n2(c.a.odd)}) €${n2(stakeOf(c.a.odd, c.b.odd))} | ${c.b.book} (${n2(c.b.odd)}) €${n2(stakeOf(c.b.odd, c.a.odd))} · ${n2(c.margin * 100)}%`);
+      lines.push(`${pre ? "🔒" : "✅"} ${kt}${e.home} – ${e.away} / ${market(e.market)}`, pairText(e, a, b), `💰 ${n2(e.maxMargin * 100)}% · stakes ${stakesText(a, b)}`);
+      for (const c of dayCombos(e)) lines.push(`🔁 ${pairText(e, c.a, c.b)} · ${n2(c.margin * 100)}%`);
       lines.push("");
     }
     lines.push("👑 ARBREX · 18+ · Bet responsibly", "#arbrex #football");
