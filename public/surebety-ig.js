@@ -385,7 +385,6 @@
     const f = (v) => Math.round(v * k);
     const fs = (v) => Math.round(v * Math.min(k, 1.3)); // drobné popisy rastú menej
     const pill = (sd, other, px, py, extra) => {
-      rr(ctx, px, py, pillW, PH, 12 * Math.min(k, 1.5)); ctx.fillStyle = C.card2; ctx.fill(); ctx.strokeStyle = C.line; ctx.lineWidth = 1.5; ctx.stroke();
       const ix = 16 * Math.min(k, 1.4);
       if (stack) {
         const iw = pillW - 2 * ix, mk = market(e0.market), lb = label(sd.label);
@@ -425,6 +424,9 @@
       let py = y + CARD.head * k;
       const pair = (s0, o0, s1, o1, extra, first) => {
         if (!first) py += PH + PG;
+        // Michal 13. 11.: obe stávky dvojice v jednom spoločnom rámčeku, uprostred deliaca čiara.
+        rr(ctx, cx, py, cw, PH, 12 * Math.min(k, 1.5)); ctx.fillStyle = C.card2; ctx.fill(); ctx.strokeStyle = C.line; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx + pillW + 6, py + PH * 0.18); ctx.lineTo(cx + pillW + 6, py + PH * 0.82); ctx.stroke();
         pill(s0, o0, cx, py, ""); pill(s1, o1, cx + pillW + 12, py, extra);
       };
       pair({ ...e.sides[0] }, e.sides[1].odd, e.sides[1], e.sides[0].odd, "", true);
