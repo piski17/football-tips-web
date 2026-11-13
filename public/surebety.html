@@ -343,7 +343,8 @@ function sbCombos(s) {
   for (const x of A) for (const y of B) {
     if (x.book === y.book || (x === s.sides[0] && y === s.sides[1])) continue;
     const sum = 1 / x.odd + 1 / y.odd;
-    if (sum < 1) out.push({ a: { book: x.book, odd: x.odd }, b: { book: y.book, odd: y.odd }, margin: 1 / sum - 1 });
+    // 13. 11. 2026 (Michal): aj náhradné dvojice len so ziskom od ARB_MIN (5 %).
+    if (sum < 1 && 1 / sum - 1 >= ARB_MIN) out.push({ a: { book: x.book, odd: x.odd }, b: { book: y.book, odd: y.odd }, margin: 1 / sum - 1 });
   }
   return out.sort((p, q) => q.margin - p.margin);
 }
@@ -486,6 +487,6 @@ $("logScope").addEventListener("click", (e) => {
 load(); loadLog();
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="/surebety-ig.js?v=2026-11-13c"></script>
+<script src="/surebety-ig.js?v=2026-11-13d"></script>
 </body>
 </html>
