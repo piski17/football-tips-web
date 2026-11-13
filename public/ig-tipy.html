@@ -118,7 +118,6 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
         <div class="opts" style="margin:0">
           <div class="opt"><label class="f" for="stake">Vklad na tip v eurách (na prepočet zisku)</label><input type="number" id="stake" min="1" step="1" value="100"></div>
           <div class="opt"><label class="f" for="handle">Podpis dole na obrázku</label><input type="text" id="handle" value="@tipradar"></div>
-          <label class="check"><input type="checkbox" id="showMonth" checked> Ukázať bilanciu mesiaca</label>
         </div>
       </div>
     </div>
@@ -160,7 +159,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
 
   // ---------- Stav ----------
   const st = { day: null, data: null, fmt: "post", page: 0, cvs: [], mode: "post" };
-  try { const h = localStorage.getItem("tr_ig_handle"); if (h) $("handle").value = h; const s = localStorage.getItem("tr_ig_stake2"); if (s) $("stake").value = s; const m = localStorage.getItem("tr_ig_month"); if (m) $("showMonth").checked = m === "1"; } catch (e) { /* bez úložiska */ }
+  try { const h = localStorage.getItem("tr_ig_handle"); if (h) $("handle").value = h; const s = localStorage.getItem("tr_ig_stake2"); if (s) $("stake").value = s; } catch (e) { /* bez úložiska */ }
   const stake = () => { const v = Number($("stake").value); return v > 0 ? v : 100; };
 
   function summary(tips) {
@@ -271,7 +270,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
     header(ctx, W, y, pre ? "TIPY DŇA" : allDone ? "VÝSLEDKY DŇA" : "PRIEBEŽNE");
 
     // --- Blok zhodnotenia dňa ---
-    const showMonth = $("showMonth").checked && data.month && data.month.tips > 0;
+    const showMonth = false && data.month && data.month.tips > 0;
     const y0 = y + (story ? 66 : 46), h = story ? 420 : 330;
     const pos = pre || sm.units >= 0;
     const accent = pre ? C.good : sm.done === 0 ? C.stone : pos ? C.good : C.bad;
@@ -448,7 +447,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
       lines.push(`💰 Deň: vyšlo ${sm.won} z ${sm.done} · ${signed(sm.units, 2)} j. (${signed(sm.units * stake(), 2)} € pri vklade ${num(stake(), stake() % 1 ? 2 : 0)} €)`);
     }
     if (sm.pending) lines.push(`⏳ Ešte sa hrá: ${sm.pending}`);
-    if ($("showMonth").checked && data.month && data.month.tips) {
+    if (false && data.month && data.month.tips) {
       const mi = Number(data.month.key.slice(5, 7)) - 1;
       lines.push(`📈 ${MONTHS[mi][0].toUpperCase() + MONTHS[mi].slice(1)} doteraz: ${plural(data.month.tips, "tip", "tipy", "tipov")} · ${signed(data.month.units, 2)} j.`);
     }
@@ -553,7 +552,6 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
   $("prevDay").addEventListener("click", () => { const d = (st.data.days || []).filter((x) => x < st.day).pop(); if (d) load(d); });
   $("nextDay").addEventListener("click", () => { const d = (st.data.days || []).find((x) => x > st.day); if (d) load(d); });
   for (const id of ["stake", "handle"]) $(id).addEventListener("input", () => { try { localStorage.setItem(id === "stake" ? "tr_ig_stake2" : "tr_ig_handle", $(id).value); } catch (e) {} render(); });
-  $("showMonth").addEventListener("change", () => { try { localStorage.setItem("tr_ig_month", $("showMonth").checked ? "1" : "0"); } catch (e) {} render(); });
   $("copyBtn").addEventListener("click", async () => {
     try { await navigator.clipboard.writeText($("text").value); } catch (e) { $("text").select(); document.execCommand("copy"); }
     $("copyBtn").textContent = "Skopírované ✓"; setTimeout(() => { $("copyBtn").textContent = "Kopírovať text"; }, 1600);
