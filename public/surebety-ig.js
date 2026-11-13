@@ -398,11 +398,11 @@
         ctx.fillStyle = C.good; ctx.font = font(800, f(27), H_FONT); ctx.fillText(n2(sd.odd), px + ix, py + f(51));
         const ow = ctx.measureText(n2(sd.odd)).width;
         ctx.fillStyle = C.stone; fit(ctx, sd.book, 700, f(21), iw - ow - 12, B_FONT, 14); ctx.fillText(sd.book, px + ix + ow + 12, py + f(51));
-        ctx.fillStyle = C.muted; fit(ctx, `€${n2(stakeOf(sd.odd, other))}`, 600, Math.round(18 * Math.min(k, 1.8)), iw - ew, B_FONT, 12); ctx.fillText(`€${n2(stakeOf(sd.odd, other))}`, px + ix, py + f(74));
+        ctx.fillStyle = C.muted; fit(ctx, `Stake €${n2(stakeOf(sd.odd, other))}`, 600, Math.round(18 * Math.min(k, 1.8)), iw - ew, B_FONT, 12); ctx.fillText(`Stake €${n2(stakeOf(sd.odd, other))}`, px + ix, py + f(74));
         return;
       }
       const mk = market(e0.market);
-      const st = `€${n2(stakeOf(sd.odd, other))}`;
+      const st = `Stake €${n2(stakeOf(sd.odd, other))}`;
       // riadok 1: trh + tip vľavo, vklad vpravo; riadok 2: kurz + stávkovka vľavo, zhodnotenie vpravo dole
       ctx.fillStyle = C.muted; ctx.font = font(600, fs(17), B_FONT); ctx.textAlign = "right"; ctx.fillText(st, px + pillW - ix, py + f(22)); const sw = ctx.measureText(st).width + 12; ctx.textAlign = "left";
       ctx.fillStyle = C.muted; fit(ctx, mk, 600, fs(16), (pillW - 2 * ix - sw) * 0.55, B_FONT, 12); ctx.fillText(mk, px + ix, py + f(22));
