@@ -534,7 +534,7 @@ function seatsHtml(t) {
 }
 function renderSeats(terms) {
   { const sb = document.getElementById("seatBox"); if (sb) sb.innerHTML = seatsHtml(terms); }
-  document.getElementById("seatBoxMobile").innerHTML = seatsHtml(terms);
+  { const sm = document.getElementById("seatBoxMobile"); if (sm) sm.innerHTML = seatsHtml(terms); }
 }
 async function loadSeats() {
   renderSeats(null);
