@@ -1006,6 +1006,77 @@ html.navrh .s12-tag.k3 { background: #F2EFEA; }
   .extra > div { border-left: 0; border-top: 1px solid rgba(30,26,20,.14); }
   .extra-h { padding-bottom: 12px; }
 }
+/* ===================== KRAJŠÍ ÚVOD (13. 11. 2026 v noci) ===================== */
+.s12 { position: relative; isolation: isolate; }
+.s12[data-n]::before { content: attr(data-n); position: absolute; z-index: -1; right: max(16px, calc(50% - 640px)); top: clamp(30px, 5vw, 70px); font: 200 clamp(110px, 15vw, 230px)/1 var(--display); letter-spacing: -.06em; color: transparent; -webkit-text-stroke: 1px rgba(207,196,180,.13); pointer-events: none; }
+.s12[data-n]::after { content: ""; position: absolute; z-index: -2; left: 50%; top: 0; width: min(1100px, 90vw); height: 520px; translate: -50% 0; background: radial-gradient(50% 50% at 50% 30%, rgba(207,196,180,.045), transparent 70%); pointer-events: none; }
+.h2 { text-wrap: balance; }
+.panel { transition: transform .5s var(--ease), border-color .3s, box-shadow .5s var(--ease); }
+.pain:hover, .g:hover, .kpi:hover { transform: translateY(-4px); border-color: var(--line2); }
+
+/* 2 · bolesti ako padnuté tikety */
+.pain { display: flex; flex-direction: column; overflow: hidden; padding-bottom: 0; }
+.pain::after { content: "“"; position: absolute; right: 18px; top: -14px; font: 700 120px/1 var(--display); color: rgba(207,196,180,.07); pointer-events: none; }
+.pain p { flex: 1; }
+.pain .stub { display: block; margin: 22px -26px 0; padding: 14px 26px; border-top: 1px dashed var(--line2); font: 600 11px/1 var(--display); letter-spacing: .2em; text-transform: uppercase; color: var(--loss); background: rgba(224,137,122,.05); }
+
+/* 3 · minca */
+.coin { overflow: hidden; }
+.coin-art { position: absolute; right: -34px; top: -34px; width: 150px; height: 150px; border-radius: 50%; background: var(--metal); box-shadow: inset 0 0 0 6px rgba(255,255,255,.35), inset 0 0 0 7px rgba(30,26,20,.2), 0 20px 50px -20px rgba(0,0,0,.8); display: grid; place-items: center; transform: rotate(-12deg); }
+.coin-art .cn { margin: 28px 22px 0 0; display: flex; align-items: baseline; gap: 4px; font: 300 30px/1 var(--display); color: #2A251F; letter-spacing: -.03em; }
+.coin-art i { font-style: normal; opacity: .5; }
+.coin h3 { max-width: 75%; }
+
+/* 4 · doteraz vs. s TipRadarom */
+.vs2 { display: grid; grid-template-columns: minmax(0, 1fr) 64px minmax(0, 1fr); align-items: center; gap: 0; }
+.vs2 > .panel, .vs-new { padding: clamp(26px, 3.4vw, 40px); border-radius: var(--r-lg); }
+.vs-new { box-shadow: 0 50px 90px -40px rgba(0,0,0,.9), 0 0 120px -30px rgba(207,196,180,.35); }
+.vs-h { display: block; font: 600 12px/1 var(--display); letter-spacing: .26em; text-transform: uppercase; color: var(--muted); }
+.vs2 ul { display: grid; margin-top: 18px; }
+.vs2 li { display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: center; padding: 13px 0; border-bottom: 1px solid var(--line); font-size: 16px; }
+.vs2 li:last-child { border-bottom: 0; }
+.vs2 li i { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; font: 700 12px/1 var(--display); font-style: normal; }
+.vs-old li { color: var(--muted); text-decoration: line-through; text-decoration-color: rgba(224,137,122,.5); }
+.vs-old li i { color: var(--loss); background: rgba(224,137,122,.1); }
+.vs-new li { font: 600 16.5px/1.35 var(--display); }
+.vs-new li i { color: #F2EFEA; background: #121110; }
+.vs-arr { display: grid; place-items: center; width: 52px; height: 52px; margin: 0 auto; border-radius: 50%; background: var(--plat); color: #0E0D0C; font: 700 20px/1 var(--display); box-shadow: 0 0 0 8px var(--bg); position: relative; z-index: 1; }
+
+/* 7 · vizitka s radarom a odleskom */
+.vcard { position: relative; overflow: hidden; transform: rotate(-3deg); transition: transform .8s var(--ease); }
+.vcard:hover { transform: rotate(0deg) translateY(-6px); }
+.vcard > * { position: relative; }
+.vc-radar { position: absolute !important; right: -60px; bottom: -70px; width: 260px; height: 260px; color: rgba(30,26,20,.14); }
+.vcard::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.55) 50%, transparent 65%); transform: translateX(-120%); animation: shine 6s var(--ease) infinite 1s; pointer-events: none; }
+@keyframes shine { 0%, 70% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
+
+/* 8 · dôkazy – žiara */
+#dokazy .proof { position: relative; }
+#dokazy .proof::before { content: ""; position: absolute; z-index: -1; inset: -60px -40px; background: radial-gradient(40% 60% at 80% 50%, rgba(207,196,180,.12), transparent 70%); }
+
+/* 9 · ponuka – radar na platine */
+.offer-l { position: relative; overflow: hidden; }
+.offer-l::after { content: ""; position: absolute; right: -170px; top: -170px; width: 340px; height: 340px; border-radius: 50%; border: 1px solid rgba(30,26,20,.08); box-shadow: 0 0 0 60px transparent, 0 0 0 61px rgba(30,26,20,.06); pointer-events: none; }
+.offer-l > * { position: relative; z-index: 1; }
+
+/* 10 · pečať s otáčajúcim sa textom */
+.seal { width: 190px; height: 190px; }
+.seal-ring { position: absolute; inset: 0; width: 100%; height: 100%; animation: spin 26s linear infinite; }
+.seal-ring text { font: 700 11.5px/1 var(--display); letter-spacing: .26em; fill: #2A251F; }
+.seal::before { inset: 30px; }
+.seal > div { position: relative; }
+
+@media (prefers-reduced-motion: reduce) { .seal-ring, .vcard::after { animation: none; } }
+@media (max-width: 720px) {
+  .s12[data-n]::before { font-size: 96px; top: 46px; }
+  .vs2 { grid-template-columns: 1fr; gap: 0; }
+  .vs-arr { transform: rotate(90deg); margin: -14px auto; }
+  .vcard { transform: rotate(-2deg); }
+  .coin-art { width: 116px; height: 116px; right: -30px; top: -30px; }
+  .coin-art .cn { font-size: 24px; margin: 22px 18px 0 0; }
+  .seal { width: 160px; height: 160px; }
+  .seal-ring text { font-size: 11px; letter-spacing: .2em; }
+}
 
 </style>
 </head>
@@ -1113,23 +1184,23 @@ html.navrh .s12-tag.k3 { background: #F2EFEA; }
 
   <!-- výsledky naživo (zobrazí sa, keď sú vyhodnotené tipy) -->
   <!-- ================= 2 · POZNÁTE TO? ================= -->
-  <section class="s12" data-pages="home" id="poznate-to">
+  <section class="s12" data-pages="home" id="poznate-to" data-n="02">
     <div class="wrap">
       <div class="head rv">
         <div><div class="eyebrow">Poznáte to?</div><h2 class="h2">Futbalu rozumiete. <em>Tiket aj tak padne.</em></h2></div>
         <p class="lead">Väčšina ľudí, ktorí tipujú futbal, je dlhodobo v mínuse. Nie preto, že by futbalu nerozumeli – ale preto, že tipujú podľa pocitu.</p>
       </div>
       <div class="pains">
-        <div class="panel pain rv"><span class="x">✕</span><q>Dnes to musí vyjsť.</q><p>Tiket z ôsmich zápasov, ktorý padne na poslednom – v 89. minúte.</p></div>
-        <div class="panel pain rv" style="--d:.06s"><span class="x">✕</span><q>Tento zápas je istota.</q><p>Kurz 1,25 vyzerá bezpečne. Pár prehier a celý mesiac je preč.</p></div>
-        <div class="panel pain rv" style="--d:.12s"><span class="x">✕</span><q>Musím to vyhrať späť.</q><p>Po prehre vyšší vklad, po výhre ešte vyšší. Bank sa stratí rýchlejšie, než čakáte.</p></div>
-        <div class="panel pain rv" style="--d:.18s"><span class="x">✕</span><q>Pozri, zase výhra!</q><p>Tipéri na sociálnych sieťach ukazujú len výhry. Prehry potichu zmiznú.</p></div>
+        <div class="panel pain rv"><span class="x">✕</span><q>Dnes to musí vyjsť.</q><p>Tiket z ôsmich zápasov, ktorý padne na poslednom – v 89. minúte.</p><span class="stub">Tiket · nevyšiel ✕</span></div>
+        <div class="panel pain rv" style="--d:.06s"><span class="x">✕</span><q>Tento zápas je istota.</q><p>Kurz 1,25 vyzerá bezpečne. Pár prehier a celý mesiac je preč.</p><span class="stub">Tiket · nevyšiel ✕</span></div>
+        <div class="panel pain rv" style="--d:.12s"><span class="x">✕</span><q>Musím to vyhrať späť.</q><p>Po prehre vyšší vklad, po výhre ešte vyšší. Bank sa stratí rýchlejšie, než čakáte.</p><span class="stub">Tiket · nevyšiel ✕</span></div>
+        <div class="panel pain rv" style="--d:.18s"><span class="x">✕</span><q>Pozri, zase výhra!</q><p>Tipéri na sociálnych sieťach ukazujú len výhry. Prehry potichu zmiznú.</p><span class="stub">Tiket · nevyšiel ✕</span></div>
       </div>
     </div>
   </section>
 
   <!-- ================= 3 · PREČO TO NEŠLO ================= -->
-  <section class="s12" data-pages="home" id="preco-to-neslo">
+  <section class="s12" data-pages="home" id="preco-to-neslo" data-n="03">
     <div class="wrap">
       <div class="head rv">
         <div><div class="eyebrow">Prečo to nešlo</div><h2 class="h2">Nie je to smola. <em>Je to matematika.</em></h2></div>
@@ -1141,7 +1212,7 @@ html.navrh .s12-tag.k3 { background: #F2EFEA; }
           <li class="rv"><span class="n">03</span><div><h3>Nikto nič nemeria</h3><p>Bez zapísaných tipov neviete, či ste naozaj v pluse. Pamätáme si výhry, prehry zabúdame.</p></div></li>
         </ol>
         <div class="panel coin rv">
-          <span class="lbl2">Príklad · hod mincou</span>
+          <div class="coin-art" aria-hidden="true"><div class="cn"><span>50</span><i>:</i><span>50</span></div></div><span class="lbl2">Príklad · hod mincou</span>
           <h3>Šanca 50 : 50, a predsa strata</h3>
           <div class="coin-row"><span>Spravodlivý kurz</span><b>2,00</b></div>
           <div class="coin-row"><span>Kurz v stávkovej kancelárii</span><b>1,90</b></div>
@@ -1155,25 +1226,22 @@ html.navrh .s12-tag.k3 { background: #F2EFEA; }
   </section>
 
   <!-- ================= 4 · ČO SA ZMENÍ ================= -->
-  <section class="s12" data-pages="home" id="co-sa-zmeni">
+  <section class="s12" data-pages="home" id="co-sa-zmeni" data-n="04">
     <div class="wrap">
       <div class="head rv">
         <div><div class="eyebrow">Čo sa zmení</div><h2 class="h2">Namiesto pocitu <em>čísla.</em></h2></div>
         <p class="lead">Rovnaký futbal, iný prístup. Takto vyzerá tipovanie s TipRadarom.</p>
       </div>
-      <div class="change rv">
-        <div class="ch-row hdr"><div class="ch-hd">Doteraz</div><div class="ch-arr"></div><div class="ch-hd">S TipRadarom</div></div>
-        <div class="ch-row"><div class="ch-old">Pocit z posledného zápasu</div><div class="ch-arr">→</div><div class="ch-new">Šanca vypočítaná z dát 18 súťaží</div></div>
-        <div class="ch-row"><div class="ch-old">Tikety z mnohých zápasov</div><div class="ch-arr">→</div><div class="ch-new">Jednotlivé tipy, každý s vlastnou hodnotou</div></div>
-        <div class="ch-row"><div class="ch-old">Vklad podľa nálady</div><div class="ch-arr">→</div><div class="ch-new">Rovnaký vklad 2 – 3 % banku na každý tip</div></div>
-        <div class="ch-row"><div class="ch-old">Tip každý deň za každú cenu</div><div class="ch-arr">→</div><div class="ch-new">Najviac 3 tipy denne, niekedy žiadny</div></div>
-        <div class="ch-row"><div class="ch-old">Neviete, či ste v pluse</div><div class="ch-arr">→</div><div class="ch-new">Každý tip zapísaný a vyhodnotený, zisk v jednotkách</div></div>
+      <div class="vs2">
+        <div class="panel vs-old rv"><span class="vs-h">Doteraz</span><ul><li><i>✕</i>Pocit z posledného zápasu</li><li><i>✕</i>Tikety z mnohých zápasov</li><li><i>✕</i>Vklad podľa nálady</li><li><i>✕</i>Tip každý deň za každú cenu</li><li><i>✕</i>Neviete, či ste v pluse</li></ul></div>
+        <div class="vs-arr rv" aria-hidden="true">→</div>
+        <div class="vs-new metal rv" style="--d:.1s"><span class="vs-h">S TipRadarom</span><ul><li><i>✓</i>Šanca vypočítaná z dát 18 súťaží</li><li><i>✓</i>Jednotlivé tipy, každý s vlastnou hodnotou</li><li><i>✓</i>Rovnaký vklad 2 – 3 % banku na každý tip</li><li><i>✓</i>Najviac 3 tipy denne, niekedy žiadny</li><li><i>✓</i>Každý tip zapísaný a vyhodnotený, zisk v jednotkách</li></ul></div>
       </div>
     </div>
   </section>
 
   <!-- ================= 5 · ČO DOSTANETE ================= -->
-  <section class="s12" data-pages="home" id="co-dostanete">
+  <section class="s12" data-pages="home" id="co-dostanete" data-n="05">
     <div class="wrap">
       <div class="head rv">
         <div><div class="eyebrow">Čo dostanete</div><h2 class="h2">Takto vyzerá <em>deň s TipRadarom.</em></h2></div>
@@ -1195,7 +1263,7 @@ html.navrh .s12-tag.k3 { background: #F2EFEA; }
   </section>
 
   <!-- ================= 6 · PRE KOHO JE ================= -->
-  <section class="s12" data-pages="home" id="pre-koho">
+  <section class="s12" data-pages="home" id="pre-koho" data-n="06">
     <div class="wrap">
       <div class="head rv">
         <div><div class="eyebrow">Pre koho je</div><h2 class="h2">TipRadar nie je <em>pre každého.</em></h2></div>
@@ -1222,7 +1290,7 @@ html.navrh .s12-tag.k3 { background: #F2EFEA; }
   <!-- ================= 7 · KTO ZA TÝM STOJÍ ================= -->
   <section class="s12" data-pages="home" id="kto-za-tym-je">
     <div class="wrap who">
-      <div class="vcard metal rv">
+      <div class="vcard metal rv"><svg class="vc-radar" viewBox="0 0 200 200" aria-hidden="true"><g fill="none" stroke="currentColor"><circle cx="100" cy="100" r="30"/><circle cx="100" cy="100" r="60"/><circle cx="100" cy="100" r="90"/><path d="M100 10v180M10 100h180"/></g></svg>
         <div class="vc-top"><span>TipRadar · zakladateľ</span><svg width="34" height="34" aria-hidden="true"><use href="#logo"/></svg></div>
         <div class="vc-mono">MP</div>
         <div class="vc-name">Michal<small>Zakladateľ TipRadaru · dáta namiesto pocitov</small></div>
@@ -1238,7 +1306,7 @@ html.navrh .s12-tag.k3 { background: #F2EFEA; }
   </section>
 
   <!-- ================= 8 · DÔKAZY ================= -->
-  <section class="s12" data-pages="home" id="dokazy">
+  <section class="s12" data-pages="home" id="dokazy" data-n="08">
     <div class="wrap">
       <div class="head rv">
         <div><div class="eyebrow">Dôkazy</div><h2 class="h2">Čísla, ktoré <em>neskrývam.</em></h2></div>
@@ -1270,7 +1338,7 @@ html.navrh .s12-tag.k3 { background: #F2EFEA; }
   </section>
 
   <!-- ================= 9 · PONUKA ================= -->
-  <section class="s12" data-pages="home" id="ponuka">
+  <section class="s12" data-pages="home" id="ponuka" data-n="09">
     <div class="wrap">
       <div class="head rv">
         <div><div class="eyebrow">Ponuka</div><h2 class="h2">VIP Klub. <em>Na mieru.</em></h2></div>
@@ -1302,7 +1370,7 @@ html.navrh .s12-tag.k3 { background: #F2EFEA; }
   <section class="s12" data-pages="home" id="garancia">
     <div class="wrap">
       <div class="panel guar2 rv">
-        <div class="seal"><div><b>1</b><span>mesiac<br />zadarmo</span></div></div>
+        <div class="seal"><svg class="seal-ring" viewBox="0 0 200 200" aria-hidden="true"><defs><path id="sealP" d="M100 100m-82 0a82 82 0 1 1 164 0a82 82 0 1 1-164 0"/></defs><text><textPath href="#sealP">GARANCIA · MESIAC ZADARMO · GARANCIA · MESIAC ZADARMO ·</textPath></text></svg><div><b>1</b><span>mesiac<br />zadarmo</span></div></div>
         <div><div class="eyebrow">Garancia</div><h3 style="margin-top:16px">Skončíte v mínuse? <em>Ďalší mesiac je na mňa.</em></h3><p>Ak vaše členstvo skončí v mínuse, dostanete 1 mesiac tipov zadarmo. Tak viete, že mi na vašom výsledku naozaj záleží.</p></div>
         <ul>
           <li><svg viewBox="0 0 24 24"><path d="M4 12.5 9 17.5 20 6.5"/></svg>Počíta sa zo všetkých tipov vášho členstva pri rovnakom vklade</li>
