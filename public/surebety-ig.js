@@ -170,7 +170,12 @@
   }
 
   /** Surebet (pred zápasom alebo vyhodnotený). */
+  /** Michal 13. 11. 15:06: rovnaké rozloženie pri jednom tikete ako v súhrne dňa. */
   function drawSurebet(s, fmtKey, result, handle) {
+    const day = new Date(s.date).toLocaleDateString("sv-SE", { timeZone: "Europe/Bratislava" });
+    return drawDay(day, [{ ...s, maxMargin: s.margin }], fmtKey, handle, 0, !result);
+  }
+  function drawSurebetOld(s, fmtKey, result, handle) {
     const W = 1080, H = fmtKey === "story" ? 1920 : 1350, story = fmtKey === "story";
     const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
     const ctx = cv.getContext("2d");
@@ -312,7 +317,7 @@
   /** Rozdelenie zápasov na obrázky podľa výšky kariet (karta rastie o ďalšie dvojice), najviac 5 zápasov na obrázok. */
   function dayLayout(list, fmtKey) {
     const story = fmtKey === "story";
-    const top = story ? 804 : 590; // y pod súčtami (rovnaké na každom obrázku)
+    const top = story ? 736 : 560; // y pod blokom nadpisu a zisku (rovnaké na každom obrázku)
     const avail = (story ? 1920 - 190 : 1350 - 60) - 46 - 10 - top;
     const gap = story ? 18 : 14;
     const pages = [[]]; let used = 0;
@@ -359,21 +364,50 @@
     header(ctx, W, y, pre ? "TODAY'S SUREBETS" : "DAILY RESULTS", pre ? "stone" : "good");
     const n = list.length;
     const avg = n ? list.reduce((t, e) => t + e.maxMargin, 0) / n : 0;
-    {
-      const bh0 = story ? 170 : 132;
-      profitBanner(ctx, X, y + (story ? 64 : 56), IW, bh0, "GUARANTEED PROFIT", `+${n2(avg * 100)}%`,
-        `€${n2(avg * 100 * n)} from €${n * 100} · whatever the score`);
-      y += (story ? 64 : 56) + bh0;
-    }
-    y += story ? 100 : 82;
-    ctx.fillStyle = C.text; ctx.font = font(800, story ? 96 : 84, H_FONT);
-    ctx.fillText("Surebets", X, y); y += story ? 92 : 80;
-    ctx.fillStyle = C.stone; ctx.fillText("of the day", X, y); y += story ? 72 : 62;
-    ctx.fillStyle = C.muted; ctx.font = font(600, 28, B_FONT); ctx.fillText(dayEn(day), X, y);
+    // Michal 13. 11. 15:06: „Surebets of the day“, dátum a Guaranteed profit spolu v jednom novom bloku hore
+    // (rovnaký pri jednom tikete aj pri viacerých).
     const pages = dayPages(list, fmtKey);
-    if (pages > 1) { ctx.fillStyle = C.stone; ctx.font = font(800, 28, B_FONT); ctx.textAlign = "right"; ctx.fillText(`${page + 1} / ${pages}`, X + IW, y); ctx.textAlign = "left"; }
+    {
+      const y0 = y + (story ? 66 : 46), h = story ? 400 : 324;
+      rr(ctx, X, y0, IW, h, 36);
+      const g = ctx.createLinearGradient(X, y0, X + IW, y0 + h);
+      g.addColorStop(0, "#1C1B19"); g.addColorStop(0.55, "#1E2420"); g.addColorStop(1, "#2A4636");
+      ctx.fillStyle = g; ctx.fill();
+      ctx.strokeStyle = "rgba(127,200,160,.45)"; ctx.lineWidth = 2; ctx.stroke();
+      // jemná žiara vpravo
+      ctx.save(); rr(ctx, X, y0, IW, h, 36); ctx.clip();
+      const rg = ctx.createRadialGradient(X + IW, y0 + h, 0, X + IW, y0 + h, IW * 0.6);
+      rg.addColorStop(0, "rgba(127,200,160,.28)"); rg.addColorStop(1, "rgba(127,200,160,0)");
+      ctx.fillStyle = rg; ctx.fillRect(X, y0, IW, h); ctx.restore();
+      const lx = X + 44, split = X + IW * 0.54;
+      // vľavo: nadpis + dátum
+      const tsz = story ? 92 : 76;
+      ctx.fillStyle = C.text; ctx.font = font(800, tsz, H_FONT); ctx.fillText("Surebets", lx, y0 + h * 0.36);
+      ctx.fillStyle = C.stone; ctx.fillText("of the day", lx, y0 + h * 0.36 + tsz * 0.95);
+      ctx.fillStyle = C.muted; ctx.font = font(600, story ? 30 : 26, B_FONT);
+      ctx.fillText(dayEn(day), lx, y0 + h * 0.36 + tsz * 0.95 + (story ? 74 : 62));
+      // deliaca čiara
+      ctx.strokeStyle = "rgba(207,196,180,.18)"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(split, y0 + h * 0.16); ctx.lineTo(split, y0 + h * 0.84); ctx.stroke();
+      // vpravo: zaručený zisk
+      const rx = split + 40, rw = X + IW - 40 - rx;
+      const ic = story ? 20 : 17, icy = y0 + h * 0.27;
+      ctx.beginPath(); ctx.arc(rx + ic, icy - ic * 0.35, ic, 0, Math.PI * 2); ctx.fillStyle = C.good; ctx.fill();
+      ctx.strokeStyle = C.bg; ctx.lineWidth = 3.5; ctx.lineCap = "round"; ctx.lineJoin = "round";
+      ctx.beginPath(); ctx.moveTo(rx + ic * 0.55, icy - ic * 0.35); ctx.lineTo(rx + ic * 0.9, icy + ic * 0.0); ctx.lineTo(rx + ic * 1.5, icy - ic * 0.75); ctx.stroke();
+      ctx.lineCap = "butt"; ctx.lineJoin = "miter";
+      ctx.fillStyle = C.good; ctx.font = font(800, story ? 22 : 19, B_FONT); spaced(ctx, "GUARANTEED PROFIT", rx + ic * 2 + 12, icy, 2.5);
+      const big = `+${n2(avg * 100)}%`;
+      const bsz = fit(ctx, big, 800, story ? 120 : 100, rw, H_FONT, 40);
+      ctx.font = font(800, bsz, H_FONT); ctx.fillStyle = C.good; ctx.fillText(big, rx - 4, y0 + h * 0.27 + bsz * 0.98);
+      ctx.fillStyle = C.text; fit(ctx, `€${n2(avg * 100 * n)} from €${n * 100}`, 700, story ? 32 : 28, rw, B_FONT, 18);
+      ctx.fillText(`€${n2(avg * 100 * n)} from €${n * 100}`, rx, y0 + h * 0.27 + bsz * 0.98 + (story ? 56 : 48));
+      ctx.fillStyle = C.muted; ctx.font = font(600, story ? 26 : 22, B_FONT);
+      ctx.fillText("Whatever the score", rx, y0 + h * 0.27 + bsz * 0.98 + (story ? 98 : 84));
+      if (pages > 1) { ctx.fillStyle = C.stone; ctx.font = font(800, 24, B_FONT); ctx.textAlign = "right"; ctx.fillText(`${page + 1} / ${pages}`, X + IW - 30, y0 + 44); ctx.textAlign = "left"; }
+    }
     // Michal 13. 11.: súčty (SUREBETS / AVG PROFIT / €100 ON EACH) nahradil pás „Guaranteed profit“ hore.
-    y = story ? 804 : 590;
+    y = story ? 736 : 560;
     // 13. 11. 2026 (Michal): pri málo surebetoch riadky zväčšiť, aby vyplnili obrázok (nie prázdna medzera dole).
     // 13. 11. 2026 (Michal): rovnaká karta pre každý zápas; ďalšie dvojice z iných stávkoviek hneď pod tým istým zápasom;
     // v kartičke stávky trh + tip, kurz, stávkovka a „Stake €…“. Strany sa delia podľa výšky (najviac 5 zápasov na obrázok).
