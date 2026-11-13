@@ -473,9 +473,10 @@
     // 13. 11. 2026 (Michal): súhrnný riadok až pod tipmi (spolu so ziskom), hore len dátum.
     const lines = [`📅 ${pre ? "Today's surebets" : "Surebets"} · ${dayEn(day)}`, ""];
     for (const e of list) {
-      const kt = pre ? new Date(e.date).toLocaleTimeString("en-GB", { timeZone: "Europe/Bratislava", hour: "2-digit", minute: "2-digit" }) + " · " : "";
+      // 13. 11. 2026 (Michal): zápas hrubo + čas výkopu, prázdny riadok, „Bet: <trh hrubo>“, potom stávky.
+      const kt = e.date ? " / " + new Date(e.date).toLocaleTimeString("en-GB", { timeZone: "Europe/Bratislava", hour: "2-digit", minute: "2-digit" }) : "";
       const [a, b] = e.sides;
-      lines.push(`${pre ? "🔒" : "✅"} ${bold(`${kt}${e.home} – ${e.away} / ${market(e.market)}`)}`, ...twoLines(e, a, b), "", `💰 Profit: €${n2(e.maxMargin * 100)} from €100 (${n2(e.maxMargin * 100)}%)`);
+      lines.push(`${pre ? "🔒" : "✅"} ${bold(`${e.home} – ${e.away}`)}${kt}`, "", `Bet: ${bold(market(e.market))}`, ...twoLines(e, a, b), "", `💰 Profit: €${n2(e.maxMargin * 100)} from €100 (${n2(e.maxMargin * 100)}%)`);
       for (const c of dayCombos(e)) lines.push(`🔁 Or (profit ${n2(c.margin * 100)}%):`, ...twoLines(e, c.a, c.b, "   "));
       lines.push("");
     }
