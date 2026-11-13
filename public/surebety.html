@@ -161,8 +161,8 @@ details p, details li { color: var(--muted); font-size: 14px; }
       <button type="button" class="btn" id="scanBtn">Prehľadať teraz</button>
     </div>
     <div class="chips" id="scopeChips" style="margin-bottom:12px">
-      <button type="button" class="chip on" data-s="top">Známe zahraničné stávkovky</button>
-      <button type="button" class="chip" data-s="all">Všetky stávkovky</button>
+      <button type="button" class="chip on" data-s="all">Všetky stávkovky s kurzami</button>
+      <button type="button" class="chip" data-s="top">Len známe zahraničné</button>
       <button type="button" class="chip" data-s="mine">Len moje stávkovky</button>
     </div>
     <p class="muted small" id="topInfo" style="margin:0 0 8px"></p>
@@ -182,8 +182,8 @@ details p, details li { color: var(--muted); font-size: 14px; }
   <section class="panel">
     <div class="head"><div><h2>Skúška – prehľad</h2><div class="muted small">Server každú hodinu prehľadá dnešné zápasy 18 súťaží TipRadaru a zapíše každý surebet; tu sa ukazujú a vyhodnocujú len tie so ziskom aspoň 5 % (bez podozrivých nad 8 %). Kliknutím na deň uvidíte, ktoré surebety to boli.</div></div></div>
     <div class="chips" id="logScope" style="margin-bottom:12px">
-      <button type="button" class="chip on" data-s="top">Známe zahraničné stávkovky</button>
-      <button type="button" class="chip" data-s="all">Všetky stávkovky</button>
+      <button type="button" class="chip on" data-s="all">Všetky stávkovky s kurzami</button>
+      <button type="button" class="chip" data-s="top">Len známe zahraničné</button>
       <button type="button" class="chip" data-s="mine">Len moje stávkovky</button>
     </div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
@@ -276,7 +276,7 @@ $("roundChips").addEventListener("click", (e) => {
 calc();
 
 // ---------- Nájdené surebety ----------
-let scope = "top";
+let scope = "all"; // 13. 11. 2026 (Michal): predvolene všetky stávkovky, ku ktorým máme kurzy
 let myBooks = [];
 let allBooks = [];
 async function api(url, opts) {
@@ -382,7 +382,7 @@ async function load() {
       ? `Naposledy ${new Date(st.at).toLocaleString("sk-SK", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "numeric" })} · ${st.fixtures} zápasov · ${allBooks.length} stávkoviek${st.error ? " · chyba: " + st.error : ""}`
       : "Server ešte neprehľadával (prvýkrát minútu po spustení, potom každú hodinu).";
     const tb = st.topBooks || [];
-    $("topInfo").textContent = tb.length ? "Známe zahraničné stávkovky v kurzoch: " + tb.join(", ") + ". Pri každom surebete sú aj ďalšie dvojice stávkoviek, v ktorých platí ten istý surebet." : "";
+    $("topInfo").textContent = scope === "all" ? (allBooks.length ? `Stávkovky s kurzami (${allBooks.length}): ${allBooks.join(", ")}.` : "") : tb.length ? "Známe zahraničné stávkovky v kurzoch: " + tb.join(", ") + "." : "";
     renderList(dedupeSame((j.surebets || []).filter((x) => x.margin >= ARB_MIN), (x) => x.margin));
     renderBooks();
   } catch (err) { $("scanInfo").textContent = err.message; }
@@ -406,7 +406,7 @@ $("scopeChips").addEventListener("click", (e) => {
 });
 
 // ---------- Skúška – prehľad ----------
-let logScope = "top";
+let logScope = "all";
 /** 12. 11. 2026 (Michal): ukazovať a vyhodnocovať len surebety so ziskom od 5 % (pôvodne 3 %, Michal 13. 11. zvýšil na 5 %). Server zapisuje všetky, filter je len tu. */
 const ARB_MIN = 0.05;
 /** 12. 11. 2026 (Michal): z jedného TYPU v zápase len jeden surebet s najvyšším ziskom – karty (celkovo, tímu, polčas) spolu, rohy spolu, góly spolu; karty a rohy toho istého zápasu môžu ostať. */
