@@ -494,14 +494,13 @@
     lines.push(`🏆 ${league(s)}${settled ? "" : " · 🕒 " + kickoff(s.date)}`);
     lines.push("");
     const [a, b] = s.sides;
-    lines.push(pairText(s, a, b));
-    lines.push(`💵 Stakes from €100: ${stakesText(a, b)}`);
+    lines.push(...twoLines(s, a, b));
     if (settled && win !== null) lines.push(win === -1 ? "↩️ Void – both stakes refunded, no loss." : `✅ ${label(s.sides[win].label)} won (${s.sides[win].book})`);
     if (!settled || win !== -1) lines.push(`💰 Profit: €${n2(profit)} (${n2(profit)}%)${settled ? "" : ", whatever the score"}`);
     const combos = window.sbCombos ? window.sbCombos(s) : [];
     if (combos.length) {
       lines.push("", settled ? "🔁 Also worked at:" : "🔁 Also works at:");
-      for (const p of combos) lines.push(`${pairText(s, p.a, p.b)} · ${n2(p.margin * 100)}%`);
+      combos.forEach((p, k) => { if (k) lines.push(""); lines.push(`Profit ${n2(p.margin * 100)}%:`, ...twoLines(s, p.a, p.b)); });
     }
     lines.push("");
     lines.push("👑 ARBREX – Profit. Whatever the score.");
@@ -523,16 +522,21 @@
   /** 13. 11. 2026 (Michal): text ako obrázok – „Zápas / trh“ a „Over 4.5 (Betano 1.83) – Under 4.5 (Pinnacle 2.47)“. */
   const pairText = (s, a, b) => `${label(s.sides[0].label)} (${a.book} ${n2(a.odd)}) – ${label(s.sides[1].label)} (${b.book} ${n2(b.odd)})`;
   const stakesText = (a, b) => `€${n2(stakeOf(a.odd, b.odd))} – €${n2(stakeOf(b.odd, a.odd))}`;
+  /** Michal 13. 11.: každá stávka na vlastnom riadku – „Over 4.5 (Betano 1.83) – Stake €57.44“. */
+  const twoLines = (s, a, b, pre = "") => [
+    `${pre}${label(s.sides[0].label)} (${a.book} ${n2(a.odd)}) – Stake €${n2(stakeOf(a.odd, b.odd))}`,
+    `${pre}${label(s.sides[1].label)} (${b.book} ${n2(b.odd)}) – Stake €${n2(stakeOf(b.odd, a.odd))}`,
+  ];
   function dayCaption(day, list, pre = false) {
     list = [...list].sort((a, b) => b.maxMargin - a.maxMargin);
     const n = list.length;
     const avg = n ? list.reduce((t, e) => t + e.maxMargin, 0) / n : 0;
-    const lines = [`📅 ${pre ? "Today's surebets" : "Surebets"} · ${dayEn(day)}`, `${n} surebet${n === 1 ? "" : "s"} · avg profit ${n2(avg * 100)}% · stakes per €100`, ""];
+    const lines = [`📅 ${pre ? "Today's surebets" : "Surebets"} · ${dayEn(day)}`, `${n} surebet${n === 1 ? "" : "s"} · avg profit ${n2(avg * 100)}% · stakes from €100`, ""];
     for (const e of list) {
       const kt = pre ? new Date(e.date).toLocaleTimeString("en-GB", { timeZone: "Europe/Bratislava", hour: "2-digit", minute: "2-digit" }) + " · " : "";
       const [a, b] = e.sides;
-      lines.push(`${pre ? "🔒" : "✅"} ${kt}${e.home} – ${e.away} / ${market(e.market)}`, pairText(e, a, b), `💰 ${n2(e.maxMargin * 100)}% · stakes ${stakesText(a, b)}`);
-      for (const c of dayCombos(e)) lines.push(`🔁 ${pairText(e, c.a, c.b)} · ${n2(c.margin * 100)}%`);
+      lines.push(`${pre ? "🔒" : "✅"} ${kt}${e.home} – ${e.away} / ${market(e.market)}`, ...twoLines(e, a, b), `💰 Profit: €${n2(e.maxMargin * 100)} (${n2(e.maxMargin * 100)}%)`);
+      for (const c of dayCombos(e)) lines.push(`🔁 Or (profit ${n2(c.margin * 100)}%):`, ...twoLines(e, c.a, c.b, "   "));
       lines.push("");
     }
     lines.push("👑 ARBREX · 18+ · Bet responsibly", "#arbrex #football");
