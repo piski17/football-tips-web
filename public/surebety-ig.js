@@ -456,6 +456,16 @@
     `${pre}${label(s.sides[0].label)} (${a.book} ${n2(a.odd)}) – Stake €${n2(stakeOf(a.odd, b.odd))}`,
     `${pre}${label(s.sides[1].label)} (${b.book} ${n2(b.odd)}) – Stake €${n2(stakeOf(b.odd, a.odd))}`,
   ];
+  /** 13. 11. 2026 (Michal): hrubé písmo v texte – Unicode „bold“ znaky (fungujú na Instagrame aj Telegrame aj bez formátovania). */
+  function bold(t) {
+    return [...String(t).normalize("NFD")].map((ch) => {
+      const c = ch.codePointAt(0);
+      if (c >= 65 && c <= 90) return String.fromCodePoint(0x1d5d4 + c - 65);
+      if (c >= 97 && c <= 122) return String.fromCodePoint(0x1d5ee + c - 97);
+      if (c >= 48 && c <= 57) return String.fromCodePoint(0x1d7ec + c - 48);
+      return ch;
+    }).join("").normalize("NFC");
+  }
   function dayCaption(day, list, pre = false) {
     list = [...list].sort((a, b) => b.maxMargin - a.maxMargin);
     const n = list.length;
@@ -465,7 +475,7 @@
     for (const e of list) {
       const kt = pre ? new Date(e.date).toLocaleTimeString("en-GB", { timeZone: "Europe/Bratislava", hour: "2-digit", minute: "2-digit" }) + " · " : "";
       const [a, b] = e.sides;
-      lines.push(`${pre ? "🔒" : "✅"} ${kt}${e.home} – ${e.away} / ${market(e.market)}`, ...twoLines(e, a, b), `💰 Profit: €${n2(e.maxMargin * 100)} from €100 (${n2(e.maxMargin * 100)}%)`);
+      lines.push(`${pre ? "🔒" : "✅"} ${bold(`${kt}${e.home} – ${e.away} / ${market(e.market)}`)}`, ...twoLines(e, a, b), "", `💰 Profit: €${n2(e.maxMargin * 100)} from €100 (${n2(e.maxMargin * 100)}%)`);
       for (const c of dayCombos(e)) lines.push(`🔁 Or (profit ${n2(c.margin * 100)}%):`, ...twoLines(e, c.a, c.b, "   "));
       lines.push("");
     }
