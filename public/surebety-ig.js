@@ -211,8 +211,8 @@
         ctx.font = font(800, 22, B_FONT); ctx.fillStyle = won ? C.good : C.muted; ctx.textAlign = "right"; ctx.fillText(t, cx + cw - 30, iy); ctx.textAlign = "left";
       }
       iy += story ? 54 : 48;
-      const lb = label(sd.label);
-      const lsz = fit(ctx, lb, 800, 44, cw - 60, H_FONT, 26);
+      const lb = `${market(s.market)} - ${label(sd.label)}`; // Michal 13. 11.: trh a tip spolu, rovnako veľké a hrubé
+      const lsz = fit(ctx, lb, 800, 44, cw - 60, H_FONT, 22);
       ctx.font = font(800, lsz, H_FONT); ctx.fillStyle = C.text; ctx.fillText(lb, cx + 30, iy);
       iy += story ? 96 : 78;
       ctx.font = font(800, story ? 96 : 80, H_FONT); ctx.fillStyle = won ? C.good : C.stone; ctx.fillText(n2(sd.odd), cx + 28, iy);
@@ -392,9 +392,9 @@
         const iw = pillW - 2 * ix, mk = market(e0.market), lb = label(sd.label);
         let ew = 0;
         if (extra) { ctx.fillStyle = C.good; ctx.font = font(700, Math.round(16 * Math.min(k, 1.6)), B_FONT); ctx.textAlign = "right"; ctx.fillText(extra, px + pillW - ix, py + f(74)); ew = ctx.measureText(extra).width + 14; ctx.textAlign = "left"; }
-        ctx.fillStyle = C.muted; const msz = fit(ctx, mk, 600, Math.round(17 * Math.min(k, 1.7)), iw * 0.6, B_FONT, 12); ctx.fillText(mk, px + ix, py + f(24));
-        const mw = ctx.measureText(mk).width;
-        ctx.fillStyle = C.text; fit(ctx, lb, 700, f(20), iw - mw - 10, B_FONT, 14); ctx.fillText(lb, px + ix + mw + 10, py + f(24));
+        // Michal 13. 11.: „Total cards - Over 4.5“ – trh aj tip rovnako veľké a hrubé
+        const ml = `${mk} - ${lb}`;
+        ctx.fillStyle = C.text; fit(ctx, ml, 800, f(20), iw, B_FONT, 12); ctx.fillText(ml, px + ix, py + f(24));
         ctx.fillStyle = C.good; ctx.font = font(800, f(27), H_FONT); ctx.fillText(n2(sd.odd), px + ix, py + f(51));
         const ow = ctx.measureText(n2(sd.odd)).width;
         ctx.fillStyle = C.stone; fit(ctx, sd.book, 700, f(21), iw - ow - 12, B_FONT, 14); ctx.fillText(sd.book, px + ix + ow + 12, py + f(51));
@@ -405,9 +405,8 @@
       const st = `Stake €${n2(stakeOf(sd.odd, other))}`;
       // riadok 1: trh + tip vľavo, vklad vpravo; riadok 2: kurz + stávkovka vľavo, zhodnotenie vpravo dole
       ctx.fillStyle = C.muted; ctx.font = font(600, fs(17), B_FONT); ctx.textAlign = "right"; ctx.fillText(st, px + pillW - ix, py + f(22)); const sw = ctx.measureText(st).width + 12; ctx.textAlign = "left";
-      ctx.fillStyle = C.muted; fit(ctx, mk, 600, fs(16), (pillW - 2 * ix - sw) * 0.55, B_FONT, 12); ctx.fillText(mk, px + ix, py + f(22));
-      const mw = ctx.measureText(mk).width;
-      ctx.fillStyle = C.text; fit(ctx, label(sd.label), 700, f(19), pillW - mw - 2 * ix - 8 - sw, B_FONT, 14); ctx.fillText(label(sd.label), px + ix + 8 + mw, py + f(22));
+      const ml = `${mk} - ${label(sd.label)}`;
+      ctx.fillStyle = C.text; fit(ctx, ml, 800, f(19), pillW - 2 * ix - sw, B_FONT, 11); ctx.fillText(ml, px + ix, py + f(22));
       ctx.fillStyle = C.good; ctx.font = font(800, f(18), B_FONT); ctx.textAlign = "right"; ctx.fillText(extra, px + pillW - ix, py + f(47)); const ew = ctx.measureText(extra).width + 12; ctx.textAlign = "left";
       ctx.fillStyle = C.good; ctx.font = font(800, f(25), H_FONT); ctx.fillText(n2(sd.odd), px + ix, py + f(48));
       const ow = ctx.measureText(n2(sd.odd)).width;
