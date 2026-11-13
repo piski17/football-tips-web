@@ -105,7 +105,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
       <div class="panel">
         <h2>Nastavenie</h2>
         <div class="opts" style="margin:0">
-          <div class="opt"><label class="f" for="stake">Vklad na tip v eurách (na prepočet zisku)</label><input type="number" id="stake" min="1" step="1" value="10"></div>
+          <div class="opt"><label class="f" for="stake">Vklad na tip v eurách (na prepočet zisku)</label><input type="number" id="stake" min="1" step="1" value="100"></div>
           <div class="opt"><label class="f" for="handle">Podpis dole na obrázku</label><input type="text" id="handle" value="@tipradar"></div>
           <label class="check"><input type="checkbox" id="showMonth" checked> Ukázať bilanciu mesiaca</label>
         </div>
@@ -149,8 +149,8 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
 
   // ---------- Stav ----------
   const st = { day: null, data: null, fmt: "post", page: 0, cvs: [] };
-  try { const h = localStorage.getItem("tr_ig_handle"); if (h) $("handle").value = h; const s = localStorage.getItem("tr_ig_stake"); if (s) $("stake").value = s; const m = localStorage.getItem("tr_ig_month"); if (m) $("showMonth").checked = m === "1"; } catch (e) { /* bez úložiska */ }
-  const stake = () => { const v = Number($("stake").value); return v > 0 ? v : 10; };
+  try { const h = localStorage.getItem("tr_ig_handle"); if (h) $("handle").value = h; const s = localStorage.getItem("tr_ig_stake2"); if (s) $("stake").value = s; const m = localStorage.getItem("tr_ig_month"); if (m) $("showMonth").checked = m === "1"; } catch (e) { /* bez úložiska */ }
+  const stake = () => { const v = Number($("stake").value); return v > 0 ? v : 100; };
 
   function summary(tips) {
     const done = tips.filter((t) => t.status === "won" || t.status === "lost");
@@ -473,7 +473,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
   $("day").addEventListener("change", () => { if (/^\d{4}-\d{2}-\d{2}$/.test($("day").value)) load($("day").value); });
   $("prevDay").addEventListener("click", () => { const d = (st.data.days || []).filter((x) => x < st.day).pop(); if (d) load(d); });
   $("nextDay").addEventListener("click", () => { const d = (st.data.days || []).find((x) => x > st.day); if (d) load(d); });
-  for (const id of ["stake", "handle"]) $(id).addEventListener("input", () => { try { localStorage.setItem(id === "stake" ? "tr_ig_stake" : "tr_ig_handle", $(id).value); } catch (e) {} render(); });
+  for (const id of ["stake", "handle"]) $(id).addEventListener("input", () => { try { localStorage.setItem(id === "stake" ? "tr_ig_stake2" : "tr_ig_handle", $(id).value); } catch (e) {} render(); });
   $("showMonth").addEventListener("change", () => { try { localStorage.setItem("tr_ig_month", $("showMonth").checked ? "1" : "0"); } catch (e) {} render(); });
   $("copyBtn").addEventListener("click", async () => {
     try { await navigator.clipboard.writeText($("text").value); } catch (e) { $("text").select(); document.execCommand("copy"); }

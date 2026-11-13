@@ -1538,7 +1538,7 @@ html, body { overflow-x: clip; }
         <div class="per panel rv" data-per="month" style="--d:.08s"><div class="per-h"><b>Tento mesiac</b><span data-per-range>–</span></div><b class="num">–</b></div>
         <div class="per panel rv all" data-per="all" style="--d:.16s"><div class="per-h"><b>Celé obdobie</b><span data-per-range>od začiatku</span></div><b class="num">–</b></div>
       </div>
-      <p class="per-note">Zisk je v jednotkách: 1 jednotka = vklad na jeden tip. V eurách pri vklade 10&nbsp;€ na každý tip.</p>
+      <p class="per-note">Zisk je v jednotkách: 1 jednotka = vklad na jeden tip. V eurách pri vklade 100&nbsp;€ na každý tip.</p>
       <p class="month-line" id="month" hidden></p>
       <p class="note" id="retroNote" hidden></p>
 
@@ -2010,7 +2010,7 @@ html, body { overflow-x: clip; }
 
   /* ---------------- OBDOBIA (1. 11. 2026): tento týždeň, tento mesiac, celé obdobie ----------------
      S novým týždňom (pondelok) a novým mesiacom sa čísla začínajú od nuly, „Celé obdobie“ ostáva. */
-  var EUR = 10; // vklad na tip v eurách pre riadok „Pri vklade 10 € na tip“
+  var EUR = 100; // vklad na tip v eurách pre riadok „Pri vklade 100 € na tip“ (Michal 13. 11. 2026)
   var dPlus = function (k, n) { var p = k.split("-").map(Number); return new Date(Date.UTC(p[0], p[1] - 1, p[2] + n)).toISOString().slice(0, 10); };
   var mPlus = function (k, n) { var p = k.split("-").map(Number); return new Date(Date.UTC(p[0], p[1] - 1 + n, 1)).toISOString().slice(0, 7); };
   var cap = function (t) { return t.charAt(0).toUpperCase() + t.slice(1); };
@@ -2135,7 +2135,7 @@ html, body { overflow-x: clip; }
           $("pfWonSub").textContent = "z " + fmt(n, 0) + " " + ofTipsN(n);
           var pr = Number(d.profit) || 0;
           $("pfProfit").textContent = signed(pr, 1) + " j.";
-          $("pfEur").innerHTML = "pri vklade 10 € na tip = <strong>" + (pr >= 0 ? "+" : "−") + fmt(Math.abs(pr * 10), 0) + " €</strong>";
+          $("pfEur").innerHTML = "pri vklade 100 € na tip = <strong>" + (pr >= 0 ? "+" : "−") + fmt(Math.abs(pr * 100), 0) + " €</strong>";
         }
         var rec = (d.recent || []).filter(function (r) { return (r.status === "won" || r.status === "lost") && r.match && r.match.indexOf("Tiket") !== 0; }).slice(0, 5);
         $("pfList").innerHTML = rec.length ? rec.map(function (r) {
