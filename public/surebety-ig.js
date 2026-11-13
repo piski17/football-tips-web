@@ -615,12 +615,13 @@
       // Michal 13. 11. 15:24: v texte bez stávkoviek (sú na obrázku) – „👉 Over 4.5 - 1.83 / Under 4.5 - 2.47“.
       const tipLine = (x, y) => `👉 ${label(e.sides[0].label)} - ${n2(x.odd)} / ${label(e.sides[1].label)} - ${n2(y.odd)}`;
       const profit = (m) => `💰 Profit: €${n2(m * 100)} (${n2(m * 100)}%)`;
-      lines.push(`${pre ? "🔒" : "✅"} ${e.home} - ${e.away} / ${market(e.market)}`, tipLine(a, b), profit(e.maxMargin));
-      for (const c of dayCombos(e)) lines.push(tipLine(c.a, c.b), profit(c.margin));
+      lines.push(`${pre ? "🔒" : "✅"} ${e.home} - ${e.away} / ${market(e.market)}`, tipLine(a, b));
+      // Michal 13. 11. 15:36: profit nie pri každom tipe, len na konci (💰 Day total).
+      for (const c of dayCombos(e)) lines.push(tipLine(c.a, c.b));
     }
     // Michal 13. 11.: pri 1 surebete súčet netreba; pri viacerých krátky súčet dňa.
     // Michal 13. 11.: Day total vždy (aj pri 1 zápase), ikonka 💰.
-    if (n) lines.push("", `📊 Day total: €${n2(avg * 100 * n)} profit (${n2(avg * 100)}%)`);
+    if (n) lines.push("", `💰 Day total: €${n2(avg * 100 * n)} profit (${n2(avg * 100)}%)`);
     lines.push("");
     lines.push("👑 ARBREX · 18+ · Bet responsibly", "#arbrex #football");
     return lines.join("\n");
