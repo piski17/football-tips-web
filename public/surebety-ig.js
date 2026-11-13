@@ -492,17 +492,17 @@
       const stake = (100 * (1 / sd.odd)) / sum;
       const icon = !settled || win === null ? (k === 0 ? "1️⃣" : "2️⃣") : win === -1 ? "↩️" : win === k ? "✅" : "❌";
       const res = !settled || win === null ? "" : win === -1 ? " · void" : win === k ? " · WON" : " · lost";
-      lines.push(`${icon} ${label(sd.label)} @ ${n2(sd.odd)} – ${sd.book} · stake €${n2(stake)}${res}`);
+      lines.push(betLine(icon, sd, s.sides[1 - k].odd, res));
     });
     lines.push("");
-    if (settled) lines.push(win === -1 ? "💰 Draw – both stakes refunded, no loss." : `💰 Profit locked in: +€${n2(profit)} on €100 (+${n2(profit)}%)`);
-    else lines.push(`💰 Guaranteed profit: +${n2(profit)}% (€${n2(profit)} on every €100), whatever the score`);
+    if (settled) lines.push(win === -1 ? "💰 Draw – both stakes refunded, no loss." : `💰 Profit from €100: €${n2(profit)} (${n2(profit)}%)`);
+    else lines.push(`💰 Profit from €100: €${n2(profit)} (${n2(profit)}%), whatever the score`);
     const combos = window.sbCombos ? window.sbCombos(s) : [];
     if (combos.length) {
       lines.push("");
       lines.push(settled ? "🔁 The same surebet also worked here:" : "🔁 The same surebet also works here:");
       // 13. 11. 2026 (Michal): všetky dvojice – stávkovka a kurz na jednu stranu + stávkovka a kurz na druhú.
-      for (const p of combos) lines.push(` • ${label(s.sides[0].label)} @ ${n2(p.a.odd)} ${p.a.book} + ${label(s.sides[1].label)} @ ${n2(p.b.odd)} ${p.b.book} → +${n2(p.margin * 100)}%`);
+      for (const p of combos) lines.push(altPair(s, p));
     }
     lines.push("");
     lines.push("👑 ARBREX – Profit. Whatever the score.");
@@ -511,21 +511,25 @@
     lines.push(`#arbrex #football ${tag(s.league)}`);
     return lines.join("\n");
   }
+  /** 13. 11. 2026 (Michal): jednoduchý zápis bez „@“ a „+“ – stávkovka: tip – kurz – vklad. */
+  const stakeOf = (odd, other) => (100 * (1 / odd)) / (1 / odd + 1 / other);
+  const betLine = (icon, sd, other, res = "") => `${icon} ${sd.book}: ${label(sd.label)} – odds ${n2(sd.odd)} – stake €${n2(stakeOf(sd.odd, other))}${res}`;
+  const altPair = (s, c) => `• ${c.a.book}: ${label(s.sides[0].label)} – odds ${n2(c.a.odd)}  |  ${c.b.book}: ${label(s.sides[1].label)} – odds ${n2(c.b.odd)}  →  profit ${n2(c.margin * 100)}%`;
   function dayCaption(day, list, pre = false) {
     list = [...list].sort((a, b) => b.maxMargin - a.maxMargin);
     const n = list.length;
     const avg = n ? list.reduce((t, e) => t + e.maxMargin, 0) / n : 0;
-    const lines = [`📅 ${pre ? "TODAY'S SUREBETS" : "SUREBETS OF THE DAY"} – ${dayEn(day)}`, "", `🔒 Surebets: ${n}`, `📈 Average profit: +${n2(avg * 100)}%`, `💰 €100 on each: +€${n2(avg * 100 * n)}`, ""];
+    const lines = [`📅 ${pre ? "TODAY'S SUREBETS" : "SUREBETS OF THE DAY"} – ${dayEn(day)}`, "", `🔒 Surebets: ${n}`, `📈 Average profit: ${n2(avg * 100)}%`, `💰 €100 on each: €${n2(avg * 100 * n)} profit`, ""];
     for (const e of list) {
       const kt = pre ? new Date(e.date).toLocaleTimeString("en-GB", { timeZone: "Europe/Bratislava", hour: "2-digit", minute: "2-digit" }) + " · " : "";
       // 12. 11. 2026 (Michal): v texte aj celý tip – obe strany s kurzom a stávkovkou.
       const [a, b] = e.sides;
       lines.push(`${pre ? "🔒" : "✅"} ${kt}${e.home} – ${e.away} · ${market(e.market)}`,
-        `   ${label(a.label)} @ ${n2(a.odd)} ${a.book} + ${label(b.label)} @ ${n2(b.odd)} ${b.book} → +${n2(e.maxMargin * 100)}%`);
+        betLine("1️⃣", a, b.odd), betLine("2️⃣", b, a.odd), `💰 Profit from €100: €${n2(e.maxMargin * 100)} (${n2(e.maxMargin * 100)}%)`);
       const cb = dayCombos(e);
       if (cb.length) {
-        lines.push("   🔁 The same surebet also works here:");
-        for (const c of cb) lines.push(`    • ${label(a.label)} @ ${n2(c.a.odd)} ${c.a.book} + ${label(b.label)} @ ${n2(c.b.odd)} ${c.b.book} → +${n2(c.margin * 100)}%`);
+        lines.push("🔁 Also works here:");
+        for (const c of cb) lines.push(altPair(e, c));
       }
       lines.push("");
     }
