@@ -456,6 +456,14 @@
     `${pre}${label(s.sides[0].label)} (${a.book} ${n2(a.odd)}) – Stake €${n2(stakeOf(a.odd, b.odd))}`,
     `${pre}${label(s.sides[1].label)} (${b.book} ${n2(b.odd)}) – Stake €${n2(stakeOf(b.odd, a.odd))}`,
   ];
+  /** 13. 11. 2026 (Michal): „Total corners 4.5“ + „Over (Bet365 2.10) – Under (Unibet 2.08)“ – hranica pri trhu, stávky v jednom riadku. */
+  function splitLine(s) {
+    const l0 = label(s.sides[0].label), l1 = label(s.sides[1].label);
+    const m0 = /^(\S+)\s+([\d.]+)$/.exec(l0), m1 = /^(\S+)\s+([\d.]+)$/.exec(l1);
+    if (m0 && m1 && m0[2] === m1[2]) return { line: " " + m0[2], s0: m0[1], s1: m1[1] };
+    return { line: "", s0: l0, s1: l1 };
+  }
+  const oneLine = (s, a, b) => { const p = splitLine(s); return `${p.s0} (${a.book} ${n2(a.odd)}) – ${p.s1} (${b.book} ${n2(b.odd)})`; };
   /** 13. 11. 2026 (Michal): hrubé písmo v texte – Unicode „bold“ znaky (fungujú na Instagrame aj Telegrame aj bez formátovania). */
   function bold(t) {
     return [...String(t).normalize("NFD")].map((ch) => {
@@ -477,10 +485,10 @@
       if (lines.length > 2) lines.push("");
       // 13. 11. 2026 (Michal): bez hrubého písma a bez času – „Zápas / trh“, stávky, prázdny riadok, zisk.
       const [a, b] = e.sides;
-      lines.push(`${pre ? "🔒" : "✅"} ${e.home} – ${e.away} / ${market(e.market)}`, ...twoLines(e, a, b));
+      lines.push(`${pre ? "🔒" : "✅"} ${e.home} – ${e.away}`, `${market(e.market)}${splitLine(e).line}`, oneLine(e, a, b));
       // Michal 13. 11.: pri viacerých zápasoch zisk len na konci (Day total), nie pri každom zápase.
       if (n === 1) lines.push("", `💰 Profit: €${n2(e.maxMargin * 100)} from €100 (${n2(e.maxMargin * 100)}%)`);
-      for (const c of dayCombos(e)) lines.push(`🔁 Or (profit ${n2(c.margin * 100)}%):`, ...twoLines(e, c.a, c.b, "   "));
+      for (const c of dayCombos(e)) lines.push(`🔁 Or: ${oneLine(e, c.a, c.b)} (${n2(c.margin * 100)}%)`);
     }
     // Michal 13. 11.: pri 1 surebete súčet netreba; pri viacerých krátky súčet dňa.
     if (n > 1) lines.push("", `📊 Day total: €${n2(avg * 100 * n)} from €${n * 100} (${n2(avg * 100)}%)`);
