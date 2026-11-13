@@ -233,7 +233,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
     ctx.strokeStyle = C.line; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(X, y - 46); ctx.lineTo(W - X, y - 46); ctx.stroke();
     ctx.fillStyle = C.stone; ctx.font = font(700, 28, B_FONT); ctx.textAlign = "left"; ctx.fillText(handle || "", X, y);
     ctx.fillStyle = C.faint; ctx.font = font(500, 22, B_FONT); ctx.textAlign = "right";
-    ctx.fillText(pre ? "Rovnaký vklad na každý tip · 18+" : "Kurz v čase zverejnenia tipu · 18+", W - X, y);
+    ctx.fillText(pre ? "Vklad na tip 2 – 3 % z banku · 18+" : "Kurz v čase zverejnenia tipu · 18+", W - X, y);
     ctx.textAlign = "left";
   }
   function mark(ctx, cx, cy, r, status) {
@@ -425,7 +425,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
       }
       lines.push("");
     }
-    lines.push("💶 Na každý tip rovnaký vklad. 18+ · Hrajte zodpovedne.");
+    lines.push("💶 Na každý tip rovnaký vklad: 2 – 3 % z banku. 18+ · Hrajte zodpovedne.");
     return lines.join("\n");
   }
   function caption(data) {
