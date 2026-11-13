@@ -302,6 +302,7 @@
     const avail = (story ? 1920 - 190 : 1350 - 60) - 46 - 10 - top;
     const gap = story ? 18 : 14;
     const pages = [[]]; let used = 0;
+    pages.avail = avail; pages.gap = gap;
     for (const e of list) {
       const cb = dayCombos(e);
       const shown = cb.slice(0, CARD.maxCombos);
@@ -311,6 +312,7 @@
       const need = (cur.length ? gap : 0) + h;
       if (cur.length && (cur.length >= 5 || used + need > avail)) { cur = []; pages.push(cur); used = 0; }
       used += (cur.length ? gap : 0) + h;
+      cur.used = used;
       cur.push({ e, h, combos: shown, more });
     }
     return pages;
@@ -364,42 +366,60 @@
     // 13. 11. 2026 (Michal): pri málo surebetoch riadky zväčšiť, aby vyplnili obrázok (nie prázdna medzera dole).
     // 13. 11. 2026 (Michal): rovnaká karta pre každý zápas; ďalšie dvojice z iných stávkoviek hneď pod tým istým zápasom;
     // v kartičke stávky trh + tip, kurz, stávkovka a „Stake €…“. Strany sa delia podľa výšky (najviac 5 zápasov na obrázok).
-    const rows = dayLayout(list, fmtKey)[page] || [];
+    const lay = dayLayout(list, fmtKey);
+    const rows = lay[page] || [];
+    // 13. 11. 2026 (Michal): karty zväčšiť podľa toho, koľko ich je na obrázku – vyplnia voľné miesto (najviac 2×).
+    // Pri málo kartách sa stávky dajú pod seba (cez celú šírku) a ešte viac zväčšia.
+    const stackH = (it) => { const r = 1 + it.combos.length; return CARD.head + r * (2 * CARD.pill + CARD.gap) + (r - 1) * CARD.gap * 2 + (it.more ? 30 : 0) + CARD.bottom; };
+    const usedS = rows.reduce((t, it, i) => t + stackH(it) + (i ? lay.gap : 0), 0);
+    const kS = rows.length ? Math.min(2.8, (lay.avail - 8) / usedS) : 0;
+    const stack = kS >= 1.25;
+    const k = stack ? kS : rows.length ? Math.max(1, Math.min(1.7, (lay.avail - 8) / rows.used)) : 1;
+    const PH = CARD.pill * k, PG = CARD.gap * k;
     const ktime = (e) => new Date(e.date).toLocaleTimeString("en-GB", { timeZone: "Europe/Bratislava", hour: "2-digit", minute: "2-digit" });
-    const pad = 22, cx = X + pad, cw = IW - 2 * pad;
-    const pillW = (cw - 12) / 2;
+    const pad = 22 * Math.min(k, 1.4), cx = X + pad, cw = IW - 2 * pad;
+    const pillW = stack ? cw : (cw - 12) / 2;
+    const f = (v) => Math.round(v * k);
+    const fs = (v) => Math.round(v * Math.min(k, stack ? 1.9 : 1.3)); // drobné popisy rastú menej
     const pill = (sd, other, px, py, extra) => {
-      rr(ctx, px, py, pillW, CARD.pill, 12); ctx.fillStyle = C.card2; ctx.fill(); ctx.strokeStyle = C.line; ctx.lineWidth = 1.5; ctx.stroke();
+      rr(ctx, px, py, pillW, PH, 12 * Math.min(k, 1.5)); ctx.fillStyle = C.card2; ctx.fill(); ctx.strokeStyle = C.line; ctx.lineWidth = 1.5; ctx.stroke();
+      const ix = 16 * Math.min(k, 1.4);
       const mk = market(e0.market);
-      ctx.fillStyle = C.muted; ctx.font = font(600, 16, B_FONT); ctx.fillText(mk, px + 16, py + 22);
+      let extraW = 0;
+      if (extra) { ctx.fillStyle = C.good; ctx.font = font(700, fs(16), B_FONT); ctx.textAlign = "right"; ctx.fillText(extra, px + pillW - ix, py + f(22)); extraW = ctx.measureText(extra).width + 12; ctx.textAlign = "left"; }
+      ctx.fillStyle = C.muted; fit(ctx, mk, 600, fs(16), (pillW - 2 * ix - extraW) * 0.55, B_FONT, 12); ctx.fillText(mk, px + ix, py + f(22));
       const mw = ctx.measureText(mk).width;
-      ctx.fillStyle = C.text; fit(ctx, label(sd.label), 700, 19, pillW - mw - 40 - (extra ? 110 : 0), B_FONT, 12); ctx.fillText(label(sd.label), px + 24 + mw, py + 22);
-      if (extra) { ctx.fillStyle = C.good; ctx.font = font(700, 16, B_FONT); ctx.textAlign = "right"; ctx.fillText(extra, px + pillW - 14, py + 22); ctx.textAlign = "left"; }
-      ctx.fillStyle = C.good; ctx.font = font(800, 25, H_FONT); ctx.fillText(n2(sd.odd), px + 16, py + 48);
+      ctx.fillStyle = C.text; fit(ctx, label(sd.label), 700, f(19), pillW - mw - 2 * ix - 8 - extraW, B_FONT, 14); ctx.fillText(label(sd.label), px + ix + 8 + mw, py + f(22));
+      ctx.fillStyle = C.good; ctx.font = font(800, f(25), H_FONT); ctx.fillText(n2(sd.odd), px + ix, py + f(48));
       const ow = ctx.measureText(n2(sd.odd)).width;
       const st = `Stake €${n2(stakeOf(sd.odd, other))}`;
-      ctx.fillStyle = C.muted; ctx.font = font(600, 17, B_FONT); ctx.textAlign = "right"; ctx.fillText(st, px + pillW - 14, py + 47); const sw = ctx.measureText(st).width; ctx.textAlign = "left";
-      ctx.fillStyle = C.stone; fit(ctx, sd.book, 700, 19, pillW - 16 - ow - 12 - sw - 26, B_FONT, 11); ctx.fillText(sd.book, px + 26 + ow, py + 47);
+      ctx.fillStyle = C.stone; const bsz = fit(ctx, sd.book, 700, f(19), (pillW - 2 * ix - ow - 22) * 0.5, B_FONT, 14); ctx.fillText(sd.book, px + ix + 10 + ow, py + f(47));
+      const bw = ctx.measureText(sd.book).width;
+      ctx.fillStyle = C.muted; fit(ctx, st, 600, fs(17), pillW - 2 * ix - ow - bw - 24, B_FONT, 12); ctx.textAlign = "right"; ctx.fillText(st, px + pillW - ix, py + f(47)); ctx.textAlign = "left";
     };
     let e0 = null;
     for (const it of rows) {
       const e = it.e; e0 = e;
-      const h = it.h;
-      rr(ctx, X, y, IW, h, 20); ctx.fillStyle = C.card; ctx.fill();
-      ctx.fillStyle = C.good; ctx.font = font(800, 30, H_FONT); ctx.textAlign = "right";
-      const pt = `+${n2(e.maxMargin * 100)}%`; ctx.fillText(pt, cx + cw, y + 35); const pw = ctx.measureText(pt).width; ctx.textAlign = "left";
+      const h = (stack ? stackH(it) : it.h) * k;
+      rr(ctx, X, y, IW, h, 20 * Math.min(k, 1.5)); ctx.fillStyle = C.card; ctx.fill();
+      ctx.fillStyle = C.good; ctx.font = font(800, f(30), H_FONT); ctx.textAlign = "right";
+      const pt = `+${n2(e.maxMargin * 100)}%`; ctx.fillText(pt, cx + cw, y + f(35)); const pw = ctx.measureText(pt).width; ctx.textAlign = "left";
       const tm = `${pre ? ktime(e) + " · " : ""}${e.home} – ${e.away}`;
-      ctx.fillStyle = C.text; fit(ctx, tm, 800, 26, cw - pw - 24, H_FONT, 16); ctx.fillText(tm, cx, y + 34);
-      let py = y + CARD.head;
-      pill({ ...e.sides[0], book: e.sides[0].book }, e.sides[1].odd, cx, py, "");
-      pill(e.sides[1], e.sides[0].odd, cx + pillW + 12, py, "");
-      for (const c of it.combos) {
-        py += CARD.pill + CARD.gap;
-        pill({ label: e.sides[0].label, odd: c.a.odd, book: c.a.book }, c.b.odd, cx, py, "");
-        pill({ label: e.sides[1].label, odd: c.b.odd, book: c.b.book }, c.a.odd, cx + pillW + 12, py, `OR · +${n2(c.margin * 100)}%`);
-      }
-      if (it.more) { ctx.fillStyle = C.muted; ctx.font = font(600, 18, B_FONT); ctx.fillText(`+ ${it.more} more combinations (see caption)`, cx, py + CARD.pill + 24); }
-      y += h + (story ? 18 : 14);
+      ctx.fillStyle = C.text; fit(ctx, tm, 800, f(26), cw - pw - 24, H_FONT, 16); ctx.fillText(tm, cx, y + f(34));
+      let py = y + CARD.head * k;
+      const pair = (s0, o0, s1, o1, extra, first) => {
+        if (stack) {
+          if (!first) py += PH + PG * 3;
+          pill(s0, o0, cx, py, extra); py += PH + PG; pill(s1, o1, cx, py, "");
+        } else {
+          if (!first) py += PH + PG;
+          pill(s0, o0, cx, py, ""); pill(s1, o1, cx + pillW + 12, py, extra);
+        }
+      };
+      pair({ ...e.sides[0] }, e.sides[1].odd, e.sides[1], e.sides[0].odd, "", true);
+      for (const c of it.combos) pair({ label: e.sides[0].label, odd: c.a.odd, book: c.a.book }, c.b.odd, { label: e.sides[1].label, odd: c.b.odd, book: c.b.book }, c.a.odd, `OR · +${n2(c.margin * 100)}%`, false);
+      if (it.more) { ctx.fillStyle = C.muted; ctx.font = font(600, f(18), B_FONT); ctx.fillText(`+ ${it.more} more combinations (see caption)`, cx, py + PH + f(24)); }
+      y += h + lay.gap * k;
     }
 
     if (!list.length) { ctx.fillStyle = C.muted; ctx.font = font(600, 30, B_FONT); ctx.fillText("No surebets today.", X, y + 30); }
