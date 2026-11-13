@@ -471,10 +471,10 @@
     const n = list.length;
     const avg = n ? list.reduce((t, e) => t + e.maxMargin, 0) / n : 0;
     // 13. 11. 2026 (Michal): súhrnný riadok až pod tipmi (spolu so ziskom), hore len dátum.
-    // Michal 13. 11.: prázdny riadok len nad Profit (a medzi zápasmi).
-    const lines = [`📅 ${pre ? "Today's surebets" : "Surebets"} · ${dayEn(day)}`];
+    // Michal 13. 11.: prázdny riadok pod dátumom, nad Profit a pod Profit.
+    const lines = [`📅 ${pre ? "Today's surebets" : "Surebets"} · ${dayEn(day)}`, ""];
     for (const e of list) {
-      if (lines.length > 1) lines.push("");
+      if (lines.length > 2) lines.push("");
       // 13. 11. 2026 (Michal): bez hrubého písma a bez času – „Zápas / trh“, stávky, prázdny riadok, zisk.
       const [a, b] = e.sides;
       lines.push(`${pre ? "🔒" : "✅"} ${e.home} – ${e.away} / ${market(e.market)}`, ...twoLines(e, a, b), "", `💰 Profit: €${n2(e.maxMargin * 100)} from €100 (${n2(e.maxMargin * 100)}%)`);
@@ -482,6 +482,7 @@
     }
     // Michal 13. 11.: pri 1 surebete súčet netreba; pri viacerých krátky súčet dňa.
     if (n > 1) lines.push("", `📊 Day total: €${n2(avg * 100 * n)} from ${n} × €100 (avg ${n2(avg * 100)}%)`);
+    lines.push("");
     lines.push("👑 ARBREX · 18+ · Bet responsibly", "#arbrex #football");
     return lines.join("\n");
   }
