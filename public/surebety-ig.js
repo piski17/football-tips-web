@@ -348,11 +348,12 @@
     const bottom = (story ? H - 190 : H - 60) - 46 - (page < pages - 1 ? 50 : 24);
     const avail = bottom - y;
     const minRh = story ? 112 : 96;
-    const rh = rows.length ? Math.max(minRh, Math.min(story ? 900 : 600, (avail - gap * (rows.length - 1)) / rows.length)) : minRh;
+    // 13. 11. 2026 (Michal): karta zápasu vždy rovnaká (1 aj 5 zápasov) – výška ako pri 5 zápasoch, karty hneď pod súčtami.
+    const rh = Math.max(minRh, Math.min(story ? 160 : 150, (avail - gap * 4) / 5));
     const ktime = (e) => new Date(e.date).toLocaleTimeString("en-GB", { timeZone: "Europe/Bratislava", hour: "2-digit", minute: "2-digit" });
     for (const e of rows) {
       rr(ctx, X, y, IW, rh, 24); ctx.fillStyle = C.card; ctx.fill();
-      if (rh >= 330) {
+      if (false) { // veľká karta – už sa nepoužíva (rovnaká karta pre všetky počty)
         // Veľká karta: liga, zápas, obe stávky s kurzom, stávkovkou a vkladom zo 100 €, zisk.
         const pad = 32, cx = X + pad, cw = IW - 2 * pad;
         const combos = dayCombos(e);
@@ -418,7 +419,7 @@
         const pf = profH >= 112 ? 60 : profH >= 92 ? 50 : 44;
         ctx.fillStyle = C.good; ctx.font = font(800, pf, H_FONT); ctx.textAlign = "right";
         ctx.fillText(`+${n2(e.maxMargin * 100)}%`, cx + cw - 26, py + profH / 2 + pf * 0.35); ctx.textAlign = "left";
-      } else if (rh >= 220) {
+      } else if (false) {
         // Karta ako pri jednom surebete: liga · trh, zápas + zisk, dve stávky (tip, kurz, stávkovka, vklad zo 100 €).
         const pad = 28, cx = X + pad, cw = IW - 2 * pad;
         const cbm = dayCombos(e);
