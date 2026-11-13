@@ -481,7 +481,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
   }
   function viewTips() {
     const chosen = st.data.tips.filter((t) => st.sel.has(t.id));
-    return st.mode === "pre" ? chosen.sort(byProb) : chosen; // výsledky podľa času výkopu
+    return chosen.sort(byProb); // Michal 13. 11.: pred zápasom aj výsledky rovnako – od najvyššej dôvery
   }
   async function render() {
     if (!st.data) return;
