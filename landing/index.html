@@ -1114,6 +1114,10 @@ html.navrh .s12-tag.k3 { background: #F2EFEA; }
   .guar2 { padding: 26px 22px; }
 }
 @media (max-width: 720px) { .guar2 .seal { justify-self: center; } }
+/* hlavný nadpis „Pre každého, kto tipuje futbal a chce byť v pluse.“ */
+.hero h1.h1-who { font-size: clamp(46px, 6.2vw, 94px); line-height: 1; max-width: 15ch; margin-inline: auto; text-wrap: balance; }
+.hero h1.h1-who .ln { display: inline; }
+@media (max-width: 560px) { .hero h1.h1-who { font-size: clamp(40px, 11.6vw, 54px); line-height: 1.04; } }
 
 
 /* ===================== PÍSMO FRAUNCES + FIGTREE (13. 11. 2026) =====================
@@ -1200,9 +1204,9 @@ html, body { overflow-x: clip; }
   <section class="hero" data-pages="home" id="uvod">
     <div class="wrap hero-in">
       <div class="hero-copy">
-        <a class="chip" href="/vysledky"><i aria-hidden="true"></i>Futbalová analytika · Est. 2026</a>
-        <h1><span class="ln">Futbal podľa</span> <span class="ln"><em>čísel.</em></span></h1>
-        <p class="lead">Futbalové tipy, za ktorými stoja čísla, nie pocit. Model každý deň prepočíta okolo 120 zápasov a pošle len tie tipy, kde je šanca vyššia, než ukazuje kurz – najviac 3 denne, každý zverejnený.</p>
+        <a class="chip" href="/vysledky"><i aria-hidden="true"></i>Tipy podložené dátami</a>
+        <h1 class="h1-who"><span class="ln">Pre každého, kto tipuje futbal</span> <span class="ln">a chce byť <em>v pluse.</em></span></h1>
+        <p class="lead">Nechcete sa spoliehať na pocit? Model každý deň prepočíta okolo 120 zápasov a pošle vám len tipy, kde je šanca vyššia, než ukazuje kurz – najviac 3 denne, každý zverejnený, výhry aj prehry.</p>
         <div class="cta">
           <a class="btn" href="#ponuka">Chcem tipy <span class="arr" aria-hidden="true">→</span></a>
           <a class="btn ghost" href="#dokazy">Pozrieť výsledky</a>
