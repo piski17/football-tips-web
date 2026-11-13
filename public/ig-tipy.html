@@ -54,6 +54,10 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
 .tip .s { font-weight: 700; min-width: 64px; }
 .tip .s.won { color: var(--good); } .tip .s.lost { color: var(--bad); } .tip .s.void, .tip .s.pending { color: var(--muted); }
 .tip .m { flex: 1; min-width: 0; }
+.tip .pick { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); cursor: pointer; white-space: nowrap; }
+.tip .pick input { width: 20px; height: 20px; accent-color: #7FC8A0; }
+.tip .pct { font-weight: 700; color: var(--good); min-width: 42px; }
+@media (max-width: 560px) { .tip { flex-wrap: wrap; } .tip .m { flex-basis: 100%; order: 3; } }
 .tip .m small { display: block; color: var(--muted); }
 .empty { color: var(--muted); padding: 20px 0; }
 </style>
@@ -461,32 +465,52 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
     ].map((x) => document.fonts.load(x).catch(() => {}))).then(() => document.fonts.ready);
     return fontsReady;
   }
+  // Michal 13. 11.: pri každom tipe políčko „Na obrázok“ – predvolene 3 najsilnejšie (tie idú klientom),
+  // zoznam zoradený: vybrané hore podľa dôvery, potom ostatné. Výber sa pamätá pre každý deň.
+  const byProb = (a, b) => (b.probability || 0) - (a.probability || 0);
+  const selKey = () => "tr_ig_sel_" + st.day;
+  function initSel() {
+    let ids = null;
+    try { ids = JSON.parse(localStorage.getItem(selKey()) || "null"); } catch (e) { /* nič */ }
+    const all = st.data.tips.map((t) => t.id);
+    st.sel = new Set(Array.isArray(ids) ? ids.filter((id) => all.includes(id)) : [...st.data.tips].sort(byProb).slice(0, 3).map((t) => t.id));
+  }
+  function saveSel() { try { localStorage.setItem(selKey(), JSON.stringify([...st.sel])); } catch (e) { /* nič */ } }
+  function listOrder() {
+    const t = [...st.data.tips].sort(byProb);
+    return [...t.filter((x) => st.sel.has(x.id)), ...t.filter((x) => !st.sel.has(x.id))];
+  }
+  function viewTips() {
+    const chosen = st.data.tips.filter((t) => st.sel.has(t.id));
+    return st.mode === "pre" ? chosen.sort(byProb) : chosen; // výsledky podľa času výkopu
+  }
   async function render() {
     if (!st.data) return;
     await loadFonts();
-    const pages = pagesOf(st.data.tips);
+    const vt = viewTips();
+    const pages = pagesOf(vt);
     if (st.page >= pages.length) st.page = pages.length - 1;
     const handle = $("handle").value.trim();
     for (const x of $("modeChips").children) x.classList.toggle("on", x.dataset.m === st.mode);
     // Michal 13. 11.: pred zápasom zoradené od najsilnejšieho tipu (najvyššia dôvera hore); výsledky podľa času výkopu.
-    const view = st.mode === "pre" ? { ...st.data, tips: [...st.data.tips].sort((a, b) => (b.probability || 0) - (a.probability || 0)) } : st.data;
+    const view = { ...st.data, tips: vt };
     st.cvs = pages.map((_, i) => draw(view, st.fmt, i, handle));
     $("img").src = st.cvs[st.page].toDataURL("image/png");
     $("preview").classList.toggle("story", st.fmt === "story");
     $("pageWrap").style.display = pages.length > 1 ? "" : "none";
     $("pageChips").innerHTML = pages.map((_, i) => `<button type="button" class="chip${i === st.page ? " on" : ""}" data-p="${i}">${i + 1}</button>`).join("");
-    const sm = summary(st.data.tips);
-    $("pageInfo").textContent = pages.length > 1 ? `${plural(st.data.tips.length, "tip", "tipy", "tipov")} na ${pages.length} obrázkoch. „Zdieľať“ pošle všetky naraz (na Instagrame ako karusel).` : "";
+    const sm = summary(vt);
+    $("pageInfo").textContent = !vt.length && st.data.tips.length ? "Zaškrtnite pri tipoch hore „Na obrázok“." : pages.length > 1 ? `${plural(vt.length, "tip", "tipy", "tipov")} na ${pages.length} obrázkoch. „Zdieľať“ pošle všetky naraz (na Instagrame ako karusel).` : "";
     $("pageInfo").className = "note";
     if (sm.pending && st.mode !== "pre") { $("pageInfo").textContent = `Pozor: ${plural(sm.pending, "tip sa ešte hrá", "tipy sa ešte hrajú", "tipov sa ešte hrá")} – obrázok ukazuje priebežný stav. Najlepšie je zverejniť až ráno po dohraní.`; $("pageInfo").className = "note warn"; }
     $("text").value = caption(view);
-    const has = st.data.tips.length > 0;
+    const has = vt.length > 0;
     $("shareBtn").disabled = !has; $("downBtn").disabled = !has;
   }
   function renderList() {
-    const tips = st.data.tips;
+    const tips = listOrder();
     $("tipList").innerHTML = tips.length
-      ? tips.map((t) => `<div class="tip"><span class="s ${t.status}">${STATUS[t.status] || ""}</span><span class="m"><b>${esc(t.home)} – ${esc(t.away)}</b>${t.score ? " " + scoreTxt(t.score) : ""}<small>${esc(t.legs && t.legs.length ? "Tiket" : tipTxt(t))}${t.odds ? " · kurz " + num(t.odds, 2) : ""} · ${esc(league(t.league))} ${kickTime(t.kickoff)}</small></span><span>${t.units == null ? "" : signed(t.units, 2) + " j."}</span></div>`).join("")
+      ? tips.map((t) => `<div class="tip"><label class="pick" title="Pridať na obrázok"><input type="checkbox" data-id="${esc(t.id)}"${st.sel.has(t.id) ? " checked" : ""}> Na obrázok</label><span class="pct">${num(t.probability || 0, 0)} %</span><span class="s ${t.status}">${STATUS[t.status] || ""}</span><span class="m"><b>${esc(t.home)} – ${esc(t.away)}</b>${t.score ? " " + scoreTxt(t.score) : ""}<small>${esc(t.legs && t.legs.length ? "Tiket" : tipTxt(t))}${t.odds ? " · kurz " + num(t.odds, 2) : ""} · ${esc(league(t.league))} ${kickTime(t.kickoff)}</small></span><span>${t.units == null ? "" : signed(t.units, 2) + " j."}</span></div>`).join("")
       : `<div class="empty">V tento deň nebol žiadny tip, ktorý sa ráta do štatistík.</div>`;
     const days = st.data.days || [];
     const before = days.filter((d) => d < st.day), after = days.filter((d) => d > st.day);
@@ -507,6 +531,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
       $("tipList").innerHTML = `<div class="empty">Nepodarilo sa načítať tipy (${esc(e.message)}).</div>`;
       return;
     }
+    initSel();
     const sm0 = summary(st.data.tips);
     st.mode = sm0.pending > 0 && sm0.done === 0 ? "pre" : "post";
     renderList(); render();
@@ -517,6 +542,11 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
   const saveFile = (b, name) => { const url = URL.createObjectURL(b); const a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); };
 
   $("fmtChips").addEventListener("click", (e) => { const c = e.target.closest(".chip"); if (!c) return; st.fmt = c.dataset.f; for (const x of $("fmtChips").children) x.classList.toggle("on", x === c); render(); });
+  $("tipList").addEventListener("change", (e) => {
+    const c = e.target.closest("input[data-id]"); if (!c) return;
+    if (c.checked) st.sel.add(c.dataset.id); else st.sel.delete(c.dataset.id);
+    saveSel(); renderList(); render();
+  });
   $("modeChips").addEventListener("click", (e) => { const c = e.target.closest(".chip"); if (!c) return; st.mode = c.dataset.m; render(); });
   $("pageChips").addEventListener("click", (e) => { const c = e.target.closest(".chip"); if (!c) return; st.page = Number(c.dataset.p); render(); });
   $("day").addEventListener("change", () => { if (/^\d{4}-\d{2}-\d{2}$/.test($("day").value)) load($("day").value); });
