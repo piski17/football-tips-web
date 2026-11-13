@@ -3166,6 +3166,24 @@ async function archiveAllResolved() {
   openTipsHistory();
 }
 document.getElementById("archiveResolvedBtn").addEventListener("click", () => archiveAllResolved());
+// 13. 11. 2026 (Michal): jedno tlačidlo v karte Tipy – skryje naraz všetky tipy, ktoré ešte nie sú skryté (aj čakajúce).
+async function archiveAllVisible() {
+  const toHide = currentHistoryTips.filter((t) => !t.archived && !t.watchOnly);
+  if (!toHide.length) { showToast("Všetky tipy sú už skryté."); return; }
+  const ok = window.confirm(
+    `Skryť ${plural(toHide.length, "tip", "tipy", "tipov")} z histórie?\n\nV štatistikách aj na prezentácii ostanú. Kedykoľvek si ich zobrazíš cez „Zobraziť skryté“.`
+  );
+  if (!ok) return;
+  const btn = document.getElementById("archiveAllBtn");
+  if (btn) btn.disabled = true;
+  for (const t of toHide) {
+    try { await setArchived(t.id, true); } catch { /* pokračujeme s ďalšími */ }
+  }
+  if (btn) btn.disabled = false;
+  showToast("Tipy sú skryté.");
+  openTipsHistory();
+}
+document.getElementById("archiveAllBtn")?.addEventListener("click", () => archiveAllVisible());
 
 // Overenie vyhodnotenia (1. 11. 2026, Michal): či niektorý tip nie je vyhodnotený zle.
 const auditTipsBtn = document.getElementById("auditTipsBtn");
