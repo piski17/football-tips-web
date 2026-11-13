@@ -979,6 +979,33 @@ html.navrh .s12-tag.k3 { background: #F2EFEA; }
 .panel.kpi.metal::before { display: none; }
 .kpi.metal small, .kpi.metal span { color: #4D463C; }
 .guar2 h3 em { font-style: normal; font-weight: 700; background: var(--plat); -webkit-background-clip: text; background-clip: text; color: transparent; }
+/* 5 · Čo dostanete – deň s TipRadarom (13. 11. 2026) */
+.day { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.day::before { content: ""; position: absolute; left: 0; right: 0; top: 7px; height: 1px; background: linear-gradient(90deg, rgba(207,196,180,.7), rgba(207,196,180,.12)); }
+.day li { position: relative; padding-top: 38px; }
+.day li::before { content: ""; position: absolute; left: 0; top: 0; width: 15px; height: 15px; border-radius: 50%; background: var(--bg); border: 1.5px solid #CFC4B4; box-shadow: 0 0 0 5px var(--bg); }
+.day li:nth-child(2)::before { background: #CFC4B4; box-shadow: 0 0 0 5px var(--bg), 0 0 22px rgba(207,196,180,.7); }
+.day-t { display: block; font: 600 12px/1 var(--display); letter-spacing: .24em; text-transform: uppercase; color: #CFC4B4; }
+.day h3 { margin-top: 16px; font-size: clamp(24px, 2.3vw, 30px); font-weight: 600; }
+.day p { margin-top: 10px; color: var(--muted); font-size: 15.5px; max-width: 30ch; }
+.extra { display: grid; grid-template-columns: auto repeat(3, minmax(0, 1fr)); align-items: center; gap: 0; margin-top: clamp(44px, 5vw, 64px); border-radius: 22px; background: var(--metal); color: #121110; overflow: hidden; }
+.extra > * { padding: 24px 28px; }
+.extra > div { border-left: 1px solid rgba(30,26,20,.14); }
+.extra-h { font: 600 11px/1 var(--display); letter-spacing: .26em; text-transform: uppercase; color: #4D463C; }
+.extra b { display: block; font: 700 17px/1.25 var(--display); }
+.extra div span { display: block; margin-top: 4px; color: #4D463C; font-size: 14px; }
+@media (max-width: 1000px) { .day { grid-template-columns: 1fr 1fr; row-gap: 40px; } .day::before { display: none; } }
+@media (max-width: 720px) {
+  .day { grid-template-columns: 1fr; row-gap: 0; padding-left: 30px; }
+  .day::before { display: block; left: 7px; right: auto; top: 8px; bottom: 8px; width: 1px; height: auto; background: linear-gradient(180deg, rgba(207,196,180,.7), rgba(207,196,180,.12)); }
+  .day li { padding: 0 0 30px; }
+  .day li::before { left: -30px; top: 0; }
+  .day h3 { margin-top: 10px; }
+  .extra { grid-template-columns: 1fr; }
+  .extra > * { padding: 18px 22px; }
+  .extra > div { border-left: 0; border-top: 1px solid rgba(30,26,20,.14); }
+  .extra-h { padding-bottom: 12px; }
+}
 
 </style>
 </head>
@@ -1149,29 +1176,20 @@ html.navrh .s12-tag.k3 { background: #F2EFEA; }
   <section class="s12" data-pages="home" id="co-dostanete">
     <div class="wrap">
       <div class="head rv">
-        <div><div class="eyebrow">Čo dostanete</div><h2 class="h2">Tip, kurz a plán. <em>Priamo do mobilu.</em></h2></div>
+        <div><div class="eyebrow">Čo dostanete</div><h2 class="h2">Takto vyzerá <em>deň s TipRadarom.</em></h2></div>
+        <p class="lead">Vy nemusíte nič počítať ani sledovať. Všetko príde samo do mobilu.</p>
       </div>
-      <div class="get">
-        <div class="gets">
-          <div class="panel g rv"><svg viewBox="0 0 24 24"><path d="M21.5 4.2 2.9 11.4l6 2 2 6 3-4 5 3.6z"/></svg><h3>Najsilnejšie tipy</h3><p>Do súkromného kanála na Telegrame, 1 – 2 hodiny pred výkopom. Najviac 3 denne.</p></div>
-          <div class="panel g rv" style="--d:.05s"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg><h3>Kurz a dôvera</h3><p>Ku každému tipu šanca podľa modelu a minimálny kurz, pri ktorom ho hrať.</p></div>
-          <div class="panel g rv" style="--d:.1s"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><h3>Vyhodnotenie</h3><p>Hneď po zápase výsledok, večer súhrn celého dňa.</p></div>
-          <div class="panel g rv" style="--d:.15s"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z"/></svg><h3>Úvodný hovor 1&nbsp;na&nbsp;1</h3><p>Spolu nastavíme bank a vklad, aby ste vedeli presne, koľko staviť.</p></div>
-          <div class="panel g rv" style="--d:.2s"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><h3>Mentoring 1&nbsp;na&nbsp;1</h3><p>Počas celej spolupráce sa ma môžete opýtať na bank, vklad či konkrétny tip.</p></div>
-          <div class="panel g rv" style="--d:.25s"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="8.5"/></svg><h3>Tipy nevypršia</h3><p>Rátajú sa tipy, nie dni. Spolupráca skončí až posledným tipom.</p></div>
-        </div>
-        <figure class="phone rv" aria-label="Ukážka: takto príde tip do Telegramu">
-          <div class="ph-scr">
-            <div class="ph-top"><svg aria-hidden="true"><use href="#logo"/></svg><div><b>TipRadar · Členovia</b><small>súkromný kanál</small></div></div>
-            <div class="ph-body">
-              <span class="ph-day">Dnes</span>
-              <div class="msg in"><b>🎯 Nový tip</b>⚽ Nórsko — Portugalsko<br />📊 Góly: <b>pod 3,5</b><br />📈 Dôvera: <b>71&nbsp;%</b><br />💰 Kurz: <b>1,72</b><br />✅ Hrajte pri kurze aspoň <b>1,50</b><span class="t">18:02</span></div>
-              <div class="msg win in"><b>✅ VÝHRA</b>⚽ Nórsko — Portugalsko<br />📊 Góly: <b>pod 3,5</b><span class="t">22:41</span></div>
-              <div class="msg in"><b>📊 Vyhodnotenie dňa</b>2 z 3 tipov vyšlo · <b>+0,2 j.</b><span class="t">22:45</span></div>
-            </div>
-          </div>
-          <figcaption>Ilustrácia</figcaption>
-        </figure>
+      <ol class="day">
+        <li class="rv"><span class="day-t">Ráno</span><h3>Model prepočíta zápasy</h3><p>Okolo 120 zápasov a 1 200 trhov. Väčšina neprejde.</p></li>
+        <li class="rv" style="--d:.06s"><span class="day-t">1 – 2 h pred výkopom</span><h3>Príde tip</h3><p>Do súkromného kanála na Telegrame – s kurzom, šancou a minimálnym kurzom, pri ktorom ho hrať.</p></li>
+        <li class="rv" style="--d:.12s"><span class="day-t">Po zápase</span><h3>Výsledok</h3><p>Výhra aj prehra, hneď ako zápas skončí.</p></li>
+        <li class="rv" style="--d:.18s"><span class="day-t">Večer</span><h3>Súhrn dňa</h3><p>Koľko tipov vyšlo a zisk dňa v jednotkách.</p></li>
+      </ol>
+      <div class="extra rv">
+        <span class="extra-h">A navyše</span>
+        <div><b>Úvodný hovor 1&nbsp;na&nbsp;1</b><span>nastavíme bank a vklad</span></div>
+        <div><b>Mentoring počas celej spolupráce</b><span>pýtajte sa kedykoľvek</span></div>
+        <div><b>Tipy nevypršia</b><span>rátajú sa tipy, nie dni</span></div>
       </div>
     </div>
   </section>
