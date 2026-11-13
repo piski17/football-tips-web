@@ -421,10 +421,12 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
       } else {
         lines.push(`⚽ ${t.home} – ${t.away} · ${kickTime(t.kickoff)} (${league(t.league)})`);
         lines.push(`👉 ${tipTxt(t)}${t.odds ? " – kurz " + num(t.odds, 2) : ""}`);
-        if (t.minOdds) lines.push(`✅ Hrajte pri kurze aspoň ${num(t.minOdds, 2)}`);
       }
       lines.push("");
     }
+    // Michal 13. 11.: minimálny kurz len raz, nad vetou o vklade (pri pásme 70 – 80 % je pre všetky tipy rovnaký).
+    const mins = tips.map((t) => t.minOdds).filter((x) => x);
+    if (mins.length) lines.push(`🎯 Hrajte pri kurze aspoň ${num(Math.max(...mins), 2)}`);
     lines.push("💶 Na každý tip rovnaký vklad: 2 – 3 % z banku. 18+ · Hrajte zodpovedne.");
     return lines.join("\n");
   }
