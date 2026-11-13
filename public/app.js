@@ -2257,7 +2257,10 @@ function renderTipsList(rawTips) {
   hiddenDuplicates = rawTips.length - allTips.length;
   currentHistoryTips = allTips;
   // Tipy „len sledovať“ sa nerátajú do štatistík ani sa nezobrazujú.
-  const tips = allTips.filter((t) => !t.watchOnly);
+  // 13. 11. 2026 (Michal): tipy z vyradených súťaží sa v Histórii už nezobrazujú (v databáze ostávajú, nič sa nemaže –
+  // po vrátení súťaže do zoznamu sa ukážu a znova rátajú).
+  const removedLeagueCount = allTips.filter((t) => !t.watchOnly && t.removedLeague).length;
+  const tips = allTips.filter((t) => !t.watchOnly && !t.removedLeague);
   // Tipy na trhy, ktoré appka už neponúka, ostávajú v zozname, ale nerátajú sa do štatistík.
   // Tipy z vyradených súťaží (2. 11. 2026) ostávajú v zozname so značkou, ale nerátajú sa do štatistík.
   const statTips = tips.filter((t) => !EXCLUDED_STATS_MARKETS.includes(t.market) && !t.removedLeague);
@@ -2275,14 +2278,14 @@ function renderTipsList(rawTips) {
   void renderWatchOverview(watchTips, statTips);
   renderTipRows(tips);
   renderFoldSums(statTips, watchTips);
-  renderTipsCountNote(tips, statTips);
+  renderTipsCountNote(tips, statTips, removedLeagueCount);
 }
 
 /**
  * 13. 11. 2026 (Michal: „v histórii je 100 tipov, na webe v štatistikách len 92“): vysvetlenie rozdielu.
  * Web ráta len vyhodnotené tipy (výhra / prehra) bez vyradených súťaží a trhov; čakajúce a vrátené nie.
  */
-function renderTipsCountNote(tips, statTips) {
+function renderTipsCountNote(tips, statTips, removedLeagueCount = 0) {
   const el = document.getElementById("tipsCountNote");
   if (!el) return;
   const onWeb = statTips.filter((t) => t.status === "won" || t.status === "lost").length;
@@ -2290,11 +2293,11 @@ function renderTipsCountNote(tips, statTips) {
   const add = (n, one, few, many) => { if (n) parts.push(plural(n, one, few, many)); };
   add(statTips.filter((t) => t.status === "pending").length, "čaká na výsledok", "čakajú na výsledok", "čaká na výsledok");
   add(statTips.filter((t) => t.status === "void").length, "vrátený (0 j.)", "vrátené (0 j.)", "vrátených (0 j.)");
-  add(tips.filter((t) => t.removedLeague).length, "z vyradenej súťaže", "z vyradených súťaží", "z vyradených súťaží");
   add(tips.filter((t) => !t.removedLeague && EXCLUDED_STATS_MARKETS.includes(t.market)).length, "na zrušený trh", "na zrušené trhy", "na zrušené trhy");
   el.textContent =
     `V histórii ${plural(tips.length, "tip", "tipy", "tipov")} (bez sledovaných) · na webe v štatistikách ${onWeb} – rátajú sa len vyhodnotené (výhra / prehra).` +
     (parts.length ? ` Rozdiel: ${parts.join(", ")}.` : "") +
+    (removedLeagueCount ? ` Tipy z vyradených súťaží (${removedLeagueCount}) sa nezobrazujú ani nerátajú.` : "") +
     (hiddenDuplicates ? ` Rovnaký tip uložený 2× sa ráta len raz (skrytých duplicít: ${hiddenDuplicates}).` : " Žiadny tip nie je uložený 2×.");
   // Ten istý zápas a ten istý trh s iným tipom (napr. Nad 2,5 aj Nad 3,5) – na kontrolu.
   const byKey = new Map();
@@ -3202,7 +3205,7 @@ async function archiveAllResolved() {
 document.getElementById("archiveResolvedBtn").addEventListener("click", () => archiveAllResolved());
 // 13. 11. 2026 (Michal): jedno tlačidlo v karte Tipy – skryje naraz všetky tipy, ktoré ešte nie sú skryté (aj čakajúce).
 async function archiveAllVisible() {
-  const toHide = currentHistoryTips.filter((t) => !t.archived && !t.watchOnly);
+  const toHide = currentHistoryTips.filter((t) => !t.archived && !t.watchOnly && !t.removedLeague);
   if (!toHide.length) { showToast("Všetky tipy sú už skryté."); return; }
   const ok = window.confirm(
     `Skryť ${plural(toHide.length, "tip", "tipy", "tipov")} z histórie?\n\nV štatistikách aj na prezentácii ostanú. Kedykoľvek si ich zobrazíš cez „Zobraziť skryté“.`
