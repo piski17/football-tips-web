@@ -460,7 +460,8 @@
     list = [...list].sort((a, b) => b.maxMargin - a.maxMargin);
     const n = list.length;
     const avg = n ? list.reduce((t, e) => t + e.maxMargin, 0) / n : 0;
-    const lines = [`📅 ${pre ? "Today's surebets" : "Surebets"} · ${dayEn(day)}`, `${n} surebet${n === 1 ? "" : "s"} · avg profit ${n2(avg * 100)}% · stakes from €100`, ""];
+    // 13. 11. 2026 (Michal): súhrnný riadok až pod tipmi (spolu so ziskom), hore len dátum.
+    const lines = [`📅 ${pre ? "Today's surebets" : "Surebets"} · ${dayEn(day)}`, ""];
     for (const e of list) {
       const kt = pre ? new Date(e.date).toLocaleTimeString("en-GB", { timeZone: "Europe/Bratislava", hour: "2-digit", minute: "2-digit" }) + " · " : "";
       const [a, b] = e.sides;
@@ -468,6 +469,7 @@
       for (const c of dayCombos(e)) lines.push(`🔁 Or (profit ${n2(c.margin * 100)}%):`, ...twoLines(e, c.a, c.b, "   "));
       lines.push("");
     }
+    if (n) { lines.pop(); lines.push(`📊 ${n} surebet${n === 1 ? "" : "s"} · avg profit ${n2(avg * 100)}% · stakes from €100`, ""); }
     lines.push("👑 ARBREX · 18+ · Bet responsibly", "#arbrex #football");
     return lines.join("\n");
   }
