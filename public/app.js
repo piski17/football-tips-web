@@ -2275,6 +2275,40 @@ function renderTipsList(rawTips) {
   void renderWatchOverview(watchTips, statTips);
   renderTipRows(tips);
   renderFoldSums(statTips, watchTips);
+  renderTipsCountNote(tips, statTips);
+}
+
+/**
+ * 13. 11. 2026 (Michal: „v histórii je 100 tipov, na webe v štatistikách len 92“): vysvetlenie rozdielu.
+ * Web ráta len vyhodnotené tipy (výhra / prehra) bez vyradených súťaží a trhov; čakajúce a vrátené nie.
+ */
+function renderTipsCountNote(tips, statTips) {
+  const el = document.getElementById("tipsCountNote");
+  if (!el) return;
+  const onWeb = statTips.filter((t) => t.status === "won" || t.status === "lost").length;
+  const parts = [];
+  const add = (n, one, few, many) => { if (n) parts.push(plural(n, one, few, many)); };
+  add(statTips.filter((t) => t.status === "pending").length, "čaká na výsledok", "čakajú na výsledok", "čaká na výsledok");
+  add(statTips.filter((t) => t.status === "void").length, "vrátený (0 j.)", "vrátené (0 j.)", "vrátených (0 j.)");
+  add(tips.filter((t) => t.removedLeague).length, "z vyradenej súťaže", "z vyradených súťaží", "z vyradených súťaží");
+  add(tips.filter((t) => !t.removedLeague && EXCLUDED_STATS_MARKETS.includes(t.market)).length, "na zrušený trh", "na zrušené trhy", "na zrušené trhy");
+  el.textContent =
+    `V histórii ${plural(tips.length, "tip", "tipy", "tipov")} (bez sledovaných) · na webe v štatistikách ${onWeb} – rátajú sa len vyhodnotené (výhra / prehra).` +
+    (parts.length ? ` Rozdiel: ${parts.join(", ")}.` : "") +
+    (hiddenDuplicates ? ` Rovnaký tip uložený 2× sa ráta len raz (skrytých duplicít: ${hiddenDuplicates}).` : " Žiadny tip nie je uložený 2×.");
+  // Ten istý zápas a ten istý trh s iným tipom (napr. Nad 2,5 aj Nad 3,5) – na kontrolu.
+  const byKey = new Map();
+  for (const t of statTips) {
+    if ((t.legs && t.legs.length) || !(Number(t.fixtureId) > 0)) continue;
+    const k = `${t.fixtureId}|${t.market}`;
+    byKey.set(k, [...(byKey.get(k) || []), t]);
+  }
+  const same = [...byKey.values()].filter((l) => l.length > 1);
+  if (same.length) {
+    el.textContent += ` Pozor – rovnaký zápas aj trh viackrát: ${same
+      .map((l) => `${translateTeamName(l[0].homeTeam)} – ${translateTeamName(l[0].awayTeam)} (${l[0].market}: ${l.map((t) => translateNamesInText(t.selection, t.homeTeam, t.awayTeam)).join(" / ")})`)
+      .join("; ")}.`;
+  }
 }
 
 /** Krátke čísla na kolónkach v Štatistikách a Sledovaných (1. 11. 2026). */
