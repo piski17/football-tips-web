@@ -352,8 +352,12 @@ export async function moveLateAddsOnce(): Promise<number> {
  * dnešných pravidiel by prešli klientom (pass), sa vrátia do štatistík. Ostanú označené strictWouldFail
  * (porovnanie 1. 12.) a strictReturned. Nič sa nemaže. Návrat: tipom so strictReturned dať watchOnly + strictFail.
  */
-const STRICT_OFF_KEY = "tipradar_migr_strict_off_done";
-export async function returnStrictFailedOnce(pass: (t: SavedTip) => boolean): Promise<{ returned: number; kept: number }> {
+// 13. 11. 2026 (Michal): 60 / 40 vypnutá druhýkrát (aj spätne) – nový príznak, aby migrácia znova prebehla.
+const STRICT_OFF_KEY = "tipradar_migr_strict_off_done_v2";
+export async function returnStrictFailedOnce(
+  pass: (t: SavedTip) => boolean,
+  typeOf?: (market: string) => string | null,
+): Promise<{ returned: number; kept: number }> {
   if (!useUpstash) return { returned: 0, kept: 0 };
   const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };
   const done = (await upstashClient().get(`${UPSTASH_URL}/get/${STRICT_OFF_KEY}`, auth)).data?.result;
@@ -362,9 +366,17 @@ export async function returnStrictFailedOnce(pass: (t: SavedTip) => boolean): Pr
     const tips = await readAll();
     let returned = 0;
     let kept = 0;
-    for (const t of tips) {
-      if (!t.watchOnly || !(t.strictFail || t.retroStrict) || t.watchBand || t.manualEntry || (t.legs && t.legs.length)) continue;
-      if (pass(t)) {
+    // Najviac 1 tip z typu na zápas (8. 11. 2026) – vrátený tip nesmie pridať druhý tip rovnakého typu.
+    const taken = new Set<string>();
+    const keyOf = (t: SavedTip) => { const ty = typeOf && t.fixtureId ? typeOf(t.market) : null; return ty ? `${t.fixtureId}|${ty}` : ""; };
+    for (const t of tips) if (!t.watchOnly && !(t.legs && t.legs.length)) { const k = keyOf(t); if (k) taken.add(k); }
+    const cands = tips
+      .filter((t) => t.watchOnly && (t.strictFail || t.retroStrict) && !t.watchBand && !t.manualEntry && !(t.legs && t.legs.length))
+      .sort((a, b) => (b.probability ?? 0) - (a.probability ?? 0));
+    for (const t of cands) {
+      const k = keyOf(t);
+      if (pass(t) && !(k && taken.has(k))) {
+        if (k) taken.add(k);
         t.watchOnly = undefined;
         t.strictFail = undefined;
         t.retroStrict = undefined;
@@ -387,7 +399,7 @@ export async function returnStrictFailedOnce(pass: (t: SavedTip) => boolean): Pr
  * (strictReturned) a zverejnené tipy uložené počas vypnutia, ktoré by 60 / 40 neprešli (strictWouldFail),
  * idú späť do sledovaných (skupina 60 / 40). Nič sa nemaže.
  */
-const STRICT_ON_KEY = "tipradar_migr_strict_on_done";
+const STRICT_ON_KEY = "tipradar_migr_strict_on_done_v2"; // 13. 11. 2026: nový príznak pre prípadné opätovné zapnutie
 export async function moveStrictFailedBackOnce(): Promise<number> {
   if (!useUpstash) return 0;
   const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };

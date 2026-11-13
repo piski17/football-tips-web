@@ -3983,9 +3983,10 @@ app.listen(PORT, () => {
     .then(() => STRICT_CHECK_ON ? null : returnStrictFailedOnce((t) => {
       if (typeof t.probability !== "number" || typeof t.odds !== "number") return false;
       const ev = (t.probability / 100) * t.odds;
+      if (t.sameTypeMoved || t.oldFoulsMoved || t.lateMoved) return false;
       return t.probability >= MIN_PROBABILITY && t.probability <= MAX_PROBABILITY && t.odds >= MIN_ODDS - 1e-9
         && ev >= MIN_EXPECTED_VALUE && ev <= SUSPICIOUS_EXPECTED_VALUE;
-    }))
+    }, (market) => { const c = marketCategory(market); return c ? tipType(c) : null; }))
     .then((r) => { if (r && (r.returned || r.kept)) console.log(`Kontrola 60 / 40 vypnutá: vrátené do štatistík ${r.returned}, ostáva v sledovaných ${r.kept}`); })
     .catch((err) => console.error("Návrat tipov vyradených 60 / 40 zlyhal:", err))
     // 6. 11. 2026 18:23 (Michal): 60 / 40 znova zapnutá – vrátené tipy raz presunie späť do sledovaných.
