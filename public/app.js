@@ -533,7 +533,7 @@ function seatsHtml(t) {
   return `<small>Členstvo</small>${["p100"].map((t) => row(t, `${MEMBER_NAME[t]} · ${MEMBER_TIPS[t]}`)).join("")}`;
 }
 function renderSeats(terms) {
-  document.getElementById("seatBox").innerHTML = seatsHtml(terms);
+  { const sb = document.getElementById("seatBox"); if (sb) sb.innerHTML = seatsHtml(terms); }
   document.getElementById("seatBoxMobile").innerHTML = seatsHtml(terms);
 }
 async function loadSeats() {
@@ -550,7 +550,7 @@ async function loadSeats() {
     /* pri chybe ostane „–“ */
   }
 }
-document.getElementById("seatBox").addEventListener("click", () => goTo("clenovia"));
+document.getElementById("seatBox")?.addEventListener("click", () => goTo("clenovia"));
 
 // =====================================================================
 // ZÁPASY
