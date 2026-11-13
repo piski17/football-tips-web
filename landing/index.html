@@ -823,6 +823,163 @@ html.menu-open .jump { display: none; }
 @media (max-width: 560px) { .eq-card { padding: 22px 20px 20px; border-radius: 24px; } .eq-chart { width: calc(100% + 40px); margin: 18px -20px 0; height: 130px; } .eq-form { gap: 4px; } .an-float.tk b { width: 32px; height: 32px; font-size: 15px; border-radius: 10px; } }
 
 .value-grid > *, .how > *, .me-grid > *, .faq-grid > *, .form-grid > *, .kurz-grid > *, .head > * { min-width: 0; }
+/* ===================== NÁVRH 12 ČASTÍ (13. 11. 2026) – predajné rozloženie úvodu =====================
+   Zaujmi (1–4) · Presvedč (5–8) · Rozhodni (9–12). Vzhľad Kameň, písmo Urbanist + Manrope. */
+.s12 { padding: clamp(80px, 10vw, 140px) 0 0; }
+.s12 .head { margin-bottom: clamp(36px, 5vw, 60px); }
+.s12-tag { display: none; }
+html.navrh .s12-tag, html.navrh .hero .s12-tag { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 18px; padding: 6px 12px 6px 6px; border-radius: 99px; background: #E9A16B; color: #1A120B; font: 700 12px/1 var(--display); letter-spacing: .04em; }
+html.navrh .s12-tag b { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #1A120B; color: #F4D9C3; font-size: 11px; }
+html.navrh .s12-tag.k2 { background: #CFC4B4; }
+html.navrh .s12-tag.k3 { background: #F2EFEA; }
+
+/* 2 · Poznáte to? */
+.pains { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.pain { padding: 30px 26px 28px; }
+.pain q { display: block; font: 600 22px/1.2 var(--display); letter-spacing: -.02em; quotes: "„" "“"; }
+.pain p { margin-top: 14px; color: var(--muted); font-size: 15px; }
+.pain .x { display: grid; place-items: center; width: 34px; height: 34px; margin-bottom: 22px; border-radius: 50%; color: var(--loss); box-shadow: inset 0 0 0 1px rgba(224,137,122, .45); font: 700 15px/1 var(--display); }
+
+/* 3 · Prečo to nešlo */
+.why { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: clamp(30px, 5vw, 70px); align-items: center; }
+.why ol { display: grid; border-top: 1px solid var(--line2); }
+.why li { display: grid; grid-template-columns: 64px 1fr; gap: 18px; padding: 26px 0; border-bottom: 1px solid var(--line2); }
+.why li .n { font: 200 44px/.9 var(--display); background: var(--plat); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.why h3 { font-size: 22px; }
+.why li p { margin-top: 8px; color: var(--muted); font-size: 15.5px; }
+.coin { padding: clamp(26px, 3.4vw, 40px); }
+.coin .lbl2 { font: 600 11px/1 var(--display); letter-spacing: .26em; text-transform: uppercase; color: var(--muted); }
+.coin h3 { margin-top: 14px; font-size: 26px; }
+.coin-row { display: flex; justify-content: space-between; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line); font-size: 15.5px; }
+.coin-row b { font: 700 18px/1.2 var(--display); white-space: nowrap; }
+.coin-row:first-of-type { margin-top: 18px; }
+.coin-sum { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-top: 18px; }
+.coin-sum span { color: var(--muted); font-size: 15px; }
+.coin-sum b { font: 600 40px/1 var(--display); color: var(--loss); letter-spacing: -.03em; white-space: nowrap; }
+.coin small { display: block; margin-top: 16px; color: var(--faint); font-size: 13.5px; }
+
+/* 4 · Čo sa zmení */
+.change { display: grid; border-radius: var(--r-lg); overflow: hidden; border: 1px solid var(--line); }
+.ch-row { display: grid; grid-template-columns: 1fr 56px 1fr; align-items: center; }
+.ch-row + .ch-row { border-top: 1px solid var(--line); }
+.ch-row > div { padding: 22px 28px; }
+.ch-old { color: var(--muted); background: rgba(255,255,255,.012); text-decoration: line-through; text-decoration-color: rgba(224,137,122,.55); text-decoration-thickness: 1px; }
+.ch-new { background: rgba(207,196,180,.06); font: 600 18px/1.35 var(--display); letter-spacing: -.01em; }
+.ch-arr { text-align: center; color: #CFC4B4; font-size: 20px; padding: 0 !important; }
+.ch-hd { font: 600 11px/1 var(--display) !important; letter-spacing: .26em !important; text-transform: uppercase; color: var(--faint) !important; text-decoration: none !important; background: transparent !important; padding-block: 18px !important; }
+
+/* 5 · Čo dostanete */
+.get { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); gap: clamp(30px, 5vw, 70px); align-items: center; }
+.gets { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.g { padding: 24px 22px; }
+.g svg { width: 40px; height: 40px; padding: 10px; border-radius: 12px; background: var(--plat); stroke: #0E0D0C; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.g h3 { margin-top: 18px; font-size: 19px; letter-spacing: -.015em; }
+.g p { margin-top: 6px; color: var(--muted); font-size: 14.5px; line-height: 1.55; }
+.get .phone .msg { opacity: 1; transform: none; }
+
+/* 6 · Pre koho je */
+.fit { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.fit .panel { padding: clamp(26px, 3.4vw, 40px); }
+.fit h3 { font-size: 26px; }
+.fit ul { display: grid; gap: 14px; margin-top: 24px; }
+.fit li { display: grid; grid-template-columns: 28px 1fr; gap: 12px; font-size: 16px; }
+.fit li i { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; font: 700 13px/1 var(--display); font-style: normal; }
+.fit .yes i { background: rgba(127,200,160,.14); color: var(--win); }
+.fit .no { background: transparent; }
+.fit .no li { color: var(--muted); }
+.fit .no i { background: rgba(224,137,122,.12); color: var(--loss); }
+
+/* 7 · Kto za tým stojí */
+.who { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: clamp(30px, 5vw, 80px); align-items: center; }
+.vcard { padding: 34px; border-radius: 28px; aspect-ratio: 1.58; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 50px 90px -40px rgba(0,0,0,.9); }
+.vc-top { display: flex; justify-content: space-between; align-items: center; font: 600 11px/1 var(--display); letter-spacing: .26em; text-transform: uppercase; color: var(--muted); }
+.vc-mono { font: 200 76px/.9 var(--display); letter-spacing: -.05em; }
+.vc-name { font: 700 24px/1.1 var(--display); }
+.vc-name small { display: block; margin-top: 6px; font: 600 13px/1.2 var(--sans); color: var(--muted); }
+.who blockquote { margin: 26px 0 0; padding-left: 20px; border-left: 2px solid #CFC4B4; font: 500 22px/1.4 var(--display); letter-spacing: -.01em; }
+.who .facts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+.who .facts span { padding: 10px 16px; border-radius: 99px; box-shadow: inset 0 0 0 1px var(--line2); font-size: 14px; color: var(--muted); }
+.who .facts b { color: var(--text); }
+
+/* 8 · Dôkazy */
+.proof { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.kpi { padding: 30px 28px; }
+.kpi small { display: block; font: 600 11px/1 var(--display); letter-spacing: .26em; text-transform: uppercase; color: var(--muted); }
+.kpi b { display: block; margin-top: 18px; font: 300 clamp(48px, 5.4vw, 72px)/.9 var(--display); letter-spacing: -.045em; }
+.kpi span { display: block; margin-top: 12px; color: var(--muted); font-size: 14.5px; }
+.proof-2 { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, .75fr); gap: 14px; margin-top: 14px; }
+.last10 { padding: 28px; }
+.l10-row { display: grid; grid-template-columns: 1fr auto auto; gap: 16px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 14.5px; }
+.l10-row:last-child { border-bottom: 0; }
+.l10-row em { font-style: normal; color: var(--muted); font-size: 13px; display: block; }
+.l10-row .od { font: 700 16px/1 var(--display); }
+.l10-row .r { font: 700 15px/1 var(--display); min-width: 64px; text-align: right; }
+.rules { padding: 28px; }
+.rules li { display: grid; grid-template-columns: 22px 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 15px; color: var(--muted); }
+.rules li:last-child { border-bottom: 0; }
+.rules li svg { width: 20px; height: 20px; margin-top: 2px; stroke: var(--win); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.rules li b { color: var(--text); }
+.proof-note { margin-top: 14px; color: var(--faint); font-size: 13.5px; text-align: center; }
+
+/* 9 · Ponuka */
+.offer { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); border-radius: 32px; overflow: hidden; border: 1px solid var(--line2); }
+.offer-l { padding: clamp(30px, 4.4vw, 56px); border-radius: 0; }
+.offer-l .badge { display: inline-block; padding: 7px 14px; border-radius: 99px; background: #0E0D0C; color: #F2EFEA; font: 600 11px/1 var(--display); letter-spacing: .24em; text-transform: uppercase; }
+.offer-l h3 { margin-top: 24px; font-size: clamp(38px, 4.4vw, 56px); font-weight: 600; }
+.offer-l .from { margin-top: 18px; font: 300 clamp(56px, 6vw, 84px)/.9 var(--display); letter-spacing: -.05em; }
+.offer-l .from small { font: 600 16px/1 var(--sans); letter-spacing: 0; color: var(--muted); margin-left: 8px; }
+.offer-l p { margin-top: 18px; color: var(--muted); font-size: 15.5px; }
+.offer-l .btn { margin-top: 30px; width: 100%; }
+.offer-l .pay { margin-top: 14px; text-align: center; color: var(--muted); font-size: 13px; }
+.offer-r { padding: clamp(30px, 4.4vw, 56px); background: var(--bg2); }
+.offer-r ol { display: grid; gap: 0; margin-top: 10px; }
+.offer-r li { display: grid; grid-template-columns: 48px 1fr; gap: 14px; padding: 20px 0; border-bottom: 1px solid var(--line); }
+.offer-r li:last-child { border-bottom: 0; }
+.offer-r .n { font: 300 30px/1 var(--display); color: #CFC4B4; }
+.offer-r h4 { font-size: 19px; }
+.offer-r li p { margin-top: 6px; color: var(--muted); font-size: 14.5px; }
+
+/* 10 · Garancia */
+.guar2 { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr); gap: clamp(26px, 4vw, 56px); align-items: center; padding: clamp(30px, 4.4vw, 56px); }
+.seal { position: relative; display: grid; place-items: center; width: 168px; height: 168px; border-radius: 50%; background: var(--plat); color: #0E0D0C; text-align: center; box-shadow: 0 30px 60px -30px rgba(207,196,180,.6); }
+.seal::before { content: ""; position: absolute; inset: 8px; border-radius: 50%; border: 1px dashed rgba(14,13,12,.35); }
+.seal b { display: block; font: 700 46px/.9 var(--display); letter-spacing: -.04em; }
+.seal span { display: block; margin-top: 6px; font: 700 11px/1.2 var(--display); letter-spacing: .2em; text-transform: uppercase; }
+.guar2 h3 { font-size: clamp(30px, 3.4vw, 44px); font-weight: 600; }
+.guar2 > div > p { margin-top: 14px; color: var(--muted); }
+.guar2 ul { display: grid; gap: 12px; }
+.guar2 li { display: grid; grid-template-columns: 26px 1fr; gap: 12px; font-size: 15px; color: var(--muted); }
+.guar2 li svg { width: 22px; height: 22px; stroke: #CFC4B4; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+@media (max-width: 1000px) {
+  .pains { grid-template-columns: 1fr 1fr; }
+  .why, .get, .who, .proof-2, .offer { grid-template-columns: 1fr; }
+  .guar2 { grid-template-columns: auto 1fr; }
+  .guar2 ul { grid-column: 1 / -1; }
+}
+@media (max-width: 720px) {
+  .pains, .gets, .fit, .proof { grid-template-columns: 1fr; }
+  .pain q { font-size: 20px; }
+  .ch-row { grid-template-columns: 1fr; }
+  .ch-row > div { padding: 14px 20px; }
+  .ch-row .ch-old { padding-bottom: 4px; background: transparent; }
+  .ch-row .ch-new { padding-top: 4px; background: transparent; }
+  .ch-arr { display: none; }
+  .ch-row.hdr { display: none; }
+  .ch-new::before { content: "→ "; color: #CFC4B4; }
+  .vcard { padding: 26px; }
+  .vc-mono { font-size: 60px; }
+  .guar2 { grid-template-columns: 1fr; justify-items: start; }
+  .seal { width: 140px; height: 140px; }
+  .seal b { font-size: 38px; }
+  .l10-row { grid-template-columns: 1fr auto; }
+  .l10-row .od { display: none; }
+}
+.panel.kpi.metal { background: var(--metal); }
+.panel.kpi.metal::before { display: none; }
+.kpi.metal small, .kpi.metal span { color: #4D463C; }
+.guar2 h3 em { font-style: normal; font-weight: 700; background: var(--plat); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
 </style>
 </head>
 <body>
@@ -877,10 +1034,10 @@ html.menu-open .jump { display: none; }
       <div class="hero-copy">
         <a class="chip" href="/vysledky"><i aria-hidden="true"></i>Futbalová analytika · Est. 2026</a>
         <h1><span class="ln">Futbal podľa</span> <span class="ln"><em>čísel.</em></span></h1>
-        <p class="lead">Štatistický model každý deň prejde stovky zápasov a vyberie len tipy, pri ktorých je šanca vyššia, než naznačuje kurz. Žiadne pocity, len čísla – a každý tip zverejnený, výhry aj prehry.</p>
+        <p class="lead">Futbalové tipy, za ktorými stoja čísla, nie pocit. Model každý deň prepočíta okolo 120 zápasov a pošle len tie tipy, kde je šanca vyššia, než ukazuje kurz – najviac 3 denne, každý zverejnený.</p>
         <div class="cta">
-          <a class="btn" href="/clenstvo">Vybrať členstvo <span class="arr" aria-hidden="true">→</span></a>
-          <a class="btn ghost" href="/vysledky">Overené výsledky</a>
+          <a class="btn" href="#ponuka">Chcem tipy <span class="arr" aria-hidden="true">→</span></a>
+          <a class="btn ghost" href="#dokazy">Pozrieť výsledky</a>
         </div>
       </div>
       <div class="stage" aria-label="Posledné vyhodnotené tipy">
@@ -928,80 +1085,89 @@ html.menu-open .jump { display: none; }
   <div class="leagues" data-pages="home" aria-label="Súťaže, ktoré model sleduje"><div class="marquee"><span>Liga majstrov</span><span>Premier League</span><span>Serie A</span><span>La Liga</span><span>Bundesliga</span><span>Ligue 1</span><span>Eredivisie</span><span>Primeira Liga</span><span>Belgicko</span><span>Turecko</span><span>Dánsko</span><span>Škótsko</span><span>Championship</span><span>Segunda División</span><span>2. Bundesliga</span><span>Ligue 2</span><span>Liga majstrov žien</span><span>Liga národov</span><span>Liga majstrov</span><span>Premier League</span><span>Serie A</span><span>La Liga</span><span>Bundesliga</span><span>Ligue 1</span><span>Eredivisie</span><span>Primeira Liga</span><span>Belgicko</span><span>Turecko</span><span>Dánsko</span><span>Škótsko</span><span>Championship</span><span>Segunda División</span><span>2. Bundesliga</span><span>Ligue 2</span><span>Liga majstrov žien</span><span>Liga národov</span></div></div>
 
   <!-- výsledky naživo (zobrazí sa, keď sú vyhodnotené tipy) -->
-  <section class="band dark" data-pages="home" id="board" hidden>
-    <div class="wrap">
-      <div class="board-head">
-        <div><span class="live-dot">Výsledky naživo</span><h2 class="h2">Čísla, ktoré <em>neskrývame</em></h2></div>
-        <div class="seg bd-tabs" role="group" aria-label="Obdobie"><button type="button" data-bp="week" aria-pressed="false">Týždeň</button><button type="button" data-bp="month" aria-pressed="false">Mesiac</button><button type="button" data-bp="all" aria-pressed="true">Celkom</button></div>
-      </div>
-      <div class="board-grid">
-        <div class="bd-st"><small>Vyhodnotené</small><b class="num" id="bdCount">–</b><span id="bdCountSub">vyhodnotených tipov</span></div>
-        <div class="bd-st"><small>Úspešnosť</small><b class="num" id="bdRate">–</b><span id="bdRateSub">vyšlo</span></div>
-        <div class="bd-st"><small>Zisk</small><b class="num" id="bdProfit">–</b><span id="bdProfitSub">zisk od začiatku</span></div>
-        <div class="bd-form"><span id="bdMonth">Posledných 10 tipov</span><div class="dots10" id="bdForm"></div></div>
-      </div>
-      <a class="bd-more" href="/vysledky">Celá história tipov →</a>
-    </div>
-  </section>
-
-  <section class="sec" data-pages="home" id="hodnota">
-    <div class="wrap value-grid">
-      <div class="rv">
-        <div class="eyebrow">Hodnota</div>
-        <h2 class="h2">Kedy má tip <em>hodnotu</em></h2>
-        <p class="lead">Keď model dáva výsledku 70&nbsp;% a kurz je 1,70, z každého eura sa v priemere vráti 0,70 × 1,70 = 1,19 €. To je hodnota +19&nbsp;%. Pri kurze 1,45 by to bolo 0,70 × 1,45 = 1,02 €, teda len +2&nbsp;%, a tip by sme neposlali.</p>
-        <p class="calc-math">Skúste si to sami – posuňte <b>šancu modelu</b> a <b>kurz</b> alebo vyberte ukážkový trh.</p>
-        <div class="presets" role="group" aria-label="Ukážkové trhy">
-          <button type="button" data-p="72" data-o="1.62" aria-pressed="false">Rohy nad 9,5</button>
-          <button type="button" data-p="64" data-o="1.45" aria-pressed="false">Góly nad 2,5</button>
-          <button type="button" data-p="70" data-o="1.64" aria-pressed="false">Karty nad 3,5</button>
-          <button type="button" data-p="84" data-o="1.55" aria-pressed="false">Strely nad 7,5</button>
-        </div>
-      </div>
-      <div class="panel meter rv" aria-live="polite">
-        <div class="mt-read">
-          <div><small>Šanca podľa modelu</small><b class="num" id="gP">70&nbsp;%</b></div>
-          <div class="vs">vs.</div>
-          <div class="r"><small>Šanca podľa kurzu <span id="gOdds">1,70</span></small><b class="num" id="gI">59&nbsp;%</b></div>
-        </div>
-        <div class="scale" aria-hidden="true">
-          <div class="sc-track"></div>
-          <div class="sc-band" id="scBand"><span>pásmo 70 – 80 %</span></div>
-          <div class="sc-gap" id="scGap"></div>
-          <div class="sc-mk o" id="mkO"><i></i></div>
-          <div class="sc-mk p" id="mkP"><i></i></div>
-        </div>
-        <div class="sc-ticks" id="scTicks" aria-hidden="true"></div>
-        <div class="sliders">
-          <label><span>Model</span><input type="range" id="inP" min="50" max="90" step="1" value="70" aria-label="Šanca podľa modelu" /><output id="oP">70 %</output></label>
-          <label><span>Kurz</span><input type="range" id="inO" min="1.2" max="2.6" step="0.01" value="1.70" aria-label="Kurz stávkovej kancelárie" /><output id="oO">1,70</output></label>
-        </div>
-        <ul class="checks" id="checks"></ul>
-        <div class="verdict" id="verdict"></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="sec" data-pages="home" id="ako-to-funguje" style="padding-top:0">
+  <!-- ================= 2 · POZNÁTE TO? ================= -->
+  <section class="s12" data-pages="home" id="poznate-to">
     <div class="wrap">
       <div class="head rv">
-        <div><div class="eyebrow">Ako to funguje</div><h2 class="h2">Od zápasu k&nbsp;<em>tipu</em></h2></div>
-        <p class="lead">Tip príde 1 – 2 hodiny pred výkopom, výsledok večer po zápase.</p>
+        <div><div class="eyebrow">Poznáte to?</div><h2 class="h2">Futbalu rozumiete. <em>Tiket aj tak padne.</em></h2></div>
+        <p class="lead">Väčšina ľudí, ktorí tipujú futbal, je dlhodobo v mínuse. Nie preto, že by futbalu nerozumeli – ale preto, že tipujú podľa pocitu.</p>
       </div>
-      <div class="how">
-        <ol class="steps" id="steps">
-          <li class="rv"><span class="n">01</span><div><h3>Model prepočíta každý zápas</h3><p>Góly, rohy, karty, strely aj fauly z posledných zápasov oboch tímov. V bežný deň okolo 120 zápasov a 1 200 trhov.</p></div></li>
-          <li class="rv"><span class="n">02</span><div><h3>Porovná šancu s kurzom</h3><p>Tip prejde, len keď model vidí vyššiu šancu, než naznačuje kurz stávkovej kancelárie. Väčšina zápasov neprejde.</p></div></li>
-          <li class="rv"><span class="n">03</span><div><h3>Tip príde do Telegramu</h3><p>1 – 2 hodiny pred výkopom, večer vyhodnotenie. Výhry aj prehry zverejníme.</p></div></li>
+      <div class="pains">
+        <div class="panel pain rv"><span class="x">✕</span><q>Dnes to musí vyjsť.</q><p>Tiket z ôsmich zápasov, ktorý padne na poslednom – v 89. minúte.</p></div>
+        <div class="panel pain rv" style="--d:.06s"><span class="x">✕</span><q>Tento zápas je istota.</q><p>Kurz 1,25 vyzerá bezpečne. Pár prehier a celý mesiac je preč.</p></div>
+        <div class="panel pain rv" style="--d:.12s"><span class="x">✕</span><q>Musím to vyhrať späť.</q><p>Po prehre vyšší vklad, po výhre ešte vyšší. Bank sa stratí rýchlejšie, než čakáte.</p></div>
+        <div class="panel pain rv" style="--d:.18s"><span class="x">✕</span><q>Pozri, zase výhra!</q><p>Tipéri na sociálnych sieťach ukazujú len výhry. Prehry potichu zmiznú.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 3 · PREČO TO NEŠLO ================= -->
+  <section class="s12" data-pages="home" id="preco-to-neslo">
+    <div class="wrap">
+      <div class="head rv">
+        <div><div class="eyebrow">Prečo to nešlo</div><h2 class="h2">Nie je to smola. <em>Je to matematika.</em></h2></div>
+      </div>
+      <div class="why">
+        <ol>
+          <li class="rv"><span class="n">01</span><div><h3>V kurze je marža kancelárie</h3><p>Stávková kancelária dáva do každého kurzu svoj zárobok. Kto stavia bez porovnania šance a kurzu, dlhodobo prerába – aj keď často vyhrá.</p></div></li>
+          <li class="rv"><span class="n">02</span><div><h3>Vklad podľa nálady</h3><p>Raz 5 €, potom 50 €, aby sa to vrátilo. Bez rovnakého vkladu stačí pár zlých dní a bank je preč.</p></div></li>
+          <li class="rv"><span class="n">03</span><div><h3>Nikto nič nemeria</h3><p>Bez zapísaných tipov neviete, či ste naozaj v pluse. Pamätáme si výhry, prehry zabúdame.</p></div></li>
         </ol>
-        <figure class="phone" id="phone" aria-label="Ukážka: takto príde tip do Telegramu">
+        <div class="panel coin rv">
+          <span class="lbl2">Príklad · hod mincou</span>
+          <h3>Šanca 50 : 50, a predsa strata</h3>
+          <div class="coin-row"><span>Spravodlivý kurz</span><b>2,00</b></div>
+          <div class="coin-row"><span>Kurz v stávkovej kancelárii</span><b>1,90</b></div>
+          <div class="coin-row"><span>100 stávok po 10 € – vsadené</span><b>1 000 €</b></div>
+          <div class="coin-row"><span>50 výhier × 19 € – vrátené</span><b>950 €</b></div>
+          <div class="coin-sum"><span>Výsledok, aj keď ste trafili polovicu</span><b>−50 €</b></div>
+          <small>Preto TipRadar pošle tip, len keď je šanca vyššia, než naznačuje kurz.</small>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 4 · ČO SA ZMENÍ ================= -->
+  <section class="s12" data-pages="home" id="co-sa-zmeni">
+    <div class="wrap">
+      <div class="head rv">
+        <div><div class="eyebrow">Čo sa zmení</div><h2 class="h2">Namiesto pocitu <em>čísla.</em></h2></div>
+        <p class="lead">Rovnaký futbal, iný prístup. Takto vyzerá tipovanie s TipRadarom.</p>
+      </div>
+      <div class="change rv">
+        <div class="ch-row hdr"><div class="ch-hd">Doteraz</div><div class="ch-arr"></div><div class="ch-hd">S TipRadarom</div></div>
+        <div class="ch-row"><div class="ch-old">Pocit z posledného zápasu</div><div class="ch-arr">→</div><div class="ch-new">Šanca vypočítaná z dát 18 súťaží</div></div>
+        <div class="ch-row"><div class="ch-old">Tikety z mnohých zápasov</div><div class="ch-arr">→</div><div class="ch-new">Jednotlivé tipy, každý s vlastnou hodnotou</div></div>
+        <div class="ch-row"><div class="ch-old">Vklad podľa nálady</div><div class="ch-arr">→</div><div class="ch-new">Rovnaký vklad 2 – 3 % banku na každý tip</div></div>
+        <div class="ch-row"><div class="ch-old">Tip každý deň za každú cenu</div><div class="ch-arr">→</div><div class="ch-new">Najviac 3 tipy denne, niekedy žiadny</div></div>
+        <div class="ch-row"><div class="ch-old">Neviete, či ste v pluse</div><div class="ch-arr">→</div><div class="ch-new">Každý tip zapísaný a vyhodnotený, zisk v jednotkách</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 5 · ČO DOSTANETE ================= -->
+  <section class="s12" data-pages="home" id="co-dostanete">
+    <div class="wrap">
+      <div class="head rv">
+        <div><div class="eyebrow">Čo dostanete</div><h2 class="h2">Tip, kurz a plán. <em>Priamo do mobilu.</em></h2></div>
+      </div>
+      <div class="get">
+        <div class="gets">
+          <div class="panel g rv"><svg viewBox="0 0 24 24"><path d="M21.5 4.2 2.9 11.4l6 2 2 6 3-4 5 3.6z"/></svg><h3>Najsilnejšie tipy</h3><p>Do súkromného kanála na Telegrame, 1 – 2 hodiny pred výkopom. Najviac 3 denne.</p></div>
+          <div class="panel g rv" style="--d:.05s"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg><h3>Kurz a dôvera</h3><p>Ku každému tipu šanca podľa modelu a minimálny kurz, pri ktorom ho hrať.</p></div>
+          <div class="panel g rv" style="--d:.1s"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><h3>Vyhodnotenie</h3><p>Hneď po zápase výsledok, večer súhrn celého dňa.</p></div>
+          <div class="panel g rv" style="--d:.15s"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z"/></svg><h3>Úvodný hovor 1&nbsp;na&nbsp;1</h3><p>Spolu nastavíme bank a vklad, aby ste vedeli presne, koľko staviť.</p></div>
+          <div class="panel g rv" style="--d:.2s"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><h3>Mentoring 1&nbsp;na&nbsp;1</h3><p>Počas celej spolupráce sa ma môžete opýtať na bank, vklad či konkrétny tip.</p></div>
+          <div class="panel g rv" style="--d:.25s"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="8.5"/></svg><h3>Tipy nevypršia</h3><p>Rátajú sa tipy, nie dni. Spolupráca skončí až posledným tipom.</p></div>
+        </div>
+        <figure class="phone rv" aria-label="Ukážka: takto príde tip do Telegramu">
           <div class="ph-scr">
             <div class="ph-top"><svg aria-hidden="true"><use href="#logo"/></svg><div><b>TipRadar · Členovia</b><small>súkromný kanál</small></div></div>
             <div class="ph-body">
               <span class="ph-day">Dnes</span>
-              <div class="msg"><b>🎯 Nový tip</b>⚽ Nórsko — Portugalsko<br />📊 Góly: <b>pod 3,5</b><br />📈 Dôvera: <b>71&nbsp;%</b><br />💰 Kurz: <b>1,72</b><br />💵 Odporúčaná sadzba: <b>3&nbsp;% bankrollu</b><span class="t">18:02</span></div>
-              <div class="msg win"><b>✅ VÝHRA</b>⚽ Nórsko — Portugalsko<br />📊 Góly: <b>pod 3,5</b><span class="t">22:41</span></div>
-              <div class="msg"><b>📊 Vyhodnotenie dňa</b>2 z 3 tipov vyšlo · <b>+0,2 j.</b><span class="t">22:45</span></div>
+              <div class="msg in"><b>🎯 Nový tip</b>⚽ Nórsko — Portugalsko<br />📊 Góly: <b>pod 3,5</b><br />📈 Dôvera: <b>71&nbsp;%</b><br />💰 Kurz: <b>1,72</b><br />✅ Hrajte pri kurze aspoň <b>1,50</b><span class="t">18:02</span></div>
+              <div class="msg win in"><b>✅ VÝHRA</b>⚽ Nórsko — Portugalsko<br />📊 Góly: <b>pod 3,5</b><span class="t">22:41</span></div>
+              <div class="msg in"><b>📊 Vyhodnotenie dňa</b>2 z 3 tipov vyšlo · <b>+0,2 j.</b><span class="t">22:45</span></div>
             </div>
           </div>
           <figcaption>Ilustrácia</figcaption>
@@ -1010,31 +1176,155 @@ html.menu-open .jump { display: none; }
     </div>
   </section>
 
-  <section class="sec" data-pages="home" style="padding-top:0">
+  <!-- ================= 6 · PRE KOHO JE ================= -->
+  <section class="s12" data-pages="home" id="pre-koho">
     <div class="wrap">
       <div class="head rv">
-        <div><div class="eyebrow">Čo model počíta</div><h2 class="h2">Osem trhov. <em>18&nbsp;súťaží.</em></h2></div>
-        <p class="lead">Model skúša všetky hranice kurzov a z každého typu (góly, rohy, karty…) pustí ďalej najviac jeden tip – ten s najvyššou dôverou.</p>
+        <div><div class="eyebrow">Pre koho je</div><h2 class="h2">TipRadar nie je <em>pre každého.</em></h2></div>
+        <p class="lead">A je to tak správne. Povedzme si to rovno, ešte predtým, než sa ozvete.</p>
       </div>
-      <ul class="markets">
-        <li class="panel rv"><span class="mk-n">01</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m12 7.5 3.8 2.8-1.5 4.4H9.7L8.2 10.3Z"/></svg><b>Góly v zápase</b><small>aj v polčasoch</small></li>
-        <li class="panel rv"><span class="mk-n">02</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V5h14v15"/><path d="M5 9h14M9 5v4M15 5v4"/></svg><b>Góly tímu</b><small>domáci aj hostia</small></li>
-        <li class="panel rv"><span class="mk-n">03</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21V4"/><path d="M6 4h11l-3 4 3 4H6"/></svg><b>Rohy v zápase</b><small>všetky hranice kurzov</small></li>
-        <li class="panel rv"><span class="mk-n">04</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21V4"/><path d="M6 4h9l-2.5 3.5L15 11H6"/><path d="M17 15v6M14 18h6"/></svg><b>Rohy tímu</b><small>domáci aj hostia</small></li>
-        <li class="panel rv"><span class="mk-n">05</span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="9" height="13" rx="1.5"/><rect x="10" y="7" width="9" height="13" rx="1.5"/></svg><b>Karty</b><small>v zápase aj tímu</small></li>
-        <li class="panel rv"><span class="mk-n">06</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg><b>Strely na bránu</b><small>v zápase aj tímu</small></li>
-        <li class="panel rv"><span class="mk-n">07</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v4M12 16v4M4 12h4M16 12h4"/><circle cx="12" cy="12" r="3"/></svg><b>Fauly</b><small>v zápase aj tímu</small></li>
-        <li class="panel rv"><span class="mk-n">08</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5H12Z"/><path d="M15 3.9A8.5 8.5 0 0 1 20.1 9H15Z"/></svg><b>Držanie lopty</b><small>4 najväčšie ligy</small></li>
-      </ul>
-      <div class="lg-rows rv" aria-label="Súťaže">
-        <div class="lg-row"><em>Najvyššie ligy</em><span>Premier League</span><span>Serie A</span><span>La Liga</span><span>Bundesliga</span><span>Ligue 1</span><span>Eredivisie</span><span>Primeira Liga</span><span>Belgicko</span><span>Turecko</span><span>Dánsko</span><span>Škótsko</span></div>
-        <div class="lg-row"><em>Druhé najvyššie ligy</em><span>Championship</span><span>Segunda División</span><span>2. Bundesliga</span><span>Ligue 2</span></div>
-        <div class="lg-row"><em>Európske súťaže UEFA</em><span>Liga majstrov</span><span>Liga majstrov žien</span><span>Liga národov</span></div>
+      <div class="fit">
+        <div class="panel yes rv"><h3>Je pre vás, ak…</h3><ul>
+          <li><i>✓</i>chcete tipovať s plánom, nie podľa nálady</li>
+          <li><i>✓</i>dodržíte rovnaký vklad na každý tip</li>
+          <li><i>✓</i>máte trpezlivosť – výsledok sa ukáže po desiatkach tipov, nie za týždeň</li>
+          <li><i>✓</i>chcete vidieť všetky výsledky, aj prehry</li>
+          <li><i>✓</i>máte viac ako 18 rokov</li>
+        </ul></div>
+        <div class="panel no rv" style="--d:.08s"><h3>Nie je pre vás, ak…</h3><ul>
+          <li><i>✕</i>hľadáte istú výhru – tá neexistuje</li>
+          <li><i>✕</i>chcete 10 tipov denne a akumulátory</li>
+          <li><i>✕</i>chcete rýchlo zbohatnúť</li>
+          <li><i>✕</i>by ste stavili peniaze, ktoré nemôžete stratiť</li>
+        </ul></div>
       </div>
     </div>
   </section>
 
-  <!-- ================= HLAVIČKY PODSTRÁNOK ================= -->
+  <!-- ================= 7 · KTO ZA TÝM STOJÍ ================= -->
+  <section class="s12" data-pages="home" id="kto-za-tym-je">
+    <div class="wrap who">
+      <div class="vcard metal rv">
+        <div class="vc-top"><span>TipRadar · zakladateľ</span><svg width="34" height="34" aria-hidden="true"><use href="#logo"/></svg></div>
+        <div class="vc-mono">MP</div>
+        <div class="vc-name">Michal<small>Zakladateľ TipRadaru · dáta namiesto pocitov</small></div>
+      </div>
+      <div class="rv">
+        <div class="eyebrow">Kto za tým stojí</div>
+        <h2 class="h2">Som Michal. <em>Tipujem podľa čísel.</em></h2>
+        <p class="lead">TipRadar som založil, pretože som chcel tipy, za ktorými stoja čísla, nie dojmy z posledného zápasu. Každý tip sa uloží v momente odoslania a po zápase sa sám vyhodnotí. Nič nemažem ani neupravujem.</p>
+        <blockquote>„Vaša dôvera je pre mňa viac než akákoľvek výhra.“</blockquote>
+        <div class="facts"><span><b>18</b> súťaží</span><span><b>8</b> trhov</span><span>okolo <b>120</b> zápasov denne</span><span>osobne na <b>Telegrame</b></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 8 · DÔKAZY ================= -->
+  <section class="s12" data-pages="home" id="dokazy">
+    <div class="wrap">
+      <div class="head rv">
+        <div><div class="eyebrow">Dôkazy</div><h2 class="h2">Čísla, ktoré <em>neskrývam.</em></h2></div>
+        <p class="lead">Každý tip od 10. 10. 2026, tak ako ho dostali členovia. Výhry aj prehry.</p>
+      </div>
+      <div class="proof">
+        <div class="panel kpi rv"><small>Vyhodnotené tipy</small><b class="num" id="pfTips">–</b><span>od 10. 10. 2026</span></div>
+        <div class="panel kpi rv" style="--d:.06s"><small>Vyšlo</small><b class="num" id="pfWon">–</b><span id="pfWonSub">vyhraté tipy</span></div>
+        <div class="panel kpi metal rv" style="--d:.12s"><small>Zisk</small><b class="num" id="pfProfit">–</b><span id="pfEur">zisk v jednotkách</span></div>
+      </div>
+      <div class="proof-2">
+        <div class="panel last10 rv">
+          <div class="eyebrow">Posledné tipy</div>
+          <div style="margin-top:14px" id="pfList"><div class="l10-row"><div>Načítavam posledné tipy…</div></div></div>
+          <a class="link" href="/vysledky" style="display:inline-block;margin-top:18px">Celá história tipov →</a>
+        </div>
+        <div class="panel rules rv" style="--d:.08s">
+          <div class="eyebrow">Ako to overíte</div>
+          <ul style="margin-top:10px">
+            <li><svg viewBox="0 0 24 24"><path d="M4 12.5 9 17.5 20 6.5"/></svg><span><b>Tip sa uloží</b> v momente odoslania – nedá sa dodatočne zmeniť</span></li>
+            <li><svg viewBox="0 0 24 24"><path d="M4 12.5 9 17.5 20 6.5"/></svg><span><b>Vyhodnotí sa sám</b> podľa skutočného výsledku zápasu</span></li>
+            <li><svg viewBox="0 0 24 24"><path d="M4 12.5 9 17.5 20 6.5"/></svg><span><b>Kalendár tipov</b> deň po dni na stránke Výsledky</span></li>
+            <li><svg viewBox="0 0 24 24"><path d="M4 12.5 9 17.5 20 6.5"/></svg><span><b>Výsledky zadarmo</b> v Telegram kanáli pre všetkých</span></li>
+          </ul>
+        </div>
+      </div>
+      <p class="proof-note">1 jednotka = vklad na jeden tip. Minulé výsledky nie sú zárukou budúcich.</p>
+    </div>
+  </section>
+
+  <!-- ================= 9 · PONUKA ================= -->
+  <section class="s12" data-pages="home" id="ponuka">
+    <div class="wrap">
+      <div class="head rv">
+        <div><div class="eyebrow">Ponuka</div><h2 class="h2">VIP Klub. <em>Na mieru.</em></h2></div>
+        <p class="lead">Jedna spolupráca, rovnaké tipy a výhody pre všetkých. Dĺžku a cenu si dohodneme osobne – podľa vášho banku.</p>
+      </div>
+      <div class="offer rv">
+        <div class="offer-l metal">
+          <span class="badge">VIP Klub</span>
+          <h3>Spolupráca na mieru</h3>
+          <div class="from">od 50<small>tipov</small></div>
+          <p>Rátajú sa tipy, nie dni – spolupráca skončí až posledným tipom. Sama sa nepredlžuje.</p>
+          <a class="btn" href="https://t.me/im_mishko" target="_blank" rel="noopener">Mám záujem o spoluprácu <span class="arr" aria-hidden="true">→</span></a>
+          <div class="pay">Bankovým prevodom cez QR kód · bez poplatkov</div>
+        </div>
+        <div class="offer-r">
+          <div class="eyebrow">Ako začneme</div>
+          <ol>
+            <li><span class="n">01</span><div><h4>Ozvete sa mi</h4><p>Jedným klikom priamo mne na Telegram. Bez záväzkov.</p></div></li>
+            <li><span class="n">02</span><div><h4>Vyberiete si dĺžku</h4><p>Od 50 tipov vyššie – podľa toho, ako dlho chcete tipy dostávať.</p></div></li>
+            <li><span class="n">03</span><div><h4>Nastavíme bank a vklad</h4><p>Presne vám poviem, s akým bankom a vkladom hrať.</p></div></li>
+            <li><span class="n">04</span><div><h4>Prvý tip</h4><p>Pridám vás do súkromného kanála. Tip príde, keď prejde všetkými pravidlami modelu.</p></div></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 10 · GARANCIA ================= -->
+  <section class="s12" data-pages="home" id="garancia">
+    <div class="wrap">
+      <div class="panel guar2 rv">
+        <div class="seal"><div><b>1</b><span>mesiac<br />zadarmo</span></div></div>
+        <div><div class="eyebrow">Garancia</div><h3 style="margin-top:16px">Skončíte v mínuse? <em>Ďalší mesiac je na mňa.</em></h3><p>Ak vaše členstvo skončí v mínuse, dostanete 1 mesiac tipov zadarmo. Tak viete, že mi na vašom výsledku naozaj záleží.</p></div>
+        <ul>
+          <li><svg viewBox="0 0 24 24"><path d="M4 12.5 9 17.5 20 6.5"/></svg>Počíta sa zo všetkých tipov vášho členstva pri rovnakom vklade</li>
+          <li><svg viewBox="0 0 24 24"><path d="M4 12.5 9 17.5 20 6.5"/></svg>Tipy vám chodia do toho istého kanála, nič nemusíte riešiť</li>
+          <li><svg viewBox="0 0 24 24"><path d="M4 12.5 9 17.5 20 6.5"/></svg>Dám vám vedieť osobne na Telegrame</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 11 · OTÁZKY A OBAVY ================= -->
+  <section class="s12" data-pages="home" id="otazky-obavy">
+    <div class="wrap faq-grid">
+      <div class="rv"><div class="eyebrow">Otázky a obavy</div><h2 class="h2">Čo vás môže <em>zaujímať</em></h2><p class="lead">Nenašli ste odpoveď? <a class="link" href="/formular">Napíšte mi</a>.</p></div>
+      <div class="faq rv">
+        <details open><summary>Zaručujete výhru?</summary><p>Nie. Žiadny model nevie zaručiť výsledok zápasu. TipRadar vyberá stávky, pri ktorých je šanca podľa štatistík vyššia, než naznačuje kurz. Rozhoduje dlhodobý výsledok, preto zverejňujem aj prehry. Ak členstvo skončí v mínuse, dostanete mesiac zadarmo.</p></details>
+        <details><summary>Koľko tipov dostanem?</summary><p>Len tie s najvyššou dôverou, ktoré prejdú všetkými pravidlami – najviac 3 denne. Niektoré dni žiadny: keď neprejde nič, nepošlem nič. Kvalita pred kvantitou.</p></details>
+        <details><summary>Aký bank potrebujem?</summary><p>Závisí od toho, na koľko tipov sa dohodneme – presný bank a vklad vám nastavím osobne. Všeobecne: vklad 2 – 3 % banku na tip, nikdy nad 5 %.</p></details>
+        <details><summary>Čo je zisk v jednotkách?</summary><p>Jednotka je suma, ktorú dáte na každý tip, napríklad 10 €. Zisk +5 jednotiek je teda +50 €.</p></details>
+        <details><summary>Nemám čas sledovať zápasy. Zvládnem to?</summary><p>Áno. Tip príde do Telegramu 1 – 2 hodiny pred výkopom, stačí ho podať. Vyhodnotenie príde samo.</p></details>
+        <details><summary>Musím členstvo rušiť?</summary><p>Nie. Členstvo sa samo nepredlžuje – skončí po poslednom tipe. Ak chcete pokračovať, jednoducho mi napíšete.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 12 · POSLEDNÁ VÝZVA ================= -->
+  <section class="final s12" data-pages="home" id="zaciatok">
+    <div class="wrap">
+      <div class="final-card dark rv">
+        <div class="final-rings" aria-hidden="true"></div>
+        <div>
+          <div class="eyebrow">Začnime</div>
+          <h2 class="h2">Ďalší tip už čaká <em>na výkop.</em></h2>
+          <p class="lead">Napíšte mi na Telegram a dohodneme sa na spolupráci. Ak sa ešte nechcete rozhodnúť, sledujte výsledky zadarmo.</p>
+        </div>
+        <div class="cta"><a class="btn" href="https://t.me/im_mishko" target="_blank" rel="noopener">Mám záujem o spoluprácu <span class="arr" aria-hidden="true">→</span></a><a class="btn ghost" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-tg"/></svg>Výsledky zadarmo</a></div>
+      </div>
+    </div>
+  </section>
+
   <header class="page-head" data-pages="vysledky">
     <div class="wrap">
       <div class="crumb"><a href="/">Úvod</a><span>/</span><span>Výsledky</span></div>
@@ -1257,7 +1547,7 @@ html.menu-open .jump { display: none; }
   </section>
 
   <!-- ================= ZÁVER ================= -->
-  <section class="final" data-pages="home vysledky otazky formular o-mne">
+  <section class="final" data-pages="vysledky otazky formular o-mne">
     <div class="wrap">
       <div class="final-card dark rv">
         <div class="final-rings" aria-hidden="true"></div>
@@ -1683,6 +1973,24 @@ html.menu-open .jump { display: none; }
           setTimeout(function () { var r = rec[(i + 2) % rec.length]; front.innerHTML = card(r); front.className = "tk3 p2" + (r.status === "lost" ? " lost" : ""); }, 700);
         }, 4200);
       })();
+      // úvod (13. 11. 2026): časť Dôkazy – skutočné čísla a posledné tipy
+      (function () {
+        if (!$("pfList")) return;
+        var n = d.totalResolved || 0;
+        if (n > 0) {
+          $("pfTips").textContent = fmt(n, 0);
+          $("pfWon").textContent = fmt(d.won || 0, 0);
+          $("pfWonSub").textContent = "z " + fmt(n, 0) + " " + ofTipsN(n);
+          var pr = Number(d.profit) || 0;
+          $("pfProfit").textContent = signed(pr, 1) + " j.";
+          $("pfEur").innerHTML = "pri vklade 10 € na tip = <strong>" + (pr >= 0 ? "+" : "−") + fmt(Math.abs(pr * 10), 0) + " €</strong>";
+        }
+        var rec = (d.recent || []).filter(function (r) { return (r.status === "won" || r.status === "lost") && r.match && r.match.indexOf("Tiket") !== 0; }).slice(0, 5);
+        $("pfList").innerHTML = rec.length ? rec.map(function (r) {
+          var pl = r.status === "won" ? (r.odds ? r.odds - 1 : null) : -1;
+          return '<div class="l10-row"><div>' + esc(r.match) + "<em>" + esc(r.bet || "") + '</em></div><span class="od">' + (r.odds ? fmt(r.odds, 2) : "–") + '</span><span class="r ' + (r.status === "won" ? "pos" : "neg") + '">' + (pl == null ? "✓" : signed(pl, 2) + " j.") + "</span></div>";
+        }).join("") : '<div class="l10-row"><div>Zatiaľ tu nie sú vyhodnotené tipy.</div></div>';
+      })();
       // členstvo: posledných 7 dní
       var l7 = d.last7, el7 = $("last7");
       if (el7 && l7 && l7.totalResolved > 0) {
@@ -1697,6 +2005,7 @@ html.menu-open .jump { display: none; }
       if (!n) { $("month").textContent = "Čísla sa zobrazia po prvých vyhodnotených tipoch."; $("month").hidden = false; return; }
       drawPeriods(buildPeriods(d));
     }).catch(function () {
+      if ($("pfList")) $("pfList").innerHTML = '<div class="l10-row"><div>Tipy sa nepodarilo načítať. <a class="link" href="/vysledky">Pozrieť výsledky</a></div></div>';
       if ($("list") && page === "vysledky") { $("list").innerHTML = '<li class="empty">Tipy sa nepodarilo načítať. Skúste obnoviť stránku.</li>'; $("month").textContent = "Čísla sa nepodarilo načítať. Skúste o chvíľu obnoviť stránku."; $("month").hidden = false; }
     });
   }
