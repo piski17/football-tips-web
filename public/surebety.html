@@ -160,7 +160,7 @@ details p, details li { color: var(--muted); font-size: 14px; }
       <div><h2>Nájdené surebety</h2><div class="muted small" id="scanInfo">Načítavam…</div></div>
       <button type="button" class="btn" id="scanBtn">Prehľadať teraz</button>
     </div>
-    <div class="chips" id="scopeChips" style="margin-bottom:12px">
+    <!-- 13. 11. 2026 (Michal): len všetky stávkovky s kurzami, ostatné filtre skryté --><div class="chips" id="scopeChips" style="display:none">
       <button type="button" class="chip on" data-s="all">Všetky stávkovky s kurzami</button>
       <button type="button" class="chip" data-s="top">Len známe zahraničné</button>
       <button type="button" class="chip" data-s="mine">Len moje stávkovky</button>
@@ -171,8 +171,8 @@ details p, details li { color: var(--muted); font-size: 14px; }
     <div class="sb-list" id="sbList"></div>
   </section>
 
-  <!-- MOJE STÁVKOVKY -->
-  <section class="panel">
+  <!-- MOJE STÁVKOVKY (skryté, Michal 13. 11.) -->
+  <section class="panel" style="display:none">
     <div class="head"><div><h2>Moje stávkovky</h2><div class="muted small">Vyberte aspoň 2 stávkovky, v ktorých máte účet. Server potom eviduje aj surebety len medzi nimi.</div></div></div>
     <div class="books" id="bookList"><span class="muted small">Zoznam sa zobrazí po prvom prehľadaní.</span></div>
     <button type="button" class="btn ghost" id="saveBooksBtn">Uložiť výber</button> <span class="muted small" id="booksMsg"></span>
@@ -181,7 +181,7 @@ details p, details li { color: var(--muted); font-size: 14px; }
   <!-- SKÚŠKA -->
   <section class="panel">
     <div class="head"><div><h2>Skúška – prehľad</h2><div class="muted small">Server každú hodinu prehľadá dnešné zápasy 18 súťaží TipRadaru a zapíše každý surebet; tu sa ukazujú a vyhodnocujú len tie so ziskom aspoň 5 % (bez podozrivých nad 8 %). Kliknutím na deň uvidíte, ktoré surebety to boli.</div></div></div>
-    <div class="chips" id="logScope" style="margin-bottom:12px">
+    <div class="chips" id="logScope" style="display:none">
       <button type="button" class="chip on" data-s="all">Všetky stávkovky s kurzami</button>
       <button type="button" class="chip" data-s="top">Len známe zahraničné</button>
       <button type="button" class="chip" data-s="mine">Len moje stávkovky</button>
