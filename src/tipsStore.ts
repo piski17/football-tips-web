@@ -353,7 +353,7 @@ export async function moveLateAddsOnce(): Promise<number> {
  * (porovnanie 1. 12.) a strictReturned. Nič sa nemaže. Návrat: tipom so strictReturned dať watchOnly + strictFail.
  */
 // 13. 11. 2026 (Michal): 60 / 40 vypnutá druhýkrát (aj spätne) – nový príznak, aby migrácia znova prebehla.
-const STRICT_OFF_KEY = "tipradar_migr_strict_off_done_v2";
+const STRICT_OFF_KEY = "tipradar_migr_strict_off_done_v3";
 export async function returnStrictFailedOnce(
   pass: (t: SavedTip) => boolean,
   typeOf?: (market: string) => string | null,
@@ -399,7 +399,7 @@ export async function returnStrictFailedOnce(
  * (strictReturned) a zverejnené tipy uložené počas vypnutia, ktoré by 60 / 40 neprešli (strictWouldFail),
  * idú späť do sledovaných (skupina 60 / 40). Nič sa nemaže.
  */
-const STRICT_ON_KEY = "tipradar_migr_strict_on_done_v2"; // 13. 11. 2026: nový príznak pre prípadné opätovné zapnutie
+const STRICT_ON_KEY = "tipradar_migr_strict_on_done_v3"; // 13. 11. 2026: nový príznak pre prípadné opätovné zapnutie
 export async function moveStrictFailedBackOnce(): Promise<number> {
   if (!useUpstash) return 0;
   const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };
