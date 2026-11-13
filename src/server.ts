@@ -2064,6 +2064,59 @@ app.get(["/suhrn", "/suhrn/"], (_req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "suhrn.html"));
 });
 
+// ---- Výsledky tipov na Instagram (/ig-tipy) – 13. 11. 2026 (Michal: „ako surebety – obrázky so zápasmi a zhodnotenie dňa + krátky text“) ----
+// Len tipy, ktoré sa rátajú do štatistík (statsTips: bez sledovaných, duplicít a vyradených súťaží).
+app.get(["/ig-tipy", "/ig-tipy/"], (_req, res) => {
+  res.set("Cache-Control", "no-cache");
+  res.sendFile(path.join(__dirname, "..", "public", "ig-tipy.html"));
+});
+app.get("/api/ig/day", async (req, res) => {
+  try {
+    const q = typeof req.query.day === "string" ? req.query.day : "";
+    const day = DAY_RE.test(q) ? q : dayKeySk(new Date());
+    const all = statsTips(await listTips());
+    const score = (h?: number | null, a?: number | null) => (typeof h === "number" && typeof a === "number" ? { home: h, away: a } : null);
+    const view = (t: SavedTip) => ({
+      id: t.id,
+      kickoff: t.matchDate,
+      league: t.leagueName,
+      home: translateTeamName(t.homeTeam),
+      away: translateTeamName(t.awayTeam),
+      market: t.market,
+      selection: translateNamesInText(t.selection, t.homeTeam, t.awayTeam),
+      odds: typeof t.odds === "number" && t.odds > 1 ? t.odds : null,
+      probability: t.probability,
+      status: t.status,
+      score: score(t.actualHomeGoals, t.actualAwayGoals),
+      units: t.status === "pending" ? null : tipUnits(t),
+      legs: (t.legs ?? []).map((l) => ({
+        home: translateTeamName(l.homeTeam),
+        away: translateTeamName(l.awayTeam),
+        market: l.market,
+        selection: translateNamesInText(l.selection, l.homeTeam, l.awayTeam),
+        status: l.status,
+        score: score(l.actualHomeGoals, l.actualAwayGoals),
+      })),
+    });
+    const dayTips = all.filter((t) => tipDayKey(t) === day).sort((a, b) => tipKickMs(a) - tipKickMs(b));
+    // Bilancia mesiaca do vybraného dňa (vrátane) – len dohrané tipy.
+    const month = day.slice(0, 7);
+    const monthDone = all.filter((t) => {
+      const d = tipDayKey(t);
+      return !!d && d.slice(0, 7) === month && d <= day && (t.status === "won" || t.status === "lost");
+    });
+    const days = [...new Set(all.map((t) => tipDayKey(t)).filter((d): d is string => !!d))].sort();
+    res.json({
+      day,
+      tips: dayTips.map(view),
+      month: { key: month, tips: monthDone.length, won: monthDone.filter((t) => t.status === "won").length, units: monthDone.reduce((s, t) => s + tipUnits(t), 0) },
+      days,
+    });
+  } catch (err: any) {
+    res.status(502).json({ error: errText(err) });
+  }
+});
+
 // ---- Instagram (/instagram) – Reel „Model vs. kancelária“ a piatkový bezplatný tip ----
 app.get(["/instagram", "/instagram/"], (_req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "instagram.html"));
