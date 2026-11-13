@@ -521,25 +521,22 @@
     betLine("2️⃣", { book: c.b.book, label: s.sides[1].label, odd: c.b.odd }, c.a.odd),
     `💰 Profit from €100: €${n2(c.margin * 100)} (${n2(c.margin * 100)}%)`,
   ];
+  /** 13. 11. 2026 (Michal): krátky text súhrnu dňa – na surebet 3 riadky: zápas + zisk, potom stávkovka tip (kurz) vklad pre obe strany. */
+  const shortBet = (icon, book, lab, odd, other) => `${icon} ${book} ${label(lab)} (${n2(odd)}) €${n2(stakeOf(odd, other))}`;
   function dayCaption(day, list, pre = false) {
     list = [...list].sort((a, b) => b.maxMargin - a.maxMargin);
     const n = list.length;
     const avg = n ? list.reduce((t, e) => t + e.maxMargin, 0) / n : 0;
-    const lines = [`📅 ${pre ? "TODAY'S SUREBETS" : "SUREBETS OF THE DAY"} – ${dayEn(day)}`, "", `🔒 Surebets: ${n}`, `📈 Average profit: ${n2(avg * 100)}%`, `💰 €100 on each: €${n2(avg * 100 * n)} profit`, ""];
+    const lines = [`📅 ${pre ? "Today's surebets" : "Surebets"} · ${dayEn(day)}`, `${n} surebet${n === 1 ? "" : "s"} · avg profit ${n2(avg * 100)}% · stakes per €100`, ""];
     for (const e of list) {
       const kt = pre ? new Date(e.date).toLocaleTimeString("en-GB", { timeZone: "Europe/Bratislava", hour: "2-digit", minute: "2-digit" }) + " · " : "";
-      // 12. 11. 2026 (Michal): v texte aj celý tip – obe strany s kurzom a stávkovkou.
       const [a, b] = e.sides;
-      lines.push(`${pre ? "🔒" : "✅"} ${kt}${e.home} – ${e.away} · ${market(e.market)}`,
-        betLine("1️⃣", a, b.odd), betLine("2️⃣", b, a.odd), `💰 Profit from €100: €${n2(e.maxMargin * 100)} (${n2(e.maxMargin * 100)}%)`);
-      const cb = dayCombos(e);
-      if (cb.length) {
-        lines.push("", "The same surebet also works at other bookmakers:");
-        cb.forEach((c, k) => { if (k) lines.push(""); lines.push(...altPair(e, c, k)); });
-      }
+      lines.push(`${pre ? "🔒" : "✅"} ${kt}${e.home} – ${e.away} · ${market(e.market)} · ${n2(e.maxMargin * 100)}%`,
+        shortBet("1️⃣", a.book, a.label, a.odd, b.odd), shortBet("2️⃣", b.book, b.label, b.odd, a.odd));
+      for (const c of dayCombos(e)) lines.push(`🔁 or ${c.a.book} (${n2(c.a.odd)}) €${n2(stakeOf(c.a.odd, c.b.odd))} | ${c.b.book} (${n2(c.b.odd)}) €${n2(stakeOf(c.b.odd, c.a.odd))} · ${n2(c.margin * 100)}%`);
       lines.push("");
     }
-    lines.push("👑 ARBREX – Profit. Whatever the score.", "18+ · Bet responsibly.", "", "#arbrex #football");
+    lines.push("👑 ARBREX · 18+ · Bet responsibly", "#arbrex #football");
     return lines.join("\n");
   }
 
