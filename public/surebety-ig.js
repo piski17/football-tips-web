@@ -106,6 +106,38 @@
     const g2 = ctx.createRadialGradient(0, H, 0, 0, H, W * 0.8);
     g2.addColorStop(0, "rgba(127,200,160,.08)"); g2.addColorStop(1, "rgba(127,200,160,0)");
     ctx.fillStyle = g2; ctx.fillRect(0, 0, W, H);
+    // jemné šikmé čiary + veľký znak ako vodotlač
+    ctx.save(); ctx.strokeStyle = "rgba(207,196,180,.025)"; ctx.lineWidth = 2;
+    for (let x = -H; x < W; x += 46) { ctx.beginPath(); ctx.moveTo(x, H); ctx.lineTo(x + H, 0); ctx.stroke(); }
+    ctx.restore();
+    emblem(ctx, W * 0.86, H * 0.9, W * 0.34, 0.035, 0.6);
+  }
+  /** Znak ARBREX (kruh, šípka hore zelená, šípka dole kameň) v ľubovoľnej veľkosti. */
+  function emblem(ctx, mx, my, mr, a = 1, lw = 1) {
+    const s = mr / 20;
+    ctx.save(); ctx.globalAlpha = a; ctx.lineCap = "round"; ctx.lineJoin = "round";
+    ctx.strokeStyle = C.stone; ctx.lineWidth = 2.5 * s * lw; ctx.beginPath(); ctx.arc(mx, my, mr, 0, Math.PI * 2); ctx.stroke();
+    ctx.lineWidth = 3.6 * s * lw;
+    ctx.strokeStyle = C.good; ctx.beginPath(); ctx.moveTo(mx - 5 * s, my + 11 * s); ctx.lineTo(mx - 5 * s, my - 9 * s); ctx.moveTo(mx - 11 * s, my - 3 * s); ctx.lineTo(mx - 5 * s, my - 10 * s); ctx.lineTo(mx + 1 * s, my - 3 * s); ctx.stroke();
+    ctx.strokeStyle = C.stone; ctx.beginPath(); ctx.moveTo(mx + 5 * s, my - 11 * s); ctx.lineTo(mx + 5 * s, my + 9 * s); ctx.moveTo(mx - 1 * s, my + 3 * s); ctx.lineTo(mx + 5 * s, my + 10 * s); ctx.lineTo(mx + 11 * s, my + 3 * s); ctx.stroke();
+    ctx.restore();
+  }
+  /** 13. 11. 2026 (Michal „niečo špeciálne“): okrúhla pečať s textom dookola a znakom v strede. */
+  function seal(ctx, cx, cy, r) {
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = C.bg; ctx.fill();
+    ctx.strokeStyle = C.good; ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, r - 9, 0, Math.PI * 2); ctx.strokeStyle = "rgba(127,200,160,.35)"; ctx.lineWidth = 1.2; ctx.stroke();
+    const txt = "PROFIT • WHATEVER THE SCORE • ";
+    ctx.font = font(800, Math.round(r * 0.2), B_FONT); ctx.fillStyle = C.good; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    const rt = r - 22, step = (Math.PI * 2) / txt.length;
+    [...txt].forEach((ch, i) => {
+      const a = -Math.PI / 2 + i * step;
+      ctx.save(); ctx.translate(cx + Math.cos(a) * rt, cy + Math.sin(a) * rt); ctx.rotate(a + Math.PI / 2); ctx.fillText(ch, 0, 0); ctx.restore();
+    });
+    ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+    ctx.restore();
+    emblem(ctx, cx, cy, r * 0.42, 1, 0.9);
   }
   function header(ctx, W, y, tag, tagColor) {
     const X = 72;
@@ -313,11 +345,11 @@
   /** Súhrn dňa (vyhodnotenie skúšky). */
   /** 12. 11. 2026 (Michal): súhrn dňa na viac obrázkov – na každom najviac 5 (príbeh 8) surebetov, aby boli vidieť všetky. */
   // 13. 11. 2026 (Michal): každý zápas ako karta BET 1 / BET 2 (ako pri jednom surebete) → príspevok 2 na obrázok, príbeh 3.
-  const CARD = { head: 48, pill: 56, gap: 8, bottom: 12, maxCombos: 2 };
+  const CARD = { head: 58, pill: 56, gap: 8, bottom: 12, maxCombos: 2 };
   /** Rozdelenie zápasov na obrázky podľa výšky kariet (karta rastie o ďalšie dvojice), najviac 5 zápasov na obrázok. */
   function dayLayout(list, fmtKey) {
     const story = fmtKey === "story";
-    const top = story ? 736 : 560; // y pod blokom nadpisu a zisku (rovnaké na každom obrázku)
+    const top = story ? 776 : 560; // y pod blokom nadpisu a zisku (rovnaké na každom obrázku)
     const avail = (story ? 1920 - 190 : 1350 - 60) - 46 - 10 - top;
     const gap = story ? 18 : 14;
     const pages = [[]]; let used = 0;
@@ -388,7 +420,7 @@
       ctx.fillText(dayEn(day), lx, y0 + h * 0.36 + tsz * 0.95 + (story ? 74 : 62));
       // deliaca čiara
       ctx.strokeStyle = "rgba(207,196,180,.18)"; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(split, y0 + h * 0.16); ctx.lineTo(split, y0 + h * 0.84); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(split, y0 + h * 0.16); ctx.lineTo(split, y0 + h); ctx.stroke();
       // vpravo: zaručený zisk
       const rx = split + 40, rw = X + IW - 40 - rx;
       const ic = story ? 20 : 17, icy = y0 + h * 0.27;
@@ -407,9 +439,10 @@
       ctx.fillStyle = C.muted; fit(ctx, l2, 600, story ? 26 : 22, rw, B_FONT, 14);
       ctx.fillText(l2, rx, y0 + h * 0.27 + bsz * 0.98 + (story ? 98 : 84));
       if (pages > 1) { ctx.fillStyle = C.stone; ctx.font = font(800, 24, B_FONT); ctx.textAlign = "right"; ctx.fillText(`${page + 1} / ${pages}`, X + IW - 30, y0 + 44); ctx.textAlign = "left"; }
+      seal(ctx, split, y0 + h, story ? 76 : 62);
     }
     // Michal 13. 11.: súčty (SUREBETS / AVG PROFIT / €100 ON EACH) nahradil pás „Guaranteed profit“ hore.
-    y = story ? 736 : 560;
+    y = story ? 776 : 560;
     // 13. 11. 2026 (Michal): pri málo surebetoch riadky zväčšiť, aby vyplnili obrázok (nie prázdna medzera dole).
     // 13. 11. 2026 (Michal): rovnaká karta pre každý zápas; ďalšie dvojice z iných stávkoviek hneď pod tým istým zápasom;
     // v kartičke stávky trh + tip, kurz, stávkovka a „Stake €…“. Strany sa delia podľa výšky (najviac 5 zápasov na obrázok).
@@ -464,6 +497,14 @@
       const e = it.e; e0 = e;
       const h = (stack ? tallH(it) : it.h) * k;
       rr(ctx, X, y, IW, h, 20 * Math.min(k, 1.5)); ctx.fillStyle = C.card; ctx.fill();
+      ctx.strokeStyle = "rgba(207,196,180,.10)"; ctx.lineWidth = 1.5; ctx.stroke();
+      // tiket: výrezy po stranách a perforácia pod názvom zápasu
+      {
+        const py0 = y + f(46), nr = 11 * Math.min(k, 1.5);
+        ctx.fillStyle = C.bg; ctx.beginPath(); ctx.arc(X, py0, nr, 0, Math.PI * 2); ctx.arc(X + IW, py0, nr, 0, Math.PI * 2); ctx.fill();
+        ctx.save(); ctx.setLineDash([7, 7]); ctx.strokeStyle = "rgba(207,196,180,.22)"; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(X + nr + 8, py0); ctx.lineTo(X + IW - nr - 8, py0); ctx.stroke(); ctx.restore();
+      }
       const pw = 0; // Michal 13. 11.: % zisku pri názve zápasu preč (je pri každej stávke v rohu)
       const tm = `${pre ? ktime(e) + " · " : ""}${e.home} – ${e.away}`;
       ctx.fillStyle = C.text; fit(ctx, tm, 800, f(26), cw - pw - 24, H_FONT, 16); ctx.fillText(tm, cx, y + f(34));
