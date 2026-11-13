@@ -477,7 +477,9 @@
       if (lines.length > 2) lines.push("");
       // 13. 11. 2026 (Michal): bez hrubého písma a bez času – „Zápas / trh“, stávky, prázdny riadok, zisk.
       const [a, b] = e.sides;
-      lines.push(`${pre ? "🔒" : "✅"} ${e.home} – ${e.away} / ${market(e.market)}`, ...twoLines(e, a, b), "", `💰 Profit: €${n2(e.maxMargin * 100)} from €100 (${n2(e.maxMargin * 100)}%)`);
+      lines.push(`${pre ? "🔒" : "✅"} ${e.home} – ${e.away} / ${market(e.market)}`, ...twoLines(e, a, b));
+      // Michal 13. 11.: pri viacerých zápasoch zisk len na konci (Day total), nie pri každom zápase.
+      if (n === 1) lines.push("", `💰 Profit: €${n2(e.maxMargin * 100)} from €100 (${n2(e.maxMargin * 100)}%)`);
       for (const c of dayCombos(e)) lines.push(`🔁 Or (profit ${n2(c.margin * 100)}%):`, ...twoLines(e, c.a, c.b, "   "));
     }
     // Michal 13. 11.: pri 1 surebete súčet netreba; pri viacerých krátky súčet dňa.
