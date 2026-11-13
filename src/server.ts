@@ -2570,6 +2570,12 @@ function conflictDetail(all: ShadowEntry[]) {
     byPeriod: shadowBreakdown(conflict, period, ["before", "after"]),
     passing: shadowBreakdown(conflict.filter(passesRules), () => "passing", []),
     passingByPeriod: shadowBreakdown(conflict.filter(passesRules), period, ["before", "after"]),
+    // 13. 11. 2026 (Michal): prešli by – podľa kurzu (1,50 – 1,59 / od 1,60), len zápasy od 22. 10. (po oprave kurzov rohov).
+    passingByOdds: shadowBreakdown(
+      conflict.filter((e) => passesRules(e) && period(e) === "after"),
+      (e) => ((e.odds as number) >= 1.6 - 1e-9 ? "from160" : "below160"),
+      ["below160", "from160"],
+    ),
     biggest,
   };
 }

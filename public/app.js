@@ -3886,6 +3886,7 @@ function conflictDetailHtml(c) {
   return `<details class="inner-details"><summary>Rozpor so stávkovkami – rozbor (kontrola pred zmenou filtra)</summary>
     ${passing ? `<p class="small"><b>Tipy, ktoré by bez rozporu prešli všetkými pravidlami</b> (${WATCH_BELOW} – 80${NB}%, kurz aspoň ${fmtNum(MIN_ODDS, 2)}, hodnota +5 až +25${NB}%): ${passing.settled ? `vyšlo <b>${passing.won} z ${passing.settled}</b> (${p(passing.hitRate)}), zisk <b class="${passing.profit >= 0 ? "g" : "l"}">${signed(passing.profit, 1)}${NB}j.</b>` : "zatiaľ žiadny vyhodnotený"}${passing.count > passing.settled ? `, čaká ${passing.count - passing.settled}` : ""}.</p>` : `<p class="small">Žiadny tip s rozporom by inak neprešiel pravidlami.</p>`}
     ${(c.passingByPeriod || []).length ? shadowTableHtml(c.passingByPeriod, "Prešli by – obdobie", (k) => CONFLICT_PERIOD_LABEL[k] || k) : ""}
+    ${(c.passingByOdds || []).length ? shadowTableHtml(c.passingByOdds, "Prešli by – kurz (zápasy od 22. 10.)", (k) => ({ below160: "kurz 1,50 – 1,59", from160: "kurz od 1,60" })[k] || k) : ""}
     ${shadowTableHtml(c.byPeriod || [], "Všetky – obdobie", (k) => CONFLICT_PERIOD_LABEL[k] || k)}
     ${shadowTableHtml(c.byMarket || [], "Trh", (k) => k)}
     ${biggest ? `<p class="small" style="margin-top:12px"><b>30 najväčších rozporov</b> – over v stávkovke, či kurz naozaj patril k tomuto tipu:</p>
