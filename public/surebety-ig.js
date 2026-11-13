@@ -621,7 +621,7 @@
     }
     // Michal 13. 11.: pri 1 surebete súčet netreba; pri viacerých krátky súčet dňa.
     // Michal 13. 11.: Day total vždy (aj pri 1 zápase), ikonka 💰.
-    if (n) lines.push("", `💰 Day total: €${n2(avg * 100 * n)} profit (${n2(avg * 100)}%) · ${n > 1 ? n + " × €100" : "€100"}`);
+    if (n) lines.push("", `💰 Day total: profit ${n2(avg * 100)}%`);
     lines.push("");
     lines.push("👑 ARBREX · 18+ · Bet responsibly", "#arbrex #football");
     return lines.join("\n");
