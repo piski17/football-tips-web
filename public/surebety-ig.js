@@ -430,7 +430,7 @@
         pill(s0, o0, cx, py, ""); pill(s1, o1, cx + pillW + 12, py, extra);
       };
       pair({ ...e.sides[0] }, e.sides[1].odd, e.sides[1], e.sides[0].odd, "", true);
-      for (const c of it.combos) pair({ label: e.sides[0].label, odd: c.a.odd, book: c.a.book }, c.b.odd, { label: e.sides[1].label, odd: c.b.odd, book: c.b.book }, c.a.odd, `OR · +${n2(c.margin * 100)}%`, false);
+      for (const c of it.combos) pair({ label: e.sides[0].label, odd: c.a.odd, book: c.a.book }, c.b.odd, { label: e.sides[1].label, odd: c.b.odd, book: c.b.book }, c.a.odd, `+${n2(c.margin * 100)}%`, false);
       if (it.more) { ctx.fillStyle = C.muted; ctx.font = font(600, f(18), B_FONT); ctx.fillText(`+ ${it.more} more combinations (see caption)`, cx, py + PH + f(24)); }
       y += h + lay.gap * k;
     }
