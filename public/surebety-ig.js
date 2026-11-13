@@ -465,11 +465,12 @@
     for (const e of list) {
       const kt = pre ? new Date(e.date).toLocaleTimeString("en-GB", { timeZone: "Europe/Bratislava", hour: "2-digit", minute: "2-digit" }) + " · " : "";
       const [a, b] = e.sides;
-      lines.push(`${pre ? "🔒" : "✅"} ${kt}${e.home} – ${e.away} / ${market(e.market)}`, ...twoLines(e, a, b), `💰 Profit: €${n2(e.maxMargin * 100)} (${n2(e.maxMargin * 100)}%)`);
+      lines.push(`${pre ? "🔒" : "✅"} ${kt}${e.home} – ${e.away} / ${market(e.market)}`, ...twoLines(e, a, b), `💰 Profit: €${n2(e.maxMargin * 100)} from €100 (${n2(e.maxMargin * 100)}%)`);
       for (const c of dayCombos(e)) lines.push(`🔁 Or (profit ${n2(c.margin * 100)}%):`, ...twoLines(e, c.a, c.b, "   "));
       lines.push("");
     }
-    if (n) { lines.pop(); lines.push(`📊 ${n} surebet${n === 1 ? "" : "s"} · avg profit ${n2(avg * 100)}% · stakes from €100`, ""); }
+    // Michal 13. 11.: pri 1 surebete súčet netreba; pri viacerých krátky súčet dňa.
+    if (n > 1) { lines.pop(); lines.push(`📊 Day total: €${n2(avg * 100 * n)} from ${n} × €100 (avg ${n2(avg * 100)}%)`, ""); }
     lines.push("👑 ARBREX · 18+ · Bet responsibly", "#arbrex #football");
     return lines.join("\n");
   }
