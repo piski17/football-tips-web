@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>TipRadar – výsledky na Instagram</title>
+<title>TipRadar – tipy a výsledky na obrázkoch</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -61,8 +61,8 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
 <body>
 <div class="wrap">
   <a class="back" href="/">← Späť do appky</a>
-  <h1>Výsledky tipov <em>na Instagram</em></h1>
-  <p class="lead">Obrázky so zápasmi a zhodnotením dňa + krátky text k príspevku. Rátajú sa len skutočné tipy (ako v štatistikách) – sledované nie. Najviac 5 zápasov na obrázok, pri viacerých tipoch vznikne karusel.</p>
+  <h1>Tipy a výsledky <em>na obrázkoch</em></h1>
+  <p class="lead">Obrázky so zápasmi dňa – pred zápasom (tipy pre členov na Telegram) aj po zápase (výsledky a zhodnotenie dňa) – a krátky text k nim. Rátajú sa len skutočné tipy (ako v štatistikách) – sledované nie. Najviac 5 zápasov na obrázok, pri viacerých tipoch vznikne karusel.</p>
 
   <div class="panel">
     <div class="daybar">
@@ -77,6 +77,13 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
   <div class="layout">
     <div class="panel">
       <div class="opts">
+        <div class="opt">
+          <label class="f">Druh</label>
+          <div class="chips" id="modeChips">
+            <button type="button" class="chip" data-m="pre">Pred zápasom (tipy dňa)</button>
+            <button type="button" class="chip on" data-m="post">Výsledky</button>
+          </div>
+        </div>
         <div class="opt">
           <label class="f">Formát</label>
           <div class="chips" id="fmtChips">
@@ -98,7 +105,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
     </div>
     <div>
       <div class="panel">
-        <h2>Text k príspevku</h2>
+        <h2>Text k obrázku</h2>
         <textarea id="text" spellcheck="false"></textarea>
         <div class="actions"><button class="btn" id="copyBtn" type="button">Kopírovať text</button></div>
       </div>
@@ -148,7 +155,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
   const tipTxt = (t) => `${t.market}: ${t.selection}`;
 
   // ---------- Stav ----------
-  const st = { day: null, data: null, fmt: "post", page: 0, cvs: [] };
+  const st = { day: null, data: null, fmt: "post", page: 0, cvs: [], mode: "post" };
   try { const h = localStorage.getItem("tr_ig_handle"); if (h) $("handle").value = h; const s = localStorage.getItem("tr_ig_stake2"); if (s) $("stake").value = s; const m = localStorage.getItem("tr_ig_month"); if (m) $("showMonth").checked = m === "1"; } catch (e) { /* bez úložiska */ }
   const stake = () => { const v = Number($("stake").value); return v > 0 ? v : 100; };
 
@@ -218,12 +225,12 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
     rr(ctx, W - X - tw, y - 40, tw, 54, 27); ctx.fillStyle = C.stone; ctx.fill();
     ctx.fillStyle = C.bg; spaced(ctx, tag, W - X - tw / 2, y - 5, 3, "center");
   }
-  function footer(ctx, W, y, handle) {
+  function footer(ctx, W, y, handle, pre) {
     const X = 72;
     ctx.strokeStyle = C.line; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(X, y - 46); ctx.lineTo(W - X, y - 46); ctx.stroke();
     ctx.fillStyle = C.stone; ctx.font = font(700, 28, B_FONT); ctx.textAlign = "left"; ctx.fillText(handle || "", X, y);
     ctx.fillStyle = C.faint; ctx.font = font(500, 22, B_FONT); ctx.textAlign = "right";
-    ctx.fillText("Kurz v čase zverejnenia tipu · 18+", W - X, y);
+    ctx.fillText(pre ? "Rovnaký vklad na každý tip · 18+" : "Kurz v čase zverejnenia tipu · 18+", W - X, y);
     ctx.textAlign = "left";
   }
   function mark(ctx, cx, cy, r, status) {
@@ -256,13 +263,14 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
     const sm = summary(tips), allDone = sm.pending === 0;
     background(ctx, W, H);
     let y = story ? 220 : 112;
-    header(ctx, W, y, allDone ? "VÝSLEDKY DŇA" : "PRIEBEŽNE");
+    const pre = st.mode === "pre";
+    header(ctx, W, y, pre ? "TIPY DŇA" : allDone ? "VÝSLEDKY DŇA" : "PRIEBEŽNE");
 
     // --- Blok zhodnotenia dňa ---
     const showMonth = $("showMonth").checked && data.month && data.month.tips > 0;
     const y0 = y + (story ? 66 : 46), h = story ? 420 : 330;
-    const pos = sm.units >= 0;
-    const accent = sm.done === 0 ? C.stone : pos ? C.good : C.bad;
+    const pos = pre || sm.units >= 0;
+    const accent = pre ? C.good : sm.done === 0 ? C.stone : pos ? C.good : C.bad;
     {
       rr(ctx, X, y0, IW, h, 36);
       const g = ctx.createLinearGradient(X, y0, X + IW, y0 + h);
@@ -279,8 +287,8 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
       const lx = X + 44, split = X + IW * 0.52;
       const tsz = story ? 90 : 74;
       const ly = y0 + (showMonth ? h * 0.33 : h * 0.38);
-      ctx.fillStyle = C.text; ctx.font = font(600, tsz, H_FONT); ctx.fillText("Výsledky", lx, ly);
-      ctx.fillStyle = C.stone; ctx.font = font(500, tsz, H_FONT, true); ctx.fillText("tipov", lx, ly + tsz * 0.95);
+      ctx.fillStyle = C.text; ctx.font = font(600, tsz, H_FONT); ctx.fillText(pre ? "Tipy" : "Výsledky", lx, ly);
+      ctx.fillStyle = C.stone; ctx.font = font(500, tsz, H_FONT, true); ctx.fillText(pre ? "dňa" : "tipov", lx, ly + tsz * 0.95);
       ctx.fillStyle = C.muted; fit(ctx, dayLong(data.day), 600, story ? 30 : 26, split - lx - 24, B_FONT, 16);
       ctx.fillText(dayLong(data.day), lx, ly + tsz * 0.95 + (story ? 68 : 56));
       ctx.strokeStyle = "rgba(207,196,180,.18)"; ctx.lineWidth = 2;
@@ -288,14 +296,18 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
 
       const rx = split + 40, rw = X + IW - 40 - rx;
       const ry = y0 + (showMonth ? h * 0.2 : h * 0.24);
+      // pred zápasom: počet tipov a priemerný kurz
+      const withOdds = tips.filter((t) => t.odds);
+      const avgOdds = withOdds.length ? withOdds.reduce((a, t) => a + t.odds, 0) / withOdds.length : 0;
+      const avgProb = tips.length ? tips.reduce((a, t) => a + (t.probability || 0), 0) / tips.length : 0;
       ctx.fillStyle = accent; ctx.font = font(800, story ? 22 : 19, B_FONT);
-      spaced(ctx, sm.done === 0 ? "ZATIAĽ BEZ VÝSLEDKU" : "ZISK DŇA", rx, ry, 2.5);
-      const big = sm.done === 0 ? "–" : `${signed(sm.units, 2)} j.`;
+      spaced(ctx, pre ? (tips.length === 1 ? "DNES 1 TIP" : `DNES ${plural(tips.length, "TIP", "TIPY", "TIPOV").toUpperCase()}`) : sm.done === 0 ? "ZATIAĽ BEZ VÝSLEDKU" : "ZISK DŇA", rx, ry, 2.5);
+      const big = pre ? (avgOdds ? num(avgOdds, 2) : "–") : sm.done === 0 ? "–" : `${signed(sm.units, 2)} j.`;
       const bsz = fit(ctx, big, 700, story ? 118 : 98, rw, H_FONT, 40);
       ctx.font = font(700, bsz, H_FONT); ctx.fillStyle = accent; ctx.fillText(big, rx - 4, ry + bsz * 0.98);
-      const l1 = sm.done === 0 ? plural(tips.length, "tip sa ešte hrá", "tipy sa ešte hrajú", "tipov sa ešte hrá") : `Vyšlo ${sm.won} z ${sm.done}`;
+      const l1 = pre ? (tips.length > 1 ? "priemerný kurz" : "kurz") : sm.done === 0 ? plural(tips.length, "tip sa ešte hrá", "tipy sa ešte hrajú", "tipov sa ešte hrá") : `Vyšlo ${sm.won} z ${sm.done}`;
       ctx.fillStyle = C.text; fit(ctx, l1, 700, story ? 34 : 30, rw, B_FONT, 16); ctx.fillText(l1, rx, ry + bsz * 0.98 + (story ? 56 : 48));
-      const l2 = sm.done === 0 ? "" : `${signed(sm.units * stake(), 2)} € pri vklade ${num(stake(), stake() % 1 ? 2 : 0)} € na tip`;
+      const l2 = pre ? `dôvera modelu ${num(avgProb, 0)} %` : sm.done === 0 ? "" : `${signed(sm.units * stake(), 2)} € pri vklade ${num(stake(), stake() % 1 ? 2 : 0)} € na tip`;
       ctx.fillStyle = C.muted; fit(ctx, l2, 600, story ? 26 : 22, rw, B_FONT, 13); ctx.fillText(l2, rx, ry + bsz * 0.98 + (story ? 96 : 82));
 
       if (showMonth) {
@@ -333,14 +345,20 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
       rr(ctx, X, cy, IW, ch, 22 * Math.min(k, 1.5)); ctx.fillStyle = C.card; ctx.fill();
       ctx.strokeStyle = "rgba(207,196,180,.10)"; ctx.lineWidth = 1.5; ctx.stroke();
       // farebný pásik vľavo podľa výsledku
-      const col = t.status === "won" ? C.good : t.status === "lost" ? C.bad : C.stone;
+      const col = pre ? C.good : t.status === "won" ? C.good : t.status === "lost" ? C.bad : C.stone;
       ctx.save(); rr(ctx, X, cy, IW, ch, 22 * Math.min(k, 1.5)); ctx.clip(); ctx.fillStyle = col; ctx.fillRect(X, cy, 7, ch); ctx.restore();
       const px = X + 34, mr = Math.min(ch * 0.26, 30 * k);
       const markX = X + IW - 34 - mr, innerR = markX - mr - 24;
       // značka výsledku vpravo (stred karty)
-      mark(ctx, markX, cy + ch / 2, mr, t.status);
+      if (pre) {
+        // pred zápasom: krúžok s dôverou modelu
+        ctx.beginPath(); ctx.arc(markX, cy + ch / 2, mr, 0, Math.PI * 2); ctx.fillStyle = "rgba(127,200,160,.12)"; ctx.fill();
+        ctx.strokeStyle = C.good; ctx.lineWidth = Math.max(3, mr * 0.09); ctx.stroke();
+        ctx.fillStyle = C.good; ctx.textAlign = "center"; const pt = `${num(t.probability, 0)} %`;
+        fit(ctx, pt, 800, Math.round(mr * 0.62), mr * 1.6, B_FONT, 10); ctx.fillText(pt, markX, cy + ch / 2 + mr * 0.21); ctx.textAlign = "left";
+      } else mark(ctx, markX, cy + ch / 2, mr, t.status);
       ctx.font = font(800, Math.round(14 * Math.min(k, 1.5)), B_FONT); ctx.fillStyle = col; ctx.textAlign = "center";
-      spaced(ctx, STATUS[t.status] || "", markX, cy + ch / 2 + mr + Math.round(24 * Math.min(k, 1.4)), 2, "center"); ctx.textAlign = "left";
+      spaced(ctx, pre ? "DÔVERA" : STATUS[t.status] || "", markX, cy + ch / 2 + mr + Math.round(24 * Math.min(k, 1.4)), 2, "center"); ctx.textAlign = "left";
 
       // rozloženie obsahu: liga hore, zápas v strede, tip dole – rozložené po celej výške karty
       // pri 1 – 2 kartách riadky nerozťahovať po celej výške – blok v strede karty (pri 1 tipe aj dôvera a zisk tipu)
@@ -352,7 +370,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
       const yTeams = mid + f(10);
       const yTip = mid + dist + f(4);
       if (extra) {
-        const ex = `Dôvera modelu ${num(t.probability, 0)} %${t.units != null && t.status !== "pending" ? ` · zisk tipu ${signed(t.units, 2)} j.` : ""}`;
+        const ex = pre ? (t.minOdds ? `Hrajte pri kurze aspoň ${num(t.minOdds, 2)}` : "") : `Dôvera modelu ${num(t.probability, 0)} %${t.units != null && t.status !== "pending" ? ` · zisk tipu ${signed(t.units, 2)} j.` : ""}`;
         ctx.fillStyle = C.muted; fit(ctx, ex, 600, f(17), innerR - px, B_FONT, 12); ctx.fillText(ex, px, yTip + f(48));
       }
       ctx.fillStyle = C.muted; ctx.font = font(700, Math.round(15 * Math.min(k, 1.6)), B_FONT);
@@ -362,7 +380,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
         const ln = t.legs.map((l) => `${l.home} – ${l.away}${l.score ? " " + scoreTxt(l.score) : ""}`).join("  ·  ");
         ctx.fillStyle = C.text; fit(ctx, ln, 600, f(24), innerR - px, H_FONT, 14); ctx.fillText(ln, px, yTeams);
       } else {
-        const sc = scoreTxt(t.score);
+        const sc = pre ? "" : scoreTxt(t.score);
         ctx.font = font(700, f(30), H_FONT);
         const sw = sc ? ctx.measureText(sc).width + f(22) : 0;
         const tm = `${t.home} – ${t.away}`;
@@ -375,15 +393,40 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
       const tp = ticket ? "Všetky zápasy tiketu" : tipTxt(t);
       ctx.fillStyle = C.stone; fit(ctx, tp, 600, f(22), innerR - px - ow - f(24), B_FONT, 12); ctx.fillText(tp, px, yTip);
       const tpw = ctx.measureText(tp).width;
-      if (odds) { ctx.font = font(800, f(22), B_FONT); ctx.fillStyle = C.text; ctx.fillText(odds, px + tpw + f(20), yTip); }
+      if (odds) {
+        ctx.font = font(800, f(22), B_FONT); ctx.fillStyle = C.text; ctx.fillText(odds, px + tpw + f(20), yTip);
+        if (pre && t.minOdds && n > 1) {
+          const ow2 = ctx.measureText(odds).width, mo = `hrať od ${num(t.minOdds, 2)}`;
+          ctx.font = font(600, f(17), B_FONT); ctx.fillStyle = C.muted;
+          if (px + tpw + f(20) + ow2 + f(16) + ctx.measureText(mo).width < innerR) ctx.fillText(mo, px + tpw + f(20) + ow2 + f(16), yTip);
+        }
+      }
       cy += ch + gap;
     }
-    footer(ctx, W, story ? H - 190 : H - 60, handle);
+    footer(ctx, W, story ? H - 190 : H - 60, handle, pre);
     return cv;
   }
 
   // ---------- Text k príspevku ----------
+  function captionPre(data) {
+    const tips = data.tips;
+    const lines = [`📅 Tipy dňa · ${dayLong(data.day)}`, ""];
+    for (const t of tips) {
+      if (t.legs && t.legs.length) {
+        lines.push(`🎫 Tiket (${plural(t.legs.length, "zápas", "zápasy", "zápasov")})${t.odds ? " – kurz " + num(t.odds, 2) : ""}`);
+        for (const l of t.legs) lines.push(`👉 ${l.home} – ${l.away}: ${l.market}: ${l.selection}`);
+      } else {
+        lines.push(`⚽ ${t.home} – ${t.away} · ${kickTime(t.kickoff)} (${league(t.league)})`);
+        lines.push(`👉 ${tipTxt(t)}${t.odds ? " – kurz " + num(t.odds, 2) : ""}`);
+        if (t.minOdds) lines.push(`✅ Hrajte pri kurze aspoň ${num(t.minOdds, 2)}`);
+      }
+      lines.push("");
+    }
+    lines.push("💶 Na každý tip rovnaký vklad. 18+ · Hrajte zodpovedne.");
+    return lines.join("\n");
+  }
   function caption(data) {
+    if (st.mode === "pre") return captionPre(data);
     const tips = data.tips, sm = summary(tips);
     const icon = (s) => (s === "won" ? "✅" : s === "lost" ? "❌" : s === "void" ? "↩️" : "⏳");
     const lines = [`📅 Výsledky tipov · ${dayLong(data.day)}`, ""];
@@ -424,6 +467,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
     const pages = pagesOf(st.data.tips);
     if (st.page >= pages.length) st.page = pages.length - 1;
     const handle = $("handle").value.trim();
+    for (const x of $("modeChips").children) x.classList.toggle("on", x.dataset.m === st.mode);
     st.cvs = pages.map((_, i) => draw(st.data, st.fmt, i, handle));
     $("img").src = st.cvs[st.page].toDataURL("image/png");
     $("preview").classList.toggle("story", st.fmt === "story");
@@ -432,7 +476,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
     const sm = summary(st.data.tips);
     $("pageInfo").textContent = pages.length > 1 ? `${plural(st.data.tips.length, "tip", "tipy", "tipov")} na ${pages.length} obrázkoch. „Zdieľať“ pošle všetky naraz (na Instagrame ako karusel).` : "";
     $("pageInfo").className = "note";
-    if (sm.pending) { $("pageInfo").textContent = `Pozor: ${plural(sm.pending, "tip sa ešte hrá", "tipy sa ešte hrajú", "tipov sa ešte hrá")} – obrázok ukazuje priebežný stav. Najlepšie je zverejniť až ráno po dohraní.`; $("pageInfo").className = "note warn"; }
+    if (sm.pending && st.mode !== "pre") { $("pageInfo").textContent = `Pozor: ${plural(sm.pending, "tip sa ešte hrá", "tipy sa ešte hrajú", "tipov sa ešte hrá")} – obrázok ukazuje priebežný stav. Najlepšie je zverejniť až ráno po dohraní.`; $("pageInfo").className = "note warn"; }
     $("text").value = caption(st.data);
     const has = st.data.tips.length > 0;
     $("shareBtn").disabled = !has; $("downBtn").disabled = !has;
@@ -461,14 +505,17 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
       $("tipList").innerHTML = `<div class="empty">Nepodarilo sa načítať tipy (${esc(e.message)}).</div>`;
       return;
     }
+    const sm0 = summary(st.data.tips);
+    st.mode = sm0.pending > 0 && sm0.done === 0 ? "pre" : "post";
     renderList(); render();
   }
-  function fileName(i) { return `tipradar-vysledky-${st.day}-${st.fmt === "story" ? "pribeh" : "prispevok"}-${i + 1}.png`; }
+  function fileName(i) { return `tipradar-${st.mode === "pre" ? "tipy" : "vysledky"}-${st.day}-${st.fmt === "story" ? "pribeh" : "prispevok"}-${i + 1}.png`; }
   const toBlob = (cv) => new Promise((res) => cv.toBlob(res, "image/png"));
   async function files() { return Promise.all(st.cvs.map(async (cv, i) => new File([await toBlob(cv)], fileName(i), { type: "image/png" }))); }
   const saveFile = (b, name) => { const url = URL.createObjectURL(b); const a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); };
 
   $("fmtChips").addEventListener("click", (e) => { const c = e.target.closest(".chip"); if (!c) return; st.fmt = c.dataset.f; for (const x of $("fmtChips").children) x.classList.toggle("on", x === c); render(); });
+  $("modeChips").addEventListener("click", (e) => { const c = e.target.closest(".chip"); if (!c) return; st.mode = c.dataset.m; render(); });
   $("pageChips").addEventListener("click", (e) => { const c = e.target.closest(".chip"); if (!c) return; st.page = Number(c.dataset.p); render(); });
   $("day").addEventListener("change", () => { if (/^\d{4}-\d{2}-\d{2}$/.test($("day").value)) load($("day").value); });
   $("prevDay").addEventListener("click", () => { const d = (st.data.days || []).filter((x) => x < st.day).pop(); if (d) load(d); });

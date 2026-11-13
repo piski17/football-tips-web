@@ -58,7 +58,7 @@ import {
   setTelegramWebhook,
   notifyAdminExpiringSubscribers,
   sendCustomMessage,
-  sendTipResultToTelegram, notifyAdmin, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite, sendMemberMessage, isMemberChannel, memberChannelConfigured, sendPackageLowReminder, freeChannelConfigured, sendFreeResult, sendFreeDaySummary, tipUnits, FreeBalance, normalizeTelegramUrl } from "./telegram";
+  sendTipResultToTelegram, notifyAdmin, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite, sendMemberMessage, isMemberChannel, memberChannelConfigured, sendPackageLowReminder, freeChannelConfigured, sendFreeResult, sendFreeDaySummary, tipUnits, minOddsFor, FreeBalance, normalizeTelegramUrl } from "./telegram";
 import { paymentsEnabled, isTerm, sellableTerm, SellableTerm, SELLABLE_TERMS, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, deletePayment, Payment, termLabel, tierName, addActiveMonths, SUMMER_PAUSE } from "./payments";
 import { payBySquareString } from "./payBySquare";
 import QRCode from "qrcode";
@@ -2085,6 +2085,7 @@ app.get("/api/ig/day", async (req, res) => {
       market: t.market,
       selection: translateNamesInText(t.selection, t.homeTeam, t.awayTeam),
       odds: typeof t.odds === "number" && t.odds > 1 ? t.odds : null,
+      minOdds: t.legs && t.legs.length ? null : minOddsFor(t),
       probability: t.probability,
       status: t.status,
       score: score(t.actualHomeGoals, t.actualAwayGoals),

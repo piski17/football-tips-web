@@ -164,9 +164,13 @@ function buildMessageText(tip: SavedTip, headerOverride?: string, vip = false, s
  * Minimálny kurz pre klienta (31. 10. 2026, Michal): tip ide s kurzom z API bez prepisovania,
  * klient si ho podá len pri kurze aspoň X – vždy aspoň 1,60 a hodnota +5 % (pri zapnutej kontrole 60 / 40 aj pri nej; od 6. 11. 2026 vypnutá).
  */
-function minOddsLine(tip: SavedTip): string {
+/** Minimálny kurz, pri ktorom tip odporúčam hrať (hodnota aspoň +5 %, nie pod 1,50). */
+export function minOddsFor(tip: SavedTip): number {
   const need = (p: number | undefined) => (typeof p === "number" && p > 0 ? 1.05 / (p / 100) : 0);
-  const min = Math.ceil(Math.max(1.5, need(tip.probability), STRICT_CHECK_ON ? need(tip.strictProbability) : 0) * 100) / 100;
+  return Math.ceil(Math.max(1.5, need(tip.probability), STRICT_CHECK_ON ? need(tip.strictProbability) : 0) * 100) / 100;
+}
+function minOddsLine(tip: SavedTip): string {
+  const min = minOddsFor(tip);
   return `✅ Minimálny kurz, pri ktorom tip odporúčam hrať: <b>${fmtNum(min, 2)}</b>\n`;
 }
 
