@@ -325,20 +325,99 @@
       ctx.fillStyle = i === 2 ? C.good : C.text; fit(ctx, v, 800, story ? 64 : 58, kw - 48, H_FONT, 30); ctx.fillText(v, kx + 24, y + kh - 34);
     });
     y += kh + (story ? 50 : 36);
-    const rh = story ? 112 : 96;
+    // 13. 11. 2026 (Michal): pri málo surebetoch riadky zväčšiť, aby vyplnili obrázok (nie prázdna medzera dole).
     const per = dayPer(fmtKey);
     const rows = list.slice(page * per, page * per + per);
+    const gap = story ? 18 : 14;
+    const bottom = (story ? H - 190 : H - 60) - 46 - (page < pages - 1 ? 50 : 24);
+    const avail = bottom - y;
+    const minRh = story ? 112 : 96;
+    const rh = rows.length ? Math.max(minRh, Math.min(story ? 900 : 600, (avail - gap * (rows.length - 1)) / rows.length)) : minRh;
+    const ktime = (e) => new Date(e.date).toLocaleTimeString("en-GB", { timeZone: "Europe/Bratislava", hour: "2-digit", minute: "2-digit" });
     for (const e of rows) {
-      rr(ctx, X, y, IW, rh, 20); ctx.fillStyle = C.card; ctx.fill();
-      ctx.fillStyle = C.text; const tm = `${e.home} – ${e.away}`;
-      fit(ctx, tm, 700, 30, IW - 260, B_FONT, 20); ctx.fillText(tm, X + 28, y + 44);
-      ctx.fillStyle = C.muted; ctx.font = font(500, 22, B_FONT);
-      const kt = pre ? new Date(e.date).toLocaleTimeString("en-GB", { timeZone: "Europe/Bratislava", hour: "2-digit", minute: "2-digit" }) + " · " : "";
-      const det = `${kt}${market(e.market)} · ${label(e.sides[0].label)} ${n2(e.sides[0].odd)} ${e.sides[0].book} / ${label(e.sides[1].label)} ${n2(e.sides[1].odd)} ${e.sides[1].book}`;
-      fit(ctx, det, 500, 22, IW - 260, B_FONT, 16); ctx.fillText(det, X + 28, y + 78);
-      ctx.fillStyle = C.good; ctx.font = font(800, 44, H_FONT); ctx.textAlign = "right";
-      ctx.fillText(`+${n2(e.maxMargin * 100)}%`, X + IW - 28, y + rh / 2 + 16); ctx.textAlign = "left";
-      y += rh + 12;
+      rr(ctx, X, y, IW, rh, 24); ctx.fillStyle = C.card; ctx.fill();
+      if (rh >= 330) {
+        // Veľká karta: liga, zápas, obe stávky s kurzom, stávkovkou a vkladom zo 100 €, zisk.
+        const pad = 32, cx = X + pad, cw = IW - 2 * pad;
+        const off = Math.max(0, (rh - 600) / 2); // veľmi vysoká karta (príbeh s 1 surebetom) – obsah vycentrovať
+        let yy = y + off + pad + 22;
+        ctx.fillStyle = C.muted; ctx.font = font(700, 20, B_FONT);
+        const top = `${pre ? ktime(e) + " · " : ""}${league(e)}`.toUpperCase();
+        spaced(ctx, top.length > 60 ? top.slice(0, 58) + "…" : top, cx, yy, 2);
+        yy += 58;
+        ctx.fillStyle = C.text; const tm = `${e.home} – ${e.away}`;
+        fit(ctx, tm, 800, rh >= 450 ? 50 : 42, cw, H_FONT, 26); ctx.fillText(tm, cx, yy);
+        yy += 46;
+        ctx.fillStyle = C.stone; ctx.font = font(700, 26, B_FONT); ctx.fillText(market(e.market), cx, yy);
+        yy += 30;
+        const profH = rh >= 450 ? 112 : 92;
+        const boxH = Math.min(220, y + rh - off - pad - profH - 18 - yy);
+        const sum = 1 / e.sides[0].odd + 1 / e.sides[1].odd;
+        const bw = (cw - 18) / 2;
+        e.sides.forEach((sd, i) => {
+          const bx = cx + i * (bw + 18);
+          rr(ctx, bx, yy, bw, boxH, 18); ctx.fillStyle = C.card2; ctx.fill();
+          ctx.strokeStyle = C.line; ctx.lineWidth = 2; ctx.stroke();
+          const big = boxH >= 170;
+          ctx.fillStyle = C.muted; ctx.font = font(700, 18, B_FONT); spaced(ctx, i ? "BET 2" : "BET 1", bx + 22, yy + 36, 2);
+          ctx.fillStyle = C.text; fit(ctx, label(sd.label), 700, big ? 30 : 26, bw - 44, B_FONT, 18); ctx.fillText(label(sd.label), bx + 22, yy + (big ? 76 : 68));
+          ctx.fillStyle = C.good; ctx.font = font(800, big ? 52 : 40, H_FONT); ctx.fillText(n2(sd.odd), bx + 22, yy + (big ? 136 : 112));
+          const odW = ctx.measureText(n2(sd.odd)).width;
+          ctx.fillStyle = C.stone; fit(ctx, sd.book, 700, big ? 26 : 22, bw - 66 - odW, B_FONT, 16); ctx.fillText(sd.book, bx + 40 + odW, yy + (big ? 134 : 110));
+          if (boxH >= 150) {
+            const stake = (100 * (1 / sd.odd)) / sum;
+            ctx.fillStyle = C.muted; ctx.font = font(600, 20, B_FONT); ctx.fillText(`Stake €${n2(stake)} of €100`, bx + 22, yy + boxH - 22);
+          }
+        });
+        const py = y + rh - off - pad - profH;
+        rr(ctx, cx, py, cw, profH, 18); ctx.fillStyle = C.goodBg; ctx.fill();
+        ctx.strokeStyle = "rgba(127,200,160,.55)"; ctx.lineWidth = 2; ctx.stroke();
+        ctx.fillStyle = C.muted; ctx.font = font(700, 20, B_FONT); spaced(ctx, "GUARANTEED PROFIT", cx + 26, py + profH / 2 + 8, 2);
+        ctx.fillStyle = C.good; ctx.font = font(800, rh >= 450 ? 60 : 50, H_FONT); ctx.textAlign = "right";
+        ctx.fillText(`+${n2(e.maxMargin * 100)}%`, cx + cw - 26, py + profH / 2 + (rh >= 450 ? 21 : 17)); ctx.textAlign = "left";
+      } else if (rh >= 220) {
+        // Stredná karta: liga, zápas, trh a každá stávka na vlastnom riadku, zisk vpravo.
+        const sideW = IW - 300;
+        let yy = y + (rh - 196) / 2;
+        ctx.fillStyle = C.muted; ctx.font = font(700, 18, B_FONT);
+        const top = `${pre ? ktime(e) + " · " : ""}${league(e)} · ${market(e.market)}`.toUpperCase();
+        spaced(ctx, top.length > 52 ? top.slice(0, 50) + "…" : top, X + 32, yy + 16, 2);
+        ctx.fillStyle = C.text; const tm = `${e.home} – ${e.away}`;
+        fit(ctx, tm, 800, 40, sideW, H_FONT, 24); ctx.fillText(tm, X + 32, yy + 72);
+        e.sides.forEach((sd, i) => {
+          const ly = yy + 128 + i * 52;
+          rr(ctx, X + 32, ly - 32, sideW, 44, 12); ctx.fillStyle = C.card2; ctx.fill();
+          ctx.fillStyle = C.text; ctx.font = font(700, 24, B_FONT); ctx.fillText(label(sd.label), X + 48, ly - 2);
+          ctx.fillStyle = C.good; ctx.font = font(800, 26, H_FONT); ctx.textAlign = "right";
+          ctx.fillText(n2(sd.odd), X + 32 + sideW - 170, ly - 2);
+          ctx.fillStyle = C.stone; ctx.font = font(700, 22, B_FONT); ctx.textAlign = "left";
+          fit(ctx, sd.book, 700, 22, 150, B_FONT, 14); ctx.fillText(sd.book, X + 32 + sideW - 152, ly - 3);
+        });
+        ctx.fillStyle = C.muted; ctx.font = font(700, 18, B_FONT); ctx.textAlign = "right";
+        ctx.fillText("PROFIT", X + IW - 32, y + rh / 2 - 34);
+        ctx.fillStyle = C.good; ctx.font = font(800, 60, H_FONT);
+        ctx.fillText(`+${n2(e.maxMargin * 100)}%`, X + IW - 32, y + rh / 2 + 30); ctx.textAlign = "left";
+      } else {
+        // Bežný riadok; pri väčšej výške navyše liga a väčšie písmo, obsah vycentrovaný.
+        const tall = rh >= 150;
+        const blockH = tall ? 112 : 56;
+        let yy = y + (rh - blockH) / 2;
+        if (tall) {
+          ctx.fillStyle = C.muted; ctx.font = font(700, 18, B_FONT);
+          const top = `${pre ? ktime(e) + " · " : ""}${league(e)}`.toUpperCase();
+          spaced(ctx, top.length > 50 ? top.slice(0, 48) + "…" : top, X + 28, yy + 16, 2);
+          yy += 34;
+        }
+        ctx.fillStyle = C.text; const tm = `${e.home} – ${e.away}`;
+        fit(ctx, tm, 700, tall ? 34 : 30, IW - 260, B_FONT, 20); ctx.fillText(tm, X + 28, yy + 28);
+        ctx.fillStyle = C.muted; ctx.font = font(500, 22, B_FONT);
+        const kt = pre && !tall ? ktime(e) + " · " : "";
+        const det = `${kt}${market(e.market)} · ${label(e.sides[0].label)} ${n2(e.sides[0].odd)} ${e.sides[0].book} / ${label(e.sides[1].label)} ${n2(e.sides[1].odd)} ${e.sides[1].book}`;
+        fit(ctx, det, 500, tall ? 24 : 22, IW - 260, B_FONT, 16); ctx.fillText(det, X + 28, yy + (tall ? 70 : 62));
+        ctx.fillStyle = C.good; ctx.font = font(800, tall ? 52 : 44, H_FONT); ctx.textAlign = "right";
+        ctx.fillText(`+${n2(e.maxMargin * 100)}%`, X + IW - 28, y + rh / 2 + (tall ? 18 : 16)); ctx.textAlign = "left";
+      }
+      y += rh + gap;
     }
     if (page < pages - 1) { ctx.fillStyle = C.muted; ctx.font = font(600, 24, B_FONT); ctx.fillText(`Swipe for more → (${list.length - (page + 1) * per} more)`, X, y + 26); }
     if (!list.length) { ctx.fillStyle = C.muted; ctx.font = font(600, 30, B_FONT); ctx.fillText("No surebets today.", X, y + 30); }
