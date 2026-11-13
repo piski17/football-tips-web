@@ -221,7 +221,7 @@
       const bk = "at " + sd.book; fit(ctx, bk, 700, 28, cw - 60, B_FONT, 18); ctx.fillText(bk, cx + 30, iy);
       iy += story ? 46 : 36;
       const stake = (100 * (1 / sd.odd)) / sum;
-      ctx.font = font(600, 24, B_FONT); ctx.fillStyle = C.muted; ctx.fillText(`Stake €${n2(stake)} of €100`, cx + 30, iy);
+      ctx.font = font(600, 24, B_FONT); ctx.fillStyle = C.muted; ctx.fillText(`Stake €${n2(stake)}`, cx + 30, iy);
       ctx.globalAlpha = 1;
     });
     y += ch + (story ? 64 : 46);
