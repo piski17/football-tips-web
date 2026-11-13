@@ -481,7 +481,7 @@
       for (const c of dayCombos(e)) lines.push(`🔁 Or (profit ${n2(c.margin * 100)}%):`, ...twoLines(e, c.a, c.b, "   "));
     }
     // Michal 13. 11.: pri 1 surebete súčet netreba; pri viacerých krátky súčet dňa.
-    if (n > 1) lines.push("", `📊 Day total: €${n2(avg * 100 * n)} from ${n} × €100 (avg ${n2(avg * 100)}%)`);
+    if (n > 1) lines.push("", `📊 Day total: €${n2(avg * 100 * n)} from €${n * 100} (avg ${n2(avg * 100)}%)`);
     lines.push("");
     lines.push("👑 ARBREX · 18+ · Bet responsibly", "#arbrex #football");
     return lines.join("\n");
