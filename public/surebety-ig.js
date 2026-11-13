@@ -205,7 +205,7 @@
       ctx.strokeStyle = won ? C.good : C.line; ctx.lineWidth = won ? 4 : 2; ctx.stroke();
       ctx.globalAlpha = lost ? 0.45 : 1;
       let iy = y + (story ? 58 : 50);
-      ctx.fillStyle = C.muted; ctx.font = font(700, 22, B_FONT); spaced(ctx, ("BET " + (k + 1)).toUpperCase(), cx + 30, iy, 3);
+      // Michal 13. 11.: popisy „BET 1 / BET 2“ odstránené.
       if (won || lost || win === -1) {
         const t = won ? "WON ✓" : lost ? "LOST" : "VOID";
         ctx.font = font(800, 22, B_FONT); ctx.fillStyle = won ? C.good : C.muted; ctx.textAlign = "right"; ctx.fillText(t, cx + cw - 30, iy); ctx.textAlign = "left";
