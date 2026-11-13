@@ -500,9 +500,9 @@
     const combos = window.sbCombos ? window.sbCombos(s) : [];
     if (combos.length) {
       lines.push("");
-      lines.push(settled ? "🔁 The same surebet also worked here:" : "🔁 The same surebet also works here:");
+      lines.push(settled ? "The same surebet also worked at other bookmakers:" : "The same surebet also works at other bookmakers:");
       // 13. 11. 2026 (Michal): všetky dvojice – stávkovka a kurz na jednu stranu + stávkovka a kurz na druhú.
-      for (const p of combos) lines.push(altPair(s, p));
+      combos.forEach((p, k) => { if (k) lines.push(""); lines.push(...altPair(s, p, k)); });
     }
     lines.push("");
     lines.push("👑 ARBREX – Profit. Whatever the score.");
@@ -514,7 +514,13 @@
   /** 13. 11. 2026 (Michal): jednoduchý zápis bez „@“ a „+“ – stávkovka: tip – kurz – vklad. */
   const stakeOf = (odd, other) => (100 * (1 / odd)) / (1 / odd + 1 / other);
   const betLine = (icon, sd, other, res = "") => `${icon} ${sd.book}: ${label(sd.label)} – odds ${n2(sd.odd)} – stake €${n2(stakeOf(sd.odd, other))}${res}`;
-  const altPair = (s, c) => `• ${c.a.book}: ${label(s.sides[0].label)} – odds ${n2(c.a.odd)}  |  ${c.b.book}: ${label(s.sides[1].label)} – odds ${n2(c.b.odd)}  →  profit ${n2(c.margin * 100)}%`;
+  /** 13. 11. 2026 (Michal): každá ďalšia dvojica rozpísaná rovnako ako hlavná – čo kde podať a koľko vsadiť. */
+  const altPair = (s, c, k) => [
+    `🔁 Option ${k + 2}:`,
+    betLine("1️⃣", { book: c.a.book, label: s.sides[0].label, odd: c.a.odd }, c.b.odd),
+    betLine("2️⃣", { book: c.b.book, label: s.sides[1].label, odd: c.b.odd }, c.a.odd),
+    `💰 Profit from €100: €${n2(c.margin * 100)} (${n2(c.margin * 100)}%)`,
+  ];
   function dayCaption(day, list, pre = false) {
     list = [...list].sort((a, b) => b.maxMargin - a.maxMargin);
     const n = list.length;
@@ -528,8 +534,8 @@
         betLine("1️⃣", a, b.odd), betLine("2️⃣", b, a.odd), `💰 Profit from €100: €${n2(e.maxMargin * 100)} (${n2(e.maxMargin * 100)}%)`);
       const cb = dayCombos(e);
       if (cb.length) {
-        lines.push("🔁 Also works here:");
-        for (const c of cb) lines.push(altPair(e, c));
+        lines.push("", "The same surebet also works at other bookmakers:");
+        cb.forEach((c, k) => { if (k) lines.push(""); lines.push(...altPair(e, c, k)); });
       }
       lines.push("");
     }
