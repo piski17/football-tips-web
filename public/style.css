@@ -663,7 +663,7 @@ tr.bt-best { background: rgba(127,200,160, .08); }
    ===================================================================== */
 :root {
   --bg: #06080D; --bg2: #0B0F17; --panel: #131211; --panel2: #141B27;
-  --glass: rgba(17,25,44, .72);
+  --glass: rgba(24,23,21, .72);
   --line: rgba(255, 255, 255, .065); --line2: rgba(207,196,180, .3); --line3: rgba(207,196,180, .55);
   --gold: #CFC4B4; --gold-hi: #FFFFFF; --gold-lo: #C2B6A4;
   --gold-grad: linear-gradient(115deg, #F4EFE7 0%, #D9D0C3 40%, #B9AC99 75%, #E3DACD 100%);
@@ -703,7 +703,7 @@ a { color: var(--gold-hi); }
   margin: 14px 0 14px 14px; height: calc(100vh - 28px); top: 14px;
   padding: 22px 14px 14px; gap: 6px; border-radius: 24px;
   border: 1px solid rgba(207,196,180, .16);
-  background: linear-gradient(180deg, rgba(17,25,44, .9), rgba(19,18,16, .94));
+  background: linear-gradient(180deg, rgba(24,23,21, .9), rgba(19,18,16, .94));
   box-shadow: var(--shadow), 0 0 0 1px rgba(0, 0, 0, .4);
   backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
 }
@@ -811,7 +811,7 @@ select option, select optgroup { background: #141417; color: var(--text); }
 .list-card { padding: 4px 8px; }
 .modal-overlay { background: rgba(14,13,12, .72); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
 .modal { border-radius: 24px; border-color: rgba(207,196,180, .22); padding: 26px; background: linear-gradient(180deg, rgba(255, 255, 255, .04), rgba(255, 255, 255, .01)), #131211; box-shadow: 0 40px 100px -30px rgba(0, 0, 0, .9), 0 0 0 1px rgba(0, 0, 0, .4); }
-.toast { border-radius: 999px; border: 1px solid var(--line2); background: rgba(17,25,44, .94); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 12px 22px; }
+.toast { border-radius: 999px; border: 1px solid var(--line2); background: rgba(24,23,21, .94); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 12px 22px; }
 
 /* --- Štítky a výsledky --- */
 .res-b { border-radius: 999px; padding: 4px 11px 4px 9px; font: 600 12px/1.3 var(--sans); display: inline-flex; align-items: center; gap: 6px; }
@@ -1001,7 +1001,7 @@ span.crest { background: radial-gradient(circle at 35% 35%, #2A2722, #1C1B19); b
    ===================================================================== */
 :root {
   --bg: #0E0D0C; --bg2: #121110; --panel: #1C1B19; --panel2: #18181B;
-  --glass: rgba(17,25,44, .78);
+  --glass: rgba(24,23,21, .78);
   --line: rgba(255, 255, 255, .07); --line2: rgba(207,196,180, .22); --line3: rgba(207,196,180, .5);
   --gold: #CFC4B4; --gold-hi: #FFFFFF; --gold-lo: #A89C8A;
   --gold-grad: linear-gradient(115deg, #F4EFE7 0%, #D9D0C3 40%, #B9AC99 75%, #E3DACD 100%);
@@ -1147,7 +1147,7 @@ h3.sh small { font: 400 12.5px var(--sans); color: var(--faint); letter-spacing:
 .days, #tipsFilter, .hist-tabs, .tabs { background: rgba(255, 255, 255, .035); border: 1px solid var(--line); border-radius: 999px; }
 .days .chip, #tipsFilter .chip, .hist-tabs .chip { border-color: transparent; background: transparent; }
 .dt-time-n { background: rgba(255, 255, 255, .07); color: var(--muted); }
-.chip.on .dt-time-n, .dt-times .chip.on .dt-time-n, .fx-times .chip.on .dt-time-n { background: rgba(17,25,44, .12); color: var(--ink); }
+.chip.on .dt-time-n, .dt-times .chip.on .dt-time-n, .fx-times .chip.on .dt-time-n { background: rgba(24,23,21, .12); color: var(--ink); }
 .ib { border-color: var(--line); background: rgba(255, 255, 255, .03); }
 .ib:hover:not(:disabled) { color: var(--gold-hi); border-color: var(--line2); background: var(--gold-soft); }
 
@@ -1237,7 +1237,7 @@ select option, select optgroup { background: #1C1B19; }
   .kpi b { font-size: 32px; margin-top: 10px; }
   .dn-card { padding: 4px 16px 14px; }
   .tabbar { left: 14px; right: 14px; bottom: calc(12px + env(safe-area-inset-bottom)); padding: 6px; border-radius: 24px;
-    border: 1px solid rgba(255, 255, 255, .09); background: rgba(17,25,44, .86); backdrop-filter: blur(22px) saturate(1.2); -webkit-backdrop-filter: blur(22px) saturate(1.2);
+    border: 1px solid rgba(255, 255, 255, .09); background: rgba(24,23,21, .86); backdrop-filter: blur(22px) saturate(1.2); -webkit-backdrop-filter: blur(22px) saturate(1.2);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), 0 24px 50px -18px rgba(0, 0, 0, .95); }
   .tabbar a { position: relative; gap: 5px; padding: 8px 0 7px; border-radius: 18px; font: 500 10px/1.1 var(--sans); color: var(--faint); background: none; }
   .tabbar a svg { width: 21px; height: 21px; }
@@ -1295,7 +1295,7 @@ body { font-feature-settings: normal; font-variant-numeric: lining-nums proporti
   .nav a.on svg { color: var(--ink); }
   .nav a.on::before { content: none; }
   .nav a .cnt { margin-left: 2px; }
-  .nav a.on .cnt { background: rgba(17,25,44, .12); color: var(--ink); }
+  .nav a.on .cnt { background: rgba(24,23,21, .12); color: var(--ink); }
   .seats { flex: none; width: auto; margin: 0; display: flex; align-items: center; gap: 14px; padding: 8px 14px 8px 44px; border-radius: 14px; }
   .seats::before { top: 50%; left: 14px; right: auto; margin-top: -9px; }
   .seats small { display: none; }
@@ -1304,7 +1304,7 @@ body { font-feature-settings: normal; font-variant-numeric: lining-nums proporti
   .top { position: relative; top: auto; padding: 26px 40px 18px; background: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
   .zap-list { top: var(--navh); height: calc(100vh - var(--navh)); border-right: 0; background: none; }
   .zap-grid { gap: 0 18px; padding: 0 24px 0 18px; }
-  .zap-an { border-radius: 26px; margin-top: 10px; min-height: calc(100vh - var(--navh) - 30px); border: 1px solid var(--line); background: linear-gradient(180deg, rgba(255, 255, 255, .025), rgba(255, 255, 255, .005)), rgba(17,25,44, .6); }
+  .zap-an { border-radius: 26px; margin-top: 10px; min-height: calc(100vh - var(--navh) - 30px); border: 1px solid var(--line); background: linear-gradient(180deg, rgba(255, 255, 255, .025), rgba(255, 255, 255, .005)), rgba(24,23,21, .6); }
   .an { padding: 0 34px 60px; }
 }
 @media (min-width: 900px) and (max-width: 1320px) {
@@ -1420,7 +1420,7 @@ button.dn-stat:hover { border-color: rgba(207,196,180, .3); }
    ===================================================================== */
 :root {
   --bg: #0E0D0C; --bg2: #121110; --panel: #181715; --panel2: #252320;
-  --glass: rgba(17,25,44, .82);
+  --glass: rgba(24,23,21, .82);
   --line: rgba(255, 255, 255, .08); --line2: rgba(207,196,180, .26); --line3: rgba(207,196,180, .55);
   --gold: #CFC4B4; --gold-hi: #FFFFFF; --gold-lo: #A89C8A;
   --gold-grad: linear-gradient(115deg, #F4EFE7 0%, #D9D0C3 40%, #B9AC99 75%, #E3DACD 100%); --foil: var(--gold-grad);
@@ -1523,3 +1523,54 @@ h3.sh { font-weight: 700; letter-spacing: -.02em; }
 .seats::before { background: var(--plat); }
 .dn-hero::before, .side::before { background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .5), transparent); }
 /* KAMEŇ (10. 11. 2026 16:05): teplý grafit + béžovo-sivý kameň (farby v celom súbore) */
+
+/* =====================================================================
+   PÍSMO FRAUNCES + FIGTREE (13. 11. 2026) – app.tipradar.eu podľa nového
+   webu tipradar.eu: nadpisy a veľké čísla Fraunces (tenký serif, zvýraznené
+   slová kurzívou v kameni), texty, štítky a tlačidlá Figtree, štítky
+   s kosoštvorcom, jemné zrno, kamenné linky na kartách. Farby Kameň ostávajú.
+   Funkcie bez zmeny.
+   ===================================================================== */
+:root {
+  --sans: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --display: "Figtree", system-ui, -apple-system, sans-serif;
+  --serif: "Fraunces", Georgia, "Times New Roman", serif;
+  --mono: "Figtree", system-ui, sans-serif;
+  --diamond: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'%3E%3Crect x='1.6' y='1.6' width='6.8' height='6.8' rx='1' transform='rotate(45 5 5)' fill='%23CFC4B4'/%3E%3C/svg%3E");
+}
+body { font-family: var(--sans); font-weight: 450; }
+/* nadpisy: tenký serif, zvýraznenie kurzívou */
+.top h2, h3.sh, .dn-big, .modal h3 { font-family: var(--serif) !important; font-variation-settings: "opsz" 144, "SOFT" 30; }
+.top h2 { font-weight: 350; letter-spacing: -.025em; }
+h3.sh { font-weight: 400; font-size: 24px; letter-spacing: -.015em; }
+.dn-big { font-weight: 300 !important; letter-spacing: -.03em; }
+.dn-big b { font-weight: 400; }
+.top h2 em, h3.sh em, .dn-big em, .splash-word em { font-family: var(--serif); font-style: italic !important; font-weight: 400 !important; letter-spacing: -.02em; padding-right: .08em; }
+/* veľké čísla: Fraunces tenký */
+.kpi b, .dn-stat b, .mh .mid b, .an-kpis b, .per b { font-family: var(--serif) !important; font-weight: 300 !important; letter-spacing: -.02em !important; font-variation-settings: "opsz" 144; }
+.dn-t-pick b, .tip .s, .mh .team { font-family: var(--serif); font-weight: 400; letter-spacing: -.015em; }
+.dn-t-k b { font-family: var(--serif); font-weight: 400; }
+/* logo a úvodná obrazovka ako na webe */
+.lx-logo span { font-family: var(--sans) !important; font-weight: 700; letter-spacing: -.01em; }
+.splash-word { font-family: var(--serif) !important; font-weight: 300; font-size: 40px; letter-spacing: -.02em; text-transform: none; margin-right: 0; }
+/* štítky: Figtree, kameň, kosoštvorec pred nadpisom stránky */
+.lx-logo small, .seats small, .ct, .kpi small, .mh .mid small, .dt-times-l, .tip .k, .dtip .k, .lg-sec, .dn-hello { font-family: var(--sans) !important; font-weight: 700; letter-spacing: .26em !important; color: #CFC4B4; }
+.top h2::before { font: 700 10.5px/1 var(--sans); letter-spacing: .28em; color: #CFC4B4; padding-left: 20px; margin-bottom: 12px; background: var(--diamond) no-repeat 0 50% / 9px 9px; }
+.dn-hello { display: inline-block; padding-left: 20px; background: var(--diamond) no-repeat 0 50% / 9px 9px; }
+/* tlačidlá a prepínače Figtree */
+.btn, .chip, .tabs button, .nav a, .tabbar a { font-family: var(--sans); }
+.btn { font-weight: 700; letter-spacing: .005em; }
+/* kamenná linka na vrchu kariet */
+.card, .kpi, .dn-stat, .dn-ticket { box-shadow: inset 0 1px 0 rgba(207,196,180, .16), var(--shadow); }
+.card:hover, .kpi:hover, .dn-stat:hover { border-color: rgba(207,196,180, .22); }
+.dn-hero::before, .side::before { background: linear-gradient(90deg, transparent, rgba(207,196,180, .55), transparent); }
+/* jemné zrno ako na webe */
+body::after { content: ""; position: fixed; inset: 0; z-index: 9999; pointer-events: none; opacity: .05; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+@media (max-width: 720px) {
+  .top h2::before { font-size: 10px; letter-spacing: .24em; }
+  h3.sh { font-size: 21px; }
+}
+/* spodná lišta na mobile a sklo v kameni (bez modrého nádychu) */
+:root { --glass: rgba(24,23,21, .86); }
+@media (max-width: 900px) { .tabbar { background: rgba(24,23,21, .9) !important; border-color: rgba(207,196,180, .14) !important; } .tabbar a { font-family: var(--sans); } }
