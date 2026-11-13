@@ -468,7 +468,9 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
     if (st.page >= pages.length) st.page = pages.length - 1;
     const handle = $("handle").value.trim();
     for (const x of $("modeChips").children) x.classList.toggle("on", x.dataset.m === st.mode);
-    st.cvs = pages.map((_, i) => draw(st.data, st.fmt, i, handle));
+    // Michal 13. 11.: pred zápasom zoradené od najsilnejšieho tipu (najvyššia dôvera hore); výsledky podľa času výkopu.
+    const view = st.mode === "pre" ? { ...st.data, tips: [...st.data.tips].sort((a, b) => (b.probability || 0) - (a.probability || 0)) } : st.data;
+    st.cvs = pages.map((_, i) => draw(view, st.fmt, i, handle));
     $("img").src = st.cvs[st.page].toDataURL("image/png");
     $("preview").classList.toggle("story", st.fmt === "story");
     $("pageWrap").style.display = pages.length > 1 ? "" : "none";
@@ -477,7 +479,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
     $("pageInfo").textContent = pages.length > 1 ? `${plural(st.data.tips.length, "tip", "tipy", "tipov")} na ${pages.length} obrázkoch. „Zdieľať“ pošle všetky naraz (na Instagrame ako karusel).` : "";
     $("pageInfo").className = "note";
     if (sm.pending && st.mode !== "pre") { $("pageInfo").textContent = `Pozor: ${plural(sm.pending, "tip sa ešte hrá", "tipy sa ešte hrajú", "tipov sa ešte hrá")} – obrázok ukazuje priebežný stav. Najlepšie je zverejniť až ráno po dohraní.`; $("pageInfo").className = "note warn"; }
-    $("text").value = caption(st.data);
+    $("text").value = caption(view);
     const has = st.data.tips.length > 0;
     $("shareBtn").disabled = !has; $("downBtn").disabled = !has;
   }
