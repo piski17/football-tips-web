@@ -433,7 +433,7 @@
       const bsz = fit(ctx, big, 800, story ? 120 : 100, rw, H_FONT, 40);
       ctx.font = font(800, bsz, H_FONT); ctx.fillStyle = C.good; ctx.fillText(big, rx - 4, y0 + h * 0.27 + bsz * 0.98);
       // Michal 13. 11.: zrozumiteľne – „€16.50 profit“ + „€100 on each surebet, any score“ (namiesto „from €300“).
-      const l1 = `€${n2(avg * 100 * n)} profit`, l2 = n === 1 ? "on €100 staked, any score" : "€100 on each surebet, any score";
+      const l1 = `€${n2(avg * 100 * n)} profit`, l2 = n === 1 ? "on €100 staked, any score" : `${n} × €100 staked, any score`;
       ctx.fillStyle = C.text; fit(ctx, l1, 700, story ? 32 : 28, rw, B_FONT, 18);
       ctx.fillText(l1, rx, y0 + h * 0.27 + bsz * 0.98 + (story ? 56 : 48));
       ctx.fillStyle = C.muted; fit(ctx, l2, 600, story ? 26 : 22, rw, B_FONT, 14);
@@ -621,7 +621,7 @@
     }
     // Michal 13. 11.: pri 1 surebete súčet netreba; pri viacerých krátky súčet dňa.
     // Michal 13. 11.: Day total vždy (aj pri 1 zápase), ikonka 💰.
-    if (n) lines.push("", `💰 Day total: €${n2(avg * 100 * n)} profit (${n2(avg * 100)}%)`);
+    if (n) lines.push("", `💰 Day total: €${n2(avg * 100 * n)} profit (${n2(avg * 100)}%) · ${n > 1 ? n + " × €100" : "€100"}`);
     lines.push("");
     lines.push("👑 ARBREX · 18+ · Bet responsibly", "#arbrex #football");
     return lines.join("\n");
