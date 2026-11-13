@@ -478,7 +478,7 @@
     `🔁 Option ${k + 2}:`,
     betLine("1️⃣", { book: c.a.book, label: s.sides[0].label, odd: c.a.odd }, c.b.odd),
     betLine("2️⃣", { book: c.b.book, label: s.sides[1].label, odd: c.b.odd }, c.a.odd),
-    `💰 Profit from €100: €${n2(c.margin * 100)} (${n2(c.margin * 100)}%)`,
+    `💰 Profit: €${n2(c.margin * 100)} (${n2(c.margin * 100)}%)`,
   ];
   /** 13. 11. 2026 (Michal): text ako obrázok – „Zápas / trh“ a „Over 4.5 (Betano 1.83) – Under 4.5 (Pinnacle 2.47)“. */
   const pairText = (s, a, b) => `${label(s.sides[0].label)} (${a.book} ${n2(a.odd)}) – ${label(s.sides[1].label)} (${b.book} ${n2(b.odd)})`;
@@ -525,7 +525,7 @@
       const [a, b] = e.sides;
       // Michal 13. 11. 14:42: „👉 Over 4.5 - 1.83 Betano / Under 4.5 - 2.47 Pinnacle“, pod každým tipom 💰 Profit, na konci 📊 celkovo.
       const tipLine = (x, y) => `👉 ${label(e.sides[0].label)} - ${n2(x.odd)} ${x.book} / ${label(e.sides[1].label)} - ${n2(y.odd)} ${y.book}`;
-      const profit = (m) => `💰 Profit: €${n2(m * 100)} from €100 (${n2(m * 100)}%)`;
+      const profit = (m) => `💰 Profit: €${n2(m * 100)} (${n2(m * 100)}%)`;
       lines.push(`${pre ? "🔒" : "✅"} ${e.home} - ${e.away} / ${market(e.market)}`, tipLine(a, b), profit(e.maxMargin));
       for (const c of dayCombos(e)) lines.push(tipLine(c.a, c.b), profit(c.margin));
     }
