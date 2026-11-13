@@ -487,11 +487,11 @@
       const [a, b] = e.sides;
       lines.push(`${pre ? "🔒" : "✅"} ${e.home} – ${e.away}`, `${market(e.market)}${splitLine(e).line}`, oneLine(e, a, b));
       // Michal 13. 11.: pri viacerých zápasoch zisk len na konci (Day total), nie pri každom zápase.
-      if (n === 1) lines.push("", `💰 Profit: €${n2(e.maxMargin * 100)} from €100 (${n2(e.maxMargin * 100)}%)`);
       for (const c of dayCombos(e)) lines.push(`🔁 Or: ${oneLine(e, c.a, c.b)} (${n2(c.margin * 100)}%)`);
     }
     // Michal 13. 11.: pri 1 surebete súčet netreba; pri viacerých krátky súčet dňa.
-    if (n > 1) lines.push("", `📊 Day total: €${n2(avg * 100 * n)} from €${n * 100} (${n2(avg * 100)}%)`);
+    // Michal 13. 11.: Day total vždy (aj pri 1 zápase), ikonka 💰.
+    if (n) lines.push("", `💰 Day total: €${n2(avg * 100 * n)} from €${n * 100} (${n2(avg * 100)}%)`);
     lines.push("");
     lines.push("👑 ARBREX · 18+ · Bet responsibly", "#arbrex #football");
     return lines.join("\n");
