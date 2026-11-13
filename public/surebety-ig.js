@@ -138,6 +138,37 @@
     ctx.textAlign = "left";
   }
 
+  /** 13. 11. 2026 (Michal): „Guaranteed profit“ hore na každom obrázku, nový vzhľad – plný zelený pás so značkou fajky,
+   *  vľavo nadpis + podnadpis, vpravo veľké číslo. */
+  function profitBanner(ctx, x, y, w, h, title, big, sub) {
+    ctx.save();
+    rr(ctx, x, y, w, h, h / 2);
+    const g = ctx.createLinearGradient(x, y, x + w, y + h);
+    g.addColorStop(0, "#93D6B1"); g.addColorStop(1, "#5FAE85");
+    ctx.fillStyle = g; ctx.fill();
+    // jemný lesk
+    rr(ctx, x + 3, y + 3, w - 6, h * 0.45, h * 0.45);
+    ctx.fillStyle = "rgba(255,255,255,.10)"; ctx.fill();
+    // ikonka: tmavý kruh s fajkou
+    const r = h * 0.32, cx = x + h * 0.52, cy = y + h / 2;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = C.bg; ctx.fill();
+    ctx.strokeStyle = "#93D6B1"; ctx.lineWidth = Math.max(4, r * 0.16); ctx.lineCap = "round"; ctx.lineJoin = "round";
+    ctx.beginPath(); ctx.moveTo(cx - r * 0.42, cy + r * 0.02); ctx.lineTo(cx - r * 0.1, cy + r * 0.34); ctx.lineTo(cx + r * 0.45, cy - r * 0.3); ctx.stroke();
+    ctx.lineCap = "butt"; ctx.lineJoin = "miter";
+    // veľké číslo vpravo
+    ctx.fillStyle = C.bg; ctx.textAlign = "right";
+    const bsz = fit(ctx, big, 800, Math.round(h * 0.5), w * 0.42, H_FONT, 30);
+    ctx.font = font(800, bsz, H_FONT); ctx.fillText(big, x + w - h * 0.42, cy + bsz * 0.36);
+    const bw = ctx.measureText(big).width; ctx.textAlign = "left";
+    // nadpis + podnadpis
+    const tx = cx + r + h * 0.22, tw = x + w - h * 0.42 - bw - 24 - tx;
+    ctx.fillStyle = C.bg; ctx.font = font(800, Math.round(h * 0.17), B_FONT);
+    spaced(ctx, title, tx, cy - h * 0.04, Math.max(2, h * 0.02));
+    ctx.fillStyle = "rgba(14,13,12,.72)"; fit(ctx, sub, 600, Math.round(h * 0.17), tw, B_FONT, 14);
+    ctx.fillText(sub, tx, cy + h * 0.22);
+    ctx.restore();
+  }
+
   /** Surebet (pred zápasom alebo vyhodnotený). */
   function drawSurebet(s, fmtKey, result, handle) {
     const W = 1080, H = fmtKey === "story" ? 1920 : 1350, story = fmtKey === "story";
@@ -149,7 +180,15 @@
     background(ctx, W, H);
     let y = story ? 220 : 112;
     header(ctx, W, y, settled ? "SETTLED ✓" : "SUREBET", settled ? "good" : "stone");
-    y += story ? 110 : 82;
+    {
+      const profit = 100 * s.margin, bh0 = story ? 170 : 132;
+      const t = settled ? (win === -1 ? "STAKES RETURNED" : "PROFIT LOCKED IN") : "GUARANTEED PROFIT";
+      const big = settled && win !== -1 ? `+€${n2(profit)}` : win === -1 ? "€0.00" : `+${n2(profit)}%`;
+      const sub = settled ? (win === -1 ? "No loss, no risk" : `+${n2(profit)}% · whatever the score`) : `€${n2(profit)} on every €100 · whatever the score`;
+      profitBanner(ctx, X, y + (story ? 64 : 56), IW, bh0, t, big, sub);
+      y += (story ? 64 : 56) + bh0;
+    }
+    y += story ? 90 : 66;
 
     // Súťaž
     ctx.fillStyle = C.muted; ctx.font = font(700, 24, B_FONT);
@@ -228,8 +267,7 @@
 
     // Ďalšie dvojice stávkoviek s tým istým surebetom (12. 11. 2026, Michal: v ktorej stávkovke a za aký kurz stranu 1, v ktorej stranu 2)
     const footY = story ? H - 160 : H - 60;
-    const bh = story ? 240 : 150;
-    const boxTop = footY - 46 - 36 - bh;
+    const boxTop = footY - 46 - 20;
     const combos = window.sbCombos ? window.sbCombos(s) : [];
     if (combos.length) {
       const rowH = story ? 46 : 34, headH = story ? 86 : 72;
@@ -263,30 +301,6 @@
       if (more) { ctx.font = font(600, 22, B_FONT); ctx.fillStyle = C.muted; ctx.fillText(`+ ${combos.length - rows.length} more combinations`, X, y); y += rowH; }
     }
 
-    // Zisk
-    const by = Math.max(y + 4, boxTop);
-    rr(ctx, X, by, IW, bh, 30);
-    const gg = ctx.createLinearGradient(X, by, X + IW, by + bh);
-    gg.addColorStop(0, "rgba(127,200,160,.20)"); gg.addColorStop(1, "rgba(127,200,160,.06)");
-    ctx.fillStyle = gg; ctx.fill(); ctx.strokeStyle = "rgba(127,200,160,.55)"; ctx.lineWidth = 2; ctx.stroke();
-    const profit = 100 * s.margin;
-    ctx.fillStyle = C.good; ctx.font = font(800, 24, B_FONT);
-    spaced(ctx, settled ? (win === -1 ? "BOTH STAKES RETURNED" : "PROFIT LOCKED IN") : "GUARANTEED PROFIT", X + 40, by + (story ? 62 : 46), 3);
-    ctx.font = font(800, story ? 116 : 76, H_FONT);
-    const big = settled && win !== -1 ? `+€${n2(profit)}` : win === -1 ? "€0.00" : `+${n2(profit)}%`;
-    ctx.fillText(big, X + 36, by + (story ? 168 : 118));
-    const bw = ctx.measureText(big).width;
-    ctx.font = font(600, story ? 28 : 24, B_FONT); ctx.fillStyle = C.text;
-    const sub1 = settled ? (win === -1 ? "Draw – no bet: both stakes refunded" : `+${n2(profit)}% on €100 staked`) : `€${n2(profit)} on every €100 staked`;
-    const sub2 = settled ? (win === -1 ? "No loss, no risk" : "Whatever the score") : "Whatever the score";
-    if (story) {
-      ctx.fillText(sub1, X + 40, by + 212);
-      ctx.fillStyle = C.muted; ctx.textAlign = "right"; ctx.fillText(sub2, X + IW - 40, by + 212); ctx.textAlign = "left";
-    } else {
-      const tx = X + 36 + bw + 34;
-      ctx.fillText(sub1, tx, by + 86);
-      ctx.fillStyle = C.muted; ctx.fillText(sub2, tx, by + 120);
-    }
     footer(ctx, W, footY, handle);
     return cv;
   }
@@ -343,26 +357,23 @@
     background(ctx, W, H);
     let y = story ? 220 : 112;
     header(ctx, W, y, pre ? "TODAY'S SUREBETS" : "DAILY RESULTS", pre ? "stone" : "good");
-    y += story ? 130 : 100;
+    const n = list.length;
+    const avg = n ? list.reduce((t, e) => t + e.maxMargin, 0) / n : 0;
+    {
+      const bh0 = story ? 170 : 132;
+      profitBanner(ctx, X, y + (story ? 64 : 56), IW, bh0, "GUARANTEED PROFIT", `+${n2(avg * 100)}%`,
+        `€${n2(avg * 100 * n)} from €${n * 100} · whatever the score`);
+      y += (story ? 64 : 56) + bh0;
+    }
+    y += story ? 100 : 82;
     ctx.fillStyle = C.text; ctx.font = font(800, story ? 96 : 84, H_FONT);
     ctx.fillText("Surebets", X, y); y += story ? 92 : 80;
     ctx.fillStyle = C.stone; ctx.fillText("of the day", X, y); y += story ? 72 : 62;
     ctx.fillStyle = C.muted; ctx.font = font(600, 28, B_FONT); ctx.fillText(dayEn(day), X, y);
     const pages = dayPages(list, fmtKey);
     if (pages > 1) { ctx.fillStyle = C.stone; ctx.font = font(800, 28, B_FONT); ctx.textAlign = "right"; ctx.fillText(`${page + 1} / ${pages}`, X + IW, y); ctx.textAlign = "left"; }
-    y += story ? 70 : 50;
-    const n = list.length;
-    const avg = n ? list.reduce((t, e) => t + e.maxMargin, 0) / n : 0;
-    const kp = [["SUREBETS", String(n)], ["AVG PROFIT", `+${n2(avg * 100)}%`], ["€100 ON EACH", `+€${n2(avg * 100 * n)}`]];
-    const kw = (IW - 2 * 20) / 3, kh = story ? 170 : 150;
-    kp.forEach(([t, v], i) => {
-      const kx = X + i * (kw + 20);
-      rr(ctx, kx, y, kw, kh, 24); ctx.fillStyle = i === 2 ? C.goodBg : C.card; ctx.fill();
-      ctx.strokeStyle = i === 2 ? "rgba(127,200,160,.55)" : C.line; ctx.lineWidth = 2; ctx.stroke();
-      ctx.fillStyle = C.muted; ctx.font = font(700, 20, B_FONT); spaced(ctx, t, kx + 26, y + 48, 2);
-      ctx.fillStyle = i === 2 ? C.good : C.text; fit(ctx, v, 800, story ? 64 : 58, kw - 48, H_FONT, 30); ctx.fillText(v, kx + 24, y + kh - 34);
-    });
-    y += kh + (story ? 50 : 36);
+    // Michal 13. 11.: súčty (SUREBETS / AVG PROFIT / €100 ON EACH) nahradil pás „Guaranteed profit“ hore.
+    y = story ? 804 : 590;
     // 13. 11. 2026 (Michal): pri málo surebetoch riadky zväčšiť, aby vyplnili obrázok (nie prázdna medzera dole).
     // 13. 11. 2026 (Michal): rovnaká karta pre každý zápas; ďalšie dvojice z iných stávkoviek hneď pod tým istým zápasom;
     // v kartičke stávky trh + tip, kurz, stávkovka a „Stake €…“. Strany sa delia podľa výšky (najviac 5 zápasov na obrázok).
