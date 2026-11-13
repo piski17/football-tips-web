@@ -2298,7 +2298,7 @@ function renderTipsCountNote(tips, statTips, removedLeagueCount = 0) {
     `V histórii ${plural(tips.length, "tip", "tipy", "tipov")} (bez sledovaných) · na webe v štatistikách ${onWeb} – rátajú sa len vyhodnotené (výhra / prehra).` +
     (parts.length ? ` Rozdiel: ${parts.join(", ")}.` : "") +
     (removedLeagueCount ? ` Tipy z vyradených súťaží (${removedLeagueCount}) sa nezobrazujú ani nerátajú.` : "") +
-    (hiddenDuplicates ? ` Rovnaký tip uložený 2× sa ráta len raz (skrytých duplicít: ${hiddenDuplicates}).` : " Žiadny tip nie je uložený 2×.");
+    "";
   // Ten istý zápas a ten istý trh s iným tipom (napr. Nad 2,5 aj Nad 3,5) – na kontrolu.
   const byKey = new Map();
   for (const t of statTips) {
