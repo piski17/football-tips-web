@@ -465,8 +465,9 @@
   }
   /** 13. 11. 2026 (Michal): „👉 Over 4.5 (Betano 1.83) - 57€“ – vklad zo 100 € zaokrúhlený na celé eurá (spolu 100). */
   const pointLines = (s, a, b) => {
-    const x = Math.round(stakeOf(a.odd, b.odd));
-    return [`👉 ${label(s.sides[0].label)} (${a.book} ${n2(a.odd)}) - ${x}€`, `👉 ${label(s.sides[1].label)} (${b.book} ${n2(b.odd)}) - ${100 - x}€`];
+    // Michal 13. 11.: sumy podľa môjho odporúčania – presne na centy, aby zisk sedel s Day total.
+    const x = Math.round(stakeOf(a.odd, b.odd) * 100) / 100;
+    return [`👉 ${label(s.sides[0].label)} (${a.book} ${n2(a.odd)}) - ${n2(x)}€`, `👉 ${label(s.sides[1].label)} (${b.book} ${n2(b.odd)}) - ${n2(100 - x)}€`];
   };
   const oneLine = (s, a, b) => { const p = splitLine(s); return `${p.s0} (${a.book} ${n2(a.odd)}) – ${p.s1} (${b.book} ${n2(b.odd)})`; };
   /** 13. 11. 2026 (Michal): hrubé písmo v texte – Unicode „bold“ znaky (fungujú na Instagrame aj Telegrame aj bez formátovania). */
