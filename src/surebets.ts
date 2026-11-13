@@ -264,7 +264,7 @@ function altsFor(list: BookOdd[], used: string[], otherOdd: number): BookOdd[] {
     .filter((o) => !seen.has(o.book) && 1 / o.odd + 1 / otherOdd < 1)
     .sort((x, y) => y.odd - x.odd)
     .filter((o) => (seen.has(o.book) ? false : (seen.add(o.book), true)))
-    .slice(0, 8);
+    .slice(0, 25); // 13. 11. 2026 (Michal): všetky stávkovky, ku ktorým máme prístup (predtým max 8)
 }
 
 export function computeSurebets(allowedBooks: string[] | null, minMargin = MIN_MARGIN): Surebet[] {

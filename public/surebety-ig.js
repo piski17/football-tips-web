@@ -295,6 +295,21 @@
   /** 12. 11. 2026 (Michal): súhrn dňa na viac obrázkov – na každom najviac 5 (príbeh 8) surebetov, aby boli vidieť všetky. */
   const dayPer = (fmtKey) => (fmtKey === "story" ? 8 : 5);
   const dayPages = (list, fmtKey) => Math.max(1, Math.ceil(list.length / dayPer(fmtKey)));
+  /** 13. 11. 2026 (Michal): ďalšie stávkovky, kde ten istý surebet funguje – aj v súhrne dňa. */
+  const dayCombos = (e) => (window.sbCombos ? window.sbCombos({ ...e, margin: e.maxMargin }) : []);
+  function alsoBooks(e, mainToo = false) {
+    const main = new Set(e.sides.map((x) => x.book));
+    const out = [];
+    for (const c of dayCombos(e)) for (const b of [c.a.book, c.b.book]) if ((mainToo || !main.has(b)) && !out.includes(b)) out.push(b);
+    return out;
+  }
+  /** Ďalšie stávkovky s kurzom pre každú stranu (ten istý surebet s pôvodnou druhou stranou). */
+  const sideAlts = (e, i) => ((e.alts && e.alts[i]) || []).filter((o) => o.book !== e.sides[0].book && o.book !== e.sides[1].book);
+  const altsText = (e, i, max = 99) => { const l = sideAlts(e, i); return l.slice(0, max).map((o) => `${o.book} ${n2(o.odd)}`).join(" · ") + (l.length > max ? ` +${l.length - max}` : ""); };
+  const alsoLine = (e, max) => {
+    const parts = [0, 1].filter((i) => sideAlts(e, i).length).map((i) => `${label(e.sides[i].label)}: ${altsText(e, i, max)}`);
+    return parts.length ? `Also: ${parts.join("  |  ")}` : "";
+  };
   /** pre = true: dnešné surebety pred zápasmi (bez výsledku). */
   function drawDay(day, list, fmtKey, handle, page = 0, pre = false) {
     const W = 1080, H = fmtKey === "story" ? 1920 : 1350, story = fmtKey === "story";
@@ -339,7 +354,8 @@
       if (rh >= 330) {
         // Veľká karta: liga, zápas, obe stávky s kurzom, stávkovkou a vkladom zo 100 €, zisk.
         const pad = 32, cx = X + pad, cw = IW - 2 * pad;
-        const off = Math.max(0, (rh - 600) / 2); // veľmi vysoká karta (príbeh s 1 surebetom) – obsah vycentrovať
+        const hasAlt = sideAlts(e, 0).length + sideAlts(e, 1).length > 0;
+        const off = hasAlt ? 0 : Math.max(0, (rh - 600) / 2); // veľmi vysoká karta (príbeh s 1 surebetom) – obsah vycentrovať
         let yy = y + off + pad + 22;
         ctx.fillStyle = C.muted; ctx.font = font(700, 20, B_FONT);
         const top = `${pre ? ktime(e) + " · " : ""}${league(e)}`.toUpperCase();
@@ -350,8 +366,12 @@
         yy += 46;
         ctx.fillStyle = C.stone; ctx.font = font(700, 26, B_FONT); ctx.fillText(market(e.market), cx, yy);
         yy += 30;
-        const profH = rh >= 450 ? 112 : 92;
-        const boxH = Math.min(220, y + rh - off - pad - profH - 18 - yy);
+        const profH = rh >= 450 && !hasAlt ? 112 : 92;
+        const freeAll = y + rh - off - pad - profH - 18 - yy;
+        const altLH = 30;
+        const boxH = Math.min(hasAlt ? 1000 : 220, freeAll);
+        const altRows = Math.max(0, Math.floor((boxH - (boxH >= 170 ? 170 : 146) - 14) / altLH));
+        const altFit = altRows * 2; // dva stĺpce
         const sum = 1 / e.sides[0].odd + 1 / e.sides[1].odd;
         const bw = (cw - 18) / 2;
         e.sides.forEach((sd, i) => {
@@ -364,9 +384,26 @@
           ctx.fillStyle = C.good; ctx.font = font(800, big ? 52 : 40, H_FONT); ctx.fillText(n2(sd.odd), bx + 22, yy + (big ? 136 : 112));
           const odW = ctx.measureText(n2(sd.odd)).width;
           ctx.fillStyle = C.stone; fit(ctx, sd.book, 700, big ? 26 : 22, bw - 66 - odW, B_FONT, 16); ctx.fillText(sd.book, bx + 40 + odW, yy + (big ? 134 : 110));
+          // Ďalšie stávkovky s kurzom pre túto stranu.
+          const al = sideAlts(e, i);
+          if (al.length && altFit > 0) {
+            const ay0 = yy + (big ? 136 : 112) + 34;
+            ctx.fillStyle = C.faint; ctx.font = font(700, 16, B_FONT); spaced(ctx, "ALSO AT", bx + 22, ay0, 2);
+            const more = al.length > altFit ? al.length - (altFit - 1) : 0;
+            const items = al.slice(0, more ? altFit - 1 : altFit).map((o) => [o.book, n2(o.odd)]);
+            if (more) items.push([`+ ${more} more`, ""]);
+            const colW = (bw - 44 - 16) / 2;
+            items.forEach(([b, o], k) => {
+              const ix = bx + 22 + (k % 2) * (colW + 16), iy = ay0 + altLH * (1 + Math.floor(k / 2));
+              ctx.fillStyle = o ? C.stone : C.muted; fit(ctx, b, 600, 20, o ? colW - 52 : colW, B_FONT, 12); ctx.fillText(b, ix, iy);
+              if (o) { ctx.fillStyle = C.good; ctx.font = font(800, 20, H_FONT); ctx.textAlign = "right"; ctx.fillText(o, ix + colW, iy); ctx.textAlign = "left"; }
+            });
+          }
           if (boxH >= 150) {
+            // Vklad zo 100 € – vpravo hore v karte (dole je zoznam ďalších stávkoviek).
             const stake = (100 * (1 / sd.odd)) / sum;
-            ctx.fillStyle = C.muted; ctx.font = font(600, 20, B_FONT); ctx.fillText(`Stake €${n2(stake)} of €100`, bx + 22, yy + boxH - 22);
+            ctx.fillStyle = C.muted; ctx.font = font(600, 18, B_FONT); ctx.textAlign = "right";
+            ctx.fillText(`Stake €${n2(stake)} / €100`, bx + bw - 22, yy + 36); ctx.textAlign = "left";
           }
         });
         const py = y + rh - off - pad - profH;
@@ -378,7 +415,8 @@
       } else if (rh >= 220) {
         // Stredná karta: liga, zápas, trh a každá stávka na vlastnom riadku, zisk vpravo.
         const sideW = IW - 300;
-        let yy = y + (rh - 196) / 2;
+        const alsoL = [0, 1].filter((k) => sideAlts(e, k).length).map((k) => `${label(e.sides[k].label)} also at: ${altsText(e, k, 5)}`);
+        let yy = y + (rh - 196 - alsoL.length * 30) / 2;
         ctx.fillStyle = C.muted; ctx.font = font(700, 18, B_FONT);
         const top = `${pre ? ktime(e) + " · " : ""}${league(e)} · ${market(e.market)}`.toUpperCase();
         spaced(ctx, top.length > 52 ? top.slice(0, 50) + "…" : top, X + 32, yy + 16, 2);
@@ -393,6 +431,7 @@
           ctx.fillStyle = C.stone; ctx.font = font(700, 22, B_FONT); ctx.textAlign = "left";
           fit(ctx, sd.book, 700, 22, 150, B_FONT, 14); ctx.fillText(sd.book, X + 32 + sideW - 152, ly - 3);
         });
+        alsoL.forEach((t, k) => { ctx.fillStyle = C.stone; fit(ctx, t, 600, 20, sideW, B_FONT, 14); ctx.fillText(t, X + 32, yy + 226 + k * 30); });
         ctx.fillStyle = C.muted; ctx.font = font(700, 18, B_FONT); ctx.textAlign = "right";
         ctx.fillText("PROFIT", X + IW - 32, y + rh / 2 - 34);
         ctx.fillStyle = C.good; ctx.font = font(800, 60, H_FONT);
@@ -400,7 +439,8 @@
       } else {
         // Bežný riadok; pri väčšej výške navyše liga a väčšie písmo, obsah vycentrovaný.
         const tall = rh >= 150;
-        const blockH = tall ? 112 : 56;
+        const also = rh >= 108 ? alsoLine(e, 5) : "";
+        const blockH = (tall ? 112 : 56) + (also ? 30 : 0);
         let yy = y + (rh - blockH) / 2;
         if (tall) {
           ctx.fillStyle = C.muted; ctx.font = font(700, 18, B_FONT);
@@ -414,6 +454,7 @@
         const kt = pre && !tall ? ktime(e) + " · " : "";
         const det = `${kt}${market(e.market)} · ${label(e.sides[0].label)} ${n2(e.sides[0].odd)} ${e.sides[0].book} / ${label(e.sides[1].label)} ${n2(e.sides[1].odd)} ${e.sides[1].book}`;
         fit(ctx, det, 500, tall ? 24 : 22, IW - 260, B_FONT, 16); ctx.fillText(det, X + 28, yy + (tall ? 70 : 62));
+        if (also) { ctx.fillStyle = C.stone; fit(ctx, also, 600, 19, IW - 260, B_FONT, 14); ctx.fillText(also, X + 28, yy + (tall ? 100 : 92)); }
         ctx.fillStyle = C.good; ctx.font = font(800, tall ? 52 : 44, H_FONT); ctx.textAlign = "right";
         ctx.fillText(`+${n2(e.maxMargin * 100)}%`, X + IW - 28, y + rh / 2 + (tall ? 18 : 16)); ctx.textAlign = "left";
       }
@@ -454,8 +495,8 @@
     if (combos.length) {
       lines.push("");
       lines.push(settled ? "🔁 The same surebet also worked here:" : "🔁 The same surebet also works here:");
-      for (const p of combos.slice(0, 8)) lines.push(` • ${p.a.book}: ${label(s.sides[0].label)} @ ${n2(p.a.odd)} + ${p.b.book}: ${label(s.sides[1].label)} @ ${n2(p.b.odd)} → +${n2(p.margin * 100)}%`);
-      if (combos.length > 8) lines.push(` • … and ${combos.length - 8} more`);
+      // 13. 11. 2026 (Michal): všetky stávkovky s kurzom pre každú stranu.
+      for (const i of [0, 1]) if (sideAlts(s, i).length) lines.push(` • ${label(s.sides[i].label)}: ${altsText(s, i)}`);
     }
     lines.push("");
     lines.push("👑 ARBREX – Profit. Whatever the score.");
@@ -474,7 +515,12 @@
       // 12. 11. 2026 (Michal): v texte aj celý tip – obe strany s kurzom a stávkovkou.
       const [a, b] = e.sides;
       lines.push(`${pre ? "🔒" : "✅"} ${kt}${e.home} – ${e.away} · ${market(e.market)}`,
-        `   ${label(a.label)} @ ${n2(a.odd)} ${a.book} + ${label(b.label)} @ ${n2(b.odd)} ${b.book} → +${n2(e.maxMargin * 100)}%`, "");
+        `   ${label(a.label)} @ ${n2(a.odd)} ${a.book} + ${label(b.label)} @ ${n2(b.odd)} ${b.book} → +${n2(e.maxMargin * 100)}%`);
+      if (sideAlts(e, 0).length || sideAlts(e, 1).length) {
+        lines.push("   🔁 Also works here:");
+        for (const i of [0, 1]) if (sideAlts(e, i).length) lines.push(`    • ${label(e.sides[i].label)}: ${altsText(e, i)}`);
+      }
+      lines.push("");
     }
     lines.push("👑 ARBREX – Profit. Whatever the score.", "18+ · Bet responsibly.", "", "#arbrex #football");
     return lines.join("\n");
