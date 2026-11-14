@@ -3545,7 +3545,7 @@ async function addAutoEntry(
  * a sám uloží do Histórie tipov každý tip, ktorý v nej ešte nie je – klientom alebo do sledovaných podľa
  * rovnakých pravidiel ako doteraz. Každý zápas sa spracuje len raz (zmazaný tip sa znova nepridá).
  * Tipy bez kurzu v API (kurz treba zadať ručne) sa automaticky neukladajú. Do Telegramu sa nič neposiela.
- * Ak zostavy do 5 minút pred výkopom nevyjdú, nič sa neuloží.
+ * Ak zostavy nevyjdú, tipy sa uložia pri poslednej kontrole (5 – 10 minút pred výkopom) aj bez nich.
  */
 const AUTO_SAVE_FROM_MIN = 5;
 const AUTO_SAVE_TO_MIN = 30;
@@ -3555,20 +3555,20 @@ async function autoSaveDueTips(): Promise<void> {
   autoSaveRunning = true;
   try {
     const now = Date.now();
-    const fixtureIds = new Set(
-      (await listAuto())
-        .filter((e) => {
-          const left = new Date(e.matchDate).getTime() - now;
-          return e.status === "pending" && left >= AUTO_SAVE_FROM_MIN * 60 * 1000 && left <= AUTO_SAVE_TO_MIN * 60 * 1000;
-        })
-        .map((e) => e.fixtureId),
-    );
-    for (const fixtureId of fixtureIds) {
+    const kickOf = new Map<number, number>();
+    for (const e of await listAuto()) {
+      const left = new Date(e.matchDate).getTime() - now;
+      if (e.status === "pending" && left >= AUTO_SAVE_FROM_MIN * 60 * 1000 && left <= AUTO_SAVE_TO_MIN * 60 * 1000) kickOf.set(e.fixtureId, new Date(e.matchDate).getTime());
+    }
+    for (const [fixtureId, kick] of kickOf) {
       const key = `autoSavedFx:${fixtureId}`;
       if (await getMeta(key)) continue;
       try {
         const lineup = await getFixtureLineupPlayerIds(fixtureId);
-        if (!lineup.homeStartIds || !lineup.awayStartIds) continue; // zostavy ešte nie sú – skúsi sa o 5 minút
+        // Zostavy ešte nie sú – skúsi sa o 5 minút. Michal 14. 11.: ak nevyjdú vôbec, pri poslednej kontrole
+        // (menej ako 10 min pred výkopom) sa tip uloží aj bez nich.
+        const hasLineups = !!(lineup.homeStartIds && lineup.awayStartIds);
+        if (!hasLineups && kick - Date.now() > 10 * 60 * 1000) continue;
         const fixture = await getFixtureById(fixtureId);
         if (!fixture || fixture.status !== "NS") continue;
         const { result } = await analyzeFixture(fixture, fixture.league.id, fixture.league.season, false);
@@ -3596,7 +3596,7 @@ async function autoSaveDueTips(): Promise<void> {
             recordedAt: at,
             status: "pending",
           };
-          const r = await addAutoEntry(entry, undefined, { autoSaved: true, lineupCheck: { at, probability, ok: true } });
+          const r = await addAutoEntry(entry, undefined, { autoSaved: true, ...(hasLineups ? { lineupCheck: { at, probability, ok: true } } : {}) });
           if ("ok" in r) console.log(`Automaticky uložený tip ${entry.id}${r.watchOnly ? " (sledovaný: " + r.reason + ")" : ""}`);
         }
         await setMeta(key, at);
