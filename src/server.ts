@@ -3540,11 +3540,12 @@ async function addAutoEntry(
 }
 
 /**
- * Automatické ukladanie (14. 11. 2026, Michal: „keby som náhodou zabudol pridať tip“): 5 – 30 minút pred výkopom
- * server sám uloží do Histórie tipov každý tip, ktorý zapísal pri automatickej analýze (~65 min pred výkopom)
- * a ktorý v Histórii ešte nie je – klientom alebo do sledovaných podľa rovnakých pravidiel ako doteraz.
- * Každý tip sa skúsi len raz (ak ho Michal zmaže, znova sa nepridá). Tipy bez kurzu v API (kurz treba zadať ručne)
- * sa automaticky neukladajú. Do Telegramu sa nič neposiela.
+ * Automatické ukladanie (14. 11. 2026, Michal: „keby som náhodou zabudol pridať tip“): najskôr 30 a najneskôr
+ * 5 minút pred výkopom, a len keď sú zverejnené zostavy, server zápas znova prepočíta modelom (so zostavami)
+ * a sám uloží do Histórie tipov každý tip, ktorý v nej ešte nie je – klientom alebo do sledovaných podľa
+ * rovnakých pravidiel ako doteraz. Každý zápas sa spracuje len raz (zmazaný tip sa znova nepridá).
+ * Tipy bez kurzu v API (kurz treba zadať ručne) sa automaticky neukladajú. Do Telegramu sa nič neposiela.
+ * Ak zostavy do 5 minút pred výkopom nevyjdú, nič sa neuloží.
  */
 const AUTO_SAVE_FROM_MIN = 5;
 const AUTO_SAVE_TO_MIN = 30;
@@ -3554,20 +3555,53 @@ async function autoSaveDueTips(): Promise<void> {
   autoSaveRunning = true;
   try {
     const now = Date.now();
-    const due = (await listAuto()).filter((e) => {
-      const left = new Date(e.matchDate).getTime() - now;
-      return e.status === "pending" && left >= AUTO_SAVE_FROM_MIN * 60 * 1000 && left <= AUTO_SAVE_TO_MIN * 60 * 1000;
-    });
-    for (const e of due) {
-      if (!(typeof e.odds === "number" && e.odds > 1)) continue;
-      const key = `autoSaved:${e.id}`;
+    const fixtureIds = new Set(
+      (await listAuto())
+        .filter((e) => {
+          const left = new Date(e.matchDate).getTime() - now;
+          return e.status === "pending" && left >= AUTO_SAVE_FROM_MIN * 60 * 1000 && left <= AUTO_SAVE_TO_MIN * 60 * 1000;
+        })
+        .map((e) => e.fixtureId),
+    );
+    for (const fixtureId of fixtureIds) {
+      const key = `autoSavedFx:${fixtureId}`;
       if (await getMeta(key)) continue;
       try {
-        const r = await addAutoEntry(e, undefined, { autoSaved: true });
-        await setMeta(key, new Date().toISOString());
-        if ("ok" in r) console.log(`Automaticky uložený tip ${e.id}${r.watchOnly ? " (sledovaný: " + r.reason + ")" : ""}`);
+        const lineup = await getFixtureLineupPlayerIds(fixtureId);
+        if (!lineup.homeStartIds || !lineup.awayStartIds) continue; // zostavy ešte nie sú – skúsi sa o 5 minút
+        const fixture = await getFixtureById(fixtureId);
+        if (!fixture || fixture.status !== "NS") continue;
+        const { result } = await analyzeFixture(fixture, fixture.league.id, fixture.league.season, false);
+        const at = new Date().toISOString();
+        for (const b of (result as any).bestBets ?? []) {
+          const odds = typeof b.odds === "number" && b.odds > 1 ? b.odds : null;
+          if (odds == null) continue;
+          const probability = Math.round(Number(b.probability) * 10) / 10;
+          const entry: AutoEntry = {
+            id: `${fixture.fixtureId}|${b.market}|${b.selection}`,
+            fixtureId: fixture.fixtureId,
+            leagueId: Number(fixture.league.id),
+            league: String(fixture.league.name ?? ""),
+            season: Number(fixture.league.season) || seasonOfDate(String(fixture.date).slice(0, 10)),
+            ...(fixture.homeTeam.logo ? { homeTeamLogo: fixture.homeTeam.logo } : {}),
+            ...(fixture.awayTeam.logo ? { awayTeamLogo: fixture.awayTeam.logo } : {}),
+            matchDate: fixture.date,
+            homeTeam: fixture.homeTeam.name,
+            awayTeam: fixture.awayTeam.name,
+            market: String(b.market),
+            selection: String(b.selection),
+            probability,
+            odds,
+            ...(b.strictFail || b.strictWouldFail ? { strictFail: true } : {}),
+            recordedAt: at,
+            status: "pending",
+          };
+          const r = await addAutoEntry(entry, undefined, { autoSaved: true, lineupCheck: { at, probability, ok: true } });
+          if ("ok" in r) console.log(`Automaticky uložený tip ${entry.id}${r.watchOnly ? " (sledovaný: " + r.reason + ")" : ""}`);
+        }
+        await setMeta(key, at);
       } catch (err) {
-        console.error(`Automatické uloženie tipu ${e.id} zlyhalo:`, err);
+        console.error(`Automatické uloženie tipov zápasu ${fixtureId} zlyhalo:`, err);
       }
     }
   } finally {
