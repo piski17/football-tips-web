@@ -3556,9 +3556,12 @@ async function autoSaveDueTips(): Promise<void> {
   try {
     const now = Date.now();
     const kickOf = new Map<number, number>();
-    for (const e of await listAuto()) {
-      const left = new Date(e.matchDate).getTime() - now;
-      if (e.status === "pending" && left >= AUTO_SAVE_FROM_MIN * 60 * 1000 && left <= AUTO_SAVE_TO_MIN * 60 * 1000) kickOf.set(e.fixtureId, new Date(e.matchDate).getTime());
+    // 14. 11. 2026 oprava: berú sa VŠETKY zápasy, ktoré server ~65 min pred výkopom prešiel (aj tie, kde vtedy
+    // nevyšiel žiadny tip – so zostavami sa tip môže objaviť), nielen zápasy so zapísaným tipom.
+    for (const f of await listAutoFixtures()) {
+      const kick = new Date(f.matchDate).getTime();
+      const left = kick - now;
+      if (left >= AUTO_SAVE_FROM_MIN * 60 * 1000 && left <= AUTO_SAVE_TO_MIN * 60 * 1000) kickOf.set(f.fixtureId, kick);
     }
     for (const [fixtureId, kick] of kickOf) {
       const key = `autoSavedFx:${fixtureId}`;
@@ -3573,7 +3576,27 @@ async function autoSaveDueTips(): Promise<void> {
         if (!fixture || fixture.status !== "NS") continue;
         const { result } = await analyzeFixture(fixture, fixture.league.id, fixture.league.season, false);
         const at = new Date().toISOString();
-        for (const b of (result as any).bestBets ?? []) {
+        for (const entry of autoSaveEntries(fixture, result, at)) {
+          const r = await addAutoEntry(entry, undefined, { autoSaved: true, ...(hasLineups ? { lineupCheck: { at, probability: entry.probability, ok: true } } : {}) });
+          if ("ok" in r) console.log(`Automaticky uložený tip ${entry.id}${r.watchOnly ? " (sledovaný: " + r.reason + ")" : ""}`);
+        }
+        await setMeta(key, at);
+      } catch (err) {
+        console.error(`Automatické uloženie tipov zápasu ${fixtureId} zlyhalo:`, err);
+      }
+    }
+  } finally {
+    autoSaveRunning = false;
+  }
+}
+/**
+ * Tipy zápasu na automatické uloženie: odporúčané (bestBets) AJ sledované pásmo 65 – 69 % (watchBandBets –
+ * v Tipoch dňa skupina „len sledovať“; 14. 11. 2026 oprava, predtým sa vynechávali). Len s kurzom z API.
+ */
+function autoSaveEntries(fixture: any, result: any, at: string, onlyWatchBand = false): AutoEntry[] {
+  const bets = [...(onlyWatchBand ? [] : result?.bestBets ?? []), ...(result?.watchBandBets ?? [])];
+  const out: AutoEntry[] = [];
+  for (const b of bets) {
           const odds = typeof b.odds === "number" && b.odds > 1 ? b.odds : null;
           if (odds == null) continue;
           const probability = Math.round(Number(b.probability) * 10) / 10;
@@ -3596,18 +3619,40 @@ async function autoSaveDueTips(): Promise<void> {
             recordedAt: at,
             status: "pending",
           };
-          const r = await addAutoEntry(entry, undefined, { autoSaved: true, ...(hasLineups ? { lineupCheck: { at, probability, ok: true } } : {}) });
-          if ("ok" in r) console.log(`Automaticky uložený tip ${entry.id}${r.watchOnly ? " (sledovaný: " + r.reason + ")" : ""}`);
-        }
-        await setMeta(key, at);
-      } catch (err) {
-        console.error(`Automatické uloženie tipov zápasu ${fixtureId} zlyhalo:`, err);
-      }
-    }
-  } finally {
-    autoSaveRunning = false;
+    out.push(entry);
   }
+  return out;
 }
+/**
+ * Jednorazové doplnenie (14. 11. 2026): zápasy od spustenia automatického ukladania (14. 11. 7:40), ktoré už
+ * začali, a ich tipy sa kvôli chybe vynechali (pásmo 65 – 69 % alebo zápas bez tipu ~65 min pred výkopom).
+ * Doplnia sa len do sledovaných (značka „doplnené po výkope“), do štatistík ani na Telegram nejdú.
+ */
+const AUTO_SAVE_BACKFILL_FROM = Date.parse("2026-11-14T06:40:00Z");
+async function backfillMissedAutoSaves(): Promise<void> {
+  if (await getMeta("autoSaveBackfill:2026-11-14")) return;
+  const now = Date.now();
+  for (const f of await listAutoFixtures()) {
+    const kick = new Date(f.matchDate).getTime();
+    if (!(kick >= AUTO_SAVE_BACKFILL_FROM && kick < now - 5 * 60 * 1000)) continue;
+    try {
+      const fixture = await getFixtureById(f.fixtureId);
+      if (!fixture || ["PST", "CANC", "ABD", "AWD", "WO"].includes(String(fixture.status))) continue;
+      const { result } = await analyzeFixture(fixture, fixture.league.id, fixture.league.season, false);
+      // Zápas, ktorý automatické ukladanie už prešlo, mal odporúčané tipy uložené – doplní sa len pásmo 65 – 69 %.
+      const processed = !!(await getMeta(`autoSavedFx:${f.fixtureId}`));
+      const at = new Date().toISOString();
+      for (const entry of autoSaveEntries(fixture, result, at, processed)) {
+        const r = await addAutoEntry(entry, undefined, { autoSaved: true, lateFromAnalysis: true, watchOnly: true });
+        if ("ok" in r) console.log(`Doplnený vynechaný tip ${entry.id} (sledovaný)`);
+      }
+    } catch (err) {
+      console.error(`Doplnenie vynechaných tipov zápasu ${f.fixtureId} zlyhalo:`, err);
+    }
+  }
+  await setMeta("autoSaveBackfill:2026-11-14", new Date().toISOString());
+}
+setTimeout(() => void backfillMissedAutoSaves().catch((err) => console.error("Doplnenie vynechaných tipov zlyhalo:", err)), 90 * 1000);
 setInterval(() => void autoSaveDueTips().catch((err) => console.error("Automatické ukladanie tipov zlyhalo:", err)), 5 * 60 * 1000);
 
 // Výsledky sa kontrolujú aj samy, každých 15 minút – netreba čakať na tlačidlo.
