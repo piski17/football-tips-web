@@ -310,7 +310,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
       ctx.font = font(700, bsz, H_FONT); ctx.fillStyle = accent; ctx.fillText(big, rx - 4, ry + bsz * 0.98);
       const l1 = pre ? (tips.length > 1 ? "priemerný kurz" : "kurz") : sm.done === 0 ? plural(tips.length, "tip sa ešte hrá", "tipy sa ešte hrajú", "tipov sa ešte hrá") : `Vyšlo ${sm.won} z ${sm.done}`;
       ctx.fillStyle = C.text; fit(ctx, l1, 700, story ? 34 : 30, rw, B_FONT, 16); ctx.fillText(l1, rx, ry + bsz * 0.98 + (story ? 56 : 48));
-      const l2 = pre ? `dôvera modelu ${num(avgProb, 0)} %` : sm.done === 0 ? "" : `${signed(sm.units * stake(), 2)} € pri vklade ${num(stake(), stake() % 1 ? 2 : 0)} € na tip`;
+      const l2 = pre ? `dôvera modelu ${num(avgProb, 0)} %` : sm.done === 0 ? "" : `${signed(sm.units * stake(), 2)} € pri ${num(stake(), stake() % 1 ? 2 : 0)} € na každý tip${sm.done > 1 ? ` (spolu ${num(stake() * sm.done, stake() % 1 ? 2 : 0)} €)` : ""}`;
       ctx.fillStyle = C.muted; fit(ctx, l2, 600, story ? 26 : 22, rw, B_FONT, 13); ctx.fillText(l2, rx, ry + bsz * 0.98 + (story ? 96 : 82));
 
       if (showMonth) {
@@ -446,7 +446,8 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
       lines.push("");
     }
     if (sm.done) {
-      lines.push(`💰 Deň: vyšlo ${sm.won} z ${sm.done} · ${signed(sm.units, 2)} j. (${signed(sm.units * stake(), 2)} € pri vklade ${num(stake(), stake() % 1 ? 2 : 0)} €)`);
+      // Michal 14. 11.: „−140 € pri vklade 100 €“ mätie – vklad je na KAŽDÝ tip, uvádzame aj spolu vsadené.
+      lines.push(`💰 Deň: vyšlo ${sm.won} z ${sm.done} · ${signed(sm.units, 2)} j. (${signed(sm.units * stake(), 2)} € pri ${num(stake(), stake() % 1 ? 2 : 0)} € na každý tip${sm.done > 1 ? `, vsadené spolu ${num(stake() * sm.done, stake() % 1 ? 2 : 0)} €` : ""})`);
     }
     if (sm.pending) lines.push(`⏳ Ešte sa hrá: ${sm.pending}`);
     if (false && data.month && data.month.tips) {
