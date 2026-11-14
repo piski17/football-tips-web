@@ -3462,71 +3462,119 @@ app.post("/api/auto-tips/:id/add", async (req, res) => {
       res.status(404).json({ error: "Tip sa v automatických tipoch nenašiel." });
       return;
     }
-    const tips = await listTips();
-    if (tips.some((t) => t.autoId === entry.id || (!(t.legs && t.legs.length) && t.fixtureId === entry.fixtureId && t.market === entry.market && t.selection === entry.selection))) {
-      res.status(409).json({ error: "Tento tip už v Histórii tipov je." });
+    const r = await addAutoEntry(entry, req.body?.odds);
+    if ("error" in r) {
+      res.status(r.status).json({ error: r.error });
       return;
     }
-    // Kurz: ten, ktorý server zapísal pred výkopom. Len pri trhoch bez kurzu v API (napr. fauly) ho treba zadať.
-    const typed = Number(String(req.body?.odds ?? "").replace(",", "."));
-    const odds = typeof entry.odds === "number" && entry.odds > 1 ? entry.odds : typed > 1 && typed <= 20 ? Math.round(typed * 100) / 100 : null;
-    if (odds == null) {
-      res.status(400).json({ error: "Pri tomto tipe server kurz nemá – zadaj kurz, ktorý si mal v stávkovke." });
-      return;
-    }
-    const tip: SavedTip = {
-      id: `${entry.fixtureId}-${Date.now()}`,
-      fixtureId: entry.fixtureId,
-      leagueId: entry.leagueId,
-      season: entry.season ?? seasonOfDate(entry.matchDate.slice(0, 10)),
-      leagueName: entry.league,
-      homeTeam: entry.homeTeam,
-      awayTeam: entry.awayTeam,
-      ...(entry.homeTeamLogo ? { homeTeamLogo: entry.homeTeamLogo } : {}),
-      ...(entry.awayTeamLogo ? { awayTeamLogo: entry.awayTeamLogo } : {}),
-      matchDate: entry.matchDate,
-      market: entry.market,
-      selection: entry.selection,
-      probability: entry.probability,
-      odds,
-      ...(typeof entry.odds === "number" ? { apiOdds: entry.odds } : {}),
-      autoId: entry.id,
-      modelVersion: MODEL_VERSION,
-      savedAt: new Date().toISOString(),
-      status: "pending",
-    };
-    const kick = new Date(entry.matchDate).getTime();
-    const rec = new Date(entry.recordedAt).getTime();
-    if (isFinite(kick) && isFinite(rec)) tip.hoursBeforeKickoff = Math.round(((kick - rec) / 3600000) * 10) / 10;
-    if (tipHasStartedMatch(tip)) tip.lateAdd = true;
-    else await addMeasurement(tip);
-    // Rovnaké pravidlá ako pri ostatných tipoch – čo by klientom nešlo, ide len do sledovaných.
-    const ev = (tip.probability / 100) * odds;
-    let reason = "";
-    if (entry.strictFail && STRICT_CHECK_ON) {
-      tip.strictFail = true;
-      reason = "neprešiel kontrolou 60 / 40";
-    } else if (tip.probability < WATCH_BELOW_PROBABILITY) {
-      if (tip.probability >= WATCH_BAND_MIN_PROBABILITY) tip.watchBand = true;
-      reason = `dôvera pod ${WATCH_BELOW_PROBABILITY} %`;
-    } else if (tip.probability > MAX_PROBABILITY) reason = `dôvera nad ${MAX_PROBABILITY} %`;
-    else if (typeof entry.odds !== "number" && isFarLineTip(tip.market, tip.probability)) reason = "rohy/karty – príliš vzdialená hranica";
-    else if (odds < MIN_ODDS) reason = `kurz pod ${String(MIN_ODDS).replace(".", ",")}`;
-    else if (ev < MIN_EXPECTED_VALUE) reason = "hodnota pod +5 %";
-    else if (ev > SUSPICIOUS_EXPECTED_VALUE) reason = "hodnota nad +25 %";
-    // 4. 11. 2026 (Michal): tip doplnený po výkope len do sledovaných – 5. 11. 2026 (Michal) ZRUŠENÉ:
-    // ak prejde pravidlami, pridá sa normálne do Histórie tipov (so značkou lateAdd).
-    if (reason) tip.watchOnly = true;
-    if (await applySameTypeRule(tip)) reason = "zápas už má tip toho istého typu";
-    if (BAND_65_TRIAL && !tip.watchOnly && typeof tip.probability === "number" && tip.probability < 70) tip.band65Trial = true;
-    await saveTip(tip);
-    // Odohraný zápas sa vyhodnotí hneď (inak do 15 minút sám).
-    if (tip.lateAdd) await checkPendingResults().catch(() => {});
-    res.json({ ok: true, watchOnly: tip.watchOnly === true, reason, lateAdd: tip.lateAdd === true });
+    res.json(r);
   } catch (err: any) {
     res.status(502).json({ error: errText(err) });
   }
 });
+
+/** Pridá automaticky zapísaný tip do Histórie tipov (rovnaké pravidlá ako pri ručnom uložení). */
+async function addAutoEntry(
+  entry: AutoEntry,
+  typedOddsRaw?: unknown,
+  extra: Partial<SavedTip> = {},
+): Promise<{ status: number; error: string } | { ok: true; watchOnly: boolean; reason: string; lateAdd: boolean }> {
+  const tips = await listTips();
+  if (tips.some((t) => t.autoId === entry.id || (!(t.legs && t.legs.length) && t.fixtureId === entry.fixtureId && t.market === entry.market && t.selection === entry.selection))) {
+    return { status: 409, error: "Tento tip už v Histórii tipov je." };
+  }
+  // Kurz: ten, ktorý server zapísal pred výkopom. Len pri trhoch bez kurzu v API (napr. fauly) ho treba zadať.
+  const typed = Number(String(typedOddsRaw ?? "").replace(",", "."));
+  const odds = typeof entry.odds === "number" && entry.odds > 1 ? entry.odds : typed > 1 && typed <= 20 ? Math.round(typed * 100) / 100 : null;
+  if (odds == null) return { status: 400, error: "Pri tomto tipe server kurz nemá – zadaj kurz, ktorý si mal v stávkovke." };
+  const tip: SavedTip = {
+    id: `${entry.fixtureId}-${Date.now()}`,
+    fixtureId: entry.fixtureId,
+    leagueId: entry.leagueId,
+    season: entry.season ?? seasonOfDate(entry.matchDate.slice(0, 10)),
+    leagueName: entry.league,
+    homeTeam: entry.homeTeam,
+    awayTeam: entry.awayTeam,
+    ...(entry.homeTeamLogo ? { homeTeamLogo: entry.homeTeamLogo } : {}),
+    ...(entry.awayTeamLogo ? { awayTeamLogo: entry.awayTeamLogo } : {}),
+    matchDate: entry.matchDate,
+    market: entry.market,
+    selection: entry.selection,
+    probability: entry.probability,
+    odds,
+    ...(typeof entry.odds === "number" ? { apiOdds: entry.odds } : {}),
+    autoId: entry.id,
+    modelVersion: MODEL_VERSION,
+    savedAt: new Date().toISOString(),
+    status: "pending",
+    ...extra,
+  };
+  const kick = new Date(entry.matchDate).getTime();
+  const rec = new Date(entry.recordedAt).getTime();
+  if (isFinite(kick) && isFinite(rec)) tip.hoursBeforeKickoff = Math.round(((kick - rec) / 3600000) * 10) / 10;
+  if (tipHasStartedMatch(tip)) tip.lateAdd = true;
+  else await addMeasurement(tip);
+  // Rovnaké pravidlá ako pri ostatných tipoch – čo by klientom nešlo, ide len do sledovaných.
+  const ev = (tip.probability / 100) * odds;
+  let reason = "";
+  if (entry.strictFail && STRICT_CHECK_ON) {
+    tip.strictFail = true;
+    reason = "neprešiel kontrolou 60 / 40";
+  } else if (tip.probability < WATCH_BELOW_PROBABILITY) {
+    if (tip.probability >= WATCH_BAND_MIN_PROBABILITY) tip.watchBand = true;
+    reason = `dôvera pod ${WATCH_BELOW_PROBABILITY} %`;
+  } else if (tip.probability > MAX_PROBABILITY) reason = `dôvera nad ${MAX_PROBABILITY} %`;
+  else if (typeof entry.odds !== "number" && isFarLineTip(tip.market, tip.probability)) reason = "rohy/karty – príliš vzdialená hranica";
+  else if (odds < MIN_ODDS) reason = `kurz pod ${String(MIN_ODDS).replace(".", ",")}`;
+  else if (ev < MIN_EXPECTED_VALUE) reason = "hodnota pod +5 %";
+  else if (ev > SUSPICIOUS_EXPECTED_VALUE) reason = "hodnota nad +25 %";
+  // 4. 11. 2026 (Michal): tip doplnený po výkope len do sledovaných – 5. 11. 2026 (Michal) ZRUŠENÉ:
+  // ak prejde pravidlami, pridá sa normálne do Histórie tipov (so značkou lateAdd).
+  if (reason) tip.watchOnly = true;
+  if (await applySameTypeRule(tip)) reason = "zápas už má tip toho istého typu";
+  if (BAND_65_TRIAL && !tip.watchOnly && typeof tip.probability === "number" && tip.probability < 70) tip.band65Trial = true;
+  await saveTip(tip);
+  // Odohraný zápas sa vyhodnotí hneď (inak do 15 minút sám).
+  if (tip.lateAdd) await checkPendingResults().catch(() => {});
+  return { ok: true, watchOnly: tip.watchOnly === true, reason, lateAdd: tip.lateAdd === true };
+}
+
+/**
+ * Automatické ukladanie (14. 11. 2026, Michal: „keby som náhodou zabudol pridať tip“): 5 – 30 minút pred výkopom
+ * server sám uloží do Histórie tipov každý tip, ktorý zapísal pri automatickej analýze (~65 min pred výkopom)
+ * a ktorý v Histórii ešte nie je – klientom alebo do sledovaných podľa rovnakých pravidiel ako doteraz.
+ * Každý tip sa skúsi len raz (ak ho Michal zmaže, znova sa nepridá). Tipy bez kurzu v API (kurz treba zadať ručne)
+ * sa automaticky neukladajú. Do Telegramu sa nič neposiela.
+ */
+const AUTO_SAVE_FROM_MIN = 5;
+const AUTO_SAVE_TO_MIN = 30;
+let autoSaveRunning = false;
+async function autoSaveDueTips(): Promise<void> {
+  if (autoSaveRunning) return;
+  autoSaveRunning = true;
+  try {
+    const now = Date.now();
+    const due = (await listAuto()).filter((e) => {
+      const left = new Date(e.matchDate).getTime() - now;
+      return e.status === "pending" && left >= AUTO_SAVE_FROM_MIN * 60 * 1000 && left <= AUTO_SAVE_TO_MIN * 60 * 1000;
+    });
+    for (const e of due) {
+      if (!(typeof e.odds === "number" && e.odds > 1)) continue;
+      const key = `autoSaved:${e.id}`;
+      if (await getMeta(key)) continue;
+      try {
+        const r = await addAutoEntry(e, undefined, { autoSaved: true });
+        await setMeta(key, new Date().toISOString());
+        if ("ok" in r) console.log(`Automaticky uložený tip ${e.id}${r.watchOnly ? " (sledovaný: " + r.reason + ")" : ""}`);
+      } catch (err) {
+        console.error(`Automatické uloženie tipu ${e.id} zlyhalo:`, err);
+      }
+    }
+  } finally {
+    autoSaveRunning = false;
+  }
+}
+setInterval(() => void autoSaveDueTips().catch((err) => console.error("Automatické ukladanie tipov zlyhalo:", err)), 5 * 60 * 1000);
 
 // Výsledky sa kontrolujú aj samy, každých 15 minút – netreba čakať na tlačidlo.
 setInterval(() => void checkPendingResults().catch((err) => console.error("Automatická kontrola výsledkov zlyhala:", err)), 15 * 60 * 1000);

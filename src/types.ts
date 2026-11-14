@@ -319,6 +319,8 @@ export interface SavedTip {
   lateFromAnalysis?: boolean;
   /** Id automatického tipu, z ktorého bol tip doplnený. */
   autoId?: string;
+  /** 14. 11. 2026: tip uložil server sám 5 – 30 min pred výkopom (Michal ho nestihol uložiť). */
+  autoSaved?: boolean;
   /** Tip obnovený z denného súhrnu (18. 10. 2026) – dôvera modelu nie je známa, ak nebola v texte tipu. */
   restoredFromDaily?: boolean;
   probabilityEstimated?: boolean;
