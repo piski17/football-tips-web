@@ -395,7 +395,7 @@
     let y = story ? 220 : 112;
     header(ctx, W, y, pre ? "TODAY'S SUREBETS" : "DAILY RESULTS", pre ? "stone" : "good");
     const n = list.length;
-    const avg = n ? list.reduce((t, e) => t + e.maxMargin, 0) / n : 0;
+    const avg = n ? list.reduce((t, e) => t + rMargin(e), 0) / n : 0; // zisk pri vkladoch na celé eurá
     // Michal 13. 11. 15:06: „Surebets of the day“, dátum a Guaranteed profit spolu v jednom novom bloku hore
     // (rovnaký pri jednom tikete aj pri viacerých).
     const pages = dayPages(list, fmtKey);
@@ -467,7 +467,7 @@
     const pill = (sd, other, px, py, extra) => {
       const ix = 16 * Math.min(k, 1.4);
       // Michal 13. 11.: v pravom dolnom rohu každej stávky zhodnotenie, ak vyjde práve táto stávka.
-      extra = `+${n2((sd.odd * stakeOf(sd.odd, other) / 100 - 1) * 100)}%`;
+      extra = `+${n2((sd.odd * stakeR(sd.odd, other) / 100 - 1) * 100)}%`;
       if (stack) {
         const iw = pillW - 2 * ix, mk = market(e0.market), lb = label(sd.label);
         let ew = 0;
@@ -478,11 +478,11 @@
         ctx.fillStyle = C.good; ctx.font = font(800, f(27), H_FONT); ctx.fillText(n2(sd.odd), px + ix, py + f(51));
         const ow = ctx.measureText(n2(sd.odd)).width;
         ctx.fillStyle = C.stone; fit(ctx, sd.book, 700, f(21), iw - ow - 12, B_FONT, 14); ctx.fillText(sd.book, px + ix + ow + 12, py + f(51));
-        ctx.fillStyle = C.muted; fit(ctx, `Stake €${n2(stakeOf(sd.odd, other))}`, 600, Math.round(18 * Math.min(k, 1.8)), iw - ew, B_FONT, 12); ctx.fillText(`Stake €${n2(stakeOf(sd.odd, other))}`, px + ix, py + f(74));
+        ctx.fillStyle = C.muted; fit(ctx, `Stake €${stakeR(sd.odd, other)}`, 600, Math.round(18 * Math.min(k, 1.8)), iw - ew, B_FONT, 12); ctx.fillText(`Stake €${stakeR(sd.odd, other)}`, px + ix, py + f(74));
         return;
       }
       const mk = market(e0.market);
-      const st = `Stake €${n2(stakeOf(sd.odd, other))}`;
+      const st = `Stake €${stakeR(sd.odd, other)}`;
       // riadok 1: trh + tip vľavo, vklad vpravo; riadok 2: kurz + stávkovka vľavo, zhodnotenie vpravo dole
       ctx.fillStyle = C.muted; ctx.font = font(600, fs(17), B_FONT); ctx.textAlign = "right"; ctx.fillText(st, px + pillW - ix, py + f(22)); const sw = ctx.measureText(st).width + 12; ctx.textAlign = "left";
       const ml = `${mk} - ${label(sd.label)}`;
@@ -565,6 +565,10 @@
   }
   /** 13. 11. 2026 (Michal): jednoduchý zápis bez „@“ a „+“ – stávkovka: tip – kurz – vklad. */
   const stakeOf = (odd, other) => (100 * (1 / odd)) / (1 / odd + 1 / other);
+  /** 15. 11. 2026 (Michal „prerob to“): vklady na obrázkoch na celé eurá (stávkovky menej obmedzujú účty);
+   *  vklad strany = zaokrúhlený vklad, druhá strana = 100 − ten vklad; zisk = horší z dvoch výsledkov. */
+  const stakeR = (odd, other) => { const a = Math.round(stakeOf(odd, other)); const b = Math.round(stakeOf(other, odd)); return a + b === 100 ? a : (odd >= other ? 100 - b : a); };
+  const rMargin = (e) => { const [a, b] = e.sides; const sa = stakeR(a.odd, b.odd), sb = 100 - sa; return Math.min(a.odd * sa, b.odd * sb) / 100 - 1; };
   const betLine = (icon, sd, other, res = "") => `${icon} ${sd.book}: ${label(sd.label)} – odds ${n2(sd.odd)} – stake €${n2(stakeOf(sd.odd, other))}${res}`;
   /** 13. 11. 2026 (Michal): každá ďalšia dvojica rozpísaná rovnako ako hlavná – čo kde podať a koľko vsadiť. */
   const altPair = (s, c, k) => [
@@ -608,7 +612,7 @@
   function dayCaption(day, list, pre = false) {
     list = [...list].sort((a, b) => b.maxMargin - a.maxMargin);
     const n = list.length;
-    const avg = n ? list.reduce((t, e) => t + e.maxMargin, 0) / n : 0;
+    const avg = n ? list.reduce((t, e) => t + rMargin(e), 0) / n : 0; // zisk pri vkladoch na celé eurá
     // 13. 11. 2026 (Michal): súhrnný riadok až pod tipmi (spolu so ziskom), hore len dátum.
     // Michal 13. 11.: prázdny riadok pod dátumom, nad Profit a pod Profit.
     const lines = [`📅 ${pre ? "Today's surebets" : "Surebets"} · ${dayEn(day)}`, ""];
