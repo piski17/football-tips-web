@@ -58,7 +58,7 @@ import {
   setTelegramWebhook,
   notifyAdminExpiringSubscribers,
   sendCustomMessage,
-  sendTipResultToTelegram, notifyAdmin, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite, sendMemberMessage, isMemberChannel, memberChannelConfigured, sendPackageLowReminder, freeChannelConfigured, sendFreeResult, sendFreeDaySummary, buildFreeDaySummaryText, sendFreeHistoryMessage, deleteTelegramMessages as deleteTgMessages, setTelegramChannelsOn, telegramChannelsOn, tipUnits, minOddsFor, FreeBalance, normalizeTelegramUrl } from "./telegram";
+  sendTipResultToTelegram, notifyAdmin, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite, sendMemberMessage, isMemberChannel, memberChannelConfigured, sendPackageLowReminder, freeChannelConfigured, sendFreeResult, sendFreeDaySummary, buildFreeDaySummaryText, sendFreeHistoryMessage, deleteTelegramMessages as deleteTgMessages, setTelegramChannelsOn, telegramChannelsOn, setTelegramFreeOn, telegramFreeOn, tipUnits, minOddsFor, FreeBalance, normalizeTelegramUrl } from "./telegram";
 import { paymentsEnabled, isTerm, sellableTerm, SellableTerm, SELLABLE_TERMS, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, deletePayment, Payment, termLabel, tierName, addActiveMonths, SUMMER_PAUSE } from "./payments";
 import { payBySquareString } from "./payBySquare";
 import QRCode from "qrcode";
@@ -1155,7 +1155,7 @@ app.post("/api/tips", async (req, res) => {
     await saveTip(tip);
     // Odohraný zápas sa vyhodnotí hneď (inak do 15 minút sám).
     if (lateFromAnalysis) await checkPendingResults().catch(() => {});
-    res.json({ ok: true, telegramAvailable: isTelegramEnabled() && telegramChannelsOn() && !lateFromAnalysis, watchOnly: tip.watchOnly === true, sameTypeMoved: tip.sameTypeMoved === true, lateAdd: lateFromAnalysis });
+    res.json({ ok: true, telegramAvailable: isTelegramEnabled() && telegramFreeOn() && !lateFromAnalysis, watchOnly: tip.watchOnly === true, sameTypeMoved: tip.sameTypeMoved === true, lateAdd: lateFromAnalysis });
   } catch (err: any) {
     res.status(502).json({ error: errText(err) });
   }
@@ -1191,7 +1191,7 @@ app.post("/api/tips/:id/telegram", async (req, res) => {
       res.status(400).json({ error: "Telegram nie je na serveri nastavený." });
       return;
     }
-    if (!telegramChannelsOn()) {
+    if (!telegramChannelsOn() && !(telegramFreeOn() && req.body?.target === "free")) {
       res.status(400).json({ error: CHANNELS_OFF_ERROR });
       return;
     }
@@ -1214,11 +1214,22 @@ void getMeta(CHANNELS_ON_META)
   .then((v) => setTelegramChannelsOn(v === "1"))
   .catch((err) => console.error("Nastavenie Telegram kanálov sa nenačítalo (ostáva vypnuté):", err));
 
+// Kanál zadarmo (15. 11. 2026, Michal: „od dnes posielať tipy do FREE“): vlastný vypínač, bez nastavenia = zapnutý.
+// Zapnutý = tipy pred zápasom (postFreeTips) aj výsledky a ranné vyhodnotenie (postFreeResults).
+const FREE_ON_META = "telegramFreeOn";
+const FREE_DEFAULT_RESUMED_AT = Date.parse("2026-11-15T12:00:00Z");
+const freeIsOn = (v: string | null) => v !== "0";
+void getMeta(FREE_ON_META)
+  .then((v) => setTelegramFreeOn(freeIsOn(v)))
+  .catch((err) => console.error("Nastavenie kanála zadarmo sa nenačítalo (ostáva vypnutý):", err));
+
 app.get("/api/telegram/channels", async (_req, res) => {
   try {
     const on = (await getMeta(CHANNELS_ON_META)) === "1";
+    const free = freeIsOn(await getMeta(FREE_ON_META));
     setTelegramChannelsOn(on);
-    res.json({ on });
+    setTelegramFreeOn(free);
+    res.json({ on, free });
   } catch (err: any) {
     res.status(502).json({ error: errText(err) });
   }
@@ -1226,12 +1237,19 @@ app.get("/api/telegram/channels", async (_req, res) => {
 
 app.post("/api/telegram/channels", async (req, res) => {
   try {
-    const on = req.body?.on === true;
-    const wasOn = telegramChannelsOn();
-    await setMeta(CHANNELS_ON_META, on ? "1" : "0");
-    if (on && !wasOn) await setMeta(CHANNELS_RESUMED_META, new Date().toISOString());
-    setTelegramChannelsOn(on);
-    res.json({ on });
+    const wasFree = telegramFreeOn();
+    if (typeof req.body?.free === "boolean") {
+      await setMeta(FREE_ON_META, req.body.free ? "1" : "0");
+      setTelegramFreeOn(req.body.free);
+    }
+    if (typeof req.body?.on === "boolean") {
+      await setMeta(CHANNELS_ON_META, req.body.on ? "1" : "0");
+      setTelegramChannelsOn(req.body.on);
+    }
+    if (telegramFreeOn() && !wasFree) await setMeta(CHANNELS_RESUMED_META, new Date().toISOString());
+    const on = telegramChannelsOn();
+    const free = freeIsOn(await getMeta(FREE_ON_META));
+    res.json({ on, free });
   } catch (err: any) {
     res.status(502).json({ error: errText(err) });
   }
@@ -1352,7 +1370,7 @@ app.post("/api/telegram/send-tips", async (req, res) => {
       res.status(400).json({ error: "Telegram nie je na serveri nastavený." });
       return;
     }
-    if (!telegramChannelsOn()) {
+    if (!telegramChannelsOn() && !(telegramFreeOn() && req.body?.target === "free")) {
       res.status(400).json({ error: CHANNELS_OFF_ERROR });
       return;
     }
@@ -1400,7 +1418,7 @@ app.post("/api/tips/:id/telegram-result", async (req, res) => {
       res.status(400).json({ error: "Telegram nie je na serveri nastavený." });
       return;
     }
-    if (!telegramChannelsOn()) {
+    if (!telegramChannelsOn() && !(telegramFreeOn() && req.body?.target === "free")) {
       res.status(400).json({ error: CHANNELS_OFF_ERROR });
       return;
     }
@@ -1792,7 +1810,7 @@ app.post("/api/telegram/tips-coming", async (req, res) => {
       res.status(400).json({ error: "Telegram nie je na serveri nastavený." });
       return;
     }
-    if (!telegramChannelsOn()) {
+    if (!telegramChannelsOn() && !(telegramFreeOn() && req.body?.target === "free")) {
       res.status(400).json({ error: CHANNELS_OFF_ERROR });
       return;
     }
@@ -1813,7 +1831,7 @@ app.post("/api/telegram/no-tip-today", async (req, res) => {
       res.status(400).json({ error: "Telegram nie je na serveri nastavený." });
       return;
     }
-    if (!telegramChannelsOn()) {
+    if (!telegramChannelsOn() && !(telegramFreeOn() && req.body?.target === "free")) {
       res.status(400).json({ error: CHANNELS_OFF_ERROR });
       return;
     }
@@ -1885,7 +1903,7 @@ app.post("/api/telegram/daily-results", async (req, res) => {
       res.status(400).json({ error: "Telegram nie je na serveri nastavený." });
       return;
     }
-    if (!telegramChannelsOn()) {
+    if (!telegramChannelsOn() && !(telegramFreeOn() && req.body?.target === "free")) {
       res.status(400).json({ error: CHANNELS_OFF_ERROR });
       return;
     }
@@ -1926,7 +1944,7 @@ app.post("/api/telegram/weekly-report", async (req, res) => {
       res.status(400).json({ error: "Telegram nie je na serveri nastavený." });
       return;
     }
-    if (!telegramChannelsOn()) {
+    if (!telegramChannelsOn() && !(telegramFreeOn() && req.body?.target === "free")) {
       res.status(400).json({ error: CHANNELS_OFF_ERROR });
       return;
     }
@@ -2109,7 +2127,7 @@ app.post("/api/telegram/monthly-report", async (req, res) => {
       res.status(400).json({ error: "Telegram nie je na serveri nastavený." });
       return;
     }
-    if (!telegramChannelsOn()) {
+    if (!telegramChannelsOn() && !(telegramFreeOn() && req.body?.target === "free")) {
       res.status(400).json({ error: CHANNELS_OFF_ERROR });
       return;
     }
@@ -3200,7 +3218,7 @@ const FREE_RESULTS_MAX_PER_RUN = 10; // pri väčšom počte pošle zvyšok o 15
 let freeResultsRunning = false;
 
 async function postFreeResults(): Promise<void> {
-  if (!telegramChannelsOn() || process.env.TELEGRAM_FREE_RESULTS === "false" || !freeChannelConfigured() || freeResultsRunning) return;
+  if (!telegramFreeOn() || process.env.TELEGRAM_FREE_RESULTS === "false" || !freeChannelConfigured() || freeResultsRunning) return;
   freeResultsRunning = true;
   try {
     const counted = statsTips(await listTips())
@@ -3217,7 +3235,7 @@ async function postFreeResults(): Promise<void> {
     });
     // Po opätovnom zapnutí kanálov (15. 11. 2026) sa výsledky z obdobia vypnutia dodatočne neposielajú –
     // rátajú sa len do bilancie, aby kanál nezaplavili desiatky starých správ.
-    const resumeAt = Date.parse((await getMeta(CHANNELS_RESUMED_META).catch(() => null)) ?? "") || 0;
+    const resumeAt = Date.parse((await getMeta(CHANNELS_RESUMED_META).catch(() => null)) ?? "") || FREE_DEFAULT_RESUMED_AT;
     const old = (t: SavedTip) => new Date(t.matchDate).getTime() < resumeAt;
     const posted = counted.filter((t) => t.freeResultSent || (done(t) && old(t)));
     let sentNow = 0;
@@ -3249,6 +3267,51 @@ async function postFreeResults(): Promise<void> {
     freeResultsRunning = false;
   }
 }
+
+/**
+ * Tipy pred zápasom do kanála zadarmo (15. 11. 2026, Michal): každý tip pre klientov (ako na webe – bez
+ * sledovaných, duplicít a tipov doplnených po výkope), ktorý ešte nebol vo FREE a zápas ešte nezačal,
+ * pošle server sám – podľa FREE_TIPS_MODE (Michal 15. 11.: 1 tip denne). Beží každých 5 minút.
+ */
+// Koľko tipov pred zápasom ide do FREE: "all" = všetky, "one" = 1 tip denne, "none" = len výsledky.
+const FREE_TIPS_MODE: "all" | "one" | "none" = "one";
+let freeTipsRunning = false;
+async function postFreeTips(): Promise<void> {
+  if (!telegramFreeOn() || !freeChannelConfigured() || freeTipsRunning) return;
+  freeTipsRunning = true;
+  try {
+    const all = await listTips();
+    const now = Date.now();
+    const due = statsTips(all)
+      .filter((t) => !t.watchOnly && !t.lateAdd && t.status === "pending" && !t.sentFree)
+      .filter((t) => !(t.telegramMessages ?? []).some((m) => isFreeChat(m.chatId)))
+      .filter((t) => new Date(t.matchDate).getTime() > now + 60 * 1000)
+      .sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime());
+    if (FREE_TIPS_MODE === "none") return;
+    if (FREE_TIPS_MODE === "one") {
+      // 1 tip denne: keď sa blíži výkop prvého tipu dňa (do 35 min), pošle sa najsilnejší z tipov s výkopom
+      // v najbližších 35 minútach. Ostatné tipy dňa ostávajú len pre členov.
+      const soon = due.filter((t) => new Date(t.matchDate).getTime() - now <= 35 * 60 * 1000);
+      const byDay = new Map<string, SavedTip[]>();
+      for (const t of soon) byDay.set(dayKeySk(new Date(t.matchDate)), [...(byDay.get(dayKeySk(new Date(t.matchDate))) ?? []), t]);
+      for (const [day, list] of byDay) {
+        const key = `freeTipOfDay:${day}`;
+        if (await getMeta(key)) continue;
+        if (all.some((t) => t.sentFree && dayKeySk(new Date(t.matchDate)) === day)) continue;
+        const best = [...list].sort((a, b) => b.probability - a.probability || (b.odds ?? 0) - (a.odds ?? 0))[0];
+        if ((await sendSavedTip(best, all, "free")) > 0) await setMeta(key, best.id);
+      }
+      return;
+    }
+    for (const tip of due.slice(0, 10)) {
+      if ((await sendSavedTip(tip, all, "free")) === 0) break; // Telegram neodpovedá – skúsi sa o 5 minút
+      await new Promise((r) => setTimeout(r, 3000));
+    }
+  } finally {
+    freeTipsRunning = false;
+  }
+}
+setInterval(() => void postFreeTips().catch((err) => console.error("Tipy do kanála zadarmo zlyhali:", err)), 5 * 60 * 1000);
 
 /** Skutočné tipy a tikety (to, čo vidia členovia a štatistiky). */
 async function settlePendingTips(): Promise<void> {

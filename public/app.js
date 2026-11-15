@@ -5129,39 +5129,43 @@ async function openFreeHistory() {
   });
 }
 
-// ---- Hlavný vypínač Telegram kanálov (15. 11. 2026, Michal: vypnuté, kým nebude 100 tipov) ----
+// ---- Vypínače Telegram kanálov (15. 11. 2026, Michal: členské vypnuté, kým nebude 100 tipov; FREE od 15. 11. zapnutý) ----
 (function wireTelegramChannels() {
-  const btn = document.getElementById("tgChannelsBtn");
-  const state = document.getElementById("tgChannelsState");
-  if (!btn || !state) return;
-  let on = false;
+  const parts = [
+    { key: "free", btn: document.getElementById("tgFreeBtn"), state: document.getElementById("tgFreeState"), name: "kanál zadarmo (FREE)" },
+    { key: "on", btn: document.getElementById("tgChannelsBtn"), state: document.getElementById("tgChannelsState"), name: "členské kanály (Členovia, Chat členov)" },
+  ].filter((p) => p.btn && p.state);
+  if (!parts.length) return;
+  let cur = { on: false, free: false };
   const show = () => {
-    state.textContent = on ? "zapnuté" : "vypnuté";
-    state.style.color = on ? "var(--green, #3fb27f)" : "var(--red, #e5484d)";
-    state.style.fontStyle = "normal";
+    for (const p of parts) {
+      const on = cur[p.key] === true;
+      p.state.textContent = on ? "zapnuté" : "vypnuté";
+      p.state.style.color = on ? "var(--green, #3fb27f)" : "var(--red, #e5484d)";
+      p.state.style.fontStyle = "normal";
+    }
   };
   fetch("/api/telegram/channels", { cache: "no-store" })
     .then((r) => r.json())
-    .then((d) => { on = d.on === true; show(); })
-    .catch(() => { state.textContent = "?"; });
-  btn.addEventListener("click", async () => {
-    const next = !on;
-    const msg = next
-      ? "Zapnúť posielanie do Telegram kanálov? Tipy a nové výsledky pôjdu znova do kanálov (výsledky z obdobia vypnutia sa dodatočne neposielajú)."
-      : "Vypnúť posielanie do všetkých Telegram kanálov TipRadaru?";
-    if (!window.confirm(msg)) return;
-    btn.disabled = true;
-    try {
-      const d = await postJson("/api/telegram/channels", { on: next });
-      on = d.on === true;
-      show();
-      showToast(on ? "Telegram kanály zapnuté." : "Telegram kanály vypnuté.");
-    } catch (err) {
-      showToast(`Nepodarilo sa: ${err.message}`);
-    } finally {
-      btn.disabled = false;
-    }
-  });
+    .then((d) => { cur = { on: d.on === true, free: d.free === true }; show(); })
+    .catch(() => parts.forEach((p) => (p.state.textContent = "?")));
+  for (const p of parts) {
+    p.btn.addEventListener("click", async () => {
+      const next = !(cur[p.key] === true);
+      if (!window.confirm(`${next ? "Zapnúť" : "Vypnúť"} ${p.name}?${next ? " Výsledky z obdobia vypnutia sa dodatočne neposielajú." : ""}`)) return;
+      p.btn.disabled = true;
+      try {
+        const d = await postJson("/api/telegram/channels", { [p.key]: next });
+        cur = { on: d.on === true, free: d.free === true };
+        show();
+        showToast(`${p.name[0].toUpperCase() + p.name.slice(1)}: ${next ? "zapnuté" : "vypnuté"}.`);
+      } catch (err) {
+        showToast(`Nepodarilo sa: ${err.message}`);
+      } finally {
+        p.btn.disabled = false;
+      }
+    });
+  }
 })();
 
 // ---- Trhy v ligách (30. 10. 2026) ----

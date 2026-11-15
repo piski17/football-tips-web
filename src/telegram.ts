@@ -188,13 +188,22 @@ export function setTelegramChannelsOn(on: boolean): void {
 export function telegramChannelsOn(): boolean {
   return channelsOn;
 }
+/** Kanál zadarmo má vlastný vypínač (15. 11. 2026, Michal: „od dnes posielať tipy do FREE“). */
+let freeOn = false;
+export function setTelegramFreeOn(on: boolean): void {
+  freeOn = on;
+}
+export function telegramFreeOn(): boolean {
+  return freeOn || channelsOn;
+}
 function isChannelChat(chatId: string | number): boolean {
   const id = String(chatId);
   return [TELEGRAM_CHAT_ID_PREMIUM, TELEGRAM_CHAT_ID_VIP, TELEGRAM_CHAT_ID_VIPCHAT, TELEGRAM_CHAT_ID_FREE].some((c) => !!c && String(c) === id);
 }
 
 async function sendToChat(chatId: string, text: string, force = false): Promise<number | null> {
-  if (!channelsOn && !force && isChannelChat(chatId)) {
+  const freeAllowed = freeOn && !!TELEGRAM_CHAT_ID_FREE && String(chatId) === String(TELEGRAM_CHAT_ID_FREE);
+  if (!channelsOn && !force && !freeAllowed && isChannelChat(chatId)) {
     console.log("Telegram kanály sú vypnuté – správa do kanála sa neposiela.");
     return null;
   }
