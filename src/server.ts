@@ -1130,6 +1130,11 @@ app.post("/api/tips", async (req, res) => {
     } else if (tip.strictFail) {
       tip.strictFail = undefined;
     }
+    // Kontrola vzájomných zápasov (15. 11. 2026, Michal): vo väčšine vzájomných zápasov by tip neprešiel → len sledovať.
+    if (typeof tip.h2hAgainst === "string" && tip.h2hAgainst && !(tip.legs && tip.legs.length)) {
+      tip.watchOnly = true;
+      tip.strongOfDay = undefined;
+    } else tip.h2hAgainst = undefined;
     // Ručne doplnený tip prejde rovnakou kontrolou ako tipy z modelu (dôvera, kurz, hodnota) –
     // ak by ho model nepustil, uloží sa len medzi sledované.
     if (tip.manualEntry && !(tip.legs && tip.legs.length) && !tip.probabilityEstimated && typeof tip.probability === "number" && typeof tip.odds === "number") {
@@ -3472,7 +3477,7 @@ async function notifyAdminClientTips(fixture: any, bets: any[]): Promise<void> {
   if (!ADMIN_CLIENT_TIP_ALERTS) return;
   const ok = bets.filter(
     (b) =>
-      !b.strictFail && !b.watchBand && !b.watchOnly &&
+      !b.strictFail && !b.watchBand && !b.watchOnly && !b.h2hAgainst &&
       typeof b.probability === "number" && b.probability >= WATCH_BELOW_PROBABILITY && b.probability <= MAX_PROBABILITY &&
       (typeof b.odds === "number" && b.odds > 1 ? b.odds >= MIN_ODDS : typeof b.minOdds === "number"),
   );
@@ -3530,6 +3535,7 @@ async function runAutoAnalysis(): Promise<void> {
           probability: Math.round(Number(b.probability) * 10) / 10,
           odds: typeof b.odds === "number" && b.odds > 1 ? b.odds : null,
           ...(b.strictFail || b.strictWouldFail ? { strictFail: true } : {}),
+          ...(b.h2hAgainst ? { h2hAgainst: String(b.h2hAgainst) } : {}),
           recordedAt,
           status: "pending" as const,
         }));
@@ -3683,6 +3689,9 @@ async function addAutoEntry(
   if (entry.strictFail && STRICT_CHECK_ON) {
     tip.strictFail = true;
     reason = "neprešiel kontrolou 60 / 40";
+  } else if (entry.h2hAgainst) {
+    tip.h2hAgainst = entry.h2hAgainst;
+    reason = `vzájomné zápasy – ${entry.h2hAgainst}`;
   } else if (tip.probability < WATCH_BELOW_PROBABILITY) {
     if (tip.probability >= WATCH_BAND_MIN_PROBABILITY) tip.watchBand = true;
     reason = `dôvera pod ${WATCH_BELOW_PROBABILITY} %`;
@@ -3779,6 +3788,7 @@ function autoSaveEntries(fixture: any, result: any, at: string, onlyWatchBand = 
             probability,
             odds,
             ...(b.strictFail || b.strictWouldFail ? { strictFail: true } : {}),
+            ...(b.h2hAgainst ? { h2hAgainst: String(b.h2hAgainst) } : {}),
             recordedAt: at,
             status: "pending",
           };

@@ -38,6 +38,8 @@ export interface AutoEntry {
   odds: number | null;
   /** Tip by neprešiel kontrolou 60 / 40 – klientom by nešiel, len do sledovaných. */
   strictFail?: boolean;
+  /** Kontrola vzájomných zápasov (15. 11. 2026) – len do sledovaných. */
+  h2hAgainst?: string;
   recordedAt: string;
   status: "pending" | "won" | "lost" | "void";
 }

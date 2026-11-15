@@ -1281,7 +1281,23 @@ export async function getHeadToHeadStats(
       setCached(cacheKey, stats, 7 * 24 * 60 * 60 * 1000);
     }
     const poss = stats.possession?.find((p) => p.team === currentHomeTeamName)?.value ?? null;
+    // Štatistiky tímov podľa mena (vo vzájomnom zápase mohol byť dnešný domáci tím hosťom).
+    const side = (list: { team: string; value: number }[] | null | undefined, home: boolean): number | null => {
+      if (!list || list.length !== 2) return null;
+      const h = list.find((x) => x.team === currentHomeTeamName);
+      if (!h) return null;
+      const o = list.find((x) => x !== h);
+      return home ? h.value : o ? o.value : null;
+    };
     out.push({
+      homeCorners: side(stats.cornersByTeam, true),
+      awayCorners: side(stats.cornersByTeam, false),
+      homeCards: side(stats.cardsByTeam, true),
+      awayCards: side(stats.cardsByTeam, false),
+      homeShots: side(stats.shotsByTeam, true),
+      awayShots: side(stats.shotsByTeam, false),
+      homeFouls: side(stats.foulsByTeam, true),
+      awayFouls: side(stats.foulsByTeam, false),
       corners: stats.corners,
       cards: stats.cards,
       shotsOnGoal: stats.shotsOnGoal,

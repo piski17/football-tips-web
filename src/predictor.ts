@@ -901,7 +901,7 @@ export function predictMatch(
     xg.away = clamp(xg.away * absences.away.attack * absences.home.defense, 0.15, 5);
   }
   // Štatistiky vzájomných zápasov spresnia rohy, karty, strely, fauly, ofsajdy a držanie lopty.
-  const h2hStat = (key: keyof H2HStats) => recencyAverage((h2hStats ?? []).map((x) => x[key]));
+  const h2hStat = (key: keyof H2HStats) => recencyAverage((h2hStats ?? []).map((x) => x[key] ?? null));
   const blendH2H = (expected: number, key: keyof H2HStats): { value: number; h2h: { avg: number; n: number } | null } => {
     const h = h2hStat(key);
     if (!h) return { value: expected, h2h: null };
@@ -1417,6 +1417,38 @@ export function predictMatch(
     const x = ouParts(b.selection);
     return !x || plausibleLine(b.market, x.line);
   };
+  // Kontrola vzájomných zápasov (15. 11. 2026, Michal – po tipe „Rohy hostí nad 1,5“ pri San Maríne, ktoré malo
+  // vo vzájomných zápasoch 0, 2 a 1 roh): pri rohoch, kartách, strelách a fauloch (zápas aj tím) sa tip porovná
+  // s posledným vzájomnými zápasmi (aspoň 3 so štatistikou). Ak by vo väčšine z nich neprešiel, ide len do
+  // sledovaných (h2hAgainst). Odhad modelu sa nemení.
+  const H2H_CHECK: Record<string, (x: H2HStats) => number | null | undefined> = {
+    "Rohy": (x) => x.corners,
+    "Rohy domácich": (x) => x.homeCorners,
+    "Rohy hostí": (x) => x.awayCorners,
+    "Karty": (x) => x.cards,
+    "Karty domácich": (x) => x.homeCards,
+    "Karty hostí": (x) => x.awayCards,
+    "Strely na bránu": (x) => x.shotsOnGoal,
+    "Strely na bránu domácich": (x) => x.homeShots,
+    "Strely na bránu hostí": (x) => x.awayShots,
+    "Fauly": (x) => x.fouls,
+    "Fauly domácich": (x) => x.homeFouls,
+    "Fauly hostí": (x) => x.awayFouls,
+  };
+  for (const c of candidates) {
+    const get = H2H_CHECK[c.market];
+    const m = /^(Over|Under)\s+([\d.]+)/.exec(c.selection);
+    if (!get || !m) continue;
+    const line = Number(m[2]);
+    const vals = (h2hStats ?? []).map(get).filter((v): v is number => typeof v === "number" && isFinite(v));
+    if (vals.length < H2H_MIN) continue;
+    const lost = vals.filter((v) => (m[1] === "Over" ? v < line : v > line)).length;
+    if (lost * 2 > vals.length) {
+      c.h2hAgainst = `vo vzájomných zápasoch by tip neprešiel ${lost}× z ${vals.length} (${vals.join(", ")})`;
+      c.explanation = (c.explanation ? c.explanation + " " : "") + `⚠️ Vzájomné zápasy: ${c.h2hAgainst} – len do sledovaných.`;
+    }
+  }
+
   // Výber tipov podľa pravidiel (hodnota, kurz, rozpor, najviac 1 tip z typu).
   // Rovnaký postup ide aj pre skúšobné pásmo 65 – 67 % (len sledovať, 28. 10. 2026).
   const selectPicks = (pool: MarketPick[], lowValueBets: MarketPick[], watchBand: boolean): MarketPick[] => {
@@ -1556,6 +1588,8 @@ export function predictMatch(
       const better = typeof bet.minOdds === "number" && ev === curEv ? bet.probability < (cur?.probability ?? 101) : bet.probability > (cur?.probability ?? -1);
       // Tip, ktorý prejde aj pri 60 / 40, má prednosť pred tipom len pre sledované.
       if (cur && !!bet.strictFail !== !!cur.strictFail) { if (cur.strictFail) bestInCategory.set(catKey(bet), bet); continue; }
+      // 15. 11. 2026: rovnako tip, ktorému neprotirečia vzájomné zápasy, má prednosť.
+      if (cur && !!bet.h2hAgainst !== !!cur.h2hAgainst) { if (cur.h2hAgainst) bestInCategory.set(catKey(bet), bet); continue; }
       // 4. 11. 2026 (Michal): z trhu ide hranica s NAJVYŠŠOU DÔVEROU (predtým s najväčšou hodnotou);
       // držanie lopty (bez kurzu) ostáva podľa pravidla vyššie.
       // 8. 11. 2026: rovnako fauly (kurz len ručne) – hranica najbližšie k spodku pásma má najlepší kurz.

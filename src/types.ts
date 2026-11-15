@@ -85,6 +85,8 @@ export interface MarketPick {
   /** Neprešiel pri 60 / 40 (s kurzom zo stávkovky). */
   strictFail?: boolean;
   strictWouldFail?: boolean;
+  /** Kontrola vzájomných zápasov (15. 11. 2026): vo väčšine z nich by tip neprešiel – len do sledovaných. */
+  h2hAgainst?: string;
   /** Tip zo skúšobného pásma 65 – 67 % (28. 10. 2026) – len sledovať. */
   watchBand?: boolean;
   /** Dôvod, prečo bol tip vyradený (len pri lowValueBets). */
@@ -117,6 +119,15 @@ export interface OverUnderMarket {
 /** Jeden odohraný vzájomný zápas dvoch tímov. */
 /** Štatistiky jedného vzájomného zápasu (držanie lopty z pohľadu dnešných domácich). */
 export interface H2HStats {
+  /** Štatistiky jednotlivých tímov (15. 11. 2026) – vzhľadom na domácich/hostí AKTUÁLNEHO zápasu. */
+  homeCorners?: number | null;
+  awayCorners?: number | null;
+  homeCards?: number | null;
+  awayCards?: number | null;
+  homeShots?: number | null;
+  awayShots?: number | null;
+  homeFouls?: number | null;
+  awayFouls?: number | null;
   corners: number | null;
   cards: number | null;
   shotsOnGoal: number | null;
@@ -332,6 +343,8 @@ export interface SavedTip {
   strictProbability?: number;
   /** Prešiel pri 70 / 30, ale nie pri 60 / 40 – len sledovať. */
   strictFail?: boolean;
+  /** Kontrola vzájomných zápasov (15. 11. 2026) – dôvod, prečo tip išiel len do sledovaných. */
+  h2hAgainst?: string;
   strictWouldFail?: boolean;
   /** Tip zo skúšobného pásma 65 – 67 % (28. 10. 2026) – len sledovať, vlastná skupina v Histórii tipov. */
   watchBand?: boolean;

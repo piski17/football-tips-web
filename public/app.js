@@ -1337,6 +1337,8 @@ function buildTip(r, bet, realOdds, extra = {}) {
     ...measurementFields(r, bet),
     // Šedá zóna ide od 1. 11. 2026 klientom (Michal) – len značka na rozbor.
     ...(bet.softConflict ? { softConflict: true } : {}),
+    // 15. 11. 2026 (Michal): vzájomné zápasy protirečia tipu → len do sledovaných.
+    ...(bet.h2hAgainst ? { h2hAgainst: bet.h2hAgainst, watchOnly: true } : {}),
     ...(typeof bet.strictProbability === "number" ? { strictProbability: bet.strictProbability } : {}),
     ...(bet.watchBand ? { watchBand: true, watchOnly: true } : !strictCheck(bet, realOdds).pass ? (STRICT_CHECK_ON ? { strictFail: true, watchOnly: true } : { strictWouldFail: true }) : {}),
     ...extra,
@@ -1847,7 +1849,7 @@ function farLineTip(t) {
   return raw > 73;
 }
 function lateTipForClients(t) {
-  if (t.strictFail || t.probability < WATCH_BELOW || t.probability > 80) return false;
+  if (t.strictFail || t.h2hAgainst || t.probability < WATCH_BELOW || t.probability > 80) return false;
   if (typeof t.odds !== "number" && farLineTip(t)) return false; // len bez kurzu z API
   if (typeof t.odds !== "number") return true; // trh bez kurzu v API – rozhodne kurz, ktorý zadá Michal
   const value = (t.probability / 100) * t.odds;
@@ -1970,10 +1972,10 @@ function renderDayTipsViewMain() {
   // každá sa dá zbaliť a rozbaliť tlačidlom − / +. Poradie a čísla tipov ostávajú.
   const groups = [
     { key: "klienti", title: "Pre klientov", note: "", idx: [] },
-    { key: "sledovane", title: "Do sledovaných", note: "neprešli pri 60 / 40; s dobrým kurzom môže tip prejsť aj ku klientom", idx: [] },
+    { key: "sledovane", title: "Do sledovaných", note: "vzájomné zápasy hovoria proti tipu (alebo neprešli pri 60 / 40)", idx: [] },
     { key: "pasmo65", title: `Pásmo 65 – 69${NB}% – len sledovať`, note: "skúška do kontroly 1. 12.: klientom nejdú, len sa vyhodnotia (História tipov → Pásmo 65 – 67 %)", idx: [] },
   ];
-  dayTips.items.forEach(({ bet }, i) => groups[bet.watchBand ? 2 : bet.strictFail ? 1 : 0].idx.push(i));
+  dayTips.items.forEach(({ bet }, i) => groups[bet.watchBand ? 2 : bet.strictFail || bet.h2hAgainst ? 1 : 0].idx.push(i));
   let shown = 0;
   const rows = groups
     .filter((g) => g.idx.length)
@@ -2061,7 +2063,7 @@ function renderDayTipsViewMain() {
       el.className = "odds-st" + (st.odd == null ? "" : (sc && !sc.pass) || (sx && !sx.pass) ? " bad" : st.ok ? " ok" : " bad");
       const hv = st.ok ? highValuePct(dayTips.items[i].bet, st.odd) : null;
       if (hv != null) { el.className = "odds-st bad"; el.textContent = `⚠ Skontroluj kurz – hodnota +${hv}${NB}%`; if (!matchHasStarted(dayTips.items[i].r.fixture)) n++; return; }
-      el.textContent = st.odd == null ? "" : sc && !sc.pass ? `✗ rozpor ${Math.round(sc.gap)} b. – len sledovať` : sx && !sx.pass ? "✗ neprejde pri 60 / 40 – len sledovať" : sc ? `✓ rozpor ${Math.round(sc.gap)} b. – prejde` : st.ok && dayTips.items[i].bet.watchBand ? "✓ má hodnotu – len sledovať" : st.ok ? "✓ má hodnotu" : st.odd > 20 ? "✗ preklep?" : `✗ pod ${fmtOdds(st.min)}`;
+      el.textContent = st.odd == null ? "" : sc && !sc.pass ? `✗ rozpor ${Math.round(sc.gap)} b. – len sledovať` : sx && !sx.pass ? "✗ neprejde pri 60 / 40 – len sledovať" : sc ? `✓ rozpor ${Math.round(sc.gap)} b. – prejde` : st.ok && (dayTips.items[i].bet.watchBand || dayTips.items[i].bet.h2hAgainst) ? "✓ má hodnotu – len sledovať" : st.ok ? "✓ má hodnotu" : st.odd > 20 ? "✗ preklep?" : `✗ pod ${fmtOdds(st.min)}`;
       if (st.odd != null && dayTipBest[i]) el.textContent += ` · ${dayTipBest[i]} ${fmtOdds(st.odd)}`;
       else if (st.odd != null && parseOddsInput(dayTipOdds[i]) == null) el.textContent += ` · kurz z API ${fmtOdds(st.odd)}`;
       if (st.ok && !matchHasStarted(dayTips.items[i].r.fixture)) n++;
