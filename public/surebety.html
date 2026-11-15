@@ -193,12 +193,6 @@ details p, details li { color: var(--muted); font-size: 14px; }
       <button type="button" class="btn" id="igBulkBtn">Stiahnuť obrázky všetkých odohraných surebetov (zip)</button>
       <span class="muted small" id="igBulkInfo">Vyhodnotené surebety od 1. 11. podľa výberu stávkoviek vyššie, po anglicky – príspevky, príbehy, texty a súhrn každého dňa.</span>
     </div>
-    <!-- 15. 11. 2026 (Michal): voľba kapitálu a % vkladu – všetky sumy sa prepočítajú (namiesto pevných 100 €) -->
-    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">
-      <div><label class="f" for="capIn">Kapitál (€)</label><input type="number" id="capIn" min="10" step="10" value="1000" style="width:130px"></div>
-      <div><label class="f" for="pctIn">Vklad na jeden surebet (% kapitálu)</label><input type="number" id="pctIn" min="0.5" max="100" step="0.5" value="10" style="width:130px"></div>
-      <div class="muted small" id="stakeInfo" style="padding-bottom:8px"></div>
-    </div>
     <div class="kpis" id="logKpis"></div>
     <div id="logDays"></div>
   </section>
@@ -314,7 +308,6 @@ function toCalc(s) {
 }
 let foundList = [];
 function renderList(list) {
-  window.lastFound = list;
   foundList = list;
   // Zoradiť podľa dňa a v rámci dňa od najvyššieho zisku.
   list = [...list].sort((a, b) => dayKey(a.date).localeCompare(dayKey(b.date)) || b.margin - a.margin);
@@ -329,7 +322,7 @@ function renderList(list) {
     lastDay = d;
     return head + `
     <div class="sb${s.suspicious ? " sus" : ""}">
-      <div class="sb-top"><b>${esc(tnm(s.home))} – ${esc(tnm(s.away))}</b><span class="pct">+${eur(s.margin * capSettings().stake)}<small>+${pc(s.margin)} · istý zisk pri vklade ${eur(capSettings().stake, 0)}</small></span></div>
+      <div class="sb-top"><b>${esc(tnm(s.home))} – ${esc(tnm(s.away))}</b><span class="pct">+${eur(s.margin * 100)}<small>+${pc(s.margin)} · istý zisk pri vklade 100 €</small></span></div>
       <div class="muted small">${esc(s.league)}${s.country ? " (" + esc(s.country) + ")" : ""} · ${when(s.date)} · ${esc(s.market)}</div>
       <div class="legs">${s.sides.map((x) => `<div class="leg">${esc(x.label)} · <b>${fmt(x.odd)}</b> <span class="muted">v ${esc(x.book)}</span></div>`).join("")}</div>
       ${combosHtml(s)}
@@ -458,33 +451,16 @@ function logListFor(sc) {
 }
 window.logListFor = logListFor;
 window.currentLogScope = () => logScope;
-/** 15. 11. 2026 (Michal): kapitál a % vkladu (uložené v prehliadači). */
-function capSettings() {
-  let cap = 1000, pct = 10;
-  try { const j = JSON.parse(localStorage.getItem("sb_cap") || "{}"); if (j.cap > 0) cap = j.cap; if (j.pct > 0) pct = j.pct; } catch {}
-  return { cap, pct, stake: Math.round(cap * pct) / 100 };
-}
-function initCap() {
-  const c = capSettings(); $("capIn").value = c.cap; $("pctIn").value = c.pct;
-  const upd = () => {
-    const cap = Math.max(1, +$("capIn").value || 0), pct = Math.min(100, Math.max(0.1, +$("pctIn").value || 0));
-    try { localStorage.setItem("sb_cap", JSON.stringify({ cap, pct })); } catch {}
-    renderLog(); if (window.lastFound) renderList(window.lastFound);
-  };
-  $("capIn").addEventListener("input", upd); $("pctIn").addEventListener("input", upd);
-}
 function renderLog() {
-  const { cap, pct, stake: ST } = capSettings();
-  $("stakeInfo").textContent = `= vklad ${eur(ST)} na každý surebet`;
   const list = logListFor(logScope);
   const n = list.length;
   const avg = n ? list.reduce((s, e) => s + e.maxMargin, 0) / n : 0;
-  const profit = list.reduce((s, e) => s + e.maxMargin * ST, 0);
+  const profit = list.reduce((s, e) => s + e.maxMargin * 100, 0);
   const lasting = list.filter((e) => e.seen >= 2).length;
   $("logKpis").innerHTML = `
     <div class="kpi"><span>Surebetov spolu</span><b>${n}</b></div>
-    <div class="kpi"><span>Priemerný istý zisk z ${eur(ST, 0)}</span><b>${n ? eur(avg * ST) : "–"}</b><span>${n ? "+" + pc(avg) + " na surebet" : ""}</span></div>
-    <div class="kpi"><span>Zisk spolu pri ${eur(ST, 0)} na každý</span><b>${eur(profit, 0)}</b><span>${n ? "= +" + pc(profit / cap) + " kapitálu " + eur(cap, 0) : ""}</span></div>
+    <div class="kpi"><span>Priemerný istý zisk zo 100 €</span><b>${n ? eur(avg * 100) : "–"}</b><span>${n ? "+" + pc(avg) + " na surebet" : ""}</span></div>
+    <div class="kpi"><span>Zisk pri 100 € na každý</span><b>${eur(profit, 0)}</b><span>${n ? "z vkladu " + eur(n * 100, 0) + " = +" + pc(avg) : ""}</span></div>
     <div class="kpi"><span>Vydržali aspoň hodinu</span><b>${n ? lasting : "–"}</b></div>`;
   const byDay = {};
   for (const e of list) (byDay[dayKey(e.date)] ??= []).push(e);
@@ -492,8 +468,8 @@ function renderLog() {
   $("logDays").innerHTML = days.length ? days.map((d) => {
     const l = byDay[d].sort((x, y) => y.maxMargin - x.maxMargin);
     const a = l.reduce((s, e) => s + e.maxMargin, 0) / l.length;
-    return `<details class="day"><summary><b>${dayName(d)}</b><span>${l.length} ${plural(l.length)} · priemerne +${eur(a * ST)} z ${eur(ST, 0)} · +${pc(a)}</span><span class="dsum" style="color:var(--good);white-space:nowrap;text-align:right">spolu +${eur(a * ST * l.length)}<small style="display:block;color:var(--muted);font-size:11.5px">vklad ${eur(ST, 0)} na každý: vsadené ${eur(ST * l.length, 0)} · +${pc(a * ST * l.length / cap)} kapitálu</small></span></summary>
-      ${l.map((e) => `<div class="lrow" data-k="${esc(e.scope + "|" + e.key)}"><div class="t"><b>${esc(tnm(e.home))} – ${esc(tnm(e.away))}</b><span style="color:var(--good);white-space:nowrap">+${eur(e.maxMargin * ST)} z ${eur(ST, 0)} · +${pc(e.maxMargin)}</span></div>
+    return `<details class="day"><summary><b>${dayName(d)}</b><span>${l.length} ${plural(l.length)} · priemerne +${eur(a * 100)} zo 100 € · +${pc(a)}</span><span class="dsum" style="color:var(--good);white-space:nowrap;text-align:right">spolu +${eur(a * 100 * l.length)}<small style="display:block;color:var(--muted);font-size:11.5px">pri 100 € na každý: vsadené ${eur(100 * l.length, 0)} = +${pc(a)}</small></span></summary>
+      ${l.map((e) => `<div class="lrow" data-k="${esc(e.scope + "|" + e.key)}"><div class="t"><b>${esc(tnm(e.home))} – ${esc(tnm(e.away))}</b><span style="color:var(--good);white-space:nowrap">+${fmt(e.maxMargin * 100)} € zo 100 € · +${pc(e.maxMargin)}</span></div>
         <div class="muted small">${esc(e.league)} · ${new Date(e.date).toLocaleTimeString("sk-SK", { hour: "2-digit", minute: "2-digit" })} · ${esc(e.market)}</div>
         <div class="small">${e.sides.map((x) => `${esc(x.label)} <b style="color:var(--gold-hi)">${fmt(x.odd)}</b> <span class="muted">v ${esc(x.book)}</span>`).join(" &nbsp;·&nbsp; ")}</div>
         ${combosHtml(e, 4)}
@@ -520,10 +496,9 @@ $("logScope").addEventListener("click", (e) => {
   for (const x of $("logScope").children) x.classList.toggle("on", x === c);
   renderLog();
 });
-initCap();
 load(); loadLog();
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="/surebety-ig.js?v=2026-11-15f"></script>
+<script src="/surebety-ig.js?v=2026-11-15e"></script>
 </body>
 </html>
