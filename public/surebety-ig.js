@@ -429,11 +429,12 @@
       ctx.beginPath(); ctx.moveTo(rx + ic * 0.55, icy - ic * 0.35); ctx.lineTo(rx + ic * 0.9, icy + ic * 0.0); ctx.lineTo(rx + ic * 1.5, icy - ic * 0.75); ctx.stroke();
       ctx.lineCap = "butt"; ctx.lineJoin = "miter";
       ctx.fillStyle = C.good; ctx.font = font(800, story ? 22 : 19, B_FONT); spaced(ctx, "GUARANTEED PROFIT", rx + ic * 2 + 12, icy, 2.5);
-      const big = `+${n2(avg * 100)}%`;
+      // Michal 15. 11.: zrozumiteľne – hore celkový istý zisk v eurách podľa počtu zápasov.
+      const big = `+€${n2(avg * 100 * n)}`;
       const bsz = fit(ctx, big, 800, story ? 120 : 100, rw, H_FONT, 40);
       ctx.font = font(800, bsz, H_FONT); ctx.fillStyle = C.good; ctx.fillText(big, rx - 4, y0 + h * 0.27 + bsz * 0.98);
       // Michal 13. 11.: zrozumiteľne – „€16.50 profit“ + „€100 on each surebet, any score“ (namiesto „from €300“).
-      const l1 = `€${n2(avg * 100 * n)} profit`, l2 = `from €${n * 100} staked, any score`; // Michal 15. 11.: celé sumy (€300), nie „3 × €100“
+      const l1 = n === 1 ? "1 surebet · €100 staked" : `All ${n} surebets · €${n * 100} staked`, l2 = `+${n2(avg * 100)}% · whatever the score`;
       ctx.fillStyle = C.text; fit(ctx, l1, 700, story ? 32 : 28, rw, B_FONT, 18);
       ctx.fillText(l1, rx, y0 + h * 0.27 + bsz * 0.98 + (story ? 56 : 48));
       ctx.fillStyle = C.muted; fit(ctx, l2, 600, story ? 26 : 22, rw, B_FONT, 14);
@@ -467,7 +468,8 @@
     const pill = (sd, other, px, py, extra) => {
       const ix = 16 * Math.min(k, 1.4);
       // Michal 13. 11.: v pravom dolnom rohu každej stávky zhodnotenie, ak vyjde práve táto stávka.
-      extra = `+${n2((sd.odd * stakeR(sd.odd, other) / 100 - 1) * 100)}%`;
+      // Michal 15. 11.: v rohu výplata, ak vyjde táto stávka (namiesto rôznych percent).
+      extra = `Wins €${n2(sd.odd * stakeR(sd.odd, other))}`;
       if (stack) {
         const iw = pillW - 2 * ix, mk = market(e0.market), lb = label(sd.label);
         let ew = 0;
@@ -505,7 +507,10 @@
         ctx.save(); ctx.setLineDash([7, 7]); ctx.strokeStyle = "rgba(207,196,180,.22)"; ctx.lineWidth = 1.5;
         ctx.beginPath(); ctx.moveTo(X + nr + 8, py0); ctx.lineTo(X + IW - nr - 8, py0); ctx.stroke(); ctx.restore();
       }
-      const pw = 0; // Michal 13. 11.: % zisku pri názve zápasu preč (je pri každej stávke v rohu)
+      // Michal 15. 11.: pri každom zápase jeho istý zisk v eurách (zo 100 €).
+      const gp = `+€${n2(rMargin(e) * 100)} (${n2(rMargin(e) * 100)}%)`;
+      ctx.fillStyle = C.good; ctx.font = font(800, f(26), H_FONT); ctx.textAlign = "right"; ctx.fillText(gp, cx + cw, y + f(34));
+      const pw = ctx.measureText(gp).width; ctx.textAlign = "left";
       const tm = `${pre ? ktime(e) + " · " : ""}${e.home} – ${e.away}`;
       ctx.fillStyle = C.text; fit(ctx, tm, 800, f(26), cw - pw - 24, H_FONT, 16); ctx.fillText(tm, cx, y + f(34));
       let py = y + CARD.head * k;
@@ -624,13 +629,13 @@
       // Michal 13. 11. 15:24: v texte bez stávkoviek (sú na obrázku) – „👉 Over 4.5 - 1.83 / Under 4.5 - 2.47“.
       const tipLine = (x, y) => `👉 ${label(e.sides[0].label)} - ${n2(x.odd)} / ${label(e.sides[1].label)} - ${n2(y.odd)}`;
       const profit = (m) => `💰 Profit: €${n2(m * 100)} (${n2(m * 100)}%)`;
-      lines.push(`${pre ? "🔒" : "✅"} ${e.home} - ${e.away} / ${market(e.market)}`, tipLine(a, b));
-      // Michal 13. 11. 15:36: profit nie pri každom tipe, len na konci (💰 Day total).
+      lines.push(`${pre ? "🔒" : "✅"} ${e.home} - ${e.away} / ${market(e.market)}`, tipLine(a, b), `💰 Profit: €${n2(rMargin(e) * 100)} from €100 (${n2(rMargin(e) * 100)}%)`);
+      // Michal 15. 11.: pri každom zápase vlastný istý zisk (klient môže podať len niektoré), na konci súčet „ak podáte všetky“.
       // 15. 11. 2026: ďalšie dvojice v texte nie – bez stávkoviek by boli nezrozumiteľné (sú na obrázku).
     }
     // Michal 13. 11.: pri 1 surebete súčet netreba; pri viacerých krátky súčet dňa.
     // Michal 13. 11.: Day total vždy (aj pri 1 zápase), ikonka 💰.
-    if (n) lines.push("", `💰 Day total: €${n2(avg * 100 * n)} profit from €${n * 100} (${n2(avg * 100)}%)`);
+    if (n) lines.push("", (n === 1 ? `📊 Day total: €${n2(avg * 100)} profit from €100 (${n2(avg * 100)}%)` : `📊 Day total, all ${n} surebets: €${n2(avg * 100 * n)} profit from €${n * 100} (${n2(avg * 100)}%)`));
     lines.push("");
     lines.push("👑 ARBREX · 18+ · Bet responsibly", "#arbrex #football");
     return lines.join("\n");
