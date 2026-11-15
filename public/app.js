@@ -5238,11 +5238,12 @@ async function renderDnes() {
   const now = new Date();
   document.getElementById("dnesDate").textContent = now.toLocaleDateString("sk-SK", { weekday: "long", day: "numeric", month: "numeric" });
   try {
-    const [tipsRaw, auto, subs, pays] = await Promise.all([
+    const [tipsRaw, auto, subs, pays, autoSave] = await Promise.all([
       fetchJson("/api/tips").catch(() => null),
       fetchJson("/api/auto-tips").catch(() => null),
       fetchJson("/api/subscribers").catch(() => null),
       fetchJson("/api/payments").catch(() => null),
+      fetchJson("/api/auto-save-status").catch(() => null),
       loadSavedTipKeys().catch(() => null),
     ]);
     const today = tipDayKey(now.toISOString());
@@ -5297,6 +5298,29 @@ async function renderDnes() {
     const autoHtml = autoToday.length
       ? autoToday.map((t) => ticket(t, `<button type="button" class="btn xs" data-dn-add="${escapeHtml(t.id)}">+ Pridať</button>`, true)).join("")
       : "";
+    // Automatické ukladanie (15. 11. 2026, Michal): pri každom dnešnom zápase, čo server spravil alebo kedy to spraví.
+    const asList = autoSave && Array.isArray(autoSave.fixtures) ? autoSave.fixtures.filter((x) => tipDayKey(x.matchDate) === today) : [];
+    const asFrom = (autoSave && autoSave.from) || 5, asTo = (autoSave && autoSave.to) || 30;
+    const asRow = (x) => {
+      const kick = new Date(x.matchDate);
+      const hm = (min) => timeHm(new Date(kick.getTime() - min * 60000));
+      const inf = x.info;
+      let st = "";
+      if (x.state === "waiting") st = `<span class="muted">uloží sa sám medzi ${hm(asTo)} a ${hm(asFrom)}</span>`;
+      else if (x.state === "window") st = `<span class="muted">práve teraz – čaká na zostavy (najneskôr ${hm(asFrom)})</span>`;
+      else if (x.state === "error") st = `<span class="loss">chyba: ${escapeHtml((inf && inf.error) || "")} – ulož ručne</span>`;
+      else if (x.state === "missed") st = `<span class="loss">nespracované – ulož ručne, ak tu bol tip</span>`;
+      else if (!inf) st = `<span class="muted">spracované</span>`;
+      else {
+        const parts = [
+          ...inf.saved.map((b) => `<span class="${b.watchOnly ? "muted" : "win"}">✓ ${escapeHtml(b.market)}: ${escapeHtml(translateNamesInText(b.selection, x.homeTeam, x.awayTeam))} – ${b.watchOnly ? `do sledovaných${b.reason ? ` (${escapeHtml(b.reason)})` : ""}` : "pre klientov"}</span>`),
+          ...inf.skipped.map((b) => `<span class="loss">✕ ${escapeHtml(b.market)}: ${escapeHtml(translateNamesInText(b.selection, x.homeTeam, x.awayTeam))} – ${escapeHtml(b.why)}</span>`),
+        ];
+        st = parts.length ? parts.join("<br>") : `<span class="muted">model tip nenašiel${inf.lineups ? " (so zostavami)" : ""}</span>`;
+      }
+      return `<div class="dn-row"><span class="dn-time">${escapeHtml(timeHm(kick))}</span><span class="dn-main"><b>${escapeHtml(translateTeamName(x.homeTeam))} – ${escapeHtml(translateTeamName(x.awayTeam))}</b><span class="small">${st}</span></span></div>`;
+    };
+    const autoSaveHtml = asList.length ? asList.map(asRow).join("") : `<p class="empty">Dnes zatiaľ server neprešiel žiadny zápas (robí to asi hodinu pred výkopom).</p>`;
     // Radar dňa: ciferník 24 hodín, bodka = tip v čase výkopu (bližšie k stredu = vyššia dôvera), ručička = teraz
     const dial = (() => {
       const pos = (d, r) => { const h = d.getHours() + d.getMinutes() / 60; const a = (h / 24) * 2 * Math.PI - Math.PI / 2; return [100 + r * Math.cos(a), 100 + r * Math.sin(a)]; };
@@ -5339,7 +5363,10 @@ async function renderDnes() {
       </div>
 
       <h3 class="sh">Tipy na dnes <small>najviac 3 najsilnejšie · vyhodnotenie po skončení dňa</small></h3>
-      ${todayHtml || autoHtml ? `<div class="dn-tickets">${todayHtml}${autoHtml}</div>${autoHtml ? `<p class="faint small dn-note">„+ Pridať“ – tip, ktorý server našiel hodinu pred výkopom. Pridajte ho do histórie a pošlite členom.</p>` : ""}` : `<div class="card dn-card"><p class="empty">Na dnes zatiaľ žiadny tip.</p></div>`}
+      ${todayHtml || autoHtml ? `<div class="dn-tickets">${todayHtml}${autoHtml}</div>${autoHtml ? `<p class="faint small dn-note">Tip, ktorý server našiel hodinu pred výkopom. Server ho uloží sám ${asTo} – ${asFrom} minút pred výkopom (po zostavách) – „+ Pridať“ ho uloží hneď.</p>` : ""}` : `<div class="card dn-card"><p class="empty">Na dnes zatiaľ žiadny tip.</p></div>`}
+
+      <h3 class="sh">Automatické ukladanie dnes <small>server ukladá tipy sám ${asTo} – ${asFrom} min pred výkopom</small></h3>
+      <div class="card dn-card">${autoSaveHtml}</div>
 
       <div class="dn-two">
         <div>

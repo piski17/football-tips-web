@@ -3748,19 +3748,70 @@ async function autoSaveDueTips(): Promise<void> {
         if (!fixture || fixture.status !== "NS") continue;
         const { result } = await analyzeFixture(fixture, fixture.league.id, fixture.league.season, false);
         const at = new Date().toISOString();
+        // Prehľad pre appku (15. 11. 2026): čo server pri zápase spravil a prečo.
+        const info: AutoSaveInfo = { at, lineups: hasLineups, homeTeam: fixture.homeTeam.name, awayTeam: fixture.awayTeam.name, saved: [], skipped: [] };
         for (const entry of autoSaveEntries(fixture, result, at)) {
           const r = await addAutoEntry(entry, undefined, { autoSaved: true, ...(hasLineups ? { lineupCheck: { at, probability: entry.probability, ok: true } } : {}) });
-          if ("ok" in r) console.log(`Automaticky uložený tip ${entry.id}${r.watchOnly ? " (sledovaný: " + r.reason + ")" : ""}`);
+          if ("ok" in r) {
+            console.log(`Automaticky uložený tip ${entry.id}${r.watchOnly ? " (sledovaný: " + r.reason + ")" : ""}`);
+            info.saved.push({ market: entry.market, selection: entry.selection, probability: entry.probability, odds: entry.odds, watchOnly: r.watchOnly, reason: r.reason });
+          } else info.skipped.push({ market: entry.market, selection: entry.selection, probability: entry.probability, why: r.error });
         }
+        for (const b of [...((result as any).bestBets ?? []), ...((result as any).watchBandBets ?? [])]) {
+          if (!(typeof b.odds === "number" && b.odds > 1)) info.skipped.push({ market: String(b.market), selection: String(b.selection), probability: Math.round(Number(b.probability) * 10) / 10, why: "kurz nie je v API – treba uložiť ručne" });
+        }
+        await setMeta(`autoSaveInfo:${fixtureId}`, JSON.stringify(info)).catch(() => {});
         await setMeta(key, at);
       } catch (err) {
         console.error(`Automatické uloženie tipov zápasu ${fixtureId} zlyhalo:`, err);
+        await setMeta(`autoSaveInfo:${fixtureId}`, JSON.stringify({ at: new Date().toISOString(), error: errText(err), saved: [], skipped: [] })).catch(() => {});
       }
     }
   } finally {
     autoSaveRunning = false;
   }
 }
+interface AutoSaveInfo {
+  at: string;
+  lineups?: boolean;
+  homeTeam?: string;
+  awayTeam?: string;
+  error?: string;
+  saved: { market: string; selection: string; probability: number; odds: number | null; watchOnly: boolean; reason: string }[];
+  skipped: { market: string; selection: string; probability: number; why: string }[];
+}
+/** Prehľad automatického ukladania na dnes (15. 11. 2026, Michal): pri každom zápase, čo server spravil alebo kedy to spraví. */
+app.get("/api/auto-save-status", async (_req, res) => {
+  try {
+    const now = Date.now();
+    const [fixtures, entries] = await Promise.all([listAutoFixtures(), listAuto()]);
+    const names = new Map<number, { home: string; away: string; league?: string }>();
+    for (const list of autoFixtureCache.values()) for (const f of list.fixtures) names.set(Number(f.fixtureId), { home: f.homeTeam?.name, away: f.awayTeam?.name, league: f.league?.name });
+    for (const e of entries) if (!names.has(e.fixtureId)) names.set(e.fixtureId, { home: e.homeTeam, away: e.awayTeam, league: e.league });
+    const out = [];
+    for (const f of fixtures) {
+      const kick = new Date(f.matchDate).getTime();
+      if (!(kick > now - 14 * 3600 * 1000 && kick < now + 24 * 3600 * 1000)) continue;
+      const raw = await getMeta(`autoSaveInfo:${f.fixtureId}`);
+      const info: AutoSaveInfo | null = raw ? JSON.parse(raw) : null;
+      const done = await getMeta(`autoSavedFx:${f.fixtureId}`);
+      const n = names.get(f.fixtureId);
+      out.push({
+        fixtureId: f.fixtureId,
+        matchDate: f.matchDate,
+        league: f.league ?? n?.league ?? "",
+        homeTeam: info?.homeTeam ?? n?.home ?? "",
+        awayTeam: info?.awayTeam ?? n?.away ?? "",
+        state: info?.error ? "error" : info || done ? "done" : kick - now > AUTO_SAVE_TO_MIN * 60 * 1000 ? "waiting" : kick - now >= AUTO_SAVE_FROM_MIN * 60 * 1000 ? "window" : "missed",
+        info,
+      });
+    }
+    out.sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime());
+    res.json({ from: AUTO_SAVE_FROM_MIN, to: AUTO_SAVE_TO_MIN, fixtures: out });
+  } catch (err: any) {
+    res.status(502).json({ error: errText(err) });
+  }
+});
 /**
  * Tipy zápasu na automatické uloženie: odporúčané (bestBets) AJ sledované pásmo 65 – 69 % (watchBandBets –
  * v Tipoch dňa skupina „len sledovať“; 14. 11. 2026 oprava, predtým sa vynechávali). Len s kurzom z API.
