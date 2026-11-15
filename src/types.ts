@@ -119,6 +119,8 @@ export interface OverUnderMarket {
 /** Jeden odohraný vzájomný zápas dvoch tímov. */
 /** Štatistiky jedného vzájomného zápasu (držanie lopty z pohľadu dnešných domácich). */
 export interface H2HStats {
+  /** Zápas starší ako 5 rokov – do odhadu modelu sa nezapočíta, len do kontroly vzájomných zápasov. */
+  old?: boolean;
   /** Štatistiky jednotlivých tímov (15. 11. 2026) – vzhľadom na domácich/hostí AKTUÁLNEHO zápasu. */
   homeCorners?: number | null;
   awayCorners?: number | null;

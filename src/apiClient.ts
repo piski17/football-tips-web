@@ -1269,7 +1269,9 @@ export async function getHeadToHeadStats(
 ): Promise<H2HStats[]> {
   const since = Date.now() - 5 * 365 * 24 * 60 * 60 * 1000;
   const recent = h2h
-    .filter((m) => m.homeGoals !== null && m.awayGoals !== null && new Date(m.date).getTime() >= since)
+    // 15. 11. 2026: berú sa 5 najnovšie aj staršie ako 5 rokov (značka old) – model ich do odhadu
+    // nezapočíta, použije ich len kontrola vzájomných zápasov (h2hAgainst).
+    .filter((m) => m.homeGoals !== null && m.awayGoals !== null)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
   const out: H2HStats[] = [];
@@ -1290,6 +1292,7 @@ export async function getHeadToHeadStats(
       return home ? h.value : o ? o.value : null;
     };
     out.push({
+      ...(new Date(m.date).getTime() < since ? { old: true } : {}),
       homeCorners: side(stats.cornersByTeam, true),
       awayCorners: side(stats.cornersByTeam, false),
       homeCards: side(stats.cardsByTeam, true),

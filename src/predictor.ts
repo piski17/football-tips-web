@@ -901,7 +901,7 @@ export function predictMatch(
     xg.away = clamp(xg.away * absences.away.attack * absences.home.defense, 0.15, 5);
   }
   // Štatistiky vzájomných zápasov spresnia rohy, karty, strely, fauly, ofsajdy a držanie lopty.
-  const h2hStat = (key: keyof H2HStats) => recencyAverage((h2hStats ?? []).map((x) => x[key] ?? null));
+  const h2hStat = (key: keyof H2HStats) => recencyAverage((h2hStats ?? []).filter((x) => !x.old).map((x) => (typeof x[key] === "number" ? (x[key] as number) : null)));
   const blendH2H = (expected: number, key: keyof H2HStats): { value: number; h2h: { avg: number; n: number } | null } => {
     const h = h2hStat(key);
     if (!h) return { value: expected, h2h: null };
