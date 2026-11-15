@@ -1071,8 +1071,10 @@ function renderAnalysis(r, root, opts = {}) {
     ${header}
     ${statusHtml}
     ${started ? `<h3 class="sh">Pridať zabudnutý tip <small>zapísané pred výkopom</small></h3><div class="card" data-late-add><p class="faint small">Načítavam…</p></div>` : ""}
-    <h3 class="sh">Odporúčané tipy <small>pásmo ${WATCH_BELOW} – 80${NB}%, len s hodnotou</small></h3>
-    ${tipsHtml}
+    ${started
+      ? `<p class="faint small">Zápas už začal alebo sa dohral – tipy z analýzy sa pri ňom neukazujú (15. 11. 2026). Platia len tipy zapísané pred výkopom.</p>`
+      : `<h3 class="sh">Odporúčané tipy <small>pásmo ${WATCH_BELOW} – 80${NB}%, len s hodnotou</small></h3>
+    ${tipsHtml}`}
     ${r.cupNote ? `<p class="faint small" data-cup-note>${escapeHtml(r.cupNote)}</p>` : ""}
     <div class="save-msg" data-save-msg></div>
     ${gridHtml}
@@ -1109,12 +1111,7 @@ function renderAnalysis(r, root, opts = {}) {
       b.disabled = true;
       b.title = MATCH_STARTED_TEXT;
     });
-    // 5. 11. 2026 (Michal): tip z analýzy sa dá pridať aj po výkope – ako zabudnutý, len do sledovaných.
-    root.querySelectorAll("[data-bet-idx]").forEach((b) => {
-      if (b.dataset.saved === "1") return;
-      b.textContent = "+ Pridať (po výkope)";
-      b.title = "Zápas už začal – tip prejde rovnakými pravidlami ako ostatné a dostane značku „doplnené po výkope“.";
-    });
+    // 15. 11. 2026 (Michal): tipy z analýzy sa pri začatom/odohranom zápase už neukazujú ani nepridávajú.
     void renderLateAdd(f, root.querySelector("[data-late-add]"));
   }
 }
@@ -1131,7 +1128,7 @@ async function renderLateAdd(f, box) {
     entries = (data.entries || []).sort((a, b) => b.probability - a.probability);
     if (Array.isArray(tips)) for (const t of tips) { if (t.autoId) autoSavedKeys.add(t.autoId); autoSavedKeys.add(`${t.fixtureId}|${t.market}|${t.selection}`); }
     if (!(data.fixtures || []).length) {
-      box.innerHTML = `<p class="faint small">Tento zápas server pred výkopom neprešiel. Tip z analýzy nižšie môžeš pridať tlačidlom „+ Pridať (po výkope)“ – platia rovnaké pravidlá ako pri ostatných tipoch, dostane značku „doplnené po výkope“.</p>`;
+      box.innerHTML = `<p class="faint small">Tento zápas server pred výkopom neprešiel, tip sa k nemu nedá pridať.</p>`;
       return;
     }
   } catch (err) {
@@ -1139,7 +1136,7 @@ async function renderLateAdd(f, box) {
     return;
   }
   if (!entries.length) {
-    box.innerHTML = `<p class="faint small">Pred výkopom model v tomto zápase tip neodporučil. Tip z analýzy nižšie (počítaný teraz) môžeš pridať tlačidlom „+ Pridať (po výkope)“ – platia rovnaké pravidlá ako pri ostatných tipoch, dostane značku „doplnené po výkope“.</p>`;
+    box.innerHTML = `<p class="faint small">Pred výkopom model v tomto zápase tip neodporučil.</p>`;
     return;
   }
   const res = { won: `<b class="g">vyšiel</b>`, lost: `<b class="l">nevyšiel</b>`, void: "vrátený", pending: `<span class="faint">čaká</span>` };
