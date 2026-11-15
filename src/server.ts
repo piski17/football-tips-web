@@ -3465,7 +3465,10 @@ async function autoFixturesFor(day: string): Promise<any[]> {
  * ktorý prejde všetkými pravidlami pre klientov (68 – 80 %, kurz aspoň 1,60, hodnota, kontrola 60 / 40),
  * pošle mu ho do admin chatu na Telegrame (telefón aj počítač). Klientom sa nič neposiela.
  */
+// 15. 11. 2026 (Michal: „vypni aj tie“): upozornenia „Nový tip pre klientov“ do chatu s botom vypnuté. Zapnúť = true.
+const ADMIN_CLIENT_TIP_ALERTS = false;
 async function notifyAdminClientTips(fixture: any, bets: any[]): Promise<void> {
+  if (!ADMIN_CLIENT_TIP_ALERTS) return;
   const ok = bets.filter(
     (b) =>
       !b.strictFail && !b.watchBand && !b.watchOnly &&
