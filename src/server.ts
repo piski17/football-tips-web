@@ -3465,6 +3465,11 @@ app.post("/api/auto-tips/:id/add", async (req, res) => {
       res.status(404).json({ error: "Tip sa v automatických tipoch nenašiel." });
       return;
     }
+    // 15. 11. 2026 (Michal): k dohratému zápasu sa tip už pridať nedá.
+    if (entry.status !== "pending" || Date.now() >= new Date(entry.matchDate).getTime() + 120 * 60 * 1000) {
+      res.status(400).json({ error: "Zápas sa už dohral – tip sa k nemu nedá pridať." });
+      return;
+    }
     const r = await addAutoEntry(entry, req.body?.odds);
     if ("error" in r) {
       res.status(r.status).json({ error: r.error });

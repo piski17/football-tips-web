@@ -214,6 +214,10 @@ const MATCH_STARTED_TEXT = "Zápas už začal – zabudnutý tip pridáš v deta
 const LIVE_STATUSES = ["1H", "HT", "2H", "ET", "BT", "P", "SUSP", "INT"];
 const FINISHED_STATUSES = ["FT", "AET", "PEN"];
 
+/** 15. 11. 2026 (Michal): k dohratému zápasu sa tip už pridať nedá (vyhodnotený alebo viac ako 2 h po výkope). */
+function autoTipAddable(t) {
+  return t.status === "pending" && Date.now() < new Date(t.matchDate).getTime() + 120 * 60 * 1000;
+}
 /** Zápas už začal (alebo je odložený/zrušený) – tip z neho sa nedá pridať. */
 function matchHasStarted(fixture) {
   const status = fixture?.status ?? "NS";
@@ -1070,9 +1074,9 @@ function renderAnalysis(r, root, opts = {}) {
   root.innerHTML = `
     ${header}
     ${statusHtml}
-    ${started ? `<h3 class="sh">Pridať zabudnutý tip <small>zapísané pred výkopom</small></h3><div class="card" data-late-add><p class="faint small">Načítavam…</p></div>` : ""}
+    ${started && !isDone ? `<h3 class="sh">Pridať zabudnutý tip <small>zapísané pred výkopom</small></h3><div class="card" data-late-add><p class="faint small">Načítavam…</p></div>` : ""}
     ${started
-      ? `<p class="faint small">Zápas už začal alebo sa dohral – tipy z analýzy sa pri ňom neukazujú (15. 11. 2026). Platia len tipy zapísané pred výkopom.</p>`
+      ? `<p class="faint small">${isDone ? "Zápas sa dohral – tipy sa pri ňom už neukazujú." : "Zápas sa hrá – tipy z analýzy sa pri ňom neukazujú. Platia len tipy zapísané pred výkopom."}</p>`
       : `<h3 class="sh">Odporúčané tipy <small>pásmo ${WATCH_BELOW} – 80${NB}%, len s hodnotou</small></h3>
     ${tipsHtml}`}
     ${r.cupNote ? `<p class="faint small" data-cup-note>${escapeHtml(r.cupNote)}</p>` : ""}
@@ -1112,7 +1116,7 @@ function renderAnalysis(r, root, opts = {}) {
       b.title = MATCH_STARTED_TEXT;
     });
     // 15. 11. 2026 (Michal): tipy z analýzy sa pri začatom/odohranom zápase už neukazujú ani nepridávajú.
-    void renderLateAdd(f, root.querySelector("[data-late-add]"));
+    if (!isDone) void renderLateAdd(f, root.querySelector("[data-late-add]"));
   }
 }
 
@@ -1844,7 +1848,8 @@ function lateTipForClients(t) {
   return t.odds >= MIN_ODDS && value >= 1.05 && value <= 1.25;
 }
 async function renderDayLateTips(box) {
-  const started = currentFixtures.filter((f) => matchHasStarted(f) && kickoffTime(f) === dayTipsTime);
+  // 15. 11. 2026 (Michal): dohraté zápasy (FT/AET/PEN) už tipy neukazujú, len zápasy, ktoré sa práve hrajú.
+  const started = currentFixtures.filter((f) => matchHasStarted(f) && !FINISHED_STATUSES.includes(f.status) && kickoffTime(f) === dayTipsTime);
   if (!started.length) return;
   const ids = new Set(started.map((f) => f.fixtureId));
   box.innerHTML = `<p class="faint small">Načítavam tipy zápasov o ${escapeHtml(dayTipsTime)}…</p>`;
@@ -2627,7 +2632,7 @@ function drawAutoTips() {
       // V rámci dňa každá súťaž zvlášť (s vlastným súčtom), v poradí súťaží.
       const dayLeagues = new Map();
       for (const t of tips) dayLeagues.set(leagueSk(t.league), [...(dayLeagues.get(leagueSk(t.league)) || []), t]);
-      const tipRow = (t) => `<tr><td style="white-space:nowrap">${escapeHtml(timeHm(new Date(t.matchDate)))}</td><td>${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))}<br><span class="faint">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}${t.strictFail ? " · neprejde 60 / 40" : ""}</span></td><td class="num">${probTxt(t.probability)}${NB}%</td><td class="num">${typeof t.odds === "number" ? fmtOdds(t.odds) : "–"}</td><td>${res[t.status] || escapeHtml(t.status)}</td><td class="num">${autoInHistory(t) ? `<span class="faint small" title="Tip už je v Histórii tipov">✓ v histórii</span>` : `<button type="button" class="btn ghost sm" data-auto-add="${escapeHtml(t.id)}" title="Pridať tento tip do Histórie tipov (aj keď sa zápas už hrá alebo je po zápase)">+ Pridať</button>`}</td></tr>`;
+      const tipRow = (t) => `<tr><td style="white-space:nowrap">${escapeHtml(timeHm(new Date(t.matchDate)))}</td><td>${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))}<br><span class="faint">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}${t.strictFail ? " · neprejde 60 / 40" : ""}</span></td><td class="num">${probTxt(t.probability)}${NB}%</td><td class="num">${typeof t.odds === "number" ? fmtOdds(t.odds) : "–"}</td><td>${res[t.status] || escapeHtml(t.status)}</td><td class="num">${autoInHistory(t) ? `<span class="faint small" title="Tip už je v Histórii tipov">✓ v histórii</span>` : !autoTipAddable(t) ? "" : `<button type="button" class="btn ghost sm" data-auto-add="${escapeHtml(t.id)}" title="Pridať tento tip do Histórie tipov (aj keď sa zápas už hrá alebo je po zápase)">+ Pridať</button>`}</td></tr>`;
       const rows = [...dayLeagues.entries()]
         .sort(byLeagueOrder((x) => x[0]))
         .map(([lg, l]) => {
