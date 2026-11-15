@@ -1075,8 +1075,8 @@ function renderAnalysis(r, root, opts = {}) {
     ${header}
     ${statusHtml}
     ${started && !isDone ? `<h3 class="sh">Pridať zabudnutý tip <small>zapísané pred výkopom</small></h3><div class="card" data-late-add><p class="faint small">Načítavam…</p></div>` : ""}
-    ${started
-      ? `<p class="faint small">${isDone ? "Zápas sa dohral – tipy sa pri ňom už neukazujú." : "Zápas sa hrá – tipy z analýzy sa pri ňom neukazujú. Platia len tipy zapísané pred výkopom."}</p>`
+    ${isDone
+      ? `<p class="faint small">Zápas sa dohral – tipy sa pri ňom už neukazujú.</p>`
       : `<h3 class="sh">Odporúčané tipy <small>pásmo ${WATCH_BELOW} – 80${NB}%, len s hodnotou</small></h3>
     ${tipsHtml}`}
     ${r.cupNote ? `<p class="faint small" data-cup-note>${escapeHtml(r.cupNote)}</p>` : ""}
@@ -1115,7 +1115,13 @@ function renderAnalysis(r, root, opts = {}) {
       b.disabled = true;
       b.title = MATCH_STARTED_TEXT;
     });
-    // 15. 11. 2026 (Michal): tipy z analýzy sa pri začatom/odohranom zápase už neukazujú ani nepridávajú.
+    // 15. 11. 2026 (Michal): počas zápasu sa tip z analýzy dá pridať (klientom alebo do sledovaných podľa pravidiel),
+    // po skončení zápasu sa tipy neukazujú vôbec.
+    root.querySelectorAll("[data-bet-idx]").forEach((b) => {
+      if (b.dataset.saved === "1") return;
+      b.textContent = "+ Pridať (po výkope)";
+      b.title = "Zápas sa hrá – tip prejde rovnakými pravidlami ako ostatné a dostane značku „doplnené po výkope“.";
+    });
     if (!isDone) void renderLateAdd(f, root.querySelector("[data-late-add]"));
   }
 }

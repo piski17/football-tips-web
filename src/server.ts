@@ -1089,9 +1089,9 @@ app.post("/api/tips", async (req, res) => {
     const isManualResult = tip.manualEntry === true && ["won", "lost", "void"].includes(tip.status);
     // 5. 11. 2026 (Michal): zabudnutý tip k začatému/odohranému zápasu sa dá pridať aj priamo z analýzy
     // (keď server pred výkopom nič nezapísal). Rovnaké pravidlá ako ostatné tipy, značka lateAdd + lateFromAnalysis.
-    // 15. 11. 2026 (Michal): ZRUŠENÉ – k začatému/odohranému zápasu sa tip z analýzy (počítaný po výkope) už pridať nedá.
-    const LATE_FROM_ANALYSIS_ON = false;
-    const lateFromAnalysis = LATE_FROM_ANALYSIS_ON && !isManualResult && tip.lateAdd === true && !(tip.legs && tip.legs.length) && tipHasStartedMatch(tip);
+    // 15. 11. 2026 (Michal): len kým sa zápas hrá (do 2 h od výkopu) – k dohratému zápasu sa tip pridať nedá.
+    const stillPlaying = Date.now() < new Date(tip.matchDate).getTime() + 120 * 60 * 1000;
+    const lateFromAnalysis = stillPlaying && !isManualResult && tip.lateAdd === true && !(tip.legs && tip.legs.length) && tipHasStartedMatch(tip);
     if (!lateFromAnalysis) { tip.lateAdd = undefined; tip.lateFromAnalysis = undefined; }
     if (!isManualResult && !lateFromAnalysis && tipHasStartedMatch(tip)) {
       res.status(400).json({ error: MATCH_STARTED_MESSAGE });
