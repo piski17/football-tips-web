@@ -1441,7 +1441,15 @@ export function predictMatch(
     if (!get || !m) continue;
     const line = Number(m[2]);
     const vals = (h2hStats ?? []).map(get).filter((v): v is number => typeof v === "number" && isFinite(v));
-    if (vals.length < H2H_MIN) continue;
+    if (vals.length < H2H_MIN) {
+      // Liga národov (15. 11. 2026, Michal – Fínsko – San Marino): reprezentácie hrajú proti súperom veľmi rôznej sily
+      // a API pri starých zápasoch malých krajín štatistiky často nemá. Keď sa vzájomné zápasy nedajú overiť, len sledovať.
+      if (Number(fixture.league?.id) === 5) {
+        c.h2hAgainst = `vzájomné zápasy sa nedajú overiť (so štatistikou ${vals.length}, treba aspoň ${H2H_MIN}) – Liga národov`;
+        c.explanation = (c.explanation ? c.explanation + " " : "") + `⚠️ ${c.h2hAgainst} – len do sledovaných.`;
+      }
+      continue;
+    }
     const lost = vals.filter((v) => (m[1] === "Over" ? v < line : v > line)).length;
     if (lost * 2 > vals.length) {
       c.h2hAgainst = `vo vzájomných zápasoch by tip neprešiel ${lost}× z ${vals.length} (${vals.join(", ")})`;
