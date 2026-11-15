@@ -461,7 +461,12 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
     }
     if (sm.done) {
       // Michal 14. 11.: „−140 € pri vklade 100 €“ mätie – vklad je na KAŽDÝ tip, uvádzame aj spolu vsadené.
-      lines.push(`💰 Deň: vyšlo ${sm.won} z ${sm.done} · ${signed(sm.units, 2)} j. (${signed(sm.units * stake(), 2)} € – ${stakeTxt()})`);
+      // Michal 15. 11.: zrozumiteľnejšie – každá vec na vlastnom riadku.
+      lines.push(
+        `🎯 Vyšlo ${sm.won} z ${plural(sm.done, "tipu", "tipov", "tipov")}`,
+        `💰 Zisk dňa: ${signed(sm.units * stake(), 2)} € (${signed(sm.units, 2)} j.)`,
+        `🏦 Pri banku ${eur(bank())} € a vklade ${eur(stake())} € na tip (${num(pct(), pct() % 1 ? 1 : 0)} % z banku)`,
+      );
     }
     if (sm.pending) lines.push(`⏳ Ešte sa hrá: ${sm.pending}`);
     if (false && data.month && data.month.tips) {
