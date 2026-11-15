@@ -12,7 +12,6 @@ import { applyCupGoals } from "./cupAdjust";
 import { getDay, getAllDays, setDay } from "./dailyStore";
 import { saveSlip, deleteSlip, listSlipIds, getSlipImage, MAX_SLIP_CHARS } from "./slipStore";
 import { recordMarketPredictions, settleMarketPredictions, marketSummary } from "./marketTracker";
-import { computeValuebets, valuebetLog, setMyBet, setMyBets, fairOdds, addManualBet, settleValuebets, valuebetStatus, startValuebets } from "./valuebets";
 import { scanSurebets, computeSurebets, fixtureResult, topBooksPresent, TOP_BOOKS, surebetStatus, surebetLog, getMyBooks, setMyBooks, startSurebetScanner } from "./surebets";
 import { recordAutoFixture, listAuto, listAutoFixtures, autoFixtureDone, updateAuto, pruneAuto, AutoEntry } from "./autoStore";
 import "dotenv/config";
@@ -2334,69 +2333,8 @@ app.get("/api/surebets/result", async (req, res) => {
 });
 startSurebetScanner(LEAGUE_PRESETS);
 
-// ---- Valuebety (/valuebety) – hodnotné stávky, skúška od 3. 11. 2026 (src/valuebets.ts) ----
-app.get(["/valuebety", "/valuebety/"], (_req, res) => {
-  res.set("Cache-Control", "no-cache");
-  res.sendFile(path.join(__dirname, "..", "public", "valuebety.html"));
-});
-app.get("/api/valuebets", async (req, res) => {
-  try {
-    const mine = await getMyBooks();
-    const scope = req.query.scope === "mine" ? "mine" : "all";
-    const list = computeValuebets(scope === "mine" ? (mine.length ? mine : ["-"]) : null);
-    res.json({ status: { ...valuebetStatus(), scan: surebetStatus() }, myBooks: mine, scope, valuebets: list.slice(0, 300) });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message ?? String(err) });
-  }
-});
-app.get("/api/valuebets/log", async (_req, res) => {
-  try {
-    res.json({ entries: await valuebetLog(), myBooks: await getMyBooks() });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message ?? String(err) });
-  }
-});
-app.post("/api/valuebets/my", async (req, res) => {
-  try {
-    const num = (v: any) => Number(String(v ?? "").replace(",", "."));
-    const entry = await setMyBet(String(req.body?.key ?? ""), num(req.body?.stake) || 0, num(req.body?.odd), String(req.body?.book ?? ""));
-    res.json({ entry });
-  } catch (err: any) {
-    res.status(400).json({ error: err.message ?? String(err) });
-  }
-});
-app.post("/api/valuebets/my/bulk", async (req, res) => {
-  try {
-    const num = (v: any) => Number(String(v ?? "").replace(",", "."));
-    const items = Array.isArray(req.body?.items) ? req.body.items.map((x: any) => ({ key: String(x?.key ?? ""), odd: num(x?.odd) })) : [];
-    const stake = num(req.body?.stake);
-    if (!(stake > 0)) throw new Error("Zadajte vklad v eurách.");
-    res.json(await setMyBets(items, stake, String(req.body?.book ?? "")));
-  } catch (err: any) {
-    res.status(400).json({ error: err.message ?? String(err) });
-  }
-});
-app.get("/api/valuebets/fair", (_req, res) => {
-  res.json({ fixtures: fairOdds() });
-});
-app.post("/api/valuebets/manual", async (req, res) => {
-  try {
-    const num = (v: any) => Number(String(v ?? "").replace(",", "."));
-    const b = req.body ?? {};
-    const entry = await addManualBet(Number(b.fixtureId), String(b.betId ?? ""), String(b.value ?? ""), num(b.odd), num(b.stake), String(b.book ?? ""));
-    res.json({ entry });
-  } catch (err: any) {
-    res.status(400).json({ error: err.message ?? String(err) });
-  }
-});
-app.post("/api/valuebets/settle", async (_req, res) => {
-  try {
-    res.json({ settled: await settleValuebets() });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message ?? String(err) });
-  }
-});
-startValuebets();
+// ---- Valuebety odstránené z appky (15. 11. 2026, Michal). Staré záznamy ostávajú v Upstash (tipradar_valuebets). ----
+app.get(["/valuebety", "/valuebety/"], (_req, res) => res.redirect("/"));
 
 // ---- Superkurzy odstránené z appky (5. 11. 2026, Michal). Staré záznamy ostávajú v Upstash. ----
 app.get(["/superkurzy", "/superkurzy/"], (_req, res) => res.redirect("/"));

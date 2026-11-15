@@ -66,7 +66,7 @@ export interface SurebetLogEntry extends Surebet {
 
 let lastScan: { at: string; fixtures: FixtureOdds[]; requests: number; books: string[]; error?: string } | null = null;
 let scanning = false;
-/** Zápis valuebetov po každom prehľadaní (nastaví valuebets.ts). */
+/** Voliteľný zápis po každom prehľadaní (pôvodne valuebety, odstránené 15. 11. 2026). */
 let onScan: (() => Promise<void>) | null = null;
 export function setOnScan(fn: () => Promise<void>): void { onScan = fn; }
 /** Zápasy a kurzy z posledného prehľadania (pre valuebety). */
@@ -159,7 +159,7 @@ export async function scanSurebets(): Promise<void> {
     for (const f of out.values()) for (const b of Object.values(f.bets)) for (const list of Object.values(b.values)) for (const o of list) books.add(o.book);
     lastScan = { at: new Date().toISOString(), fixtures: [...out.values()], requests: counter.n, books: [...books].sort((a, b) => a.localeCompare(b)), ...(failed.length ? { error: failed.join(" · ").slice(0, 300) } : {}) };
     await logCurrent();
-    if (onScan) await onScan().catch((err) => console.error("Valuebety – zápis zlyhal:", err));
+    if (onScan) await onScan().catch((err) => console.error("Zápis po prehľadaní zlyhal:", err));
   } catch (err: any) {
     lastScan = { at: new Date().toISOString(), fixtures: lastScan?.fixtures ?? [], requests: counter.n, books: lastScan?.books ?? [], error: String(err?.message ?? err) };
   } finally {
