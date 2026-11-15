@@ -116,7 +116,11 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
       <div class="panel">
         <h2>Nastavenie</h2>
         <div class="opts" style="margin:0">
-          <div class="opt"><label class="f" for="stake">Vklad na tip v eurách (na prepočet zisku)</label><input type="number" id="stake" min="1" step="1" value="100"></div>
+          <div class="grid2" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="opt"><label class="f" for="bank">Kapitál (bank) v €</label><input type="number" id="bank" min="1" step="50" value="1000"></div>
+            <div class="opt"><label class="f" for="pct">Vklad na tip v %</label><input type="number" id="pct" min="0.5" max="20" step="0.5" value="3"></div>
+          </div>
+          <p class="note" id="stakeInfo" style="margin:-4px 0 0"></p>
           <div class="opt"><label class="f" for="handle">Podpis dole na obrázku</label><input type="text" id="handle" value="@tipradar"></div>
         </div>
       </div>
@@ -159,8 +163,13 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
 
   // ---------- Stav ----------
   const st = { day: null, data: null, fmt: "post", page: 0, cvs: [], mode: "post" };
-  try { const h = localStorage.getItem("tr_ig_handle"); if (h) $("handle").value = h; const s = localStorage.getItem("tr_ig_stake2"); if (s) $("stake").value = s; } catch (e) { /* bez úložiska */ }
-  const stake = () => { const v = Number($("stake").value); return v > 0 ? v : 100; };
+  try { const h = localStorage.getItem("tr_ig_handle"); if (h) $("handle").value = h; const b = localStorage.getItem("tr_ig_bank"); if (b) $("bank").value = b; const pc = localStorage.getItem("tr_ig_pct"); if (pc) $("pct").value = pc; } catch (e) { /* bez úložiska */ }
+  // Michal 15. 11.: namiesto pevného vkladu kapitál (bank) a % vkladu – vklad na tip = bank × %.
+  const bank = () => { const v = Number(String($("bank").value).replace(",", ".")); return v > 0 ? v : 1000; };
+  const pct = () => { const v = Number(String($("pct").value).replace(",", ".")); return v > 0 ? v : 3; };
+  const stake = () => Math.round(bank() * pct()) / 100;
+  const eur = (n) => num(n, Math.abs(n % 1) > 0.001 ? 2 : 0).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  const stakeTxt = () => `bank ${eur(bank())} €, vklad ${num(pct(), pct() % 1 ? 1 : 0)} % = ${eur(stake())} € na tip`;
 
   function summary(tips) {
     const done = tips.filter((t) => t.status === "won" || t.status === "lost");
@@ -310,8 +319,13 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
       ctx.font = font(700, bsz, H_FONT); ctx.fillStyle = accent; ctx.fillText(big, rx - 4, ry + bsz * 0.98);
       const l1 = pre ? (tips.length > 1 ? "priemerný kurz" : "kurz") : sm.done === 0 ? plural(tips.length, "tip sa ešte hrá", "tipy sa ešte hrajú", "tipov sa ešte hrá") : `Vyšlo ${sm.won} z ${sm.done}`;
       ctx.fillStyle = C.text; fit(ctx, l1, 700, story ? 34 : 30, rw, B_FONT, 16); ctx.fillText(l1, rx, ry + bsz * 0.98 + (story ? 56 : 48));
-      const l2 = pre ? `dôvera modelu ${num(avgProb, 0)} %` : sm.done === 0 ? "" : `${signed(sm.units * stake(), 2)} € pri ${num(stake(), stake() % 1 ? 2 : 0)} € na každý tip${sm.done > 1 ? ` (spolu ${num(stake() * sm.done, stake() % 1 ? 2 : 0)} €)` : ""}`;
+      const l2 = pre ? `dôvera modelu ${num(avgProb, 0)} %` : sm.done === 0 ? "" : `${signed(sm.units * stake(), 2)} € pri vklade ${eur(stake())} € na tip`;
       ctx.fillStyle = C.muted; fit(ctx, l2, 600, story ? 26 : 22, rw, B_FONT, 13); ctx.fillText(l2, rx, ry + bsz * 0.98 + (story ? 96 : 82));
+      // Michal 15. 11.: kapitál a % vkladu
+      if (!pre && sm.done) {
+        const l3 = `bank ${eur(bank())} € · vklad ${num(pct(), pct() % 1 ? 1 : 0)} %`;
+        ctx.fillStyle = C.faint; fit(ctx, l3, 600, story ? 22 : 19, rw, B_FONT, 12); ctx.fillText(l3, rx, ry + bsz * 0.98 + (story ? 132 : 112));
+      }
 
       if (showMonth) {
         const m = data.month, mi = Number(m.key.slice(5, 7)) - 1;
@@ -447,7 +461,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
     }
     if (sm.done) {
       // Michal 14. 11.: „−140 € pri vklade 100 €“ mätie – vklad je na KAŽDÝ tip, uvádzame aj spolu vsadené.
-      lines.push(`💰 Deň: vyšlo ${sm.won} z ${sm.done} · ${signed(sm.units, 2)} j. (${signed(sm.units * stake(), 2)} € pri ${num(stake(), stake() % 1 ? 2 : 0)} € na každý tip${sm.done > 1 ? `, vsadené spolu ${num(stake() * sm.done, stake() % 1 ? 2 : 0)} €` : ""})`);
+      lines.push(`💰 Deň: vyšlo ${sm.won} z ${sm.done} · ${signed(sm.units, 2)} j. (${signed(sm.units * stake(), 2)} € – ${stakeTxt()})`);
     }
     if (sm.pending) lines.push(`⏳ Ešte sa hrá: ${sm.pending}`);
     if (false && data.month && data.month.tips) {
@@ -506,6 +520,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
     $("pageInfo").className = "note";
     if (sm.pending && st.mode !== "pre") { $("pageInfo").textContent = `Pozor: ${plural(sm.pending, "tip sa ešte hrá", "tipy sa ešte hrajú", "tipov sa ešte hrá")} – obrázok ukazuje priebežný stav. Najlepšie je zverejniť až ráno po dohraní.`; $("pageInfo").className = "note warn"; }
     $("text").value = caption(view);
+    $("stakeInfo").textContent = `Vklad na tip: ${eur(stake())} € (${num(pct(), pct() % 1 ? 1 : 0)} % z ${eur(bank())} €).`;
     const has = vt.length > 0;
     $("shareBtn").disabled = !has; $("downBtn").disabled = !has;
   }
@@ -554,7 +569,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
   $("day").addEventListener("change", () => { if (/^\d{4}-\d{2}-\d{2}$/.test($("day").value)) load($("day").value); });
   $("prevDay").addEventListener("click", () => { const d = (st.data.days || []).filter((x) => x < st.day).pop(); if (d) load(d); });
   $("nextDay").addEventListener("click", () => { const d = (st.data.days || []).find((x) => x > st.day); if (d) load(d); });
-  for (const id of ["stake", "handle"]) $(id).addEventListener("input", () => { try { localStorage.setItem(id === "stake" ? "tr_ig_stake2" : "tr_ig_handle", $(id).value); } catch (e) {} render(); });
+  for (const id of ["bank", "pct", "handle"]) $(id).addEventListener("input", () => { try { localStorage.setItem("tr_ig_" + id, $(id).value); } catch (e) {} render(); });
   $("copyBtn").addEventListener("click", async () => {
     try { await navigator.clipboard.writeText($("text").value); } catch (e) { $("text").select(); document.execCommand("copy"); }
     $("copyBtn").textContent = "Skopírované ✓"; setTimeout(() => { $("copyBtn").textContent = "Kopírovať text"; }, 1600);
