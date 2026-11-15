@@ -246,6 +246,7 @@ function basicAuth(req: Request, res: Response, next: NextFunction): void {
   // priamo, bez znalosti hesla appky - musia zostať verejne prístupné.
   if (
     req.path === "/api/telegram/webhook" ||
+    req.path === "/health" ||
     req.path === "/api/public/track-record" ||
     req.path === "/api/public/vip-seats" ||
     req.path === "/api/public/waitlist" ||
@@ -3653,6 +3654,13 @@ async function backfillMissedAutoSaves(): Promise<void> {
   await setMeta("autoSaveBackfill:2026-11-14", new Date().toISOString());
 }
 setTimeout(() => void backfillMissedAutoSaves().catch((err) => console.error("Doplnenie vynechaných tipov zlyhalo:", err)), 90 * 1000);
+/**
+ * Server nesmie zaspať (15. 11. 2026): bezplatný Render server sa po ~15 min bez návštevy uspí a vtedy nebežia
+ * žiadne časovače – automatická analýza ani automatické ukladanie tipov (napr. večer a v noci, keď appku nikto
+ * neotvára). Server si preto každých 10 minút sám „zaklope“ na vlastnú verejnú adresu, aby ostal hore.
+ */
+const KEEP_ALIVE_URL = `${(process.env.RENDER_EXTERNAL_URL || "https://football-tips-web.onrender.com").replace(/\/$/, "")}/health`;
+setInterval(() => void fetch(KEEP_ALIVE_URL, { signal: AbortSignal.timeout(20000) }).catch(() => {}), 10 * 60 * 1000);
 setInterval(() => void autoSaveDueTips().catch((err) => console.error("Automatické ukladanie tipov zlyhalo:", err)), 5 * 60 * 1000);
 
 // Výsledky sa kontrolujú aj samy, každých 15 minút – netreba čakať na tlačidlo.
