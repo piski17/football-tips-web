@@ -518,7 +518,7 @@
       };
       pair({ ...e.sides[0] }, e.sides[1].odd, e.sides[1], e.sides[0].odd, "", true);
       for (const c of it.combos) pair({ label: e.sides[0].label, odd: c.a.odd, book: c.a.book }, c.b.odd, { label: e.sides[1].label, odd: c.b.odd, book: c.b.book }, c.a.odd, `+${n2(c.margin * 100)}%`, false);
-      if (it.more) { ctx.fillStyle = C.muted; ctx.font = font(600, f(18), B_FONT); ctx.fillText(`+ ${it.more} more combinations (see caption)`, cx, py + PH + f(24)); }
+      if (it.more) { ctx.fillStyle = C.muted; ctx.font = font(600, f(18), B_FONT); ctx.fillText(`+ ${it.more} more bookmaker option${it.more === 1 ? "" : "s"}`, cx, py + PH + f(24)); }
       y += h + lay.gap * k;
     }
 
@@ -529,7 +529,12 @@
 
   // ---------- Text k príspevku (ako správa s tipom na Telegrame, po anglicky) ----------
   const tag = (t) => "#" + String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/gi, "").toLowerCase();
+  /** 15. 11. 2026 (kontrola textov): text k jednému surebetu v rovnakom tvare ako súhrn dňa. */
   function caption(s, result) {
+    const day = new Date(s.date).toLocaleDateString("sv-SE", { timeZone: "Europe/Bratislava" });
+    return dayCaption(day, [{ ...s, maxMargin: s.margin }], !result);
+  }
+  function captionOld(s, result) {
     const settled = !!result;
     const win = settled ? winner(s, result) : null;
     const sum = 1 / s.sides[0].odd + 1 / s.sides[1].odd;
@@ -617,7 +622,7 @@
       const profit = (m) => `💰 Profit: €${n2(m * 100)} (${n2(m * 100)}%)`;
       lines.push(`${pre ? "🔒" : "✅"} ${e.home} - ${e.away} / ${market(e.market)}`, tipLine(a, b));
       // Michal 13. 11. 15:36: profit nie pri každom tipe, len na konci (💰 Day total).
-      for (const c of dayCombos(e)) lines.push(tipLine(c.a, c.b));
+      // 15. 11. 2026: ďalšie dvojice v texte nie – bez stávkoviek by boli nezrozumiteľné (sú na obrázku).
     }
     // Michal 13. 11.: pri 1 surebete súčet netreba; pri viacerých krátky súčet dňa.
     // Michal 13. 11.: Day total vždy (aj pri 1 zápase), ikonka 💰.
