@@ -174,7 +174,30 @@ function minOddsLine(tip: SavedTip): string {
   return `✅ Minimálny kurz, pri ktorom tip odporúčam hrať: <b>${fmtNum(min, 2)}</b>\n`;
 }
 
+/**
+ * Hlavný vypínač kanálov (15. 11. 2026, Michal): kým je vypnutý, do žiadneho kanála/skupiny TipRadaru
+ * (kanál zadarmo, Členovia, Chat členov, starý VIP) neodíde nič – tipy, výsledky, vyhodnotenie dňa ani oznamy.
+ * Súkromné správy bota (záujemcovia, upozornenia adminovi, členom osobne) fungujú ďalej.
+ * Zapína sa v app.tipradar.eu → Nástroje → „Telegram kanály“ (uložené v meta „telegramChannelsOn“).
+ * Kým sa nastavenie po štarte nenačíta, platí vypnuté.
+ */
+let channelsOn = false;
+export function setTelegramChannelsOn(on: boolean): void {
+  channelsOn = on;
+}
+export function telegramChannelsOn(): boolean {
+  return channelsOn;
+}
+function isChannelChat(chatId: string | number): boolean {
+  const id = String(chatId);
+  return [TELEGRAM_CHAT_ID_PREMIUM, TELEGRAM_CHAT_ID_VIP, TELEGRAM_CHAT_ID_VIPCHAT, TELEGRAM_CHAT_ID_FREE].some((c) => !!c && String(c) === id);
+}
+
 async function sendToChat(chatId: string, text: string): Promise<number | null> {
+  if (!channelsOn && isChannelChat(chatId)) {
+    console.log("Telegram kanály sú vypnuté – správa do kanála sa neposiela.");
+    return null;
+  }
   try {
     const res = await axios.post(
       `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,

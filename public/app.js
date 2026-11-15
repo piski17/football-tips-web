@@ -5056,6 +5056,41 @@ async function openVisits() {
 }
 document.getElementById("openVisitsBtn").addEventListener("click", () => openVisits());
 
+// ---- Hlavný vypínač Telegram kanálov (15. 11. 2026, Michal: vypnuté, kým nebude 100 tipov) ----
+(function wireTelegramChannels() {
+  const btn = document.getElementById("tgChannelsBtn");
+  const state = document.getElementById("tgChannelsState");
+  if (!btn || !state) return;
+  let on = false;
+  const show = () => {
+    state.textContent = on ? "zapnuté" : "vypnuté";
+    state.style.color = on ? "var(--green, #3fb27f)" : "var(--red, #e5484d)";
+    state.style.fontStyle = "normal";
+  };
+  fetch("/api/telegram/channels", { cache: "no-store" })
+    .then((r) => r.json())
+    .then((d) => { on = d.on === true; show(); })
+    .catch(() => { state.textContent = "?"; });
+  btn.addEventListener("click", async () => {
+    const next = !on;
+    const msg = next
+      ? "Zapnúť posielanie do Telegram kanálov? Tipy a nové výsledky pôjdu znova do kanálov (výsledky z obdobia vypnutia sa dodatočne neposielajú)."
+      : "Vypnúť posielanie do všetkých Telegram kanálov TipRadaru?";
+    if (!window.confirm(msg)) return;
+    btn.disabled = true;
+    try {
+      const d = await postJson("/api/telegram/channels", { on: next });
+      on = d.on === true;
+      show();
+      showToast(on ? "Telegram kanály zapnuté." : "Telegram kanály vypnuté.");
+    } catch (err) {
+      showToast(`Nepodarilo sa: ${err.message}`);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+})();
+
 // ---- Trhy v ligách (30. 10. 2026) ----
 async function openCoverage() {
   const m = openModal(`
