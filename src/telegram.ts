@@ -24,9 +24,10 @@ function plural(n: number, one: string, few: string, many: string): string {
 }
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-// Súkromný (členský) kanál TipRadar pre všetkých členov – Štart, Gold aj Platinum
-// (starší názov premennej TELEGRAM_CHAT_ID_PREMIUM stále funguje).
-const TELEGRAM_CHAT_ID_PREMIUM = process.env.TELEGRAM_CHAT_ID_PLATINUM || process.env.TELEGRAM_CHAT_ID_PREMIUM;
+// Súkromný (členský) kanál pre platiacich – od 15. 11. 2026 „TipRadar · VIP Klub“ (Michal ho založil, ID zapísané
+// v kóde, aby sa nemuselo meniť v Renderi; prebíja staré premenné TELEGRAM_CHAT_ID_PLATINUM / _PREMIUM).
+const VIP_KLUB_CHAT_ID = "-1004363377204";
+const TELEGRAM_CHAT_ID_PREMIUM = VIP_KLUB_CHAT_ID || process.env.TELEGRAM_CHAT_ID_PLATINUM || process.env.TELEGRAM_CHAT_ID_PREMIUM;
 const TELEGRAM_CHAT_ID_VIP = process.env.TELEGRAM_CHAT_ID_VIP;
 // VIP chat (skupina pre všetkých členov). Bot v nej musí byť administrátor s právom pozývať.
 const TELEGRAM_CHAT_ID_VIPCHAT = process.env.TELEGRAM_CHAT_ID_VIPCHAT;
