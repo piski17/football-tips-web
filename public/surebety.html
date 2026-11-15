@@ -347,7 +347,7 @@ function sbCombos(s) {
     if (x.book === y.book || (x === s.sides[0] && y === s.sides[1])) continue;
     const sum = 1 / x.odd + 1 / y.odd;
     // 13. 11. 2026 (Michal): aj náhradné dvojice len so ziskom od ARB_MIN (5 %).
-    if (sum < 1 && 1 / sum - 1 >= ARB_MIN) out.push({ a: { book: x.book, odd: x.odd }, b: { book: y.book, odd: y.odd }, margin: 1 / sum - 1 });
+    if (sum < 1 && 1 / sum - 1 >= ARB_MIN && rMarginOdds(x.odd, y.odd) >= ARB_MIN) out.push({ a: { book: x.book, odd: x.odd }, b: { book: y.book, odd: y.odd }, margin: 1 / sum - 1 });
   }
   return out.sort((p, q) => q.margin - p.margin);
 }
@@ -386,7 +386,7 @@ async function load() {
       : "Server ešte neprehľadával (prvýkrát minútu po spustení, potom každú hodinu).";
     const tb = st.topBooks || [];
     $("topInfo").textContent = scope === "all" ? (allBooks.length ? `Stávkovky s kurzami (${allBooks.length}): ${allBooks.join(", ")}.` : "") : tb.length ? "Známe zahraničné stávkovky v kurzoch: " + tb.join(", ") + "." : "";
-    renderList(dedupeSame((j.surebets || []).filter((x) => x.margin >= ARB_MIN), (x) => x.margin));
+    renderList(dedupeSame((j.surebets || []).filter((x) => x.margin >= ARB_MIN && rMarginE(x) >= ARB_MIN), (x) => x.margin));
     renderBooks();
   } catch (err) { $("scanInfo").textContent = err.message; }
 }
@@ -412,6 +412,15 @@ $("scopeChips").addEventListener("click", (e) => {
 let logScope = "all";
 /** 12. 11. 2026 (Michal): ukazovať a vyhodnocovať len surebety so ziskom od 5 % (pôvodne 3 %, Michal 13. 11. zvýšil na 5 %). Server zapisuje všetky, filter je len tu. */
 const ARB_MIN = 0.05;
+/** 15. 11. 2026 (Michal): minimum 5 % platí pre zisk pri vkladoch na CELÉ EURÁ (ako na obrázkoch) – horší z dvoch výsledkov. */
+function rMarginOdds(oa, ob) {
+  const ex = (100 / oa) / (1 / oa + 1 / ob);
+  let sa = Math.round(ex); const sb0 = Math.round(100 - ex);
+  if (sa + sb0 !== 100) sa = oa >= ob ? 100 - sb0 : sa;
+  return Math.min(oa * sa, ob * (100 - sa)) / 100 - 1;
+}
+const rMarginE = (x) => (x.sides && x.sides.length === 2 ? rMarginOdds(x.sides[0].odd, x.sides[1].odd) : 0);
+window.rMarginOdds = rMarginOdds;
 /** 12. 11. 2026 (Michal): z jedného TYPU v zápase len jeden surebet s najvyšším ziskom – karty (celkovo, tímu, polčas) spolu, rohy spolu, góly spolu; karty a rohy toho istého zápasu môžu ostať. */
 const sbType = (market) => String(market || "").trim().split(/\s+/)[0].toLowerCase();
 function dedupeSame(list, mk) {
@@ -470,7 +479,7 @@ function renderLog() {
   }).join("") : `<p class="empty">${logScope === "mine" && myBooks.length < 2 ? "Vyberte aspoň 2 svoje stávkovky – evidencia začne od ďalšieho prehľadania." : "Zatiaľ nič zapísané."}</p>`;
 }
 async function loadLog() {
-  try { const j = await api("/api/surebets/log"); logEntries = dedupeSame((j.entries || []).filter((x) => x.maxMargin >= ARB_MIN), (x) => x.maxMargin); topBooksAll = j.topBooks || []; renderLog(); } catch (err) { $("logDays").innerHTML = `<p class="empty">${esc(err.message)}</p>`; }
+  try { const j = await api("/api/surebets/log"); logEntries = dedupeSame((j.entries || []).filter((x) => x.maxMargin >= ARB_MIN && rMarginE(x) >= ARB_MIN), (x) => x.maxMargin); topBooksAll = j.topBooks || []; renderLog(); } catch (err) { $("logDays").innerHTML = `<p class="empty">${esc(err.message)}</p>`; }
 }
 $("logDays").addEventListener("click", (e) => {
   const ig = e.target.closest("button[data-igk]");
@@ -490,6 +499,6 @@ $("logScope").addEventListener("click", (e) => {
 load(); loadLog();
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="/surebety-ig.js?v=2026-11-15b"></script>
+<script src="/surebety-ig.js?v=2026-11-15d"></script>
 </body>
 </html>
