@@ -5056,6 +5056,79 @@ async function openVisits() {
 }
 document.getElementById("openVisitsBtn").addEventListener("click", () => openVisits());
 
+// ---- Doplnenie tipov od 1. 11. do kanála zadarmo (15. 11. 2026, Michal) ----
+document.getElementById("freeHistoryBtn")?.addEventListener("click", () => openFreeHistory());
+async function openFreeHistory() {
+  const m = openModal(`
+    <h3>Kanál zadarmo – tipy od 1. 11.</h3>
+    <p class="muted small">Každý zaškrtnutý deň = jedna správa v kanáli zadarmo (ako ranné vyhodnotenie: tipy dňa, výsledky, bilancia od 1. 11.). Dni so značkou „už v kanáli“ tam bot už posielal – sú nezaškrtnuté, aby sa neopakovali. Medzi správami sú 3 sekundy.</p>
+    <div data-body><p class="empty">Načítavam…</p></div>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" data-del hidden>Zmazať poslané z kanála</button>
+      <button type="button" class="btn ghost" data-close>Zavrieť</button>
+      <button type="button" class="btn" data-send disabled>Odoslať do kanála</button>
+    </div>`, { wide: true });
+  const body = m.el.querySelector("[data-body]");
+  const sendBtn = m.el.querySelector("[data-send]");
+  const delBtn = m.el.querySelector("[data-del]");
+  const fmtDay = (d) => { const [y, mo, da] = d.split("-").map(Number); return `${da}. ${mo}. ${y}`; };
+  const tgToHtml = (t) => t.replace(/\n/g, "<br>");
+  let data;
+  try {
+    data = await fetchJson("/api/telegram/free-history");
+  } catch (err) {
+    body.innerHTML = `<p class="empty">Nepodarilo sa načítať: ${escapeHtml(err.message)}</p>`;
+    return;
+  }
+  if (!data.configured) {
+    body.innerHTML = `<p class="empty">Kanál zadarmo nie je na serveri nastavený (TELEGRAM_CHAT_ID_FREE).</p>`;
+    return;
+  }
+  if (data.sentMessages > 0) {
+    delBtn.hidden = false;
+    delBtn.textContent = `Zmazať poslané z kanála (${data.sentMessages})`;
+  }
+  const days = data.days || [];
+  if (!days.length) {
+    body.innerHTML = `<p class="empty">Od 1. 11. zatiaľ nie je žiadny dohraný deň s tipmi.</p>`;
+  } else {
+    body.innerHTML = days.map((d) => `
+      <details class="card" style="margin:8px 0;padding:10px 14px">
+        <summary><label class="check" onclick="event.stopPropagation()"><input type="checkbox" data-day="${d.day}" ${d.posted ? "" : "checked"} /> <b>${fmtDay(d.day)}</b></label> · ${d.tips} ${d.tips === 1 ? "tip" : d.tips < 5 ? "tipy" : "tipov"}${d.posted ? ' · <span class="tag">už v kanáli</span>' : ""}</summary>
+        <div class="small" style="margin-top:8px;line-height:1.5">${tgToHtml(d.text)}</div>
+      </details>`).join("");
+    sendBtn.disabled = false;
+  }
+  sendBtn.addEventListener("click", async () => {
+    const chosen = [...body.querySelectorAll("[data-day]:checked")].map((i) => i.dataset.day);
+    if (!chosen.length) { showToast("Nie je zaškrtnutý žiadny deň."); return; }
+    if (!window.confirm(`Odoslať ${chosen.length} ${chosen.length === 1 ? "správu" : chosen.length < 5 ? "správy" : "správ"} do kanála zadarmo?`)) return;
+    sendBtn.disabled = true;
+    sendBtn.textContent = "Odosielam…";
+    try {
+      const r = await postJson("/api/telegram/free-history", { days: chosen });
+      showToast(`Odoslané: ${r.sent}${r.failed ? ` · neodišlo: ${r.failed}` : ""}`);
+      m.close();
+    } catch (err) {
+      showToast(`Odoslanie zlyhalo: ${err.message}`);
+      sendBtn.disabled = false;
+      sendBtn.textContent = "Odoslať do kanála";
+    }
+  });
+  delBtn.addEventListener("click", async () => {
+    if (!window.confirm("Zmazať z kanála zadarmo všetky správy poslané týmto tlačidlom?")) return;
+    delBtn.disabled = true;
+    try {
+      const r = await fetchJson("/api/telegram/free-history", { method: "DELETE" });
+      showToast(`Zmazané: ${r.deleted}`);
+      m.close();
+    } catch (err) {
+      showToast(`Mazanie zlyhalo: ${err.message}`);
+      delBtn.disabled = false;
+    }
+  });
+}
+
 // ---- Hlavný vypínač Telegram kanálov (15. 11. 2026, Michal: vypnuté, kým nebude 100 tipov) ----
 (function wireTelegramChannels() {
   const btn = document.getElementById("tgChannelsBtn");

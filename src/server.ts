@@ -58,7 +58,7 @@ import {
   setTelegramWebhook,
   notifyAdminExpiringSubscribers,
   sendCustomMessage,
-  sendTipResultToTelegram, notifyAdmin, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite, sendMemberMessage, isMemberChannel, memberChannelConfigured, sendPackageLowReminder, freeChannelConfigured, sendFreeResult, sendFreeDaySummary, setTelegramChannelsOn, telegramChannelsOn, tipUnits, minOddsFor, FreeBalance, normalizeTelegramUrl } from "./telegram";
+  sendTipResultToTelegram, notifyAdmin, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite, sendMemberMessage, isMemberChannel, memberChannelConfigured, sendPackageLowReminder, freeChannelConfigured, sendFreeResult, sendFreeDaySummary, buildFreeDaySummaryText, sendFreeHistoryMessage, deleteTelegramMessages as deleteTgMessages, setTelegramChannelsOn, telegramChannelsOn, tipUnits, minOddsFor, FreeBalance, normalizeTelegramUrl } from "./telegram";
 import { paymentsEnabled, isTerm, sellableTerm, SellableTerm, SELLABLE_TERMS, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, deletePayment, Payment, termLabel, tierName, addActiveMonths, SUMMER_PAUSE } from "./payments";
 import { payBySquareString } from "./payBySquare";
 import QRCode from "qrcode";
@@ -1232,6 +1232,89 @@ app.post("/api/telegram/channels", async (req, res) => {
     if (on && !wasOn) await setMeta(CHANNELS_RESUMED_META, new Date().toISOString());
     setTelegramChannelsOn(on);
     res.json({ on });
+  } catch (err: any) {
+    res.status(502).json({ error: errText(err) });
+  }
+});
+
+// ---- Doplnenie histórie do kanála zadarmo (15. 11. 2026, Michal: „pridať do FREE tipy od 1. 11.“) ----
+// Jedna správa za každý dohraný deň (ako ranné vyhodnotenie) s priebežnou bilanciou. Posiela sa len ručne
+// z Nástrojov (náhľad → Odoslať), aj keď je hlavný vypínač kanálov vypnutý. Správy sa dajú zase zmazať.
+const FREE_HISTORY_META = "freeHistoryMessages";
+async function freeHistoryDays(): Promise<{ day: string; text: string; tips: number; posted: boolean }[]> {
+  const today = dayKeySk(new Date());
+  const counted = statsTips(await listTips())
+    .filter((t) => (tipDayKey(t) ?? "") >= FREE_RESULTS_FROM && !t.lateAdd)
+    .sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime());
+  const done = (t: SavedTip) => t.status === "won" || t.status === "lost" || t.status === "void";
+  const days = [...new Set(counted.map((t) => tipDayKey(t)!).filter(Boolean))].filter((d) => d < today).sort();
+  const out: { day: string; text: string; tips: number; posted: boolean }[] = [];
+  for (const day of days) {
+    const dayTips = counted.filter((t) => tipDayKey(t) === day);
+    if (!dayTips.every(done)) continue;
+    const upTo = counted.filter((t) => (tipDayKey(t) ?? "") <= day && done(t));
+    const balance: FreeBalance = {
+      won: upTo.filter((t) => t.status === "won").length,
+      lost: upTo.filter((t) => t.status === "lost").length,
+      units: upTo.reduce((sum, t) => sum + tipUnits(t), 0),
+      from: FREE_RESULTS_FROM,
+    };
+    out.push({ day, text: buildFreeDaySummaryText(dayTips, day, balance), tips: dayTips.length, posted: !!(await getMeta(`freeDaySummary:${day}`)) });
+  }
+  return out;
+}
+
+app.get("/api/telegram/free-history", async (_req, res) => {
+  try {
+    let sentBefore: unknown[] = [];
+    try { sentBefore = JSON.parse((await getMeta(FREE_HISTORY_META)) ?? "[]"); } catch { sentBefore = []; }
+    res.json({ configured: freeChannelConfigured(), days: await freeHistoryDays(), sentMessages: sentBefore.length });
+  } catch (err: any) {
+    res.status(502).json({ error: errText(err) });
+  }
+});
+
+let freeHistoryRunning = false;
+app.post("/api/telegram/free-history", async (req, res) => {
+  if (freeHistoryRunning) {
+    res.status(409).json({ error: "Odosielanie už beží." });
+    return;
+  }
+  freeHistoryRunning = true;
+  try {
+    if (!freeChannelConfigured()) {
+      res.status(400).json({ error: "Kanál zadarmo nie je na serveri nastavený." });
+      return;
+    }
+    const wanted: string[] = Array.isArray(req.body?.days) ? req.body.days.map(String) : [];
+    const days = (await freeHistoryDays()).filter((d) => wanted.includes(d.day));
+    let stored: { chatId: string; messageId: number }[] = [];
+    try { stored = JSON.parse((await getMeta(FREE_HISTORY_META)) ?? "[]"); } catch { stored = []; }
+    let sent = 0;
+    for (const d of days) {
+      const m = await sendFreeHistoryMessage(d.text);
+      if (!m) break;
+      stored.push(m);
+      sent++;
+      await setMeta(FREE_HISTORY_META, JSON.stringify(stored));
+      await setMeta(`freeDaySummary:${d.day}`, new Date().toISOString());
+      await new Promise((r) => setTimeout(r, 3000));
+    }
+    res.json({ sent, failed: days.length - sent });
+  } catch (err: any) {
+    res.status(502).json({ error: errText(err) });
+  } finally {
+    freeHistoryRunning = false;
+  }
+});
+
+app.delete("/api/telegram/free-history", async (_req, res) => {
+  try {
+    let stored: { chatId: string; messageId: number }[] = [];
+    try { stored = JSON.parse((await getMeta(FREE_HISTORY_META)) ?? "[]"); } catch { stored = []; }
+    await deleteTgMessages(stored);
+    await setMeta(FREE_HISTORY_META, "[]");
+    res.json({ deleted: stored.length });
   } catch (err: any) {
     res.status(502).json({ error: errText(err) });
   }

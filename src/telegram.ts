@@ -193,8 +193,8 @@ function isChannelChat(chatId: string | number): boolean {
   return [TELEGRAM_CHAT_ID_PREMIUM, TELEGRAM_CHAT_ID_VIP, TELEGRAM_CHAT_ID_VIPCHAT, TELEGRAM_CHAT_ID_FREE].some((c) => !!c && String(c) === id);
 }
 
-async function sendToChat(chatId: string, text: string): Promise<number | null> {
-  if (!channelsOn && isChannelChat(chatId)) {
+async function sendToChat(chatId: string, text: string, force = false): Promise<number | null> {
+  if (!channelsOn && !force && isChannelChat(chatId)) {
     console.log("Telegram kanály sú vypnuté – správa do kanála sa neposiela.");
     return null;
   }
@@ -371,13 +371,26 @@ export async function sendFreeResult(tip: SavedTip, balance: FreeBalance): Promi
 /** Vyhodnotenie celého dňa do bezplatného kanála – keď sú všetky tipy dňa dohrané. */
 export async function sendFreeDaySummary(tips: SavedTip[], day: string, balance: FreeBalance): Promise<boolean> {
   if (!freeChannelConfigured()) return false;
-  const text = buildDailyResultsText(tips, day)
+  return (await sendToChat(TELEGRAM_CHAT_ID_FREE!, buildFreeDaySummaryText(tips, day, balance))) !== null;
+}
+
+/**
+ * Jednorazové doplnenie histórie do kanála zadarmo (15. 11. 2026, Michal: „pridať tipy od 1. 11.“).
+ * Posiela sa len na Michalovo ťuknutie v appke, preto ide aj pri vypnutom hlavnom vypínači kanálov.
+ */
+export async function sendFreeHistoryMessage(text: string): Promise<{ chatId: string; messageId: number } | null> {
+  if (!freeChannelConfigured()) return null;
+  const messageId = await sendToChat(TELEGRAM_CHAT_ID_FREE!, text, true);
+  return messageId ? { chatId: TELEGRAM_CHAT_ID_FREE!, messageId } : null;
+}
+
+export function buildFreeDaySummaryText(tips: SavedTip[], day: string, balance: FreeBalance): string {
+  return buildDailyResultsText(tips, day)
     .replace(/ \(\d+ %\)\n/, "\n") // bez percent – na webe aj tu len počty a jednotky
     .replace(
     /\n<i>Poctivá história – vrátane prehratých tipov\.<\/i>$/,
     `${freeBalanceLine(balance)}\n\n<i>Poctivá história – vrátane prehratých tipov.</i>\n\n${FREE_FOOTER}`
   );
-  return (await sendToChat(TELEGRAM_CHAT_ID_FREE!, text)) !== null;
 }
 
 export async function sendCustomMessage(
