@@ -609,15 +609,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
       lines.push("", st.period === "week" ? "Po dňoch:" : "Po týždňoch:");
       for (const r of rows) lines.push(`${r.done === 0 ? "⏳" : r.units >= 0 ? "🟢" : "🔴"} ${r.short}: ${r.done ? `vyšlo ${r.won} z ${r.done} · ${signed(r.units, 2)} j.` : "hrá sa"}`);
     }
-    // týždeň: aj zoznam tipov (mesiac by bol pre Instagram pridlhý – tipy sú na obrázkoch)
-    if (st.period === "week" && tips.length) {
-      lines.push("", "Všetky tipy:");
-      for (const t of tips) {
-        const p = dayParts(t.day || data.from);
-        if (t.legs && t.legs.length) lines.push(`${icon(t.status)} ${WD_SHORT[p.wd]} · Tiket (${plural(t.legs.length, "zápas", "zápasy", "zápasov")})${t.odds ? " – kurz " + num(t.odds, 2) : ""}`);
-        else lines.push(`${icon(t.status)} ${WD_SHORT[p.wd]} · ${t.home} – ${t.away}${t.score ? " " + scoreTxt(t.score) : ""} · ${tipTxt(t)}${t.odds ? " – " + num(t.odds, 2) : ""}`);
-      }
-    }
+    // Michal 16. 11.: zápasy v texte reportu nie – sú na obrázkoch.
     lines.push("", "Ukazujeme všetky tipy – aj tie, čo nevyšli. 18+ · Hrajte zodpovedne.", "#tipradar #futbal #futbalovestatistiky #analyzazapasu #futbalvcislach");
     return lines.join("\n");
   }
