@@ -1149,7 +1149,7 @@ app.post("/api/tips", async (req, res) => {
     // ak by ho model nepustil, uloží sa len medzi sledované.
     if (tip.manualEntry && !(tip.legs && tip.legs.length) && !tip.probabilityEstimated && typeof tip.probability === "number" && typeof tip.odds === "number") {
       const ev = (tip.probability / 100) * tip.odds;
-      if (tip.probability < WATCH_BELOW_PROBABILITY || tip.probability > MAX_PROBABILITY || tip.odds < MIN_ODDS || ev < 1.05 || ev > 1.25) {
+      if (tip.probability < WATCH_BELOW_PROBABILITY || tip.probability > MAX_PROBABILITY || tip.odds < MIN_ODDS || ev < MIN_EXPECTED_VALUE || ev > 1.25) {
         tip.watchOnly = true;
       }
     }
@@ -3727,7 +3727,7 @@ async function addAutoEntry(
   } else if (tip.probability > MAX_PROBABILITY) reason = `dôvera nad ${MAX_PROBABILITY} %`;
   else if (typeof entry.odds !== "number" && isFarLineTip(tip.market, tip.probability)) reason = "rohy/karty – príliš vzdialená hranica";
   else if (odds < MIN_ODDS) reason = `kurz pod ${String(MIN_ODDS).replace(".", ",")}`;
-  else if (ev < MIN_EXPECTED_VALUE) reason = "hodnota pod +5 %";
+  else if (ev < MIN_EXPECTED_VALUE) reason = "hodnota pod +10 %";
   else if (ev > SUSPICIOUS_EXPECTED_VALUE) reason = "hodnota nad +25 %";
   // 4. 11. 2026 (Michal): tip doplnený po výkope len do sledovaných – 5. 11. 2026 (Michal) ZRUŠENÉ:
   // ak prejde pravidlami, pridá sa normálne do Histórie tipov (so značkou lateAdd).

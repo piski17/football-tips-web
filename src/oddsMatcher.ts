@@ -20,11 +20,12 @@ export interface OddsMatch {
   bookmakers: number;
 }
 
-/** Minimálna očakávaná hodnota tipu: pravdepodobnosť × kurz. 1,05 = +5 %. */
+/** Minimálna očakávaná hodnota tipu: pravdepodobnosť × kurz. 1,10 = +10 %. */
 /** Názov trhu "oba tímy skórujú" - nový aj starší (v uložených tipoch). */
 const BTTS_MARKETS = ["Oba tímy skórujú", "Obaja tímy skórujú"];
 
-export const MIN_EXPECTED_VALUE = 1.05;
+// 16. 11. 2026 (Michal, tabuľka Úspešnosť podľa hodnoty: +5 – 10 % 34 tipov −2,3 j., od +10 % 69 tipov +16,3 j.): hranica +10 %.
+export const MIN_EXPECTED_VALUE = 1.1;
 
 /**
  * Minimálny kurz odporúčaného tipu: 1,60 (2. 11. 2026, Michalovo rozhodnutie; 25. 10. – 2. 11. 1,50, predtým 1,55).
