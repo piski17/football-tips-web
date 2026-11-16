@@ -5410,13 +5410,19 @@ document.getElementById("dnesSendBtn")?.addEventListener("click", () => openSend
 // =====================================================================
 // Najsilnejší tip z každého zápasu (9. 11. 2026, Michal) – server ho zapíše pri automatickej analýze
 // (asi hodinu pred výkopom) a vyhodnotí po zápase. Klientom nejde, do štatistík sa neráta.
-function renderTopPicks(t) {
-  const box = document.getElementById("topPickResult");
+// Skúška „kurz od 2,00“ (16. 11. 2026, Michal) – rovnaká tabuľka ako Najsilnejší tip zápasu.
+const ODDS2_TEXT = {
+  boxId: "odds2Result", fold: "kurz2", emptySum: "Tiché sledovanie od 16. 11.",
+  intro: `Pri každom zápase server asi hodinu pred výkopom vyberie najviac jeden tip s kurzom stávkoviek aspoň 2,00 a hodnotou +5 až +25${NB}% (pri kurze 2,00 je to šanca modelu asi 53 – 62${NB}%), bez rozporu so stávkovkami. Po zápase ho vyhodnotí. Klientom nejde a do štatistík sa neráta.`,
+};
+function renderTopPicks(t, cfg) {
+  const box = document.getElementById(cfg ? cfg.boxId : "topPickResult");
   if (!box) return;
-  const sumEl = document.querySelector('[data-fold-sum="najsilnejsi"]');
+  const sumEl = document.querySelector(`[data-fold-sum="${cfg ? cfg.fold : "najsilnejsi"}"]`);
   const fmt2 = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(2).replace(".", ",");
   if (!t || !(t.n + t.void)) {
-    if (sumEl) sumEl.textContent = "Z každého zápasu jeden tip";
+    if (sumEl) sumEl.textContent = cfg ? cfg.emptySum : "Z každého zápasu jeden tip";
+    if (cfg) { box.innerHTML = `<p class="muted small">${cfg.intro}</p><p class="empty">Zatiaľ nič vyhodnotené. Prvé výsledky budú po najbližších zápasoch.</p>`; return; }
     box.innerHTML = `<p class="muted small">Pri každom zápase všetkých súťaží server asi hodinu pred výkopom vyberie jeden tip – ten s najvyššou dôverou modelu (do 80${NB}%), na ktorý stávkovky dávajú kurz aspoň 1,50 – a po zápase ho vyhodnotí. Pravidlá pre klientov (hodnota, 60 / 40) sa tu neuplatňujú. Klientom nejde a do štatistík sa neráta.</p><p class="empty">Zatiaľ nič vyhodnotené. Prvé výsledky budú po dnešných zápasoch.</p>`;
     return;
   }
@@ -5426,7 +5432,7 @@ function renderTopPicks(t) {
   const ST = { won: '<b class="g">✓</b>', lost: '<b class="l">✕</b>', void: '<span class="faint">↺</span>' };
   const lg = Object.entries(t.leagues || {}).sort((a, b) => b[1].n - a[1].n);
   box.innerHTML = `
-    <p class="muted small">Z každého zápasu jeden tip s najvyššou dôverou modelu (do 80${NB}%) pri kurze stávkoviek aspoň 1,50, bez pravidiel pre klientov. Zisk pri vklade 1 jednotka na tip. Začalo ${escapeHtml(new Date(t.since).toLocaleDateString("sk-SK"))}. Klientom nejde a do štatistík sa neráta.</p>
+    <p class="muted small">${cfg ? cfg.intro + " Zisk pri vklade 1 jednotka na tip." : `Z každého zápasu jeden tip s najvyššou dôverou modelu (do 80${NB}%) pri kurze stávkoviek aspoň 1,50, bez pravidiel pre klientov. Zisk pri vklade 1 jednotka na tip.`} Začalo ${escapeHtml(new Date(t.since).toLocaleDateString("sk-SK"))}. Klientom nejde a do štatistík sa neráta.</p>
     <div class="table-wrap"><table class="bt-table"><tbody>
       <tr><td>Vyhodnotené tipy</td><td><b>${t.n}</b>${t.void ? ` <span class="faint">(+${t.void} vrátené)</span>` : ""}</td></tr>
       <tr><td>Vyšlo</td><td><b>${t.won}</b> z ${t.n} · ${pct}${NB}% <span class="faint">(model čakal ${exp}${NB}%)</span></td></tr>
@@ -5445,6 +5451,7 @@ async function renderAllMarkets() {
   try { d = await fetchJson("/api/markets-all"); }
   catch (err) { box.innerHTML = `<p class="faint small">Nepodarilo sa načítať: ${escapeHtml(err.message)}</p>`; return; }
   renderTopPicks(d.top);
+  renderTopPicks(d.odds2, ODDS2_TEXT);
   const rows = Object.entries(d.markets || {}).map(([market, m]) => ({ market, ...m, pct: m.n ? (m.won / m.n) * 100 : null, exp: m.n ? m.sumP / m.n : null }))
     .sort((a, b) => b.n - a.n || a.market.localeCompare(b.market));
   const sumEl = document.querySelector('[data-fold-sum="vsetkytrhy"]');
