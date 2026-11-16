@@ -1273,6 +1273,19 @@ app.post("/api/telegram/channels", async (req, res) => {
 // Jedna správa za každý dohraný deň (ako ranné vyhodnotenie) s priebežnou bilanciou. Posiela sa len ručne
 // z Nástrojov (náhľad → Odoslať), aj keď je hlavný vypínač kanálov vypnutý. Správy sa dajú zase zmazať.
 const FREE_HISTORY_META = "freeHistoryMessages";
+/**
+ * 16. 11. 2026 (Michal): vo vyhodnotení dňa vo FREE kanáli nie všetky tipy, len 2 – 3 za deň (silnejšie sú pre VIP).
+ * Výber: najprv tip, ktorý už vo FREE bol (denný tip zadarmo), potom tipy s najnižšou šancou modelu.
+ * Deň s 1 – 2 tipmi ukáže všetky, s 3 tipmi 2, so 4 a viac 3. Bilancia „Naše tipy od 1. 11.“ ráta stále všetky tipy.
+ */
+function freeDayPick(dayTips: SavedTip[]): SavedTip[] {
+  const n = dayTips.length <= 2 ? dayTips.length : dayTips.length === 3 ? 2 : 3;
+  const wasFree = (t: SavedTip) => !!t.sentFree || (t.telegramMessages ?? []).some((m) => isFreeChat(m.chatId));
+  const picked = [...dayTips]
+    .sort((a, b) => Number(wasFree(b)) - Number(wasFree(a)) || (a.probability ?? 0) - (b.probability ?? 0))
+    .slice(0, n);
+  return dayTips.filter((t) => picked.includes(t));
+}
 async function freeHistoryDays(): Promise<{ day: string; text: string; tips: number; posted: boolean }[]> {
   const today = dayKeySk(new Date());
   const counted = statsTips(await listTips())
@@ -1291,7 +1304,7 @@ async function freeHistoryDays(): Promise<{ day: string; text: string; tips: num
       units: upTo.reduce((sum, t) => sum + tipUnits(t), 0),
       from: FREE_RESULTS_FROM,
     };
-    out.push({ day, text: buildFreeDaySummaryText(dayTips, day, balance), tips: dayTips.length, posted: !!(await getMeta(`freeDaySummary:${day}`)) });
+    out.push({ day, text: buildFreeDaySummaryText(freeDayPick(dayTips), day, balance), tips: freeDayPick(dayTips).length, posted: !!(await getMeta(`freeDaySummary:${day}`)) });
   }
   return out;
 }
@@ -3234,7 +3247,7 @@ async function postFreeResults(): Promise<void> {
       const key = `freeDaySummary:${day}`;
       if (await getMeta(key)) continue;
       const upTo = allFrom.filter((t) => (tipDayKey(t) ?? "") <= day && done(t));
-      if (await sendFreeDaySummary(dayTips, day, balance(upTo))) await setMeta(key, new Date().toISOString());
+      if (await sendFreeDaySummary(freeDayPick(dayTips), day, balance(upTo))) await setMeta(key, new Date().toISOString());
     }
   } finally {
     freeResultsRunning = false;
