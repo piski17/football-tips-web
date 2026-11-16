@@ -330,8 +330,9 @@ export function tipUnits(tip: SavedTip): number {
   return 0;
 }
 
-function freeBalanceLine(b: FreeBalance): string {
-  return `📈 Bilancia od ${dayShort(b.from)}: <b>${b.won} ✅ · ${b.lost} ❌ · ${signed(b.units, 2)} j.</b>`;
+/** Štatistika vo FREE kanáli (16. 11. 2026, Michal: „od 1. 11. ako naše výherné a prehrané“). */
+export function freeBalanceLine(b: FreeBalance): string {
+  return `📊 Naše tipy od ${dayShort(b.from)}: <b>✅ ${plural(b.won, "výherný", "výherné", "výherných")} · ❌ ${plural(b.lost, "prehraný", "prehrané", "prehraných")}</b>`;
 }
 
 const FREE_FOOTER =

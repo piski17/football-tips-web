@@ -57,7 +57,7 @@ import {
   setTelegramWebhook,
   notifyAdminExpiringSubscribers,
   sendCustomMessage,
-  sendTipResultToTelegram, notifyAdmin, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite, sendMemberMessage, isMemberChannel, memberChannelConfigured, sendPackageLowReminder, freeChannelConfigured, sendFreeResult, sendFreeDaySummary, buildFreeDaySummaryText, sendFreeHistoryMessage, deleteTelegramMessages as deleteTgMessages, setTelegramChannelsOn, telegramChannelsOn, setTelegramFreeOn, telegramFreeOn, tipUnits, minOddsFor, FreeBalance, normalizeTelegramUrl } from "./telegram";
+  sendTipResultToTelegram, notifyAdmin, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite, sendMemberMessage, isMemberChannel, memberChannelConfigured, sendPackageLowReminder, freeChannelConfigured, sendFreeResult, sendFreeDaySummary, buildFreeDaySummaryText, freeBalanceLine, sendFreeHistoryMessage, deleteTelegramMessages as deleteTgMessages, setTelegramChannelsOn, telegramChannelsOn, setTelegramFreeOn, telegramFreeOn, tipUnits, minOddsFor, FreeBalance, normalizeTelegramUrl } from "./telegram";
 import { paymentsEnabled, isTerm, sellableTerm, SellableTerm, SELLABLE_TERMS, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, deletePayment, Payment, termLabel, tierName, addActiveMonths, SUMMER_PAUSE } from "./payments";
 import { payBySquareString } from "./payBySquare";
 import QRCode from "qrcode";
@@ -353,6 +353,16 @@ async function termSeats(): Promise<TermSeats> {
   return Object.fromEntries(SELLABLE_TERMS.map((t) => [t, row(count[t])])) as TermSeats;
 }
 /** Riadok pod tipom v bezplatnom kanáli (členstvá sú bez obmedzenia miest). */
+/** Riadok štatistiky pod tipom vo FREE kanáli: výherné a prehrané tipy od 1. 11. (rovnaké tipy ako na webe). */
+async function freeStatsLine(all: SavedTip[]): Promise<string> {
+  const list = statsTips(all).filter((t) => (tipDayKey(t) ?? "") >= FREE_RESULTS_FROM && !t.lateAdd);
+  return freeBalanceLine({
+    won: list.filter((t) => t.status === "won").length,
+    lost: list.filter((t) => t.status === "lost").length,
+    units: 0,
+    from: FREE_RESULTS_FROM,
+  });
+}
 async function freeSeatsLine(): Promise<string | undefined> {
   return `🎯 Členstvo: VIP Klub na mieru · od 50 tipov za 49 € · 🛡 v mínuse = mesiac zadarmo`;
 }
@@ -1354,7 +1364,7 @@ async function sendSavedTip(tip: SavedTip, tips: SavedTip[], target: TelegramTar
       if (t.id !== tip.id && t.strongOfDay && dayKeySk(new Date(t.matchDate)) === day) await updateTip(t.id, { strongOfDay: false });
     }
   }
-  const seatsLine = target === "free" && !forceStrong ? await freeSeatsLine() : undefined;
+  const seatsLine = target === "free" && !forceStrong ? `${await freeStatsLine(tips)}\n${await freeSeatsLine()}` : undefined;
   const sent = await sendTipToTelegram(tip, forceStrong ? "vip" : target, headerOverride, strong, seatsLine);
   if (sent.length > 0) {
     const existing = tip.telegramMessages ?? [];
