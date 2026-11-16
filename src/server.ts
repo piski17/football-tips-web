@@ -2240,14 +2240,12 @@ app.get(["/ig-tipy", "/ig-tipy/"], (_req, res) => {
   res.set("Cache-Control", "no-cache");
   res.sendFile(path.join(__dirname, "..", "public", "ig-tipy.html"));
 });
-app.get("/api/ig/day", async (req, res) => {
-  try {
-    const q = typeof req.query.day === "string" ? req.query.day : "";
-    const day = DAY_RE.test(q) ? q : dayKeySk(new Date());
-    const all = statsTips(await listTips());
-    const score = (h?: number | null, a?: number | null) => (typeof h === "number" && typeof a === "number" ? { home: h, away: a } : null);
-    const view = (t: SavedTip) => ({
+const igScore = (h?: number | null, a?: number | null) => (typeof h === "number" && typeof a === "number" ? { home: h, away: a } : null);
+function igView(t: SavedTip) {
+  const score = igScore;
+  return {
       id: t.id,
+      day: tipDayKey(t),
       kickoff: t.matchDate,
       league: t.leagueName,
       home: translateTeamName(t.homeTeam),
@@ -2268,7 +2266,28 @@ app.get("/api/ig/day", async (req, res) => {
         status: l.status,
         score: score(l.actualHomeGoals, l.actualAwayGoals),
       })),
-    });
+  };
+}
+// 16. 11. 2026 (Michal): týždenný a mesačný report – všetky tipy zo štatistík v období od–do (vrátane).
+app.get("/api/ig/range", async (req, res) => {
+  try {
+    const from = typeof req.query.from === "string" && DAY_RE.test(req.query.from) ? req.query.from : "";
+    const to = typeof req.query.to === "string" && DAY_RE.test(req.query.to) ? req.query.to : "";
+    if (!from || !to || from > to) return res.status(400).json({ error: "Zlé obdobie." });
+    const all = statsTips(await listTips());
+    const tips = all.filter((t) => { const d = tipDayKey(t); return !!d && d >= from && d <= to; }).sort((a, b) => tipKickMs(a) - tipKickMs(b));
+    const days = [...new Set(all.map((t) => tipDayKey(t)).filter((d): d is string => !!d))].sort();
+    res.json({ from, to, tips: tips.map(igView), days });
+  } catch (err: any) {
+    res.status(502).json({ error: errText(err) });
+  }
+});
+app.get("/api/ig/day", async (req, res) => {
+  try {
+    const q = typeof req.query.day === "string" ? req.query.day : "";
+    const day = DAY_RE.test(q) ? q : dayKeySk(new Date());
+    const all = statsTips(await listTips());
+    const view = igView;
     const dayTips = all.filter((t) => tipDayKey(t) === day).sort((a, b) => tipKickMs(a) - tipKickMs(b));
     // Bilancia mesiaca do vybraného dňa (vrátane) – len dohrané tipy.
     const month = day.slice(0, 7);

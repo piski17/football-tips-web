@@ -69,6 +69,13 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
   <p class="lead">Obrázky so zápasmi dňa – pred zápasom (tipy pre členov na Telegram) aj po zápase (výsledky a zhodnotenie dňa) – a krátky text k nim. Rátajú sa len skutočné tipy (ako v štatistikách) – sledované nie. Najviac 5 zápasov na obrázok, pri viacerých tipoch vznikne karusel.</p>
 
   <div class="panel">
+    <div class="opt" style="margin-bottom:12px">
+      <div class="chips" id="periodChips">
+        <button type="button" class="chip on" data-p="day">Deň</button>
+        <button type="button" class="chip" data-p="week">Týždeň (report)</button>
+        <button type="button" class="chip" data-p="month">Mesiac (report)</button>
+      </div>
+    </div>
     <div class="daybar">
       <button class="btn ghost" id="prevDay" type="button" aria-label="Predchádzajúci deň s tipmi">←</button>
       <input type="date" id="day" aria-label="Deň">
@@ -81,7 +88,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
   <div class="layout">
     <div class="panel">
       <div class="opts">
-        <div class="opt">
+        <div class="opt" id="modeWrap">
           <label class="f">Druh</label>
           <div class="chips" id="modeChips">
             <button type="button" class="chip" data-m="pre">Pred zápasom (tipy dňa)</button>
@@ -162,7 +169,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
   const tipTxt = (t) => `${t.market}: ${t.selection}`;
 
   // ---------- Stav ----------
-  const st = { day: null, data: null, fmt: "post", page: 0, cvs: [], mode: "post" };
+  const st = { day: null, data: null, fmt: "post", page: 0, cvs: [], mode: "post", period: "day" };
   try { const h = localStorage.getItem("tr_ig_handle"); if (h) $("handle").value = h; const b = localStorage.getItem("tr_ig_bank"); if (b) $("bank").value = b; const pc = localStorage.getItem("tr_ig_pct"); if (pc) $("pct").value = pc; } catch (e) { /* bez úložiska */ }
   // Michal 15. 11.: namiesto pevného vkladu kapitál (bank) a % vkladu – vklad na tip = bank × %.
   const bank = () => { const v = Number(String($("bank").value).replace(",", ".")); return v > 0 ? v : 1000; };
@@ -424,6 +431,189 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
     return cv;
   }
 
+  // ---------- Týždenný a mesačný report (Michal 16. 11.) ----------
+  // Všetky tipy zo štatistík za týždeň (po – ne) alebo mesiac. 1. obrázok = zhodnotenie + prehľad po dňoch / týždňoch,
+  // ďalšie obrázky = zoznam všetkých tipov.
+  const WD_SHORT = ["ne", "po", "ut", "st", "št", "pi", "so"];
+  const addDays = (day, n) => { const p = dayParts(day); return isoLocal(new Date(p.y, p.m - 1, p.d + n)); };
+  function periodRange(day, period) {
+    const p = dayParts(day);
+    if (period === "week") { const from = addDays(day, -((p.wd + 6) % 7)); return { from, to: addDays(from, 6) }; }
+    return { from: `${p.y}-${pad(p.m)}-01`, to: isoLocal(new Date(p.y, p.m, 0)) };
+  }
+  function rangeTxt(r) {
+    const a = dayParts(r.from), b = dayParts(r.to);
+    if (st.period === "month") return `${MONTHS[a.m - 1]} ${a.y}`;
+    return a.m === b.m ? `${a.d}. – ${b.d}. ${b.m}. ${b.y}` : `${a.d}. ${a.m}. – ${b.d}. ${b.m}. ${b.y}`;
+  }
+  const PW = () => (st.period === "week" ? "týždňa" : "mesiaca");
+  /** Riadky prehľadu: týždeň po dňoch (len dni s tipmi), mesiac po týždňoch (po – ne, orezané na mesiac). */
+  function breakdown(tips, r) {
+    const out = [];
+    if (st.period === "week") {
+      for (let d = r.from; d <= r.to; d = addDays(d, 1)) {
+        const dt = tips.filter((t) => t.day === d); if (!dt.length) continue;
+        const p = dayParts(d);
+        out.push({ label: `${WEEKDAYS[p.wd][0].toUpperCase() + WEEKDAYS[p.wd].slice(1)} ${p.d}. ${p.m}.`, short: `${WD_SHORT[p.wd][0].toUpperCase() + WD_SHORT[p.wd].slice(1)} ${p.d}. ${p.m}.`, ...summary(dt), n: dt.length });
+      }
+    } else {
+      let a = r.from;
+      while (a <= r.to) {
+        let b = addDays(a, (7 - dayParts(a).wd) % 7); if (b > r.to) b = r.to;
+        const wt = tips.filter((t) => t.day >= a && t.day <= b);
+        if (wt.length) { const x = dayParts(a), y = dayParts(b); const lab = a === b ? `${x.d}. ${x.m}.` : `${x.d}. – ${y.d}. ${y.m}.`; out.push({ label: lab, short: lab, ...summary(wt), n: wt.length }); }
+        a = addDays(b, 1);
+      }
+    }
+    return out;
+  }
+  function reportPages(tips, story) {
+    const per = story ? 12 : 8, out = [null];
+    for (let i = 0; i < tips.length; i += per) out.push(tips.slice(i, i + per));
+    return out;
+  }
+  function drawReport(data, fmt, page, handle) {
+    const story = fmt === "story";
+    const W = 1080, H = story ? 1920 : 1350;
+    const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+    const ctx = cv.getContext("2d");
+    const X = 72, IW = W - 2 * X;
+    const tips = data.tips, pages = reportPages(tips, story), sm = summary(tips);
+    const pos = sm.units >= 0, accent = sm.done === 0 ? C.stone : pos ? C.good : C.bad;
+    background(ctx, W, H);
+    let y = story ? 220 : 112;
+    header(ctx, W, y, st.period === "week" ? "TÝŽDEŇ" : "MESIAC");
+    const bottom = story ? H - 190 - 70 : H - 60 - 66;
+    if (page === 0) {
+      const y0 = y + (story ? 66 : 46), h = story ? 420 : 340;
+      rr(ctx, X, y0, IW, h, 36);
+      const g = ctx.createLinearGradient(X, y0, X + IW, y0 + h);
+      g.addColorStop(0, "#1C1B19"); g.addColorStop(0.55, pos ? "#1E2420" : "#251E1C"); g.addColorStop(1, sm.done === 0 ? "#2A2825" : pos ? "#2A4636" : "#4A2C27");
+      ctx.fillStyle = g; ctx.fill();
+      ctx.strokeStyle = sm.done === 0 ? C.line : pos ? "rgba(127,200,160,.45)" : "rgba(224,137,122,.45)"; ctx.lineWidth = 2; ctx.stroke();
+      ctx.save(); rr(ctx, X, y0, IW, h, 36); ctx.clip();
+      const rg = ctx.createRadialGradient(X + IW, y0 + h, 0, X + IW, y0 + h, IW * 0.6);
+      rg.addColorStop(0, pos ? "rgba(127,200,160,.24)" : "rgba(224,137,122,.20)"); rg.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = rg; ctx.fillRect(X, y0, IW, h);
+      radar(ctx, X + IW * 0.5, y0 + h * 0.5, h * 0.62, 0.05);
+      ctx.restore();
+      const lx = X + 44, split = X + IW * 0.52, tsz = story ? 90 : 74, ly = y0 + h * 0.38;
+      ctx.fillStyle = C.text; ctx.font = font(600, tsz, H_FONT); ctx.fillText("Výsledky", lx, ly);
+      ctx.fillStyle = C.stone; ctx.font = font(500, tsz, H_FONT, true); ctx.fillText(PW(), lx, ly + tsz * 0.95);
+      const rt = rangeTxt(data);
+      ctx.fillStyle = C.muted; fit(ctx, rt, 600, story ? 30 : 26, split - lx - 24, B_FONT, 16); ctx.fillText(rt, lx, ly + tsz * 0.95 + (story ? 68 : 56));
+      ctx.strokeStyle = "rgba(207,196,180,.18)"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(split, y0 + h * 0.14); ctx.lineTo(split, y0 + h * 0.86); ctx.stroke();
+      const rx = split + 40, rw = X + IW - 40 - rx, ry = y0 + h * 0.24;
+      ctx.fillStyle = accent; ctx.font = font(800, story ? 22 : 19, B_FONT);
+      spaced(ctx, sm.done === 0 ? "ZATIAĽ BEZ VÝSLEDKU" : `ZISK ${PW().toUpperCase()}`, rx, ry, 2.5);
+      const big = sm.done === 0 ? "–" : `${signed(sm.units, 2)} j.`;
+      const bsz = fit(ctx, big, 700, story ? 118 : 98, rw, H_FONT, 40);
+      ctx.font = font(700, bsz, H_FONT); ctx.fillStyle = accent; ctx.fillText(big, rx - 4, ry + bsz * 0.98);
+      const l1 = sm.done ? `Vyšlo ${sm.won} z ${sm.done} · ${num((sm.won / sm.done) * 100, 0)} %` : plural(tips.length, "tip", "tipy", "tipov");
+      ctx.fillStyle = C.text; fit(ctx, l1, 700, story ? 34 : 30, rw, B_FONT, 16); ctx.fillText(l1, rx, ry + bsz * 0.98 + (story ? 56 : 48));
+      if (sm.done) {
+        const l2 = `${signed(sm.units * stake(), 2)} € pri vklade ${eur(stake())} € na tip`;
+        ctx.fillStyle = C.muted; fit(ctx, l2, 600, story ? 26 : 22, rw, B_FONT, 13); ctx.fillText(l2, rx, ry + bsz * 0.98 + (story ? 96 : 82));
+        const l3 = `bank ${eur(bank())} € · vklad ${num(pct(), pct() % 1 ? 1 : 0)} %`;
+        ctx.fillStyle = C.faint; fit(ctx, l3, 600, story ? 22 : 19, rw, B_FONT, 12); ctx.fillText(l3, rx, ry + bsz * 0.98 + (story ? 132 : 112));
+      }
+      // prehľad po dňoch / týždňoch
+      const rows = breakdown(tips, data);
+      let top = y0 + h + (story ? 50 : 40);
+      ctx.fillStyle = C.muted; ctx.font = font(800, story ? 18 : 16, B_FONT);
+      spaced(ctx, st.period === "week" ? "PO DŇOCH" : "PO TÝŽDŇOCH", X + 6, top, 3);
+      top += story ? 26 : 20;
+      if (!rows.length) { ctx.fillStyle = C.muted; ctx.font = font(600, 32, B_FONT); ctx.fillText(`V tomto ${st.period === "week" ? "týždni" : "mesiaci"} nebol žiadny tip.`, X, top + 60); }
+      const gap = story ? 14 : 10;
+      const rh = rows.length ? Math.min(story ? 150 : 110, (bottom - top - gap * (rows.length - 1)) / rows.length) : 0;
+      let cy = top;
+      const maxAbs = Math.max(0.5, ...rows.map((r) => Math.abs(r.units)));
+      for (const r of rows) {
+        const col = r.done === 0 ? C.stone : r.units >= 0 ? C.good : C.bad;
+        rr(ctx, X, cy, IW, rh, 20); ctx.fillStyle = C.card; ctx.fill(); ctx.strokeStyle = "rgba(207,196,180,.10)"; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.save(); rr(ctx, X, cy, IW, rh, 20); ctx.clip(); ctx.fillStyle = col; ctx.fillRect(X, cy, 7, rh); ctx.restore();
+        const mid = cy + rh / 2, fs = Math.max(20, Math.min(34, rh * 0.3));
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = C.text; ctx.font = font(600, fs, H_FONT); ctx.fillText(story || st.period === "month" ? r.label : r.label, X + 34, mid);
+        ctx.fillStyle = C.muted; ctx.font = font(600, fs * 0.72, B_FONT);
+        ctx.fillText(r.done ? `vyšlo ${r.won} z ${r.done}` : plural(r.n, "tip sa hrá", "tipy sa hrajú", "tipov sa hrá"), X + IW * 0.42, mid);
+        // stĺpik zisku
+        const bx = X + IW * 0.66, bw = IW * 0.12, bl = Math.max(4, (Math.abs(r.units) / maxAbs) * bw);
+        rr(ctx, bx, mid - 6, bw, 12, 6); ctx.fillStyle = "rgba(207,196,180,.08)"; ctx.fill();
+        if (r.done) { rr(ctx, bx, mid - 6, bl, 12, 6); ctx.fillStyle = col; ctx.fill(); }
+        ctx.fillStyle = col; ctx.font = font(700, fs, H_FONT); ctx.textAlign = "right";
+        ctx.fillText(r.done ? `${signed(r.units, 2)} j.` : "–", X + IW - 30, mid); ctx.textAlign = "left";
+        ctx.textBaseline = "alphabetic";
+        cy += rh + gap;
+      }
+      if (pages.length > 1) { ctx.fillStyle = C.faint; ctx.font = font(600, 20, B_FONT); ctx.textAlign = "right"; ctx.fillText(`všetky tipy na ďalších obrázkoch →`, X + IW, y0 - 14 + (story ? 0 : 0) + h + (story ? 50 : 40)); ctx.textAlign = "left"; }
+    } else {
+      const rows = pages[page] || [];
+      let ty = y + (story ? 110 : 92);
+      ctx.fillStyle = C.text; ctx.font = font(600, story ? 54 : 46, H_FONT); ctx.fillText("Všetky tipy ", X, ty);
+      const w0 = ctx.measureText("Všetky tipy ").width;
+      ctx.fillStyle = C.stone; ctx.font = font(500, story ? 54 : 46, H_FONT, true); ctx.fillText(PW(), X + w0, ty);
+      ctx.fillStyle = C.muted; ctx.font = font(600, story ? 24 : 22, B_FONT); ctx.textAlign = "right";
+      ctx.fillText(`${rangeTxt(data)} · ${page + 1} / ${pages.length}`, X + IW, ty); ctx.textAlign = "left";
+      const top = ty + (story ? 40 : 32), per = story ? 12 : 8, gap = story ? 12 : 10;
+      const rh = (bottom - top - gap * (per - 1)) / per;
+      let cy = top;
+      for (const t of rows) {
+        const ticket = t.legs && t.legs.length > 0;
+        const col = t.status === "won" ? C.good : t.status === "lost" ? C.bad : C.stone;
+        rr(ctx, X, cy, IW, rh, 18); ctx.fillStyle = C.card; ctx.fill(); ctx.strokeStyle = "rgba(207,196,180,.10)"; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.save(); rr(ctx, X, cy, IW, rh, 18); ctx.clip(); ctx.fillStyle = col; ctx.fillRect(X, cy, 6, rh); ctx.restore();
+        const mr = Math.min(rh * 0.24, 24), markX = X + IW - 28 - mr;
+        mark(ctx, markX, cy + rh / 2, mr, t.status);
+        const ut = t.units == null ? "" : `${signed(t.units, 2)} j.`;
+        ctx.font = font(700, 24, H_FONT); const uw = ut ? ctx.measureText(ut).width : 0;
+        if (ut) { ctx.fillStyle = col; ctx.textAlign = "right"; ctx.fillText(ut, markX - mr - 18, cy + rh / 2 + 8); ctx.textAlign = "left"; }
+        const px = X + 30, maxW = markX - mr - 18 - uw - 24 - px;
+        const p = dayParts(t.day || data.from);
+        ctx.fillStyle = C.muted; ctx.font = font(700, 14, B_FONT);
+        const lg = `${WD_SHORT[p.wd].toUpperCase()} ${p.d}. ${p.m}. · ${ticket ? "TIKET" : league(t.league).toUpperCase()}`;
+        fit(ctx, lg, 700, 14, maxW, B_FONT, 10); spaced(ctx, lg, px, cy + rh * 0.3, 1.5);
+        const tm = ticket ? t.legs.map((l) => `${l.home} – ${l.away}`).join(" · ") : `${t.home} – ${t.away}${t.score ? "  " + scoreTxt(t.score) : ""}`;
+        ctx.fillStyle = C.text; fit(ctx, tm, 600, 25, maxW, H_FONT, 14); ctx.fillText(tm, px, cy + rh * 0.6);
+        const tp = `${ticket ? "Všetky zápasy tiketu" : tipTxt(t)}${t.odds ? " · kurz " + num(t.odds, 2) : ""}`;
+        ctx.fillStyle = C.stone; fit(ctx, tp, 600, 18, maxW, B_FONT, 11); ctx.fillText(tp, px, cy + rh * 0.86);
+        cy += rh + gap;
+      }
+    }
+    footer(ctx, W, story ? H - 190 : H - 60, handle, false);
+    return cv;
+  }
+  function captionReport(data) {
+    const tips = data.tips, sm = summary(tips);
+    const icon = (s) => (s === "won" ? "✅" : s === "lost" ? "❌" : s === "void" ? "↩️" : "⏳");
+    const lines = [`📅 Výsledky ${PW()} · ${rangeTxt(data)}`, ""];
+    if (sm.done) {
+      lines.push(
+        `🎯 Vyšlo ${sm.won} z ${plural(sm.done, "tipu", "tipov", "tipov")} (${num((sm.won / sm.done) * 100, 0)} %)`,
+        `💰 Zisk ${PW()}: ${signed(sm.units * stake(), 2)} € (${signed(sm.units, 2)} j.)`,
+        `🏦 Pri banku ${eur(bank())} € a vklade ${eur(stake())} € na tip (${num(pct(), pct() % 1 ? 1 : 0)} % z banku)`,
+      );
+    } else lines.push("Zatiaľ žiadny dohraný tip.");
+    if (sm.pending) lines.push(`⏳ Ešte sa hrá: ${sm.pending}`);
+    const rows = breakdown(tips, data);
+    if (rows.length) {
+      lines.push("", st.period === "week" ? "Po dňoch:" : "Po týždňoch:");
+      for (const r of rows) lines.push(`${r.done === 0 ? "⏳" : r.units >= 0 ? "🟢" : "🔴"} ${r.short}: ${r.done ? `vyšlo ${r.won} z ${r.done} · ${signed(r.units, 2)} j.` : "hrá sa"}`);
+    }
+    // týždeň: aj zoznam tipov (mesiac by bol pre Instagram pridlhý – tipy sú na obrázkoch)
+    if (st.period === "week" && tips.length) {
+      lines.push("", "Všetky tipy:");
+      for (const t of tips) {
+        const p = dayParts(t.day || data.from);
+        if (t.legs && t.legs.length) lines.push(`${icon(t.status)} ${WD_SHORT[p.wd]} · Tiket (${plural(t.legs.length, "zápas", "zápasy", "zápasov")})${t.odds ? " – kurz " + num(t.odds, 2) : ""}`);
+        else lines.push(`${icon(t.status)} ${WD_SHORT[p.wd]} · ${t.home} – ${t.away}${t.score ? " " + scoreTxt(t.score) : ""} · ${tipTxt(t)}${t.odds ? " – " + num(t.odds, 2) : ""}`);
+      }
+    }
+    lines.push("", "Ukazujeme všetky tipy – aj tie, čo nevyšli. 18+ · Hrajte zodpovedne.", "#tipradar #futbal #tipy #stavkovanie");
+    return lines.join("\n");
+  }
+
   // ---------- Text k príspevku ----------
   function captionPre(data) {
     const tips = data.tips;
@@ -508,6 +698,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
   async function render() {
     if (!st.data) return;
     await loadFonts();
+    if (st.period !== "day") return renderReport();
     const vt = viewTips();
     const pages = pagesOf(vt);
     if (st.page >= pages.length) st.page = pages.length - 1;
@@ -529,7 +720,36 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
     const has = vt.length > 0;
     $("shareBtn").disabled = !has; $("downBtn").disabled = !has;
   }
+  async function renderReport() {
+    const tips = st.data.tips, story = st.fmt === "story";
+    const pages = reportPages(tips, story);
+    if (st.page >= pages.length) st.page = pages.length - 1;
+    const handle = $("handle").value.trim();
+    st.cvs = pages.map((_, i) => drawReport(st.data, st.fmt, i, handle));
+    $("img").src = st.cvs[st.page].toDataURL("image/png");
+    $("preview").classList.toggle("story", story);
+    $("pageWrap").style.display = pages.length > 1 ? "" : "none";
+    $("pageChips").innerHTML = pages.map((_, i) => `<button type="button" class="chip${i === st.page ? " on" : ""}" data-p="${i}">${i + 1}</button>`).join("");
+    const sm = summary(tips);
+    $("pageInfo").className = sm.pending ? "note warn" : "note";
+    $("pageInfo").textContent = sm.pending
+      ? `Pozor: ${plural(sm.pending, "tip sa ešte hrá", "tipy sa ešte hrajú", "tipov sa ešte hrá")} – report ukazuje priebežný stav. Najlepšie je stiahnuť ho po dohraní (týždeň v pondelok ráno, mesiac 1. deň ráno).`
+      : pages.length > 1 ? `1. obrázok je zhodnotenie, na ďalších ${pages.length - 1} sú všetky tipy (${tips.length}). Na Instagram sa zmestí najviac 20 obrázkov v jednom príspevku.` : "";
+    $("text").value = captionReport(st.data);
+    $("stakeInfo").textContent = `Vklad na tip: ${eur(stake())} € (${num(pct(), pct() % 1 ? 1 : 0)} % z ${eur(bank())} €).`;
+    $("shareBtn").disabled = false; $("downBtn").disabled = false;
+  }
   function renderList() {
+    if (st.period !== "day") {
+      const tips = st.data.tips;
+      $("tipList").innerHTML = tips.length
+        ? `<p class="note" style="margin:0">Do reportu idú všetky tipy ${PW()} (ako v štatistikách na webe) – ${plural(tips.length, "tip", "tipy", "tipov")}.</p>` + tips.map((t) => { const p = dayParts(t.day || st.data.from); return `<div class="tip"><span class="pct">${WD_SHORT[p.wd]} ${p.d}. ${p.m}.</span><span class="s ${t.status}">${STATUS[t.status] || ""}</span><span class="m"><b>${esc(t.home)} – ${esc(t.away)}</b>${t.score ? " " + scoreTxt(t.score) : ""}<small>${esc(t.legs && t.legs.length ? "Tiket" : tipTxt(t))}${t.odds ? " · kurz " + num(t.odds, 2) : ""} · ${esc(league(t.league))}</small></span><span>${t.units == null ? "" : signed(t.units, 2) + " j."}</span></div>`; }).join("")
+        : `<div class="empty">V tomto ${st.period === "week" ? "týždni" : "mesiaci"} nebol žiadny tip, ktorý sa ráta do štatistík.</div>`;
+      const days = st.data.days || [];
+      $("prevDay").disabled = !days.some((d) => d < st.data.from); $("nextDay").disabled = !days.some((d) => d > st.data.to);
+      $("dayInfo").textContent = (st.period === "week" ? "Týždeň " : "") + rangeTxt(st.data);
+      return;
+    }
     const tips = listOrder();
     $("tipList").innerHTML = tips.length
       ? tips.map((t) => `<div class="tip"><label class="pick" title="Pridať na obrázok"><input type="checkbox" data-id="${esc(t.id)}"${st.sel.has(t.id) ? " checked" : ""}> Na obrázok</label><span class="pct">${num(t.probability || 0, 0)} %</span><span class="s ${t.status}">${STATUS[t.status] || ""}</span><span class="m"><b>${esc(t.home)} – ${esc(t.away)}</b>${t.score ? " " + scoreTxt(t.score) : ""}<small>${esc(t.legs && t.legs.length ? "Tiket" : tipTxt(t))}${t.odds ? " · kurz " + num(t.odds, 2) : ""} · ${esc(league(t.league))} ${kickTime(t.kickoff)}</small></span><span>${t.units == null ? "" : signed(t.units, 2) + " j."}</span></div>`).join("")
@@ -544,21 +764,26 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
     st.day = day; $("day").value = day; st.page = 0;
     $("tipList").innerHTML = `<div class="empty">Načítavam…</div>`;
     try {
-      const r = await fetch(`/api/ig/day?day=${day}`, { cache: "no-store" });
+      const rg = st.period === "day" ? null : periodRange(day, st.period);
+      const r = await fetch(rg ? `/api/ig/range?from=${rg.from}&to=${rg.to}` : `/api/ig/day?day=${day}`, { cache: "no-store" });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error || r.status);
       st.data = j;
-      try { history.replaceState(null, "", `?den=${day}`); } catch (e) { /* nič */ }
+      try { history.replaceState(null, "", `?den=${day}${st.period === "day" ? "" : "&obdobie=" + (st.period === "week" ? "tyzden" : "mesiac")}`); } catch (e) { /* nič */ }
     } catch (e) {
       $("tipList").innerHTML = `<div class="empty">Nepodarilo sa načítať tipy (${esc(e.message)}).</div>`;
       return;
     }
+    for (const x of $("periodChips").children) x.classList.toggle("on", x.dataset.p === st.period);
+    $("modeWrap").style.display = st.period === "day" ? "" : "none";
+    if (st.period !== "day") { renderList(); render(); return; }
     initSel();
     const sm0 = summary(st.data.tips);
     st.mode = sm0.pending > 0 && sm0.done === 0 ? "pre" : "post";
     renderList(); render();
   }
-  function fileName(i) { return `tipradar-${st.mode === "pre" ? "tipy" : "vysledky"}-${st.day}-${st.fmt === "story" ? "pribeh" : "prispevok"}-${i + 1}.png`; }
+  const fileBase = () => (st.period === "week" ? `tipradar-tyzden-${st.data.from}` : st.period === "month" ? `tipradar-mesiac-${st.data.from.slice(0, 7)}` : `tipradar-${st.mode === "pre" ? "tipy" : "vysledky"}-${st.day}`);
+  function fileName(i) { return `${fileBase()}-${st.fmt === "story" ? "pribeh" : "prispevok"}-${i + 1}.png`; }
   const toBlob = (cv) => new Promise((res) => cv.toBlob(res, "image/png"));
   async function files() { return Promise.all(st.cvs.map(async (cv, i) => new File([await toBlob(cv)], fileName(i), { type: "image/png" }))); }
   const saveFile = (b, name) => { const url = URL.createObjectURL(b); const a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); };
@@ -572,8 +797,14 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
   $("modeChips").addEventListener("click", (e) => { const c = e.target.closest(".chip"); if (!c) return; st.mode = c.dataset.m; render(); });
   $("pageChips").addEventListener("click", (e) => { const c = e.target.closest(".chip"); if (!c) return; st.page = Number(c.dataset.p); render(); });
   $("day").addEventListener("change", () => { if (/^\d{4}-\d{2}-\d{2}$/.test($("day").value)) load($("day").value); });
-  $("prevDay").addEventListener("click", () => { const d = (st.data.days || []).filter((x) => x < st.day).pop(); if (d) load(d); });
-  $("nextDay").addEventListener("click", () => { const d = (st.data.days || []).find((x) => x > st.day); if (d) load(d); });
+  $("periodChips").addEventListener("click", (e) => { const c = e.target.closest(".chip"); if (!c || c.dataset.p === st.period) return; st.period = c.dataset.p; load(st.day); });
+  $("prevDay").addEventListener("click", () => {
+    if (st.period === "week") return load(addDays(st.data.from, -7));
+    if (st.period === "month") return load(addDays(st.data.from, -1));
+    const d = (st.data.days || []).filter((x) => x < st.day).pop(); if (d) load(d); });
+  $("nextDay").addEventListener("click", () => {
+    if (st.period !== "day") return load(addDays(st.data.to, 1));
+    const d = (st.data.days || []).find((x) => x > st.day); if (d) load(d); });
   for (const id of ["bank", "pct", "handle"]) $(id).addEventListener("input", () => { try { localStorage.setItem("tr_ig_" + id, $(id).value); } catch (e) {} render(); });
   $("copyBtn").addEventListener("click", async () => {
     try { await navigator.clipboard.writeText($("text").value); } catch (e) { $("text").select(); document.execCommand("copy"); }
@@ -582,8 +813,8 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
   $("downBtn").addEventListener("click", async () => {
     const fs = await files();
     if (fs.length > 1 && window.JSZip) {
-      const zip = new JSZip(); for (const f of fs) zip.file(f.name, f); zip.file(`tipradar-vysledky-${st.day}-text.txt`, $("text").value);
-      saveFile(await zip.generateAsync({ type: "blob" }), `tipradar-vysledky-${st.day}.zip`);
+      const zip = new JSZip(); for (const f of fs) zip.file(f.name, f); zip.file(`${fileBase()}-text.txt`, $("text").value);
+      saveFile(await zip.generateAsync({ type: "blob" }), `${fileBase()}.zip`);
     } else for (const f of fs) saveFile(f, f.name);
   });
   $("shareBtn").addEventListener("click", async () => {
@@ -595,7 +826,8 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
   });
 
   // Predvolený deň: ?den=…, inak dnes; pred 12:00 včerajšok (ráno sa zverejňujú výsledky včerajška).
-  const q = new URLSearchParams(location.search).get("den");
+  const qs = new URLSearchParams(location.search), q = qs.get("den");
+  st.period = { tyzden: "week", mesiac: "month" }[qs.get("obdobie")] || "day";
   const now = new Date(); if (now.getHours() < 12) now.setDate(now.getDate() - 1);
   load(q && /^\d{4}-\d{2}-\d{2}$/.test(q) ? q : isoLocal(now));
 })();
