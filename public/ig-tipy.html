@@ -611,7 +611,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
         else lines.push(`${icon(t.status)} ${WD_SHORT[p.wd]} · ${t.home} – ${t.away}${t.score ? " " + scoreTxt(t.score) : ""} · ${tipTxt(t)}${t.odds ? " – " + num(t.odds, 2) : ""}`);
       }
     }
-    lines.push("", "Ukazujeme všetky tipy – aj tie, čo nevyšli. 18+ · Hrajte zodpovedne.", "#tipradar #futbal #tipy #stavkovanie");
+    lines.push("", "Ukazujeme všetky tipy – aj tie, čo nevyšli. 18+ · Hrajte zodpovedne.", "#tipradar #futbal #futbalovestatistiky #analyzazapasu #futbalvcislach");
     return lines.join("\n");
   }
 
@@ -664,7 +664,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
       const mi = Number(data.month.key.slice(5, 7)) - 1;
       lines.push(`📈 ${MONTHS[mi][0].toUpperCase() + MONTHS[mi].slice(1)} doteraz: ${plural(data.month.tips, "tip", "tipy", "tipov")} · ${signed(data.month.units, 2)} j.`);
     }
-    lines.push("", "Ukazujeme všetky tipy – aj tie, čo nevyšli. 18+ · Hrajte zodpovedne.", "#tipradar #futbal #tipy #stavkovanie");
+    lines.push("", "Ukazujeme všetky tipy – aj tie, čo nevyšli. 18+ · Hrajte zodpovedne.", "#tipradar #futbal #futbalovestatistiky #analyzazapasu #futbalvcislach");
     return lines.join("\n");
   }
 
