@@ -358,12 +358,13 @@ function scaleVarRatio(v: typeof VAR_RATIO, k: number): typeof VAR_RATIO {
  * Vráti rozdelenie súčtu gólov a gólov domácich a hostí (index = počet gólov).
  */
 const DC_RHO = -0.08;
-function goalsJoint(lh: number, la: number, gamesPlayed: number): { total: number[]; home: number[]; away: number[] } {
+function goalsJoint(lh: number, la: number, gamesPlayed: number): { total: number[]; home: number[]; away: number[]; grid: number[][] } {
   const n = Math.max(3, Math.min(gamesPlayed || 0, 30));
   const d = Math.min(0.45, Math.sqrt(1.5 / (n * Math.max(lh + la, 0.5))) * Math.SQRT2);
   const scales: [number, number][] = [[1 - d, 0.25], [1, 0.5], [1 + d, 0.25]];
   const max = MAX_GOALS + 3;
   const total = new Array(2 * max + 1).fill(0), home = new Array(max + 1).fill(0), away = new Array(max + 1).fill(0);
+  const joint: number[][] = Array.from({ length: max + 1 }, () => new Array(max + 1).fill(0));
   for (const [sh, wh] of scales) {
     for (const [sa, wa] of scales) {
       const h0 = lh * sh, a0 = la * sa;
@@ -388,10 +389,89 @@ function goalsJoint(lh: number, la: number, gamesPlayed: number): { total: numbe
           total[h + a] += p;
           home[h] += p;
           away[a] += p;
+          joint[h][a] += p;
         }
     }
   }
-  return { total, home, away };
+  return { total, home, away, grid: joint };
+}
+
+/** Rozdelenie výsledkov (grid[h][a]) z čistého Poissona – pre súčasný model bez Dixon–Coles. */
+function poissonGrid(lh: number, la: number): number[][] {
+  const max = MAX_GOALS + 3;
+  const g: number[][] = [];
+  let sum = 0;
+  for (let h = 0; h <= max; h++) { g[h] = []; for (let a = 0; a <= max; a++) { g[h][a] = poissonPmf(h, lh) * poissonPmf(a, la); sum += g[h][a]; } }
+  for (let h = 0; h <= max; h++) for (let a = 0; a <= max; a++) g[h][a] /= sum || 1;
+  return g;
+}
+
+/**
+ * Ďalšie trhy z modelu gólov – LEN tiché sledovanie (16. 11. 2026, Michal: „kompletne všetko, čo dokáže model nájsť“).
+ * Z rozdelenia výsledkov (grid = celý zápas, ht = 1. polčas) vypočíta šancu modelu pre trhy, ktoré klientom
+ * nejdú: výsledok, dvojitá šanca, víťaz bez remízy, oba tímy skórujú, ázijský a európsky handicap, presný počet
+ * gólov (zápas aj tím), presný výsledok, čisté konto, párny/nepárny počet gólov, výsledok 1. polčasu.
+ * Bez kalibrácie a bez kurzov – čistá predpoveď modelu, aby sa pri kontrole 1. 12. ukázalo, či sedí.
+ * Do odporúčaní, štatistík ani na web sa nedostanú (nie sú v allCandidates).
+ */
+export function goalMarketsTrackOnly(grid: number[][], ht: number[][], homeName: string, awayName: string): MarketPick[] {
+  const out: MarketPick[] = [];
+  const pct = (x: number) => Math.round(Math.min(1, Math.max(0, x)) * 1000) / 10;
+  const add = (market: string, selection: string, p: number) =>
+    out.push({ market, selection, probability: pct(p), category: "sledovanie", explanation: "Len tiché sledovanie – trh z modelu gólov." });
+  const sumWhere = (g: number[][], f: (h: number, a: number) => boolean) => {
+    let s = 0;
+    for (let h = 0; h < g.length; h++) for (let a = 0; a < g[h].length; a++) if (f(h, a)) s += g[h][a];
+    return s;
+  };
+  const pH = sumWhere(grid, (h, a) => h > a), pD = sumWhere(grid, (h, a) => h === a), pA = sumWhere(grid, (h, a) => h < a);
+  add("Výsledok zápasu", `Výhra ${homeName}`, pH);
+  add("Výsledok zápasu", "Remíza", pD);
+  add("Výsledok zápasu", `Výhra ${awayName}`, pA);
+  add("Dvojšanca", `${homeName} alebo remíza`, pH + pD);
+  add("Dvojšanca", `${awayName} alebo remíza`, pA + pD);
+  add("Dvojšanca", `${homeName} alebo ${awayName}`, pH + pA);
+  // Víťaz bez remízy: pri remíze sa stávka vracia – šanca je podiel z rozhodnutých zápasov.
+  if (pH + pA > 0) { add("Víťaz bez remízy", homeName, pH / (pH + pA)); add("Víťaz bez remízy", awayName, pA / (pH + pA)); }
+  const btts = sumWhere(grid, (h, a) => h > 0 && a > 0);
+  add("Oba tímy skórujú", "Áno", btts);
+  add("Oba tímy skórujú", "Nie", 1 - btts);
+  add("Čisté konto", `${homeName} – čisté konto`, sumWhere(grid, (_h, a) => a === 0));
+  add("Čisté konto", `${awayName} – čisté konto`, sumWhere(grid, (h) => h === 0));
+  const even = sumWhere(grid, (h, a) => (h + a) % 2 === 0);
+  add("Párny / nepárny počet gólov", "Párny", even);
+  add("Párny / nepárny počet gólov", "Nepárny", 1 - even);
+  // Ázijský handicap (hranica pre domácich; hostia majú opačnú). Pri celej hranici (−1, +1…) sa pri rozdiele
+  // presne na hranici stávka vracia – šanca je preto len z nevrátených zápasov.
+  for (const line of [-2.5, -2, -1.5, -1, -0.5, 0.5, 1, 1.5, 2, 2.5]) {
+    const win = sumWhere(grid, (h, a) => h - a + line > 0), push = sumWhere(grid, (h, a) => h - a + line === 0);
+    const lose = 1 - win - push;
+    if (win + lose <= 0) continue;
+    add("Ázijský handicap", `${homeName} ${fmtHcp(line)}`, win / (win + lose));
+    add("Ázijský handicap", `${awayName} ${fmtHcp(-line)}`, lose / (win + lose));
+  }
+  // Európsky handicap (3 možnosti, celé hranice): napr. domáci −1 = výhra o 2+ góly, remíza = výhra presne o 1.
+  for (const line of [-2, -1, 1, 2]) {
+    add("Európsky handicap", `${homeName} ${fmtHcp(line)}`, sumWhere(grid, (h, a) => h - a + line > 0));
+    add("Európsky handicap", `Remíza (${homeName} ${fmtHcp(line)})`, sumWhere(grid, (h, a) => h - a + line === 0));
+    add("Európsky handicap", `${awayName} ${fmtHcp(-line)}`, sumWhere(grid, (h, a) => h - a + line < 0));
+  }
+  // Presný počet gólov: zápas 0 – 5+, tím 0 – 3+.
+  for (let k = 0; k <= 5; k++) add("Presný počet gólov", k === 5 ? "5+" : String(k), sumWhere(grid, (h, a) => (k === 5 ? h + a >= 5 : h + a === k)));
+  for (let k = 0; k <= 3; k++) {
+    add("Presný počet gólov domácich", k === 3 ? "3+" : String(k), sumWhere(grid, (h) => (k === 3 ? h >= 3 : h === k)));
+    add("Presný počet gólov hostí", k === 3 ? "3+" : String(k), sumWhere(grid, (_h, a) => (k === 3 ? a >= 3 : a === k)));
+  }
+  for (let h = 0; h <= 4; h++) for (let a = 0; a <= 4; a++) add("Presný výsledok", `${h}:${a}`, grid[h]?.[a] ?? 0);
+  // Výsledok 1. polčasu.
+  add("Výsledok 1. polčasu", `Výhra ${homeName}`, sumWhere(ht, (h, a) => h > a));
+  add("Výsledok 1. polčasu", "Remíza", sumWhere(ht, (h, a) => h === a));
+  add("Výsledok 1. polčasu", `Výhra ${awayName}`, sumWhere(ht, (h, a) => h < a));
+  return out;
+}
+/** Hranica handicapu s mínusom (−1.5, +0.5). */
+function fmtHcp(line: number): string {
+  return `${line > 0 ? "+" : "−"}${Math.abs(line)}`;
 }
 /** Nad/pod z rozdelenia počtov (pmf[k] = pravdepodobnosť k). */
 function overUnderFromPmf(pmf: number[], line: number): { over: number; under: number } {
@@ -1107,6 +1187,16 @@ export function predictMatch(
   // Nový model (25. 10. 2026): góly z rozdelenia s opravou nízkych skóre (Dixon–Coles)
   // a s neistotou očakávaných gólov podľa počtu odohraných zápasov. Súčasný model: čistý Poisson.
   const gj = variant ? goalsJoint(xg.home, xg.away, minGamesPlayed) : null;
+  // Tiché sledovanie ďalších trhov z modelu gólov (16. 11. 2026) – klientom nejdú.
+  let trackOnlyCandidates: MarketPick[] = [];
+  try {
+    trackOnlyCandidates = goalMarketsTrackOnly(
+      gj ? gj.grid : poissonGrid(xg.home, xg.away),
+      poissonGrid(xg.home * FIRST_HALF_GOAL_SHARE, xg.away * FIRST_HALF_GOAL_SHARE),
+      fixture.homeTeam.name,
+      fixture.awayTeam.name
+    );
+  } catch { /* sledovanie nesmie zhodiť analýzu */ }
   const goalsOU = (kind: "total" | "home" | "away", line: number) =>
     gj ? overUnderFromPmf(gj[kind], line) : poissonOverUnder(kind === "total" ? xg.home + xg.away : kind === "home" ? xg.home : xg.away, line);
   addOverUnder("Góly", "goly", (line) => goalsOU("total", line), () => golyExplanation, { mean: xg.home + xg.away });
@@ -1693,6 +1783,7 @@ export function predictMatch(
     oddsAvailable,
     modelVersion: variant ? NEW_MODEL_VERSION : MODEL_VERSION,
     allCandidates: candidates,
+    trackOnlyCandidates,
     teamSeasonGoalsPerGame: {
       home: homeStats.goals.for.average.total,
       away: awayStats.goals.for.average.total,

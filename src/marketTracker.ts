@@ -124,10 +124,12 @@ function pickOdds2(candidates: Cand[], minOdds = ODDS2_MIN): TopPick | undefined
 /** Z kandidátov modelu vyberie z každého trhu jednu predpoveď (najvyššia šanca do 80 %) a zapíše zápas. */
 export async function recordMarketPredictions(
   fixture: { fixtureId: number; matchDate: string; homeTeam: string; awayTeam: string; league: string },
-  candidates: Cand[]
+  candidates: Cand[],
+  /** Ďalšie trhy z modelu gólov len na sledovanie (16. 11. 2026) – dvojšanca, handicap, presný počet gólov… */
+  trackOnly: Cand[] = []
 ): Promise<void> {
   const best = new Map<string, MarketPrediction>();
-  for (const c of candidates ?? []) {
+  for (const c of [...(candidates ?? []), ...(trackOnly ?? [])]) {
     const p = Number(c.probability);
     if (!c.market || SKIP_MARKETS.includes(c.market) || !isFinite(p) || p > MAX_PROB) continue;
     const cur = best.get(c.market);

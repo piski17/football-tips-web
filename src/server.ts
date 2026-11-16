@@ -3609,7 +3609,8 @@ async function runAutoAnalysis(): Promise<void> {
         // Všetky trhy (4. 11. 2026): z každého trhu jedna predpoveď modelu, vyhodnotí sa bez ohľadu na pravidlá.
         await recordMarketPredictions(
           { fixtureId: fixture.fixtureId, matchDate: fixture.date, homeTeam: fixture.homeTeam.name, awayTeam: fixture.awayTeam.name, league: String(fixture.league.name ?? "") },
-          (result as any).allCandidates ?? []
+          (result as any).allCandidates ?? [],
+          (result as any).trackOnlyCandidates ?? []
         ).catch((err) => console.error("Zápis predpovedí všetkých trhov zlyhal:", err));
         const isNew = await recordAutoFixture({ fixtureId: fixture.fixtureId, matchDate: fixture.date, tips: entries.length, league: String(fixture.league.name ?? "") }, entries);
         if (isNew) await notifyAdminClientTips(fixture, (result as any).bestBets ?? []).catch(() => {});

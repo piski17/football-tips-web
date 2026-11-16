@@ -231,6 +231,8 @@ export interface PredictionResult {
   watchBandBets?: MarketPick[];
   /** Všetci kandidáti (najpravdepodobnejšia voľba pre každý trh) – pre spätný test. */
   allCandidates?: MarketPick[];
+  /** Ďalšie trhy z modelu gólov len pre tiché sledovanie „Všetky trhy“ (16. 11. 2026) – klientom nejdú. */
+  trackOnlyCandidates?: MarketPick[];
   /** Či boli pre zápas k dispozícii skutočné kurzy stávkoviek. */
   oddsAvailable?: boolean;
   teamSeasonGoalsPerGame: {
