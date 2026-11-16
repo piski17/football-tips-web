@@ -355,7 +355,7 @@ async function termSeats(): Promise<TermSeats> {
 /** Riadok pod tipom v bezplatnom kanáli (členstvá sú bez obmedzenia miest). */
 /** Riadok štatistiky pod tipom vo FREE kanáli: výherné a prehrané tipy od 1. 11. (rovnaké tipy ako na webe). */
 async function freeStatsLine(all: SavedTip[]): Promise<string> {
-  const list = statsTips(all).filter((t) => (tipDayKey(t) ?? "") >= FREE_RESULTS_FROM && !t.lateAdd);
+  const list = statsTips(all).filter((t) => (tipDayKey(t) ?? "") >= FREE_RESULTS_FROM);
   return freeBalanceLine({
     won: list.filter((t) => t.status === "won").length,
     lost: list.filter((t) => t.status === "lost").length,
@@ -1276,7 +1276,7 @@ const FREE_HISTORY_META = "freeHistoryMessages";
 async function freeHistoryDays(): Promise<{ day: string; text: string; tips: number; posted: boolean }[]> {
   const today = dayKeySk(new Date());
   const counted = statsTips(await listTips())
-    .filter((t) => (tipDayKey(t) ?? "") >= FREE_RESULTS_FROM && !t.lateAdd)
+    .filter((t) => (tipDayKey(t) ?? "") >= FREE_RESULTS_FROM)
     .sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime());
   const done = (t: SavedTip) => t.status === "won" || t.status === "lost" || t.status === "void";
   const days = [...new Set(counted.map((t) => tipDayKey(t)!).filter(Boolean))].filter((d) => d < today).sort();
@@ -3193,11 +3193,12 @@ async function postFreeResults(): Promise<void> {
   if (!telegramFreeOn() || process.env.TELEGRAM_FREE_RESULTS === "false" || !freeChannelConfigured() || freeResultsRunning) return;
   freeResultsRunning = true;
   try {
-    const counted = statsTips(await listTips())
+    // Bilancia (16. 11. 2026, Michal): rovnaké tipy ako História tipov / web od 1. 11. – aj tipy doplnené po výkope.
+    const allFrom = statsTips(await listTips())
       .filter((t) => (tipDayKey(t) ?? "") >= FREE_RESULTS_FROM)
-      // Tip doplnený po výkope (1. 11. 2026) do verejného kanála nejde – nikto ho pred zápasom nevidel.
-      .filter((t) => !t.lateAdd)
       .sort((a, b) => new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime());
+    // Tip doplnený po výkope (1. 11. 2026) sa ako samostatná správa do verejného kanála neposiela – nikto ho pred zápasom nevidel.
+    const counted = allFrom.filter((t) => !t.lateAdd);
     const done = (t: SavedTip) => t.status === "won" || t.status === "lost" || t.status === "void";
     const balance = (list: SavedTip[]): FreeBalance => ({
       won: list.filter((t) => t.status === "won").length,
@@ -3213,7 +3214,7 @@ async function postFreeResults(): Promise<void> {
     let sentNow = 0;
     for (const tip of counted.filter((t) => done(t) && !t.freeResultSent && !old(t))) {
       if (sentNow >= FREE_RESULTS_MAX_PER_RUN) break;
-      const sent = await sendFreeResult(tip, balance([...posted, tip]));
+      const sent = await sendFreeResult(tip, balance(allFrom.filter((t) => done(t) && new Date(t.matchDate).getTime() <= new Date(tip.matchDate).getTime())));
       if (sent.length === 0) break; // Telegram neodpovedá – skúsi sa pri ďalšej kontrole
       await updateTip(tip.id, { freeResultSent: true, freeResultMessages: [...(tip.freeResultMessages ?? []), ...sent] });
       tip.freeResultSent = true;
@@ -3226,13 +3227,13 @@ async function postFreeResults(): Promise<void> {
     const today = dayKeySk(new Date());
     const hourSk = Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Bratislava", hour: "2-digit", hour12: false }).format(new Date()));
     const resumeDay = resumeAt ? dayKeySk(new Date(resumeAt)) : "";
-    const days = [...new Set(counted.map((t) => tipDayKey(t)!).filter(Boolean))].filter((d) => d < today && d >= resumeDay && hourSk >= 9);
+    const days = [...new Set(allFrom.map((t) => tipDayKey(t)!).filter(Boolean))].filter((d) => d < today && d >= resumeDay && hourSk >= 9);
     for (const day of days) {
-      const dayTips = counted.filter((t) => tipDayKey(t) === day);
-      if (!dayTips.every((t) => done(t) && (t.freeResultSent || old(t)))) continue;
+      const dayTips = allFrom.filter((t) => tipDayKey(t) === day);
+      if (!dayTips.every((t) => done(t) && (t.freeResultSent || old(t) || t.lateAdd))) continue;
       const key = `freeDaySummary:${day}`;
       if (await getMeta(key)) continue;
-      const upTo = counted.filter((t) => (tipDayKey(t) ?? "") <= day && done(t));
+      const upTo = allFrom.filter((t) => (tipDayKey(t) ?? "") <= day && done(t));
       if (await sendFreeDaySummary(dayTips, day, balance(upTo))) await setMeta(key, new Date().toISOString());
     }
   } finally {
