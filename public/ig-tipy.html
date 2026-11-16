@@ -110,7 +110,8 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
       <div class="preview" id="preview"><img id="img" alt="Náhľad obrázka na Instagram"></div>
       <div class="actions">
         <button class="btn" id="shareBtn" type="button">Zdieľať</button>
-        <button class="btn ghost" id="downBtn" type="button">Stiahnuť obrázky</button>
+        <button class="btn ghost" id="downBtn" type="button">Stiahnuť ZIP</button>
+        <button class="btn ghost" id="pngBtn" type="button">Stiahnuť obrázky PNG</button>
       </div>
       <p class="note" id="pageInfo"></p>
     </div>
@@ -718,7 +719,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
     $("text").value = caption(view);
     $("stakeInfo").textContent = `Vklad na tip: ${eur(stake())} € (${num(pct(), pct() % 1 ? 1 : 0)} % z ${eur(bank())} €).`;
     const has = vt.length > 0;
-    $("shareBtn").disabled = !has; $("downBtn").disabled = !has;
+    $("shareBtn").disabled = !has; $("downBtn").disabled = !has; $("pngBtn").disabled = !has;
   }
   async function renderReport() {
     const tips = st.data.tips, story = st.fmt === "story";
@@ -737,7 +738,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
       : pages.length > 1 ? `1. obrázok je zhodnotenie, na ďalších ${pages.length - 1} sú všetky tipy (${tips.length}). Na Instagram sa zmestí najviac 20 obrázkov v jednom príspevku.` : "";
     $("text").value = captionReport(st.data);
     $("stakeInfo").textContent = `Vklad na tip: ${eur(stake())} € (${num(pct(), pct() % 1 ? 1 : 0)} % z ${eur(bank())} €).`;
-    $("shareBtn").disabled = false; $("downBtn").disabled = false;
+    $("shareBtn").disabled = false; $("downBtn").disabled = false; $("pngBtn").disabled = false;
   }
   function renderList() {
     if (st.period !== "day") {
@@ -812,10 +813,15 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
   });
   $("downBtn").addEventListener("click", async () => {
     const fs = await files();
-    if (fs.length > 1 && window.JSZip) {
+    if (window.JSZip) {
       const zip = new JSZip(); for (const f of fs) zip.file(f.name, f); zip.file(`${fileBase()}-text.txt`, $("text").value);
       saveFile(await zip.generateAsync({ type: "blob" }), `${fileBase()}.zip`);
     } else for (const f of fs) saveFile(f, f.name);
+  });
+  // Michal 16. 11.: obrázky aj jednotlivo ako PNG (popri ZIP-e) – s malou pauzou, aby prehliadač stiahol všetky.
+  $("pngBtn").addEventListener("click", async () => {
+    const fs = await files();
+    for (let i = 0; i < fs.length; i++) { saveFile(fs[i], fs[i].name); if (i < fs.length - 1) await new Promise((r) => setTimeout(r, 400)); }
   });
   $("shareBtn").addEventListener("click", async () => {
     const fs = await files();
