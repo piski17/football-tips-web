@@ -5415,6 +5415,10 @@ const ODDS2_TEXT = {
   boxId: "odds2Result", fold: "kurz2", emptySum: "Tiché sledovanie od 16. 11.",
   intro: `Pri každom zápase server asi hodinu pred výkopom vyberie najviac jeden tip s kurzom stávkoviek aspoň 2,00 a hodnotou +5 až +25${NB}% (pri kurze 2,00 je to šanca modelu asi 53 – 62${NB}%), bez rozporu so stávkovkami. Po zápase ho vyhodnotí. Klientom nejde a do štatistík sa neráta.`,
 };
+const ODDS17_TEXT = {
+  boxId: "odds17Result", fold: "kurz17", emptySum: "Tiché sledovanie od 16. 11.",
+  intro: `Pri každom zápase server asi hodinu pred výkopom vyberie najviac jeden tip s kurzom stávkoviek aspoň 1,70 a hodnotou +5 až +25${NB}% (prednosť má vyššia šanca), bez rozporu so stávkovkami. Po zápase ho vyhodnotí. Klientom nejde a do štatistík sa neráta.`,
+};
 function renderTopPicks(t, cfg) {
   const box = document.getElementById(cfg ? cfg.boxId : "topPickResult");
   if (!box) return;
@@ -5452,6 +5456,7 @@ async function renderAllMarkets() {
   catch (err) { box.innerHTML = `<p class="faint small">Nepodarilo sa načítať: ${escapeHtml(err.message)}</p>`; return; }
   renderTopPicks(d.top);
   renderTopPicks(d.odds2, ODDS2_TEXT);
+  renderTopPicks(d.odds17, ODDS17_TEXT);
   const rows = Object.entries(d.markets || {}).map(([market, m]) => ({ market, ...m, pct: m.n ? (m.won / m.n) * 100 : null, exp: m.n ? m.sumP / m.n : null }))
     .sort((a, b) => b.n - a.n || a.market.localeCompare(b.market));
   const sumEl = document.querySelector('[data-fold-sum="vsetkytrhy"]');

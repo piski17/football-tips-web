@@ -156,6 +156,7 @@
           <p class="muted small hist-note">Rozbory na mesačnú kontrolu (najbližšie 1. 12.). Denne ich netreba pozerať. Sledované tipy sa vyhodnocujú potichu: nejdú členom ani na web a nerátajú sa do štatistík. Kliknite na kolónku a otvorí sa.</p>
           <div class="fold-grid" data-fold-group="sled">
             <button type="button" class="fold-tile" data-fold="najsilnejsi" aria-expanded="false"><span class="ft-t">Najsilnejší tip zápasu</span><span class="ft-s" data-fold-sum="najsilnejsi">Z každého zápasu jeden tip</span><i aria-hidden="true">›</i></button>
+            <button type="button" class="fold-tile" data-fold="kurz17" aria-expanded="false"><span class="ft-t">Kurz od 1,70 – skúška</span><span class="ft-s" data-fold-sum="kurz17">Tiché sledovanie od 16. 11.</span><i aria-hidden="true">›</i></button>
             <button type="button" class="fold-tile" data-fold="kurz2" aria-expanded="false"><span class="ft-t">Kurz od 2,00 – skúška</span><span class="ft-s" data-fold-sum="kurz2">Tiché sledovanie od 16. 11.</span><i aria-hidden="true">›</i></button>
             <button type="button" class="fold-tile" data-fold="auto" aria-expanded="false"><span class="ft-t">Všetky zápasy – automaticky</span><span class="ft-s" data-fold-sum="auto">Model sám prejde každý zápas</span><i aria-hidden="true">›</i></button>
             <button type="button" class="fold-tile" data-fold="vsetkytrhy" aria-expanded="false"><span class="ft-t">Všetky trhy</span><span class="ft-s" data-fold-sum="vsetkytrhy">Predpoveď modelu v každom trhu</span><i aria-hidden="true">›</i></button>
@@ -173,6 +174,10 @@
           <div class="fold-sec" data-fold-sec="najsilnejsi" hidden>
           <h3 class="sh">Najsilnejší tip zápasu <small>z každého zápasu všetkých súťaží jeden tip s najvyššou dôverou (kurz aspoň 1,50)</small><button type="button" class="fold-close" data-fold-close aria-label="Zavrieť">× Zavrieť</button></h3>
           <div class="card" id="topPickResult"><p class="empty">Načítavam…</p></div>
+          </div>
+          <div class="fold-sec" data-fold-sec="kurz17" hidden>
+          <h3 class="sh">Kurz od 1,70 – skúška <small>z každého zápasu najviac jeden tip s kurzom aspoň 1,70 a hodnotou +5 až +25&nbsp;%</small><button type="button" class="fold-close" data-fold-close aria-label="Zavrieť">× Zavrieť</button></h3>
+          <div class="card" id="odds17Result"><p class="empty">Načítavam…</p></div>
           </div>
           <div class="fold-sec" data-fold-sec="kurz2" hidden>
           <h3 class="sh">Kurz od 2,00 – skúška <small>z každého zápasu najviac jeden tip s kurzom aspoň 2,00 a hodnotou +5 až +25&nbsp;%</small><button type="button" class="fold-close" data-fold-close aria-label="Zavrieť">× Zavrieť</button></h3>
