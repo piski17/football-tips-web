@@ -1151,7 +1151,7 @@ async function renderLateAdd(f, box) {
   }
   const res = { won: `<b class="g">vyšiel</b>`, lost: `<b class="l">nevyšiel</b>`, void: "vrátený", pending: `<span class="faint">čaká</span>` };
   box.innerHTML = `<div class="table-wrap"><table class="bt-table"><thead><tr><th>Tip</th><th class="num">Dôvera</th><th class="num">Kurz</th><th>Výsledok</th><th class="num"></th></tr></thead><tbody>${entries
-    .map((t) => `<tr><td>${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}${t.strictFail ? `<br><span class="faint small">neprejde 60 / 40 – pôjde do sledovaných</span>` : ""}</td><td class="num">${probTxt(t.probability)}${NB}%</td><td class="num">${typeof t.odds === "number" ? fmtOdds(t.odds) : "–"}</td><td>${res[t.status] || escapeHtml(t.status)}</td><td class="num">${autoInHistory(t) ? `<span class="faint small">✓ v histórii</span>` : `<button type="button" class="btn sm" data-late-id="${escapeHtml(t.id)}">+ Pridať do histórie</button>`}</td></tr>`)
+    .map((t) => `<tr><td>${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}${t.strictFail && STRICT_CHECK_ON ? `<br><span class="faint small">neprejde 60 / 40 – pôjde do sledovaných</span>` : ""}</td><td class="num">${probTxt(t.probability)}${NB}%</td><td class="num">${typeof t.odds === "number" ? fmtOdds(t.odds) : "–"}</td><td>${res[t.status] || escapeHtml(t.status)}</td><td class="num">${autoInHistory(t) ? `<span class="faint small">✓ v histórii</span>` : `<button type="button" class="btn sm" data-late-id="${escapeHtml(t.id)}">+ Pridať do histórie</button>`}</td></tr>`)
     .join("")}</tbody></table></div><p class="faint small">Dôvera a kurz sú tie, ktoré server zapísal asi hodinu pred výkopom. Platia rovnaké pravidlá ako pri ostatných tipoch; tip dostane značku „⏱ doplnené po výkope“ a do Telegramu sa neposiela.</p>`;
   box.querySelectorAll("[data-late-id]").forEach((b) => {
     b.onclick = async () => {
@@ -1849,7 +1849,8 @@ function farLineTip(t) {
   return raw > 73;
 }
 function lateTipForClients(t) {
-  if (t.strictFail || t.h2hAgainst || t.probability < WATCH_BELOW || t.probability > 80) return false;
+  // 16. 11. 2026: automatický záznam má strictFail aj pri vypnutej 60 / 40 (strictWouldFail) – rozhoduje len pri zapnutej kontrole, ako na serveri.
+  if ((t.strictFail && STRICT_CHECK_ON) || t.h2hAgainst || t.probability < WATCH_BELOW || t.probability > 80) return false;
   if (typeof t.odds !== "number" && farLineTip(t)) return false; // len bez kurzu z API
   if (typeof t.odds !== "number") return true; // trh bez kurzu v API – rozhodne kurz, ktorý zadá Michal
   const value = (t.probability / 100) * t.odds;
@@ -1891,7 +1892,7 @@ async function renderDayLateTips(box) {
         <div class="dtip-match"><span class="faint">${escapeHtml(timeHm(new Date(t.matchDate)))}</span> ${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))} <span class="faint small">· ${escapeHtml(translateLeagueName(t.league || ""))}${score}</span></div>
         <div class="s">${escapeHtml(t.market)}: <b>${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}</b>${strongTipBadge(t.probability)}</div>
         <div class="m"><span>Dôvera <b>${probTxt(t.probability)}${NB}%</b></span>${typeof t.odds === "number" ? `<span>Kurz pred výkopom <b>${fmtOdds(t.odds)}</b></span>` : `<span>Priemerný kurz ~${impliedOdds(t.probability).replace(".", ",")}</span><span><b>Hraj len pri kurze aspoň ${fmtOdds(minOddsFor(t))}</b> <span class="faint">(Kurz v API nie je – zadáš ho pri pridaní)</span></span>`}${res[t.status] ? `<span>${res[t.status]}</span>` : ""}</div>
-        ${t.strictFail ? `<div class="why warn">⚠️ neprejde pri 60 / 40</div>` : ""}
+        ${t.strictFail && STRICT_CHECK_ON ? `<div class="why warn">⚠️ neprejde pri 60 / 40</div>` : ""}
       </div>
       <div class="dtip-odds">
         ${saved ? `<button type="button" class="btn sm" disabled>✓ Uložené</button>` : `<button type="button" class="btn sm${n === 1 ? "" : " ghost"}" data-dt-late-id="${escapeHtml(t.id)}">+ Pridať</button>`}
