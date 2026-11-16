@@ -439,12 +439,19 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
   const addDays = (day, n) => { const p = dayParts(day); return isoLocal(new Date(p.y, p.m - 1, p.d + n)); };
   function periodRange(day, period) {
     const p = dayParts(day);
-    if (period === "week") { const from = addDays(day, -((p.wd + 6) % 7)); return { from, to: addDays(from, 6) }; }
+    if (period === "week") {
+      // Michal 16. 11.: týždeň na prelome mesiacov sa delí – len dni z mesiaca vybraného dňa (napr. 26. – 31. 10. a zvlášť 1. 11.)
+      let from = addDays(day, -((p.wd + 6) % 7)), to = addDays(from, 6);
+      const m0 = `${p.y}-${pad(p.m)}-01`, m1 = isoLocal(new Date(p.y, p.m, 0));
+      if (from < m0) from = m0; if (to > m1) to = m1;
+      return { from, to };
+    }
     return { from: `${p.y}-${pad(p.m)}-01`, to: isoLocal(new Date(p.y, p.m, 0)) };
   }
   function rangeTxt(r) {
     const a = dayParts(r.from), b = dayParts(r.to);
     if (st.period === "month") return `${MONTHS[a.m - 1]} ${a.y}`;
+    if (r.from === r.to) return dayShort(r.from);
     return a.m === b.m ? `${a.d}. – ${b.d}. ${b.m}. ${b.y}` : `${a.d}. ${a.m}. – ${b.d}. ${b.m}. ${b.y}`;
   }
   const PW = () => (st.period === "week" ? "týždňa" : "mesiaca");
@@ -800,8 +807,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
   $("day").addEventListener("change", () => { if (/^\d{4}-\d{2}-\d{2}$/.test($("day").value)) load($("day").value); });
   $("periodChips").addEventListener("click", (e) => { const c = e.target.closest(".chip"); if (!c || c.dataset.p === st.period) return; st.period = c.dataset.p; load(st.day); });
   $("prevDay").addEventListener("click", () => {
-    if (st.period === "week") return load(addDays(st.data.from, -7));
-    if (st.period === "month") return load(addDays(st.data.from, -1));
+    if (st.period !== "day") return load(addDays(st.data.from, -1));
     const d = (st.data.days || []).filter((x) => x < st.day).pop(); if (d) load(d); });
   $("nextDay").addEventListener("click", () => {
     if (st.period !== "day") return load(addDays(st.data.to, 1));
