@@ -2153,7 +2153,7 @@ html, body { overflow-x: clip; }
       if (page !== "vysledky") return;
       recentAll = d.recent || []; drawList(); drawMonths(d.months); drawCalendar(d.calendar);
       var rn = $("retroNote"), rx = Number(d.retroStrictExcluded) || 0;
-      if (rn && rx > 0) { rn.textContent = "Od 27. 10. 2026 prechádza každý tip aj prísnejšou kontrolou (šanca 60 % model / 40 % stávkovky). " + rx + " " + (rx === 1 ? "starší tip, ktorý by ňou neprešiel, sme" : rx <= 4 ? "staršie tipy, ktoré by ňou neprešli, sme" : "starších tipov, ktoré by ňou neprešli, sme") + " v skúšobnom období (bez platiacich členov) spätne vyradili zo štatistík."; rn.hidden = false; }
+      if (rn && rx > 0) { rn.textContent = rx + " " + (rx === 1 ? "starší tip, ktorý nespĺňa súčasné pravidlá výberu (dôvera 70 – 80 %, kurz aspoň 1,50), sme" : rx <= 4 ? "staršie tipy, ktoré nespĺňajú súčasné pravidlá výberu (dôvera 70 – 80 %, kurz aspoň 1,50), sme" : "starších tipov, ktoré nespĺňajú súčasné pravidlá výberu (dôvera 70 – 80 %, kurz aspoň 1,50), sme") + " v skúšobnom období (bez platiacich členov) spätne vyradili zo štatistík."; rn.hidden = false; }
       if (!n) { $("month").textContent = "Čísla sa zobrazia po prvých vyhodnotených tipoch."; $("month").hidden = false; return; }
       drawPeriods(buildPeriods(d));
     }).catch(function () {
