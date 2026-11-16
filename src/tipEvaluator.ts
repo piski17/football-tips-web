@@ -187,6 +187,52 @@ export function evaluateTip(
       return parseInt(h, 10) === homeGoals && parseInt(a, 10) === awayGoals ? "won" : "lost";
     }
 
+    // Trhy z modelu gólov len pre tiché sledovanie (16. 11. 2026).
+    case "Víťaz bez remízy": {
+      if (homeGoals === awayGoals) return "void";
+      if (tip.selection === tip.homeTeam) return homeGoals > awayGoals ? "won" : "lost";
+      if (tip.selection === tip.awayTeam) return awayGoals > homeGoals ? "won" : "lost";
+      return "void";
+    }
+
+    case "Ázijský handicap":
+    case "Európsky handicap": {
+      const draw = tip.selection.match(/^Remíza \((.*) ([+−-])(\d+(?:\.\d+)?)\)$/);
+      const m = draw ?? tip.selection.match(/^(.*) ([+−-])(\d+(?:\.\d+)?)$/);
+      if (!m) return "void";
+      const line = (m[2] === "+" ? 1 : -1) * parseFloat(m[3]);
+      const isHome = m[1] === tip.homeTeam;
+      if (!isHome && m[1] !== tip.awayTeam) return "void";
+      const diff = (isHome ? homeGoals - awayGoals : awayGoals - homeGoals) + line;
+      if (draw) return diff === 0 ? "won" : "lost";
+      if (diff === 0) return tip.market === "Ázijský handicap" ? "void" : "lost";
+      return diff > 0 ? "won" : "lost";
+    }
+
+    case "Presný počet gólov":
+    case "Presný počet gólov domácich":
+    case "Presný počet gólov hostí": {
+      const actual = tip.market === "Presný počet gólov" ? homeGoals + awayGoals : tip.market === "Presný počet gólov domácich" ? homeGoals : awayGoals;
+      const m = tip.selection.match(/^(\d+)(\+)?$/);
+      if (!m) return "void";
+      const k = parseInt(m[1], 10);
+      return (m[2] ? actual >= k : actual === k) ? "won" : "lost";
+    }
+
+    case "Párny / nepárny počet gólov": {
+      const even = (homeGoals + awayGoals) % 2 === 0;
+      if (tip.selection === "Párny") return even ? "won" : "lost";
+      if (tip.selection === "Nepárny") return even ? "lost" : "won";
+      return "void";
+    }
+
+    case "Výsledok 1. polčasu": {
+      const ht = actualTeamStats?.halftime;
+      if (!ht) return "void";
+      const actual = ht.home > ht.away ? `Výhra ${tip.homeTeam}` : ht.home < ht.away ? `Výhra ${tip.awayTeam}` : "Remíza";
+      return actual === tip.selection ? "won" : "lost";
+    }
+
     case "Čisté konto": {
       if (tip.selection.startsWith(tip.homeTeam)) return awayGoals === 0 ? "won" : "lost";
       if (tip.selection.startsWith(tip.awayTeam)) return homeGoals === 0 ? "won" : "lost";
@@ -319,7 +365,7 @@ export async function settleBet(
 const STATS_RETRY_MS = 2 * 24 * 60 * 60 * 1000;
 function statsMissingTooEarly(market: string, wentToExtraTime: boolean, matchDate?: string): boolean {
   if (wentToExtraTime) return false; // pri predĺžení sa štatistiky tipy vracajú zámerne
-  if (!STATS_MARKETS.includes(market) && !CARD_HALF_MARKETS.includes(market) && market !== "Góly v 1. polčase" && market !== "Góly v 2. polčase") return false;
+  if (!STATS_MARKETS.includes(market) && !CARD_HALF_MARKETS.includes(market) && market !== "Góly v 1. polčase" && market !== "Góly v 2. polčase" && market !== "Výsledok 1. polčasu") return false;
   const kickoff = matchDate ? new Date(matchDate).getTime() : NaN;
   return !isNaN(kickoff) && Date.now() - kickoff < STATS_RETRY_MS;
 }
