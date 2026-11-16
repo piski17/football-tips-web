@@ -44,7 +44,7 @@
 <script>
 (() => {
   const W = 1080, H = 1350, X = 76;
-  const C = { white: "#FFFFFF", bad: "#FF6B6B", acc: "#FFD43B", deep: "#0B1C9C", soft: "rgba(255,255,255,.85)", faint: "rgba(255,255,255,.7)", line: "rgba(255,255,255,.22)" };
+  const C = { white: "#F6EAD0", bad: "#E0607A", acc: "#E9C98A", deep: "#2A0E22", soft: "rgba(246,234,208,.85)", faint: "rgba(246,234,208,.6)", line: "rgba(233,201,138,.25)" };
   const st = { kind: "first", tips: [] };
   const cv = document.getElementById("out"), ctx = cv.getContext("2d");
   const LOGO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="gf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F6E7BE"/><stop offset=".5" stop-color="#D6B676"/><stop offset="1" stop-color="#9C7834"/></linearGradient></defs><circle cx="50" cy="50" r="48" fill="#0B0B0C"/><g fill="none" stroke="url(#gf)"><circle cx="50" cy="50" r="46" stroke-width="2.4"/><circle cx="50" cy="50" r="31" stroke-width="1.2" opacity=".7"/><circle cx="50" cy="50" r="16" stroke-width="1.2" opacity=".55"/><path d="M50 50 75 25" stroke-width="3" stroke-linecap="round"/></g><path d="M50 50 L50 19 A31 31 0 0 1 71.9 28.1 Z" fill="url(#gf)" opacity=".28"/><circle cx="50" cy="50" r="4" fill="url(#gf)"/><circle cx="66" cy="36" r="3" fill="#F6E7BE"/></svg>`;
@@ -59,14 +59,13 @@
   function runs(parts, x, y) { for (const [t, c, f] of parts) { ctx.font = f; ctx.fillStyle = c; ctx.fillText(t, x, y); x += ctx.measureText(t).width; } return x; }
 
   function background() {
-    let g = ctx.createLinearGradient(0, 0, W * 0.55, H);
-    g.addColorStop(0, "#2547FF"); g.addColorStop(0.5, "#1230D6"); g.addColorStop(1, "#0B1C9C");
+    // 17. 11. – farby ako reklama „Messi 91“: navy → bordová + zlatá
+    let g = ctx.createLinearGradient(0, 0, W * 0.6, H);
+    g.addColorStop(0, "#0B1638"); g.addColorStop(0.45, "#1A1240"); g.addColorStop(1, "#4A0F2B");
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-    g = ctx.createRadialGradient(W, 0, 0, W, 0, 760); g.addColorStop(0, "rgba(91,123,255,.85)"); g.addColorStop(1, "rgba(91,123,255,0)");
+    g = ctx.createRadialGradient(W * 0.85, 0, 0, W * 0.85, 0, 760); g.addColorStop(0, "rgba(225,170,90,.28)"); g.addColorStop(1, "rgba(225,170,90,0)");
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-    g = ctx.createRadialGradient(0, H, 0, 0, H, 900); g.addColorStop(0, "rgba(10,26,143,.9)"); g.addColorStop(1, "rgba(10,26,143,0)");
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-    ctx.strokeStyle = "rgba(255,255,255,.05)"; ctx.lineWidth = 1;
+    ctx.strokeStyle = "rgba(233,201,138,.04)"; ctx.lineWidth = 1;
     for (let x = 0.5; x < W; x += 54) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
     for (let y = 0.5; y < H; y += 54) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
   }
@@ -92,11 +91,11 @@
     // kruh
     const cx = X + 260, cy = 166 + 260, R = 230;
     ctx.lineWidth = 38;
-    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.strokeStyle = C.bad; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.strokeStyle = "rgba(224,96,122,.75)"; ctx.stroke();
     if (n) { ctx.beginPath(); ctx.arc(cx, cy, R, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (won / n)); ctx.strokeStyle = C.white; ctx.stroke(); }
     ctx.textAlign = "center";
-    ctx.fillStyle = C.white; ctx.font = U(900, String(won).length > 2 ? 150 : 196); ctx.fillText(String(won), cx, cy + 50);
-    ctx.fillStyle = C.acc; ctx.font = U(500, 40); ctx.fillText("zo " + n, cx, cy + 110);
+    { const gg = ctx.createLinearGradient(cx - 180, cy - 140, cx + 180, cy + 60); gg.addColorStop(0, "#FFE3A8"); gg.addColorStop(0.55, "#F0A35E"); gg.addColorStop(1, "#E0607A"); ctx.fillStyle = gg; } ctx.font = U(900, String(won).length > 2 ? 150 : 196); ctx.fillText(String(won), cx, cy + 50);
+    ctx.fillStyle = C.soft; ctx.font = U(500, 40); ctx.fillText("zo " + n, cx, cy + 110);
     ctx.textAlign = "left";
 
     // vpravo
@@ -113,7 +112,7 @@
     tips.forEach((t, i) => {
       const x = X + (i % cols) * (cell + gap), y = gy + Math.floor(i / cols) * (cell + gap);
       if (t.status === "won") { rr(x, y, cell, cell, 7); ctx.fillStyle = C.white; ctx.fill(); }
-      else { rr(x + 1.5, y + 1.5, cell - 3, cell - 3, 6); ctx.fillStyle = "rgba(255,107,107,.18)"; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = C.bad; ctx.stroke(); }
+      else { rr(x + 1.5, y + 1.5, cell - 3, cell - 3, 6); ctx.fillStyle = "rgba(224,96,122,.16)"; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = C.bad; ctx.stroke(); }
     });
     const rows = Math.max(1, Math.ceil(n / cols));
     const ly = gy + rows * (cell + gap) + 48;
@@ -122,7 +121,7 @@
     const x2 = X + 32 + ctx.measureText(won + " vyšlo").width + 36;
     rr(x2 + 1.5, ly - 18.5, 17, 17, 4); ctx.lineWidth = 3; ctx.strokeStyle = C.bad; ctx.stroke();
     ctx.fillStyle = C.soft; ctx.fillText((n - won) + " nevyšlo", x2 + 32, ly - 1);
-    ctx.font = D(500, 22); ctx.fillStyle = "rgba(255,255,255,.55)";
+    ctx.font = D(500, 22); ctx.fillStyle = "rgba(246,234,208,.5)";
     ctx.fillText("Poradie podľa dátumu zápasu →", X, ly + 40);
 
     // otázka
