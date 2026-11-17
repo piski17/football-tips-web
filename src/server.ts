@@ -2625,7 +2625,16 @@ setAskRadarHandler(async (text, chatId): Promise<AskRadarAnswer> => {
   const best = (r.bestBets ?? []) as { probability?: number }[];
   if (best.length) {
     const top = Math.max(...best.map((b) => Number(b.probability) || 0));
-    lines.push(`✅ <b>Model tu našiel silný tip</b>${top ? ` (dôvera ${Math.round(top)} %)` : ""}. Konkrétny tip posielam členom pred zápasom.`);
+    // Michal (admin) vidí v bote aj samotný tip (17. 11. 2026), ostatní len to, že tip existuje.
+    if (process.env.TELEGRAM_ADMIN_CHAT_ID && String(chatId) === String(process.env.TELEGRAM_ADMIN_CHAT_ID)) {
+      lines.push(`✅ <b>Tipy modelu</b> (vidíte len vy):`);
+      for (const b of best as any[]) {
+        const sel = translateNamesInText(String(b.selection ?? ""), fixture.homeTeam.name, fixture.awayTeam.name);
+        lines.push(`👉 ${escapeHtml(String(b.market ?? ""))}: <b>${escapeHtml(sel)}</b> · dôvera ${Math.round(Number(b.probability) || 0)} %${typeof b.odds === "number" && b.odds > 1 ? ` · kurz ${b.odds.toFixed(2).replace(".", ",")}` : ""}`);
+      }
+    } else {
+      lines.push(`✅ <b>Model tu našiel silný tip</b>${top ? ` (dôvera ${Math.round(top)} %)` : ""}. Konkrétny tip posielam členom pred zápasom.`);
+    }
   } else {
     lines.push(`➖ Model tu nevidí dosť silný tip. Takýto zápas by som nehral – radšej nič ako slabý tip.`);
   }
