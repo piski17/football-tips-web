@@ -2288,6 +2288,7 @@ function renderTipsList(rawTips) {
   renderWatchReport(watchTips.filter((t) => !isWatchBandTip(t)));
   void renderWatchOverview(watchTips, statTips);
   renderTipRows(tips);
+  renderEv10(statTips);
   renderFoldSums(statTips, watchTips);
   renderTipsCountNote(tips, statTips, removedLeagueCount);
 }
@@ -5432,6 +5433,30 @@ document.getElementById("dnesSendBtn")?.addEventListener("click", () => openSend
 // Najsilnejší tip z každého zápasu (9. 11. 2026, Michal) – server ho zapíše pri automatickej analýze
 // (asi hodinu pred výkopom) a vyhodnotí po zápase. Klientom nejde, do štatistík sa neráta.
 // Skúška „kurz od 2,00“ (16. 11. 2026, Michal) – rovnaká tabuľka ako Najsilnejší tip zápasu.
+// Skúška „hodnota od +10 %“ (17. 11. 2026, Michal): klientom ide ďalej hranica +5 %, tu sa ticho porovnáva,
+// ako by dopadli len tipy s hodnotou aspoň +10 % (pravdepodobnosť × kurz ≥ 1,10). Od 17. 11. 2026.
+const EV10_SINCE = "2026-11-17";
+function renderEv10(statTips) {
+  const box = document.getElementById("ev10Result");
+  if (!box) return;
+  const sumEl = document.querySelector('[data-fold-sum="hodnota10"]');
+  const fmt2 = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(2).replace(".", ",");
+  const all = statTips.filter((t) => !(t.legs && t.legs.length) && String(t.matchDate || "").slice(0, 10) >= EV10_SINCE && typeof t.odds === "number" && typeof t.probability === "number");
+  const grp = (list) => {
+    const done = list.filter((t) => t.status === "won" || t.status === "lost");
+    const won = done.filter((t) => t.status === "won").length;
+    const profit = done.reduce((a, t) => a + (t.status === "won" ? t.odds - 1 : -1), 0);
+    return { n: done.length, won, profit, pending: list.filter((t) => t.status === "pending").length };
+  };
+  const hi = grp(all.filter((t) => (t.probability / 100) * t.odds >= 1.1));
+  const lo = grp(all.filter((t) => (t.probability / 100) * t.odds < 1.1));
+  const tot = grp(all);
+  const line = (label, g) => `<tr><td>${label}</td><td>${g.n}</td><td>${g.n ? `${g.won} (${Math.round((g.won / g.n) * 100)}${NB}%)` : "–"}</td><td class="${g.profit > 0 ? "g" : g.profit < 0 ? "l" : ""}">${g.n ? fmt2(g.profit) + " j." : "–"}</td><td>${g.pending || ""}</td></tr>`;
+  if (sumEl) sumEl.textContent = hi.n ? `${hi.n} tipov · ${Math.round((hi.won / hi.n) * 100)}${NB}% · ${fmt2(hi.profit)} j.` : "Tiché sledovanie od 17. 11.";
+  box.innerHTML = `<p class="muted small">Klientom ide ďalej hranica hodnoty +5${NB}%. Tu sa ticho porovnáva, ako by dopadli len tipy s hodnotou aspoň +10${NB}% (šanca × kurz ≥ 1,10, napr. pri 70${NB}% kurz aspoň 1,58). Rátajú sa tipy zo štatistík od 17. 11. 2026, zisk pri vklade 1 jednotka na tip. Vyhodnotiť 1. 12.</p>
+  <table class="bt-table"><thead><tr><th></th><th>Vyhodnotené</th><th>Vyšlo</th><th>Zisk</th><th>Čaká</th></tr></thead><tbody>
+  ${line("Hodnota od +10 %", hi)}${line("Hodnota +5 – 10 % (by vypadli)", lo)}${line("Všetky tipy klientom", tot)}</tbody></table>`;
+}
 const ODDS2_TEXT = {
   boxId: "odds2Result", fold: "kurz2", emptySum: "Tiché sledovanie od 16. 11.",
   intro: `Pri každom zápase server asi hodinu pred výkopom vyberie najviac jeden tip s kurzom stávkoviek aspoň 2,00 a hodnotou +5 až +25${NB}% (pri kurze 2,00 je to šanca modelu asi 53 – 62${NB}%), bez rozporu so stávkovkami. Po zápase ho vyhodnotí. Klientom nejde a do štatistík sa neráta.`,
