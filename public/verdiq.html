@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>VERDIQ – skúška</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&amp;family=Figtree:wght@400..800&amp;display=swap" rel="stylesheet">
+<style>
+/* VERDIQ (18. 11. 2026) – samostatný model pre zahraničie, skúška. Farby Kameň ako app.tipradar.eu. */
+:root {
+  --bg: #0E0D0C; --section: #1C1B19; --card: #252320; --line: rgba(207,196,180,.24); --line2: rgba(207,196,180,.12);
+  --gold: #CFC4B4; --gold-hi: #FFFFFF; --text: #F2EFEA; --muted: #A39E96; --faint: #6E6A64; --good: #7FC8A0; --bad: #E0897A;
+  --display: "Fraunces", Georgia, serif; --body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 var(--body); font-variant-numeric: tabular-nums; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 28px 20px 56px; }
+@media (max-width: 620px) { .wrap { padding: 20px 16px 44px; } }
+a.back { color: var(--muted); text-decoration: none; font-size: 13.5px; }
+h1, h2 { font-family: var(--display); letter-spacing: -0.01em; margin: 0; font-weight: 600; }
+.brand { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin: 14px 0 4px; }
+.brand h1 { font-size: 40px; letter-spacing: .08em; }
+.brand h1 b { color: var(--good); font-weight: 600; }
+.brand em { font-family: var(--display); font-style: italic; color: var(--gold); font-size: 18px; }
+h2 { font-size: 21px; margin-bottom: 10px; }
+.lead { color: var(--muted); margin: 6px 0 22px; max-width: 76ch; }
+.panel { background: var(--section); border: 1px solid var(--line); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+@media (max-width: 620px) { .panel { padding: 14px; } }
+.judges { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+@media (max-width: 760px) { .judges { grid-template-columns: 1fr; } }
+.judge { background: var(--card); border: 1px solid var(--line2); border-radius: 12px; padding: 14px; }
+.judge b { display: block; font-family: var(--display); font-size: 17px; margin-bottom: 4px; }
+.judge span { color: var(--muted); font-size: 14px; }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+@media (max-width: 760px) { .kpis { grid-template-columns: 1fr 1fr; } }
+.kpi { background: var(--card); border-radius: 12px; padding: 14px; }
+.kpi small { display: block; color: var(--muted); font-size: 12.5px; text-transform: uppercase; letter-spacing: .08em; }
+.kpi b { display: block; font: 600 28px/1.2 var(--display); margin-top: 4px; }
+.kpi span { color: var(--faint); font-size: 13px; }
+.pos { color: var(--good) !important; } .neg { color: var(--bad) !important; }
+.scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line2); white-space: nowrap; }
+th { color: var(--muted); font-weight: 600; font-size: 12.5px; text-transform: uppercase; letter-spacing: .06em; }
+td.num, th.num { text-align: right; }
+.st { display: inline-block; min-width: 22px; text-align: center; border-radius: 6px; padding: 1px 6px; font-weight: 700; font-size: 12.5px; }
+.st.won { background: rgba(127,200,160,.18); color: var(--good); }
+.st.lost { background: rgba(224,137,122,.18); color: var(--bad); }
+.st.void, .st.pending { background: var(--card); color: var(--muted); }
+.muted { color: var(--muted); } .small { font-size: 13px; }
+.note { color: var(--muted); font-size: 13.5px; margin: 10px 0 0; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/">← Späť do appky</a>
+  <div class="brand"><h1>VERDIQ<b>.</b></h1><em>Two judges. One verdict.</em></div>
+  <p class="lead">Nový samostatný model pre zahraničný trh (skúška od 18. 11. 2026). S tipmi TipRadaru nesúvisí. Tipy sa vyberajú, ukladajú a vyhodnocujú úplne samé, nikomu sa neposielajú. Tu sleduješ, či model zarába.</p>
+
+  <section class="panel">
+    <h2>Ako vzniká tip</h2>
+    <div class="judges">
+      <div class="judge"><b>1. sudca – štatistický model</b><span>Z čísel tímov vypočíta šancu (góly, rohy, karty, strely, víťaz…). Pri najvyššom kurze musí vidieť hodnotu aspoň +5 %.</span></div>
+      <div class="judge"><b>2. sudca – Pinnacle</b><span>Najpresnejšia stávkovka sveta, bez marže. Aj ona musí pri tom istom kurze vidieť hodnotu. Model a Pinnacle sa nesmú rozchádzať o viac ako 12 bodov.</span></div>
+      <div class="judge"><b>Verdikt</b><span>Kurz od 1,70 do 3,20, najvyšší zo známych zahraničných stávkoviek (Bet365, Unibet, Betano, William Hill…). Z jedného zápasu najviac 2 tipy, každý z iného trhu.</span></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Výsledky skúšky</h2>
+    <div class="kpis" id="kpis"><div class="kpi"><small>Načítavam…</small></div></div>
+    <p class="note" id="clvNote"></p>
+  </section>
+
+  <div class="grid2">
+    <section class="panel"><h2>Podľa kurzu</h2><div class="scroll"><table id="bands"></table></div></section>
+    <section class="panel"><h2>Podľa trhu</h2><div class="scroll"><table id="markets"></table></div></section>
+  </div>
+
+  <section class="panel"><h2>Po dňoch</h2><div class="scroll"><table id="days"></table></div></section>
+  <section class="panel"><h2>Tipy</h2><p class="muted small" style="margin:-4px 0 10px">Čakajúce aj vyhodnotené, najnovšie hore. Vklad 1 jednotka na každý tip.</p><div class="scroll"><table id="picks"></table></div></section>
+</div>
+<script>
+const nf = (n, d = 2) => n == null ? "–" : Number(n).toLocaleString("sk-SK", { minimumFractionDigits: d, maximumFractionDigits: d });
+const units = (n) => (n > 0 ? "+" : n < 0 ? "−" : "") + nf(Math.abs(n)) + " j.";
+const cls = (n) => n > 0 ? "pos" : n < 0 ? "neg" : "";
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const dt = (iso) => new Date(iso).toLocaleString("sk-SK", { timeZone: "Europe/Bratislava", day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" });
+const day = (k) => { const [y, m, d] = k.split("-"); return `${+d}. ${+m}. ${y}`; };
+const ST = { won: "✓", lost: "✕", void: "↺", pending: "…" };
+
+function aggRows(list, label) {
+  if (!list.length) return `<tr><td class="muted">Zatiaľ žiadne vyhodnotené tipy.</td></tr>`;
+  return `<tr><th>${label}</th><th class="num">Tipov</th><th class="num">Vyšlo</th><th class="num">Ø kurz</th><th class="num">Zisk</th></tr>` +
+    list.map((r) => `<tr><td>${esc(r.key)}</td><td class="num">${r.n}</td><td class="num">${r.won}${r.n ? ` <span class="muted small">(${Math.round(r.won / r.n * 10)} z 10)</span>` : ""}</td><td class="num">${nf(r.avgOdds)}</td><td class="num ${cls(r.profit)}">${r.n ? units(r.profit) : "–"}</td></tr>`).join("");
+}
+
+async function load() {
+  const res = await fetch("/api/verdiq", { cache: "no-store" });
+  const d = await res.json();
+  const t = d.total;
+  const eur = t.profit * 10;
+  document.getElementById("kpis").innerHTML = `
+    <div class="kpi"><small>Vyhodnotené tipy</small><b>${t.n}</b><span>${d.pending} čaká na výsledok</span></div>
+    <div class="kpi"><small>Vyšlo</small><b>${t.won} z ${t.n}</b><span>${t.n ? `model čakal ${Math.round(t.expected / 10)} z 10, vyšlo ${Math.round(t.won / t.n * 10)} z 10` : "–"}</span></div>
+    <div class="kpi"><small>Zisk</small><b class="${cls(t.profit)}">${units(t.profit)}</b><span>pri 10 € na tip: ${eur >= 0 ? "+" : "−"}${nf(Math.abs(eur))} €</span></div>
+    <div class="kpi"><small>Priemerný kurz</small><b>${nf(t.avgOdds)}</b><span>najvyšší zo známych stávkoviek</span></div>`;
+  document.getElementById("clvNote").innerHTML = t.clvN
+    ? `<b>Kurz pred výkopom:</b> v ${Math.round(t.clvPlus / 10)} z 10 tipov (${t.clvN} meraných) sme mali lepší kurz, ako bol férový kurz Pinnacle tesne pred zápasom. Čím viac, tým lepšie – znamená to, že model nachádza skutočnú hodnotu, nie náhodu.`
+    : "Kurz pred výkopom (či sa trh pohol v náš prospech) sa začne merať s prvými tipmi.";
+  document.getElementById("bands").innerHTML = aggRows(d.byBand.filter((r) => r.n), "Kurz");
+  document.getElementById("markets").innerHTML = aggRows(d.byMarket.filter((r) => r.n), "Trh");
+  document.getElementById("days").innerHTML = aggRows(d.byDay.filter((r) => r.n).map((r) => ({ ...r, key: day(r.key) })), "Deň");
+  document.getElementById("picks").innerHTML = d.picks.length
+    ? `<tr><th></th><th>Zápas</th><th>Tip</th><th class="num">Kurz</th><th>Stávkovka</th><th class="num">Model</th><th class="num">Pinnacle</th><th class="num">Zisk</th></tr>` +
+      d.picks.map((p) => {
+        const g = p.status === "won" ? p.odds - 1 : p.status === "lost" ? -1 : 0;
+        return `<tr><td><span class="st ${p.status}">${ST[p.status]}</span></td>
+          <td>${esc(p.homeTeam)} – ${esc(p.awayTeam)}<br><span class="muted small">${dt(p.matchDate)} · ${esc(p.league)}</span></td>
+          <td>${esc(p.market)}: <b>${esc(p.selection)}</b></td>
+          <td class="num"><b>${nf(p.odds)}</b>${p.closingFair ? `<br><span class="muted small">pred výkopom ${nf(p.closingFair)}</span>` : ""}</td>
+          <td>${esc(p.book)}</td>
+          <td class="num">${Math.round(p.modelP)} %</td>
+          <td class="num">${Math.round(p.sharpP)} %${p.sharpSource !== "Pinnacle" ? ' <span class="muted small">(trh)</span>' : ""}</td>
+          <td class="num ${cls(g)}">${p.status === "won" || p.status === "lost" ? units(g) : "–"}</td></tr>`;
+      }).join("")
+    : `<tr><td class="muted">Zatiaľ žiadne tipy. Prvé pribudnú hodinu pred výkopom najbližších zápasov.</td></tr>`;
+}
+load().catch(() => { document.getElementById("kpis").innerHTML = '<div class="kpi"><small>Nepodarilo sa načítať</small></div>'; });
+</script>
+</body>
+</html>
