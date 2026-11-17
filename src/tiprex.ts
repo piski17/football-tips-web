@@ -33,6 +33,8 @@ const MAX_GAP = 12;
 const MAX_OVER_MEDIAN = 1.08;
 /** 18. 11. 2026 (Michal): zo zápasu toľko tipov, koľko prejde – len nie dva z toho istého typu trhu. */
 const MAX_PER_FIXTURE = 99;
+/** Tip musia ponúkať aspoň 3 známe zahraničné stávkovky (Bet365, Unibet, Betano…). */
+const MIN_TOP_BOOKS = 3;
 const SKIP_MARKETS = ["Strelec gólov", "Ofsajdy", "Vyššie držanie lopty", "Držanie lopty domácich", "Držanie lopty hostí"];
 
 const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL;
@@ -151,7 +153,9 @@ function priceView(books: Map<string, MarketOdds[]>, pick: { market: string; sel
     }
   }
   const top = prices.filter((p) => isTopBook(p.book) && !/^pinnacle$/i.test(p.book.trim()));
-  if (!top.length) return null;
+  // 18. 11. 2026 (Michal): len tipy, ktoré sa naozaj dajú podať v zahraničí – presne tento tip
+  // musia ponúkať aspoň 3 známe zahraničné stávkovky (bez Pinnacle).
+  if (top.length < MIN_TOP_BOOKS) return null;
   let sharpP: number, sharpSource: "Pinnacle" | "trh";
   if (pin != null) { sharpP = pin; sharpSource = "Pinnacle"; }
   else if (fairs.length >= 3) { sharpP = median(fairs); sharpSource = "trh"; }
@@ -302,6 +306,19 @@ function fin(a: Agg) {
 const ODDS_BANDS: [string, number, number][] = [["1,70 – 1,99", 1.7, 2], ["2,00 – 2,49", 2, 2.5], ["2,50 – 3,20", 2.5, 9]];
 const skDay = (iso: string) => new Date(iso).toLocaleDateString("sv-SE", { timeZone: "Europe/Bratislava" });
 
+/** Súťaže TipRadaru v poslednom prehľadaní kurzov: koľko známych zahraničných stávkoviek ich ponúka. */
+function leagueCoverage() {
+  const map = new Map<string, { league: string; country: string; fixtures: number; books: Set<string> }>();
+  for (const f of scannedFixtures()) {
+    const e = map.get(f.league) ?? { league: f.league, country: f.country, fixtures: 0, books: new Set<string>() };
+    e.fixtures++;
+    for (const bet of Object.values(f.bets)) for (const list of Object.values(bet.values)) for (const o of list)
+      if (isTopBook(o.book) && !/^pinnacle$/i.test(o.book.trim())) e.books.add(o.book);
+    map.set(f.league, e);
+  }
+  return [...map.values()].map((e) => ({ league: e.league, country: e.country, fixtures: e.fixtures, books: [...e.books].sort() })).sort((a, b) => b.books.length - a.books.length);
+}
+
 export async function tiprexSummary() {
   const all = [...(await listPicks("done")), ...(await listPicks("pending"))].sort((a, b) => b.matchDate.localeCompare(a.matchDate));
   const total = agg();
@@ -318,12 +335,13 @@ export async function tiprexSummary() {
   }
   return {
     since: all.length ? all[all.length - 1].matchDate : null,
-    rules: { minOdds: VQ_MIN_ODDS, maxOdds: VQ_MAX_ODDS, minEvModel: MIN_EV_MODEL, minEvSharp: MIN_EV_SHARP, minEv: MIN_EV, maxEv: MAX_EV, maxGap: MAX_GAP, perFixture: MAX_PER_FIXTURE },
+    rules: { minTopBooks: MIN_TOP_BOOKS, minOdds: VQ_MIN_ODDS, maxOdds: VQ_MAX_ODDS, minEvModel: MIN_EV_MODEL, minEvSharp: MIN_EV_SHARP, minEv: MIN_EV, maxEv: MAX_EV, maxGap: MAX_GAP, perFixture: MAX_PER_FIXTURE },
     total: fin(total),
     pending: all.filter((p) => p.status === "pending").length,
     byMarket: [...byMarket].map(([k, a]) => ({ key: k, ...fin(a) })).sort((x, y) => y.n - x.n),
     byBand: ODDS_BANDS.map(([k]) => ({ key: k, ...fin(byBand.get(k) ?? agg()) })),
     byDay: [...byDay].map(([k, a]) => ({ key: k, ...fin(a) })).sort((x, y) => y.key.localeCompare(x.key)),
+    leagues: leagueCoverage(),
     picks: all.slice(0, 400),
   };
 }

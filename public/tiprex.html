@@ -68,7 +68,7 @@ td.num, th.num { text-align: right; }
     <div class="judges">
       <div class="judge"><b>1. sudca – štatistický model</b><span>Z čísel tímov vypočíta šancu (góly, rohy, karty, strely, víťaz…). Pri najvyššom kurze musí vidieť hodnotu aspoň +5 %.</span></div>
       <div class="judge"><b>2. sudca – Pinnacle</b><span>Najpresnejšia stávkovka sveta, bez marže. Aj ona musí pri tom istom kurze vidieť hodnotu. Model a Pinnacle sa nesmú rozchádzať o viac ako 12 bodov.</span></div>
-      <div class="judge"><b>Verdikt</b><span>Kurz od 1,70 do 3,20, najvyšší zo známych zahraničných stávkoviek (Bet365, Unibet, Betano, William Hill…). Zo zápasu môže byť viac tipov, ale každý z iného trhu (góly, rohy, karty…).</span></div>
+      <div class="judge"><b>Verdikt</b><span>Kurz od 1,70 do 3,20, najvyšší zo známych zahraničných stávkoviek (Bet365, Unibet, Betano, William Hill…). Tip musia ponúkať aspoň 3 z nich – inak sa v zahraničí nedá poriadne podať. Zo zápasu môže byť viac tipov, ale každý z iného trhu (góly, rohy, karty…).</span></div>
     </div>
   </section>
 
@@ -83,6 +83,7 @@ td.num, th.num { text-align: right; }
     <section class="panel"><h2>Podľa trhu</h2><div class="scroll"><table id="markets"></table></div></section>
   </div>
 
+  <section class="panel"><h2>Súťaže dnes</h2><p class="muted small" style="margin:-4px 0 10px">18 súťaží TipRadaru. Pri každej, koľko známych zahraničných stávkoviek dnes ponúka kurzy (z posledného prehľadania). Tipy idú len zo zápasov, kde ich je aspoň 3.</p><div class="scroll"><table id="leagues"></table></div></section>
   <section class="panel"><h2>Po dňoch</h2><div class="scroll"><table id="days"></table></div></section>
   <section class="panel"><h2>Tipy</h2><p class="muted small" style="margin:-4px 0 10px">Čakajúce aj vyhodnotené, najnovšie hore. Vklad 1 jednotka na každý tip.</p><div class="scroll"><table id="picks"></table></div></section>
 </div>
@@ -117,6 +118,10 @@ async function load() {
   document.getElementById("bands").innerHTML = aggRows(d.byBand.filter((r) => r.n), "Kurz");
   document.getElementById("markets").innerHTML = aggRows(d.byMarket.filter((r) => r.n), "Trh");
   document.getElementById("days").innerHTML = aggRows(d.byDay.filter((r) => r.n).map((r) => ({ ...r, key: day(r.key) })), "Deň");
+  document.getElementById("leagues").innerHTML = (d.leagues || []).length
+    ? `<tr><th>Súťaž</th><th class="num">Zápasy dnes</th><th class="num">Zahraničné stávkovky</th><th>Ktoré</th></tr>` +
+      d.leagues.map((l) => `<tr><td>${esc(l.league)}</td><td class="num">${l.fixtures}</td><td class="num ${l.books.length >= 3 ? "pos" : "neg"}">${l.books.length}</td><td class="muted small" style="white-space:normal">${esc(l.books.join(", "))}</td></tr>`).join("")
+    : `<tr><td class="muted">Dnes sa nehrá alebo ešte neprebehlo prehľadanie kurzov (každú hodinu).</td></tr>`;
   document.getElementById("picks").innerHTML = d.picks.length
     ? `<tr><th></th><th>Zápas</th><th>Tip</th><th class="num">Kurz</th><th>Stávkovka</th><th class="num">Model</th><th class="num">Pinnacle</th><th class="num">Zisk</th></tr>` +
       d.picks.map((p) => {
