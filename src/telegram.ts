@@ -482,7 +482,8 @@ const LANDING_URL = "https://tipradar.eu";
 const CONTACT_URL = `https://t.me/${TELEGRAM_CONTACT_USERNAME}`;
 const WELCOME_TEXT =
   `👋 Ahoj, tu je <b>TipRadar</b> – futbalové tipy podložené štatistikou.\n\n` +
-  `Všetko podstatné nájdete na webe. Tipy a výsledky zadarmo posielam do kanála. S otázkou mi pokojne napíšte osobne.`;
+  `Všetko podstatné nájdete na webe. Tipy a výsledky zadarmo posielam do kanála. S otázkou mi pokojne napíšte osobne.\n\n` +
+  `🔎 <b>Opýtajte sa radaru:</b> napíšte mi zápas, napríklad <i>Arsenal – Chelsea</i>, a pošlem vám, čo o ňom hovoria čísla.`;
 function mainMenuKeyboard() {
   const freeUrl = normalizeTelegramUrl(process.env.TELEGRAM_FREE_CHANNEL_URL);
   const rows: { text: string; url: string }[][] = [];
@@ -559,6 +560,15 @@ async function notifyAdminLead(plan: string, from: any, chatId: number): Promise
   });
 }
 
+// ---- „Opýtajte sa radaru“ (17. 11. 2026, Michal) ----
+// Človek napíše botovi zápas („Slovan – Spartak“) a bot mu sám pošle, čo hovorí model.
+// Vyhľadanie a analýzu robí server.ts (setAskRadarHandler), aby telegram.ts nemal závislosť na modeli.
+export type AskRadarAnswer = { kind: "answer"; text: string; match: string } | { kind: "notfound"; text: string } | { kind: "none" };
+let askRadarHandler: ((text: string, chatId: string) => Promise<AskRadarAnswer>) | null = null;
+export function setAskRadarHandler(fn: (text: string, chatId: string) => Promise<AskRadarAnswer>): void {
+  askRadarHandler = fn;
+}
+
 export async function handleTelegramUpdate(update: any): Promise<void> {
   if (!TELEGRAM_BOT_TOKEN) return;
 
@@ -626,18 +636,48 @@ export async function handleTelegramUpdate(update: any): Promise<void> {
   }
 
   // Bežná textová správa (nie príkaz): pošleme ju tebe, aby sa nestratila, a človeka nasmerujeme na tvoj Telegram.
-  if (text && !text.startsWith("/") && TELEGRAM_ADMIN_CHAT_ID && String(chatId) !== String(TELEGRAM_ADMIN_CHAT_ID)) {
-    await callTelegramApi("forwardMessage", { chat_id: TELEGRAM_ADMIN_CHAT_ID, from_chat_id: chatId, message_id: update.message.message_id });
-    await callTelegramApi("sendMessage", {
-      chat_id: TELEGRAM_ADMIN_CHAT_ID,
-      text: `✉️ Správa od <b>${escapeTg(personName(from))}</b>${from.username ? ` (@${escapeTg(from.username)})` : ""} · ID <code>${chatId}</code> · <a href="tg://user?id=${chatId}">otvoriť chat</a>`,
-      parse_mode: "HTML",
-    });
-    await callTelegramApi("sendMessage", {
-      chat_id: chatId,
-      text: `Ďakujem za správu 🙏 Najrýchlejšie vám odpoviem osobne na @${TELEGRAM_CONTACT_USERNAME}.`,
-      reply_markup: mainMenuKeyboard(),
-    });
+  const forwardPlain = async () => {
+      await callTelegramApi("forwardMessage", { chat_id: TELEGRAM_ADMIN_CHAT_ID, from_chat_id: chatId, message_id: update.message.message_id });
+      await callTelegramApi("sendMessage", {
+        chat_id: TELEGRAM_ADMIN_CHAT_ID,
+        text: `✉️ Správa od <b>${escapeTg(personName(from))}</b>${from.username ? ` (@${escapeTg(from.username)})` : ""} · ID <code>${chatId}</code> · <a href="tg://user?id=${chatId}">otvoriť chat</a>`,
+        parse_mode: "HTML",
+      });
+      await callTelegramApi("sendMessage", {
+        chat_id: chatId,
+        text: `Ďakujem za správu 🙏 Najrýchlejšie vám odpoviem osobne na @${TELEGRAM_CONTACT_USERNAME}.`,
+        reply_markup: mainMenuKeyboard(),
+      });
+  };
+  const plainText = text && !text.startsWith("/");
+  const isAdminChat = String(chatId) === String(TELEGRAM_ADMIN_CHAT_ID);
+  // „Opýtajte sa radaru“ (17. 11. 2026): správa vyzerá ako zápas alebo tím → bot odpovie číslami modelu.
+  // Beží na pozadí (analýza trvá aj 10 – 20 s), aby Telegram nečakal na odpoveď webhooku a neposielal správu znova.
+  if (plainText && askRadarHandler) {
+    const handler = askRadarHandler;
+    void (async () => {
+      void callTelegramApi("sendChatAction", { chat_id: chatId, action: "typing" });
+      let ans: AskRadarAnswer = { kind: "none" };
+      try { ans = await handler(text, String(chatId)); } catch (err: any) { console.error("[radar] otázka zlyhala:", err?.message ?? err); }
+      if (ans.kind === "none") {
+        if (TELEGRAM_ADMIN_CHAT_ID && !isAdminChat) await forwardPlain();
+        else await callTelegramApi("sendMessage", { chat_id: chatId, text: WELCOME_TEXT, parse_mode: "HTML", reply_markup: mainMenuKeyboard() });
+        return;
+      }
+      await callTelegramApi("sendMessage", { chat_id: chatId, text: ans.text, parse_mode: "HTML", disable_web_page_preview: true, reply_markup: mainMenuKeyboard() });
+      if (TELEGRAM_ADMIN_CHAT_ID && !isAdminChat) {
+        await callTelegramApi("sendMessage", {
+          chat_id: TELEGRAM_ADMIN_CHAT_ID,
+          text: `🔎 <b>${escapeTg(personName(from))}</b>${from.username ? ` (@${escapeTg(from.username)})` : ""} sa pýtal radaru: <i>${escapeTg(text.slice(0, 80))}</i>${ans.kind === "answer" ? ` → ${escapeTg(ans.match)}` : " → zápas nenájdený"} · <a href="tg://user?id=${chatId}">otvoriť chat</a>`,
+          parse_mode: "HTML",
+          disable_notification: true,
+        });
+      }
+    })();
+    return;
+  }
+  if (plainText && TELEGRAM_ADMIN_CHAT_ID && !isAdminChat) {
+    await forwardPlain();
     return;
   }
 

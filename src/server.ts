@@ -57,7 +57,7 @@ import {
   setTelegramWebhook,
   notifyAdminExpiringSubscribers,
   sendCustomMessage,
-  sendTipResultToTelegram, notifyAdmin, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite, sendMemberMessage, isMemberChannel, memberChannelConfigured, sendPackageLowReminder, freeChannelConfigured, sendFreeResult, sendFreeDaySummary, buildFreeDaySummaryText, freeBalanceLine, sendFreeHistoryMessage, deleteTelegramMessages as deleteTgMessages, setTelegramChannelsOn, telegramChannelsOn, setTelegramFreeOn, telegramFreeOn, tipUnits, minOddsFor, FreeBalance, normalizeTelegramUrl } from "./telegram";
+  sendTipResultToTelegram, notifyAdmin, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite, sendMemberMessage, isMemberChannel, memberChannelConfigured, sendPackageLowReminder, freeChannelConfigured, sendFreeResult, sendFreeDaySummary, buildFreeDaySummaryText, freeBalanceLine, sendFreeHistoryMessage, deleteTelegramMessages as deleteTgMessages, setTelegramChannelsOn, telegramChannelsOn, setTelegramFreeOn, telegramFreeOn, tipUnits, minOddsFor, FreeBalance, normalizeTelegramUrl, setAskRadarHandler, AskRadarAnswer } from "./telegram";
 import { paymentsEnabled, bankEnabled, isTerm, sellableTerm, SellableTerm, SELLABLE_TERMS, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, deletePayment, Payment, termLabel, tierName, addActiveMonths, SUMMER_PAUSE } from "./payments";
 import { payBySquareString } from "./payBySquare";
 import QRCode from "qrcode";
@@ -2488,6 +2488,121 @@ app.post("/api/analyza", async (req, res) => {
     res.status(502).json({ error: errText(err) });
   }
 });
+
+// ---- „Opýtajte sa radaru“ v Telegram bote (17. 11. 2026, Michal) ----
+// Človek napíše botovi zápas alebo tím, server nájde najbližší zápas (dnes + 3 dni, našich 18 súťaží),
+// spustí model bez zápisu (record = false) a vráti čísla. Konkrétny tip neprezradí – ten dostávajú členovia.
+const RADAR_DAILY_LIMIT = 15;
+const radarUse = new Map<string, { day: string; n: number }>();
+const normName = (v: string) => String(v ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
+async function fixturesForDay(day: string): Promise<any[]> {
+  const out: any[] = [];
+  await Promise.all(
+    LEAGUE_PRESETS.map(async (league) => {
+      const key = `${league.id}|${day}`;
+      const cached = analyzaFixtureCache.get(key);
+      if (cached && Date.now() - cached.at < 2 * 60 * 60 * 1000) { out.push(...cached.fixtures); return; }
+      try {
+        const fixtures = await getFixturesByLeague(league.id, seasonOfDate(day), 60, day, true);
+        analyzaFixtureCache.set(key, { at: Date.now(), fixtures });
+        out.push(...fixtures);
+      } catch {
+        if (cached) out.push(...cached.fixtures);
+      }
+    })
+  );
+  return out;
+}
+function teamMatches(query: string, teamName: string): boolean {
+  const q = normName(query);
+  if (q.length < 3) return false;
+  for (const n of [normName(teamName), normName(translateTeamName(teamName))]) {
+    if (!n) continue;
+    if (n === q || n.includes(q) || (n.length >= 4 && q.includes(n))) return true;
+    const nt = n.split(" "), qt = q.split(" ").filter((t) => t.length >= 3);
+    if (qt.length && qt.every((t) => nt.some((w) => w.startsWith(t)))) return true;
+  }
+  return false;
+}
+async function findRadarFixture(text: string): Promise<{ fixture: any | null; looksLikeMatch: boolean }> {
+  const clean = text.replace(/[?!.]+$/g, "").trim();
+  const parts = clean.split(/\s+[-–—:]\s+|\s+vs?\.?\s+|\s*[–—]\s*/i).map((x) => x.trim()).filter(Boolean);
+  const looksLikeMatch = parts.length === 2 && parts.every((x) => x.length >= 3 && x.length <= 40);
+  // Jeden tím: len krátka správa (1 – 3 slová), inak je to bežná otázka pre Michala.
+  if (parts.length > 2 || (parts.length === 1 && (clean.length > 30 || clean.split(/\s+/).length > 3))) return { fixture: null, looksLikeMatch: false };
+  const now = Date.now();
+  for (let i = 0; i <= 3; i++) {
+    const day = dayKeySk(new Date(now + i * 864e5));
+    const fx = (await fixturesForDay(day))
+      .filter((f) => new Date(f.date).getTime() > now - 5 * 60 * 1000)
+      .sort((a, b) => a.timestamp - b.timestamp);
+    const hit = fx.find((f) => {
+      const h = f.homeTeam?.name ?? "", a = f.awayTeam?.name ?? "";
+      if (parts.length === 2) return (teamMatches(parts[0], h) && teamMatches(parts[1], a)) || (teamMatches(parts[0], a) && teamMatches(parts[1], h));
+      return teamMatches(parts[0], h) || teamMatches(parts[0], a);
+    });
+    if (hit) return { fixture: hit, looksLikeMatch: true };
+  }
+  return { fixture: null, looksLikeMatch };
+}
+async function analyzeCached(fixture: any): Promise<any> {
+  const fixtureId = Number(fixture.fixtureId);
+  const cached = analyzaResultCache.get(fixtureId);
+  if (cached && Date.now() - cached.at < 20 * 60 * 1000) return cached.payload;
+  let job = analyzaRunning.get(fixtureId);
+  if (!job) {
+    const season = Number(fixture.league?.season) || seasonOfDate(String(fixture.date).slice(0, 10));
+    job = analyzeFixture(fixture, fixture.league.id, season, false).finally(() => analyzaRunning.delete(fixtureId));
+    analyzaRunning.set(fixtureId, job);
+  }
+  const { result, cupNote } = await job;
+  const payload = { ...result, cupNote, analyzedAt: new Date().toISOString() };
+  analyzaResultCache.set(fixtureId, { at: Date.now(), payload });
+  return payload;
+}
+const n1 = (v: any) => (typeof v === "number" && Number.isFinite(v) ? v.toFixed(1).replace(".", ",") : null);
+setAskRadarHandler(async (text, chatId): Promise<AskRadarAnswer> => {
+  const { fixture, looksLikeMatch } = await findRadarFixture(text);
+  if (!fixture) {
+    if (!looksLikeMatch) return { kind: "none" };
+    return {
+      kind: "notfound",
+      text: `🔎 Tento zápas som v najbližších 3 dňoch nenašiel.\n\nRadar sleduje 18 súťaží (top 5 líg, Liga majstrov, Niké liga, Chance Liga a ďalšie). Skúste napísať názvy tímov inak, napríklad <i>Arsenal – Chelsea</i>.`,
+    };
+  }
+  const day = dayKeySk(new Date());
+  const use = radarUse.get(chatId);
+  const n = use && use.day === day ? use.n : 0;
+  if (n >= RADAR_DAILY_LIMIT) {
+    return { kind: "notfound", text: `🔎 Dnes ste sa už radaru pýtali ${RADAR_DAILY_LIMIT}-krát. Zajtra sa pokojne pýtajte znova 🙂` };
+  }
+  radarUse.set(chatId, { day, n: n + 1 });
+  const home = translateTeamName(fixture.homeTeam.name), away = translateTeamName(fixture.awayTeam.name);
+  const match = `${home} – ${away}`;
+  const r = await analyzeCached(fixture);
+  const kick = new Date(fixture.date);
+  const dayTxt = new Intl.DateTimeFormat("sk-SK", { timeZone: "Europe/Bratislava", weekday: "short", day: "numeric", month: "numeric" }).format(kick);
+  const lg = LEAGUE_PRESETS.find((l) => Number(l.id) === Number(fixture.league?.id));
+  const lines: string[] = [`🔎 <b>${escapeHtml(match)}</b>`, `<i>${escapeHtml(String((lg as any)?.name ?? fixture.league?.name ?? ""))} · ${dayTxt} ${timeSk(kick)}</i>`, ""];
+  const xg = r.expectedGoals;
+  if (xg && typeof xg.home === "number") lines.push(`⚽ Očakávané góly: <b>${n1(xg.home)} : ${n1(xg.away)}</b> (spolu ${n1(xg.home + xg.away)})`);
+  if (r.corners?.expected != null) lines.push(`🚩 Rohy: približne <b>${n1(r.corners.expected)}</b>`);
+  if (r.cards?.expected != null) lines.push(`🟨 Karty: približne <b>${n1(r.cards.expected)}</b>`);
+  if (r.shotsOnGoal?.expected != null) lines.push(`🎯 Strely na bránu: približne <b>${n1(r.shotsOnGoal.expected)}</b>`);
+  const p = r.probabilities;
+  if (p && typeof p.homeWin === "number") lines.push(`📈 Šanca: domáci <b>${Math.round(p.homeWin)} %</b> · remíza <b>${Math.round(p.draw)} %</b> · hostia <b>${Math.round(p.awayWin)} %</b>`);
+  lines.push("");
+  const best = (r.bestBets ?? []) as { probability?: number }[];
+  if (best.length) {
+    const top = Math.max(...best.map((b) => Number(b.probability) || 0));
+    lines.push(`✅ <b>Model tu našiel silný tip</b>${top ? ` (dôvera ${Math.round(top)} %)` : ""}. Konkrétny tip posielam členom pred zápasom.`);
+  } else {
+    lines.push(`➖ Model tu nevidí dosť silný tip. Takýto zápas by som nehral – radšej nič ako slabý tip.`);
+  }
+  lines.push("", `<i>Čísla sú odhad modelu, nie istota. 18+ · Hrajte zodpovedne.</i>`);
+  return { kind: "answer", text: lines.join("\n"), match };
+});
+const escapeHtml = (v: string) => String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 app.get("/api/daily", async (_req, res) => {
   try {
