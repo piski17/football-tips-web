@@ -336,6 +336,8 @@ export interface SavedTip {
   autoId?: string;
   /** 14. 11. 2026: tip uložil server sám 5 – 30 min pred výkopom (Michal ho nestihol uložiť). */
   autoSaved?: boolean;
+  /** 17. 11. 2026: trh bez kurzu v API (karty, strely, fauly…) – server uložil tip podľa modelu s minimálnym kurzom, pri ktorom má tip hodnotu (štatistiky rátajú s ním). */
+  minOddsAuto?: boolean;
   /** Tip obnovený z denného súhrnu (18. 10. 2026) – dôvera modelu nie je známa, ak nebola v texte tipu. */
   restoredFromDaily?: boolean;
   probabilityEstimated?: boolean;

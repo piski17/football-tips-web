@@ -3793,7 +3793,7 @@ async function addAutoEntry(
  * 5 minút pred výkopom, a len keď sú zverejnené zostavy, server zápas znova prepočíta modelom (so zostavami)
  * a sám uloží do Histórie tipov každý tip, ktorý v nej ešte nie je – klientom alebo do sledovaných podľa
  * rovnakých pravidiel ako doteraz. Každý zápas sa spracuje len raz (zmazaný tip sa znova nepridá).
- * Tipy bez kurzu v API (kurz treba zadať ručne) sa automaticky neukladajú. Do Telegramu sa nič neposiela.
+ * Tipy bez kurzu v API sa od 17. 11. 2026 ukladajú s minimálnym kurzom, pri ktorom majú hodnotu. Do Telegramu sa nič neposiela.
  * Ak zostavy nevyjdú, tipy sa uložia pri poslednej kontrole (5 – 10 minút pred výkopom) aj bez nich.
  */
 const AUTO_SAVE_FROM_MIN = 5;
@@ -3828,14 +3828,15 @@ async function autoSaveDueTips(): Promise<void> {
         // Prehľad pre appku (15. 11. 2026): čo server pri zápase spravil a prečo.
         const info: AutoSaveInfo = { at, lineups: hasLineups, homeTeam: fixture.homeTeam.name, awayTeam: fixture.awayTeam.name, saved: [], skipped: [] };
         for (const entry of autoSaveEntries(fixture, result, at)) {
-          const r = await addAutoEntry(entry, undefined, { autoSaved: true, ...(hasLineups ? { lineupCheck: { at, probability: entry.probability, ok: true } } : {}) });
+          // Trh bez kurzu v API (17. 11. 2026, Michal: „podľa API a modelu, nie podľa kurzu stávkovky“): tip sa uloží
+          // s minimálnym kurzom, pri ktorom má hodnotu (ako „Hrajte len pri kurze aspoň X“); štatistiky rátajú s ním.
+          const noApiOdds = !(typeof entry.odds === "number" && entry.odds > 1);
+          const minOdds = noApiOdds ? Math.ceil(Math.max(MIN_ODDS, MIN_EXPECTED_VALUE / (entry.probability / 100)) * 100) / 100 : undefined;
+          const r = await addAutoEntry(entry, minOdds, { autoSaved: true, ...(noApiOdds ? { minOddsAuto: true } : {}), ...(hasLineups ? { lineupCheck: { at, probability: entry.probability, ok: true } } : {}) });
           if ("ok" in r) {
             console.log(`Automaticky uložený tip ${entry.id}${r.watchOnly ? " (sledovaný: " + r.reason + ")" : ""}`);
             info.saved.push({ market: entry.market, selection: entry.selection, probability: entry.probability, odds: entry.odds, watchOnly: r.watchOnly, reason: r.reason });
           } else info.skipped.push({ market: entry.market, selection: entry.selection, probability: entry.probability, why: r.error });
-        }
-        for (const b of [...((result as any).bestBets ?? []), ...((result as any).watchBandBets ?? [])]) {
-          if (!(typeof b.odds === "number" && b.odds > 1)) info.skipped.push({ market: String(b.market), selection: String(b.selection), probability: Math.round(Number(b.probability) * 10) / 10, why: "kurz nie je v API – treba uložiť ručne" });
         }
         await setMeta(`autoSaveInfo:${fixtureId}`, JSON.stringify(info)).catch(() => {});
         await setMeta(key, at);
@@ -3897,8 +3898,8 @@ function autoSaveEntries(fixture: any, result: any, at: string, onlyWatchBand = 
   const bets = [...(onlyWatchBand ? [] : result?.bestBets ?? []), ...(result?.watchBandBets ?? [])];
   const out: AutoEntry[] = [];
   for (const b of bets) {
+          // 17. 11. 2026 (Michal): aj trhy bez kurzu v API (karty, strely, fauly…) – podľa modelu, kurz doplní autoSaveDueTips.
           const odds = typeof b.odds === "number" && b.odds > 1 ? b.odds : null;
-          if (odds == null) continue;
           const probability = Math.round(Number(b.probability) * 10) / 10;
           const entry: AutoEntry = {
             id: `${fixture.fixtureId}|${b.market}|${b.selection}`,
