@@ -344,7 +344,8 @@ function overdispersedOverUnder(mean: number, line: number, varRatio: number): {
 const VAR_RATIO = { cards: 1.4, shotsOnGoal: 1.35, offsides: 1.3, fouls: 1.3, corners: 1.2 };
 
 /** Počet zápasov, z ktorých sa počítajú priemery štatistík (rohy, karty, strely, fauly). */
-const STAT_WINDOW_GAMES = 10;
+// 18. 11. 2026 (Michal): rohy, karty, strely, fauly z posledných 5 zápasov tímu (predtým 10).
+const STAT_WINDOW_GAMES = 5;
 function scaleVarRatio(v: typeof VAR_RATIO, k: number): typeof VAR_RATIO {
   return { cards: v.cards * k, shotsOnGoal: v.shotsOnGoal * k, offsides: v.offsides * k, fouls: v.fouls * k, corners: v.corners * k };
 }

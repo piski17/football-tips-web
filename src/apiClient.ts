@@ -347,6 +347,9 @@ function parseStatValue(value: unknown): number | null {
   return null;
 }
 
+/** Z koľkých posledných zápasov tímu sa počítajú rohy, karty, strely, fauly aj forma gólov (18. 11. 2026, Michal: 5; predtým 10). */
+export const STAT_GAMES = 5;
+
 export async function getTeamExtendedStatsAverages(
   leagueId: number,
   season: number,
@@ -354,7 +357,7 @@ export async function getTeamExtendedStatsAverages(
   lastN: number = 10,
   asOf?: string
 ): Promise<TeamExtendedStatsAverages> {
-  const cacheKey = `extStatsAvg5:${leagueId}:${season}:${teamId}:${lastN}:${asOf ?? ""}`;
+  const cacheKey = `extStatsAvg6:${leagueId}:${season}:${teamId}:${lastN}:${asOf ?? ""}`;
   // Pri spätnom teste načítame viac zápasov a ponecháme len tie spred výkopu.
   const extra = asOf ? 15 : 0;
   const cached = getCached<TeamExtendedStatsAverages>(cacheKey);
@@ -488,8 +491,10 @@ export async function getTeamExtendedStatsAverages(
       return empty;
     }
 
+    // 18. 11. 2026 (Michal): rohy, karty, strely, fauly (aj doma / vonku) len z posledných 5 zápasov tímu.
+    const statRows = [...valid].sort((a, b) => (b.time ?? 0) - (a.time ?? 0)).slice(0, STAT_GAMES);
     const average = (key: string): number | null => {
-      const values = valid.map((r) => r[key]).filter((v): v is number => v !== null);
+      const values = statRows.map((r) => r[key]).filter((v): v is number => v !== null);
       return values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : null;
     };
 
@@ -500,7 +505,9 @@ export async function getTeamExtendedStatsAverages(
       .map((f: any) => {
         const isHome = f.teams?.home?.id === teamId;
         return { gf: Number(isHome ? f.goals.home : f.goals.away), ga: Number(isHome ? f.goals.away : f.goals.home) };
-      });
+      })
+      // 18. 11. 2026 (Michal): forma gólov len z posledných 5 zápasov tímu.
+      .slice(0, STAT_GAMES);
     let gw = 0, gfSum = 0, gaSum = 0;
     goalRows.forEach((r, i) => {
       const w = Math.pow(0.9, i);
@@ -524,7 +531,7 @@ export async function getTeamExtendedStatsAverages(
       return Math.min(1.2, Math.max(0.8, Math.max(mixed, 0.3) / goals));
     };
     const venue = (home: 1 | 0): VenueStats => {
-      const list = valid.filter((r) => r.isHome === home);
+      const list = statRows.filter((r) => r.isHome === home);
       const avg = (key: string): number | null => {
         const values = list.map((r) => r[key]).filter((v): v is number => v != null);
         return values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
