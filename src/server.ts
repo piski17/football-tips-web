@@ -2,7 +2,7 @@ import { plausibleLine, offeredLines, MIN_BOOKMAKERS, MIN_ODDS, MAX_PROBABILITY,
 import { teamNamesBrowserScript } from "./teamNamesSk";
 import { listLeads, deleteLead, recordLead } from "./leadsStore";
 import { getMeta, setMeta } from "./metaStore";
-import { listCoopLinks, getCoopLink, createCoopLink, updateCoopLink, deleteCoopLink, chooseCoop, coopPage } from "./coopLinks";
+import { listCoopLinks, getCoopLink, createCoopLink, updateCoopLink, deleteCoopLink, chooseCoop, coopPage, coopPayHtml, coopNote, CoopLink, CoopPay } from "./coopLinks";
 import * as crypto from "crypto";
 import { recordShadow, listShadow, updateShadow, shadowEntriesFrom, shadowReasonCode, ShadowEntry } from "./shadowStore";
 import { recordBlend, listBlend, updateBlend, blendEntryFrom, blendSummary, newModelSummary, homeCornersSummary } from "./blendStore";
@@ -58,7 +58,7 @@ import {
   notifyAdminExpiringSubscribers,
   sendCustomMessage,
   sendTipResultToTelegram, notifyAdmin, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite, sendMemberMessage, isMemberChannel, memberChannelConfigured, sendPackageLowReminder, freeChannelConfigured, sendFreeResult, sendFreeDaySummary, buildFreeDaySummaryText, freeBalanceLine, sendFreeHistoryMessage, deleteTelegramMessages as deleteTgMessages, setTelegramChannelsOn, telegramChannelsOn, setTelegramFreeOn, telegramFreeOn, tipUnits, minOddsFor, FreeBalance, normalizeTelegramUrl } from "./telegram";
-import { paymentsEnabled, isTerm, sellableTerm, SellableTerm, SELLABLE_TERMS, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, deletePayment, Payment, termLabel, tierName, addActiveMonths, SUMMER_PAUSE } from "./payments";
+import { paymentsEnabled, bankEnabled, isTerm, sellableTerm, SellableTerm, SELLABLE_TERMS, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, deletePayment, Payment, termLabel, tierName, addActiveMonths, SUMMER_PAUSE } from "./payments";
 import { payBySquareString } from "./payBySquare";
 import QRCode from "qrcode";
 import { sendAdminEmail } from "./mailer";
@@ -598,10 +598,22 @@ app.post("/api/public/waitlist", express.json({ limit: "10kb" }), async (req, re
 });
 
 // Osobný odkaz na výber dĺžky spolupráce (11. 11. 2026, Michal) – tipradar.eu/spolupraca/KÓD, bez hesla.
+// 17. 11. 2026 (Michal): po výbere počtu tipov QR kód platby na presnú sumu – klientovi len pri zapnutom predaji (SALES_OPEN),
+// Michal ho vidí vždy v app.tipradar.eu (Spolupráca → QR platba) a môže ho poslať sám.
+async function coopPayFor(link: CoopLink | null): Promise<CoopPay | null> {
+  if (!link?.choice || !link.vs || !bankEnabled()) return null;
+  const price = link.choice.price;
+  const note = coopNote(link.choice.tips);
+  const qrText = payBySquareString({ iban: BANK.iban, bic: BANK.bic, amount: price, variableSymbol: link.vs, note, beneficiaryName: BANK.name });
+  const svg = await QRCode.toString(qrText, { type: "svg", errorCorrectionLevel: "M", margin: 0, color: { dark: "#0C0B0A", light: "#FFFFFF" } });
+  const png = await QRCode.toDataURL(qrText, { errorCorrectionLevel: "M", margin: 3, width: 720, color: { dark: "#0C0B0A", light: "#FFFFFF" } });
+  return { svg, png, price, iban: BANK.iban, name: BANK.name, vs: link.vs, note };
+}
 app.get("/spolupraca/:token", async (req, res) => {
   res.set("Cache-Control", "no-store");
   const link = await getCoopLink(String(req.params.token)).catch(() => null);
-  res.status(link ? 200 : 404).send(coopPage(link));
+  const pay = paymentsEnabled() && link && !link.done ? await coopPayFor(link).catch(() => null) : null;
+  res.status(link ? 200 : 404).send(coopPage(link, pay));
 });
 app.post("/api/public/coop/:token", express.json({ limit: "10kb" }), async (req, res) => {
   try {
@@ -616,9 +628,11 @@ app.post("/api/public/coop/:token", express.json({ limit: "10kb" }), async (req,
     void notifyAdmin(
       `🤝 <b>Spolupráca – výber klienta</b>\n\n${escT(link.name)} si vybral(a) <b>${c.tips} tipov</b> (${c.price} €).` +
         (c.contact ? `\nKontakt: ${escT(c.contact)}` : "") + (c.note ? `\nPoznámka: ${escT(c.note)}` : "") +
+        (link.vs ? `\nVariabilný symbol: ${link.vs}` : "") +
         `\n\nZapíšeš v app.tipradar.eu → Nástroje → Spolupráca.`
     ).catch(() => {});
-    res.json({ ok: true, tips: c.tips, price: c.price });
+    const pay = paymentsEnabled() ? await coopPayFor(link).catch(() => null) : null;
+    res.json({ ok: true, tips: c.tips, price: c.price, ...(pay ? { payHtml: coopPayHtml(pay, c.tips) } : {}) });
   } catch {
     res.status(502).json({ error: "Uloženie sa nepodarilo. Skúste to, prosím, o chvíľu znova." });
   }
@@ -4107,6 +4121,15 @@ app.patch("/api/coop-links/:token", async (req, res) => {
     if (typeof b.seen === "boolean") patch.seen = b.seen;
     if (typeof b.done === "boolean") patch.done = b.done;
     res.json({ ok: !!(await updateCoopLink(String(req.params.token), patch)) });
+  } catch (err: any) { res.status(502).json({ error: errText(err) }); }
+});
+app.get("/api/coop-links/:token/qr", async (req, res) => {
+  try {
+    const link = await getCoopLink(String(req.params.token));
+    if (!link?.choice) { res.status(404).json({ error: "Klient si ešte nevybral počet tipov." }); return; }
+    if (!bankEnabled()) { res.status(409).json({ error: "Na Renderi chýba číslo účtu (PAY_IBAN) alebo meno majiteľa (PAY_NAME)." }); return; }
+    const pay = await coopPayFor(link);
+    res.json({ ...pay, tips: link.choice.tips, salesOpen: paymentsEnabled() });
   } catch (err: any) { res.status(502).json({ error: errText(err) }); }
 });
 app.delete("/api/coop-links/:token", async (req, res) => {

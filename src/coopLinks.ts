@@ -33,6 +33,23 @@ export interface CoopLink {
   history?: CoopChoice[]; // predošlé výbery (ak si to klient zmenil)
   seen?: boolean; // Michal výber videl v appke
   done?: boolean; // zapísaný medzi členov
+  vs?: string; // variabilný symbol pre QR platbu (17. 11. 2026) – pridelí sa pri prvom výbere
+}
+
+/** Údaje pre QR platbu na stránke klienta (pripraví server, len keď je zapnutý predaj). */
+export interface CoopPay {
+  svg: string; // QR kód (SVG)
+  png: string; // QR kód na uloženie (data URL)
+  price: number;
+  iban: string;
+  name: string;
+  vs: string;
+  note: string;
+}
+
+/** Správa pre príjemcu – bez diakritiky, aby ju zobrazila každá banka. */
+export function coopNote(tips: number): string {
+  return `TipRadar Spolupraca ${tips} tipov`;
 }
 
 const KEY = "coop_links";
@@ -102,6 +119,13 @@ export async function chooseCoop(token: string, tips: number, contact?: string, 
   link.history = [...(link.history ?? []), ...(link.choice ? [link.choice] : [])].slice(-5);
   link.choice = choice;
   link.seen = false;
+  if (!link.vs) {
+    // Variabilný symbol: 8 číslic, prvá nie je nula; začína 7, aby sa nepomýlil s platbami členstiev.
+    const used = new Set(Object.values(all).map((l) => l.vs).filter(Boolean));
+    let vs = "";
+    do vs = "7" + String(crypto.randomInt(0, 10000000)).padStart(7, "0"); while (used.has(vs));
+    link.vs = vs;
+  }
   await writeAll(all);
   return link;
 }
@@ -109,7 +133,7 @@ export async function chooseCoop(token: string, tips: number, contact?: string, 
 const esc = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 /** Stránka tipradar.eu/spolupraca/KÓD – klient si vyberie počet tipov. Farby Kameň ako web. */
-export function coopPage(link: CoopLink | null): string {
+export function coopPage(link: CoopLink | null, pay?: CoopPay | null): string {
   const head = `<!doctype html><html lang="sk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex"><title>Spolupráca · TipRadar</title><link rel="icon" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;500;600;700&family=Manrope:wght@400;500;600;700&display=swap">
@@ -133,6 +157,13 @@ input,textarea{width:100%;margin-top:6px;padding:13px 14px;border-radius:14px;bo
 button.go{width:100%;margin-top:20px;padding:17px;border:0;border-radius:999px;background:var(--plat);color:#0E0D0C;font:700 15px/1 Manrope,Arial,sans-serif;cursor:pointer}
 button.go:disabled{opacity:.5}.msg{margin-top:12px;font-size:14px;color:#E0897A;min-height:1em}
 .done{text-align:center}.done .ok{width:64px;height:64px;margin:0 auto 16px;border-radius:50%;background:var(--plat);display:grid;place-items:center;color:#0E0D0C;font-size:30px;font-weight:700}
+.pay{margin-top:26px;padding-top:22px;border-top:1px solid var(--line);text-align:left}
+.pay h2{font:500 22px/1.2 Urbanist,Arial,sans-serif;margin:0 0 8px}
+.qr{background:#fff;border-radius:18px;padding:16px;width:240px;max-width:100%;margin:16px auto 10px}.qr svg{display:block;width:100%;height:auto}
+.save{display:block;text-align:center;color:var(--text);font-size:13.5px;text-decoration:underline;text-underline-offset:3px;margin-bottom:12px}
+.prow{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+.prow .k{flex:0 0 110px;color:var(--faint);font-size:13px}.prow .v{flex:1;font-weight:600;font-size:14.5px;word-break:break-word}
+.cp{flex:0 0 auto;border-radius:999px;background:transparent;border:1px solid var(--line2);color:var(--text);font:600 12px Manrope,Arial,sans-serif;padding:7px 10px;cursor:pointer}
 .foot{margin-top:18px;text-align:center;font-size:12.5px;color:var(--faint);line-height:1.5}
 </style></head><body><div class="box"><div class="logo">TipRadar</div>`;
   const tail = `<p class="foot">Zisk nie je zaručený. Stávkovanie je pre osoby staršie ako 18 rokov a nesie riziko straty.</p></div></body></html>`;
@@ -155,8 +186,9 @@ button.go:disabled{opacity:.5}.msg{margin-top:12px;font-size:14px;color:#E0897A;
 <label>Poznámka (voliteľné)<textarea id="note" rows="2" maxlength="400"></textarea></label>
 <div class="sum"><small><span id="sTips">${cur}</span> tipov · <span id="sPer"></span> € za tip<span id="sSave"></span></small><b id="sPrice">${coopPrice(link, cur)} €</b></div>
 <button type="button" class="go" id="go">Potvrdiť výber</button><div class="msg" id="msg"></div>
+${pay && link.choice ? coopPayHtml(pay, link.choice.tips) : ""}
 </div>
-<div class="card done" id="ok" hidden><div class="ok">✓</div><div class="lab">Hotovo</div><h1>Ďakujem, <em>mám to</em></h1><p id="okText"></p></div>
+<div class="card done" id="ok" hidden><div class="ok">✓</div><div class="lab">Hotovo</div><h1>Ďakujem, <em>mám to</em></h1><p id="okText"></p><div id="okPay"></div></div>
 <script>
 (function(){var per=${link.perTip},min=${COOP_MIN_TIPS},disc=${JSON.stringify(COOP_DISCOUNTS)},t=document.getElementById("tips");
 function dsc(n){for(var i=0;i<disc.length;i++)if(n>=disc[i][0])return disc[i][1];return 0}
@@ -167,14 +199,33 @@ document.getElementById("sSave").textContent=ok&&full>price(n)?" · ušetríte "
 document.querySelectorAll(".opt").forEach(function(b){b.classList.toggle("on",+b.dataset.t===n)})}
 document.querySelectorAll(".opt").forEach(function(b){b.onclick=function(){t.value=b.dataset.t;draw()}});
 t.oninput=draw;draw();
+document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest(".cp");if(!b)return;var v=b.getAttribute("data-copy");
+(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(function(){b.textContent="Skopírované"},function(){window.prompt("Skopírujte:",v)})});
 document.getElementById("go").onclick=function(){var n=Math.round(+t.value||0),m=document.getElementById("msg");
 if(n<min){m.textContent="Spolupráca je najmenej od "+min+" tipov.";return}
 this.disabled=true;m.textContent="";
 fetch("/api/public/coop/${link.token}",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({tips:n,contact:document.getElementById("contact").value,note:document.getElementById("note").value})})
 .then(function(r){return r.json().then(function(d){if(!r.ok)throw new Error(d.error||"Nepodarilo sa to uložiť.");return d})})
 .then(function(d){document.getElementById("form").hidden=true;document.getElementById("ok").hidden=false;
-document.getElementById("okText").textContent="Vybrali ste si "+d.tips+" tipov ("+d.price+" €). Ozvem sa vám na Telegrame s platobnými údajmi a nastavíme bank a vklad.";})
+document.getElementById("okText").textContent=d.payHtml?"Vybrali ste si "+d.tips+" tipov ("+d.price+" €). Zaplatiť môžete hneď cez QR kód nižšie. Po prijatí platby sa vám ozvem na Telegrame a nastavíme bank a vklad.":"Vybrali ste si "+d.tips+" tipov ("+d.price+" €). Ozvem sa vám na Telegrame s platobnými údajmi a nastavíme bank a vklad.";
+if(d.payHtml){document.getElementById("okPay").innerHTML=d.payHtml;}window.scrollTo(0,0);})
 .catch(function(e){m.textContent=e.message;document.getElementById("go").disabled=false})};
 })();
 </script>` + tail;
+}
+
+/** Časť stránky s QR kódom platby (PAY by square) a údajmi na skopírovanie. */
+export function coopPayHtml(pay: CoopPay, tips: number): string {
+  const row = (k: string, v: string, copy: string) =>
+    `<div class="prow"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span><button type="button" class="cp" data-copy="${esc(copy)}">Kopírovať</button></div>`;
+  return `<div class="pay"><div class="lab">Platba prevodom</div><h2>${tips} tipov · ${pay.price} €</h2>
+<p>Otvorte appku svojej banky, zvoľte platbu cez QR kód a naskenujte ho. Suma, účet aj variabilný symbol sa vyplnia samy.</p>
+<div class="qr">${pay.svg}</div>
+<a class="save" href="${pay.png}" download="tipradar-spolupraca-${esc(pay.vs)}.png">Platíte z tohto mobilu? Uložte si QR kód</a>
+${row("Suma", `${pay.price},00 €`, `${pay.price},00`)}
+${row("IBAN", pay.iban.replace(/(.{4})/g, "$1 ").trim(), pay.iban)}
+${row("Variabilný symbol", pay.vs, pay.vs)}
+${row("Príjemca", pay.name, pay.name)}
+${row("Správa", pay.note, pay.note)}
+<p style="margin-top:12px;font-size:13.5px">Ak zmeníte počet tipov a znova potvrdíte, QR kód sa prepočíta na novú sumu.</p></div>`;
 }

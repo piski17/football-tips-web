@@ -4486,6 +4486,7 @@ function renderCoopList() {
     return `<div class="mrow"><span class="mt"><b>${escapeHtml(l.name)}</b><span>${info}</span></span>${st}
       <span class="ic">
         <button type="button" class="btn ghost xs" data-coop-copy="${l.token}">Kopírovať odkaz</button>
+        ${c ? `<button type="button" class="btn ghost xs" data-coop-qr="${l.token}">QR platba</button>` : ""}
         ${c && !l.done ? `<button type="button" class="btn xs" data-coop-use="${l.token}">Zapísať</button>` : ""}
         <button type="button" class="ib danger" data-coop-del="${l.token}" title="Zmazať odkaz" aria-label="Zmazať odkaz">${ICON.trash}</button>
       </span></div>`;
@@ -4527,9 +4528,10 @@ document.getElementById("coopCreateBtn").addEventListener("click", async (e) => 
 document.getElementById("coopList").addEventListener("click", async (e) => {
   const b = e.target.closest("button");
   if (!b) return;
-  const l = coopLinks.find((x) => x.token === (b.dataset.coopCopy || b.dataset.coopUse || b.dataset.coopDel));
+  const l = coopLinks.find((x) => x.token === (b.dataset.coopCopy || b.dataset.coopUse || b.dataset.coopDel || b.dataset.coopQr));
   if (!l) return;
   if (b.dataset.coopCopy) copyText(coopUrl(l));
+  else if (b.dataset.coopQr) void showCoopQr(l);
   else if (b.dataset.coopUse) {
     // Predvyplní plán aj klienta – stačí doplniť bank a kliknúť na „Uložiť spoluprácu“.
     coopUsing = l.token;
@@ -4549,6 +4551,24 @@ document.getElementById("coopList").addEventListener("click", async (e) => {
     loadCoopLinks();
   }
 });
+// 17. 11. 2026: QR kód platby na sumu, ktorú si klient vybral (PAY by square).
+async function showCoopQr(l) {
+  const box = document.getElementById("coopQr");
+  box.innerHTML = `<p class="muted small">Pripravujem QR kód…</p>`;
+  try {
+    const q = await fetchJson(`/api/coop-links/${l.token}/qr`);
+    box.innerHTML = `<div class="card" style="text-align:center">
+      <h4 class="ct">QR platba · ${escapeHtml(l.name)} <small class="muted">${q.tips} tipov · ${q.price}${NB}€ · VS ${escapeHtml(q.vs)}</small></h4>
+      <div style="background:#fff;border-radius:14px;padding:14px;width:220px;max-width:100%;margin:10px auto">${q.svg}</div>
+      <p class="muted small">${q.salesOpen ? "Klient tento QR kód vidí aj na svojom odkaze." : "Klient QR kód na odkaze zatiaľ nevidí (predaj nie je spustený) – ak chceš, ulož obrázok a pošli mu ho na Telegram."}</p>
+      <p style="margin-top:8px"><a class="btn sm" href="${q.png}" download="tipradar-${escapeHtml(l.name)}-${q.price}eur.png">Uložiť QR kód (obrázok)</a>
+      <button type="button" class="btn ghost sm" id="coopQrClose">Zavrieť</button></p></div>`;
+    document.getElementById("coopQrClose").onclick = () => { box.innerHTML = ""; };
+    box.scrollIntoView({ behavior: "smooth", block: "center" });
+  } catch (err) {
+    box.innerHTML = `<p class="muted small">QR kód sa nedá pripraviť: ${escapeHtml(err.message)}</p>`;
+  }
+}
 void loadCoopLinks();
 setInterval(() => void loadCoopLinks(), 5 * 60 * 1000);
 
