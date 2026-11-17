@@ -12,7 +12,7 @@ import { applyCupGoals } from "./cupAdjust";
 import { getDay, getAllDays, setDay } from "./dailyStore";
 import { saveSlip, deleteSlip, listSlipIds, getSlipImage, MAX_SLIP_CHARS } from "./slipStore";
 import { recordMarketPredictions, settleMarketPredictions, marketSummary } from "./marketTracker";
-import { recordVerdiqPicks, updateVerdiqClosing, settleVerdiq, verdiqSummary } from "./verdiq";
+import { recordTiprexPicks, updateTiprexClosing, settleTiprex, tiprexSummary } from "./tiprex";
 import { scanSurebets, computeSurebets, fixtureResult, topBooksPresent, TOP_BOOKS, surebetStatus, surebetLog, getMyBooks, setMyBooks, startSurebetScanner, setOnScan } from "./surebets";
 import { recordAutoFixture, listAuto, listAutoFixtures, autoFixtureDone, updateAuto, pruneAuto, AutoEntry } from "./autoStore";
 import "dotenv/config";
@@ -2369,13 +2369,13 @@ app.get(["/instagram", "/instagram/"], (_req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "instagram.html"));
 });
 
-// ---- VERDIQ (/verdiq) – samostatný model pre zahraničie, skúška od 18. 11. 2026 (src/verdiq.ts) ----
-app.get(["/verdiq", "/verdiq/"], (_req, res) => {
+// ---- TIPREX (/tiprex) – samostatný model pre zahraničie, skúška od 18. 11. 2026 (src/tiprex.ts) ----
+app.get(["/tiprex", "/tiprex/", "/verdiq", "/verdiq/"], (_req, res) => {
   res.set("Cache-Control", "no-cache");
-  res.sendFile(path.join(__dirname, "..", "public", "verdiq.html"));
+  res.sendFile(path.join(__dirname, "..", "public", "tiprex.html"));
 });
-app.get("/api/verdiq", async (_req, res) => {
-  try { res.json(await verdiqSummary()); }
+app.get("/api/tiprex", async (_req, res) => {
+  try { res.json(await tiprexSummary()); }
   catch (err: any) { res.status(500).json({ error: String(err?.message ?? err) }); }
 });
 
@@ -2423,7 +2423,7 @@ app.get("/api/surebets/result", async (req, res) => {
   }
 });
 startSurebetScanner(LEAGUE_PRESETS);
-setOnScan(() => updateVerdiqClosing()); // VERDIQ: posledný férový kurz pred výkopom (CLV)
+setOnScan(() => updateTiprexClosing()); // TIPREX: posledný férový kurz pred výkopom (CLV)
 
 // ---- Valuebety odstránené z appky (15. 11. 2026, Michal). Staré záznamy ostávajú v Upstash (tipradar_valuebets). ----
 app.get(["/valuebety", "/valuebety/"], (_req, res) => res.redirect("/"));
@@ -3787,12 +3787,12 @@ async function runAutoAnalysis(): Promise<void> {
           (result as any).allCandidates ?? [],
           (result as any).trackOnlyCandidates ?? []
         ).catch((err) => console.error("Zápis predpovedí všetkých trhov zlyhal:", err));
-        // VERDIQ (18. 11. 2026): samostatný model pre zahraničie – model + Pinnacle, kurz 1,70 – 3,20. Len skúška.
-        await recordVerdiqPicks(
+        // TIPREX (18. 11. 2026): samostatný model pre zahraničie – model + Pinnacle, kurz 1,70 – 3,20. Len skúška.
+        await recordTiprexPicks(
           { fixtureId: fixture.fixtureId, matchDate: fixture.date, homeTeam: fixture.homeTeam.name, awayTeam: fixture.awayTeam.name, league: String(fixture.league.name ?? "") },
           (result as any).allCandidates ?? [],
           (result as any).trackOnlyCandidates ?? []
-        ).catch((err) => console.error("VERDIQ – zápis tipov zlyhal:", err));
+        ).catch((err) => console.error("TIPREX – zápis tipov zlyhal:", err));
         const isNew = await recordAutoFixture({ fixtureId: fixture.fixtureId, matchDate: fixture.date, tips: entries.length, league: String(fixture.league.name ?? "") }, entries);
         if (isNew) await notifyAdminClientTips(fixture, (result as any).bestBets ?? []).catch(() => {});
       } catch (err) {
@@ -3812,7 +3812,7 @@ async function runAutoAnalysis(): Promise<void> {
 setInterval(() => void runAutoAnalysis().catch((err) => console.error("Automatická analýza zlyhala:", err)), 15 * 60 * 1000);
 setTimeout(() => void runAutoAnalysis().catch(() => {}), 60 * 1000);
 setInterval(() => void settleMarketPredictions().catch(() => {}), 15 * 60 * 1000);
-setInterval(() => void settleVerdiq().catch(() => {}), 15 * 60 * 1000);
+setInterval(() => void settleTiprex().catch(() => {}), 15 * 60 * 1000);
 app.get("/api/markets-all", async (_req, res) => {
   try {
     res.json(await marketSummary());

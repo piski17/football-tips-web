@@ -6,8 +6,8 @@ import { scannedFixtures, isTopBook, FixtureOdds } from "./surebets";
 import { findOdds, marketProbabilityDetail, MarketOdds } from "./oddsMatcher";
 import { settleFixtureBets } from "./tipEvaluator";
 
-// VERDIQ (18. 11. 2026, Michal: „nový projekt vyhodnocovania stávok pre zahraničný trh, nie to isté ako TipRadar,
-// špeciálny model, kurzy od 1,70, viac tipov denne“). Samostatný model – „Two judges. One verdict.“
+// TIPREX (18. 11. 2026, Michal: „nový projekt vyhodnocovania stávok pre zahraničný trh, nie to isté ako TipRadar,
+// špeciálny model, kurzy od 1,70, viac tipov denne“). Samostatný model (názov TIPREX = tip + rex, kráľ tipov, Michal 18. 11.; pracovne VERDIQ).
 //
 // Tip vznikne len vtedy, keď ho NEZÁVISLE potvrdia dvaja „sudcovia“:
 //   1. sudca = štatistický model (šanca z predictor.ts, bez miešania so stávkovkami),
@@ -39,11 +39,11 @@ const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL;
 const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
 const useUpstash = Boolean(UPSTASH_URL && UPSTASH_TOKEN);
 /** Čakajúce tipy (malý hash – číta sa každých 15 min) a vyhodnotené (číta sa len pri otvorení stránky). */
-const PENDING_KEY = "verdiq_pending";
-const DONE_KEY = "verdiq_done";
-const FILE = path.join(__dirname, "..", "data", "verdiq.json");
+const PENDING_KEY = "tiprex_pending";
+const DONE_KEY = "tiprex_done";
+const FILE = path.join(__dirname, "..", "data", "tiprex.json");
 
-export interface VerdiqPick {
+export interface TiprexPick {
   id: string;
   fixtureId: number;
   matchDate: string;
@@ -82,22 +82,22 @@ async function redis(command: (string | number)[]): Promise<any> {
 }
 type Bucket = "pending" | "done";
 const keyOf = (b: Bucket) => (b === "pending" ? PENDING_KEY : DONE_KEY);
-function readFile(): Record<Bucket, Record<string, VerdiqPick>> {
+function readFile(): Record<Bucket, Record<string, TiprexPick>> {
   try { const d = JSON.parse(fs.readFileSync(FILE, "utf8")); return { pending: d.pending ?? {}, done: d.done ?? {} }; }
   catch { return { pending: {}, done: {} }; }
 }
-function writeFile(d: Record<Bucket, Record<string, VerdiqPick>>): void {
+function writeFile(d: Record<Bucket, Record<string, TiprexPick>>): void {
   fs.mkdirSync(path.dirname(FILE), { recursive: true });
   fs.writeFileSync(FILE, JSON.stringify(d));
 }
-async function listPicks(b: Bucket): Promise<VerdiqPick[]> {
+async function listPicks(b: Bucket): Promise<TiprexPick[]> {
   if (!useUpstash) return Object.values(readFile()[b]);
   const flat: string[] = (await redis(["HGETALL", keyOf(b)])) ?? [];
-  const out: VerdiqPick[] = [];
+  const out: TiprexPick[] = [];
   for (let i = 0; i + 1 < flat.length; i += 2) { try { out.push(JSON.parse(flat[i + 1])); } catch { /* poškodený */ } }
   return out;
 }
-async function savePicks(b: Bucket, picks: VerdiqPick[]): Promise<void> {
+async function savePicks(b: Bucket, picks: TiprexPick[]): Promise<void> {
   if (!picks.length) return;
   if (!useUpstash) { const d = readFile(); for (const p of picks) d[b][p.id] = p; writeFile(d); return; }
   const args: string[] = [];
@@ -165,10 +165,10 @@ const typeOf = (market: string) => market.split(" ")[0];
 type Cand = { market: string; selection: string; probability: number; blendModel?: number };
 
 /**
- * Pri automatickej analýze zápasu (~65 min pred výkopom) vyberie tipy VERDIQ a uloží ich.
+ * Pri automatickej analýze zápasu (~65 min pred výkopom) vyberie tipy TIPREX a uloží ich.
  * Kurzy berie z posledného prehľadania surebetov (každú hodinu, dnešné zápasy 18 súťaží).
  */
-export async function recordVerdiqPicks(
+export async function recordTiprexPicks(
   fixture: { fixtureId: number; matchDate: string; homeTeam: string; awayTeam: string; league: string },
   candidates: Cand[],
   trackOnly: Cand[] = []
@@ -179,7 +179,7 @@ export async function recordVerdiqPicks(
   doneFixtures.add(fixture.fixtureId);
   const books = oddsByBook(f);
   const seen = new Set<string>();
-  const found: VerdiqPick[] = [];
+  const found: TiprexPick[] = [];
   const now = new Date().toISOString();
   for (const c of [...(candidates ?? []), ...(trackOnly ?? [])]) {
     if (!c?.market || SKIP_MARKETS.includes(c.market)) continue;
@@ -212,7 +212,7 @@ export async function recordVerdiqPicks(
   // Z jedného typu trhu (góly, rohy, karty…) len jeden tip – ten s najvyššou hodnotou; počet na zápas neobmedzený.
   found.sort((a, b) => b.ev - a.ev);
   const types = new Set<string>();
-  const chosen: VerdiqPick[] = [];
+  const chosen: TiprexPick[] = [];
   for (const pk of found) {
     const t = typeOf(pk.market);
     if (types.has(t)) continue;
@@ -225,11 +225,11 @@ export async function recordVerdiqPicks(
 }
 
 /** Po každom prehľadaní kurzov: posledný férový kurz pred výkopom (na CLV). */
-export async function updateVerdiqClosing(): Promise<void> {
+export async function updateTiprexClosing(): Promise<void> {
   const fixtures = scannedFixtures();
   if (!fixtures.length) return;
   const pending = (await listPicks("pending")).filter((p) => new Date(p.matchDate).getTime() > Date.now());
-  const changed: VerdiqPick[] = [];
+  const changed: TiprexPick[] = [];
   for (const p of pending) {
     const f = fixtures.find((x) => x.fixtureId === p.fixtureId);
     if (!f) continue;
@@ -244,13 +244,13 @@ export async function updateVerdiqClosing(): Promise<void> {
 
 let settling = false;
 /** Vyhodnotí odohrané zápasy (každých 15 minút). */
-export async function settleVerdiq(): Promise<number> {
+export async function settleTiprex(): Promise<number> {
   if (settling) return 0;
   settling = true;
   let done = 0;
   try {
     const due = (await listPicks("pending")).filter((p) => Date.now() >= new Date(p.matchDate).getTime() + 110 * 60 * 1000);
-    const byFixture = new Map<number, VerdiqPick[]>();
+    const byFixture = new Map<number, TiprexPick[]>();
     for (const p of due) byFixture.set(p.fixtureId, [...(byFixture.get(p.fixtureId) ?? []), p]);
     for (const [, picks] of [...byFixture].slice(0, 20)) {
       try {
@@ -273,11 +273,11 @@ export async function settleVerdiq(): Promise<number> {
   return done;
 }
 
-// ---------- Súhrn pre stránku /verdiq ----------
+// ---------- Súhrn pre stránku /tiprex ----------
 
 interface Agg { n: number; won: number; lost: number; void: number; profit: number; sumOdds: number; sumP: number; clvN: number; clvSum: number; clvPlus: number }
 const agg = (): Agg => ({ n: 0, won: 0, lost: 0, void: 0, profit: 0, sumOdds: 0, sumP: 0, clvN: 0, clvSum: 0, clvPlus: 0 });
-function add(a: Agg, p: VerdiqPick): void {
+function add(a: Agg, p: TiprexPick): void {
   if (p.closingFair && p.closingFair > 1) {
     const clv = p.odds / p.closingFair - 1;
     a.clvN++; a.clvSum += clv; if (clv > 0) a.clvPlus++;
@@ -302,7 +302,7 @@ function fin(a: Agg) {
 const ODDS_BANDS: [string, number, number][] = [["1,70 – 1,99", 1.7, 2], ["2,00 – 2,49", 2, 2.5], ["2,50 – 3,20", 2.5, 9]];
 const skDay = (iso: string) => new Date(iso).toLocaleDateString("sv-SE", { timeZone: "Europe/Bratislava" });
 
-export async function verdiqSummary() {
+export async function tiprexSummary() {
   const all = [...(await listPicks("done")), ...(await listPicks("pending"))].sort((a, b) => b.matchDate.localeCompare(a.matchDate));
   const total = agg();
   const byMarket = new Map<string, Agg>();
