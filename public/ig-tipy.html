@@ -74,6 +74,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
         <button type="button" class="chip on" data-p="day">Deň</button>
         <button type="button" class="chip" data-p="week">Týždeň (report)</button>
         <button type="button" class="chip" data-p="month">Mesiac (report)</button>
+        <button type="button" class="chip" data-p="challenge">Verejná výzva</button>
       </div>
     </div>
     <div class="daybar">
@@ -129,6 +130,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
             <div class="opt"><label class="f" for="pct">Vklad na tip v %</label><input type="number" id="pct" min="0.5" max="20" step="0.5" value="3"></div>
           </div>
           <p class="note" id="stakeInfo" style="margin:-4px 0 0"></p>
+          <div class="opt" id="chWrap" style="display:none"><label class="f" for="chStart">Začiatok verejnej výzvy (30 dní)</label><input type="date" id="chStart" value="2026-11-17" style="font:600 15px var(--body);color:var(--text);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 12px;color-scheme:dark"></div>
           <div class="opt"><label class="f" for="handle">Podpis dole na obrázku</label><input type="text" id="handle" value="@tipradar"></div>
         </div>
       </div>
@@ -592,6 +594,153 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
     footer(ctx, W, story ? H - 190 : H - 60, handle, false);
     return cv;
   }
+  // ---------- Verejná výzva (Michal 17. 11. 2026) ----------
+  // 30 dní, každý tip vopred, aj prehry. Počítadlo od začiatku výzvy: tip č. N, vyšlo X z N, mriežka 30 dní, tipy vybraného dňa.
+  const CH_DAYS = 30, CH_DEFAULT = "2026-11-17", CH_LINK = "t.me/tipradar";
+  const chStart = () => { const v = $("chStart").value; return /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : CH_DEFAULT; };
+  const dayDiff = (a, b) => { const x = dayParts(a), y = dayParts(b); return Math.round((Date.UTC(y.y, y.m - 1, y.d) - Date.UTC(x.y, x.m - 1, x.d)) / 864e5); };
+  const chDayNo = (day) => Math.min(CH_DAYS, Math.max(1, dayDiff(chStart(), day) + 1));
+  /** Tipy výzvy zoradené podľa výkopu s poradovým číslom (#1, #2, …). */
+  function chTips(data) {
+    return [...data.tips].sort((a, b) => String(a.kickoff).localeCompare(String(b.kickoff))).map((t, i) => ({ ...t, no: i + 1 }));
+  }
+  function drawChallenge(data, fmt, handle) {
+    const story = fmt === "story";
+    const W = 1080, H = story ? 1920 : 1350;
+    const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+    const ctx = cv.getContext("2d");
+    const X = 72, IW = W - 2 * X;
+    const all = chTips(data), today = all.filter((t) => t.day === st.day);
+    const sm = summary(all), dno = chDayNo(st.day);
+    const pos = sm.units >= 0, accent = sm.done === 0 ? C.stone : pos ? C.good : C.bad;
+    background(ctx, W, H);
+    let y = story ? 220 : 112;
+    header(ctx, W, y, "VEREJNÁ VÝZVA");
+    // Titulok
+    let ty = y + (story ? 130 : 104);
+    const tsz = story ? 96 : 76;
+    ctx.fillStyle = C.text; ctx.font = font(600, tsz, H_FONT); ctx.fillText(`Deň ${dno} `, X, ty);
+    const w0 = ctx.measureText(`Deň ${dno} `).width;
+    ctx.fillStyle = C.stone; ctx.font = font(500, tsz, H_FONT, true); ctx.fillText(`z ${CH_DAYS}`, X + w0, ty);
+    ctx.fillStyle = C.muted; ctx.font = font(600, story ? 30 : 26, B_FONT);
+    ctx.fillText("Každý tip zverejnený vopred. Aj prehry.", X, ty + (story ? 58 : 48));
+    // Karta počítadla
+    const y0 = ty + (story ? 100 : 82), h = story ? 300 : 236;
+    rr(ctx, X, y0, IW, h, 36);
+    const g = ctx.createLinearGradient(X, y0, X + IW, y0 + h);
+    g.addColorStop(0, "#1C1B19"); g.addColorStop(0.55, pos ? "#1E2420" : "#251E1C"); g.addColorStop(1, sm.done === 0 ? "#2A2825" : pos ? "#2A4636" : "#4A2C27");
+    ctx.fillStyle = g; ctx.fill();
+    ctx.strokeStyle = sm.done === 0 ? C.line : pos ? "rgba(127,200,160,.45)" : "rgba(224,137,122,.45)"; ctx.lineWidth = 2; ctx.stroke();
+    ctx.save(); rr(ctx, X, y0, IW, h, 36); ctx.clip(); radar(ctx, X + IW * 0.85, y0 + h * 0.5, h * 0.7, 0.05); ctx.restore();
+    const cols = [
+      { k: "TIPOV", v: String(all.length) },
+      { k: "VYŠLO", v: sm.done ? `${sm.won} z ${sm.done}` : "–" },
+      { k: "ZISK", v: sm.done ? `${signed(sm.units, 2)} j.` : "–", c: accent },
+    ];
+    const cw = IW / 3;
+    cols.forEach((c, i) => {
+      const cx = X + cw * i + cw / 2;
+      if (i) { ctx.strokeStyle = "rgba(207,196,180,.18)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(X + cw * i, y0 + h * 0.2); ctx.lineTo(X + cw * i, y0 + h * 0.8); ctx.stroke(); }
+      ctx.fillStyle = C.muted; ctx.font = font(800, story ? 22 : 19, B_FONT); spaced(ctx, c.k, cx, y0 + h * 0.3, 3, "center");
+      ctx.textAlign = "center"; ctx.fillStyle = c.c || C.text;
+      const sz = fit(ctx, c.v, 700, story ? 92 : 74, cw - 40, H_FONT, 30); ctx.font = font(700, sz, H_FONT);
+      ctx.fillText(c.v, cx, y0 + h * 0.3 + sz * 1.08); ctx.textAlign = "left";
+    });
+    if (sm.done) {
+      const l = `úspešnosť ${num((sm.won / sm.done) * 100, 0)} % · ${signed(sm.units * stake(), 2)} € pri vklade ${eur(stake())} € na tip`;
+      ctx.fillStyle = C.faint; ctx.textAlign = "center"; fit(ctx, l, 600, story ? 24 : 20, IW - 60, B_FONT, 12); ctx.fillText(l, X + IW / 2, y0 + h - (story ? 30 : 22)); ctx.textAlign = "left";
+    }
+    // Mriežka 30 dní
+    let gy = y0 + h + (story ? 56 : 40);
+    ctx.fillStyle = C.muted; ctx.font = font(800, story ? 18 : 16, B_FONT); spaced(ctx, "30 DNÍ VÝZVY", X + 6, gy, 3);
+    gy += story ? 22 : 16;
+    const per = 15, gap = story ? 10 : 8, sq = (IW - gap * (per - 1)) / per, sqh = story ? sq : sq * 0.78;
+    for (let i = 0; i < CH_DAYS; i++) {
+      const d = addDays(chStart(), i), dt = all.filter((t) => t.day === d), s = summary(dt);
+      const gx = X + (i % per) * (sq + gap), yy = gy + Math.floor(i / per) * (sqh + gap);
+      rr(ctx, gx, yy, sq, sqh, 10);
+      const future = d > st.day;
+      ctx.fillStyle = future ? "rgba(207,196,180,.05)" : !dt.length ? "rgba(207,196,180,.12)" : s.done === 0 ? "rgba(207,196,180,.35)" : s.units >= 0 ? C.good : C.bad;
+      ctx.fill();
+      if (d === st.day) { ctx.strokeStyle = C.text; ctx.lineWidth = 3; ctx.stroke(); }
+      ctx.fillStyle = future ? C.faint : dt.length && s.done ? C.bg : C.muted; ctx.font = font(700, story ? 20 : 16, B_FONT); ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(String(i + 1), gx + sq / 2, yy + sqh / 2 + 1); ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+    }
+    gy += 2 * sqh + gap;
+    ctx.fillStyle = C.faint; ctx.font = font(600, story ? 20 : 17, B_FONT);
+    ctx.fillText("zelená = deň v pluse · červená = deň v mínuse · sivá = bez tipu", X + 6, gy + (story ? 26 : 20)); gy += story ? 30 : 22;
+    // Tipy vybraného dňa
+    let top = gy + (story ? 60 : 44);
+    const pre = today.length && today.every((t) => t.status === "pending");
+    ctx.fillStyle = C.muted; ctx.font = font(800, story ? 18 : 16, B_FONT);
+    spaced(ctx, (pre ? "TIPY DŇA · " : "DNES · ") + dayShort(st.day).toUpperCase(), X + 6, top, 3);
+    top += story ? 24 : 18;
+    const bottom = story ? H - 190 - 150 : H - 60 - 120;
+    if (!today.length) {
+      rr(ctx, X, top, IW, story ? 150 : 110, 20); ctx.fillStyle = C.card; ctx.fill();
+      ctx.fillStyle = C.text; ctx.font = font(600, story ? 36 : 30, H_FONT); ctx.fillText("Dnes žiadny tip.", X + 34, top + (story ? 70 : 52));
+      ctx.fillStyle = C.muted; ctx.font = font(600, story ? 24 : 20, B_FONT); ctx.fillText("Model nenašiel dosť silný tip – radšej nič.", X + 34, top + (story ? 112 : 86));
+    } else {
+      const shown = today.slice(0, story ? 4 : 3), rg = story ? 14 : 10;
+      const rh = Math.min(story ? 150 : 120, (bottom - top - rg * (shown.length - 1)) / shown.length);
+      let cy = top;
+      for (const t of shown) {
+        const ticket = t.legs && t.legs.length > 0;
+        const col = t.status === "won" ? C.good : t.status === "lost" ? C.bad : C.stone;
+        rr(ctx, X, cy, IW, rh, 20); ctx.fillStyle = C.card; ctx.fill(); ctx.strokeStyle = "rgba(207,196,180,.10)"; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.save(); rr(ctx, X, cy, IW, rh, 20); ctx.clip(); ctx.fillStyle = col; ctx.fillRect(X, cy, 7, rh); ctx.restore();
+        const mr = Math.min(rh * 0.24, 28), markX = X + IW - 30 - mr;
+        mark(ctx, markX, cy + rh / 2, mr, t.status);
+        ctx.fillStyle = C.stone; ctx.font = font(700, story ? 34 : 28, H_FONT); ctx.fillText(`#${t.no}`, X + 30, cy + rh / 2 + 11);
+        const px = X + (story ? 130 : 112), maxW = markX - mr - 24 - px;
+        const tm = ticket ? t.legs.map((l) => `${l.home} – ${l.away}`).join(" · ") : `${t.home} – ${t.away}${t.score ? "  " + scoreTxt(t.score) : ""}`;
+        ctx.fillStyle = C.text; fit(ctx, tm, 600, story ? 30 : 26, maxW, H_FONT, 14); ctx.fillText(tm, px, cy + rh * 0.45);
+        const tp = `${ticket ? "Tiket" : tipTxt(t)}${t.odds ? " · kurz " + num(t.odds, 2) : t.minOdds ? " · kurz aspoň " + num(t.minOdds, 2) : ""}${t.status === "pending" ? "" : " · " + STATUS[t.status].toLowerCase()}`;
+        ctx.fillStyle = C.stone; fit(ctx, tp, 600, story ? 23 : 20, maxW, B_FONT, 11); ctx.fillText(tp, px, cy + rh * 0.76);
+        cy += rh + rg;
+      }
+      if (today.length > shown.length) { ctx.fillStyle = C.faint; ctx.font = font(600, 20, B_FONT); ctx.fillText(`+ ďalšie ${today.length - shown.length} v texte`, X + 6, cy + 14); }
+    }
+    // Výzva na sledovanie
+    const by = story ? H - 190 - 120 : H - 60 - 100, bh = story ? 76 : 62;
+    rr(ctx, X, by, IW, bh, bh / 2); ctx.fillStyle = C.stone; ctx.fill();
+    ctx.fillStyle = C.bg; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    const cta = `Sledujte zadarmo · ${CH_LINK}`;
+    fit(ctx, cta, 800, story ? 32 : 28, IW - 60, B_FONT, 14); ctx.fillText(cta, X + IW / 2, by + bh / 2 + 1);
+    ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+    footer(ctx, W, story ? H - 190 + 40 : H - 60 + 20, handle, false);
+    return cv;
+  }
+  function captionChallenge(data) {
+    const all = chTips(data), today = all.filter((t) => t.day === st.day), sm = summary(all);
+    const icon = (s) => (s === "won" ? "✅" : s === "lost" ? "❌" : s === "void" ? "↩️" : "⏳");
+    const lines = [`🎯 Verejná výzva TipRadar · deň ${chDayNo(st.day)} z ${CH_DAYS}`, "Každý tip zverejňujeme vopred – aj tie, čo nevyjdú.", "", `📅 ${dayLong(st.day)}:`];
+    if (!today.length) lines.push("Dnes žiadny tip – model nenašiel dosť silný. Radšej nič ako slabý tip.");
+    for (const t of today) {
+      const ticket = t.legs && t.legs.length;
+      lines.push(`${icon(t.status)} #${t.no} ${ticket ? "Tiket" : `${t.home} – ${t.away}${t.score ? " " + scoreTxt(t.score) : ""}`}`);
+      lines.push(`👉 ${ticket ? t.legs.map((l) => `${l.home} – ${l.away}: ${l.market}: ${l.selection}`).join(" | ") : tipTxt(t)}${t.odds ? " – kurz " + num(t.odds, 2) : t.minOdds ? " – hrať pri kurze aspoň " + num(t.minOdds, 2) : ""}`);
+    }
+    lines.push("");
+    if (sm.done) lines.push(`📊 Od začiatku výzvy: vyšlo ${sm.won} z ${plural(sm.done, "tipu", "tipov", "tipov")} (${num((sm.won / sm.done) * 100, 0)} %) · ${signed(sm.units, 2)} j.`);
+    else lines.push(`📊 Od začiatku výzvy: ${plural(all.length, "tip", "tipy", "tipov")}, zatiaľ bez výsledku.`);
+    lines.push(`👉 Tipy vopred zadarmo: ${CH_LINK} (odkaz v bio)`, "", "18+ · Hrajte zodpovedne.", "#tipradar #futbal #verejnavyzva #futbalovestatistiky #futbalvcislach");
+    return lines.join("\n");
+  }
+  async function renderChallenge() {
+    st.cvs = [drawChallenge(st.data, st.fmt, $("handle").value.trim())];
+    $("img").src = st.cvs[0].toDataURL("image/png");
+    $("preview").classList.toggle("story", st.fmt === "story");
+    $("pageWrap").style.display = "none";
+    const today = st.data.tips.filter((t) => t.day === st.day), sm = summary(today);
+    $("pageInfo").className = sm.pending ? "note warn" : "note";
+    $("pageInfo").textContent = sm.pending
+      ? "Tipy dňa sa ešte hrajú – obrázok sa hodí ako „tip vopred“ pred zápasom. Ráno po dohraní stiahnite znova, ukáže výsledok."
+      : "Jeden obrázok denne: pred zápasom (tipy vopred) a ráno znova s výsledkom. Mriežka ukazuje všetkých 30 dní výzvy.";
+    $("text").value = captionChallenge(st.data);
+    $("stakeInfo").textContent = `Vklad na tip: ${eur(stake())} € (${num(pct(), pct() % 1 ? 1 : 0)} % z ${eur(bank())} €).`;
+    $("shareBtn").disabled = false; $("downBtn").disabled = false; $("pngBtn").disabled = false;
+  }
   function captionReport(data) {
     const tips = data.tips, sm = summary(tips);
     const icon = (s) => (s === "won" ? "✅" : s === "lost" ? "❌" : s === "void" ? "↩️" : "⏳");
@@ -698,6 +847,7 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
   async function render() {
     if (!st.data) return;
     await loadFonts();
+    if (st.period === "challenge") return renderChallenge();
     if (st.period !== "day") return renderReport();
     const vt = viewTips();
     const pages = pagesOf(vt);
@@ -740,6 +890,15 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
     $("shareBtn").disabled = false; $("downBtn").disabled = false; $("pngBtn").disabled = false;
   }
   function renderList() {
+    if (st.period === "challenge") {
+      const all = chTips(st.data), tips = all.filter((t) => t.day === st.day);
+      $("tipList").innerHTML = (`<p class="note" style="margin:0">Výzva od ${dayShort(chStart())} – zatiaľ ${plural(all.length, "tip", "tipy", "tipov")}. Na obrázku sú tipy vybraného dňa a počítadlo od začiatku.</p>`) + (tips.length
+        ? tips.map((t) => `<div class="tip"><span class="pct">#${t.no}</span><span class="s ${t.status}">${STATUS[t.status] || ""}</span><span class="m"><b>${esc(t.home)} – ${esc(t.away)}</b>${t.score ? " " + scoreTxt(t.score) : ""}<small>${esc(t.legs && t.legs.length ? "Tiket" : tipTxt(t))}${t.odds ? " · kurz " + num(t.odds, 2) : ""} · ${esc(league(t.league))} ${kickTime(t.kickoff)}</small></span><span>${t.units == null ? "" : signed(t.units, 2) + " j."}</span></div>`).join("")
+        : `<div class="empty">V tento deň zatiaľ nie je žiadny tip.</div>`);
+      $("prevDay").disabled = st.day <= chStart(); $("nextDay").disabled = false;
+      $("dayInfo").textContent = `Deň ${chDayNo(st.day)} z ${CH_DAYS} · ${dayLong(st.day)}`;
+      return;
+    }
     if (st.period !== "day") {
       const tips = st.data.tips;
       $("tipList").innerHTML = tips.length
@@ -764,25 +923,27 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
     st.day = day; $("day").value = day; st.page = 0;
     $("tipList").innerHTML = `<div class="empty">Načítavam…</div>`;
     try {
-      const rg = st.period === "day" ? null : periodRange(day, st.period);
+      if (st.period === "challenge" && day < chStart()) { day = chStart(); st.day = day; $("day").value = day; }
+      const rg = st.period === "day" ? null : st.period === "challenge" ? { from: chStart(), to: day } : periodRange(day, st.period);
       const r = await fetch(rg ? `/api/ig/range?from=${rg.from}&to=${rg.to}` : `/api/ig/day?day=${day}`, { cache: "no-store" });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error || r.status);
       st.data = j;
-      try { history.replaceState(null, "", `?den=${day}${st.period === "day" ? "" : "&obdobie=" + (st.period === "week" ? "tyzden" : "mesiac")}`); } catch (e) { /* nič */ }
+      try { history.replaceState(null, "", `?den=${day}${st.period === "day" ? "" : "&obdobie=" + ({ week: "tyzden", month: "mesiac", challenge: "vyzva" })[st.period]}`); } catch (e) { /* nič */ }
     } catch (e) {
       $("tipList").innerHTML = `<div class="empty">Nepodarilo sa načítať tipy (${esc(e.message)}).</div>`;
       return;
     }
     for (const x of $("periodChips").children) x.classList.toggle("on", x.dataset.p === st.period);
     $("modeWrap").style.display = st.period === "day" ? "" : "none";
+    $("chWrap").style.display = st.period === "challenge" ? "" : "none";
     if (st.period !== "day") { renderList(); render(); return; }
     initSel();
     const sm0 = summary(st.data.tips);
     st.mode = sm0.pending > 0 && sm0.done === 0 ? "pre" : "post";
     renderList(); render();
   }
-  const fileBase = () => (st.period === "week" ? `tipradar-tyzden-${st.data.from}` : st.period === "month" ? `tipradar-mesiac-${st.data.from.slice(0, 7)}` : `tipradar-${st.mode === "pre" ? "tipy" : "vysledky"}-${st.day}`);
+  const fileBase = () => (st.period === "challenge" ? `tipradar-vyzva-den-${chDayNo(st.day)}-${st.day}` : st.period === "week" ? `tipradar-tyzden-${st.data.from}` : st.period === "month" ? `tipradar-mesiac-${st.data.from.slice(0, 7)}` : `tipradar-${st.mode === "pre" ? "tipy" : "vysledky"}-${st.day}`);
   function fileName(i) { return `${fileBase()}-${st.fmt === "story" ? "pribeh" : "prispevok"}-${i + 1}.png`; }
   const toBlob = (cv) => new Promise((res) => cv.toBlob(res, "image/png"));
   async function files() { return Promise.all(st.cvs.map(async (cv, i) => new File([await toBlob(cv)], fileName(i), { type: "image/png" }))); }
@@ -799,9 +960,11 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
   $("day").addEventListener("change", () => { if (/^\d{4}-\d{2}-\d{2}$/.test($("day").value)) load($("day").value); });
   $("periodChips").addEventListener("click", (e) => { const c = e.target.closest(".chip"); if (!c || c.dataset.p === st.period) return; st.period = c.dataset.p; load(st.day); });
   $("prevDay").addEventListener("click", () => {
+    if (st.period === "challenge") return load(addDays(st.day, -1));
     if (st.period !== "day") return load(addDays(st.data.from, -1));
     const d = (st.data.days || []).filter((x) => x < st.day).pop(); if (d) load(d); });
   $("nextDay").addEventListener("click", () => {
+    if (st.period === "challenge") return load(addDays(st.day, 1));
     if (st.period !== "day") return load(addDays(st.data.to, 1));
     const d = (st.data.days || []).find((x) => x > st.day); if (d) load(d); });
   for (const id of ["bank", "pct", "handle"]) $(id).addEventListener("input", () => { try { localStorage.setItem("tr_ig_" + id, $(id).value); } catch (e) {} render(); });
@@ -831,7 +994,9 @@ textarea { width: 100%; min-height: 300px; font: 14px/1.5 var(--body); color: va
 
   // Predvolený deň: ?den=…, inak dnes; pred 12:00 včerajšok (ráno sa zverejňujú výsledky včerajška).
   const qs = new URLSearchParams(location.search), q = qs.get("den");
-  st.period = { tyzden: "week", mesiac: "month" }[qs.get("obdobie")] || "day";
+  st.period = { tyzden: "week", mesiac: "month", vyzva: "challenge" }[qs.get("obdobie")] || "day";
+  try { const cs = localStorage.getItem("tr_ig_chStart"); if (cs) $("chStart").value = cs; } catch (e) { /* nič */ }
+  $("chStart").addEventListener("change", () => { try { localStorage.setItem("tr_ig_chStart", $("chStart").value); } catch (e) {} load(st.day); });
   const now = new Date(); if (now.getHours() < 12) now.setDate(now.getDate() - 1);
   load(q && /^\d{4}-\d{2}-\d{2}$/.test(q) ? q : isoLocal(now));
 })();
