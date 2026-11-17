@@ -14,7 +14,7 @@ import { settleFixtureBets } from "./tipEvaluator";
 //   2. sudca = najostrejší trh – Pinnacle bez marže (ak Pinnacle chýba, medián aspoň 3 stávkoviek bez marže).
 // Kurz sa berie NAJVYŠŠÍ zo známych zahraničných stávkoviek (TOP_BOOKS zo surebetov: Bet365, Unibet, Betano…).
 // Rozdiel oproti TipRadaru: kurz 1,70 – 3,20 (šanca zhruba 35 – 62 %), výsledná šanca 50 % model + 50 % Pinnacle,
-// hodnota sa musí ukázať u OBOCH sudcov, z jedného zápasu najviac 2 tipy (rôzne typy trhu), viac tipov denne.
+// hodnota sa musí ukázať u OBOCH sudcov, z jedného typu trhu v zápase len 1 tip (počet tipov na zápas neobmedzený), viac tipov denne.
 // Meria sa aj CLV – či sa kurz do výkopu pohol k nám (najlepší znak, či model nachádza skutočnú hodnotu).
 // Zatiaľ len skúška: tipy sa ukladajú a vyhodnocujú samé, nikomu sa neposielajú, TipRadar sa nemení.
 
@@ -31,7 +31,8 @@ const MAX_EV = 1.2;
 const MAX_GAP = 12;
 /** Najvyšší kurz najviac o 8 % nad mediánom stávkoviek – vyšší býva chyba alebo starý kurz. */
 const MAX_OVER_MEDIAN = 1.08;
-const MAX_PER_FIXTURE = 2;
+/** 18. 11. 2026 (Michal): zo zápasu toľko tipov, koľko prejde – len nie dva z toho istého typu trhu. */
+const MAX_PER_FIXTURE = 99;
 const SKIP_MARKETS = ["Strelec gólov", "Ofsajdy", "Vyššie držanie lopty", "Držanie lopty domácich", "Držanie lopty hostí"];
 
 const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL;
@@ -208,7 +209,7 @@ export async function recordVerdiqPicks(
       ev: Math.round(ev * 1000) / 1000, recordedAt: now, status: "pending",
     });
   }
-  // Z jedného typu trhu (góly, rohy, karty…) len jeden tip – ten s najvyššou hodnotou; najviac 2 na zápas.
+  // Z jedného typu trhu (góly, rohy, karty…) len jeden tip – ten s najvyššou hodnotou; počet na zápas neobmedzený.
   found.sort((a, b) => b.ev - a.ev);
   const types = new Set<string>();
   const chosen: VerdiqPick[] = [];
