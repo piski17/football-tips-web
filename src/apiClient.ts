@@ -1277,7 +1277,8 @@ export async function getHeadToHeadStats(
   h2h: HeadToHeadMatch[],
   currentHomeTeamName: string
 ): Promise<H2HStats[]> {
-  const since = Date.now() - 5 * 365 * 24 * 60 * 60 * 1000;
+  // 18. 11. 2026 (Michal): do odhadu len vzájomné zápasy za posledné 3 roky (predtým 5).
+  const since = Date.now() - 3 * 365 * 24 * 60 * 60 * 1000;
   const recent = h2h
     // 15. 11. 2026: berú sa 5 najnovšie aj staršie ako 5 rokov (značka old) – model ich do odhadu
     // nezapočíta, použije ich len kontrola vzájomných zápasov (h2hAgainst).

@@ -829,8 +829,8 @@ function recencyAverage(values: (number | null)[]): { avg: number; n: number } |
   return n >= H2H_MIN ? { avg: sum / wsum, n } : null;
 }
 interface H2HGoals { n: number; weight: number; home: number; away: number; total: number }
-/** Vzájomné zápasy sa berú za posledných 5 rokov (5 sezón) – staršie už pre dnešné tímy veľa nehovoria (21. 10. 2026, Michalovo rozhodnutie). */
-const H2H_YEARS = 5;
+/** Vzájomné zápasy sa berú za posledné 3 roky (18. 11. 2026, Michal; predtým od 21. 10. 5 rokov) – staršie už pre dnešné tímy veľa nehovoria. */
+export const H2H_YEARS = 3;
 function h2hRecent(h2h: HeadToHeadMatch[]): HeadToHeadMatch[] {
   const since = Date.now() - H2H_YEARS * 365 * 24 * 60 * 60 * 1000;
   return h2h
