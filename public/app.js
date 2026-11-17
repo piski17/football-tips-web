@@ -3130,15 +3130,15 @@ document.getElementById("tipsFilter").addEventListener("click", (e) => {
   const b = e.target.closest("[data-f]");
   if (!b) return;
   tipsFilter = b.dataset.f;
-  renderTipRows(currentHistoryTips.filter((t) => !t.watchOnly));
+  renderTipRows(currentHistoryTips.filter((t) => !t.watchOnly && !t.removedLeague));
 });
 document.getElementById("tipsLeague").addEventListener("change", (e) => {
   tipsLeague = e.target.value;
-  renderTipRows(currentHistoryTips.filter((t) => !t.watchOnly));
+  renderTipRows(currentHistoryTips.filter((t) => !t.watchOnly && !t.removedLeague));
 });
 document.getElementById("showArchivedToggle").addEventListener("change", (e) => {
   showArchivedTips = e.target.checked;
-  renderTipRows(currentHistoryTips.filter((t) => !t.watchOnly));
+  renderTipRows(currentHistoryTips.filter((t) => !t.watchOnly && !t.removedLeague));
 });
 
 tipsListEl.addEventListener("click", async (e) => {
