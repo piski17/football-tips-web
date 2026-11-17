@@ -228,13 +228,11 @@ function matchHasStarted(fixture) {
 function isOverrideTip(t) {
   return !!t.overrideFilter || (Array.isArray(t.legs) && t.legs.some((l) => l.overrideFilter));
 }
-/** Hranica hodnoty tipu (16. 11. 2026, Michal: +10 %; predtým +5 %). Rovnaká ako MIN_EXPECTED_VALUE na serveri. */
-const MIN_EV = 1.1;
-/** Minimálny kurz tipu: hodnota aspoň +10 % pri dôvere modelu a zároveň aspoň MIN_ODDS. */
+/** Minimálny kurz tipu: hodnota aspoň +5 % pri dôvere modelu a zároveň aspoň MIN_ODDS. */
 function minOddsFor(bet) {
   if (typeof bet.minOdds === "number") return bet.minOdds;
   const p = (bet.probability ?? 0) / 100;
-  return p > 0 ? Math.max(MIN_ODDS, Math.ceil((MIN_EV / p) * 100) / 100) : MIN_ODDS;
+  return p > 0 ? Math.max(MIN_ODDS, Math.ceil((1.05 / p) * 100) / 100) : MIN_ODDS;
 }
 function evPct(ev) {
   const p = Math.round((ev - 1) * 100);
@@ -1307,7 +1305,7 @@ const STRICT_CHECK_ON = false; // 13. 11. 2026 (Michal): 60 / 40 vypnutá aj sp�
 function strictCheck(bet, odd) {
   const p = bet.strictProbability;
   if (typeof p !== "number" || !(odd > 1)) return { pass: true, p: null };
-  return { pass: p >= WATCH_BELOW && p <= 80 && (p / 100) * odd >= MIN_EV, p };
+  return { pass: p >= WATCH_BELOW && p <= 80 && (p / 100) * odd >= 1.05, p };
 }
 
 /** Text pri tipe do sledovaných kvôli 60 / 40: aký kurz treba, aby prešiel ku klientom. */
@@ -1315,7 +1313,7 @@ function strictHint(bet) {
   const p = bet.strictProbability;
   if (typeof p !== "number") return "Pri kurze zo stávkoviek neprejde kontrolou 60 / 40.";
   if (p < WATCH_BELOW || p > 80) return `Pri 60 / 40 má dôveru ${fmtNum(p, 0)}${NB}% – mimo pásma ${WATCH_BELOW} – 80${NB}%, ku klientom nepôjde pri žiadnom kurze.`;
-  const need = Math.ceil((MIN_EV / (p / 100)) * 100) / 100;
+  const need = Math.ceil((1.05 / (p / 100)) * 100) / 100;
   return `Pri 60 / 40 má dôveru ${fmtNum(p, 0)}${NB}% – ku klientom prejde pri kurze aspoň ${fmtOdds(need)}, inak len sledovať.`;
 }
 
@@ -1489,7 +1487,7 @@ function renderCalcRows(out, r, market, rows) {
   rows.forEach((x) => {
     if (x.odds != null) {
       x.ev = (x.probability / 100) * x.odds;
-      x.ok = x.probability >= WATCH_BELOW && x.probability <= 80 && x.odds >= MIN_ODDS && x.ev >= MIN_EV && x.ev <= 1.25;
+      x.ok = x.probability >= WATCH_BELOW && x.probability <= 80 && x.odds >= MIN_ODDS && x.ev >= 1.05 && x.ev <= 1.25;
     } else {
       x.ok = x.probability >= WATCH_BELOW && x.probability <= 80;
     }
@@ -1502,7 +1500,7 @@ function renderCalcRows(out, r, market, rows) {
   const whyNot = (x) => {
     if (x.probability < WATCH_BELOW || x.probability > 80) return `Mimo pásma ${WATCH_BELOW} – 80${NB}% – neodporúčame.`;
     if (x.odds < MIN_ODDS) return `Kurz pod ${fmtOdds(MIN_ODDS)} – neodporúčame.`;
-    if (x.ev < MIN_EV) return `Kurz je na túto šancu nízky (výhodnosť ${evPct(x.ev)}) – neodporúčame.`;
+    if (x.ev < 1.05) return `Kurz je na túto šancu nízky (výhodnosť ${evPct(x.ev)}) – neodporúčame.`;
     if (x.ev > 1.25) return `Podozrivo vysoká výhodnosť (${evPct(x.ev)}), model sa asi mýli – neodporúčame.`;
     return "Druhá možnosť je výhodnejšia.";
   };
@@ -1856,7 +1854,7 @@ function lateTipForClients(t) {
   if (typeof t.odds !== "number" && farLineTip(t)) return false; // len bez kurzu z API
   if (typeof t.odds !== "number") return true; // trh bez kurzu v API – rozhodne kurz, ktorý zadá Michal
   const value = (t.probability / 100) * t.odds;
-  return t.odds >= MIN_ODDS && value >= MIN_EV && value <= 1.25;
+  return t.odds >= MIN_ODDS && value >= 1.05 && value <= 1.25;
 }
 async function renderDayLateTips(box) {
   // 15. 11. 2026 (Michal): dohraté zápasy (FT/AET/PEN) už tipy neukazujú, len zápasy, ktoré sa práve hrajú.
@@ -2928,7 +2926,7 @@ function renderCalibrationReport(tips) {
     <p class="faint small">Pri pásme s menej ako 30 tipmi je rozdiel ešte prevažne náhoda.${outside ? ` Mimo pásiem ${CALIBRATION_FROM} – ${fmtNum(CALIBRATION_TO, 1)}${NB}%: ${plural(outside, "tip", "tipy", "tipov")} (započítané v celkovom riadku).` : ""}</p>`;
 }
 // Úspešnosť podľa hodnoty (25. 10. 2026): či viac zarábajú tipy s malou (+5 – 10 %) alebo
-// veľkou hodnotou (+15 – 25 %). Podľa toho sa dá posunúť spodná hranica hodnoty (teraz +10 %).
+// veľkou hodnotou (+15 – 25 %). Podľa toho sa dá posunúť spodná hranica hodnoty (teraz +5 %).
 const VALUE_BUCKETS = [
   { label: "pod +5 %", min: -Infinity, max: 5 },
   { label: "+5 – 10 %", min: 5, max: 10 },
@@ -3913,7 +3911,7 @@ const SHADOW_REASON_LABEL = {
   conflict: "rozpor so stávkovkami",
   ev_high: "podozrivo vysoká hodnota (nad +25 %)",
   ev_high_few_games: "vysoká hodnota pri málo dátach",
-  ev_low: "nízka hodnota (pod +10 %)",
+  ev_low: "nízka hodnota (pod +5 %)",
   min_odds: `kurz pod ${fmtNum(MIN_ODDS, 2)}`,
   one_bookmaker: "kurz len od jednej stávkovky",
   band_low: "dôvera pod pásmom (pod 70 %, do 2. 11. pod 68 %, 21. 10. a 23. – 24. 10. pod 65 %)",
@@ -3954,7 +3952,7 @@ function conflictDetailHtml(c) {
     .map((x) => `<tr><td style="white-space:nowrap">${escapeHtml(new Date(x.matchDate).toLocaleDateString("sk-SK", { day: "numeric", month: "numeric" }))}</td><td>${escapeHtml(translateTeamName(x.homeTeam))} – ${escapeHtml(translateTeamName(x.awayTeam))}<br><span class="faint">${escapeHtml(x.market)}: ${escapeHtml(translateNamesInText(x.selection, x.homeTeam, x.awayTeam))}</span></td><td class="num">${p(x.model)}</td><td class="num">${p(x.bookmakers)}</td><td class="num">${typeof x.odds === "number" ? fmtOdds(x.odds) : "–"}</td><td>${res[x.status] || x.status}</td></tr>`)
     .join("");
   return `<details class="inner-details"><summary>Rozpor so stávkovkami – rozbor (kontrola pred zmenou filtra)</summary>
-    ${passing ? `<p class="small"><b>Tipy, ktoré by bez rozporu prešli všetkými pravidlami</b> (${WATCH_BELOW} – 80${NB}%, kurz aspoň ${fmtNum(MIN_ODDS, 2)}, hodnota +10 až +25${NB}%): ${passing.settled ? `vyšlo <b>${passing.won} z ${passing.settled}</b> (${p(passing.hitRate)}), zisk <b class="${passing.profit >= 0 ? "g" : "l"}">${signed(passing.profit, 1)}${NB}j.</b>` : "zatiaľ žiadny vyhodnotený"}${passing.count > passing.settled ? `, čaká ${passing.count - passing.settled}` : ""}.</p>` : `<p class="small">Žiadny tip s rozporom by inak neprešiel pravidlami.</p>`}
+    ${passing ? `<p class="small"><b>Tipy, ktoré by bez rozporu prešli všetkými pravidlami</b> (${WATCH_BELOW} – 80${NB}%, kurz aspoň ${fmtNum(MIN_ODDS, 2)}, hodnota +5 až +25${NB}%): ${passing.settled ? `vyšlo <b>${passing.won} z ${passing.settled}</b> (${p(passing.hitRate)}), zisk <b class="${passing.profit >= 0 ? "g" : "l"}">${signed(passing.profit, 1)}${NB}j.</b>` : "zatiaľ žiadny vyhodnotený"}${passing.count > passing.settled ? `, čaká ${passing.count - passing.settled}` : ""}.</p>` : `<p class="small">Žiadny tip s rozporom by inak neprešiel pravidlami.</p>`}
     ${(c.passingByPeriod || []).length ? shadowTableHtml(c.passingByPeriod, "Prešli by – obdobie", (k) => CONFLICT_PERIOD_LABEL[k] || k) : ""}
     ${(c.passingByOdds || []).length ? shadowTableHtml(c.passingByOdds, "Prešli by – kurz (zápasy od 22. 10.)", (k) => ({ below160: "kurz 1,50 – 1,59", from160: "kurz od 1,60" })[k] || k) : ""}
     ${shadowTableHtml(c.byPeriod || [], "Všetky – obdobie", (k) => CONFLICT_PERIOD_LABEL[k] || k)}

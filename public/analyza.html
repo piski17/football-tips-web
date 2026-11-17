@@ -184,7 +184,7 @@ select { width: 100%; font: 500 15px var(--body); color: var(--text); background
     <div class="explain">
       <div><b>Šanca modelu</b>Rovnaká šanca, akú TipRadar používa pri tipoch (70 % model, 30 % stávkovky). Nie je to odporúčanie – tipy pre klientov idú ďalej len cez Tipy dňa.</div>
       <div><b>Férový kurz</b>100 delené šancou. Pri šanci 70 % je férový kurz 1,43. Stávka má hodnotu, len keď stávkovka dáva vyšší kurz.</div>
-      <div><b>Hodnota</b>Napíšte kurz zo svojej stávkovky. Zelená = aspoň +10 % (rovnaká hranica ako pri tipoch), červená = stávka sa neoplatí.</div>
+      <div><b>Hodnota</b>Napíšte kurz zo svojej stávkovky. Zelená = aspoň +5 % (rovnaká hranica ako pri tipoch), červená = stávka sa neoplatí.</div>
     </div>
   </section>
 
@@ -438,8 +438,8 @@ function render(r) {
     const o = num(inp.value), pr = Number(inp.dataset.p), v = $("v" + inp.dataset.i);
     if (!(o > 1)) { v.innerHTML = ""; return; }
     const ev = (pr / 100) * o - 1;
-    const cls = ev >= 0.1 ? "g" : ev < 0 ? "l" : "warn";
-    const word = ev >= 0.1 ? "hodnota" : ev < 0 ? "neoplatí sa" : "tesne";
+    const cls = ev >= 0.05 ? "g" : ev < 0 ? "l" : "warn";
+    const word = ev >= 0.05 ? "hodnota" : ev < 0 ? "neoplatí sa" : "tesne";
     v.innerHTML = `<span class="${cls}"><b>${ev > 0 ? "+" : ev < 0 ? "−" : ""}${fmt(Math.abs(ev) * 100, 1)}${NB}%</b> ${word}</span>`;
   }));
   const lc = () => {
@@ -449,7 +449,7 @@ function render(r) {
     let under = negBinUnder(m.mean, line, m.varRatio) * 100;
     if (m.calibration < 1) under = 50 + m.calibration * (under - 50);
     const over = 100 - under, lt = fmt(line, 1);
-    const val = (pp) => (o > 1 ? ` · pri kurze ${fmt(o)} hodnota <b class="${(pp / 100) * o - 1 >= 0.1 ? "g" : (pp / 100) * o - 1 < 0 ? "l" : "warn"}">${((pp / 100) * o - 1) >= 0 ? "+" : "−"}${fmt(Math.abs((pp / 100) * o - 1) * 100, 1)}${NB}%</b>` : "");
+    const val = (pp) => (o > 1 ? ` · pri kurze ${fmt(o)} hodnota <b class="${(pp / 100) * o - 1 >= 0.05 ? "g" : (pp / 100) * o - 1 < 0 ? "l" : "warn"}">${((pp / 100) * o - 1) >= 0 ? "+" : "−"}${fmt(Math.abs((pp / 100) * o - 1) * 100, 1)}${NB}%</b>` : "");
     $("lcR").innerHTML = `Viac ako ${lt}: <b>${pct(over)}</b> (férový ${fair(over)})${val(over)}<br>Menej ako ${lt}: <b>${pct(under)}</b> (férový ${fair(under)})${val(under)}`;
   };
   if ($("lcM")) ["lcM", "lcL", "lcO"].forEach((k) => $(k).addEventListener("input", lc));

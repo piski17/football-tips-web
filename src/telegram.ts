@@ -5,7 +5,7 @@ import axios from "axios";
 import { sendAdminEmail } from "./mailer";
 import { newPeriodUpdates } from "./guarantee";
 import { SavedTip } from "./types";
-import { MIN_ODDS, MIN_EXPECTED_VALUE } from "./oddsMatcher";
+import { MIN_ODDS } from "./oddsMatcher";
 import { STRICT_CHECK_ON } from "./predictor";
 
 /** Slovenský tvar podľa počtu: plural(3, "tip", "tipy", "tipov") -> "3 tipy". */
@@ -165,9 +165,9 @@ function buildMessageText(tip: SavedTip, headerOverride?: string, vip = false, s
  * Minimálny kurz pre klienta (31. 10. 2026, Michal): tip ide s kurzom z API bez prepisovania,
  * klient si ho podá len pri kurze aspoň X – vždy aspoň 1,60 a hodnota +5 % (pri zapnutej kontrole 60 / 40 aj pri nej; od 6. 11. 2026 vypnutá).
  */
-/** Minimálny kurz, pri ktorom tip odporúčam hrať (hodnota aspoň +10 %, nie pod 1,50). */
+/** Minimálny kurz, pri ktorom tip odporúčam hrať (hodnota aspoň +5 %, nie pod 1,50). */
 export function minOddsFor(tip: SavedTip): number {
-  const need = (p: number | undefined) => (typeof p === "number" && p > 0 ? MIN_EXPECTED_VALUE / (p / 100) : 0);
+  const need = (p: number | undefined) => (typeof p === "number" && p > 0 ? 1.05 / (p / 100) : 0);
   return Math.ceil(Math.max(1.5, need(tip.probability), STRICT_CHECK_ON ? need(tip.strictProbability) : 0) * 100) / 100;
 }
 function minOddsLine(tip: SavedTip): string {
