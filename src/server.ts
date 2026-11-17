@@ -2295,11 +2295,6 @@ app.get(["/ig-tipy", "/ig-tipy/"], (_req, res) => {
   res.set("Cache-Control", "no-cache");
   res.sendFile(path.join(__dirname, "..", "public", "ig-tipy.html"));
 });
-// 17. 11. 2026 – Michal: IG príspevok „73 zo 100“ so štvorčekmi v poradí zápasov (/ig-100)
-app.get(["/ig-100", "/ig-100/"], (_req, res) => {
-  res.set("Cache-Control", "no-cache");
-  res.sendFile(path.join(__dirname, "..", "public", "ig-100.html"));
-});
 const igScore = (h?: number | null, a?: number | null) => (typeof h === "number" && typeof a === "number" ? { home: h, away: a } : null);
 function igView(t: SavedTip) {
   const score = igScore;
