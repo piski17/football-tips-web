@@ -207,6 +207,16 @@ export async function getFixturesByLeague(
   return all.sort((a: Fixture, b: Fixture) => a.timestamp - b.timestamp).slice(0, limitCount);
 }
 
+/** Všetky zápasy sveta v daný deň (jedna požiadavka) – pre „Opýtajte sa radaru“ v bote (17. 11. 2026). */
+export async function getAllFixturesByDate(date: string): Promise<Fixture[]> {
+  const res = await client().get("/fixtures", { params: { date, timezone: "Europe/Bratislava" } });
+  checkApiErrors(res.data);
+  return (res.data?.response ?? [])
+    .map((item: any) => mapFixture(item))
+    .filter((f: Fixture) => !FINISHED_STATUSES.includes(f.status) && !NOT_PLAYED_STATUSES.includes(f.status))
+    .sort((a: Fixture, b: Fixture) => a.timestamp - b.timestamp);
+}
+
 /** Načíta agregované štatistiky tímu v danej lige a sezóne. */
 export async function getTeamStatistics(
   leagueId: number,

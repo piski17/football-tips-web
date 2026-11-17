@@ -19,6 +19,7 @@ import express, { NextFunction, Request, Response } from "express";
 import path from "path";
 import {
   getFixturesByLeague,
+  getAllFixturesByDate,
   getFixtureReferee,
   getRefereeProfile,
   getTeamStatistics,
@@ -2493,6 +2494,7 @@ app.post("/api/analyza", async (req, res) => {
 // Človek napíše botovi zápas alebo tím, server nájde najbližší zápas (dnes + 3 dni, našich 18 súťaží),
 // spustí model bez zápisu (record = false) a vráti čísla. Konkrétny tip neprezradí – ten dostávajú členovia.
 const RADAR_DAILY_LIMIT = 15;
+// 17. 11. 23:20: hľadanie cez všetky zápasy dňa (jedna požiadavka na deň), 7 dní dopredu; zápas mimo našich súťaží → vysvetlenie.
 const radarUse = new Map<string, { day: string; n: number }>();
 const normName = (v: string) => String(v ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
 async function fixturesForDay(day: string): Promise<any[]> {
@@ -2524,26 +2526,47 @@ function teamMatches(query: string, teamName: string): boolean {
   }
   return false;
 }
-async function findRadarFixture(text: string): Promise<{ fixture: any | null; looksLikeMatch: boolean }> {
+const radarDayCache = new Map<string, { at: number; fixtures: any[] }>();
+async function radarFixturesForDay(day: string): Promise<any[]> {
+  const c = radarDayCache.get(day);
+  if (c && Date.now() - c.at < 60 * 60 * 1000) return c.fixtures;
+  try {
+    const fixtures = await getAllFixturesByDate(day);
+    radarDayCache.set(day, { at: Date.now(), fixtures });
+    for (const [k, v] of radarDayCache) if (Date.now() - v.at > 6 * 60 * 60 * 1000) radarDayCache.delete(k);
+    return fixtures;
+  } catch {
+    return c?.fixtures ?? (await fixturesForDay(day));
+  }
+}
+/** Nájde najbližší zápas (dnes + 7 dní) zo všetkých súťaží sveta; tracked = súťaž je medzi našimi 18. */
+async function findRadarFixture(text: string): Promise<{ fixture: any | null; tracked: boolean; looksLikeMatch: boolean }> {
   const clean = text.replace(/[?!.]+$/g, "").trim();
-  const parts = clean.split(/\s+[-–—:]\s+|\s+vs?\.?\s+|\s*[–—]\s*/i).map((x) => x.trim()).filter(Boolean);
+  // „Arsenal Ž – Lyon Ž“ / „(ženy)“ / „women“ = ženský zápas (17. 11. 2026, Michal skúšal ženskú Ligu majstrov).
+  const womenQ = /(^|\s)(ž|z|w|zeny|ženy|women)(\s|$)|\((ž|ženy|zeny|w|women)\)/i.test(clean.replace(/\s*[-–—]\s*/g, " "));
+  const isWomen = (name: string) => /\sW$|women|\(ženy\)|feminin|frauen/i.test(name);
+  const parts = clean.replace(/\((ž|ženy|zeny|w|women)\)/gi, " ").split(/\s+[-–—:]\s+|\s+vs?\.?\s+|\s*[–—]\s*/i).map((x) => x.replace(/(^|\s)(ž|zeny|ženy|women|w)(?=\s|$)/gi, " ").trim()).filter(Boolean);
   const looksLikeMatch = parts.length === 2 && parts.every((x) => x.length >= 3 && x.length <= 40);
   // Jeden tím: len krátka správa (1 – 3 slová), inak je to bežná otázka pre Michala.
-  if (parts.length > 2 || (parts.length === 1 && (clean.length > 30 || clean.split(/\s+/).length > 3))) return { fixture: null, looksLikeMatch: false };
+  if (parts.length > 2 || (parts.length === 1 && (clean.length > 30 || clean.split(/\s+/).length > 3))) return { fixture: null, tracked: false, looksLikeMatch: false };
   const now = Date.now();
-  for (let i = 0; i <= 3; i++) {
+  const tracked = new Set(LEAGUE_PRESETS.map((l) => Number(l.id)));
+  let other: any = null;
+  for (let i = 0; i <= 7; i++) {
     const day = dayKeySk(new Date(now + i * 864e5));
-    const fx = (await fixturesForDay(day))
-      .filter((f) => new Date(f.date).getTime() > now - 5 * 60 * 1000)
-      .sort((a, b) => a.timestamp - b.timestamp);
-    const hit = fx.find((f) => {
+    const fx = (await radarFixturesForDay(day)).filter((f) => new Date(f.date).getTime() > now - 5 * 60 * 1000);
+    const hits = fx.filter((f) => {
       const h = f.homeTeam?.name ?? "", a = f.awayTeam?.name ?? "";
+      if (isWomen(h) !== womenQ) return false;
       if (parts.length === 2) return (teamMatches(parts[0], h) && teamMatches(parts[1], a)) || (teamMatches(parts[0], a) && teamMatches(parts[1], h));
       return teamMatches(parts[0], h) || teamMatches(parts[0], a);
     });
-    if (hit) return { fixture: hit, looksLikeMatch: true };
+    const ours = hits.find((f) => tracked.has(Number(f.league?.id)));
+    if (ours) return { fixture: ours, tracked: true, looksLikeMatch: true };
+    if (!other && hits.length) other = hits[0];
+    if (other && parts.length === 2) break;
   }
-  return { fixture: null, looksLikeMatch };
+  return { fixture: other, tracked: false, looksLikeMatch: looksLikeMatch || !!other };
 }
 async function analyzeCached(fixture: any): Promise<any> {
   const fixtureId = Number(fixture.fixtureId);
@@ -2562,12 +2585,19 @@ async function analyzeCached(fixture: any): Promise<any> {
 }
 const n1 = (v: any) => (typeof v === "number" && Number.isFinite(v) ? v.toFixed(1).replace(".", ",") : null);
 setAskRadarHandler(async (text, chatId): Promise<AskRadarAnswer> => {
-  const { fixture, looksLikeMatch } = await findRadarFixture(text);
+  const { fixture, tracked, looksLikeMatch } = await findRadarFixture(text);
+  if (fixture && !tracked) {
+    const m = `${translateTeamName(fixture.homeTeam.name)} – ${translateTeamName(fixture.awayTeam.name)}`;
+    return {
+      kind: "notfound",
+      text: `🔎 Našiel som <b>${escapeHtml(m)}</b> (${escapeHtml(String(fixture.league?.name ?? ""))}), ale túto súťaž radar nesleduje – nemá pre ňu dosť spoľahlivé čísla.\n\nRadar sleduje 18 súťaží: top 5 líg, Ligu majstrov, Ligu národov, Niké ligu, Chance Ligu a ďalšie. Skúste zápas z nich, napríklad <i>Arsenal – Chelsea</i>.`,
+    };
+  }
   if (!fixture) {
     if (!looksLikeMatch) return { kind: "none" };
     return {
       kind: "notfound",
-      text: `🔎 Tento zápas som v najbližších 3 dňoch nenašiel.\n\nRadar sleduje 18 súťaží (top 5 líg, Liga majstrov, Niké liga, Chance Liga a ďalšie). Skúste napísať názvy tímov inak, napríklad <i>Arsenal – Chelsea</i>.`,
+      text: `🔎 Tento zápas som v najbližších 7 dňoch nenašiel.\n\nRadar sleduje 18 súťaží (top 5 líg, Liga majstrov, Niké liga, Chance Liga a ďalšie). Skúste napísať názvy tímov inak, napríklad <i>Arsenal – Chelsea</i>.`,
     };
   }
   const day = dayKeySk(new Date());
