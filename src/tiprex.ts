@@ -166,7 +166,125 @@ function priceView(books: Map<string, MarketOdds[]>, pick: { market: string; sel
   return { best: bestTop.odd, book: bestTop.book, median: median(prices.map((p) => p.odd)), sharpP, sharpSource };
 }
 
-const typeOf = (market: string) => market.split(" ")[0];
+/** Skupina trhu – z jednej skupiny v zápase len 1 tip (handicap na rohy patrí k rohom, gólový handicap k výsledku). */
+const typeOf = (market: string) => {
+  const m = market.toLowerCase();
+  if (m.includes("rohy")) return "Rohy";
+  if (m.includes("karty")) return "Karty";
+  if (m.includes("strely")) return "Strely";
+  if (m === "ázijský handicap") return "Výsledok";
+  return market.split(" ")[0];
+};
+
+// ---------- Ázijský handicap (18. 11. 2026, Michal: „handicapy by boli fajn – góly, rohy, karty, strely“) ----------
+// Hodnota strany: „Home -1.5“ / „Away +1.5“ (API-Football). Len celé a polovičné hranice (štvrtinové sa delia na dve stávky).
+type HcpKind = "goals" | "corners" | "cards" | "shots";
+const HCP_MARKET: Record<HcpKind, string> = { goals: "Ázijský handicap", corners: "Ázijský handicap – rohy", cards: "Ázijský handicap – karty", shots: "Ázijský handicap – strely na bránu" };
+function isHcpBet(name: string, kind: HcpKind): boolean {
+  const b = name.toLowerCase();
+  if (!/asian handicap|handicap asian/.test(b) || /(1st|2nd|first|second|half)/.test(b)) return false;
+  if (kind === "corners") return /corner/.test(b);
+  if (kind === "cards") return /card|booking/.test(b) && !/point/.test(b);
+  if (kind === "shots") return /shot/.test(b) && /target|goal/.test(b);
+  return !/(corner|card|booking|shot|foul|offside)/.test(b);
+}
+function parseHcp(v: string): { side: "home" | "away"; line: number } | null {
+  const m = String(v).trim().match(/^(home|away)\s*([+-]?\d+(?:\.\d+)?)$/i);
+  if (!m) return null;
+  const line = parseFloat(m[2]);
+  if (!isFinite(line) || Math.abs((Math.abs(line) % 1) - 0.25) < 0.01 || Math.abs((Math.abs(line) % 1) - 0.75) < 0.01) return null;
+  return { side: m[1].toLowerCase() as "home" | "away", line };
+}
+/** Kurzy jednej stávkovky pre stranu (side, line) a opačnú stranu (druhý tím, −line). */
+function hcpOdds(f: FixtureOdds, kind: HcpKind, side: "home" | "away", line: number): Map<string, { own?: number; opp?: number }> {
+  const out = new Map<string, { own?: number; opp?: number }>();
+  for (const bet of Object.values(f.bets)) {
+    if (!isHcpBet(bet.name, kind)) continue;
+    for (const [value, list] of Object.entries(bet.values)) {
+      const h = parseHcp(value);
+      if (!h) continue;
+      const isOwn = h.side === side && Math.abs(h.line - line) < 0.001;
+      const isOpp = h.side !== side && Math.abs(h.line + line) < 0.001;
+      if (!isOwn && !isOpp) continue;
+      for (const o of list) {
+        const e = out.get(o.book) ?? {};
+        if (isOwn) e.own = Math.max(e.own ?? 0, o.odd); else e.opp = Math.max(e.opp ?? 0, o.odd);
+        out.set(o.book, e);
+      }
+    }
+  }
+  return out;
+}
+function hcpPriceView(f: FixtureOdds, kind: HcpKind, side: "home" | "away", line: number): PriceView | null {
+  const books = hcpOdds(f, kind, side, line);
+  const prices: { book: string; odd: number }[] = [];
+  const fairs: number[] = [];
+  let pin: number | null = null;
+  for (const [book, o] of books) {
+    if (!o.own) continue;
+    prices.push({ book, odd: o.own });
+    if (o.opp) {
+      const fair = (1 / o.own) / (1 / o.own + 1 / o.opp) * 100;
+      fairs.push(fair);
+      if (/^pinnacle$/i.test(book.trim())) pin = fair;
+    }
+  }
+  const top = prices.filter((p) => isTopBook(p.book) && !/^pinnacle$/i.test(p.book.trim()));
+  if (top.length < MIN_TOP_BOOKS) return null;
+  let sharpP: number, sharpSource: "Pinnacle" | "trh";
+  if (pin != null) { sharpP = pin; sharpSource = "Pinnacle"; }
+  else if (fairs.length >= 3) { sharpP = median(fairs); sharpSource = "trh"; }
+  else return null;
+  const bestTop = top.sort((a, b) => b.odd - a.odd)[0];
+  return { best: bestTop.odd, book: bestTop.book, median: median(prices.map((p) => p.odd)), sharpP, sharpSource };
+}
+const fmtHcp = (line: number) => `${line > 0 ? "+" : "−"}${Math.abs(line)}`;
+
+/** Rozdelenie počtu (Poisson alebo negatívne binomické podľa rozptylu) – pmf[0..max]. */
+function countPmf(mean: number, varRatio: number, max = 40): number[] {
+  const out: number[] = [];
+  if (!(varRatio > 1.02)) {
+    let p = Math.exp(-mean);
+    for (let k = 0; k <= max; k++) { out.push(p); p = (p * mean) / (k + 1); }
+    return out;
+  }
+  const r = mean / (varRatio - 1), q = 1 / varRatio; // NB: priemer = r(1−q)/q
+  let p = Math.pow(q, r);
+  for (let k = 0; k <= max; k++) { out.push(p); p = p * ((k + r) / (k + 1)) * (1 - q); }
+  return out;
+}
+interface LineModelLite { market: string; mean: number; varRatio: number; calibration: number }
+/** Šanca (%) na handicap strany z modelov tímov – bez vrátených stávok (pri celej hranici). */
+function teamHcpChance(home: LineModelLite, away: LineModelLite, side: "home" | "away", line: number): number | null {
+  const ph = countPmf(home.mean, home.varRatio), pa = countPmf(away.mean, away.varRatio);
+  let win = 0, push = 0, lose = 0;
+  for (let h = 0; h < ph.length; h++) for (let a = 0; a < pa.length; a++) {
+    const d = (side === "home" ? h - a : a - h) + line;
+    const w = ph[h] * pa[a];
+    if (Math.abs(d) < 1e-9) push += w; else if (d > 0) win += w; else lose += w;
+  }
+  if (win + lose <= 0) return null;
+  const raw = (win / (win + lose)) * 100;
+  const k = Math.min(1, home.calibration || 1, away.calibration || 1);
+  return 50 + k * (raw - 50);
+}
+const TEAM_HCP: { kind: HcpKind; home: string; away: string }[] = [
+  { kind: "corners", home: "Rohy domácich", away: "Rohy hostí" },
+  { kind: "cards", home: "Karty domácich", away: "Karty hostí" },
+  { kind: "shots", home: "Strely na bránu domácich", away: "Strely na bránu hostí" },
+];
+/** Hranice handicapu, ktoré stávkovky pri zápase naozaj ponúkajú (z pohľadu domácich). */
+function offeredHcpLines(f: FixtureOdds, kind: HcpKind): number[] {
+  const set = new Set<number>();
+  for (const bet of Object.values(f.bets)) {
+    if (!isHcpBet(bet.name, kind)) continue;
+    for (const value of Object.keys(bet.values)) {
+      const h = parseHcp(value);
+      if (h) set.add(h.side === "home" ? h.line : -h.line);
+    }
+  }
+  return [...set];
+}
 
 type Cand = { market: string; selection: string; probability: number; blendModel?: number };
 
@@ -177,7 +295,8 @@ type Cand = { market: string; selection: string; probability: number; blendModel
 export async function recordTiprexPicks(
   fixture: { fixtureId: number; matchDate: string; homeTeam: string; awayTeam: string; league: string },
   candidates: Cand[],
-  trackOnly: Cand[] = []
+  trackOnly: Cand[] = [],
+  lineModels: LineModelLite[] = []
 ): Promise<number> {
   const f = scannedFixtures().find((x) => x.fixtureId === fixture.fixtureId);
   if (!f) { analyzed.set(fixture.fixtureId, { at: new Date().toISOString(), picks: 0, note: "bez kurzov zahraničných stávkoviek" }); return 0; }
@@ -187,6 +306,8 @@ export async function recordTiprexPicks(
   const seen = new Set<string>();
   const found: TiprexPick[] = [];
   const now = new Date().toISOString();
+  // Kandidáti: trhy modelu (s kurzami cez findOdds) + ázijské handicapy (góly z modelu gólov, rohy/karty/strely z modelov tímov).
+  const priced: { market: string; selection: string; modelP: number; pv: PriceView }[] = [];
   for (const c of [...(candidates ?? []), ...(trackOnly ?? [])]) {
     if (!c?.market || SKIP_MARKETS.includes(c.market)) continue;
     const key = `${c.market}|${c.selection}`;
@@ -194,8 +315,32 @@ export async function recordTiprexPicks(
     seen.add(key);
     const modelP = typeof c.blendModel === "number" ? c.blendModel : Number(c.probability);
     if (!isFinite(modelP) || modelP <= 0 || modelP >= 100) continue;
-    const pv = priceView(books, c, fixture.homeTeam, fixture.awayTeam);
-    if (!pv) continue;
+    let pv: PriceView | null = null;
+    if (c.market === "Ázijský handicap") {
+      const m = String(c.selection).match(/^(.*) ([+−-])(\d+(?:\.\d+)?)$/);
+      if (!m) continue;
+      const side = m[1] === fixture.homeTeam ? "home" : m[1] === fixture.awayTeam ? "away" : null;
+      if (!side) continue;
+      pv = hcpPriceView(f, "goals", side, (m[2] === "+" ? 1 : -1) * parseFloat(m[3]));
+    } else {
+      pv = priceView(books, c, fixture.homeTeam, fixture.awayTeam);
+    }
+    if (pv) priced.push({ market: c.market, selection: String(c.selection), modelP, pv });
+  }
+  for (const t of TEAM_HCP) {
+    const hm = lineModels.find((m) => m.market === t.home), am = lineModels.find((m) => m.market === t.away);
+    if (!hm || !am || !(hm.mean > 0) || !(am.mean > 0)) continue;
+    for (const homeLine of offeredHcpLines(f, t.kind)) {
+      for (const side of ["home", "away"] as const) {
+        const line = side === "home" ? homeLine : -homeLine;
+        const modelP = teamHcpChance(hm, am, side, line);
+        const pv = modelP == null ? null : hcpPriceView(f, t.kind, side, line);
+        if (modelP == null || !pv) continue;
+        priced.push({ market: HCP_MARKET[t.kind], selection: `${side === "home" ? fixture.homeTeam : fixture.awayTeam} ${fmtHcp(line)}`, modelP, pv });
+      }
+    }
+  }
+  for (const { market, selection, modelP, pv } of priced) {
     const odds = pv.best;
     if (odds < VQ_MIN_ODDS || odds > VQ_MAX_ODDS) continue;
     if (odds > pv.median * MAX_OVER_MEDIAN) continue;
@@ -206,10 +351,10 @@ export async function recordTiprexPicks(
     const ev = (p / 100) * odds;
     if (ev < MIN_EV || ev > MAX_EV) continue;
     found.push({
-      id: `${fixture.fixtureId}|${c.market}|${c.selection}`,
+      id: `${fixture.fixtureId}|${market}|${selection}`,
       fixtureId: fixture.fixtureId, matchDate: fixture.matchDate, homeTeam: fixture.homeTeam, awayTeam: fixture.awayTeam,
       league: fixture.league || f.league, country: f.country,
-      market: c.market, selection: String(c.selection),
+      market, selection,
       modelP: Math.round(modelP * 10) / 10, sharpP: Math.round(pv.sharpP * 10) / 10, sharpSource: pv.sharpSource,
       p: Math.round(p * 10) / 10, odds: Math.round(odds * 100) / 100, book: pv.book, medianOdds: Math.round(pv.median * 100) / 100,
       ev: Math.round(ev * 1000) / 1000, recordedAt: now, status: "pending",
@@ -231,6 +376,15 @@ export async function recordTiprexPicks(
   return chosen.length;
 }
 
+function closingView(f: FixtureOdds, p: TiprexPick): PriceView | null {
+  const kind = (Object.keys(HCP_MARKET) as HcpKind[]).find((k) => HCP_MARKET[k] === p.market);
+  if (!kind) return priceView(oddsByBook(f), p, p.homeTeam, p.awayTeam);
+  const m = p.selection.match(/^(.*) ([+−-])(\d+(?:\.\d+)?)$/);
+  if (!m) return null;
+  const side = m[1] === p.homeTeam ? "home" : m[1] === p.awayTeam ? "away" : null;
+  return side ? hcpPriceView(f, kind, side, (m[2] === "+" ? 1 : -1) * parseFloat(m[3])) : null;
+}
+
 /** Po každom prehľadaní kurzov: posledný férový kurz pred výkopom (na CLV). */
 export async function updateTiprexClosing(): Promise<void> {
   const fixtures = scannedFixtures();
@@ -240,7 +394,7 @@ export async function updateTiprexClosing(): Promise<void> {
   for (const p of pending) {
     const f = fixtures.find((x) => x.fixtureId === p.fixtureId);
     if (!f) continue;
-    const pv = priceView(oddsByBook(f), p, p.homeTeam, p.awayTeam);
+    const pv = closingView(f, p);
     if (!pv || !(pv.sharpP > 0)) continue;
     p.closingFair = Math.round((100 / pv.sharpP) * 100) / 100;
     p.closingAt = new Date().toISOString();
@@ -401,7 +555,8 @@ const MARKET_EN: Record<string, string> = {
   "Karty v 1. polčase": "1st half cards", "Karty v 2. polčase": "2nd half cards",
   "Strely na bránu": "Shots on target", "Strely na bránu domácich": "Home shots on target", "Strely na bránu hostí": "Away shots on target",
   "Fauly": "Total fouls", "Fauly domácich": "Home team fouls", "Fauly hostí": "Away team fouls",
-  "Výsledok zápasu": "Match result", "Oba tímy skórujú": "Both teams to score", "Obaja tímy skórujú": "Both teams to score",
+  "Výsledok zápasu": "Match result", "Ázijský handicap": "Asian handicap", "Ázijský handicap – rohy": "Corners handicap",
+  "Ázijský handicap – karty": "Cards handicap", "Ázijský handicap – strely na bránu": "Shots on target handicap", "Oba tímy skórujú": "Both teams to score", "Obaja tímy skórujú": "Both teams to score",
 };
 export function marketEn(m: string): string { return MARKET_EN[m] ?? m; }
 export function selectionEn(sel: string, home: string, away: string): string {
@@ -409,7 +564,7 @@ export function selectionEn(sel: string, home: string, away: string): string {
   if (sel === "Áno") return "Yes";
   if (sel === "Nie") return "No";
   if (sel.startsWith("Výhra ")) return `${sel.slice(6)} to win`;
-  return sel;
+  return sel.replace(/−/g, "-");
 }
 
 const WAITLIST_KEY = "tiprex_waitlist";

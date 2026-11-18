@@ -195,6 +195,23 @@ export function evaluateTip(
       return "void";
     }
 
+    // TIPREX (18. 11. 2026): ázijský handicap na rohy, karty a strely na bránu – rozdiel štatistík tímov.
+    case "Ázijský handicap – rohy":
+    case "Ázijský handicap – karty":
+    case "Ázijský handicap – strely na bránu": {
+      const m = tip.selection.match(/^(.*) ([+−-])(\d+(?:\.\d+)?)$/);
+      if (!m) return "void";
+      const line = (m[2] === "+" ? 1 : -1) * parseFloat(m[3]);
+      const isHome = m[1] === tip.homeTeam;
+      if (!isHome && m[1] !== tip.awayTeam) return "void";
+      const list = tip.market.endsWith("rohy") ? actualCornersByTeam : tip.market.endsWith("karty") ? actualTeamStats?.cards : actualTeamStats?.shots;
+      const h = teamValue(list, "home"), a = teamValue(list, "away");
+      if (h == null || a == null) return "void";
+      const diff = (isHome ? h - a : a - h) + line;
+      if (diff === 0) return "void";
+      return diff > 0 ? "won" : "lost";
+    }
+
     case "Ázijský handicap":
     case "Európsky handicap": {
       const draw = tip.selection.match(/^Remíza \((.*) ([+−-])(\d+(?:\.\d+)?)\)$/);
@@ -269,7 +286,7 @@ const VOID_STATUSES = ["CANC", "ABD", "AWD", "WO"];
 /** Odložený / prerušený zápas - ak sa neodohrá do 3 dní, stávka sa vracia. */
 const DELAYED_STATUSES = ["PST", "TBD", "SUSP", "INT"];
 const DELAYED_VOID_AFTER_MS = 3 * 24 * 60 * 60 * 1000;
-export const STATS_MARKETS = ["Rohy", "Rohy domácich", "Rohy hostí", "Karty", "Karty domácich", "Karty hostí", "Strely na bránu domácich", "Strely na bránu hostí", "Strely na bránu", "Fauly", "Ofsajdy", "Vyššie držanie lopty", "Držanie lopty domácich", "Držanie lopty hostí", "Fauly domácich", "Fauly hostí"];
+export const STATS_MARKETS = ["Rohy", "Rohy domácich", "Rohy hostí", "Karty", "Karty domácich", "Karty hostí", "Strely na bránu domácich", "Strely na bránu hostí", "Strely na bránu", "Fauly", "Ofsajdy", "Vyššie držanie lopty", "Držanie lopty domácich", "Držanie lopty hostí", "Fauly domácich", "Fauly hostí", "Ázijský handicap – rohy", "Ázijský handicap – karty", "Ázijský handicap – strely na bránu"];
 /** Karty v polčasoch – vyhodnotia sa z udalostí zápasu (pri predĺžení sa vracajú). */
 const CARD_HALF_MARKETS = ["Karty v 1. polčase", "Karty v 2. polčase"];
 const halftimeOf = (r: { htHome?: number | null; htAway?: number | null }) =>
