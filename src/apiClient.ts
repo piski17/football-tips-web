@@ -347,8 +347,8 @@ function parseStatValue(value: unknown): number | null {
   return null;
 }
 
-/** Z koľkých posledných zápasov tímu sa počítajú rohy, karty, strely, fauly aj forma gólov (18. 11. 2026, Michal: 5; predtým 10). */
-export const STAT_GAMES = 5;
+/** Z koľkých posledných zápasov tímu sa počítajú rohy, karty, strely, fauly aj forma gólov (18. 11. 2026 23:14 Michal: späť 10; 0:25 – 23:14 bolo 5). */
+export const STAT_GAMES = 10;
 
 export async function getTeamExtendedStatsAverages(
   leagueId: number,
@@ -357,7 +357,7 @@ export async function getTeamExtendedStatsAverages(
   lastN: number = 10,
   asOf?: string
 ): Promise<TeamExtendedStatsAverages> {
-  const cacheKey = `extStatsAvg6:${leagueId}:${season}:${teamId}:${lastN}:${asOf ?? ""}`;
+  const cacheKey = `extStatsAvg7:${leagueId}:${season}:${teamId}:${lastN}:${asOf ?? ""}`;
   // Pri spätnom teste načítame viac zápasov a ponecháme len tie spred výkopu.
   const extra = asOf ? 15 : 0;
   const cached = getCached<TeamExtendedStatsAverages>(cacheKey);
@@ -491,7 +491,7 @@ export async function getTeamExtendedStatsAverages(
       return empty;
     }
 
-    // 18. 11. 2026 (Michal): rohy, karty, strely, fauly (aj doma / vonku) len z posledných 5 zápasov tímu.
+    // Rohy, karty, strely, fauly (aj doma / vonku) z posledných STAT_GAMES zápasov tímu.
     const statRows = [...valid].sort((a, b) => (b.time ?? 0) - (a.time ?? 0)).slice(0, STAT_GAMES);
     const average = (key: string): number | null => {
       const values = statRows.map((r) => r[key]).filter((v): v is number => v !== null);
@@ -506,7 +506,7 @@ export async function getTeamExtendedStatsAverages(
         const isHome = f.teams?.home?.id === teamId;
         return { gf: Number(isHome ? f.goals.home : f.goals.away), ga: Number(isHome ? f.goals.away : f.goals.home) };
       })
-      // 18. 11. 2026 (Michal): forma gólov len z posledných 5 zápasov tímu.
+      // Forma gólov z posledných STAT_GAMES zápasov tímu.
       .slice(0, STAT_GAMES);
     let gw = 0, gfSum = 0, gaSum = 0;
     goalRows.forEach((r, i) => {

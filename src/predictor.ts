@@ -345,7 +345,7 @@ const VAR_RATIO = { cards: 1.4, shotsOnGoal: 1.35, offsides: 1.3, fouls: 1.3, co
 
 /** Počet zápasov, z ktorých sa počítajú priemery štatistík (rohy, karty, strely, fauly). */
 // 18. 11. 2026 (Michal): rohy, karty, strely, fauly z posledných 5 zápasov tímu (predtým 10).
-const STAT_WINDOW_GAMES = 5;
+const STAT_WINDOW_GAMES = 10;
 function scaleVarRatio(v: typeof VAR_RATIO, k: number): typeof VAR_RATIO {
   return { cards: v.cards * k, shotsOnGoal: v.shotsOnGoal * k, offsides: v.offsides * k, fouls: v.fouls * k, corners: v.corners * k };
 }
@@ -816,7 +816,8 @@ function normalCdf(z: number): number {
 // Váha rastie s počtom zápasov (za posledných 5 rokov, najviac 5 najnovších):
 // 3 zápasy = 15 %, 4 = 20 %, 5 = 25 %; menej ako 3 = nepoužijú sa.
 // Novšie zápasy majú väčšiu váhu (každý starší × 0,85).
-const H2H_MIN = 3;
+// 18. 11. 2026 23:14 (Michal): vzájomné zápasy sa použijú až pri aspoň 5 za posledné 3 roky (predtým 3).
+const H2H_MIN = 5;
 function h2hWeight(n: number): number {
   return n >= 5 ? 0.25 : n === 4 ? 0.2 : n === 3 ? 0.15 : 0;
 }
