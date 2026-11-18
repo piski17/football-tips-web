@@ -1226,7 +1226,7 @@ app.post("/api/tips", async (req, res) => {
     // ak by ho model nepustil, uloží sa len medzi sledované.
     if (tip.manualEntry && !(tip.legs && tip.legs.length) && !tip.probabilityEstimated && typeof tip.probability === "number" && typeof tip.odds === "number") {
       const ev = (tip.probability / 100) * tip.odds;
-      if (tip.probability < WATCH_BELOW_PROBABILITY || tip.probability > MAX_PROBABILITY || tip.odds < MIN_ODDS || ev < 1.05 || ev > 1.25) {
+      if (tip.probability < WATCH_BELOW_PROBABILITY || tip.probability > MAX_PROBABILITY || tip.odds < MIN_ODDS || ev < MIN_EXPECTED_VALUE || ev > SUSPICIOUS_EXPECTED_VALUE) {
         tip.watchOnly = true;
       }
     }
@@ -4067,7 +4067,7 @@ async function addAutoEntry(
     reason = `vzájomné zápasy – ${entry.h2hAgainst}`;
   } else if (tip.probability < WATCH_BELOW_PROBABILITY) {
     if (tip.probability >= WATCH_BAND_MIN_PROBABILITY) tip.watchBand = true;
-    reason = `dôvera pod ${WATCH_BELOW_PROBABILITY} %`;
+    reason = `dôvera pod ${Math.round(WATCH_BELOW_PROBABILITY)} %`;
   } else if (tip.probability > MAX_PROBABILITY) reason = `dôvera nad ${MAX_PROBABILITY} %`;
   else if (typeof entry.odds !== "number" && isFarLineTip(tip.market, tip.probability)) reason = "rohy/karty – príliš vzdialená hranica";
   else if (odds < MIN_ODDS) reason = `kurz pod ${String(MIN_ODDS).replace(".", ",")}`;

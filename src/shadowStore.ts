@@ -194,7 +194,7 @@ export function shadowEntriesFrom(
   const reasonOf = (p: any, code: string): string =>
     p.rejectReason ??
     (code === "band_low"
-      ? `dôvera pod ${MIN_PROBABILITY} %`
+      ? `dôvera pod ${Math.round(MIN_PROBABILITY)} %`
       : code === "band_high"
       ? `dôvera nad ${MAX_PROBABILITY} %`
       : code === "category_lower_ev"

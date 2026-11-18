@@ -24,7 +24,10 @@ export interface OddsMatch {
 /** Názov trhu "oba tímy skórujú" - nový aj starší (v uložených tipoch). */
 const BTTS_MARKETS = ["Oba tímy skórujú", "Obaja tímy skórujú"];
 
-export const MIN_EXPECTED_VALUE = 1.05;
+// 19. 11. 2026 (Michal): spodná hranica 69,6 % (= zaokrúhlene 70 %). Aby 69,6 % pri kurze 1,50 prešiel,
+// hodnota sa kontroluje od 1,044 (69,6 % × 1,50). Pri dôvere od 70 % a kurze od 1,50 je hodnota vždy aspoň 1,05,
+// takže inde sa pravidlo +5 % nemení. Návrat: 1.05.
+export const MIN_EXPECTED_VALUE = 1.044;
 
 /**
  * Minimálny kurz odporúčaného tipu: 1,60 (2. 11. 2026, Michalovo rozhodnutie; 25. 10. – 2. 11. 1,50, predtým 1,55).
@@ -42,7 +45,8 @@ export const MIN_ODDS = parseMinOdds(typeof process !== "undefined" ? process.en
  * Hodnota nad touto hranicou (+25 %) je podozrivá - model sa s trhom rozchádza
  * viac, než je v praxi bežné, a chyba je spravidla v modeli.
  */
-export const SUSPICIOUS_EXPECTED_VALUE = 1.25;
+// 19. 11. 2026 (Michal): do +25,4 % je to ešte „+25 %“ (zaokrúhlene). Návrat: 1.25.
+export const SUSPICIOUS_EXPECTED_VALUE = 1.254;
 
 /** Pod týmto počtom odohraných zápasov v sezóne (pri ktoromkoľvek tíme) má model málo dát. */
 export const MIN_GAMES_FOR_TRUST = 5;
@@ -72,7 +76,8 @@ export const MIN_GAMES_TO_RECOMMEND = 3;
 // NÁVRAT na 70 – 80 %: BAND_65_TRIAL = false (a v public/app.js WATCH_BELOW = 70) – server pri štarte
 // vráti tipy 65 – 69 % (band65Returned aj band65Trial) späť do sledovaných.
 export const BAND_65_TRIAL = false; // 12. 11. 2026 ~18:30 VRÁTENÉ (42 vrátených tipov 55 %, −4,1 j.)
-export const MIN_PROBABILITY = BAND_65_TRIAL ? 65 : 70;
+// 19. 11. 2026 (Michal): „69,6 je už 70 %“ – spodná hranica 69,6 (len nové tipy). Návrat: 70 (aj public/app.js WATCH_BELOW).
+export const MIN_PROBABILITY = BAND_65_TRIAL ? 65 : 69.6;
 /**
  * Skúšobné pásmo (21. 10. 2026, Michalovo rozhodnutie): tipy s dôverou pod touto hranicou
  * (65 – 68 %) sa ukladajú len na sledovanie – vyhodnotia sa, ale neposielajú sa členom
@@ -90,7 +95,7 @@ export const MAX_PROBABILITY = 80;
  * Od tejto dôvery je odporúčaný tip označený „★ Silný tip“. V troch spätných
  * testoch vyšli tipy 70 – 80 % o ~3 body častejšie ako celé pásmo 68 – 80 %.
  */
-export const STRONG_TIP_MIN_PROBABILITY = 70;
+export const STRONG_TIP_MIN_PROBABILITY = 69.6; // 19. 11. 2026: = MIN_PROBABILITY (69,6 % = 70 %)
 /**
  * Kurz pre odporúčaný tip musí ponúkať aspoň toľko stávkoviek.
  * 30. 10. 2026 (Michalovo rozhodnutie, naostro): pri všetkých trhoch stačí 1 stávkovka – v API-Football
