@@ -5274,7 +5274,7 @@ async function renderDnes() {
     const month = today.slice(0, 7);
     const all = Array.isArray(tipsRaw) ? dedupeTips(tipsRaw) : [];
     if (all.length) currentHistoryTips = all; // pre „Poslať tipy dňa“
-    const client = all.filter((t) => !t.watchOnly);
+    const client = all.filter((t) => !t.watchOnly && !t.removedLeague); // 18. 11. 2026: bez tipov z vyradených súťaží
     const stat = client.filter((t) => !EXCLUDED_STATS_MARKETS.includes(t.market) && !t.removedLeague);
     const units = (l) => l.filter((t) => (t.status === "won" || t.status === "lost") && typeof t.odds === "number" && t.odds > 1).reduce((s, t) => s + (t.status === "won" ? t.odds - 1 : -1), 0);
     const sumUp = (l) => { const won = l.filter((t) => t.status === "won").length, lost = l.filter((t) => t.status === "lost").length; return { won, lost, done: won + lost, profit: units(l) }; };
