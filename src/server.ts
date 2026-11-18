@@ -1,4 +1,4 @@
-import { plausibleLine, offeredLines, MIN_BOOKMAKERS, MIN_ODDS, MAX_PROBABILITY, MIN_PROBABILITY, MIN_EXPECTED_VALUE, SUSPICIOUS_EXPECTED_VALUE, findOdds, marketProbabilityDetail, STRONG_TIP_MIN_PROBABILITY, WATCH_BELOW_PROBABILITY, WATCH_BAND_MIN_PROBABILITY, BAND_65_TRIAL } from "./oddsMatcher";
+import { plausibleLine, offeredLines, offeredHcpLines, MIN_BOOKMAKERS, MIN_ODDS, MAX_PROBABILITY, MIN_PROBABILITY, MIN_EXPECTED_VALUE, SUSPICIOUS_EXPECTED_VALUE, findOdds, marketProbabilityDetail, STRONG_TIP_MIN_PROBABILITY, WATCH_BELOW_PROBABILITY, WATCH_BAND_MIN_PROBABILITY, BAND_65_TRIAL } from "./oddsMatcher";
 import { teamNamesBrowserScript } from "./teamNamesSk";
 import { listLeads, deleteLead, recordLead } from "./leadsStore";
 import { getMeta, setMeta } from "./metaStore";
@@ -737,6 +737,7 @@ const COVERAGE_MARKETS: { key: string; label: string; markets: string[] }[] = [
   { key: "cards", label: "Karty", markets: ["Karty", "Karty domácich", "Karty hostí"] },
   { key: "shots", label: "Strely na bránu", markets: ["Strely na bránu", "Strely na bránu domácich", "Strely na bránu hostí"] },
   { key: "fouls", label: "Fauly", markets: ["Fauly", "Fauly domácich", "Fauly hostí"] },
+  { key: "hcp", label: "Handicapy", markets: ["Ázijský handicap", "Ázijský handicap – rohy", "Ázijský handicap – karty", "Ázijský handicap – strely na bránu"] },
 ];
 type CoverageRow = { order: number; id: number; name: string; country: string; inProject: boolean; fixtures: number; withOdds: number; markets: Record<string, number>; single: Record<string, number>; betNames: string[]; error?: string };
 let coverageJob: { startedAt: string; finishedAt?: string; done: number; total: number; rows: CoverageRow[] } | null = null;
@@ -764,13 +765,13 @@ async function runMarketCoverage() {
           if (!all.length) continue;
           row.withOdds++;
           for (const m of COVERAGE_MARKETS) {
-            if (m.markets.some((market) => offeredLines(odds, market).length > 0)) row.markets[m.key] = (row.markets[m.key] || 0) + 1;
+            if (m.markets.some((market) => offeredLines(odds, market).length > 0 || offeredHcpLines(odds, market).length > 0)) row.markets[m.key] = (row.markets[m.key] || 0) + 1;
             // Trh, ktorý ponúka len 1 stávkovka (model ho kvôli MIN_BOOKMAKERS neberie).
-            else if (m.markets.some((market) => offeredLines(all, market).length > 0)) row.single[m.key] = (row.single[m.key] || 0) + 1;
+            else if (m.markets.some((market) => offeredLines(all, market).length > 0 || offeredHcpLines(all, market).length > 0)) row.single[m.key] = (row.single[m.key] || 0) + 1;
           }
           // Názvy stávok so strelami a faulmi, ako ich API posiela (či ich appka správne rozpozná).
           for (const o of all) {
-            if (/shot|foul/i.test(o.bet) && !row.betNames.includes(o.bet)) row.betNames.push(o.bet);
+            if (/shot|foul|handicap/i.test(o.bet) && !row.betNames.includes(o.bet)) row.betNames.push(o.bet);
           }
         }
       } catch (err: any) {
@@ -3722,7 +3723,11 @@ async function checkLineups(): Promise<void> {
             reason = `podozrivo vysoká hodnota (+${((ev - 1) * 100).toFixed(0)} %)`;
           }
         }
-        await updateTip(tip.id, { lineupCheck: { at: new Date().toISOString(), probability: prob, ok, ...(reason ? { reason } : {}) } });
+        // 18. 11. 2026 (Michal – naostro): tip, ktorý po zostavách neprejde, ide pred výkopom do sledovaných
+        // (neráta sa do štatistík ani na web). Tip už poslaný členom sa nepresúva.
+        const move = !ok && !tip.watchOnly && !(tip.telegramMessages && tip.telegramMessages.length) && new Date(tip.matchDate).getTime() > Date.now();
+        await updateTip(tip.id, { lineupCheck: { at: new Date().toISOString(), probability: prob, ok, ...(reason ? { reason } : {}) }, ...(move ? { watchOnly: true, lineupMoved: true } : {}) });
+        if (move) console.log(`Tip ${tip.id} po zostavách presunutý do sledovaných: ${reason}`);
       } catch (err) {
         console.error(`Kontrola zostáv pre tip ${tip.id} zlyhala:`, err);
       }

@@ -231,6 +231,59 @@ function parseOverUnder(text: string): { dir: "over" | "under"; line: number } |
   return { dir: m[1].toLowerCase() as "over" | "under", line: parseFloat(m[2].replace(",", ".")) };
 }
 
+
+// ---------- Ázijský handicap (18. 11. 2026, Michal: handicapy naostro – góly, rohy, karty, strely na bránu) ----------
+// Hodnota v API: „Home -1.5“ / „Away +1.5“. Len polovičné hranice (x,5) – bez vrátených stávok, ako pri nad/pod.
+export type HcpKind = "goals" | "corners" | "cards" | "shots";
+export const HCP_MARKETS: Record<string, HcpKind> = {
+  "Ázijský handicap": "goals",
+  "Ázijský handicap – rohy": "corners",
+  "Ázijský handicap – karty": "cards",
+  "Ázijský handicap – strely na bránu": "shots",
+};
+export function isHcpBet(name: string, kind: HcpKind): boolean {
+  const b = name.toLowerCase();
+  if (!/asian handicap|handicap asian/.test(b) || /(1st|2nd|first|second|half)/.test(b)) return false;
+  if (kind === "corners") return /corner/.test(b);
+  if (kind === "cards") return /card|booking/.test(b) && !/point/.test(b);
+  if (kind === "shots") return /shot/.test(b) && /target|goal/.test(b);
+  return !/(corner|card|booking|shot|foul|offside)/.test(b);
+}
+function parseHcpValue(v: string): { side: "home" | "away"; line: number } | null {
+  const m = String(v).trim().match(/^(home|away)\s*([+-]?\d+(?:\.\d+)?)$/i);
+  if (!m) return null;
+  const line = parseFloat(m[2]);
+  if (!isFinite(line) || Math.abs((Math.abs(line) % 1) - 0.5) > 0.001) return null; // len x,5
+  return { side: m[1].toLowerCase() as "home" | "away", line };
+}
+/** Tip handicapu „Tím −1.5“ → strana a hranica. */
+export function parseHcpSelection(sel: string, homeTeam: string, awayTeam: string): { side: "home" | "away"; line: number } | null {
+  const m = String(sel).match(/^(.*) ([+−-])(\d+(?:\.\d+)?)$/);
+  if (!m) return null;
+  const side = m[1] === homeTeam ? "home" : m[1] === awayTeam ? "away" : null;
+  if (!side) return null;
+  return { side, line: (m[2] === "+" ? 1 : -1) * parseFloat(m[3]) };
+}
+/** Polovičné hranice handicapu, ktoré stávkovky ponúkajú (z pohľadu domácich). */
+export function offeredHcpLines(odds: MarketOdds[] | undefined, market: string): number[] {
+  const kind = HCP_MARKETS[market];
+  if (!kind || !odds) return [];
+  const set = new Set<number>();
+  for (const o of odds) {
+    if (!isHcpBet(o.bet, kind)) continue;
+    const h = parseHcpValue(o.value);
+    if (h) set.add(h.side === "home" ? h.line : -h.line);
+  }
+  return [...set].sort((a, b) => a - b);
+}
+function findHcpOdds(odds: MarketOdds[], kind: HcpKind, side: "home" | "away", line: number): OddsMatch | null {
+  return best(odds.filter((o) => {
+    if (!isHcpBet(o.bet, kind)) return false;
+    const h = parseHcpValue(o.value);
+    return !!h && h.side === side && Math.abs(h.line - line) < 0.001;
+  }));
+}
+
 function best(candidates: MarketOdds[]): OddsMatch | null {
   if (candidates.length === 0) return null;
   const top = [...candidates].sort((a, b) => b.bookmakers - a.bookmakers)[0];
@@ -254,6 +307,11 @@ export function findOdds(
       pick.selection === "Remíza" ? "draw" : pick.selection === `Výhra ${homeTeam}` ? "home" : pick.selection === `Výhra ${awayTeam}` ? "away" : null;
     if (!want) return null;
     return best(odds.filter((o) => /^match winner$/i.test(o.bet.trim()) && o.value.trim().toLowerCase() === want));
+  }
+
+  if (HCP_MARKETS[pick.market]) {
+    const h = parseHcpSelection(pick.selection, homeTeam, awayTeam);
+    return h ? findHcpOdds(odds, HCP_MARKETS[pick.market], h.side, h.line) : null;
   }
 
   if (BTTS_MARKETS.includes(pick.market)) {
@@ -317,6 +375,9 @@ function opposingOdds(
     others = [`Výhra ${homeTeam}`, "Remíza", `Výhra ${awayTeam}`]
       .filter((sel) => sel !== pick.selection)
       .map((sel) => findOdds(odds, { market: pick.market, selection: sel }, homeTeam, awayTeam));
+  } else if (HCP_MARKETS[pick.market]) {
+    const h = parseHcpSelection(pick.selection, homeTeam, awayTeam);
+    if (h) others = [findHcpOdds(odds, HCP_MARKETS[pick.market], h.side === "home" ? "away" : "home", -h.line)];
   } else if (BTTS_MARKETS.includes(pick.market)) {
     others = [findOdds(odds, { market: pick.market, selection: pick.selection === "Áno" ? "Nie" : "Áno" }, homeTeam, awayTeam)];
   } else {

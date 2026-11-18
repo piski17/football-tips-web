@@ -1358,9 +1358,9 @@ export async function getFixtureMissingPlayers(fixtureId: number): Promise<Missi
 const REF_GAMES = 10; // koľko posledných zápasov rozhodcu
 const REF_MIN_GAMES = 3; // pri menej zápasoch rozhodcu nepoužijeme
 const REF_BASELINE_GAMES = 20; // vzorka zápasov ligy pre priemer
-const REF_SHRINK = 6; // váha = n / (n + 6): pri 10 zápasoch 62 %, pri 3 zápasoch 33 %
-const REF_FOULS_RANGE: [number, number] = [0.85, 1.15];
-const REF_CARDS_RANGE: [number, number] = [0.8, 1.2];
+const REF_SHRINK = 4; // 18. 11. 2026 (Michal – rozhodca naostro): váha = n / (n + 4): pri 10 zápasoch 71 %, pri 3 zápasoch 43 %
+const REF_FOULS_RANGE: [number, number] = [0.8, 1.2];
+const REF_CARDS_RANGE: [number, number] = [0.7, 1.3];
 const TTL_REFEREE = 12 * 60 * 60 * 1000;
 const TTL_FX_STATS = 7 * 24 * 60 * 60 * 1000;
 

@@ -3063,7 +3063,7 @@ function historyRowHtml(t) {
   const lineupLine = lc
     ? lc.ok
       ? `<br><small class="g" title="Prepočítané s potvrdenými zostavami">✓ Po zostavách${typeof lc.probability === "number" ? ` ${fmtNum(lc.probability, 0)}${NB}%` : ""} – tip platí</small>`
-      : `<br><small class="l" title="Prepočítané s potvrdenými zostavami">⚠ Po zostavách${typeof lc.probability === "number" ? ` ${fmtNum(lc.probability, 0)}${NB}%` : ""}: ${escapeHtml(lc.reason || "tip už nespĺňa pravidlá")}</small>`
+      : `<br><small class="l" title="Prepočítané s potvrdenými zostavami">⚠ Po zostavách${typeof lc.probability === "number" ? ` ${fmtNum(lc.probability, 0)}${NB}%` : ""}: ${escapeHtml(lc.reason || "tip už nespĺňa pravidlá")}${t.lineupMoved ? " – presunutý do sledovaných" : ""}</small>`
     : "";
   const btn = (attr, icon, title, extra = "") => `<button type="button" class="ib${extra}" ${attr}="${escapeHtml(t.id)}" title="${title}" aria-label="${title}">${icon}</button>`;
   const buttons = [btn("data-edit-id", ICON.edit, "Upraviť výsledok alebo kurz")];

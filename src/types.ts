@@ -381,6 +381,8 @@ export interface SavedTip {
    * s potvrdenými zostavami. ok = tip stále spĺňa pravidlá (dôvera, hodnota, rozpor).
    */
   lineupCheck?: { at: string; probability: number | null; ok: boolean; reason?: string };
+  /** Po zostavách neprešiel – pred výkopom presunutý do sledovaných (18. 11. 2026). */
+  lineupMoved?: boolean;
   savedAt: string; // ISO
   status: "pending" | "won" | "lost" | "void";
   actualHomeGoals?: number | null;

@@ -3,6 +3,7 @@ import {
   findOdds,
   marketProbability,
   offeredLines,
+  offeredHcpLines,
   plausibleLine,
   MIN_EXPECTED_VALUE,
   MIN_ODDS,
@@ -87,6 +88,10 @@ export function marketCategory(market: string): string | null {
   if (m === "Karty v 1. polčase") return "karty_1p";
   if (m === "Karty v 2. polčase") return "karty_2p";
   if (m.startsWith("Držanie lopty")) return "drzanie_lopty";
+  if (m === "Ázijský handicap") return "hcp_goly";
+  if (m === "Ázijský handicap – rohy") return "hcp_rohy";
+  if (m === "Ázijský handicap – karty") return "hcp_karty";
+  if (m === "Ázijský handicap – strely na bránu") return "hcp_strely";
   return null;
 }
 
@@ -154,6 +159,11 @@ const MARKET_CALIBRATION: Record<string, number> = {
   fauly_timu: 0.9,
   karty_1p: 0.9,
   karty_2p: 0.9,
+  // Handicapy (18. 11. 2026) – zatiaľ bez spätného testu: rovnako ako trhy tímu, góly opatrnejšie (1X2 model preceňoval).
+  hcp_goly: 0.85,
+  hcp_rohy: 0.8,
+  hcp_karty: 0.9,
+  hcp_strely: 0.95,
 };
 /**
  * Podiel gólov a žltých kariet v 1. polčase (22. 10. 2026). V európskych ligách padá
@@ -473,6 +483,26 @@ export function goalMarketsTrackOnly(grid: number[][], ht: number[][], homeName:
 /** Hranica handicapu s mínusom (−1.5, +0.5). */
 function fmtHcp(line: number): string {
   return `${line > 0 ? "+" : "−"}${Math.abs(line)}`;
+}
+/** Hranice handicapu pre analýzu bez kurzov (z pohľadu domácich), len x,5. */
+const HCP_DEFAULT_LINES: Record<string, number[]> = {
+  "Ázijský handicap": [-1.5, -0.5, 0.5, 1.5],
+  "Ázijský handicap – rohy": [-3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5],
+  "Ázijský handicap – karty": [-1.5, -0.5, 0.5, 1.5],
+  "Ázijský handicap – strely na bránu": [-2.5, -1.5, -0.5, 0.5, 1.5, 2.5],
+};
+/** Rozdelenie počtu (Poisson alebo negatívne binomické podľa rozptylu) – pmf[0..max]. */
+function countPmf(mean: number, varRatio: number, max = 40): number[] {
+  const out: number[] = [];
+  if (!(varRatio > 1.02)) {
+    let p = Math.exp(-mean);
+    for (let k = 0; k <= max; k++) { out.push(p); p = (p * mean) / (k + 1); }
+    return out;
+  }
+  const r = mean / (varRatio - 1), q = 1 / varRatio;
+  let p = Math.pow(q, r);
+  for (let k = 0; k <= max; k++) { out.push(p); p = p * ((k + r) / (k + 1)) * (1 - q); }
+  return out;
 }
 /** Nad/pod z rozdelenia počtov (pmf[k] = pravdepodobnosť k). */
 function overUnderFromPmf(pmf: number[], line: number): { over: number; under: number } {
@@ -1217,16 +1247,24 @@ export function predictMatch(
     const exp = corners.expected;
     addOverUnder("Rohy", "rohy", (line) => overdispersedOverUnder(exp, line, VR.corners), (line) => statExplanation(exp, line), { mean: exp, varRatio: VR.corners });
   }
+  // Nevyrovnané zápasy (18. 11. 2026, Michal – naostro): keď je jeden tím oveľa silnejší, rohy, strely a fauly
+  // JEDNÉHO tímu sa od priemerov odchyľujú viac (favorit po vedení prestane tlačiť, outsider sa len bráni).
+  // Pri pomere očakávaných gólov nad 1,6 sa preto zväčší rozptyl týchto trhov – model je opatrnejší a tip vypadne skôr.
+  const xgRatio = Math.max(xg.home, xg.away) / Math.max(0.15, Math.min(xg.home, xg.away));
+  const mismatch = Math.max(0, Math.min(1, (xgRatio - 1.6) / 1.4)); // 0 pri pomere ≤1,6, 1 pri pomere ≥3
+  const MM_VAR = 1 + 0.8 * mismatch; // rozptyl až 1,8×
+  const mmNote = mismatch > 0 ? ` Nevyrovnaný zápas (očakávané góly ${fmt1(xg.home)} : ${fmt1(xg.away)}) – model počíta s väčším rozptylom.` : "";
+  const VRT = { corners: VR.corners * MM_VAR, shotsOnGoal: VR.shotsOnGoal * MM_VAR, fouls: VR.fouls * MM_VAR };
   // Rohy jedného tímu: vlastné rohy tímu zmiešané s tým, koľko rohov dovolí súper.
   if (homeCornersAvg != null && awayCornersAvg != null) {
     const hc = homeCornersAvg, ac = awayCornersAvg;
-    addOverUnder("Rohy domácich", "rohy_timu", (line) => overdispersedOverUnder(hc, line, VR.corners), (line) =>
-      `${fixture.homeTeam.name} má v priemere ${fmt1(hc)} rohu na zápas (aj s ohľadom na súpera), hranica ${line}.`,
-      { mean: hc, varRatio: VR.corners }
+    addOverUnder("Rohy domácich", "rohy_timu", (line) => overdispersedOverUnder(hc, line, VRT.corners), (line) =>
+      `${fixture.homeTeam.name} má v priemere ${fmt1(hc)} rohu na zápas (aj s ohľadom na súpera), hranica ${line}.${mmNote}`,
+      { mean: hc, varRatio: VRT.corners }
     );
-    addOverUnder("Rohy hostí", "rohy_timu", (line) => overdispersedOverUnder(ac, line, VR.corners), (line) =>
-      `${fixture.awayTeam.name} má v priemere ${fmt1(ac)} rohu na zápas (aj s ohľadom na súpera), hranica ${line}.`,
-      { mean: ac, varRatio: VR.corners }
+    addOverUnder("Rohy hostí", "rohy_timu", (line) => overdispersedOverUnder(ac, line, VRT.corners), (line) =>
+      `${fixture.awayTeam.name} má v priemere ${fmt1(ac)} rohu na zápas (aj s ohľadom na súpera), hranica ${line}.${mmNote}`,
+      { mean: ac, varRatio: VRT.corners }
     );
   }
 
@@ -1283,13 +1321,13 @@ export function predictMatch(
   }
   if (extraStatsAvg?.homeShotsOnGoal != null && extraStatsAvg?.awayShotsOnGoal != null) {
     const hs = extraStatsAvg.homeShotsOnGoal, as = extraStatsAvg.awayShotsOnGoal;
-    addOverUnder("Strely na bránu domácich", "strely_timu", (line) => overdispersedOverUnder(hs, line, VR.shotsOnGoal), (line) =>
-      `${fixture.homeTeam.name} má v priemere ${fmt1(hs)} striel na bránu (aj s ohľadom na súpera), hranica ${line}.`,
-      { mean: hs, varRatio: VR.shotsOnGoal }
+    addOverUnder("Strely na bránu domácich", "strely_timu", (line) => overdispersedOverUnder(hs, line, VRT.shotsOnGoal), (line) =>
+      `${fixture.homeTeam.name} má v priemere ${fmt1(hs)} striel na bránu (aj s ohľadom na súpera), hranica ${line}.${mmNote}`,
+      { mean: hs, varRatio: VRT.shotsOnGoal }
     );
-    addOverUnder("Strely na bránu hostí", "strely_timu", (line) => overdispersedOverUnder(as, line, VR.shotsOnGoal), (line) =>
-      `${fixture.awayTeam.name} má v priemere ${fmt1(as)} striel na bránu (aj s ohľadom na súpera), hranica ${line}.`,
-      { mean: as, varRatio: VR.shotsOnGoal }
+    addOverUnder("Strely na bránu hostí", "strely_timu", (line) => overdispersedOverUnder(as, line, VRT.shotsOnGoal), (line) =>
+      `${fixture.awayTeam.name} má v priemere ${fmt1(as)} striel na bránu (aj s ohľadom na súpera), hranica ${line}.${mmNote}`,
+      { mean: as, varRatio: VRT.shotsOnGoal }
     );
   }
 
@@ -1300,14 +1338,62 @@ export function predictMatch(
     // súper vynúti (ako pri rohoch a kartách tímu), aj s vplyvom rozhodcu.
     const rf = referee?.foulsFactor ?? 1;
     const hf = extraStatsAvg!.homeFouls! * rf, af = extraStatsAvg!.awayFouls! * rf;
-    addOverUnder("Fauly domácich", "fauly_timu", (line) => overdispersedOverUnder(hf, line, VR.fouls), (line) =>
-      `${fixture.homeTeam.name}: očakávané fauly ${fmt1(hf)} (aj s ohľadom na súpera), hranica ${line}.${refereeNote("fouls")}`,
-      { mean: hf, varRatio: VR.fouls }
+    addOverUnder("Fauly domácich", "fauly_timu", (line) => overdispersedOverUnder(hf, line, VRT.fouls), (line) =>
+      `${fixture.homeTeam.name}: očakávané fauly ${fmt1(hf)} (aj s ohľadom na súpera), hranica ${line}.${refereeNote("fouls")}${mmNote}`,
+      { mean: hf, varRatio: VRT.fouls }
     );
-    addOverUnder("Fauly hostí", "fauly_timu", (line) => overdispersedOverUnder(af, line, VR.fouls), (line) =>
-      `${fixture.awayTeam.name}: očakávané fauly ${fmt1(af)} (aj s ohľadom na súpera), hranica ${line}.${refereeNote("fouls")}`,
-      { mean: af, varRatio: VR.fouls }
+    addOverUnder("Fauly hostí", "fauly_timu", (line) => overdispersedOverUnder(af, line, VRT.fouls), (line) =>
+      `${fixture.awayTeam.name}: očakávané fauly ${fmt1(af)} (aj s ohľadom na súpera), hranica ${line}.${refereeNote("fouls")}${mmNote}`,
+      { mean: af, varRatio: VRT.fouls }
     );
+  }
+
+  // Ázijský handicap (18. 11. 2026, Michal – naostro): góly, rohy, karty a strely na bránu. Šanca z rozdelenia
+  // počtu pre každý tím (góly z mriežky výsledkov). Len polovičné hranice (bez vrátených stávok); pri zápase
+  // s kurzami len hranice, ktoré stávkovky ponúkajú. Typ „hcp“ – zo zápasu najviac 1 tip na handicap.
+  try {
+    const addHcp = (market: string, category: string, joint: (homeLine: number) => number, note: string) => {
+      const lines = hasOdds ? offeredHcpLines(marketOdds, market) : HCP_DEFAULT_LINES[market] ?? [];
+      for (const homeLine of lines) {
+        const pHome = joint(homeLine);
+        if (!isFinite(pHome)) continue;
+        const homeSide = pHome >= 0.5;
+        const line = homeSide ? homeLine : -homeLine;
+        candidates.push({
+          market,
+          selection: `${homeSide ? fixture.homeTeam.name : fixture.awayTeam.name} ${fmtHcp(line)}`,
+          probability: Math.round((homeSide ? pHome : 1 - pHome) * 1000) / 10,
+          category,
+          explanation: `${note} Handicap ${homeSide ? fixture.homeTeam.name : fixture.awayTeam.name} ${fmtHcp(line)}: tím musí po pripočítaní hranice skončiť lepšie než súper.${mmNote}`,
+        });
+      }
+    };
+    const grid = gj ? gj.grid : poissonGrid(xg.home, xg.away);
+    addHcp("Ázijský handicap", "hcp_goly", (L) => {
+      let w = 0;
+      for (let h = 0; h < grid.length; h++) for (let a = 0; a < grid[h].length; a++) if (h - a + L > 0) w += grid[h][a];
+      return w;
+    }, `Očakávané góly ${fmt1(xg.home)} : ${fmt1(xg.away)}.`);
+    const team = (hMarket: string, aMarket: string) => {
+      const hm = lineModels.find((m) => m.market === hMarket), am = lineModels.find((m) => m.market === aMarket);
+      return hm && am && hm.mean > 0 && am.mean > 0 ? { hm, am } : null;
+    };
+    const teamJoint = (hm: LineModel, am: LineModel) => {
+      const ph = countPmf(hm.mean, hm.varRatio), pa = countPmf(am.mean, am.varRatio);
+      return (L: number) => {
+        let w = 0;
+        for (let h = 0; h < ph.length; h++) for (let a = 0; a < pa.length; a++) if (h - a + L > 0) w += ph[h] * pa[a];
+        return w;
+      };
+    };
+    const tc = team("Rohy domácich", "Rohy hostí");
+    if (tc) addHcp("Ázijský handicap – rohy", "hcp_rohy", teamJoint(tc.hm, tc.am), `Očakávané rohy ${fmt1(tc.hm.mean)} : ${fmt1(tc.am.mean)}.`);
+    const tk = team("Karty domácich", "Karty hostí");
+    if (tk) addHcp("Ázijský handicap – karty", "hcp_karty", teamJoint(tk.hm, tk.am), `Očakávané žlté karty ${fmt1(tk.hm.mean)} : ${fmt1(tk.am.mean)}.${refereeNote("cards")}`);
+    const ts = team("Strely na bránu domácich", "Strely na bránu hostí");
+    if (ts) addHcp("Ázijský handicap – strely na bránu", "hcp_strely", teamJoint(ts.hm, ts.am), `Očakávané strely na bránu ${fmt1(ts.hm.mean)} : ${fmt1(ts.am.mean)}.`);
+  } catch (err) {
+    console.error("Handicapy – výpočet zlyhal:", err); // handicap nesmie zhodiť analýzu zápasu
   }
 
   // Očakávané držanie lopty domácich (v %) a rozptyl – appka z nich počíta šancu
