@@ -121,11 +121,17 @@ async function load() {
   document.getElementById("days").innerHTML = aggRows(d.byDay.filter((r) => r.n).map((r) => ({ ...r, key: day(r.key) })), "Deň");
   const tm = (iso) => new Date(iso).toLocaleTimeString("sk-SK", { timeZone: "Europe/Bratislava", hour: "2-digit", minute: "2-digit" });
   const fx = d.fixtures || [];
+  // 18. 11. 2026 (Michal): pri zápase vypísať samotné tipy (trh, tip, kurz), nielen počet
+  const tipsOf = (f) => {
+    const list = d.picks.filter((p) => p.fixtureId === f.fixtureId);
+    if (!list.length) return `<b class="pos">${f.picks} ${f.picks === 1 ? "tip" : f.picks < 5 ? "tipy" : "tipov"}</b>`;
+    return list.map((p) => `<div><b class="pos">${esc(p.market)}: ${esc(p.selection)}</b> <span class="muted small">kurz</span> <b>${nf(p.odds)}</b> <span class="muted small">(${esc(p.book)})</span></div>`).join("");
+  };
   document.getElementById("fixtures").innerHTML = fx.length
     ? `<tr><th>Výkop</th><th>Zápas</th><th>Súťaž</th><th class="num">Zahr. stávkovky</th><th>Stav</th></tr>` +
       fx.map((f) => {
         const st = f.analyzedAt
-          ? (f.picks > 0 ? `<b class="pos">${f.picks} ${f.picks === 1 ? "tip" : f.picks < 5 ? "tipy" : "tipov"}</b>` : `<span class="muted">bez tipu${f.note ? " – " + esc(f.note) : ""}</span>`)
+          ? (f.picks > 0 ? tipsOf(f) : `<span class="muted">bez tipu${f.note ? " – " + esc(f.note) : ""}</span>`)
           : f.books < 3 ? `<span class="muted">málo stávkoviek – tip nebude</span>` : `<span class="muted">analýza o ${tm(f.analyzeAt)}</span>`;
         return `<tr><td>${tm(f.date)}</td><td>${esc(f.home)} – ${esc(f.away)}</td><td>${esc(f.league)} <span class="muted small">· ${esc(f.country)}${f.extra ? " · len TIPREX" : ""}</span></td><td class="num ${f.books >= 3 ? "pos" : "neg"}">${f.books}</td><td>${st}</td></tr>`;
       }).join("")
