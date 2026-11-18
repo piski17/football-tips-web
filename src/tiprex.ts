@@ -93,6 +93,8 @@ function writeFile(d: Record<Bucket, Record<string, TiprexPick>>): void {
   fs.writeFileSync(FILE, JSON.stringify(d));
 }
 /** 18. 11. 2026 23:30 (Michal): ženské súťaže (ženská Liga majstrov) do TIPREXU nepatria – tipy sa nezapisujú ani nerátajú (v databáze ostávajú). */
+/** Minimálny počet odohraných zápasov v sezóne pri oboch tímoch (TipRadar má 3 / 5). */
+const TIPREX_MIN_GAMES = 8;
 const isWomenLeague = (league: string) => /women|ženy|\(ž\.\)/i.test(league || "");
 async function listPicks(b: Bucket): Promise<TiprexPick[]> {
   return (await listPicksRaw(b)).filter((p) => !isWomenLeague(p.league));
@@ -301,9 +303,16 @@ export async function recordTiprexPicks(
   fixture: { fixtureId: number; matchDate: string; homeTeam: string; awayTeam: string; league: string },
   candidates: Cand[],
   trackOnly: Cand[] = [],
-  lineModels: LineModelLite[] = []
+  lineModels: LineModelLite[] = [],
+  seasonGames?: { home?: number; away?: number }
 ): Promise<number> {
   if (isWomenLeague(fixture.league)) return 0;
+  // 18. 11. 2026 23:35 (Michal): TIPREX len pri tímoch s dostatkom dát – oba tímy aspoň TIPREX_MIN_GAMES zápasov v sezóne.
+  const minGames = Math.min(Number(seasonGames?.home ?? 0), Number(seasonGames?.away ?? 0));
+  if (seasonGames && minGames < TIPREX_MIN_GAMES) {
+    analyzed.set(fixture.fixtureId, { at: new Date().toISOString(), picks: 0, note: `málo dát – ${minGames} zápasov v sezóne (treba aspoň ${TIPREX_MIN_GAMES})` });
+    return 0;
+  }
   const f = scannedFixtures().find((x) => x.fixtureId === fixture.fixtureId);
   if (!f) { analyzed.set(fixture.fixtureId, { at: new Date().toISOString(), picks: 0, note: "bez kurzov zahraničných stávkoviek" }); return 0; }
   if (doneFixtures.has(fixture.fixtureId)) return 0;

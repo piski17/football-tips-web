@@ -3852,7 +3852,8 @@ async function runAutoAnalysis(): Promise<void> {
           { fixtureId: fixture.fixtureId, matchDate: fixture.date, homeTeam: fixture.homeTeam.name, awayTeam: fixture.awayTeam.name, league: String(fixture.league.name ?? "") },
           (result as any).allCandidates ?? [],
           (result as any).trackOnlyCandidates ?? [],
-          (result as any).lineModels ?? []
+          (result as any).lineModels ?? [],
+          (result as any).seasonGamesPlayed
         ).catch((err) => console.error("TIPREX – zápis tipov zlyhal:", err));
         const isNew = await recordAutoFixture({ fixtureId: fixture.fixtureId, matchDate: fixture.date, tips: entries.length, league: String(fixture.league.name ?? "") }, entries);
         if (isNew) await notifyAdminClientTips(fixture, (result as any).bestBets ?? []).catch(() => {});
@@ -3917,7 +3918,8 @@ async function runTiprexExtra(): Promise<void> {
           { fixtureId: fixture.fixtureId, matchDate: fixture.date, homeTeam: fixture.homeTeam.name, awayTeam: fixture.awayTeam.name, league: String(fixture.league.name ?? "") },
           (result as any).allCandidates ?? [],
           (result as any).trackOnlyCandidates ?? [],
-          (result as any).lineModels ?? []
+          (result as any).lineModels ?? [],
+          (result as any).seasonGamesPlayed
         );
       } catch (err) {
         console.error(`TIPREX – analýza zápasu ${fixture.fixtureId} zlyhala:`, err);
