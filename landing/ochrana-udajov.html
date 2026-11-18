@@ -3,23 +3,23 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="color-scheme" content="dark" />
-<meta name="theme-color" content="#0E0D0C" />
+<meta name="color-scheme" content="light" />
+<meta name="theme-color" content="#E3E3E0" />
 <title>Ochrana osobných údajov – TipRadar</title>
 <meta name="robots" content="noindex" />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&amp;family=Figtree:wght@400..800&amp;display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&amp;display=swap" rel="stylesheet" />
 <style>/* KAMEŇ (10. 11. 2026 16:05): teplý grafit + béžovo-sivý kameň */
 /* PLATINUM (8. 11. 2026) – rovnaké farby a písmo ako tipradar.eu */
-:root { --paper: #0E0D0C; --ink: #F2EFEA; --muted: #A39E96; --faint: #6E6A64; --line: rgba(255, 255, 255, .08); --plat: linear-gradient(115deg, #F4EFE7 0%, #D9D0C3 40%, #B9AC99 75%, #E3DACD 100%); }
+:root { --paper: #F4F0E8; --ink: #141210; --muted: #5A544B; --faint: #8A8378; --line: rgba(20,18,16, .08); --plat: linear-gradient(115deg, #1E1A16 0%, #2A2520 40%, #3A342C 75%, #1E1A16 100%); }
 * { box-sizing: border-box; }
-body { margin: 0; background: radial-gradient(60% 40% at 50% 0%, rgba(207,196,180, .12), transparent 70%) no-repeat, var(--paper); color: var(--ink); font: 500 16.5px/1.7 "Manrope", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+body { margin: 0; background: radial-gradient(60% 40% at 50% 0%, rgba(200,52,38, .12), transparent 70%) no-repeat, var(--paper); color: var(--ink); font: 500 16.5px/1.7 "Manrope", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
 .wrap { width: min(780px, 100% - 48px); margin-inline: auto; padding: 48px 0 90px; }
 @media (max-width: 640px) { .wrap { width: calc(100% - 32px); padding-top: 28px; } }
-a { color: var(--ink); font-weight: 700; text-decoration: underline; text-decoration-color: rgba(207,196,180, .45); text-decoration-thickness: 1px; text-underline-offset: 4px; }
-.back { display: inline-flex; align-items: center; gap: 12px; padding: 6px 18px 6px 6px; border-radius: 999px; background: rgba(255, 255, 255, .03); border: 1px solid var(--line); font: 600 14px/1 "Urbanist", sans-serif; text-decoration: none; }
+a { color: var(--ink); font-weight: 700; text-decoration: underline; text-decoration-color: rgba(200,52,38, .45); text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.back { display: inline-flex; align-items: center; gap: 12px; padding: 6px 18px 6px 6px; border-radius: 999px; background: rgba(20,18,16, .03); border: 1px solid var(--line); font: 600 14px/1 "Urbanist", sans-serif; text-decoration: none; }
 .back svg { width: 32px; height: 32px; }
 h1, h2 { font-family: "Urbanist", sans-serif; letter-spacing: -.03em; line-height: 1.05; }
 h1 { font-size: clamp(40px, 6vw, 68px); font-weight: 400; margin: 44px 0 10px; }
@@ -45,15 +45,15 @@ h3, h4 { letter-spacing: -.015em; }
 .day h3, .offer-l h3, .fit h3, .coin h3, .guar2 h3 { font-weight: 400; }
 .kpi b, .offer-l .from, .vc-mono, .big-n, .s12[data-n]::before, .steps .n, .why li .n, .offer-r .n, .coin-sum b, .seal b, .per-r, .coin-art .cn, .per .big, .tk3-match i { font-family: var(--serif) !important; font-weight: 300; }
 .s12[data-n]::before, .big-n { font-style: italic; font-weight: 200; }
-.eyebrow { font-family: var(--sans); font-weight: 700; letter-spacing: .28em; color: #CFC4B4; }
+.eyebrow { font-family: var(--sans); font-weight: 700; letter-spacing: .28em; color: #C83426; }
 .eyebrow::before { width: 7px; height: 7px; border-radius: 1px; transform: rotate(45deg); background: currentColor; opacity: .9; }
-.metal .eyebrow, .vs-new .eyebrow { color: #5E574D; }
+.metal .eyebrow, .vs-new .eyebrow { color: #B3AA9C; }
 .btn { font-family: var(--sans); font-weight: 700; letter-spacing: .005em; }
 /* jemné zrno a zlaté linky */
 body::after { content: ""; position: fixed; inset: 0; z-index: 9999; pointer-events: none; opacity: .05; mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
-.panel::before { background: linear-gradient(90deg, transparent, rgba(207,196,180,.55), transparent); }
-.panel:hover { border-color: rgba(207,196,180,.28); }
+.panel::before { background: linear-gradient(90deg, transparent, rgba(200,52,38,.55), transparent); }
+.panel:hover { border-color: rgba(200,52,38,.28); }
 html, body { overflow-x: clip; }
 @media (max-width: 720px) {
   .jump { display: none !important; }
@@ -63,6 +63,116 @@ html, body { overflow-x: clip; }
   .eyebrow { font-size: 11.5px; letter-spacing: .24em; }
 }
 .coin { overflow: clip; }
+/* ===================== DENNÍK (18. 11. 2026) – úplne nový vzhľad tipradar.eu =====================
+   Michal: „úplne iný dizajn“ (nie Kameň, nie TIPREX). Svetlý ako športové noviny: sivé pozadie #E3E3E0 (Michal 18. 11. 10:00, predtým papier #F4F0E8), čierna tlač #141210,
+   červený akcent #C83426, ostré rohy, hrubé čiary nad časťami, písmo Archivo (nadpisy úzke a hrubé, veľkými písmenami).
+   Farby boli prevrátené v celom štýle (tmavé ↔ svetlé), plochy .metal sú teraz čierne. */
+:root {
+  --bg: #E3E3E0; --bg2: #D9D9D5; --card: #FAFAF8; --card2: #EFEFEC;
+  --text: #141210; --muted: #5A544B; --faint: #8A8378; --ink: #F4F0E8;
+  --line: rgba(20,18,16,.12); --line2: rgba(20,18,16,.24); --soft: rgba(20,18,16,.04);
+  --red: #C83426;
+  --plat: linear-gradient(#141210, #141210);
+  --metal: linear-gradient(160deg, #1A1714 0%, #24201B 100%);
+  --win: #1E7B4C; --loss: #C23A2B; --void: #8A8378;
+  --sans: "Archivo", system-ui, sans-serif; --display: "Archivo", system-ui, sans-serif; --serif: "Archivo", system-ui, sans-serif;
+  --r: 6px; --r-lg: 8px;
+  --shadow: 0 1px 0 rgba(20,18,16,.04), 0 18px 40px -30px rgba(60,40,20,.35);
+}
+.metal, .plan.feat, .per.all, .buy, .idcard { --text: #F4F0E8; --muted: #C9C0B2; --faint: #A39A8C; --card: rgba(255,255,255,.06); --win: #86D8AA; --loss: #F2907E; --line: rgba(246,242,234,.14); --line2: rgba(246,242,234,.28); }
+html, body { background: var(--bg); }
+body { font-weight: 450; color: var(--text); }
+body::before { background: none; }
+body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .5; background-image: radial-gradient(rgba(20,18,16,.06) 1px, transparent 1px); background-size: 4px 4px; }
+::selection { background: var(--red); color: #fff; }
+
+/* nadpisy ako titulky novín */
+h1, .h2, .page-head h1, .final-card .h2, .hero h1 { font-family: "Archivo", sans-serif !important; font-stretch: 72%; font-variation-settings: "wdth" 72 !important; font-weight: 800 !important; text-transform: uppercase; letter-spacing: -.01em !important; line-height: .95 !important; }
+h3, h4 { font-family: "Archivo", sans-serif; font-weight: 750; letter-spacing: -.01em; }
+h1 em, .h2 em, .guar2 h3 em, .hero h1 em { font-family: inherit !important; font-style: normal !important; font-weight: 800 !important; background: none !important; color: var(--red) !important; -webkit-text-fill-color: var(--red); animation: none !important; padding-right: 0 !important; }
+.metal h1 em, .metal .h2 em { color: #FF8A70 !important; -webkit-text-fill-color: #FF8A70; }
+.h2 { font-size: clamp(40px, 5.6vw, 76px); }
+.kpi b, .offer-l .from, .vc-mono, .big-n, .steps .n, .why li .n, .offer-r .n, .coin-sum b, .seal b, .per-r, .coin-art .cn, .per .big, .tk3-match i, .cal-stat b { font-family: "Archivo", sans-serif !important; font-variation-settings: "wdth" 75 !important; font-style: normal !important; font-weight: 800 !important; }
+.s12[data-n]::before { font-family: "Archivo", sans-serif; font-variation-settings: "wdth" 62; font-weight: 900; font-style: normal; -webkit-text-stroke: 0; color: rgba(20,18,16,.05); }
+.s12[data-n]::after { display: none; }
+.eyebrow { font: 700 12.5px/1 "Archivo", sans-serif; letter-spacing: .18em; color: var(--red); }
+.eyebrow::before { width: 10px; height: 10px; border-radius: 0; transform: none; background: var(--red); opacity: 1; }
+.metal .eyebrow { color: #FF8A70; }
+.lead { color: var(--muted); }
+.sig { color: var(--text); }
+
+/* hrubá čiara nad každou časťou */
+main > section.s12:not(.final) { border-top: 0; }
+main > section.s12:not(.hero):not(.final) > .wrap { border-top: 4px solid var(--text); padding-top: 26px; position: relative; }
+main > section.s12:not(.hero):not(.final) > .wrap::before { content: ""; position: absolute; left: 0; right: 0; top: 3px; height: 1px; background: var(--text); }
+.s12 .head, .head { border-bottom: 1px solid var(--line2); padding-bottom: 26px; }
+
+/* menu – tiráž novín */
+.nav { inset: 0 0 auto; }
+.nav-in { width: 100%; max-width: none; height: 66px; padding: 0 max(20px, calc(50% - 610px)); border-radius: 0; border: 0; border-bottom: 3px double var(--text); background: rgba(227,227,224,.94); box-shadow: none; }
+html.scrolled .nav-in { background: rgba(227,227,224,.97); border-color: var(--text); }
+.brand span { font: 800 22px/1 "Archivo", sans-serif; font-variation-settings: "wdth" 80; text-transform: uppercase; letter-spacing: 0; }
+.brand small { color: var(--red); letter-spacing: .24em; }
+.links a { border-radius: 0; font: 650 14px/1 "Archivo", sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 10px 12px; }
+.links a:hover { color: var(--text); }
+.links a.active { color: var(--text); background: none; box-shadow: inset 0 -3px 0 var(--red); }
+.nav-right { border-left-color: var(--line2); }
+.burger { border-radius: 4px !important; }
+.ov-links a.active { background: none; color: var(--red); -webkit-text-fill-color: var(--red); }
+.overlay { background: var(--bg) !important; }
+@media (max-width: 720px) { .nav { inset: 0 0 auto; } .nav-in { width: 100%; height: 60px; padding: 0 10px 0 14px; } }
+
+/* tlačidlá – hranaté, čierne */
+.btn { border-radius: 4px; background: #141210; color: #F4F0E8; box-shadow: none; font: 700 15px/1 "Archivo", sans-serif; text-transform: uppercase; letter-spacing: .06em; min-height: 52px; }
+.btn::after { display: none; }
+.btn:hover { background: var(--red); box-shadow: none; transform: translateY(-1px); }
+.btn .arr { border-radius: 2px; background: var(--red); color: #fff; }
+.btn:hover .arr { background: #141210; }
+.btn.ghost { background: transparent; color: var(--text); box-shadow: inset 0 0 0 2px #141210; }
+.btn.ghost:hover { background: #141210; color: #F4F0E8; box-shadow: inset 0 0 0 2px #141210; }
+.metal .btn, .final-card .btn { background: #F4F0E8; color: #141210; }
+.metal .btn:hover, .final-card .btn:hover { background: var(--red); color: #fff; }
+.metal .btn.ghost, .final-card .btn.ghost { background: transparent; color: #F4F0E8; box-shadow: inset 0 0 0 2px rgba(244,240,232,.6); }
+
+/* karty – biely papier s čiarou */
+.panel { background: var(--card); border: 1px solid var(--line2); border-radius: var(--r-lg); box-shadow: var(--shadow); }
+.panel::before { display: none; }
+.panel:hover { border-color: rgba(20,18,16,.45); }
+.chip, .trust, .deck-bar span, .an-float { border-radius: 4px !important; }
+.chip { background: var(--card); }
+.chip i { border-radius: 0; }
+.trust { background: var(--card); border-color: var(--line2); }
+.trust svg { stroke: var(--red); }
+
+/* úvod */
+.hero::before { background: radial-gradient(closest-side, rgba(200,52,38,.08), transparent) !important; }
+.hero h1.h1-who { font-size: clamp(54px, 8vw, 128px); max-width: 15ch; }
+.pitch { opacity: .55; }
+.final-card, .foot.dark { background: #141210 !important; color: #F4F0E8; --text: #F4F0E8; --muted: #C9C0B2; --faint: #A39A8C; --line: rgba(246,242,234,.14); --line2: rgba(246,242,234,.28); }
+.final-card { border-radius: var(--r-lg) !important; }
+.final-card .h2 em { color: #FF8A70 !important; -webkit-text-fill-color: #FF8A70; }
+.foot.dark a { color: inherit; }
+
+/* DENNÍK 2 (18. 11. 2026 10:06, Michal: „prerob celý web graficky, aby to dávalo zmysel“) – novinové prvky:
+   hlavička vydania s dátumom, čierny pás so súťažami ako tlačová lišta, „Strana 02“ namiesto veľkých čísel,
+   výsledky a otázky na bielom pruhu ako vložená strana. */
+.masthead { display: flex; justify-content: space-between; gap: 12px 24px; flex-wrap: wrap; width: 100%; padding: 9px 0; margin-bottom: 34px; border-block: 1px solid var(--text); font: 650 11.5px/1.3 "Archivo", sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.masthead b { color: var(--red); font-weight: 750; }
+@media (max-width: 720px) { .masthead { justify-content: center; text-align: center; } .masthead span:last-child { display: none; } }
+.leagues { margin-top: 40px; border: 0; background: #141210; -webkit-mask-image: none; mask-image: none; }
+.marquee span { color: #E9E7E2; font: 700 14px/1 "Archivo", sans-serif; font-variation-settings: "wdth" 85; letter-spacing: .2em; padding: 18px 0 18px 30px; gap: 30px; }
+.marquee span::after { width: 7px; height: 7px; transform: none; background: var(--red); }
+.s12[data-n]::before { display: none !important; }
+main > section.s12 > .wrap[data-n]::after { content: "Strana " attr(data-n); position: absolute; right: 0; top: 16px; font: 700 11px/1 "Archivo", sans-serif; letter-spacing: .2em; text-transform: uppercase; color: var(--faint); }
+#vysledky, #otazky { background: #F6F6F4; border-block: 1px solid var(--line2); }
+#vysledky .panel:not(.metal):not(.all), #otazky .panel:not(.metal) { background: #FFFFFF; }
+.hero::before { display: none !important; }
+.panel.metal, .panel.buy, .panel.per.all, .panel.plan.feat { background: var(--metal) !important; }
+.page-head::before { opacity: .35; }
+.pitch { opacity: .35; filter: grayscale(1); }
+.kto-za-tym-je blockquote, #kto-za-tym-je blockquote { border-left: 4px solid var(--red); }
+.faq details { border-color: var(--line2); }
+.faq summary { font-family: "Archivo", sans-serif; font-weight: 700; }
 </style>
 </head>
 <body>
