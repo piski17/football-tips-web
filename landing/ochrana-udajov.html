@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="light" />
-<meta name="theme-color" content="#E3E3E0" />
+<meta name="theme-color" content="#C9CBC7" />
 <title>Ochrana osobných údajov – TipRadar</title>
 <meta name="robots" content="noindex" />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -68,7 +68,7 @@ html, body { overflow-x: clip; }
    červený akcent #C83426, ostré rohy, hrubé čiary nad časťami, písmo Archivo (nadpisy úzke a hrubé, veľkými písmenami).
    Farby boli prevrátené v celom štýle (tmavé ↔ svetlé), plochy .metal sú teraz čierne. */
 :root {
-  --bg: #E3E3E0; --bg2: #D9D9D5; --card: #FAFAF8; --card2: #EFEFEC;
+  --bg: #C9CBC7; --bg2: #BFC1BD; --card: #FAFAF8; --card2: #EFEFEC;
   --text: #141210; --muted: #5A544B; --faint: #8A8378; --ink: #F4F0E8;
   --line: rgba(20,18,16,.12); --line2: rgba(20,18,16,.24); --soft: rgba(20,18,16,.04);
   --red: #C83426;
@@ -109,8 +109,8 @@ main > section.s12:not(.hero):not(.final) > .wrap::before { content: ""; positio
 
 /* menu – tiráž novín */
 .nav { inset: 0 0 auto; }
-.nav-in { width: 100%; max-width: none; height: 66px; padding: 0 max(20px, calc(50% - 610px)); border-radius: 0; border: 0; border-bottom: 3px double var(--text); background: rgba(227,227,224,.94); box-shadow: none; }
-html.scrolled .nav-in { background: rgba(227,227,224,.97); border-color: var(--text); }
+.nav-in { width: 100%; max-width: none; height: 66px; padding: 0 max(20px, calc(50% - 610px)); border-radius: 0; border: 0; border-bottom: 3px double var(--text); background: rgba(201,203,199,.94); box-shadow: none; }
+html.scrolled .nav-in { background: rgba(201,203,199,.97); border-color: var(--text); }
 .brand span { font: 800 22px/1 "Archivo", sans-serif; font-variation-settings: "wdth" 80; text-transform: uppercase; letter-spacing: 0; }
 .brand small { color: var(--red); letter-spacing: .24em; }
 .links a { border-radius: 0; font: 650 14px/1 "Archivo", sans-serif; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 10px 12px; }
@@ -164,7 +164,7 @@ html.scrolled .nav-in { background: rgba(227,227,224,.97); border-color: var(--t
 .marquee span::after { width: 7px; height: 7px; transform: none; background: var(--red); }
 .s12[data-n]::before { display: none !important; }
 main > section.s12 > .wrap[data-n]::after { content: "Strana " attr(data-n); position: absolute; right: 0; top: 16px; font: 700 11px/1 "Archivo", sans-serif; letter-spacing: .2em; text-transform: uppercase; color: var(--faint); }
-#vysledky, #otazky { background: #F6F6F4; border-block: 1px solid var(--line2); }
+#vysledky, #otazky { background: #D8D9D5; border-block: 1px solid var(--line2); }
 #vysledky .panel:not(.metal):not(.all), #otazky .panel:not(.metal) { background: #FFFFFF; }
 .hero::before { display: none !important; }
 .panel.metal, .panel.buy, .panel.per.all, .panel.plan.feat { background: var(--metal) !important; }
