@@ -816,7 +816,8 @@ function normalCdf(z: number): number {
 // Váha rastie s počtom zápasov (za posledných 5 rokov, najviac 5 najnovších):
 // 3 zápasy = 15 %, 4 = 20 %, 5 = 25 %; menej ako 3 = nepoužijú sa.
 // Novšie zápasy majú väčšiu váhu (každý starší × 0,85).
-const H2H_MIN = 3;
+// 18. 11. 2026 23:19 (Michal): vzájomné zápasy sa použijú až pri aspoň 5 za posledné 3 roky (predtým 3). Štatistiky tímu ostávajú z 5 zápasov.
+const H2H_MIN = 5;
 function h2hWeight(n: number): number {
   return n >= 5 ? 0.25 : n === 4 ? 0.2 : n === 3 ? 0.15 : 0;
 }
