@@ -5479,7 +5479,22 @@ function renderEv10(statTips) {
   if (sumEl) sumEl.textContent = hi.n ? `${hi.n} tipov · ${Math.round((hi.won / hi.n) * 100)}${NB}% · ${fmt2(hi.profit)} j.` : "Tiché sledovanie od 17. 11.";
   box.innerHTML = `<p class="muted small">Klientom ide ďalej hranica hodnoty +5${NB}%. Tu sa ticho porovnáva, ako by dopadli len tipy s hodnotou aspoň +10${NB}% (šanca × kurz ≥ 1,10, napr. pri 70${NB}% kurz aspoň 1,58). Rátajú sa tipy zo štatistík od 17. 11. 2026, zisk pri vklade 1 jednotka na tip. Vyhodnotiť 1. 12.</p>
   <table class="bt-table"><thead><tr><th></th><th>Vyhodnotené</th><th>Vyšlo</th><th>Zisk</th><th>Čaká</th></tr></thead><tbody>
-  ${line("Hodnota od +10 %", hi)}${line("Hodnota +5 – 10 % (by vypadli)", lo)}${line("Všetky tipy klientom", tot)}</tbody></table>`;
+  ${line("Hodnota od +10 %", hi)}${line("Hodnota +5 – 10 % (by vypadli)", lo)}${line("Všetky tipy klientom", tot)}</tbody></table>
+  ${ev10List(all)}`;
+}
+// 18. 11. 2026 (Michal): v dlaždici ukázať aj konkrétne tipy – zápas, tip, kurz, dôvera, hodnota, výsledok.
+// Sú to tipy, ktoré UŽ išli klientom a rátajú sa v štatistikách (značka „klientom ✓“), preto bez tlačidla Pridať.
+function ev10List(all) {
+  const ST = { won: '<b class="g">✓ vyšiel</b>', lost: '<b class="l">✕ nevyšiel</b>', void: '<span class="faint">↺ vrátený</span>', pending: '<span class="faint">čaká</span>' };
+  const rows = all.slice().sort((a, b) => new Date(b.matchDate) - new Date(a.matchDate)).map((t) => {
+    const ev = (t.probability / 100) * t.odds;
+    const hiT = ev >= 1.1;
+    return `<tr${hiT ? "" : ' class="faint"'}><td class="faint small">${escapeHtml(new Date(t.matchDate).toLocaleDateString("sk-SK", { day: "numeric", month: "numeric" }))}</td><td><b>${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))}</b><br><span class="small">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}</span></td><td>${fmtOdds(t.odds)}<br><span class="faint small">${probTxt(t.probability)}${NB}%</span></td><td class="${hiT ? "g" : ""}">${ev >= 1 ? "+" : ""}${Math.round((ev - 1) * 100)}${NB}%</td><td>${ST[t.status] || ST.pending}<br><span class="faint small">klientom ✓</span></td></tr>`;
+  }).join("");
+  if (!rows) return "";
+  return `<details open><summary class="small">Tipy (zápas a tip) – zvýraznené sú tipy s hodnotou od +10${NB}%</summary>
+    <p class="faint small">Všetky tieto tipy už išli klientom a rátajú sa v štatistikách, preto pri nich nie je tlačidlo Pridať.</p>
+    <div class="table-wrap"><table class="bt-table"><thead><tr><th>Dátum</th><th>Zápas a tip</th><th>Kurz · dôvera</th><th>Hodnota</th><th>Výsledok</th></tr></thead><tbody>${rows}</tbody></table></div></details>`;
 }
 const ODDS2_TEXT = {
   boxId: "odds2Result", fold: "kurz2", emptySum: "Tiché sledovanie od 16. 11.",
