@@ -558,3 +558,57 @@ export async function moveOldFoulTipsOnce(): Promise<number> {
     return moved;
   });
 }
+
+/**
+ * 19. 11. 2026 (Michal): omylom zmazané sledované tipy (Zoznam sledovaných – horná tabuľka 6 tipov
+ * a „Neprešli ani pri 60 / 40“ 7 tipov) jednorazovo nahraté späť do sledovaných podľa údajov,
+ * ktoré Michal poslal z appky. Čas výkopu a id zápasu nie sú známe (fixtureId 0, 18:00).
+ * Do štatistík ani na web nejdú (watchOnly). Značka restoredWatch.
+ */
+const RESTORE_WATCH_KEY = "tipradar_migr_restore_watch_1119";
+export async function restoreDeletedWatchOnce(): Promise<number> {
+  if (!useUpstash) return 0;
+  const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };
+  const done = (await upstashClient().get(`${UPSTASH_URL}/get/${RESTORE_WATCH_KEY}`, auth)).data?.result;
+  if (done) return 0;
+  type R = [string, number, string, string, string, string, string, number, number, "won" | "lost", Partial<SavedTip>?];
+  const rows: R[] = [
+    // horná tabuľka (iné dôvody ako 60 / 40)
+    ["2026-11-17", 5, "UEFA Nations League", "Dánsko", "Nórsko", "Karty hostí", "Under 2.5", 74, 1.5, "lost"],
+    ["2026-11-14", 5, "UEFA Nations League", "Portugalsko", "Dánsko", "Góly", "Over 2.5", 72, 1.53, "won"],
+    ["2026-11-08", 144, "Jupiler Pro League", "Club Bruggy", "Anderlecht Brusel", "Karty", "Under 5.5", 74, 1.65, "lost", { sameTypeMoved: true }],
+    ["2026-11-08", 144, "Jupiler Pro League", "Club Bruggy", "Anderlecht Brusel", "Karty hostí", "Under 3.5", 75, 1.5, "lost"],
+    ["2026-10-16", 140, "La Liga", "Deportivo La Coruña", "Levante", "Fauly", "Under 26.5", 74, 1.61, "lost", { oldFoulsMoved: true }],
+    ["2026-10-16", 78, "Bundesliga", "Eintracht Frankfurt", "1. FC Kolín", "Fauly", "Under 22.5", 71, 1.6, "lost", { oldFoulsMoved: true }],
+    // „Neprešli ani pri 60 / 40“
+    ["2026-11-15", 5, "UEFA Nations League", "Fínsko", "San Maríno", "Rohy hostí", "Over 1.5", 72, 1.64, "lost", { strictFail: true }],
+    ["2026-11-08", 61, "Ligue 1", "Stade Brest", "Olympique Lyon", "Karty domácich", "Under 2.5", 70, 1.53, "won", { strictFail: true }],
+    ["2026-11-07", 79, "2. Bundesliga", "1. FC Norimberg", "SV Darmstadt 98", "Góly hostí", "Under 1.5", 70, 1.5, "won", { strictFail: true }],
+    ["2026-11-07", 203, "Süper Lig", "Eyüpspor", "Kocaelispor", "Karty domácich", "Under 2.5", 71, 1.52, "won", { strictFail: true }],
+    ["2026-11-04", 2, "UEFA Champions League", "Borussia Dortmund", "Betis Sevilla", "Góly", "Over 2.5", 70, 1.5, "won", { strictFail: true }],
+    ["2026-10-25", 61, "Ligue 1", "Olympique Marseille", "Le Havre", "Góly", "Over 2.5", 70, 1.5, "won", { strictFail: true }],
+    ["2026-10-25", 39, "Premier League", "Manchester United", "Bournemouth", "Góly", "Over 2.5", 70, 1.79, "won", { strictFail: true }],
+  ];
+  return withWriteLock(async () => {
+    const tips = await readAll();
+    const norm = (x: string) => x.toLowerCase().normalize("NFD").replace(/[^a-z0-9]/g, "");
+    let added = 0;
+    rows.forEach(([day, leagueId, leagueName, home, away, market, selection, probability, odds, status, extra], i) => {
+      const exists = tips.some((t) => String(t.matchDate).slice(0, 10) === day && norm(t.homeTeam ?? "").startsWith(norm(home).slice(0, 5))
+        && t.market === market && t.selection === selection);
+      if (exists) return;
+      const matchDate = new Date(`${day}T17:00:00Z`).toISOString();
+      tips.push({
+        id: `restored-1119-${i + 1}`, fixtureId: 0, leagueId, season: 2026, leagueName, homeTeam: home, awayTeam: away,
+        matchDate, market, selection, probability, odds, savedAt: matchDate, status,
+        watchOnly: true, restoredWatch: true, ...(extra ?? {}),
+      } as SavedTip);
+      added++;
+    });
+    if (added) await writeAll(tips);
+    await upstashClient().post(`${UPSTASH_URL}/set/${RESTORE_WATCH_KEY}`, new Date().toISOString(), {
+      headers: { ...auth.headers, "Content-Type": "text/plain" },
+    });
+    return added;
+  });
+}

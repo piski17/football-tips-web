@@ -372,6 +372,8 @@ export interface SavedTip {
   sameTypeMoved?: boolean;
   /** 8. 11. 2026: starý tip na fauly (pred hranicami podľa zápasu) presunutý do sledovaných. */
   oldFoulsMoved?: boolean;
+  /** 19. 11. 2026: omylom zmazaný sledovaný tip nahratý späť (bez id zápasu a presného času). */
+  restoredWatch?: boolean;
   /** Tip skrytý z histórie tipov - naďalej sa ráta do štatistík a zobrazuje na prezentačnej stránke. */
   archived?: boolean;
   /** Výsledok alebo kurz bol ručne opravený v histórii. */

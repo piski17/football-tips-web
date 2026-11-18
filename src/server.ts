@@ -46,7 +46,7 @@ import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, Market
 import { newModelInputs } from "./newModel";
 import { computeMarketHealth, marketChangesText, clvOf, CLV_TIE } from "./marketHealth";
 import { LeaguePreset, SavedTip } from "./types";
-import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once, moveLateAddsOnce, restoreLateMovedOnce, returnStrictFailedOnce, moveStrictFailedBackOnce, moveSameTypeOnce, moveOldFoulTipsOnce, syncBand65Trial } from "./tipsStore";
+import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once, moveLateAddsOnce, restoreLateMovedOnce, returnStrictFailedOnce, moveStrictFailedBackOnce, moveSameTypeOnce, moveOldFoulTipsOnce, syncBand65Trial, restoreDeletedWatchOnce } from "./tipsStore";
 import { computeTicketStatus, settleBet, settleFixtureBets, tipHasStartedMatch, MATCH_STARTED_MESSAGE, buildTipEdit } from "./tipEvaluator";
 import {
   sendTipToTelegram,
@@ -4796,6 +4796,10 @@ app.listen(PORT, () => {
     .then(() => moveOldFoulTipsOnce())
     .then((n) => { if (n) console.log(`Staré tipy na fauly: presunuté do sledovaných ${n}`); })
     .catch((err) => console.error("Presun starých tipov na fauly zlyhal:", err))
+    // 19. 11. 2026 (Michal): omylom zmazané sledované tipy (13) raz nahrá späť do sledovaných.
+    .then(() => restoreDeletedWatchOnce())
+    .then((n) => { if (n) console.log(`Zmazané sledované tipy nahraté späť: ${n}`); })
+    .catch((err) => console.error("Návrat zmazaných sledovaných tipov zlyhal:", err))
     // 12. 11. 2026 (Michal, skúška): pásmo 65 – 80 % – sledované tipy 65 – 69 %, ktoré prejdú aj 60 / 40, raz vráti do štatistík.
     // Pri BAND_65_TRIAL = false ich (aj nové tipy 65 – 69 %) presunie späť do sledovaných.
     .then(() => syncBand65Trial(BAND_65_TRIAL, (t) => {
