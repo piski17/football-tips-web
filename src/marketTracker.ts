@@ -136,7 +136,8 @@ export async function recordMarketPredictions(
     if (!cur || p > cur.probability) best.set(c.market, { market: c.market, selection: String(c.selection), probability: Math.round(p * 10) / 10 });
   }
   const top = pickTop(candidates);
-  const odds2 = pickOdds2(candidates);
+  // Kurz od 2,00 (16. 11. 2026) – 18. 11. 2026 Michal skúšku ZRUŠIL: nové tipy sa už nevyberajú, staré čakajúce sa dovyhodnotia.
+  const odds2: TopPick | undefined = undefined;
   // Kurz od 1,70 (16. 11. 2026) – 18. 11. 2026 Michal skúšku ZRUŠIL („katastrofa“): nové tipy sa už nevyberajú,
   // staré čakajúce sa ešte vyhodnotia (aby sedelo poradie výsledkov), v appke sa dlaždica neukazuje.
   const odds17: TopPick | undefined = undefined;

@@ -5540,7 +5540,6 @@ async function renderAllMarkets() {
   try { d = await fetchJson("/api/markets-all"); }
   catch (err) { box.innerHTML = `<p class="faint small">Nepodarilo sa načítať: ${escapeHtml(err.message)}</p>`; return; }
   renderTopPicks(d.top);
-  renderTopPicks(d.odds2, ODDS2_TEXT);
   const rows = Object.entries(d.markets || {}).map(([market, m]) => ({ market, ...m, pct: m.n ? (m.won / m.n) * 100 : null, exp: m.n ? m.sumP / m.n : null }))
     .sort((a, b) => b.n - a.n || a.market.localeCompare(b.market));
   const sumEl = document.querySelector('[data-fold-sum="vsetkytrhy"]');
