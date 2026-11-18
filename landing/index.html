@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8" />
 <script>
-  /* Ktorá stránka sa zobrazí: tipradar.eu/, /vysledky, /clenstvo, /otazky, /formular, /o-mne (jeden súbor, rôzne časti). */
+  /* 18. 11. 2026 (Michal): celý web na JEDNEJ stránke – menu posúva na časti. Staré adresy (/vysledky, /clenstvo, /otazky,
+     /formular, /o-mne – odkazy z Instagramu, Telegramu, bota) otvoria úvod a posunú na tú časť. */
   (function () {
     var m = location.pathname.replace(/\/+$/, "").split("/").pop();
     var q = new URLSearchParams(location.search).get("stranka");
-    var page = ["vysledky", "clenstvo", "otazky", "formular", "o-mne"].indexOf(q || m) >= 0 ? (q || m) : "home";
-    document.documentElement.setAttribute("data-page", page);
-    var t = { vysledky: "Výsledky – všetky vyhodnotené tipy | TipRadar", otazky: "Otázky | TipRadar", formular: "Kontakt – napíšte mi | TipRadar", "o-mne": "O mne | TipRadar", clenstvo: "Členstvo | TipRadar" }[page];
-    if (t) document.title = t;
+    var to = { vysledky: "vysledky", clenstvo: "ponuka", otazky: "otazky", formular: "zapis", "o-mne": "kto-za-tym-je" }[q || m];
+    document.documentElement.setAttribute("data-page", "home");
+    if (to && !location.hash) { try { history.replaceState(null, "", "/#" + to); } catch (e) {} }
   })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -65,6 +65,8 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; background: var(--bg); }
+main [id], footer [id] { scroll-margin-top: 84px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 body { position: relative; margin: 0; background: var(--bg); color: var(--text); font: 500 16.5px/1.65 var(--sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; overflow-x: hidden; }
 body::before { content: ""; position: fixed; inset: 0; z-index: -2; pointer-events: none;
   background: radial-gradient(40% 35% at 15% 5%, rgba(207,196,180, .09), transparent 70%), radial-gradient(35% 30% at 90% 20%, rgba(170,160,145, .06), transparent 70%), radial-gradient(45% 40% at 60% 105%, rgba(190,178,160, .05), transparent 70%); }
@@ -1169,7 +1171,7 @@ html, body { overflow-x: clip; }
   <div class="nav-in">
     <a class="brand" href="/" aria-label="TipRadar – úvod"><svg aria-hidden="true"><use href="#logo"/></svg><span>TipRadar<small>Futbalová analytika</small></span></a>
     <div class="links">
-      <a href="/">Úvod</a><a href="/vysledky">Výsledky</a><a href="/clenstvo">Členstvo</a><a href="/kurz">Kurz</a><a href="/o-mne">O mne</a><a href="/otazky">Otázky</a><a href="/formular">Kontakt</a>
+      <a href="#uvod">Úvod</a><a href="#kto-za-tym-je">O mne</a><a href="#vysledky">Výsledky</a><a href="#ponuka">Členstvo</a><a href="#otazky">Otázky</a><a href="#zapis">Kontakt</a><a href="/kurz">Kurz</a>
     </div>
     <div class="nav-right">
       <a class="ic" href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener" aria-label="Telegram komunita" data-free><svg aria-hidden="true"><use href="#i-tg"/></svg></a>
@@ -1182,13 +1184,13 @@ html, body { overflow-x: clip; }
 <div class="overlay" id="overlay" aria-label="Menu" aria-hidden="true">
   <div class="ov-in">
     <ul class="ov-links">
-      <li><a href="/">Úvod<small>futbal podľa čísel</small></a></li>
-      <li><a href="/vysledky">Výsledky<small>všetky tipy</small></a></li>
-      <li><a href="/clenstvo">Členstvo<small>VIP Klub · od 50 tipov</small></a></li>
+      <li><a href="#uvod">Úvod<small>futbal podľa čísel</small></a></li>
+      <li><a href="#kto-za-tym-je">O mne<small>Michal</small></a></li>
+      <li><a href="#vysledky">Výsledky<small>všetky tipy</small></a></li>
+      <li><a href="#ponuka">Členstvo<small>VIP Klub · od 50 tipov</small></a></li>
+      <li><a href="#otazky">Otázky<small>časté otázky</small></a></li>
+      <li><a href="#zapis">Kontakt<small>napíšte mi</small></a></li>
       <li><a href="/kurz">Kurz<small>Škola stávkovania</small></a></li>
-      <li><a href="/o-mne">O mne<small>Michal</small></a></li>
-      <li><a href="/otazky">Otázky<small>časté otázky</small></a></li>
-      <li><a href="/formular">Kontakt<small>napíšte mi</small></a></li>
     </ul>
     <div class="ov-foot">
       <a class="btn" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-tg"/></svg>Telegram komunita</a>
@@ -1204,7 +1206,7 @@ html, body { overflow-x: clip; }
   <section class="hero" data-pages="home" id="uvod">
     <div class="wrap hero-in">
       <div class="hero-copy">
-        <a class="chip" href="/vysledky"><i aria-hidden="true"></i>Dátová analýza futbalu</a>
+        <a class="chip" href="#vysledky"><i aria-hidden="true"></i>Dátová analýza futbalu</a>
         <h1 class="h1-who"><span class="ln">Futbalové tipy, za ktorými stoja</span> <span class="ln"><em>čísla,</em> nie pocit.</span></h1>
         <p class="lead">Každý tip vychádza zo štatistického modelu, nie z dojmu. Odporúčam len stávky s hodnotou.</p>
         <div class="cta">
@@ -1380,7 +1382,7 @@ html, body { overflow-x: clip; }
   </section>
 
   <!-- ================= 8 · DÔKAZY ================= -->
-  <section class="s12" data-pages="home" id="dokazy" data-n="08">
+  <section class="s12" data-pages="none" id="dokazy" data-n="08">
     <div class="wrap">
       <div class="head rv">
         <div><div class="eyebrow">Dôkazy</div><h2 class="h2">Čísla, ktoré <em>neskrývam.</em></h2></div>
@@ -1395,7 +1397,7 @@ html, body { overflow-x: clip; }
         <div class="panel last10 rv">
           <div class="eyebrow">Posledné tipy</div>
           <div style="margin-top:14px" id="pfList"><div class="l10-row"><div>Načítavam posledné tipy…</div></div></div>
-          <a class="link" href="/vysledky" style="display:inline-block;margin-top:18px">Celá história tipov →</a>
+          <a class="link" href="#vysledky" style="display:inline-block;margin-top:18px">Celá história tipov →</a>
         </div>
         <div class="panel rules rv" style="--d:.08s">
           <div class="eyebrow">Ako to overíte</div>
@@ -1408,6 +1410,59 @@ html, body { overflow-x: clip; }
         </div>
       </div>
       <p class="proof-note">1 jednotka = vklad na jeden tip. Minulé výsledky nie sú zárukou budúcich.</p>
+    </div>
+  </section>
+
+  <!-- ================= VÝSLEDKY ================= -->
+  <section class="sub s12" id="vysledky" data-pages="home">
+    <div class="wrap">
+      <div class="head rv">
+        <div><div class="eyebrow">Výsledky</div><h2 class="h2">Čísla, ktoré <em>neskrývam.</em></h2></div>
+        <p class="lead">Každý tip od 10. 10. 2026, tak ako ho dostali členovia. Výhry aj prehry. Tipy na zápasy, ktoré sa ešte nehrali, vidia len členovia.</p>
+      </div>
+      <!-- 1. 11. 2026: štatistiky za tento týždeň, tento mesiac a celé obdobie (s novým týždňom/mesiacom sa začínajú od nuly) -->
+      <div class="periods" id="periods">
+        <div class="per panel rv" data-per="week"><div class="per-h"><b>Tento týždeň</b><span data-per-range>–</span></div><b class="num">–</b></div>
+        <div class="per panel rv" data-per="month" style="--d:.08s"><div class="per-h"><b>Tento mesiac</b><span data-per-range>–</span></div><b class="num">–</b></div>
+        <div class="per panel rv all" data-per="all" style="--d:.16s"><div class="per-h"><b>Celé obdobie</b><span data-per-range>od začiatku</span></div><b class="num">–</b></div>
+      </div>
+      <p class="per-note">Zisk je v jednotkách: 1 jednotka = vklad na jeden tip. V eurách pri vklade 100&nbsp;€ na každý tip.</p>
+      <p class="month-line" id="month" hidden></p>
+      <p class="note" id="retroNote" hidden></p>
+
+      <div class="block panel rv">
+        <div class="block-head">
+          <div><h3>Všetky vyhodnotené tipy</h3><p>Tak, ako ich dostali členovia.</p></div>
+          <div class="tabs" role="group" aria-label="Filter">
+            <button class="tab" data-f="all" aria-pressed="true">Všetky</button>
+            <button class="tab" data-f="won" aria-pressed="false">Vyšli</button>
+            <button class="tab" data-f="lost" aria-pressed="false">Nevyšli</button>
+          </div>
+        </div>
+        <div class="ledger-cols"><span>Dátum a čas</span><span>Zápas a tip</span><span>Kurz</span><span style="text-align:right">Výsledok</span></div>
+        <ul class="ledger" id="list"><li class="empty">Načítavam…</li></ul>
+        <div class="pager" id="pager" hidden>
+          <span class="num" id="pgInfo"></span>
+          <button class="pg" id="pgPrev" aria-label="Novšie tipy">‹</button>
+          <button class="pg" id="pgNext" aria-label="Staršie tipy">›</button>
+        </div>
+      </div>
+
+      <div class="block panel" id="kalendar" hidden>
+        <div class="block-head"><div><h3>Kalendár tipov</h3><p>Zelená = deň v pluse, červená = deň v mínuse. Prejdite myšou na deň (na mobile ťuknite) a uvidíte jeho tipy.</p></div></div>
+        <div class="cal-stats" id="calStats"></div>
+        <div class="cal-bar">
+          <div class="cal-legend"><i class="l3"></i><i class="l1"></i><span>mínus</span><i class="e"></i><span>bez tipu</span><i class="w1"></i><i class="w3"></i><span>plus</span></div>
+          <div class="cal-nav"><button type="button" id="calPrev" aria-label="Staršie mesiace">‹</button><span id="calRange"></span><button type="button" id="calNext" aria-label="Novšie mesiace">›</button></div>
+        </div>
+        <div class="cal-wrap" id="calWrap"><div class="cal-months" id="calMonths"></div><div class="cal-tip" id="calTip" hidden></div></div>
+      </div>
+
+      <div class="block panel" id="mesiace" hidden>
+        <div class="block-head"><div><h3>Zisk mesiac po mesiaci</h3><p>Zisk je v jednotkách (1 jednotka = vklad na jeden tip).</p></div></div>
+        <div class="mon-cols" aria-hidden="true"><span>Mesiac</span><span>Tipov</span><span>W / L</span><span>Vyšlo</span><span>Zisk</span></div>
+        <ul class="mon-list" id="monList"></ul>
+      </div>
     </div>
   </section>
 
@@ -1454,9 +1509,9 @@ html, body { overflow-x: clip; }
   </section>
 
   <!-- ================= 11 · OTÁZKY A OBAVY ================= -->
-  <section class="s12" data-pages="home" id="otazky-obavy">
+  <section class="s12" data-pages="none" id="otazky-obavy">
     <div class="wrap faq-grid">
-      <div class="rv"><div class="eyebrow">Otázky a obavy</div><h2 class="h2">Čo vás môže <em>zaujímať</em></h2><p class="lead">Nenašli ste odpoveď? <a class="link" href="/formular">Napíšte mi</a>.</p></div>
+      <div class="rv"><div class="eyebrow">Otázky a obavy</div><h2 class="h2">Čo vás môže <em>zaujímať</em></h2><p class="lead">Nenašli ste odpoveď? <a class="link" href="#zapis">Napíšte mi</a>.</p></div>
       <div class="faq rv">
         <details open><summary>Zaručujete výhru?</summary><p>Nie. Žiadny model nevie zaručiť výsledok zápasu. TipRadar vyberá stávky, pri ktorých je šanca podľa štatistík vyššia, než naznačuje kurz. Rozhoduje dlhodobý výsledok, preto zverejňujem aj prehry. Ak členstvo skončí v mínuse, dostanete mesiac zadarmo.</p></details>
         <details><summary>Koľko tipov dostanem?</summary><p>Len tie s najvyššou dôverou, ktoré prejdú všetkými pravidlami – najviac 3 denne. Niektoré dni žiadny: keď neprejde nič, nepošlem nič. Kvalita pred kvantitou.</p></details>
@@ -1465,6 +1520,53 @@ html, body { overflow-x: clip; }
         <details><summary>Nemám čas sledovať zápasy. Zvládnem to?</summary><p>Áno. Tip príde do Telegramu 1 – 2 hodiny pred výkopom, stačí ho podať. Vyhodnotenie príde samo.</p></details>
         <details><summary>Musím členstvo rušiť?</summary><p>Nie. Členstvo sa samo nepredlžuje – skončí po poslednom tipe. Ak chcete pokračovať, jednoducho mi napíšete.</p></details>
       </div>
+    </div>
+  </section>
+
+  <!-- ================= OTÁZKY (aj pod členstvom) ================= -->
+  <section class="sub s12" id="otazky" data-pages="home">
+    <div class="wrap faq-grid">
+      <div class="rv"><div class="eyebrow">Otázky</div><h2 class="h2">Čo sa ľudia <em>pýtajú</em></h2><p class="lead">Nenašli ste odpoveď? <a class="link" href="#zapis">Napíšte mi</a>.</p></div>
+      <div class="faq">
+        <details><summary>Kedy a kam tipy prídu?</summary><p>Do súkromného kanála na Telegrame, 1 – 2 hodiny pred výkopom zápasu. Večer, keď sa zápasy dohrajú, príde vyhodnotenie dňa.</p></details>
+        <details><summary>Koľko tipov dostanem?</summary><p>Počet podľa dennej ponuky – len tie s najvyššou dôverou, ktoré prejdú všetkými pravidlami. Niektoré dni žiadny: keď neprejde nič, nepošleme nič a dáme vám vedieť. Kvalita pred kvantitou.</p></details>
+        <details><summary>Čo je zisk v jednotkách?</summary><p>Jednotka je suma, ktorú dáte na každý tip, napríklad 10 €. Zisk +5 jednotiek je teda +50 €.</p></details>
+        <details><summary>Zaručujete výhru?</summary><p>Nie. Žiadny model nevie zaručiť výsledok zápasu. TipRadar vyberá stávky, pri ktorých je šanca podľa štatistík vyššia, než naznačuje kurz. Rozhoduje dlhodobý výsledok, preto zverejňujeme aj prehraté tipy. Ak vaše členstvo skončí v mínuse, dostanete mesiac zadarmo (pozrite garanciu nižšie).</p></details>
+        <details id="garancia"><summary>Ako funguje garancia?</summary><p><strong>Mesiac zadarmo:</strong> ak vaše členstvo skončí v&nbsp;mínuse, dostanete 1 mesiac zadarmo – počas neho vám chodia všetky tipy do toho istého kanála a&nbsp;dáme vám vedieť na Telegrame. Počíta sa zo všetkých tipov vášho členstva s&nbsp;výsledkom, pri rovnakom vklade na každý tip (1 jednotka). Ak je súčet záporný, členstvo skončilo v&nbsp;mínuse. Na samotný mesiac zadarmo sa garancia už nevzťahuje, na ďalšie zaplatené členstvo áno.</p></details>
+        <details><summary>Ako overujete, že model funguje?</summary><p>Spätným testom na odohraných zápasoch a mesačnou kontrolou, či tipy s dôverou 70&nbsp;% naozaj vychádzajú zhruba v 70&nbsp;% prípadov. Tipy vyradené pre veľký rozpor s kurzami si zapisujeme a porovnávame, kto mal pravdu.</p></details>
+        <details><summary>Ako funguje členstvo?</summary><p>Spolupráca je na mieru, od 50 tipov. Napíšete mi, vyberiete si, na koľko tipov spolupráca bude, a&nbsp;podľa toho vám nastavím bank a&nbsp;vklad. Tipy sa vám rátajú odo dňa začiatku, každý poslaný tip sa odpočíta (zrušený zápas sa neráta). Spolupráca nemá časový limit – skončí, až keď dostanete posledný tip. Počas celej spolupráce máte mentoring 1&nbsp;na&nbsp;1 – kedykoľvek sa ma môžete opýtať na bank, vklad či konkrétny tip. Bank a&nbsp;vklad vám nastavím podľa zvolenej dĺžky spolupráce.</p></details>
+        <details><summary>Aký bank a vklad odporúčate?</summary><p>Závisí od toho, na koľko tipov sa dohodneme – presný bank a&nbsp;vklad vám nastavím osobne. Všeobecne platí: vklad 2&nbsp;–&nbsp;3&nbsp;% banku na tip, nikdy nad 5&nbsp;% a&nbsp;vždy z&nbsp;aktuálneho banku. Zisk nie je zaručený, rozhoduje dlhodobý výsledok.</p></details>
+        <details><summary>Musím členstvo rušiť?</summary><p>Nie. Členstvo sa samo nepredlžuje – skončí po poslednom tipe. Ak chcete pokračovať, jednoducho si kúpite ďalšie.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= KONTAKT ================= -->
+  <section class="sub s12" id="zapis" data-pages="home">
+    <div class="wrap form-grid">
+      <div class="rv">
+        <div class="eyebrow">Kontakt</div>
+        <h2 class="h2">Ozvem sa vám <em>osobne</em></h2>
+        <p class="lead">Napíšte mi, čo vás zaujíma o modeli, tipoch, členstve alebo kurze. Odpoveď príde na váš e-mail.</p>
+        <div class="contacts">
+          <a href="https://t.me/im_mishko" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-tg"/></svg><span><small>Telegram</small>@im_mishko</span></a>
+          <a href="mailto:info@tipradar.eu"><svg aria-hidden="true"><use href="#i-mail"/></svg><span><small>E-mail</small>info@tipradar.eu</span></a>
+          <a href="https://www.instagram.com/tipradar.eu/" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-ig"/></svg><span><small>Instagram</small>@tipradar.eu</span></a>
+        </div>
+      </div>
+      <form class="form panel rv" id="joinForm" novalidate>
+        <div class="fields">
+          <label class="field"><span class="lbl">Meno</span><input type="text" name="name" autocomplete="name" maxlength="80" required /></label>
+          <label class="field"><span class="lbl">E-mail</span><input type="email" name="email" autocomplete="email" inputmode="email" maxlength="120" required /></label>
+          <label class="field wide"><span class="lbl">Čo vás zaujíma</span><select name="plan"><option value="otazka" selected>Všeobecná otázka</option><option value="clenstvo">Členstvo</option><option value="kurz">Kurz stávkovania (99 €)</option></select></label>
+          <label class="field wide"><span class="lbl">Vaša otázka</span><textarea name="note" rows="5" maxlength="500" required></textarea></label>
+          <label class="hp" aria-hidden="true">Web <input type="text" name="web" tabindex="-1" autocomplete="off" /></label>
+        </div>
+        <label class="consent"><input type="checkbox" name="consent" required /><span>Súhlasím so spracovaním mena a e-mailu, aby ste mi mohli odpovedať. Podrobnosti v <a class="link" href="/ochrana-udajov" target="_blank">zásadách ochrany údajov</a>.</span></label>
+        <div class="submit"><button class="btn" type="submit" id="joinBtn">Odoslať otázku</button></div>
+        <p class="form-msg" id="joinMsg" role="status" aria-live="polite"></p>
+        <div class="form-done" id="joinDone" hidden><b>Ďakujem, otázka je odoslaná.</b><p class="muted">Odpoviem vám osobne na e-mail.</p></div>
+      </form>
     </div>
   </section>
 
@@ -1506,7 +1608,7 @@ html, body { overflow-x: clip; }
       <div class="crumb"><a href="/">Úvod</a><span>/</span><span>Otázky</span></div>
       <div class="eyebrow">Otázky</div>
       <h1>Ako vám <em>poradím</em></h1>
-      <p class="lead">Odpovede na najčastejšie otázky. Ak tu tú svoju nenájdete, napíšte mi cez <a class="link" href="/formular">formulár</a>.</p>
+      <p class="lead">Odpovede na najčastejšie otázky. Ak tu tú svoju nenájdete, napíšte mi cez <a class="link" href="#zapis">formulár</a>.</p>
       <span class="big-n" aria-hidden="true">?</span>
     </div>
   </header>
@@ -1528,55 +1630,6 @@ html, body { overflow-x: clip; }
       <span class="big-n" aria-hidden="true">MP</span>
     </div>
   </header>
-
-  <!-- ================= VÝSLEDKY ================= -->
-  <section class="sub" id="vysledky" data-pages="vysledky">
-    <div class="wrap">
-      <!-- 1. 11. 2026: štatistiky za tento týždeň, tento mesiac a celé obdobie (s novým týždňom/mesiacom sa začínajú od nuly) -->
-      <div class="periods" id="periods">
-        <div class="per panel rv" data-per="week"><div class="per-h"><b>Tento týždeň</b><span data-per-range>–</span></div><b class="num">–</b></div>
-        <div class="per panel rv" data-per="month" style="--d:.08s"><div class="per-h"><b>Tento mesiac</b><span data-per-range>–</span></div><b class="num">–</b></div>
-        <div class="per panel rv all" data-per="all" style="--d:.16s"><div class="per-h"><b>Celé obdobie</b><span data-per-range>od začiatku</span></div><b class="num">–</b></div>
-      </div>
-      <p class="per-note">Zisk je v jednotkách: 1 jednotka = vklad na jeden tip. V eurách pri vklade 100&nbsp;€ na každý tip.</p>
-      <p class="month-line" id="month" hidden></p>
-      <p class="note" id="retroNote" hidden></p>
-
-      <div class="block panel rv">
-        <div class="block-head">
-          <div><h3>Všetky vyhodnotené tipy</h3><p>Tak, ako ich dostali členovia.</p></div>
-          <div class="tabs" role="group" aria-label="Filter">
-            <button class="tab" data-f="all" aria-pressed="true">Všetky</button>
-            <button class="tab" data-f="won" aria-pressed="false">Vyšli</button>
-            <button class="tab" data-f="lost" aria-pressed="false">Nevyšli</button>
-          </div>
-        </div>
-        <div class="ledger-cols"><span>Dátum a čas</span><span>Zápas a tip</span><span>Kurz</span><span style="text-align:right">Výsledok</span></div>
-        <ul class="ledger" id="list"><li class="empty">Načítavam…</li></ul>
-        <div class="pager" id="pager" hidden>
-          <span class="num" id="pgInfo"></span>
-          <button class="pg" id="pgPrev" aria-label="Novšie tipy">‹</button>
-          <button class="pg" id="pgNext" aria-label="Staršie tipy">›</button>
-        </div>
-      </div>
-
-      <div class="block panel" id="kalendar" hidden>
-        <div class="block-head"><div><h3>Kalendár tipov</h3><p>Zelená = deň v pluse, červená = deň v mínuse. Prejdite myšou na deň (na mobile ťuknite) a uvidíte jeho tipy.</p></div></div>
-        <div class="cal-stats" id="calStats"></div>
-        <div class="cal-bar">
-          <div class="cal-legend"><i class="l3"></i><i class="l1"></i><span>mínus</span><i class="e"></i><span>bez tipu</span><i class="w1"></i><i class="w3"></i><span>plus</span></div>
-          <div class="cal-nav"><button type="button" id="calPrev" aria-label="Staršie mesiace">‹</button><span id="calRange"></span><button type="button" id="calNext" aria-label="Novšie mesiace">›</button></div>
-        </div>
-        <div class="cal-wrap" id="calWrap"><div class="cal-months" id="calMonths"></div><div class="cal-tip" id="calTip" hidden></div></div>
-      </div>
-
-      <div class="block panel" id="mesiace" hidden>
-        <div class="block-head"><div><h3>Zisk mesiac po mesiaci</h3><p>Zisk je v jednotkách (1 jednotka = vklad na jeden tip).</p></div></div>
-        <div class="mon-cols" aria-hidden="true"><span>Mesiac</span><span>Tipov</span><span>W / L</span><span>Vyšlo</span><span>Zisk</span></div>
-        <ul class="mon-list" id="monList"></ul>
-      </div>
-    </div>
-  </section>
 
   <!-- ================= ČLENSTVO ================= -->
   <section class="sub" id="clenstvo" data-pages="clenstvo">
@@ -1652,53 +1705,6 @@ html, body { overflow-x: clip; }
     </div>
   </section>
 
-  <!-- ================= OTÁZKY (aj pod členstvom) ================= -->
-  <section class="sub" id="otazky" data-pages="otazky clenstvo">
-    <div class="wrap faq-grid">
-      <div class="rv"><div class="eyebrow">Otázky</div><h2 class="h2">Čo sa ľudia <em>pýtajú</em></h2><p class="lead">Nenašli ste odpoveď? <a class="link" href="/formular">Napíšte mi</a>.</p></div>
-      <div class="faq">
-        <details><summary>Kedy a kam tipy prídu?</summary><p>Do súkromného kanála na Telegrame, 1 – 2 hodiny pred výkopom zápasu. Večer, keď sa zápasy dohrajú, príde vyhodnotenie dňa.</p></details>
-        <details><summary>Koľko tipov dostanem?</summary><p>Počet podľa dennej ponuky – len tie s najvyššou dôverou, ktoré prejdú všetkými pravidlami. Niektoré dni žiadny: keď neprejde nič, nepošleme nič a dáme vám vedieť. Kvalita pred kvantitou.</p></details>
-        <details><summary>Čo je zisk v jednotkách?</summary><p>Jednotka je suma, ktorú dáte na každý tip, napríklad 10 €. Zisk +5 jednotiek je teda +50 €.</p></details>
-        <details><summary>Zaručujete výhru?</summary><p>Nie. Žiadny model nevie zaručiť výsledok zápasu. TipRadar vyberá stávky, pri ktorých je šanca podľa štatistík vyššia, než naznačuje kurz. Rozhoduje dlhodobý výsledok, preto zverejňujeme aj prehraté tipy. Ak vaše členstvo skončí v mínuse, dostanete mesiac zadarmo (pozrite garanciu nižšie).</p></details>
-        <details id="garancia"><summary>Ako funguje garancia?</summary><p><strong>Mesiac zadarmo:</strong> ak vaše členstvo skončí v&nbsp;mínuse, dostanete 1 mesiac zadarmo – počas neho vám chodia všetky tipy do toho istého kanála a&nbsp;dáme vám vedieť na Telegrame. Počíta sa zo všetkých tipov vášho členstva s&nbsp;výsledkom, pri rovnakom vklade na každý tip (1 jednotka). Ak je súčet záporný, členstvo skončilo v&nbsp;mínuse. Na samotný mesiac zadarmo sa garancia už nevzťahuje, na ďalšie zaplatené členstvo áno.</p></details>
-        <details><summary>Ako overujete, že model funguje?</summary><p>Spätným testom na odohraných zápasoch a mesačnou kontrolou, či tipy s dôverou 70&nbsp;% naozaj vychádzajú zhruba v 70&nbsp;% prípadov. Tipy vyradené pre veľký rozpor s kurzami si zapisujeme a porovnávame, kto mal pravdu.</p></details>
-        <details><summary>Ako funguje členstvo?</summary><p>Spolupráca je na mieru, od 50 tipov. Napíšete mi, vyberiete si, na koľko tipov spolupráca bude, a&nbsp;podľa toho vám nastavím bank a&nbsp;vklad. Tipy sa vám rátajú odo dňa začiatku, každý poslaný tip sa odpočíta (zrušený zápas sa neráta). Spolupráca nemá časový limit – skončí, až keď dostanete posledný tip. Počas celej spolupráce máte mentoring 1&nbsp;na&nbsp;1 – kedykoľvek sa ma môžete opýtať na bank, vklad či konkrétny tip. Bank a&nbsp;vklad vám nastavím podľa zvolenej dĺžky spolupráce.</p></details>
-        <details><summary>Aký bank a vklad odporúčate?</summary><p>Závisí od toho, na koľko tipov sa dohodneme – presný bank a&nbsp;vklad vám nastavím osobne. Všeobecne platí: vklad 2&nbsp;–&nbsp;3&nbsp;% banku na tip, nikdy nad 5&nbsp;% a&nbsp;vždy z&nbsp;aktuálneho banku. Zisk nie je zaručený, rozhoduje dlhodobý výsledok.</p></details>
-        <details><summary>Musím členstvo rušiť?</summary><p>Nie. Členstvo sa samo nepredlžuje – skončí po poslednom tipe. Ak chcete pokračovať, jednoducho si kúpite ďalšie.</p></details>
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= KONTAKT ================= -->
-  <section class="sub" id="zapis" data-pages="formular">
-    <div class="wrap form-grid">
-      <div class="rv">
-        <div class="eyebrow">Kontakt</div>
-        <h2 class="h2">Ozvem sa vám <em>osobne</em></h2>
-        <p class="lead">Napíšte mi, čo vás zaujíma o modeli, tipoch, členstve alebo kurze. Odpoveď príde na váš e-mail.</p>
-        <div class="contacts">
-          <a href="https://t.me/im_mishko" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-tg"/></svg><span><small>Telegram</small>@im_mishko</span></a>
-          <a href="mailto:info@tipradar.eu"><svg aria-hidden="true"><use href="#i-mail"/></svg><span><small>E-mail</small>info@tipradar.eu</span></a>
-          <a href="https://www.instagram.com/tipradar.eu/" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-ig"/></svg><span><small>Instagram</small>@tipradar.eu</span></a>
-        </div>
-      </div>
-      <form class="form panel rv" id="joinForm" novalidate>
-        <div class="fields">
-          <label class="field"><span class="lbl">Meno</span><input type="text" name="name" autocomplete="name" maxlength="80" required /></label>
-          <label class="field"><span class="lbl">E-mail</span><input type="email" name="email" autocomplete="email" inputmode="email" maxlength="120" required /></label>
-          <label class="field wide"><span class="lbl">Čo vás zaujíma</span><select name="plan"><option value="otazka" selected>Všeobecná otázka</option><option value="clenstvo">Členstvo</option><option value="kurz">Kurz stávkovania (99 €)</option></select></label>
-          <label class="field wide"><span class="lbl">Vaša otázka</span><textarea name="note" rows="5" maxlength="500" required></textarea></label>
-          <label class="hp" aria-hidden="true">Web <input type="text" name="web" tabindex="-1" autocomplete="off" /></label>
-        </div>
-        <label class="consent"><input type="checkbox" name="consent" required /><span>Súhlasím so spracovaním mena a e-mailu, aby ste mi mohli odpovedať. Podrobnosti v <a class="link" href="/ochrana-udajov" target="_blank">zásadách ochrany údajov</a>.</span></label>
-        <div class="submit"><button class="btn" type="submit" id="joinBtn">Odoslať otázku</button></div>
-        <p class="form-msg" id="joinMsg" role="status" aria-live="polite"></p>
-        <div class="form-done" id="joinDone" hidden><b>Ďakujem, otázka je odoslaná.</b><p class="muted">Odpoviem vám osobne na e-mail.</p></div>
-      </form>
-    </div>
-  </section>
-
   <section class="final s12" data-pages="vysledky otazky formular o-mne" id="zaciatok-sub">
     <div class="wrap">
       <div class="final-card dark rv">
@@ -1718,7 +1724,7 @@ html, body { overflow-x: clip; }
   <div class="wrap">
     <div class="foot-top">
       <a class="brand" href="/" aria-label="TipRadar – úvod"><svg aria-hidden="true"><use href="#logo"/></svg><span>TipRadar<small>Futbalová analytika</small></span></a>
-      <nav class="foot-nav" aria-label="Odkazy v päte"><a href="/vysledky">Výsledky</a><a href="/clenstvo">Členstvo</a><a href="/kurz">Kurz</a><a href="/o-mne">O mne</a><a href="/otazky">Otázky</a><a href="/formular">Kontakt</a></nav>
+      <nav class="foot-nav" aria-label="Odkazy v päte"><a href="#kto-za-tym-je">O mne</a><a href="#vysledky">Výsledky</a><a href="#ponuka">Členstvo</a><a href="#otazky">Otázky</a><a href="#zapis">Kontakt</a><a href="/kurz">Kurz</a></nav>
       <div class="foot-ic">
         <a class="ic" href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener" aria-label="Telegram komunita" data-free><svg aria-hidden="true"><use href="#i-tg"/></svg></a>
         <a class="ic" href="https://www.instagram.com/tipradar.eu/" target="_blank" rel="noopener" aria-label="Instagram"><svg aria-hidden="true"><use href="#i-ig"/></svg></a>
@@ -1741,11 +1747,15 @@ html, body { overflow-x: clip; }
   var root = document.documentElement, page = root.getAttribute("data-page");
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // aktuálna stránka v menu
-  document.querySelectorAll(".links a, .ov-links a").forEach(function (a) {
-    var h = a.getAttribute("href");
-    if ((page === "home" && h === "/") || h === "/" + page) a.classList.add("active");
-  });
+  // jedna stránka: v menu svieti časť, na ktorej práve ste
+  var navA = Array.prototype.slice.call(document.querySelectorAll('.links a[href^="#"], .ov-links a[href^="#"]'));
+  var spy = navA.map(function (a) { return document.getElementById(a.getAttribute("href").slice(1)); }).filter(function (el, i, arr) { return el && arr.indexOf(el) === i; });
+  var markActive = function () {
+    var y = window.scrollY + window.innerHeight * 0.35, cur = spy.length ? spy[0].id : "";
+    spy.forEach(function (el) { if (el.getBoundingClientRect().top + window.scrollY <= y) cur = el.id; });
+    navA.forEach(function (a) { a.classList.toggle("active", a.getAttribute("href") === "#" + cur); });
+  };
+  window.addEventListener("scroll", markActive, { passive: true }); window.addEventListener("load", markActive); markActive();
 
   // celoplošné menu
   var tog = document.querySelector(".burger"), ov = document.getElementById("overlay");
@@ -2150,15 +2160,14 @@ html, body { overflow-x: clip; }
         el7.innerHTML = "Posledných 7 dní: <b>" + l7.won + " z " + l7.totalResolved + "</b> " + ofTips(l7.totalResolved) + " " + verb(l7.won) + (l7.withOdds > 0 ? ' · zisk <b class="' + cls(p7) + '">' + signed(p7, 1) + "&nbsp;j.</b>" : "");
         el7.hidden = false;
       }
-      if (page !== "vysledky") return;
       recentAll = d.recent || []; drawList(); drawMonths(d.months); drawCalendar(d.calendar);
       var rn = $("retroNote"), rx = Number(d.retroStrictExcluded) || 0;
       if (rn && rx > 0) { rn.textContent = rx + " " + (rx === 1 ? "starší tip, ktorý nespĺňa súčasné pravidlá výberu (dôvera 70 – 80 %, kurz aspoň 1,50), sme" : rx <= 4 ? "staršie tipy, ktoré nespĺňajú súčasné pravidlá výberu (dôvera 70 – 80 %, kurz aspoň 1,50), sme" : "starších tipov, ktoré nespĺňajú súčasné pravidlá výberu (dôvera 70 – 80 %, kurz aspoň 1,50), sme") + " v skúšobnom období (bez platiacich členov) spätne vyradili zo štatistík."; rn.hidden = false; }
       if (!n) { $("month").textContent = "Čísla sa zobrazia po prvých vyhodnotených tipoch."; $("month").hidden = false; return; }
       drawPeriods(buildPeriods(d));
     }).catch(function () {
-      if ($("pfList")) $("pfList").innerHTML = '<div class="l10-row"><div>Tipy sa nepodarilo načítať. <a class="link" href="/vysledky">Pozrieť výsledky</a></div></div>';
-      if ($("list") && page === "vysledky") { $("list").innerHTML = '<li class="empty">Tipy sa nepodarilo načítať. Skúste obnoviť stránku.</li>'; $("month").textContent = "Čísla sa nepodarilo načítať. Skúste o chvíľu obnoviť stránku."; $("month").hidden = false; }
+      if ($("pfList")) $("pfList").innerHTML = '<div class="l10-row"><div>Tipy sa nepodarilo načítať. <a class="link" href="#vysledky">Pozrieť výsledky</a></div></div>';
+      if ($("list")) { $("list").innerHTML = '<li class="empty">Tipy sa nepodarilo načítať. Skúste obnoviť stránku.</li>'; $("month").textContent = "Čísla sa nepodarilo načítať. Skúste o chvíľu obnoviť stránku."; $("month").hidden = false; }
     });
   }
 
