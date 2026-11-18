@@ -366,3 +366,73 @@ export async function tiprexSummary() {
     picks: all.slice(0, 400),
   };
 }
+
+// ---------- Verejný web tiprex.eu (18. 11. 2026) ----------
+
+/**
+ * Verejné čísla pre tiprex.eu – LEN vyhodnotené tipy (čakajúce nie, tie budú pre platiacich členov).
+ * Bez mena stávkovky a šancí modelu – návštevník vidí zápas, tip, kurz a výsledok.
+ */
+export async function tiprexPublicStats() {
+  const done = (await listPicks("done")).filter((p) => p.status !== "pending").sort((a, b) => b.matchDate.localeCompare(a.matchDate));
+  const total = agg();
+  const byMonth = new Map<string, Agg>();
+  for (const p of done) {
+    add(total, p);
+    const m = skDay(p.matchDate).slice(0, 7);
+    const a = byMonth.get(m) ?? agg(); add(a, p); byMonth.set(m, a);
+  }
+  const t = fin(total);
+  return {
+    startedAt: "2026-11-18",
+    total: { n: t.n, won: t.won, lost: t.lost, void: t.void, profit: t.profit, hit: t.hit, avgOdds: t.avgOdds, clvPlus: t.clvPlus, clvN: t.clvN },
+    byMonth: [...byMonth].map(([k, a]) => ({ key: k, ...fin(a) })).sort((x, y) => y.key.localeCompare(x.key)).map((r) => ({ key: r.key, n: r.n, won: r.won, profit: r.profit })),
+    recent: done.slice(0, 30).map((p) => ({
+      date: p.matchDate, league: p.league, home: p.homeTeam, away: p.awayTeam, market: marketEn(p.market), selection: selectionEn(p.selection, p.homeTeam, p.awayTeam), odds: p.odds, status: p.status,
+    })),
+  };
+}
+
+const MARKET_EN: Record<string, string> = {
+  "Góly": "Total goals", "Góly domácich": "Home team goals", "Góly hostí": "Away team goals",
+  "Góly v 1. polčase": "1st half goals", "Góly v 2. polčase": "2nd half goals",
+  "Rohy": "Total corners", "Rohy domácich": "Home team corners", "Rohy hostí": "Away team corners",
+  "Karty": "Total cards", "Karty domácich": "Home team cards", "Karty hostí": "Away team cards",
+  "Karty v 1. polčase": "1st half cards", "Karty v 2. polčase": "2nd half cards",
+  "Strely na bránu": "Shots on target", "Strely na bránu domácich": "Home shots on target", "Strely na bránu hostí": "Away shots on target",
+  "Fauly": "Total fouls", "Fauly domácich": "Home team fouls", "Fauly hostí": "Away team fouls",
+  "Výsledok zápasu": "Match result", "Oba tímy skórujú": "Both teams to score", "Obaja tímy skórujú": "Both teams to score",
+};
+export function marketEn(m: string): string { return MARKET_EN[m] ?? m; }
+export function selectionEn(sel: string, home: string, away: string): string {
+  if (sel === "Remíza") return "Draw";
+  if (sel === "Áno") return "Yes";
+  if (sel === "Nie") return "No";
+  if (sel.startsWith("Výhra ")) return `${sel.slice(6)} to win`;
+  return sel;
+}
+
+const WAITLIST_KEY = "tiprex_waitlist";
+/** Poradovník záujemcov z tiprex.eu (e-mail + voliteľne Telegram). Vráti false, ak už bol zapísaný. */
+export async function addTiprexWaitlist(email: string, telegram: string, country: string): Promise<boolean> {
+  const id = email.trim().toLowerCase();
+  const entry = JSON.stringify({ email: id, telegram: telegram.trim().slice(0, 64), country: country.trim().slice(0, 64), at: new Date().toISOString() });
+  if (!useUpstash) {
+    const f = path.join(__dirname, "..", "data", "tiprex-waitlist.json");
+    let d: Record<string, string> = {};
+    try { d = JSON.parse(fs.readFileSync(f, "utf8")); } catch { /* prázdny */ }
+    if (d[id]) return false;
+    d[id] = entry;
+    fs.mkdirSync(path.dirname(f), { recursive: true });
+    fs.writeFileSync(f, JSON.stringify(d));
+    return true;
+  }
+  const res = await redis(["HSETNX", WAITLIST_KEY, id, entry]);
+  return Number(res) === 1;
+}
+export async function tiprexWaitlistCount(): Promise<number> {
+  if (!useUpstash) {
+    try { return Object.keys(JSON.parse(fs.readFileSync(path.join(__dirname, "..", "data", "tiprex-waitlist.json"), "utf8"))).length; } catch { return 0; }
+  }
+  return Number(await redis(["HLEN", WAITLIST_KEY])) || 0;
+}

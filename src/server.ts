@@ -12,7 +12,7 @@ import { applyCupGoals } from "./cupAdjust";
 import { getDay, getAllDays, setDay } from "./dailyStore";
 import { saveSlip, deleteSlip, listSlipIds, getSlipImage, MAX_SLIP_CHARS } from "./slipStore";
 import { recordMarketPredictions, settleMarketPredictions, marketSummary } from "./marketTracker";
-import { recordTiprexPicks, updateTiprexClosing, settleTiprex, tiprexSummary } from "./tiprex";
+import { recordTiprexPicks, updateTiprexClosing, settleTiprex, tiprexSummary, tiprexPublicStats, addTiprexWaitlist, tiprexWaitlistCount } from "./tiprex";
 import { scanSurebets, computeSurebets, fixtureResult, topBooksPresent, TOP_BOOKS, surebetStatus, surebetLog, getMyBooks, setMyBooks, startSurebetScanner, setOnScan } from "./surebets";
 import { recordAutoFixture, listAuto, listAutoFixtures, autoFixtureDone, updateAuto, pruneAuto, AutoEntry } from "./autoStore";
 import "dotenv/config";
@@ -328,6 +328,43 @@ app.use((req, res, next) => {
   const toLanding = ["/", "/video", "/video/", "/kurz", "/kurz/", "/metoda", "/metoda/", "/vysledky", "/vysledky/", "/otazky", "/otazky/", "/formular", "/formular/", "/o-mne", "/o-mne/", "/clenstvo", "/clenstvo/", "/zaplatit", "/platba"].includes(req.path);
   res.redirect(301, (toLanding ? "https://tipradar.eu" : "https://app.tipradar.eu") + req.originalUrl);
 });
+
+// ---- TIPREX – verejný anglický web tiprex.eu (18. 11. 2026), bez hesla ----
+// Doména tiprex.eu (a www) ukazuje len landing-tiprex/; náhľad pred prepojením domény: app.tipradar.eu/tiprex-web.
+const TIPREX_HOSTS = (process.env.TIPREX_HOSTS || "tiprex.eu,www.tiprex.eu").split(",").map((h) => h.trim().toLowerCase()).filter(Boolean);
+const TIPREX_LANDING = path.join(__dirname, "..", "landing-tiprex");
+app.get("/api/tiprex-public/stats", async (_req, res) => {
+  try { res.set("Cache-Control", "public, max-age=300"); res.json(await tiprexPublicStats()); }
+  catch { res.status(500).json({ error: "Stats are temporarily unavailable." }); }
+});
+app.post("/api/tiprex-public/waitlist", express.json({ limit: "5kb" }), async (req, res) => {
+  try {
+    const b = req.body ?? {};
+    const email = String(b.email ?? "").trim();
+    if (!/^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,24}$/i.test(email)) { res.status(400).json({ error: "Please enter a valid e-mail address." }); return; }
+    const isNew = await addTiprexWaitlist(email, String(b.telegram ?? ""), String(b.country ?? ""));
+    if (isNew) {
+      const n = await tiprexWaitlistCount().catch(() => 0);
+      const esc = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      void notifyAdmin(`👑 <b>TIPREX – nový záujemca</b>\n${esc(email)}${b.telegram ? `\nTelegram: ${esc(String(b.telegram).slice(0, 64))}` : ""}${b.country ? `\nKrajina: ${esc(String(b.country).slice(0, 64))}` : ""}\n\nV poradovníku spolu: ${n}`).catch(() => {});
+    }
+    res.json({ ok: true, already: !isNew });
+  } catch {
+    res.status(500).json({ error: "Something went wrong. Please try again later." });
+  }
+});
+app.use((req, res, next) => {
+  if (!TIPREX_HOSTS.includes((req.hostname || "").toLowerCase())) { next(); return; }
+  if (req.path.startsWith("/api/tiprex-public/")) { next(); return; }
+  if (req.method !== "GET" && req.method !== "HEAD") { res.status(404).end(); return; }
+  if (req.path === "/" || req.path === "/index.html") {
+    res.set("Cache-Control", "no-cache"); res.sendFile(path.join(TIPREX_LANDING, "index.html"));
+    return;
+  }
+  // obrázky a ikony webu; všetko ostatné (appka TipRadaru, API) na tiprex.eu nie je
+  express.static(TIPREX_LANDING, { maxAge: "7d", index: false })(req, res, () => res.redirect(302, "/"));
+});
+app.use("/tiprex-web", express.static(TIPREX_LANDING, { maxAge: "1h" })); // náhľad (za heslom appky nižšie by nebol – preto len statické súbory)
 
 app.get("/", (req, res, next) => {
   if (LANDING_HOSTS.includes((req.hostname || "").toLowerCase())) {
