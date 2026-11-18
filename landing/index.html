@@ -34,7 +34,7 @@
 <link rel="apple-touch-icon" href="/favicon-256.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&amp;display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,400..900;1,62..125,400..900&amp;display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Mrs+Saint+Delafield&amp;text=Michal&amp;display=swap" rel="stylesheet" />
 <style>/* KAMEŇ (10. 11. 2026 16:05): teplý grafit + béžovo-sivý kameň */
 /* ===================== PLATINUM (8. 11. 2026) – nový web tipradar.eu od základu =====================
@@ -1265,6 +1265,41 @@ main > section.s12 > .wrap[data-n]::after { content: "Strana " attr(data-n); pos
 .kto-za-tym-je blockquote, #kto-za-tym-je blockquote { border-left: 4px solid var(--red); }
 .faq details { border-color: var(--line2); }
 .faq summary { font-family: "Archivo", sans-serif; font-weight: 700; }
+
+/* KLUB (18. 11. 2026 10:10, Michal: „grafika sa mi nepáči, ako športový tím, najlepšie futbalový“).
+   Farby Denníka ostávajú (sivá, čierna, červená). Grafika futbalového klubu: pruhy ihriska v pozadí, dresové pásy nad
+   časťami, čísla ako na drese, skosené tlačidlá a karty, nadpisy kurzívou ako na zápasových plagátoch. Nahrádza novinové prvky. */
+body::after { opacity: 1; background-image: repeating-linear-gradient(90deg, rgba(20,18,16,.028) 0 90px, transparent 90px 180px); background-size: auto; }
+h1, .h2, .page-head h1, .final-card .h2, .hero h1 { font-style: italic !important; letter-spacing: -.005em !important; }
+.masthead { border: 0; background: #141210; color: #E9E7E2; padding: 10px 18px; clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%); }
+.masthead b { color: #FF5A45; }
+/* dresový pás nad každou časťou namiesto novinovej čiary */
+main > section.s12:not(.hero):not(.final) > .wrap { border-top: 0; padding-top: 34px; }
+main > section.s12:not(.hero):not(.final) > .wrap::before { top: 0; height: 10px; background: repeating-linear-gradient(-55deg, var(--red) 0 14px, #141210 14px 28px); clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%); }
+main > section.s12 > .wrap[data-n]::after { content: attr(data-n); top: 26px; right: 0; padding: 10px 14px 8px; background: #141210; color: #fff; font: italic 900 34px/1 "Archivo", sans-serif; font-variation-settings: "wdth" 70; letter-spacing: 0; clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%); box-shadow: inset 0 -5px 0 var(--red); }
+.s12 .head, .head { border-bottom: 0; padding-bottom: 0; }
+.eyebrow::before { width: 16px; height: 12px; background: var(--red); clip-path: polygon(30% 0, 100% 0, 70% 100%, 0 100%); }
+/* skosené tlačidlá a štítky ako na zápasovej grafike */
+.btn { border-radius: 0; clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%); padding: 0 34px; font-style: italic; font-weight: 800; }
+.btn .arr { border-radius: 0; clip-path: polygon(5px 0, 100% 0, calc(100% - 5px) 100%, 0 100%); }
+.chip, .deck-bar span, .facts span, .tabs, .tab { border-radius: 0 !important; }
+/* karty: červený pás hore a zrezaný roh ako na dresovej grafike */
+.panel { border-radius: 0; clip-path: polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 0 100%); box-shadow: inset 0 4px 0 #141210; }
+.panel.metal, .panel.buy, .panel.per.all, .panel.plan.feat { box-shadow: inset 0 4px 0 var(--red); }
+.offer, .final-card { border-radius: 0 !important; clip-path: polygon(0 0, calc(100% - 34px) 0, 100% 34px, 100% 100%, 34px 100%, 0 calc(100% - 34px)); }
+/* tabuľa súťaží ako LED pás na štadióne */
+.leagues { border-block: 4px solid var(--red); }
+.marquee span { font-style: italic; font-weight: 800; }
+/* výsledky a otázky na „trávniku“ – jemné pruhy kosenia */
+#vysledky, #otazky { background: repeating-linear-gradient(90deg, #D3D5D1 0 120px, #CDCFCB 120px 240px); }
+/* úvod: veľké skosené pásy v pozadí ako na zápasovom plagáte */
+.hero { isolation: isolate; }
+.hero::after { content: ""; position: absolute; z-index: -1; right: -8%; top: 90px; width: 58%; height: 640px; background: linear-gradient(#141210, #141210) 0 0 / 34% 100% no-repeat, linear-gradient(var(--red), var(--red)) 52% 0 / 14% 100% no-repeat; transform: skewX(-18deg); opacity: .07; pointer-events: none; }
+.vc-mono, .kpi b, .per .big, .per b.num, .cal-stat b, .offer-l .from, .tk3-match i { font-style: italic !important; }
+.btn.ghost { background: #FAFAF8; box-shadow: none; }
+.btn.ghost:hover { background: #141210; color: #F4F0E8; }
+.metal .btn.ghost, .final-card .btn.ghost { background: rgba(244,240,232,.12); box-shadow: none; }
+.guar2 h3, .offer-l h3 { font-family: "Archivo", sans-serif !important; font-style: italic; font-weight: 800; font-variation-settings: "wdth" 75; text-transform: uppercase; letter-spacing: 0; line-height: 1; }
 </style>
 </head>
 <body>
@@ -1316,7 +1351,7 @@ main > section.s12 > .wrap[data-n]::after { content: "Strana " attr(data-n); pos
   <!-- ================= ÚVOD ================= -->
   <section class="hero" data-pages="home" id="uvod">
     <div class="wrap hero-in">
-      <div class="masthead" aria-hidden="true"><span id="mhDate">Denné vydanie</span><span><b>TipRadar</b> · futbal podľa čísel</span><span>18 súťaží · okolo 120 zápasov denne</span></div>
+      <div class="masthead" aria-hidden="true"><span id="mhDate">Zápasový deň</span><span><b>TipRadar</b> · futbal podľa čísel</span><span>18 súťaží · okolo 120 zápasov denne</span></div>
       <div class="hero-copy">
         <a class="chip" href="#vysledky"><i aria-hidden="true"></i>Dátová analýza futbalu</a>
         <h1 class="h1-who"><span class="ln">Futbalové tipy, za ktorými stoja</span> <span class="ln"><em>čísla,</em> nie pocit.</span></h1>
@@ -1859,7 +1894,7 @@ main > section.s12 > .wrap[data-n]::after { content: "Strana " attr(data-n); pos
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // Denník: dátum vydania v hlavičke a „Strana 02“ pri častiach
-  try { var mh = document.getElementById("mhDate"); if (mh) { var dt = new Date().toLocaleDateString("sk-SK", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Bratislava" }); mh.textContent = dt + " · denné vydanie"; } } catch (e) {}
+  try { var mh = document.getElementById("mhDate"); if (mh) { var dt = new Date().toLocaleDateString("sk-SK", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Bratislava" }); mh.textContent = "Zápasový deň · " + dt; } } catch (e) {}
   document.querySelectorAll("section.s12[data-n] > .wrap").forEach(function (w) { w.setAttribute("data-n", w.parentNode.getAttribute("data-n")); });
   // jedna stránka: v menu svieti časť, na ktorej práve ste
   var navA = Array.prototype.slice.call(document.querySelectorAll('.links a[href^="#"], .ov-links a[href^="#"]'));
