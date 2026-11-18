@@ -38,6 +38,8 @@ export interface FixtureOdds {
   away: string;
   /** betId -> { name, values: value -> kurzy jednotlivých stávkoviek } */
   bets: Record<string, { name: string; values: Record<string, BookOdd[]> }>;
+  /** Súťaž len pre TIPREX (18. 11. 2026) – do surebetov ARBREX sa nepočíta. */
+  extra?: boolean;
 }
 export interface SurebetSide { label: string; book: string; odd: number }
 export interface Surebet {
@@ -95,7 +97,7 @@ function currentSeason(): number {
   return now.getUTCMonth() >= 6 ? now.getUTCFullYear() : now.getUTCFullYear() - 1;
 }
 
-export interface SurebetLeague { id: number; name: string; country: string }
+export interface SurebetLeague { id: number; name: string; country: string; extra?: boolean }
 /** Súťaže TipRadaru (LEAGUE_PRESETS zo server.ts) – nastaví ich startSurebetScanner. */
 let LEAGUES: SurebetLeague[] = [];
 
@@ -124,7 +126,7 @@ async function scanLeague(lg: SurebetLeague, out: Map<number, FixtureOdds>, coun
       const nm = names.get(id);
       // Len zápasy najbližších dní, ktoré sa ešte nezačali.
       if (!id || !when || !nm || new Date(when).getTime() <= Date.now() || (nm.status !== "NS" && nm.status !== "TBD")) continue;
-      const fo: FixtureOdds = out.get(id) ?? { fixtureId: id, league: lg.name, country: lg.country, date: when, home: nm.home, away: nm.away, bets: {} };
+      const fo: FixtureOdds = out.get(id) ?? { fixtureId: id, league: lg.name, country: lg.country, date: when, home: nm.home, away: nm.away, bets: {}, ...(lg.extra ? { extra: true } : {}) };
       for (const bk of item?.bookmakers ?? []) {
         const book = String(bk?.name ?? "").trim();
         if (!book) continue;
@@ -273,6 +275,7 @@ export function computeSurebets(allowedBooks: string[] | null, minMargin = MIN_M
   const out: Surebet[] = [];
   const now = Date.now();
   for (const f of lastScan.fixtures) {
+    if (f.extra) continue; // súťaže len pre TIPREX – ARBREX ostáva pri 18 súťažiach TipRadaru
     if (new Date(f.date).getTime() <= now) continue;
     for (const [betId, bet] of Object.entries(f.bets)) {
       for (const [va, vb] of pairsOf(bet.name, bet.values)) {
@@ -451,8 +454,11 @@ export function surebetStatus() {
   };
 }
 
-export function startSurebetScanner(leagues: SurebetLeague[]): void {
-  LEAGUES = leagues.map((l) => ({ id: l.id, name: l.name, country: l.country }));
+export function startSurebetScanner(leagues: SurebetLeague[], extraLeagues: SurebetLeague[] = []): void {
+  LEAGUES = [
+    ...leagues.map((l) => ({ id: l.id, name: l.name, country: l.country })),
+    ...extraLeagues.map((l) => ({ id: l.id, name: l.name, country: l.country, extra: true })),
+  ];
   setTimeout(() => void scanSurebets(), 60 * 1000); // minútu po štarte servera
   setInterval(() => void scanSurebets(), SCAN_EVERY_MS);
 }

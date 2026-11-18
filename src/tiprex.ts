@@ -308,15 +308,15 @@ const skDay = (iso: string) => new Date(iso).toLocaleDateString("sv-SE", { timeZ
 
 /** Súťaže TipRadaru v poslednom prehľadaní kurzov: koľko známych zahraničných stávkoviek ich ponúka. */
 function leagueCoverage() {
-  const map = new Map<string, { league: string; country: string; fixtures: number; books: Set<string> }>();
+  const map = new Map<string, { league: string; country: string; fixtures: number; books: Set<string>; extra: boolean }>();
   for (const f of scannedFixtures()) {
-    const e = map.get(f.league) ?? { league: f.league, country: f.country, fixtures: 0, books: new Set<string>() };
+    const e = map.get(f.league + "|" + f.country) ?? { league: f.league, country: f.country, fixtures: 0, books: new Set<string>(), extra: !!f.extra };
     e.fixtures++;
     for (const bet of Object.values(f.bets)) for (const list of Object.values(bet.values)) for (const o of list)
       if (isTopBook(o.book) && !/^pinnacle$/i.test(o.book.trim())) e.books.add(o.book);
-    map.set(f.league, e);
+    map.set(f.league + "|" + f.country, e);
   }
-  return [...map.values()].map((e) => ({ league: e.league, country: e.country, fixtures: e.fixtures, books: [...e.books].sort() })).sort((a, b) => b.books.length - a.books.length);
+  return [...map.values()].map((e) => ({ league: e.league, country: e.country, extra: e.extra, fixtures: e.fixtures, books: [...e.books].sort() })).sort((a, b) => b.books.length - a.books.length);
 }
 
 export async function tiprexSummary() {

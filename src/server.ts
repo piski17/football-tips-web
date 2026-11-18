@@ -196,6 +196,29 @@ function monthlyResults(tips: SavedTip[]) {
 /** Pohárové súťaže: tímy v nich hrajú málo zápasov, ale v domácej lige majú dosť dát. */
 const CUP_LEAGUE_IDS = [2, 3, 848]; // Liga majstrov, Európska liga, Konferenčná liga
 
+/**
+ * TIPREX (18. 11. 2026, Michal): ďalšie súťaže LEN pre TIPREX – TipRadar ani ARBREX ich nepoužívajú.
+ * Tip z nich vznikne len vtedy, keď presne ten tip ponúkajú aspoň 3 známe zahraničné stávkovky (src/tiprex.ts).
+ */
+const TIPREX_EXTRA_LEAGUES: { id: number; name: string; country: string }[] = [
+  { id: 3, name: "UEFA Europa League", country: "Európa" },
+  { id: 848, name: "UEFA Conference League", country: "Európa" },
+  { id: 136, name: "Serie B", country: "Taliansko" },
+  { id: 41, name: "League One", country: "Anglicko" },
+  { id: 218, name: "Bundesliga", country: "Rakúsko" },
+  { id: 207, name: "Super League", country: "Švajčiarsko" },
+  { id: 197, name: "Super League 1", country: "Grécko" },
+  { id: 106, name: "Ekstraklasa", country: "Poľsko" },
+  { id: 345, name: "Chance Liga", country: "Česko" },
+  { id: 210, name: "HNL", country: "Chorvátsko" },
+  { id: 253, name: "MLS", country: "USA" },
+  { id: 71, name: "Serie A", country: "Brazília" },
+  { id: 128, name: "Liga Profesional", country: "Argentína" },
+  { id: 262, name: "Liga MX", country: "Mexiko" },
+  { id: 307, name: "Pro League", country: "Saudská Arábia" },
+  { id: 98, name: "J1 League", country: "Japonsko" },
+];
+
 const LEAGUE_PRESETS: LeaguePreset[] = [
   // 10. 11. 2026 (Michal): + ženská Liga majstrov (525) a Liga národov (5) – 18 súťaží.
   // 8. 11. 2026 22:16 (Michal): Rumunská Liga I ODSTRÁNENÁ – 16 súťaží; jej tipy sa nerátajú (HIDE_REMOVED_LEAGUE_TIPS).
@@ -2422,7 +2445,7 @@ app.get("/api/surebets/result", async (req, res) => {
     res.status(500).json({ error: err.message ?? String(err) });
   }
 });
-startSurebetScanner(LEAGUE_PRESETS);
+startSurebetScanner(LEAGUE_PRESETS, TIPREX_EXTRA_LEAGUES); // TIPREX: kurzy aj ďalších súťaží (do surebetov sa nerátajú)
 setOnScan(() => updateTiprexClosing()); // TIPREX: posledný férový kurz pred výkopom (CLV)
 
 // ---- Valuebety odstránené z appky (15. 11. 2026, Michal). Staré záznamy ostávajú v Upstash (tipradar_valuebets). ----
@@ -3813,6 +3836,60 @@ setInterval(() => void runAutoAnalysis().catch((err) => console.error("Automatic
 setTimeout(() => void runAutoAnalysis().catch(() => {}), 60 * 1000);
 setInterval(() => void settleMarketPredictions().catch(() => {}), 15 * 60 * 1000);
 setInterval(() => void settleTiprex().catch(() => {}), 15 * 60 * 1000);
+
+// TIPREX – ďalšie súťaže (18. 11. 2026): rovnaký postup ako runAutoAnalysis (~65 min pred výkopom), ale výsledok ide
+// LEN do TIPREXU – nič sa nezapisuje do automatických tipov, sledovania trhov ani štatistík TipRadaru.
+const tiprexFixtureCache = new Map<string, { at: number; fixtures: any[] }>();
+const tiprexDone = new Set<number>();
+let tiprexRunning = false;
+async function tiprexFixturesFor(day: string): Promise<any[]> {
+  const out: any[] = [];
+  for (const league of TIPREX_EXTRA_LEAGUES) {
+    const key = `${league.id}|${day}`;
+    const cached = tiprexFixtureCache.get(key);
+    if (cached && Date.now() - cached.at < AUTO_FIXTURES_REFRESH_MS) { out.push(...cached.fixtures); continue; }
+    try {
+      const fixtures = await getFixturesByLeague(league.id, seasonOfDate(day), 50, day);
+      tiprexFixtureCache.set(key, { at: Date.now(), fixtures });
+      out.push(...fixtures);
+    } catch {
+      if (cached) out.push(...cached.fixtures);
+    }
+  }
+  return out;
+}
+async function runTiprexExtra(): Promise<void> {
+  if (tiprexRunning) return;
+  tiprexRunning = true;
+  try {
+    const now = Date.now();
+    const days = Array.from(new Set([new Date(now).toISOString().slice(0, 10), new Date(now + 3 * 3600 * 1000).toISOString().slice(0, 10)]));
+    for (const k of tiprexFixtureCache.keys()) if (!days.includes(k.split("|")[1])) tiprexFixtureCache.delete(k);
+    const fixtures = (await Promise.all(days.map(tiprexFixturesFor))).flat();
+    const due = fixtures.filter((f) => {
+      const kick = new Date(f.date).getTime();
+      return f.status === "NS" && isFinite(kick) && kick > now && kick - now <= AUTO_BEFORE_KICKOFF_MIN * 60 * 1000;
+    });
+    for (const fixture of due) {
+      if (tiprexDone.has(fixture.fixtureId)) continue;
+      try {
+        const { result } = await analyzeFixture(fixture, fixture.league.id, fixture.league.season, false);
+        tiprexDone.add(fixture.fixtureId);
+        await recordTiprexPicks(
+          { fixtureId: fixture.fixtureId, matchDate: fixture.date, homeTeam: fixture.homeTeam.name, awayTeam: fixture.awayTeam.name, league: String(fixture.league.name ?? "") },
+          (result as any).allCandidates ?? [],
+          (result as any).trackOnlyCandidates ?? []
+        );
+      } catch (err) {
+        console.error(`TIPREX – analýza zápasu ${fixture.fixtureId} zlyhala:`, err);
+      }
+    }
+  } finally {
+    tiprexRunning = false;
+  }
+}
+setInterval(() => void runTiprexExtra().catch((err) => console.error("TIPREX – ďalšie súťaže zlyhali:", err)), 15 * 60 * 1000);
+setTimeout(() => void runTiprexExtra().catch(() => {}), 90 * 1000);
 app.get("/api/markets-all", async (_req, res) => {
   try {
     res.json(await marketSummary());
