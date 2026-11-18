@@ -15,10 +15,10 @@
 /* PLATINUM (8. 11. 2026) – rovnaké farby a písmo ako tipradar.eu */
 :root { --paper: #F4F0E8; --ink: #141210; --muted: #5A544B; --faint: #8A8378; --line: rgba(20,18,16, .08); --plat: linear-gradient(115deg, #1E1A16 0%, #2A2520 40%, #3A342C 75%, #1E1A16 100%); }
 * { box-sizing: border-box; }
-body { margin: 0; background: radial-gradient(60% 40% at 50% 0%, rgba(200,52,38, .12), transparent 70%) no-repeat, var(--paper); color: var(--ink); font: 500 16.5px/1.7 "Manrope", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+body { margin: 0; background: radial-gradient(60% 40% at 50% 0%, rgba(140,29,43, .12), transparent 70%) no-repeat, var(--paper); color: var(--ink); font: 500 16.5px/1.7 "Manrope", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
 .wrap { width: min(780px, 100% - 48px); margin-inline: auto; padding: 48px 0 90px; }
 @media (max-width: 640px) { .wrap { width: calc(100% - 32px); padding-top: 28px; } }
-a { color: var(--ink); font-weight: 700; text-decoration: underline; text-decoration-color: rgba(200,52,38, .45); text-decoration-thickness: 1px; text-underline-offset: 4px; }
+a { color: var(--ink); font-weight: 700; text-decoration: underline; text-decoration-color: rgba(140,29,43, .45); text-decoration-thickness: 1px; text-underline-offset: 4px; }
 .back { display: inline-flex; align-items: center; gap: 12px; padding: 6px 18px 6px 6px; border-radius: 999px; background: rgba(20,18,16, .03); border: 1px solid var(--line); font: 600 14px/1 "Urbanist", sans-serif; text-decoration: none; }
 .back svg { width: 32px; height: 32px; }
 h1, h2 { font-family: "Urbanist", sans-serif; letter-spacing: -.03em; line-height: 1.05; }
@@ -45,15 +45,15 @@ h3, h4 { letter-spacing: -.015em; }
 .day h3, .offer-l h3, .fit h3, .coin h3, .guar2 h3 { font-weight: 400; }
 .kpi b, .offer-l .from, .vc-mono, .big-n, .s12[data-n]::before, .steps .n, .why li .n, .offer-r .n, .coin-sum b, .seal b, .per-r, .coin-art .cn, .per .big, .tk3-match i { font-family: var(--serif) !important; font-weight: 300; }
 .s12[data-n]::before, .big-n { font-style: italic; font-weight: 200; }
-.eyebrow { font-family: var(--sans); font-weight: 700; letter-spacing: .28em; color: #C83426; }
+.eyebrow { font-family: var(--sans); font-weight: 700; letter-spacing: .28em; color: #8C1D2B; }
 .eyebrow::before { width: 7px; height: 7px; border-radius: 1px; transform: rotate(45deg); background: currentColor; opacity: .9; }
 .metal .eyebrow, .vs-new .eyebrow { color: #B3AA9C; }
 .btn { font-family: var(--sans); font-weight: 700; letter-spacing: .005em; }
 /* jemné zrno a zlaté linky */
 body::after { content: ""; position: fixed; inset: 0; z-index: 9999; pointer-events: none; opacity: .05; mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
-.panel::before { background: linear-gradient(90deg, transparent, rgba(200,52,38,.55), transparent); }
-.panel:hover { border-color: rgba(200,52,38,.28); }
+.panel::before { background: linear-gradient(90deg, transparent, rgba(140,29,43,.55), transparent); }
+.panel:hover { border-color: rgba(140,29,43,.28); }
 html, body { overflow-x: clip; }
 @media (max-width: 720px) {
   .jump { display: none !important; }
@@ -65,13 +65,13 @@ html, body { overflow-x: clip; }
 .coin { overflow: clip; }
 /* ===================== DENNÍK (18. 11. 2026) – úplne nový vzhľad tipradar.eu =====================
    Michal: „úplne iný dizajn“ (nie Kameň, nie TIPREX). Svetlý ako športové noviny: sivé pozadie #E3E3E0 (Michal 18. 11. 10:00, predtým papier #F4F0E8), čierna tlač #141210,
-   červený akcent #C83426, ostré rohy, hrubé čiary nad časťami, písmo Archivo (nadpisy úzke a hrubé, veľkými písmenami).
+   červený akcent #8C1D2B, ostré rohy, hrubé čiary nad časťami, písmo Archivo (nadpisy úzke a hrubé, veľkými písmenami).
    Farby boli prevrátené v celom štýle (tmavé ↔ svetlé), plochy .metal sú teraz čierne. */
 :root {
   --bg: #C9CBC7; --bg2: #BFC1BD; --card: #FAFAF8; --card2: #EFEFEC;
   --text: #141210; --muted: #5A544B; --faint: #8A8378; --ink: #F4F0E8;
   --line: rgba(20,18,16,.12); --line2: rgba(20,18,16,.24); --soft: rgba(20,18,16,.04);
-  --red: #C83426;
+  --red: #8C1D2B;
   --plat: linear-gradient(#141210, #141210);
   --metal: linear-gradient(160deg, #1A1714 0%, #24201B 100%);
   --win: #1E7B4C; --loss: #C23A2B; --void: #8A8378;
@@ -90,14 +90,14 @@ body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-event
 h1, .h2, .page-head h1, .final-card .h2, .hero h1 { font-family: "Archivo", sans-serif !important; font-stretch: 72%; font-variation-settings: "wdth" 72 !important; font-weight: 800 !important; text-transform: uppercase; letter-spacing: -.01em !important; line-height: .95 !important; }
 h3, h4 { font-family: "Archivo", sans-serif; font-weight: 750; letter-spacing: -.01em; }
 h1 em, .h2 em, .guar2 h3 em, .hero h1 em { font-family: inherit !important; font-style: normal !important; font-weight: 800 !important; background: none !important; color: var(--red) !important; -webkit-text-fill-color: var(--red); animation: none !important; padding-right: 0 !important; }
-.metal h1 em, .metal .h2 em { color: #FF8A70 !important; -webkit-text-fill-color: #FF8A70; }
+.metal h1 em, .metal .h2 em { color: #D9BF8C !important; -webkit-text-fill-color: #D9BF8C; }
 .h2 { font-size: clamp(40px, 5.6vw, 76px); }
 .kpi b, .offer-l .from, .vc-mono, .big-n, .steps .n, .why li .n, .offer-r .n, .coin-sum b, .seal b, .per-r, .coin-art .cn, .per .big, .tk3-match i, .cal-stat b { font-family: "Archivo", sans-serif !important; font-variation-settings: "wdth" 75 !important; font-style: normal !important; font-weight: 800 !important; }
 .s12[data-n]::before { font-family: "Archivo", sans-serif; font-variation-settings: "wdth" 62; font-weight: 900; font-style: normal; -webkit-text-stroke: 0; color: rgba(20,18,16,.05); }
 .s12[data-n]::after { display: none; }
 .eyebrow { font: 700 12.5px/1 "Archivo", sans-serif; letter-spacing: .18em; color: var(--red); }
 .eyebrow::before { width: 10px; height: 10px; border-radius: 0; transform: none; background: var(--red); opacity: 1; }
-.metal .eyebrow { color: #FF8A70; }
+.metal .eyebrow { color: #D9BF8C; }
 .lead { color: var(--muted); }
 .sig { color: var(--text); }
 
@@ -145,12 +145,12 @@ html.scrolled .nav-in { background: rgba(201,203,199,.97); border-color: var(--t
 .trust svg { stroke: var(--red); }
 
 /* úvod */
-.hero::before { background: radial-gradient(closest-side, rgba(200,52,38,.08), transparent) !important; }
+.hero::before { background: radial-gradient(closest-side, rgba(140,29,43,.08), transparent) !important; }
 .hero h1.h1-who { font-size: clamp(54px, 8vw, 128px); max-width: 15ch; }
 .pitch { opacity: .55; }
 .final-card, .foot.dark { background: #141210 !important; color: #F4F0E8; --text: #F4F0E8; --muted: #C9C0B2; --faint: #A39A8C; --line: rgba(246,242,234,.14); --line2: rgba(246,242,234,.28); }
 .final-card { border-radius: var(--r-lg) !important; }
-.final-card .h2 em { color: #FF8A70 !important; -webkit-text-fill-color: #FF8A70; }
+.final-card .h2 em { color: #D9BF8C !important; -webkit-text-fill-color: #D9BF8C; }
 .foot.dark a { color: inherit; }
 
 /* DENNÍK 2 (18. 11. 2026 10:06, Michal: „prerob celý web graficky, aby to dávalo zmysel“) – novinové prvky:
@@ -180,7 +180,7 @@ main > section.s12 > .wrap[data-n]::after { content: "Strana " attr(data-n); pos
 body::after { opacity: 1; background-image: repeating-linear-gradient(90deg, rgba(20,18,16,.028) 0 90px, transparent 90px 180px); background-size: auto; }
 h1, .h2, .page-head h1, .final-card .h2, .hero h1 { font-style: italic !important; letter-spacing: -.005em !important; }
 .masthead { border: 0; background: #141210; color: #E9E7E2; padding: 10px 18px; clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%); }
-.masthead b { color: #FF5A45; }
+.masthead b { color: #D9BF8C; }
 /* dresový pás nad každou časťou namiesto novinovej čiary */
 main > section.s12:not(.hero):not(.final) > .wrap { border-top: 0; padding-top: 34px; }
 main > section.s12:not(.hero):not(.final) > .wrap::before { top: 0; height: 10px; background: repeating-linear-gradient(-55deg, var(--red) 0 14px, #141210 14px 28px); clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%); }
@@ -208,6 +208,34 @@ main > section.s12 > .wrap[data-n]::after { content: attr(data-n); top: 26px; ri
 .btn.ghost:hover { background: #141210; color: #F4F0E8; }
 .metal .btn.ghost, .final-card .btn.ghost { background: rgba(244,240,232,.12); box-shadow: none; }
 .guar2 h3, .offer-l h3 { font-family: "Archivo", sans-serif !important; font-style: italic; font-weight: 800; font-variation-settings: "wdth" 75; text-transform: uppercase; letter-spacing: 0; line-height: 1; }
+
+/* PREHĽADNE (18. 11. 2026 10:13, Michal: „neprehľadné – odstráň zbytočnosti, zmeň text, luxusnejšie farby textu zladené s pozadím“).
+   Text grafit #1B1E22, tlmený #4F555C, akcent bordová #8C1D2B (na tmavom šampanské #D9BF8C), karty #F3F3F1.
+   Preč: plávajúce kartičky a štítok v úvode, pás dôvery, šikmé pásy v pozadí, pruhy trávnika, čísla častí, hlavička vydania. */
+:root { --text: #1B1E22; --muted: #4F555C; --faint: #7C828A; --red: #8C1D2B; --win: #1D6B45; --loss: #8C1D2B; --card: #F3F3F1; --line: rgba(27,30,34,.11); --line2: rgba(27,30,34,.2); }
+.metal, .plan.feat, .per.all, .buy, .idcard, .final-card, .foot.dark { --text: #EDEBE6; --muted: #B9B6AE; --faint: #8F8C85; }
+.panel.metal, .panel.buy, .panel.per.all, .panel.plan.feat, .vs-new, .offer-l, .vcard, .final-card, .foot.dark { background: #1B1E22 !important; }
+.metal h1 em, .metal .h2 em, .final-card .h2 em, .metal .eyebrow, .final-card .eyebrow, .offer-l .badge { color: #D9BF8C !important; -webkit-text-fill-color: #D9BF8C; }
+.masthead, .hero .chip, .an-float, .trust, .hero::after, .s12 .wrap[data-n]::after, .pain q::before, .pain::after { display: none !important; }
+main > section.s12 > .wrap[data-n]::after { display: none !important; }
+body::after { display: none; }
+#vysledky, #otazky { background: #D3D4D0; border-block: 0; }
+.panel, #vysledky .panel:not(.metal):not(.all), #otazky .panel:not(.metal) { background: var(--card); border-color: var(--line); box-shadow: inset 0 3px 0 var(--red); }
+/* dresový pás už len ako krátky akcent */
+main > section.s12:not(.hero):not(.final) > .wrap { padding-top: 0; }
+main > section.s12:not(.hero):not(.final) > .wrap::before { display: none; }
+.eyebrow { color: var(--red); }
+.eyebrow::before { width: 34px; height: 6px; background: repeating-linear-gradient(-55deg, var(--red) 0 5px, transparent 5px 9px); clip-path: none; }
+main > section.s12:not(.hero):not(.final) { padding: clamp(64px, 8vw, 104px) 0; }
+.hero { padding-bottom: 40px; }
+.hero h1.h1-who { margin-top: 0; }
+.btn { background: #1B1E22; }
+.btn:hover { background: var(--red); }
+.btn .arr { background: var(--red); }
+.metal .btn, .final-card .btn { background: #D9BF8C; color: #1B1E22; }
+.leagues { background: #1B1E22; border-block: 0; }
+.marquee span { color: #D6D3CC; }
+.marquee span::after { background: #D9BF8C; }
 </style>
 </head>
 <body>
