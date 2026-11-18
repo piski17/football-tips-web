@@ -357,7 +357,7 @@ export async function getTeamExtendedStatsAverages(
   lastN: number = 10,
   asOf?: string
 ): Promise<TeamExtendedStatsAverages> {
-  const cacheKey = `extStatsAvg6:${leagueId}:${season}:${teamId}:${lastN}:${asOf ?? ""}`;
+  const cacheKey = `extStatsAvg8:${leagueId}:${season}:${teamId}:${lastN}:${asOf ?? ""}`;
   // Pri spätnom teste načítame viac zápasov a ponecháme len tie spred výkopu.
   const extra = asOf ? 15 : 0;
   const cached = getCached<TeamExtendedStatsAverages>(cacheKey);
