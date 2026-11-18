@@ -290,7 +290,7 @@ type Cand = { market: string; selection: string; probability: number; blendModel
 
 /**
  * Pri automatickej analýze zápasu (~65 min pred výkopom) vyberie tipy TIPREX a uloží ich.
- * Kurzy berie z posledného prehľadania surebetov (každú hodinu, dnešné zápasy 18 súťaží).
+ * Kurzy berie z posledného prehľadania surebetov (každú hodinu, dnešné zápasy 17 súťaží).
  */
 export async function recordTiprexPicks(
   fixture: { fixtureId: number; matchDate: string; homeTeam: string; awayTeam: string; league: string },

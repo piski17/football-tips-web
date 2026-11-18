@@ -250,7 +250,7 @@ const LEAGUE_PRESETS: LeaguePreset[] = [
   // Liga národov bola 6. 10. 2026 odstránená; jej staré tipy (pred 10. 11.) sa nerátajú (since).
   // Bežné pravidlá platia: tím s <3 zápasmi v sezóne súťaže sa neodporúča, pri <5 kurz aspoň od 2 stávkoviek,
   // tip len so skutočným kurzom stávkoviek.
-  { id: 525, name: "UEFA Champions League Women", country: "Európa", since: "2026-11-10" },
+  // 18. 11. 2026 23:21 (Michal): ženská Liga majstrov (525) VYRADENÁ – 3 tipy, 2 nevyšli; jej tipy sa nerátajú (isRemovedLeagueTip). 17 súťaží.
   { id: 5, name: "UEFA Nations League", country: "Európa", since: "2026-11-10" },
 ];
 
@@ -2563,7 +2563,7 @@ app.post("/api/analyza", async (req, res) => {
 });
 
 // ---- „Opýtajte sa radaru“ v Telegram bote (17. 11. 2026, Michal) ----
-// Človek napíše botovi zápas alebo tím, server nájde najbližší zápas (dnes + 3 dni, našich 18 súťaží),
+// Človek napíše botovi zápas alebo tím, server nájde najbližší zápas (dnes + 3 dni, našich 17 súťaží),
 // spustí model bez zápisu (record = false) a vráti čísla. Konkrétny tip neprezradí – ten dostávajú členovia.
 const RADAR_DAILY_LIMIT = 15;
 // 17. 11. 23:20: hľadanie cez všetky zápasy dňa (jedna požiadavka na deň), 7 dní dopredu; zápas mimo našich súťaží → vysvetlenie.
@@ -2662,14 +2662,14 @@ setAskRadarHandler(async (text, chatId): Promise<AskRadarAnswer> => {
     const m = `${translateTeamName(fixture.homeTeam.name)} – ${translateTeamName(fixture.awayTeam.name)}`;
     return {
       kind: "notfound",
-      text: `🔎 Našiel som <b>${escapeHtml(m)}</b> (${escapeHtml(String(fixture.league?.name ?? ""))}), ale túto súťaž radar nesleduje – nemá pre ňu dosť spoľahlivé čísla.\n\nRadar sleduje 18 súťaží: top 5 líg, Ligu majstrov, Ligu národov, Niké ligu, Chance Ligu a ďalšie. Skúste zápas z nich, napríklad <i>Arsenal – Chelsea</i>.`,
+      text: `🔎 Našiel som <b>${escapeHtml(m)}</b> (${escapeHtml(String(fixture.league?.name ?? ""))}), ale túto súťaž radar nesleduje – nemá pre ňu dosť spoľahlivé čísla.\n\nRadar sleduje 17 súťaží: top 5 líg, Ligu majstrov, Ligu národov, Niké ligu, Chance Ligu a ďalšie. Skúste zápas z nich, napríklad <i>Arsenal – Chelsea</i>.`,
     };
   }
   if (!fixture) {
     if (!looksLikeMatch) return { kind: "none" };
     return {
       kind: "notfound",
-      text: `🔎 Tento zápas som v najbližších 7 dňoch nenašiel.\n\nRadar sleduje 18 súťaží (top 5 líg, Liga majstrov, Niké liga, Chance Liga a ďalšie). Skúste napísať názvy tímov inak, napríklad <i>Arsenal – Chelsea</i>.`,
+      text: `🔎 Tento zápas som v najbližších 7 dňoch nenašiel.\n\nRadar sleduje 17 súťaží (top 5 líg, Liga majstrov, Niké liga, Chance Liga a ďalšie). Skúste napísať názvy tímov inak, napríklad <i>Arsenal – Chelsea</i>.`,
     };
   }
   const day = dayKeySk(new Date());
