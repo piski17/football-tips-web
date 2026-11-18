@@ -5,7 +5,7 @@
 <script>document.documentElement.setAttribute("data-page", "kurz");</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="dark" />
-<meta name="theme-color" content="#0E0D0C" />
+<meta name="theme-color" content="#120D0F" />
 <title>Kurz – Škola stávkovania | TipRadar</title>
 <meta name="description" content="Škola stávkovania – kurz o bankrolle, hodnote stávky a psychológii. 48 strán, 10 kapitol." />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="/favicon-256.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500..800&amp;family=Inter:wght@400..700&amp;display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400..700&amp;family=DM+Sans:opsz,wght@9..40,400..700&amp;display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Mrs+Saint+Delafield&amp;text=Michal&amp;display=swap" rel="stylesheet" />
 <style>/* KAMEŇ (10. 11. 2026 16:05): teplý grafit + béžovo-sivý kameň */
 /* ===================== PLATINUM (8. 11. 2026) – nový web tipradar.eu od základu =====================
@@ -856,6 +856,42 @@ h3 { font-size: clamp(18px, 1.5vw, 21px); font-weight: 650; }
 .hero .chip { display: none; }
 .an-float, .trust { display: none !important; }
 s12 { padding-top: clamp(70px, 8vw, 110px); }
+
+/* BORDÓ (18. 11. 2026 10:33, Michal: „iný vzhľad a font písma“). Nahrádza Klub zlato.
+   Tmavé pozadie s nádychom bordovej #120D0F, bordová #A3263C (tlačidlá), ružovo-krémové zvýraznenie #E8A5A5,
+   svetlé karty krémové #F4EADF, písmo Outfit (nadpisy) + DM Sans (texty). */
+:root {
+  --bg: #120D0F; --bg2: #160F12; --card: #1B1316; --card2: #22181C;
+  --text: #F3ECE8; --muted: #B3A6A2; --faint: #7D706D;
+  --acc: #E8A5A5; --wine: #A3263C;
+  --line: rgba(243,236,232,.08); --line2: rgba(243,236,232,.16);
+  --plat: linear-gradient(120deg, #C2344D 0%, #A3263C 55%, #7E1A2D 100%);
+  --metal: linear-gradient(150deg, #FBF4EC 0%, #F1E4D6 60%, #E7D5C3 100%);
+  --sans: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --display: "Outfit", "DM Sans", system-ui, sans-serif;
+  --serif: "Outfit", "DM Sans", system-ui, sans-serif;
+}
+.metal, .plan.feat, .per.all, .buy, .idcard { --text: #2A1418; --muted: #6E5458; --faint: #8E7478; --line: rgba(42,20,24,.12); --line2: rgba(42,20,24,.22); --win: #2C7A52; --loss: #A3263C; }
+html, body { background: var(--bg); }
+body { font: 400 16px/1.65 var(--sans); }
+body::before { background: radial-gradient(45% 35% at 85% 0%, rgba(163,38,60,.22), transparent 70%), radial-gradient(40% 30% at 0% 40%, rgba(163,38,60,.10), transparent 70%); }
+h1, .h2, .page-head h1, .final-card .h2, .hero h1, h3, h4 { font-family: var(--display) !important; font-style: normal !important; font-variation-settings: normal !important; letter-spacing: -.02em !important; }
+h1, .h2, .page-head h1, .final-card .h2, .hero h1 { font-weight: 600 !important; }
+h1 em, .h2 em, .guar2 h3 em, .hero h1 em { font-family: inherit !important; font-style: normal !important; font-weight: 600 !important; background: none !important; color: var(--acc) !important; -webkit-text-fill-color: var(--acc); animation: none !important; padding-right: 0 !important; }
+.metal h1 em, .metal .h2 em, .metal h3 em { color: var(--wine) !important; -webkit-text-fill-color: var(--wine); }
+.eyebrow, .marquee span::after { color: var(--acc); }
+.eyebrow::before, .marquee span::after { background: var(--acc); }
+.btn { color: #FFF4F2; font-family: var(--sans); font-weight: 600; box-shadow: 0 14px 30px -16px rgba(163,38,60,.7); }
+.btn:hover { box-shadow: 0 18px 36px -16px rgba(194,52,77,.8); }
+.btn .arr { background: #FFF4F2; color: var(--wine); }
+.btn.ghost { color: var(--text); }
+.metal .btn { color: #FFF4F2; }
+.links a.active { color: #FFF4F2; }
+.panel::before { background: linear-gradient(90deg, transparent, rgba(232,165,165,.45), transparent); }
+.panel:hover { border-color: rgba(232,165,165,.28); }
+.btn .arr, .an-float svg { color: var(--wine); }
+::selection { background: var(--wine); color: #fff; }
+.pitch { filter: hue-rotate(-20deg) saturate(.6); }
 </style>
 </head>
 <body>
