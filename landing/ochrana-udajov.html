@@ -15,10 +15,10 @@
 /* PLATINUM (8. 11. 2026) – rovnaké farby a písmo ako tipradar.eu */
 :root { --paper: #0E0D0C; --ink: #F2EFEA; --muted: #A39E96; --faint: #6E6A64; --line: rgba(255, 255, 255, .08); --plat: linear-gradient(115deg, #F4EFE7 0%, #D9D0C3 40%, #B9AC99 75%, #E3DACD 100%); }
 * { box-sizing: border-box; }
-body { margin: 0; background: radial-gradient(60% 40% at 50% 0%, rgba(207,196,180, .12), transparent 70%) no-repeat, var(--paper); color: var(--ink); font: 500 16.5px/1.7 "Manrope", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+body { margin: 0; background: radial-gradient(60% 40% at 50% 0%, rgba(217,191,140, .12), transparent 70%) no-repeat, var(--paper); color: var(--ink); font: 500 16.5px/1.7 "Manrope", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
 .wrap { width: min(780px, 100% - 48px); margin-inline: auto; padding: 48px 0 90px; }
 @media (max-width: 640px) { .wrap { width: calc(100% - 32px); padding-top: 28px; } }
-a { color: var(--ink); font-weight: 700; text-decoration: underline; text-decoration-color: rgba(207,196,180, .45); text-decoration-thickness: 1px; text-underline-offset: 4px; }
+a { color: var(--ink); font-weight: 700; text-decoration: underline; text-decoration-color: rgba(217,191,140, .45); text-decoration-thickness: 1px; text-underline-offset: 4px; }
 .back { display: inline-flex; align-items: center; gap: 12px; padding: 6px 18px 6px 6px; border-radius: 999px; background: rgba(255, 255, 255, .03); border: 1px solid var(--line); font: 600 14px/1 "Urbanist", sans-serif; text-decoration: none; }
 .back svg { width: 32px; height: 32px; }
 h1, h2 { font-family: "Urbanist", sans-serif; letter-spacing: -.03em; line-height: 1.05; }
@@ -45,15 +45,15 @@ h3, h4 { letter-spacing: -.015em; }
 .day h3, .offer-l h3, .fit h3, .coin h3, .guar2 h3 { font-weight: 400; }
 .kpi b, .offer-l .from, .vc-mono, .big-n, .s12[data-n]::before, .steps .n, .why li .n, .offer-r .n, .coin-sum b, .seal b, .per-r, .coin-art .cn, .per .big, .tk3-match i { font-family: var(--serif) !important; font-weight: 300; }
 .s12[data-n]::before, .big-n { font-style: italic; font-weight: 200; }
-.eyebrow { font-family: var(--sans); font-weight: 700; letter-spacing: .28em; color: #CFC4B4; }
+.eyebrow { font-family: var(--sans); font-weight: 700; letter-spacing: .28em; color: #D9BF8C; }
 .eyebrow::before { width: 7px; height: 7px; border-radius: 1px; transform: rotate(45deg); background: currentColor; opacity: .9; }
 .metal .eyebrow, .vs-new .eyebrow { color: #5E574D; }
 .btn { font-family: var(--sans); font-weight: 700; letter-spacing: .005em; }
 /* jemné zrno a zlaté linky */
 body::after { content: ""; position: fixed; inset: 0; z-index: 9999; pointer-events: none; opacity: .05; mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
-.panel::before { background: linear-gradient(90deg, transparent, rgba(207,196,180,.55), transparent); }
-.panel:hover { border-color: rgba(207,196,180,.28); }
+.panel::before { background: linear-gradient(90deg, transparent, rgba(217,191,140,.55), transparent); }
+.panel:hover { border-color: rgba(217,191,140,.28); }
 html, body { overflow-x: clip; }
 @media (max-width: 720px) {
   .jump { display: none !important; }
@@ -103,46 +103,48 @@ h3 { font-size: clamp(18px, 1.5vw, 21px); font-weight: 650; }
 .an-float, .trust { display: none !important; }
 s12 { padding-top: clamp(70px, 8vw, 110px); }
 
-/* BORDÓ (18. 11. 2026 10:33, Michal: „iný vzhľad a font písma“). Nahrádza Klub zlato.
-   Tmavé pozadie s nádychom bordovej #120D0F, bordová #A3263C (tlačidlá), ružovo-krémové zvýraznenie #E8A5A5,
-   svetlé karty krémové #F4EADF, písmo Outfit (nadpisy) + DM Sans (texty). */
+/* ŠAMPANSKÉ (18. 11. 2026 11:37, Michal: „krásne, podľa toho uprav aj web“) – rovnaké farby ako app.tipradar.eu.
+   Nahrádza Bordó. Tmavé teplé pozadie #0F0D0B, šampanské zlato #D9BF8C, tlačidlá zlatý prechod s tmavým textom,
+   slonovinový text #F4EEE3, svetlé karty krémovo-zlaté. Písmo Outfit (nadpisy) + DM Sans (texty) ostáva. */
 :root {
-  --bg: #120D0F; --bg2: #160F12; --card: #1B1316; --card2: #22181C;
-  --text: #F3ECE8; --muted: #B3A6A2; --faint: #7D706D;
-  --acc: #E8A5A5; --wine: #A3263C;
-  --line: rgba(243,236,232,.08); --line2: rgba(243,236,232,.16);
-  --plat: linear-gradient(120deg, #C2344D 0%, #A3263C 55%, #7E1A2D 100%);
-  --metal: linear-gradient(150deg, #FBF4EC 0%, #F1E4D6 60%, #E7D5C3 100%);
+  --bg: #0F0D0B; --bg2: #14120F; --card: #1A1714; --card2: #221E1A;
+  --text: #F4EEE3; --muted: #AFA593; --faint: #7A7062;
+  --acc: #D9BF8C; --wine: #D6B67A;
+  --line: rgba(244,238,227,.08); --line2: rgba(244,238,227,.16);
+  --plat: linear-gradient(120deg, #F1E0BC 0%, #D6B67A 50%, #A8874E 100%);
+  --metal: linear-gradient(150deg, #FBF6EC 0%, #F1E7D3 60%, #E5D5B6 100%);
   --sans: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --display: "Outfit", "DM Sans", system-ui, sans-serif;
   --serif: "Outfit", "DM Sans", system-ui, sans-serif;
 }
-.metal, .plan.feat, .per.all, .buy, .idcard { --text: #2A1418; --muted: #6E5458; --faint: #8E7478; --line: rgba(42,20,24,.12); --line2: rgba(42,20,24,.22); --win: #2C7A52; --loss: #A3263C; }
+.metal, .plan.feat, .per.all, .buy, .idcard { --text: #1E180F; --muted: #6B5E48; --faint: #8C7E66; --line: rgba(30,24,15,.12); --line2: rgba(30,24,15,.22); --win: #2C7A52; --loss: #A8453A; --acc: #8A6A2E; }
 html, body { background: var(--bg); }
 body { font: 400 16px/1.65 var(--sans); }
-body::before { background: radial-gradient(45% 35% at 85% 0%, rgba(163,38,60,.22), transparent 70%), radial-gradient(40% 30% at 0% 40%, rgba(163,38,60,.10), transparent 70%); }
+body::before { background: radial-gradient(45% 35% at 85% 0%, rgba(214,182,122,.16), transparent 70%), radial-gradient(40% 30% at 0% 40%, rgba(214,182,122,.07), transparent 70%); }
 h1, .h2, .page-head h1, .final-card .h2, .hero h1, h3, h4 { font-family: var(--display) !important; font-style: normal !important; font-variation-settings: normal !important; letter-spacing: -.02em !important; }
 h1, .h2, .page-head h1, .final-card .h2, .hero h1 { font-weight: 600 !important; }
 h1 em, .h2 em, .guar2 h3 em, .hero h1 em { font-family: inherit !important; font-style: normal !important; font-weight: 600 !important; background: none !important; color: var(--acc) !important; -webkit-text-fill-color: var(--acc); animation: none !important; padding-right: 0 !important; }
-.metal h1 em, .metal .h2 em, .metal h3 em { color: var(--wine) !important; -webkit-text-fill-color: var(--wine); }
+.metal h1 em, .metal .h2 em, .metal h3 em { color: #8A6A2E !important; -webkit-text-fill-color: #8A6A2E; }
 .eyebrow, .marquee span::after { color: var(--acc); }
 .eyebrow::before, .marquee span::after { background: var(--acc); }
-.btn { color: #FFF4F2; font-family: var(--sans); font-weight: 600; box-shadow: 0 14px 30px -16px rgba(163,38,60,.7); }
-.btn:hover { box-shadow: 0 18px 36px -16px rgba(194,52,77,.8); }
-.btn .arr { background: #FFF4F2; color: var(--wine); }
+.btn { color: #17120A; font-family: var(--sans); font-weight: 600; box-shadow: 0 1px 0 rgba(255,255,255,.4) inset, 0 14px 30px -16px rgba(214,182,122,.7); }
+.btn:hover { box-shadow: 0 1px 0 rgba(255,255,255,.4) inset, 0 18px 36px -16px rgba(214,182,122,.85); }
+.btn .arr { background: #17120A; color: #D9BF8C; }
 .btn.ghost { color: var(--text); }
-.metal .btn { color: #FFF4F2; }
-.links a.active { color: #FFF4F2; }
-.panel::before { background: linear-gradient(90deg, transparent, rgba(232,165,165,.45), transparent); }
-.panel:hover { border-color: rgba(232,165,165,.28); }
-.btn .arr, .an-float svg { color: var(--wine); }
-::selection { background: var(--wine); color: #fff; }
-.pitch { filter: hue-rotate(-20deg) saturate(.6); }
+.metal .btn { color: #17120A; }
+.metal .btn { background: linear-gradient(120deg, #2A2318, #17120A) !important; color: #F1E0BC !important; }
+.metal .btn .arr { background: #F1E0BC; color: #17120A; }
+.links a.active { color: #17120A; }
+.panel::before { background: linear-gradient(90deg, transparent, rgba(217,191,140,.45), transparent); }
+.panel:hover { border-color: rgba(217,191,140,.28); }
+.an-float svg { color: var(--wine); }
+::selection { background: #D6B67A; color: #17120A; }
+.pitch { filter: sepia(.25) saturate(.8); }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back" href="/"><svg aria-hidden="true" viewBox="0 0 40 40"><circle cx="20" cy="20" r="19.2" fill="#121110" stroke="#CFC4B4" stroke-width="1.1"/><circle cx="20" cy="20" r="7" fill="none" stroke="#CFC4B4" stroke-opacity=".3"/><path d="M20 20 30.6 14.4" stroke="#E6DFD5" stroke-width="1.8" stroke-linecap="round"/><circle cx="20" cy="20" r="1.9" fill="#F2EFEA"/><circle cx="25.6" cy="24.4" r="1.6" fill="#9ED9B8"/></svg>← Späť na TipRadar</a>
+  <a class="back" href="/"><svg aria-hidden="true" viewBox="0 0 40 40"><circle cx="20" cy="20" r="19.2" fill="#121110" stroke="#D9BF8C" stroke-width="1.1"/><circle cx="20" cy="20" r="7" fill="none" stroke="#D9BF8C" stroke-opacity=".3"/><path d="M20 20 30.6 14.4" stroke="#E6DFD5" stroke-width="1.8" stroke-linecap="round"/><circle cx="20" cy="20" r="1.9" fill="#F2EFEA"/><circle cx="25.6" cy="24.4" r="1.6" fill="#9ED9B8"/></svg>← Späť na TipRadar</a>
   <h1>Ochrana osobných údajov</h1>
   <p class="date">Platné od 5. 10. 2026</p>
 
