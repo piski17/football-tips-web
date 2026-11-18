@@ -92,7 +92,12 @@ function writeFile(d: Record<Bucket, Record<string, TiprexPick>>): void {
   fs.mkdirSync(path.dirname(FILE), { recursive: true });
   fs.writeFileSync(FILE, JSON.stringify(d));
 }
+/** 18. 11. 2026 23:30 (Michal): ženské súťaže (ženská Liga majstrov) do TIPREXU nepatria – tipy sa nezapisujú ani nerátajú (v databáze ostávajú). */
+const isWomenLeague = (league: string) => /women|ženy|\(ž\.\)/i.test(league || "");
 async function listPicks(b: Bucket): Promise<TiprexPick[]> {
+  return (await listPicksRaw(b)).filter((p) => !isWomenLeague(p.league));
+}
+async function listPicksRaw(b: Bucket): Promise<TiprexPick[]> {
   if (!useUpstash) return Object.values(readFile()[b]);
   const flat: string[] = (await redis(["HGETALL", keyOf(b)])) ?? [];
   const out: TiprexPick[] = [];
@@ -298,6 +303,7 @@ export async function recordTiprexPicks(
   trackOnly: Cand[] = [],
   lineModels: LineModelLite[] = []
 ): Promise<number> {
+  if (isWomenLeague(fixture.league)) return 0;
   const f = scannedFixtures().find((x) => x.fixtureId === fixture.fixtureId);
   if (!f) { analyzed.set(fixture.fixtureId, { at: new Date().toISOString(), picks: 0, note: "bez kurzov zahraničných stávkoviek" }); return 0; }
   if (doneFixtures.has(fixture.fixtureId)) return 0;
