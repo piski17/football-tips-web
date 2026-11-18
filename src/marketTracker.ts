@@ -137,8 +137,9 @@ export async function recordMarketPredictions(
   }
   const top = pickTop(candidates);
   const odds2 = pickOdds2(candidates);
-  // Kurz od 1,70 (16. 11. 2026, Michal): rovnaké pravidlá ako skúška od 2,00, len hranica kurzu 1,70.
-  const odds17 = pickOdds2(candidates, 1.7);
+  // Kurz od 1,70 (16. 11. 2026) – 18. 11. 2026 Michal skúšku ZRUŠIL („katastrofa“): nové tipy sa už nevyberajú,
+  // staré čakajúce sa ešte vyhodnotia (aby sedelo poradie výsledkov), v appke sa dlaždica neukazuje.
+  const odds17: TopPick | undefined = undefined;
   if (!best.size && !top && !odds2 && !odds17) return;
   const entry: PendingFixture = { ...fixture, picks: [...best.values()], ...(top ? { top } : {}), ...(odds2 ? { odds2 } : {}), ...(odds17 ? { odds17 } : {}) };
   if (!useUpstash) { const d = readFile(); d.pending[String(fixture.fixtureId)] = entry; writeFile(d); return; }
