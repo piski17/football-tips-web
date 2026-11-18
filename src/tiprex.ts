@@ -113,6 +113,8 @@ async function removePending(ids: string[]): Promise<void> {
 }
 /** Zápasy, z ktorých sa už tipy vyberali (aby sa pri opakovanej analýze nezapísali dvakrát). */
 const doneFixtures = new Set<number>();
+/** Stav analýzy dnešných zápasov pre stránku (18. 11. 2026): kedy sa analyzoval a koľko tipov z neho vyšlo. */
+const analyzed = new Map<number, { at: string; picks: number; note?: string }>();
 
 // ---------- Kurzy jednotlivých stávkoviek ----------
 
@@ -178,7 +180,7 @@ export async function recordTiprexPicks(
   trackOnly: Cand[] = []
 ): Promise<number> {
   const f = scannedFixtures().find((x) => x.fixtureId === fixture.fixtureId);
-  if (!f) return 0;
+  if (!f) { analyzed.set(fixture.fixtureId, { at: new Date().toISOString(), picks: 0, note: "bez kurzov zahraničných stávkoviek" }); return 0; }
   if (doneFixtures.has(fixture.fixtureId)) return 0;
   doneFixtures.add(fixture.fixtureId);
   const books = oddsByBook(f);
@@ -225,6 +227,7 @@ export async function recordTiprexPicks(
     if (chosen.length >= MAX_PER_FIXTURE) break;
   }
   await savePicks("pending", chosen);
+  analyzed.set(fixture.fixtureId, { at: now, picks: chosen.length });
   return chosen.length;
 }
 
@@ -306,6 +309,23 @@ function fin(a: Agg) {
 const ODDS_BANDS: [string, number, number][] = [["1,70 – 1,99", 1.7, 2], ["2,00 – 2,49", 2, 2.5], ["2,50 – 3,20", 2.5, 9]];
 const skDay = (iso: string) => new Date(iso).toLocaleDateString("sv-SE", { timeZone: "Europe/Bratislava" });
 
+/** Dnešné zápasy z posledného prehľadania kurzov: tímy, výkop, zahraničné stávkovky, stav analýzy. */
+function todayFixtures() {
+  return scannedFixtures()
+    .map((f) => {
+      const books = new Set<string>();
+      for (const bet of Object.values(f.bets)) for (const list of Object.values(bet.values)) for (const o of list)
+        if (isTopBook(o.book) && !/^pinnacle$/i.test(o.book.trim())) books.add(o.book);
+      const a = analyzed.get(f.fixtureId);
+      return {
+        fixtureId: f.fixtureId, league: f.league, country: f.country, extra: !!f.extra, date: f.date, home: f.home, away: f.away,
+        books: books.size, analyzedAt: a?.at ?? null, picks: a ? a.picks : null, note: a?.note ?? null,
+        analyzeAt: new Date(new Date(f.date).getTime() - 65 * 60 * 1000).toISOString(),
+      };
+    })
+    .sort((x, y) => x.date.localeCompare(y.date) || x.league.localeCompare(y.league));
+}
+
 /** Súťaže TipRadaru v poslednom prehľadaní kurzov: koľko známych zahraničných stávkoviek ich ponúka. */
 function leagueCoverage() {
   const map = new Map<string, { league: string; country: string; fixtures: number; books: Set<string>; extra: boolean }>();
@@ -342,6 +362,7 @@ export async function tiprexSummary() {
     byBand: ODDS_BANDS.map(([k]) => ({ key: k, ...fin(byBand.get(k) ?? agg()) })),
     byDay: [...byDay].map(([k, a]) => ({ key: k, ...fin(a) })).sort((x, y) => y.key.localeCompare(x.key)),
     leagues: leagueCoverage(),
+    fixtures: todayFixtures(),
     picks: all.slice(0, 400),
   };
 }

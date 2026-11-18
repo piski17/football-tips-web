@@ -83,6 +83,7 @@ td.num, th.num { text-align: right; }
     <section class="panel"><h2>Podľa trhu</h2><div class="scroll"><table id="markets"></table></div></section>
   </div>
 
+  <section class="panel"><h2>Zápasy dnes</h2><p class="muted small" style="margin:-4px 0 10px">Dnešné zápasy, ktoré ešte nezačali a majú kurzy (obnovuje sa každú hodinu). Analýza prebehne sama asi hodinu pred výkopom.</p><div class="scroll"><table id="fixtures"></table></div></section>
   <section class="panel"><h2>Súťaže dnes</h2><p class="muted small" style="margin:-4px 0 10px">18 súťaží TipRadaru a 16 ďalších len pre TIPREX (Európska a Konferenčná liga, Serie B, League One, Rakúsko, Švajčiarsko, Grécko, Poľsko, Česko, Chorvátsko, MLS, Brazília, Argentína, Mexiko, Saudská Arábia, Japonsko). Pri každej, ktorá dnes hrá, koľko známych zahraničných stávkoviek dnes ponúka kurzy (z posledného prehľadania). Tipy idú len zo zápasov, kde ich je aspoň 3.</p><div class="scroll"><table id="leagues"></table></div></section>
   <section class="panel"><h2>Po dňoch</h2><div class="scroll"><table id="days"></table></div></section>
   <section class="panel"><h2>Tipy</h2><p class="muted small" style="margin:-4px 0 10px">Čakajúce aj vyhodnotené, najnovšie hore. Vklad 1 jednotka na každý tip.</p><div class="scroll"><table id="picks"></table></div></section>
@@ -118,6 +119,17 @@ async function load() {
   document.getElementById("bands").innerHTML = aggRows(d.byBand.filter((r) => r.n), "Kurz");
   document.getElementById("markets").innerHTML = aggRows(d.byMarket.filter((r) => r.n), "Trh");
   document.getElementById("days").innerHTML = aggRows(d.byDay.filter((r) => r.n).map((r) => ({ ...r, key: day(r.key) })), "Deň");
+  const tm = (iso) => new Date(iso).toLocaleTimeString("sk-SK", { timeZone: "Europe/Bratislava", hour: "2-digit", minute: "2-digit" });
+  const fx = d.fixtures || [];
+  document.getElementById("fixtures").innerHTML = fx.length
+    ? `<tr><th>Výkop</th><th>Zápas</th><th>Súťaž</th><th class="num">Zahr. stávkovky</th><th>Stav</th></tr>` +
+      fx.map((f) => {
+        const st = f.analyzedAt
+          ? (f.picks > 0 ? `<b class="pos">${f.picks} ${f.picks === 1 ? "tip" : f.picks < 5 ? "tipy" : "tipov"}</b>` : `<span class="muted">bez tipu${f.note ? " – " + esc(f.note) : ""}</span>`)
+          : f.books < 3 ? `<span class="muted">málo stávkoviek – tip nebude</span>` : `<span class="muted">analýza o ${tm(f.analyzeAt)}</span>`;
+        return `<tr><td>${tm(f.date)}</td><td>${esc(f.home)} – ${esc(f.away)}</td><td>${esc(f.league)} <span class="muted small">· ${esc(f.country)}${f.extra ? " · len TIPREX" : ""}</span></td><td class="num ${f.books >= 3 ? "pos" : "neg"}">${f.books}</td><td>${st}</td></tr>`;
+      }).join("")
+    : `<tr><td class="muted">Dnes sa už nehrá alebo ešte neprebehlo prehľadanie kurzov (každú hodinu).</td></tr>`;
   document.getElementById("leagues").innerHTML = (d.leagues || []).length
     ? `<tr><th>Súťaž</th><th class="num">Zápasy dnes</th><th class="num">Zahraničné stávkovky</th><th>Ktoré</th></tr>` +
       d.leagues.map((l) => `<tr><td>${esc(l.league)} <span class="muted small">· ${esc(l.country)}${l.extra ? " · len TIPREX" : ""}</span></td><td class="num">${l.fixtures}</td><td class="num ${l.books.length >= 3 ? "pos" : "neg"}">${l.books.length}</td><td class="muted small" style="white-space:normal">${esc(l.books.join(", "))}</td></tr>`).join("")
