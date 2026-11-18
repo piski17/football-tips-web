@@ -5367,23 +5367,47 @@ async function renderDnes() {
     const hello = hr < 10 ? "Dobré ráno" : hr < 18 ? "Dobrý deň" : "Dobrý večer";
     const nextTip = todayTips.find((t) => new Date(t.matchDate) > now);
     const pctRing = (won, done) => { const v = done ? (won / done) * 100 : 0; const C = 2 * Math.PI * 20; return `<svg viewBox="0 0 48 48" class="dn-pr" aria-hidden="true"><circle cx="24" cy="24" r="20"/><circle cx="24" cy="24" r="20" class="v" stroke-dasharray="${((C * v) / 100).toFixed(1)} 999"/></svg><i>${done ? Math.round(v) + NB + "%" : "–"}</i>`; };
+    // VYSIELANIE (18. 11. 2026, Michal: „úplne nový, niečo špeciálne“): bežiaca lišta zápasov, tabuľa dňa, časová os dňa
+    const tickItems = [
+      ...todayTips.map((t) => `<span class="tk-i tk-tip"><b>${escapeHtml(timeHm(new Date(t.matchDate)))}</b> ${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))} <em>${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}${typeof t.odds === "number" ? ` @ ${fmtOdds(t.odds)}` : ""}</em></span>`),
+      ...asList.map((x) => `<span class="tk-i"><b>${escapeHtml(timeHm(new Date(x.matchDate)))}</b> ${escapeHtml(translateTeamName(x.homeTeam))} – ${escapeHtml(translateTeamName(x.awayTeam))}</span>`),
+    ];
+    const tickHtml = tickItems.length ? tickItems.join('<i class="tk-sep">◆</i>') : `<span class="tk-i">Dnes zatiaľ žiadne sledované zápasy</span><i class="tk-sep">◆</i><span class="tk-i">Model prepočíta zápasy po spustení analýzy</span>`;
+    const H0 = 10, H1 = 24; // časová os 10:00 – 24:00
+    const xOf = (d) => { const h = d.getHours() + d.getMinutes() / 60; return Math.max(0, Math.min(100, ((h - H0) / (H1 - H0)) * 100)); };
+    const nowX = xOf(now);
+    const tlFix = asList.map((x) => `<i class="tl-fx" style="left:${xOf(new Date(x.matchDate)).toFixed(2)}%"></i>`).join("");
+    const tlTips = [...todayTips.map((t) => [t, ""]), ...autoToday.map((t) => [t, " auto"])].map(([t, k], i) => `<span class="tl-tip${k}" style="left:${xOf(new Date(t.matchDate)).toFixed(2)}%;--row:${i % 2}"><i></i><b>${escapeHtml(timeHm(new Date(t.matchDate)))} · ${escapeHtml(translateTeamName(t.homeTeam))}</b><small>${probTxt(t.probability)}${NB}%</small></span>`).join("");
+    const tlHours = [10, 12, 14, 16, 18, 20, 22, 24].map((h) => `<span style="left:${(((h - H0) / (H1 - H0)) * 100).toFixed(2)}%">${h === 24 ? "24" : h}:00</span>`).join("");
+    const dayNames = ["nedeľa", "pondelok", "utorok", "streda", "štvrtok", "piatok", "sobota"];
+    const monNames = ["január", "február", "marec", "apríl", "máj", "jún", "júl", "august", "september", "október", "november", "december"];
+    const cell = (label, val, sub, cls = "", go = "") => `<${go ? `button type="button" data-dn-go="${go}"` : "div"} class="sb-cell ${cls}"><small>${label}</small><b>${val}</b><span>${sub}</span></${go ? "button" : "div"}>`;
     pane.innerHTML = `
-      <section class="dn-hero">
-        <div class="dn-hero-txt">
+      <div class="tk" aria-label="Dnešné zápasy"><span class="tk-lbl"><i></i>Dnes</span><div class="tk-mask"><div class="tk-run">${tickHtml}<i class="tk-sep">◆</i>${tickHtml}<i class="tk-sep">◆</i></div></div></div>
+
+      <section class="sb">
+        <div class="sb-date"><b>${now.getDate()}</b><span>${dayNames[now.getDay()]}<br>${monNames[now.getMonth()]}</span></div>
+        <div class="sb-main">
           <span class="dn-hello">${hello}, Michal</span>
           <h3 class="dn-big">${todayTips.length ? `${plural(todayTips.length, "tip", "tipy", "tipov")} <em>na dnes</em>` : `Dnes zatiaľ <em>bez tipu</em>`}</h3>
           <p class="dn-lead">${todayTips.length ? `${sent} ${sent === 1 ? "poslaný" : sent >= 2 && sent <= 4 ? "poslané" : "poslaných"} členom${nextTip ? ` · najbližší výkop o ${escapeHtml(timeHm(new Date(nextTip.matchDate)))}` : " · všetky zápasy už začali"}` : autoToday.length ? `Server našiel ${plural(autoToday.length, "tip", "tipy", "tipov")} – pridajte ${autoToday.length === 1 ? "ho" : "ich"} nižšie.` : "Spustite analýzu a model prejde všetky zápasy dňa."}</p>
           <div class="dn-hero-act"><button type="button" class="btn" data-dn-go="tipy">Nájsť tipy dňa</button><button type="button" class="btn ghost" data-dn-go="zapasy">Zápasy</button></div>
           ${todayTips.length > 3 ? `<p class="warn small">Dnes je ${todayTips.length} tipov – klientom posielate najviac 3.</p>` : ""}
         </div>
-        <div class="dn-radar">${dial}<span class="dn-radar-cap">Radar dňa · bodka = tip v čase výkopu</span></div>
+        <div class="sb-count"><b>${todayTips.length}</b><span>${todayTips.length === 1 ? "tip" : todayTips.length >= 2 && todayTips.length <= 4 ? "tipy" : "tipov"}<br>na dnes</span><small>${asList.length} ${asList.length === 1 ? "sledovaný zápas" : asList.length >= 2 && asList.length <= 4 ? "sledované zápasy" : "sledovaných zápasov"}</small></div>
       </section>
 
-      <div class="dn-stats">
-        <div class="dn-stat"><div class="dn-ring-w">${pctRing(y.won, y.done)}</div><div><small>Včera</small><b class="${y.profit > 0 ? "g" : y.profit < 0 ? "l" : ""}">${y.done ? j(y.profit) : "–"}</b><span>${y.done ? `${y.won} z ${y.done} vyšlo` : yTips.length ? "čaká na výsledky" : "bez tipu"}</span></div></div>
-        <div class="dn-stat"><div class="dn-ring-w">${pctRing(m.won, m.done)}</div><div><small>Tento mesiac</small><b class="${m.profit > 0 ? "g" : m.profit < 0 ? "l" : ""}">${m.done ? j(m.profit) : "–"}</b><span>${m.done ? `${m.won} z ${m.done} vyšlo` : "zatiaľ bez výsledkov"}</span></div></div>
-        <button type="button" class="dn-stat dn-stat-m${ending.length || payPending ? " warn" : ""}" data-dn-go="clenovia"><div class="dn-ring-w dn-mem">${ICON.clenovia}</div><div><small>Členovia</small><b>${active.length}</b><span>${ending.length ? `${ending.length} čoskoro končí` : "aktívnych"}${payPending ? ` · ${payPending} čaká platba` : ""}</span></div></button>
-      </div>
+      <section class="tl">
+        <header><b>Deň v zápasoch</b><span><i class="lg-fx"></i>zápas <i class="lg-tip"></i>tip <i class="lg-now"></i>teraz</span></header>
+        <div class="tl-track">${tlFix}${tlTips}${nowX > 0 && nowX < 100 ? `<span class="tl-now" style="left:${nowX.toFixed(2)}%"><b>${escapeHtml(timeHm(now))}</b></span>` : ""}</div>
+        <div class="tl-hours">${tlHours}</div>
+      </section>
+
+      <section class="sb-strip">
+        ${cell("Včera", y.done ? j(y.profit) : "–", y.done ? `${y.won} z ${y.done} vyšlo` : yTips.length ? "čaká na výsledky" : "bez tipu", y.profit > 0 ? "g" : y.profit < 0 ? "l" : "")}
+        ${cell("Tento mesiac", m.done ? j(m.profit) : "–", m.done ? `${m.won} z ${m.done} vyšlo · ${Math.round((m.won / m.done) * 100)}${NB}%` : "zatiaľ bez výsledkov", m.profit > 0 ? "g" : m.profit < 0 ? "l" : "")}
+        ${cell("Členovia", String(active.length), `${ending.length ? `${ending.length} čoskoro končí` : "aktívnych"}${payPending ? ` · ${payPending} čaká platba` : ""}`, ending.length || payPending ? "warn" : "", "clenovia")}
+      </section>
 
       <h3 class="sh">Tipy na dnes <small>najviac 3 najsilnejšie · vyhodnotenie po skončení dňa</small></h3>
       ${todayHtml || autoHtml ? `<div class="dn-tickets">${todayHtml}${autoHtml}</div>${autoHtml ? `<p class="faint small dn-note">Tip, ktorý server našiel hodinu pred výkopom. Server ho uloží sám ${asTo} – ${asFrom} minút pred výkopom (po zostavách) – „+ Pridať“ ho uloží hneď.</p>` : ""}` : `<div class="card dn-card"><p class="empty">Na dnes zatiaľ žiadny tip.</p></div>`}
