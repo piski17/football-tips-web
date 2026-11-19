@@ -1500,8 +1500,8 @@ function bookLineHtml(i, bet) {
       <div class="bookline-t small">Hranica a kurzy zo stávkovky</div>
       <div class="bookline-f">
         <label>Hranica${poss ? " %" : ""}<input type="text" inputmode="decimal" autocomplete="off" data-bl-line value="${escapeHtml(betLineOf(bet))}" placeholder="${poss ? "napr. 55,5" : "napr. 25,5"}" /></label>
-        <label>${poss ? "Kurz a viac" : "Kurz viac ako"}<input type="text" inputmode="decimal" autocomplete="off" data-bl-over placeholder="napr. 1,85" /></label>
-        <label>Kurz menej ako<input type="text" inputmode="decimal" autocomplete="off" data-bl-under placeholder="napr. 1,90" /></label>
+        <label>${poss ? "Kurz a viac" : "Kurz viac ako"}<input type="text" inputmode="decimal" autocomplete="off" data-bl-over placeholder="–" /></label>
+        <label>Kurz menej ako<input type="text" inputmode="decimal" autocomplete="off" data-bl-under placeholder="–" /></label>
         <button type="button" class="btn sm" data-bl-calc>Prepočítať</button>
       </div>
       <div class="res" data-bl-out></div>
