@@ -146,6 +146,36 @@ async function scanLeague(lg: SurebetLeague, out: Map<number, FixtureOdds>, coun
   } while (page <= total && page <= MAX_PAGES_PER_LEAGUE);
 }
 
+/** 19. 11. 2026: kurzy jedného zápasu priamo z API (aj po výkope – API drží posledné predzápasové kurzy). Na dodatočnú kontrolu TIPREX tipov. */
+export async function fetchFixtureOdds(meta: { fixtureId: number; league: string; country: string; date: string; home: string; away: string }): Promise<FixtureOdds | null> {
+  const http = api();
+  const fo: FixtureOdds = { fixtureId: meta.fixtureId, league: meta.league, country: meta.country, date: meta.date, home: meta.home, away: meta.away, bets: {} };
+  let page = 1, total = 1;
+  do {
+    const res = await http.get("/odds", { params: { fixture: meta.fixtureId, page, timezone: "Europe/Bratislava" } });
+    const err = apiErrors(res.data);
+    if (err) throw new Error(err);
+    total = Number(res.data?.paging?.total) || 1;
+    for (const item of res.data?.response ?? []) {
+      for (const bk of item?.bookmakers ?? []) {
+        const book = String(bk?.name ?? "").trim();
+        if (!book) continue;
+        for (const bet of bk?.bets ?? []) {
+          const betKey = String(bet?.id ?? bet?.name);
+          const slot = (fo.bets[betKey] ??= { name: String(bet?.name ?? ""), values: {} });
+          for (const v of bet?.values ?? []) {
+            const odd = parseFloat(String(v?.odd ?? "").replace(",", "."));
+            if (!isFinite(odd) || odd <= 1) continue;
+            (slot.values[String(v?.value ?? "").trim()] ??= []).push({ book, odd });
+          }
+        }
+      }
+    }
+    page++;
+  } while (page <= total && page <= 5);
+  return Object.keys(fo.bets).length ? fo : null;
+}
+
 /** Prehľadá kurzy zápasov TipRadar súťaží na najbližších DAYS_AHEAD dní (asi 30 – 60 požiadaviek API). */
 export async function scanSurebets(): Promise<void> {
   if (scanning || !LEAGUES.length) return;

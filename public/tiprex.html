@@ -148,7 +148,7 @@ async function load() {
           <td>${esc(p.homeTeam)} – ${esc(p.awayTeam)}<br><span class="muted small">${dt(p.matchDate)} · ${esc(p.league)}</span></td>
           <td>${esc(p.market)}: <b>${esc(p.selection)}</b></td>
           <td class="num"><b>${nf(p.odds)}</b>${p.closingFair ? `<br><span class="muted small">pred výkopom ${nf(p.closingFair)}</span>` : ""}</td>
-          <td>${esc(p.book)}${p.recheck ? `<br><span class="small ${p.recheck.pass ? "pos" : "neg"}">Nové pravidlá: ${p.recheck.pass ? `prešiel${p.recheck.odds ? `, priemer ${nf(p.recheck.odds)}` : ""}` : `neprešiel – ${esc(p.recheck.reason || "")}`}</span>` : p.status === "pending" && p.recordedAt < "2026-11-19T19:35:00Z" ? `<br><span class="small muted">Nové pravidlá: nestihlo sa overiť (zápas sa začal skôr)</span>` : ""}</td>
+          <td>${esc(p.book)}${p.recheck ? `<br><span class="small ${p.recheck.pass ? "pos" : "neg"}">Nové pravidlá: ${p.recheck.pass ? `prešiel${p.recheck.odds ? `, priemer ${nf(p.recheck.odds)}` : ""}` : `neprešiel – ${esc(p.recheck.reason || "")}`}</span>` : p.status === "pending" && p.recordedAt < "2026-11-19T19:35:00Z" ? `<br><span class="small muted">Nové pravidlá: overuje sa z kurzov pred výkopom…</span>` : ""}</td>
           <td class="num">${Math.round(p.modelP)} %</td>
           <td class="num">${Math.round(p.sharpP)} %${p.sharpSource !== "Pinnacle" ? ' <span class="muted small">(trh)</span>' : ""}</td>
           <td class="num ${cls(g)}">${p.status === "won" || p.status === "lost" ? units(g) : "–"}</td></tr>`;

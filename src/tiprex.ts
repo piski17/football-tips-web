@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import axios from "axios";
 import { cachedRedis } from "./upstashCache";
-import { scannedFixtures, isTopBook, FixtureOdds } from "./surebets";
+import { scannedFixtures, isTopBook, FixtureOdds, fetchFixtureOdds } from "./surebets";
 import { findOdds, marketProbabilityDetail, MarketOdds } from "./oddsMatcher";
 import { settleFixtureBets } from "./tipEvaluator";
 
@@ -454,7 +454,28 @@ export async function updateTiprexClosing(): Promise<void> {
     p.closingAt = new Date().toISOString();
     changed.push(p);
   }
-  await savePicks("pending", changed);
+  // 19. 11. 2026 (Michal: „nevieš zistiť, či by prešli“): tipy z doby pred novými pravidlami, ktorých zápas sa začal skôr,
+  // než prebehla kontrola – dopočíta sa z posledných predzápasových kurzov priamo z API (každý zápas raz).
+  const old = (await listPicks("pending")).concat(await listPicks("done").catch(() => [] as TiprexPick[]))
+    .filter((p) => !p.recheck && p.recordedAt < "2026-11-19T19:35:00Z" && Date.now() - new Date(p.matchDate).getTime() < 3 * 24 * 3600 * 1000)
+    .slice(0, 20);
+  const byFx = new Map<number, FixtureOdds | null>();
+  const late: TiprexPick[] = [];
+  for (const p of old) {
+    if (!byFx.has(p.fixtureId)) {
+      byFx.set(p.fixtureId, await fetchFixtureOdds({ fixtureId: p.fixtureId, league: p.league, country: p.country, date: p.matchDate, home: p.homeTeam, away: p.awayTeam }).catch(() => null));
+    }
+    const f = byFx.get(p.fixtureId);
+    const pv = f ? closingView(f, p) : null;
+    const fail = pv ? ruleFail(p.modelP, pv) : "kurzy pred výkopom sa nedajú zistiť";
+    p.recheck = { pass: !fail, ...(pv?.avg3 ? { odds: Math.round(pv.avg3 * 100) / 100 } : {}), ...(fail ? { reason: fail } : {}), at: new Date().toISOString() };
+    late.push(p);
+  }
+  if (late.length) {
+    await savePicks("pending", late.filter((p) => p.status === "pending"));
+    const doneOnes = late.filter((p) => p.status !== "pending");
+    if (doneOnes.length) await savePicks("done", doneOnes);
+  }
 }
 
 let settling = false;
