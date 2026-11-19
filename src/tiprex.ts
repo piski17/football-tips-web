@@ -32,7 +32,7 @@ const MAX_GAP = 12;
 /** Najvyšší kurz najviac o 8 % nad mediánom stávkoviek – vyšší býva chyba alebo starý kurz. */
 const MAX_OVER_MEDIAN = 1.08;
 /** 18. 11. 2026 (Michal): zo zápasu toľko tipov, koľko prejde – len nie dva z toho istého typu trhu. */
-const MAX_PER_FIXTURE = 1; // 19. 11. 2026 (Michal): z jedného zápasu len 1 tip – ten s najväčšou dôverou (predtým 99)
+const MAX_PER_FIXTURE = 99; // 19. 11. 2026 1:53 (Michal): späť – viac tipov zo zápasu, z každého druhu 1 (najväčšia dôvera)
 /** Tip musia ponúkať aspoň 3 známe zahraničné stávkovky (Bet365, Unibet, Betano…). */
 const MIN_TOP_BOOKS = 3;
 const SKIP_MARKETS = ["Strelec gólov", "Ofsajdy", "Vyššie držanie lopty", "Držanie lopty domácich", "Držanie lopty hostí"];
@@ -98,11 +98,12 @@ const TIPREX_MIN_GAMES = 8;
 const isWomenLeague = (league: string) => /women|ženy|\(ž\.\)/i.test(league || "");
 async function listPicks(b: Bucket): Promise<TiprexPick[]> {
   const all = (await listPicksRaw(b)).filter((p) => !isWomenLeague(p.league));
-  // 19. 11. 2026 (Michal): aj spätne len 1 tip zo zápasu – ten s najväčšou dôverou (ostatné v databáze ostávajú, nerátajú sa).
-  const best = new Map<number, TiprexPick>();
+  // 19. 11. 2026 (Michal): aj spätne z každého druhu trhu v zápase len 1 tip – ten s najväčšou dôverou (ostatné v databáze ostávajú).
+  const best = new Map<string, TiprexPick>();
   for (const p of all) {
-    const cur = best.get(p.fixtureId);
-    if (!cur || p.p > cur.p || (p.p === cur.p && p.ev > cur.ev)) best.set(p.fixtureId, p);
+    const k = `${p.fixtureId}|${typeOf(p.market)}`;
+    const cur = best.get(k);
+    if (!cur || p.p > cur.p || (p.p === cur.p && p.ev > cur.ev)) best.set(k, p);
   }
   return [...best.values()];
 }
@@ -382,7 +383,7 @@ export async function recordTiprexPicks(
       ev: Math.round(ev * 1000) / 1000, recordedAt: now, status: "pending",
     });
   }
-  // 19. 11. 2026 (Michal): zo zápasu len 1 tip (MAX_PER_FIXTURE) – ten s najväčšou dôverou (p), pri zhode vyššia hodnota.
+  // 19. 11. 2026 (Michal): z každého druhu trhu (góly, rohy, karty…) len 1 tip – ten s najväčšou dôverou (p), pri zhode vyššia hodnota.
   found.sort((a, b) => b.p - a.p || b.ev - a.ev);
   const types = new Set<string>();
   const chosen: TiprexPick[] = [];
