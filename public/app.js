@@ -5507,6 +5507,24 @@ const OCT_TEXT = {
   boxId: "octResult", fold: "oktober", emptySum: "Tiché sledovanie od 19. 11.",
   intro: `Pravidlá zo začiatku štatistík (10. – 19. 10. 2026): dôvera len z modelu (bez zmiešania so stávkovkami), pásmo 68 – 80${NB}%, kurz z API aspoň 1,60, hodnota +5 až +25${NB}%, zo zápasu najviac 1 tip z typu (góly, rohy, karty…). Server ich vyberá asi hodinu pred výkopom a po zápase vyhodnotí. Klientom nejde a do štatistík sa neráta – na konci mesiaca porovnať so súčasnými tipmi.`,
 };
+// 19. 11. 2026 (Michal): ktoré tipy by spätne prešli pravidlami „Ako v októbri“ (z tichej evidencie od 20. 10.).
+async function renderOctoberRetro() {
+  const box = document.getElementById("octResult");
+  if (!box) return;
+  let d;
+  try { d = await fetchJson("/api/october-retro"); } catch (err) { return; }
+  const fmt2 = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(2).replace(".", ",");
+  const row = (label, g) => `<tr><td>${label}</td><td>${g.n}</td><td>${g.n ? `${g.won} (${Math.round((g.won / g.n) * 100)}${NB}%)` : "–"}</td><td class="${g.profit > 0 ? "g" : g.profit < 0 ? "l" : ""}">${g.n ? fmt2(g.profit) + " j." : "–"}</td><td>${g.avgOdds ? fmtOdds(g.avgOdds) : "–"}</td><td>${g.days ? (g.n / g.days).toFixed(1).replace(".", ",") : "–"}</td></tr>`;
+  const ST = { won: '<b class="g">✓</b>', lost: '<b class="l">✕</b>' };
+  const list = (d.noConflict.list || []).map((t) => `<tr><td class="faint small">${escapeHtml(new Date(t.matchDate).toLocaleDateString("sk-SK", { day: "numeric", month: "numeric" }))}</td><td>${escapeHtml(translateTeamName(t.match.split(" – ")[0] || ""))} – ${escapeHtml(translateTeamName(t.match.split(" – ")[1] || ""))}<br><span class="small">${escapeHtml(t.market)}: ${escapeHtml(translateNamesInText(t.selection, "", ""))}</span></td><td>${fmtOdds(t.odds)}</td><td>${probTxt(t.model)}${NB}%<br><span class="faint small">stávk. ${Math.round(t.bookmakers)}${NB}%</span></td><td>${ST[t.outcome] || ""}</td></tr>`).join("");
+  const html = `<div class="oct-retro"><h4>Spätne – ktoré tipy by prešli (zápasy od ${escapeHtml(new Date(d.from || Date.now()).toLocaleDateString("sk-SK"))})</h4>
+    <p class="faint small">Z tichej evidencie modelu a stávkoviek: dôvera len z modelu 68 – 80${NB}%, kurz z API aspoň 1,60, hodnota +5 až +25${NB}%, zo zápasu 1 tip z typu. Zápasy zo všetkých súťaží, ktoré server prešiel – aj tie, ktoré klientom nešli. Zisk pri vklade 1 jednotka, kurz z API.</p>
+    <div class="table-wrap"><table class="bt-table"><thead><tr><th></th><th>Tipy</th><th>Vyšlo</th><th>Zisk</th><th>Priem. kurz</th><th>Tipov denne</th></tr></thead><tbody>
+    ${row("S filtrom rozporu so stávkovkami", d.noConflict)}${row("Bez filtra (len model, ako do 19. 10.)", d.all)}</tbody></table></div>
+    ${list ? `<details><summary class="small">Tipy s filtrom rozporu (posledných 150)</summary><div class="table-wrap"><table class="bt-table"><tbody>${list}</tbody></table></div></details>` : ""}</div>`;
+  box.querySelector(".oct-retro")?.remove();
+  box.insertAdjacentHTML("afterbegin", html);
+}
 const ODDS17_TEXT = {
   boxId: "odds17Result", fold: "kurz17", emptySum: "Tiché sledovanie od 16. 11.",
   intro: `Pri každom zápase server asi hodinu pred výkopom vyberie najviac jeden tip s kurzom stávkoviek aspoň 1,70 a hodnotou +5 až +25${NB}% (prednosť má vyššia šanca), bez rozporu so stávkovkami. Po zápase ho vyhodnotí. Klientom nejde a do štatistík sa neráta.`,
@@ -5548,6 +5566,7 @@ async function renderAllMarkets() {
   catch (err) { box.innerHTML = `<p class="faint small">Nepodarilo sa načítať: ${escapeHtml(err.message)}</p>`; return; }
   renderTopPicks(d.top);
   renderTopPicks(d.oct, OCT_TEXT); // 19. 11. 2026: skúška „Ako v októbri“
+  void renderOctoberRetro();
   const rows = Object.entries(d.markets || {}).map(([market, m]) => ({ market, ...m, pct: m.n ? (m.won / m.n) * 100 : null, exp: m.n ? m.sumP / m.n : null }))
     .sort((a, b) => b.n - a.n || a.market.localeCompare(b.market));
   const sumEl = document.querySelector('[data-fold-sum="vsetkytrhy"]');

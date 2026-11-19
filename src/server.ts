@@ -5,7 +5,7 @@ import { getMeta, setMeta } from "./metaStore";
 import { listCoopLinks, getCoopLink, createCoopLink, updateCoopLink, deleteCoopLink, chooseCoop, coopPage, coopPayHtml, coopNote, CoopLink, CoopPay } from "./coopLinks";
 import * as crypto from "crypto";
 import { recordShadow, listShadow, updateShadow, shadowEntriesFrom, shadowReasonCode, ShadowEntry } from "./shadowStore";
-import { recordBlend, listBlend, updateBlend, blendEntryFrom, blendSummary, newModelSummary, homeCornersSummary } from "./blendStore";
+import { recordBlend, listBlend, updateBlend, blendEntryFrom, blendSummary, newModelSummary, homeCornersSummary, octoberRetro } from "./blendStore";
 import { recordLegs, listLegs, updateLeg, legCandidatesFrom, legQualifies, buildTickets, TicketLegCandidate, TICKET_RULES } from "./ticketWatchStore";
 import { startBacktest, getBacktest } from "./backtest";
 import { applyCupGoals } from "./cupAdjust";
@@ -3936,6 +3936,11 @@ async function runTiprexExtra(): Promise<void> {
 }
 setInterval(() => void runTiprexExtra().catch((err) => console.error("TIPREX – ďalšie súťaže zlyhali:", err)), 15 * 60 * 1000);
 setTimeout(() => void runTiprexExtra().catch(() => {}), 90 * 1000);
+// 19. 11. 2026 (Michal): skúška „Ako v októbri“ spätne z tichej evidencie modelu a stávkoviek (od 20. 10.).
+app.get("/api/october-retro", async (_req, res) => {
+  try { res.json(octoberRetro(await listBlend())); }
+  catch (err: any) { res.status(500).json({ error: err.message ?? String(err) }); }
+});
 app.get("/api/markets-all", async (_req, res) => {
   try {
     res.json(await marketSummary());

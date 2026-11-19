@@ -350,3 +350,41 @@ export function homeCornersSummary(all: BlendFixture[], minOdds = MIN_ODDS): {
     .filter((x) => x.picks > 0);
   return { settledPicks: settled.length, pendingPicks: mine.length - settled.length, proposedK: HOME_CORNERS_PROPOSED_K, rows, sides };
 }
+
+
+/**
+ * Skúška „Ako v októbri“ spätne (19. 11. 2026, Michal): z tichej evidencie (od 20. 10. 2026, čistý model + kurz)
+ * vyberie tipy podľa pravidiel z 10. – 19. 10.: len model 68 – 80 %, kurz aspoň 1,60, hodnota modelu +5 až +25 %,
+ * bez neodporúčaných trhov, zo zápasu najviac 1 tip z typu (najvyššia dôvera). Zvlášť aj s filtrom rozporu so stávkovkami.
+ */
+export function octoberRetro(all: BlendFixture[]) {
+  const typeOf = (m: string) => String(m).split(" ")[0];
+  const run = (useConflict: boolean) => {
+    const tips: { matchDate: string; match: string; market: string; selection: string; model: number; bookmakers: number; odds: number; outcome: "won" | "lost"; conflict: boolean }[] = [];
+    for (const f of all) {
+      if (f.status !== "settled") continue;
+      const best = new Map<string, BlendPick>();
+      for (const p of f.picks) {
+        if (p.outcome !== "won" && p.outcome !== "lost") continue;
+        if (p.odds == null || p.odds < 1.6 || NOT_RECOMMENDED_MARKETS.includes(p.market) || /handicap/i.test(p.market)) continue;
+        if (useConflict && p.conflict) continue;
+        if (p.model < 68 || p.model > 80) continue;
+        const ev = (p.model / 100) * p.odds;
+        if (ev < 1.05 || ev > 1.25) continue;
+        const k = typeOf(p.market), cur = best.get(k);
+        if (!cur || p.model > cur.model) best.set(k, p);
+      }
+      for (const p of best.values())
+        tips.push({ matchDate: f.matchDate, match: `${f.homeTeam} – ${f.awayTeam}`, market: p.market, selection: p.selection, model: p.model, bookmakers: p.bookmakers, odds: p.odds!, outcome: p.outcome as "won" | "lost", conflict: !!p.conflict });
+    }
+    tips.sort((a, b) => b.matchDate.localeCompare(a.matchDate));
+    const won = tips.filter((t) => t.outcome === "won").length;
+    const profit = Math.round(tips.reduce((a, t) => a + (t.outcome === "won" ? t.odds - 1 : -1), 0) * 100) / 100;
+    const days = new Set(tips.map((t) => t.matchDate.slice(0, 10))).size;
+    const avgOdds = tips.length ? Math.round((tips.reduce((a, t) => a + t.odds, 0) / tips.length) * 100) / 100 : null;
+    const avgModel = tips.length ? Math.round((tips.reduce((a, t) => a + t.model, 0) / tips.length) * 10) / 10 : null;
+    return { n: tips.length, won, profit, days, avgOdds, avgModel, list: tips.slice(0, 150) };
+  };
+  const from = all.reduce((m, f) => (!m || f.matchDate < m ? f.matchDate : m), "");
+  return { from, all: run(false), noConflict: run(true) };
+}
