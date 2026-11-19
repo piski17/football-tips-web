@@ -72,6 +72,8 @@ export interface TiprexPick {
   /** Posledný férový kurz pred výkopom (Pinnacle / trh bez marže) – na CLV. */
   closingFair?: number;
   closingAt?: string;
+  /** 19. 11. 2026: kontrola tipu podľa pravidiel platných od 19. 11. 20:25 (Pinnacle povinný, priemer Pinnacle + 2) – z posledného prehľadania kurzov. */
+  recheck?: { pass: boolean; odds?: number; reason?: string; at: string };
   status: "pending" | "won" | "lost" | "void";
   settledAt?: string;
 }
@@ -409,6 +411,22 @@ export async function recordTiprexPicks(
   return chosen.length;
 }
 
+/** Pravidlá výberu (od 19. 11. 2026 20:23): vráti dôvod vyradenia, alebo null keď tip prejde. */
+function ruleFail(modelP: number, pv: PriceView): string | null {
+  if (pv.sharpSource !== "Pinnacle") return "Pinnacle tip neponúka";
+  if (pv.avg3 == null) return "chýba Pinnacle + 2 stávkovky";
+  const odds = pv.avg3;
+  if (odds < VQ_MIN_ODDS) return "priemerný kurz pod 1,70";
+  if (odds > VQ_MAX_ODDS) return "priemerný kurz nad 3,20";
+  if (Math.abs(modelP - pv.sharpP) > MAX_GAP) return "model a Pinnacle sa rozchádzajú";
+  if ((modelP / 100) * odds < MIN_EV_MODEL) return "malá hodnota podľa modelu";
+  if ((pv.sharpP / 100) * odds < MIN_EV_SHARP) return "malá hodnota podľa Pinnacle";
+  const ev = (((modelP + pv.sharpP) / 2) / 100) * odds;
+  if (ev < MIN_EV) return "malá hodnota";
+  if (ev > MAX_EV) return "podozrivo vysoká hodnota";
+  return null;
+}
+
 function closingView(f: FixtureOdds, p: TiprexPick): PriceView | null {
   const kind = (Object.keys(HCP_MARKET) as HcpKind[]).find((k) => HCP_MARKET[k] === p.market);
   if (!kind) return priceView(oddsByBook(f), p, p.homeTeam, p.awayTeam);
@@ -428,7 +446,10 @@ export async function updateTiprexClosing(): Promise<void> {
     const f = fixtures.find((x) => x.fixtureId === p.fixtureId);
     if (!f) continue;
     const pv = closingView(f, p);
-    if (!pv || !(pv.sharpP > 0)) continue;
+    if (!pv) { p.recheck = { pass: false, reason: "tip už neponúkajú 2 stávkovky", at: new Date().toISOString() }; changed.push(p); continue; }
+    const fail = ruleFail(p.modelP, pv);
+    p.recheck = { pass: !fail, ...(pv.avg3 ? { odds: Math.round(pv.avg3 * 100) / 100 } : {}), ...(fail ? { reason: fail } : {}), at: new Date().toISOString() };
+    if (!(pv.sharpP > 0)) { changed.push(p); continue; }
     p.closingFair = Math.round((100 / pv.sharpP) * 100) / 100;
     p.closingAt = new Date().toISOString();
     changed.push(p);

@@ -132,13 +132,13 @@ async function load() {
       fx.map((f) => {
         const st = f.analyzedAt
           ? (f.picks > 0 ? tipsOf(f) : `<span class="muted">bez tipu${f.note ? " – " + esc(f.note) : ""}</span>`)
-          : f.books < 3 ? `<span class="muted">málo stávkoviek – tip nebude</span>` : `<span class="muted">analýza o ${tm(f.analyzeAt)}</span>`;
-        return `<tr><td>${tm(f.date)}</td><td>${esc(f.home)} – ${esc(f.away)}</td><td>${esc(f.league)} <span class="muted small">· ${esc(f.country)}${f.extra ? " · len TIPREX" : ""}</span></td><td class="num ${f.books >= 3 ? "pos" : "neg"}">${f.books}</td><td>${st}</td></tr>`;
+          : f.books < 2 ? `<span class="muted">málo stávkoviek – tip nebude</span>` : `<span class="muted">analýza o ${tm(f.analyzeAt)}</span>`;
+        return `<tr><td>${tm(f.date)}</td><td>${esc(f.home)} – ${esc(f.away)}</td><td>${esc(f.league)} <span class="muted small">· ${esc(f.country)}${f.extra ? " · len TIPREX" : ""}</span></td><td class="num ${f.books >= 2 ? "pos" : "neg"}">${f.books}</td><td>${st}</td></tr>`;
       }).join("")
     : `<tr><td class="muted">Dnes sa už nehrá alebo ešte neprebehlo prehľadanie kurzov (každú hodinu).</td></tr>`;
   document.getElementById("leagues").innerHTML = (d.leagues || []).length
     ? `<tr><th>Súťaž</th><th class="num">Zápasy dnes</th><th class="num">Zahraničné stávkovky</th><th>Ktoré</th></tr>` +
-      d.leagues.map((l) => `<tr><td>${esc(l.league)} <span class="muted small">· ${esc(l.country)}${l.extra ? " · len TIPREX" : ""}</span></td><td class="num">${l.fixtures}</td><td class="num ${l.books.length >= 3 ? "pos" : "neg"}">${l.books.length}</td><td class="muted small" style="white-space:normal">${esc(l.books.join(", "))}</td></tr>`).join("")
+      d.leagues.map((l) => `<tr><td>${esc(l.league)} <span class="muted small">· ${esc(l.country)}${l.extra ? " · len TIPREX" : ""}</span></td><td class="num">${l.fixtures}</td><td class="num ${l.books.length >= 2 ? "pos" : "neg"}">${l.books.length}</td><td class="muted small" style="white-space:normal">${esc(l.books.join(", "))}</td></tr>`).join("")
     : `<tr><td class="muted">Dnes sa nehrá alebo ešte neprebehlo prehľadanie kurzov (každú hodinu).</td></tr>`;
   document.getElementById("picks").innerHTML = d.picks.length
     ? `<tr><th></th><th>Zápas</th><th>Tip</th><th class="num">Kurz</th><th>Stávkovka</th><th class="num">Model</th><th class="num">Pinnacle</th><th class="num">Zisk</th></tr>` +
@@ -148,7 +148,7 @@ async function load() {
           <td>${esc(p.homeTeam)} – ${esc(p.awayTeam)}<br><span class="muted small">${dt(p.matchDate)} · ${esc(p.league)}</span></td>
           <td>${esc(p.market)}: <b>${esc(p.selection)}</b></td>
           <td class="num"><b>${nf(p.odds)}</b>${p.closingFair ? `<br><span class="muted small">pred výkopom ${nf(p.closingFair)}</span>` : ""}</td>
-          <td>${esc(p.book)}</td>
+          <td>${esc(p.book)}${p.recheck ? `<br><span class="small ${p.recheck.pass ? "pos" : "neg"}">Nové pravidlá: ${p.recheck.pass ? `prešiel${p.recheck.odds ? `, priemer ${nf(p.recheck.odds)}` : ""}` : `neprešiel – ${esc(p.recheck.reason || "")}`}</span>` : ""}</td>
           <td class="num">${Math.round(p.modelP)} %</td>
           <td class="num">${Math.round(p.sharpP)} %${p.sharpSource !== "Pinnacle" ? ' <span class="muted small">(trh)</span>' : ""}</td>
           <td class="num ${cls(g)}">${p.status === "won" || p.status === "lost" ? units(g) : "–"}</td></tr>`;
