@@ -32,13 +32,15 @@ interface PendingFixture {
   odds2?: TopPick;
   /** Skúška „kurz od 1,70“ (16. 11. 2026). */
   odds17?: TopPick;
+  /** Skúška „Ako v októbri“ (19. 11. 2026) – pozri pickOctober; z každého typu najviac 1. */
+  oct?: TopPick[];
 }
 export interface BandStats { n: number; won: number; sumP: number }
 export interface MarketStats { n: number; won: number; lost: number; void: number; sumP: number; bands: Record<string, BandStats> }
 export interface RecentResult { fixtureId: number; matchDate: string; match: string; league: string; market: string; selection: string; probability: number; status: "won" | "lost" | "void" }
 export interface TopResult { fixtureId: number; matchDate: string; match: string; league: string; market: string; selection: string; probability: number; odds: number; status: "won" | "lost" | "void" }
 export interface TopStats { since: string; n: number; won: number; lost: number; void: number; sumP: number; profit: number; leagues: Record<string, { n: number; won: number; profit: number }>; recent: TopResult[] }
-export interface MarketSummary { since: string; fixtures: number; markets: Record<string, MarketStats>; recent: RecentResult[]; top?: TopStats; odds2?: TopStats; odds17?: TopStats }
+export interface MarketSummary { since: string; fixtures: number; markets: Record<string, MarketStats>; recent: RecentResult[]; top?: TopStats; odds2?: TopStats; odds17?: TopStats; oct?: TopStats }
 
 const BANDS: [string, number, number][] = [["pod 60 %", 0, 60], ["60 – 69 %", 60, 70], ["70 – 80 %", 70, 80.01]];
 const bandOf = (p: number) => (BANDS.find(([, lo, hi]) => p >= lo && p < hi) ?? BANDS[0])[0];
@@ -106,7 +108,7 @@ function pickTop(candidates: { market: string; selection: string; probability: n
 // Len tiché sledovanie – klientom nejde, do štatistík sa neráta.
 const ODDS2_MIN = 2.0;
 const ODDS2_MARKETS_SKIP = ["Ofsajdy", "Výsledok zápasu", "Oba tímy skórujú", "Obaja tímy skórujú", "Strelec gólov"];
-type Cand = { market: string; selection: string; probability: number; odds?: number | null; expectedValue?: number | null; marketConflict?: string; h2hAgainst?: string };
+type Cand = { market: string; selection: string; probability: number; odds?: number | null; expectedValue?: number | null; marketConflict?: string; h2hAgainst?: string; blendModel?: number; category?: string };
 function pickOdds2(candidates: Cand[], minOdds = ODDS2_MIN): TopPick | undefined {
   let best: TopPick | undefined;
   for (const c of candidates ?? []) {
@@ -119,6 +121,28 @@ function pickOdds2(candidates: Cand[], minOdds = ODDS2_MIN): TopPick | undefined
       best = { market: c.market, selection: String(c.selection), probability: Math.round(p * 10) / 10, odds: Math.round(o * 100) / 100 };
   }
   return best;
+}
+
+// Skúška „Ako v októbri“ (19. 11. 2026, Michal: „nastav do sledovaných, ako bolo na začiatku, na konci mesiaca pozrieme“).
+// Pravidlá z 10. – 19. 10. 2026: dôvera LEN z modelu (bez zmiešania so stávkovkami), pásmo 68 – 80 %, kurz z API aspoň 1,60,
+// hodnota +5 až +25 % (počítaná zo šance modelu), bez ofsajdov / 1X2 / oba skórujú / handicapov; zo zápasu najviac 1 tip z typu
+// (góly, rohy, karty…), prednosť vyššia dôvera. Len tiché sledovanie – klientom nejde, do štatistík sa neráta.
+const OCT_MIN_ODDS = 1.6, OCT_MIN_P = 68, OCT_MAX_P = 80;
+const OCT_SKIP = ["Ofsajdy", "Výsledok zápasu", "Oba tímy skórujú", "Obaja tímy skórujú", "Strelec gólov"];
+function pickOctober(candidates: Cand[]): TopPick[] {
+  const byType = new Map<string, TopPick>();
+  for (const c of candidates ?? []) {
+    if (!c.market || OCT_SKIP.includes(c.market) || c.market.startsWith("Ázijský handicap")) continue;
+    const p = Number(typeof c.blendModel === "number" ? c.blendModel : c.probability), o = Number(c.odds);
+    if (!isFinite(p) || !isFinite(o) || o < OCT_MIN_ODDS || p < OCT_MIN_P || p > OCT_MAX_P) continue;
+    const ev = (p / 100) * o;
+    if (ev < 1.05 || ev > 1.25) continue;
+    const type = String(c.category || c.market).split("_")[0];
+    const cur = byType.get(type);
+    if (!cur || p > cur.probability || (p === cur.probability && o > cur.odds))
+      byType.set(type, { market: c.market, selection: String(c.selection), probability: Math.round(p * 10) / 10, odds: Math.round(o * 100) / 100 });
+  }
+  return [...byType.values()];
 }
 
 /** Z kandidátov modelu vyberie z každého trhu jednu predpoveď (najvyššia šanca do 80 %) a zapíše zápas. */
@@ -141,8 +165,9 @@ export async function recordMarketPredictions(
   // Kurz od 1,70 (16. 11. 2026) – 18. 11. 2026 Michal skúšku ZRUŠIL („katastrofa“): nové tipy sa už nevyberajú,
   // staré čakajúce sa ešte vyhodnotia (aby sedelo poradie výsledkov), v appke sa dlaždica neukazuje.
   const odds17: TopPick | undefined = undefined;
-  if (!best.size && !top && !odds2 && !odds17) return;
-  const entry: PendingFixture = { ...fixture, picks: [...best.values()], ...(top ? { top } : {}), ...(odds2 ? { odds2 } : {}), ...(odds17 ? { odds17 } : {}) };
+  const oct = pickOctober(candidates);
+  if (!best.size && !top && !odds2 && !odds17 && !oct.length) return;
+  const entry: PendingFixture = { ...fixture, picks: [...best.values()], ...(top ? { top } : {}), ...(odds2 ? { odds2 } : {}), ...(odds17 ? { odds17 } : {}), ...(oct.length ? { oct } : {}) };
   if (!useUpstash) { const d = readFile(); d.pending[String(fixture.fixtureId)] = entry; writeFile(d); return; }
   await redis(["HSET", PENDING_KEY, String(fixture.fixtureId), JSON.stringify(entry)]);
 }
@@ -159,14 +184,14 @@ export async function settleMarketPredictions(): Promise<number> {
     const summary = await readSummary();
     for (const f of due.slice(0, 25)) {
       try {
-        const extra = [f.top, f.odds2, f.odds17].filter((x): x is TopPick => !!x);
+        const extra = [f.top, f.odds2, f.odds17, ...(f.oct ?? [])].filter((x): x is TopPick => !!x);
         const all = [...f.picks, ...extra];
         let outcomes = await settleFixtureBets(f, all);
         if (!outcomes) {
           if (Date.now() < new Date(f.matchDate).getTime() + 3 * 24 * 3600 * 1000) continue;
           outcomes = all.map(() => "void" as const);
         }
-        const addTop = (key: "top" | "odds2" | "odds17", pick: TopPick, st: "won" | "lost" | "void") => {
+        const addTop = (key: "top" | "odds2" | "odds17" | "oct", pick: TopPick, st: "won" | "lost" | "void") => {
           const t = (summary[key] ??= { since: new Date().toISOString(), n: 0, won: 0, lost: 0, void: 0, sumP: 0, profit: 0, leagues: {}, recent: [] });
           const gain = st === "won" ? pick.odds - 1 : st === "lost" ? -1 : 0;
           if (st === "void") t.void++;
@@ -183,6 +208,7 @@ export async function settleMarketPredictions(): Promise<number> {
         if (f.top) addTop("top", f.top, outcomes[xi++]);
         if (f.odds2) addTop("odds2", f.odds2, outcomes[xi++]);
         if (f.odds17) addTop("odds17", f.odds17, outcomes[xi++]);
+        for (const o of f.oct ?? []) addTop("oct", o, outcomes[xi++]);
         summary.fixtures++;
         f.picks.forEach((p, i) => {
           const st = outcomes![i];
