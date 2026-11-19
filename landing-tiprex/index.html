@@ -9,7 +9,7 @@
 <meta property="og:description" content="Two judges. One verdict. Football tips at odds 1.70+, every result tracked in public.">
 <meta property="og:image" content="https://tiprex.eu/og-image.png">
 <meta property="og:type" content="website">
-<meta name="theme-color" content="#0B0B0C">
+<meta name="theme-color" content="#06110E">
 <link rel="icon" href="favicon-64.png" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -185,6 +185,29 @@ section.s .eyebrow::before { display: none; }
 .join form { text-align: left; }
 @media (max-width: 640px) { .hero { padding: 56px 0 56px; } .facts > div { padding: 0 14px; } .join { padding: 32px 20px; } }
 table:has(td:only-child) { min-width: 0; } table td:only-child { white-space: normal; text-align: center; }
+
+/* 20. 11. 2026 0:18 (Michal: „skús špeciálne farby“) – KRÁĽOVSKÁ ZELEŇ: hlboká smaragdová noc + zlato („The king of tips“). */
+:root {
+  --bg: #06110E; --bg2: #0A1814; --card: #0E1F1A; --card2: #13281F; --line: rgba(214,190,130,.12); --line2: rgba(214,190,130,.24);
+  --text: #F3EEDF; --muted: #A9B5AC; --faint: #6E7D74;
+  --gold: #E3C27A; --gold2: #B8914A; --green: #3BE0A0; --green-dim: rgba(59,224,160,.10);
+}
+body { background: radial-gradient(1200px 600px at 50% -10%, #0F2A21 0%, transparent 70%), var(--bg); }
+nav { background: rgba(6,17,14,.85); }
+.g { background: linear-gradient(100deg, var(--green) 0%, var(--gold) 85%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.eyebrow { color: var(--gold); }
+.btn { color: #1A1406; background: linear-gradient(135deg, #F4DDA2 0%, var(--gold) 45%, var(--gold2) 100%); }
+.btn:hover { background: linear-gradient(135deg, #F8E7BC 0%, #EBCB86 45%, #C49E57 100%); }
+.links a.btn, .links a.btn:hover { color: #1A1406; }
+.ticket { border-color: var(--line2); background: linear-gradient(180deg, var(--card2), var(--card)); }
+.t-pick { background: rgba(227,194,122,.08); border-color: rgba(227,194,122,.35); }
+.t-odds { color: var(--gold); }
+.facts b, .kpi b { color: var(--text); }
+.step .n { background: rgba(227,194,122,.12); color: var(--gold); border: 1px solid rgba(227,194,122,.35); }
+.step.final { border-color: rgba(227,194,122,.35); }
+.join { border-color: rgba(227,194,122,.35); background: linear-gradient(180deg, var(--card2), var(--card)); }
+input { background: var(--bg); border-color: var(--line2); }
+.btn:focus-visible, input:focus-visible { outline-color: var(--gold); }
 </style>
 </head>
 <body>
