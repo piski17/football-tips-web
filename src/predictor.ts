@@ -1620,7 +1620,7 @@ export function predictMatch(
   // Kontrola vzájomných zápasov (15. 11. 2026, Michal – po tipe „Rohy hostí nad 1,5“ pri San Maríne, ktoré malo
   // vo vzájomných zápasoch 0, 2 a 1 roh): pri rohoch, kartách, strelách a fauloch (zápas aj tím) sa tip porovná
   // s posledným vzájomnými zápasmi (aspoň 3 so štatistikou). Ak by vo väčšine z nich neprešiel, ide len do
-  // sledovaných (h2hAgainst). Odhad modelu sa nemení.
+  // sledovaných (h2hAgainst). Odhad modelu sa nemení. Od 20. 11. 2026 aj držanie lopty.
   const H2H_CHECK: Record<string, (x: H2HStats) => number | null | undefined> = {
     "Rohy": (x) => x.corners,
     "Rohy domácich": (x) => x.homeCorners,
@@ -1634,6 +1634,9 @@ export function predictMatch(
     "Fauly": (x) => x.fouls,
     "Fauly domácich": (x) => x.homeFouls,
     "Fauly hostí": (x) => x.awayFouls,
+    // 20. 11. 2026 (Michal): aj držanie lopty – posledných 5 vzájomných zápasov (percentá z pohľadu tímu v tipe).
+    "Držanie lopty domácich": (x) => x.homePossession,
+    "Držanie lopty hostí": (x) => (typeof x.homePossession === "number" ? 100 - x.homePossession : null),
   };
   for (const c of candidates) {
     const get = H2H_CHECK[c.market];
