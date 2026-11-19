@@ -5505,7 +5505,7 @@ const ODDS2_TEXT = {
 };
 const OCT_TEXT = {
   boxId: "octResult", fold: "oktober", emptySum: "Tiché sledovanie od 19. 11.",
-  intro: `Pravidlá zo začiatku štatistík (10. – 19. 10. 2026): dôvera len z modelu (bez zmiešania so stávkovkami), pásmo 68 – 80${NB}%, kurz z API aspoň 1,60, hodnota +5 až +25${NB}%, zo zápasu najviac 1 tip z typu (góly, rohy, karty…). Server ich vyberá asi hodinu pred výkopom a po zápase vyhodnotí. Klientom nejde a do štatistík sa neráta – na konci mesiaca porovnať so súčasnými tipmi.`,
+  intro: `Pravidlá zo začiatku štatistík (10. – 19. 10. 2026), od 19. 11. s hranicou 70${NB}%: dôvera len z modelu (bez zmiešania so stávkovkami), pásmo 70 – 80${NB}%, kurz z API aspoň 1,60, hodnota +5 až +25${NB}%, zo zápasu najviac 1 tip z typu (góly, rohy, karty…). Server ich vyberá asi hodinu pred výkopom a po zápase vyhodnotí. Klientom nejde a do štatistík sa neráta – na konci mesiaca porovnať so súčasnými tipmi.`,
 };
 // 19. 11. 2026 (Michal): ktoré tipy by spätne prešli pravidlami „Ako v októbri“ (z tichej evidencie od 20. 10.).
 async function renderOctoberRetro() {
@@ -5520,7 +5520,7 @@ async function renderOctoberRetro() {
   const html = `<div class="oct-retro"><h4>Spätne – ktoré tipy by prešli (zápasy od ${escapeHtml(new Date(d.from || Date.now()).toLocaleDateString("sk-SK"))})</h4>
     <p class="faint small">Z tichej evidencie modelu a stávkoviek: dôvera len z modelu 68 – 80${NB}%, kurz z API aspoň 1,60, hodnota +5 až +25${NB}%, zo zápasu 1 tip z typu. Zápasy zo všetkých súťaží, ktoré server prešiel – aj tie, ktoré klientom nešli. Zisk pri vklade 1 jednotka, kurz z API.</p>
     <div class="table-wrap"><table class="bt-table"><thead><tr><th></th><th>Tipy</th><th>Vyšlo</th><th>Zisk</th><th>Priem. kurz</th><th>Tipov denne</th></tr></thead><tbody>
-    ${row("S filtrom rozporu so stávkovkami", d.noConflict)}${row("Bez filtra (len model, ako do 19. 10.)", d.all)}${d.daily3 ? row("Najviac 3 denne – najvyššia dôvera (s filtrom)", d.daily3) : ""}</tbody></table></div>
+    ${row("S filtrom rozporu so stávkovkami", d.noConflict)}${row("Bez filtra (len model, ako do 19. 10.)", d.all)}${d.daily3 ? row("Najviac 3 denne – najvyššia dôvera (s filtrom)", d.daily3) : ""}${d.noConflict70 ? row("Od 70 % (s filtrom)", d.noConflict70) : ""}${d.daily3_70 ? row("Od 70 % – najviac 3 denne", d.daily3_70) : ""}</tbody></table></div>
     ${list ? `<details><summary class="small">Tipy s filtrom rozporu (posledných 150)</summary><div class="table-wrap"><table class="bt-table"><tbody>${list}</tbody></table></div></details>` : ""}</div>`;
   box.querySelector(".oct-retro")?.remove();
   box.insertAdjacentHTML("afterbegin", html);
