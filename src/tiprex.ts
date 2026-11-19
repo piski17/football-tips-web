@@ -97,7 +97,14 @@ function writeFile(d: Record<Bucket, Record<string, TiprexPick>>): void {
 const TIPREX_MIN_GAMES = 8;
 const isWomenLeague = (league: string) => /women|ženy|\(ž\.\)/i.test(league || "");
 async function listPicks(b: Bucket): Promise<TiprexPick[]> {
-  return (await listPicksRaw(b)).filter((p) => !isWomenLeague(p.league));
+  const all = (await listPicksRaw(b)).filter((p) => !isWomenLeague(p.league));
+  // 19. 11. 2026 (Michal): aj spätne len 1 tip zo zápasu – ten s najväčšou dôverou (ostatné v databáze ostávajú, nerátajú sa).
+  const best = new Map<number, TiprexPick>();
+  for (const p of all) {
+    const cur = best.get(p.fixtureId);
+    if (!cur || p.p > cur.p || (p.p === cur.p && p.ev > cur.ev)) best.set(p.fixtureId, p);
+  }
+  return [...best.values()];
 }
 async function listPicksRaw(b: Bucket): Promise<TiprexPick[]> {
   if (!useUpstash) return Object.values(readFile()[b]);
