@@ -32,7 +32,7 @@ const MAX_GAP = 12;
 /** Najvyšší kurz najviac o 8 % nad mediánom stávkoviek – vyšší býva chyba alebo starý kurz. */
 const MAX_OVER_MEDIAN = 1.08;
 /** 18. 11. 2026 (Michal): zo zápasu toľko tipov, koľko prejde – len nie dva z toho istého typu trhu. */
-const MAX_PER_FIXTURE = 99;
+const MAX_PER_FIXTURE = 1; // 19. 11. 2026 (Michal): z jedného zápasu len 1 tip – ten s najväčšou dôverou (predtým 99)
 /** Tip musia ponúkať aspoň 3 známe zahraničné stávkovky (Bet365, Unibet, Betano…). */
 const MIN_TOP_BOOKS = 3;
 const SKIP_MARKETS = ["Strelec gólov", "Ofsajdy", "Vyššie držanie lopty", "Držanie lopty domácich", "Držanie lopty hostí"];
@@ -375,8 +375,8 @@ export async function recordTiprexPicks(
       ev: Math.round(ev * 1000) / 1000, recordedAt: now, status: "pending",
     });
   }
-  // Z jedného typu trhu (góly, rohy, karty…) len jeden tip – ten s najvyššou hodnotou; počet na zápas neobmedzený.
-  found.sort((a, b) => b.ev - a.ev);
+  // 19. 11. 2026 (Michal): zo zápasu len 1 tip (MAX_PER_FIXTURE) – ten s najväčšou dôverou (p), pri zhode vyššia hodnota.
+  found.sort((a, b) => b.p - a.p || b.ev - a.ev);
   const types = new Set<string>();
   const chosen: TiprexPick[] = [];
   for (const pk of found) {
