@@ -73,11 +73,14 @@ export function addActiveMonths(from: Date, months: number, days?: number): Date
 // Bez časovej platnosti: členstvo platí, kým sa neminú tipy (NO_EXPIRY_MONTHS je len technický dátum, nikde sa neukazuje).
 // Garancia: prvých 20 tipov bez rizika; ak členstvo skončí v strate (v jednotkách), člen dostane 1 mesiac zadarmo.
 export const NO_EXPIRY_MONTHS = 1200;
-export type SellableTerm = "p100";
-export type Term = SellableTerm | "p30" | "p50" | "p75" | "p150" | "p200" | "p250" | "p300" | "t75" | "t150" | "t300" | "m1" | "m3" | "season";
-export const SELLABLE_TERMS: SellableTerm[] = ["p100"];
+// Od 19. 11. 2026 (Michal: „mesačné členstvo“): jediné členstvo VIP Klub na 1 mesiac za 39 € – platí sa za mesiac, nie za tipy.
+// Člen dostane všetky tipy, ktoré za mesiac prejdú. Samo sa nepredlžuje. VIP Klub na tipy (p100, od 50 tipov) je odvtedy starý.
+export type SellableTerm = "mesiac";
+export type Term = SellableTerm | "p100" | "p30" | "p50" | "p75" | "p150" | "p200" | "p250" | "p300" | "t75" | "t150" | "t300" | "m1" | "m3" | "season";
+export const SELLABLE_TERMS: SellableTerm[] = ["mesiac"];
 const pk = (price: number, tips: number) => ({ price, name: `${tips} tipov`, tips, months: NO_EXPIRY_MONTHS });
 export const PAY_TERMS: Record<Term, { price: number; name: string; months?: number; days?: number; tips?: number }> = {
+  mesiac: { price: 39, name: "1 mesiac", months: 1 }, // 19. 11. 2026 Michal: mesačné členstvo 39 €
   p100: pk(98, 100), // 12. 11. 2026 Michal: 50 tipov za 49 € → 0,98 € za tip
   p30: pk(29, 30),
   p50: pk(39, 50),
@@ -95,7 +98,8 @@ export const PAY_TERMS: Record<Term, { price: number; name: string; months?: num
 };
 /** Názov členstva: Štart / Gold / Platinum (staré balíčky a časové členstvá majú v názve „starý / staré“). */
 export const TIER_NAMES: Record<Term, string> = {
-  p100: "VIP Klub",
+  mesiac: "VIP Klub",
+  p100: "VIP Klub (staré, na tipy)",
   p30: "Štart (staré, 30 tipov)",
   p50: "Štart (staré, 50 tipov)",
   p150: "VIP (staré, 150 tipov)",
@@ -111,7 +115,7 @@ export const TIER_NAMES: Record<Term, string> = {
   season: "Platinum (6 mesiacov, staré)",
 };
 export function tierName(term: Term): string {
-  return TIER_NAMES[term] ?? TIER_NAMES.p100;
+  return TIER_NAMES[term] ?? TIER_NAMES.mesiac;
 }
 /** Názov členstva s počtom tipov, napríklad „Platinum · 200 tipov“. */
 export function termLabel(term: Term): string {
@@ -131,10 +135,12 @@ const REAL_ROI = 0.042;
 // Od 4. 11. 2026: odporúčaný bank od – do. „Od“ = pri bežnom zisku modelu (4,2 % na tip) a vklade 3 % zarobí člen
 // aspoň 1,5× cenu členstva (cena sa vráti a ešte je v pluse). „Do“ = horná hranica, pri ktorej je vklad 3 % stále rozumný (75 – 90 €).
 const BANK_MARGIN = 1.5;
-const BANK_MAX: Partial<Record<Term, number>> = { p100: 3000, p30: 2500, p75: 2500, p150: 3000 };
+/** Mesačné členstvo: odhad počtu tipov za mesiac (19. 11. 2026: asi 25 – 30) – len pre výpočet odporúčaného banku. */
+export const MONTH_TIPS = 27;
+const BANK_MAX: Partial<Record<Term, number>> = { mesiac: 3000, p100: 3000, p30: 2500, p75: 2500, p150: 3000 };
 export function memberBank(term: Term): number {
   const t = PAY_TERMS[term];
-  const tips = t.tips || 50;
+  const tips = t.tips || MONTH_TIPS;
   return Math.ceil((BANK_MARGIN * t.price) / tips / (MEMBER_STAKE_PCT / 100) / REAL_ROI / 50) * 50;
 }
 export function memberBankMax(term: Term): number {
@@ -146,13 +152,14 @@ export function memberSaving(_term: Term): number {
 }
 /** Od 11. 11. 2026 jediné členstvo VIP Klub (100 tipov). */
 export function termForTips(_tips: number): SellableTerm {
-  return "p100";
+  return "mesiac";
 }
 /** Staré odkazy vedú na nové členstvá: Štart 75 / 50 dní → Štart, Štart 100 → Premium, Gold 250 / Onyx 500 / 300 tipov / 6 mesiacov → Platinum. */
 export function sellableTerm(v: unknown): SellableTerm | null {
   if (isSellableTerm(v)) return v;
   // Od 11. 11. 2026 vedú všetky staré odkazy (aj p30 / p100) na jediné členstvo VIP Klub.
-  if (isTerm(v)) return "p100";
+  // Od 19. 11. 2026 vedú na mesačné členstvo.
+  if (isTerm(v)) return "mesiac";
   return null;
 }
 

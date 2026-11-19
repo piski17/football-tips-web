@@ -391,8 +391,7 @@ type TermSeats = Record<SellableTerm, { occupied: number; total: null; left: nul
 /** Plán z bota (t.me/…?start=…) → členstvo: c50 … c250 = posuvník na webe (Štart / Premium / VIP / Gold / Platinum). Staré odkazy:
  *  stat / start = Štart, seria = Premium, vip = VIP, gold = Gold, platinum / onyx / sampion = Platinum. Rovnako v src/telegram.ts (PLAN_TERM). */
 // 11. 11. 2026: všetky odkazy (aj staré c30 / c100) vedú na jediné členstvo VIP Klub.
-const LEAD_PLAN_TERM: Record<string, SellableTerm> = Object.fromEntries(["stat", "start", "seria", "vip", "gold", "platinum", "onyx", "sampion", "klub", "c30", "c50", "c75", "c80", "c100", "c120", "c150", "c200", "c250"].map((k) => [k, "p100"])) as Record<string, SellableTerm>;
-for (const t of SELLABLE_TERMS) LEAD_PLAN_TERM["c" + PAY_TERMS[t].tips] = t;
+const LEAD_PLAN_TERM: Record<string, SellableTerm> = Object.fromEntries(["stat", "start", "seria", "vip", "gold", "platinum", "onyx", "sampion", "klub", "c30", "c50", "c75", "c80", "c100", "c120", "c150", "c200", "c250", "mesiac", "mesacne"].map((k) => [k, "mesiac"])) as Record<string, SellableTerm>; // 19. 11. 2026: mesačné členstvo
 for (const k of Object.keys(LEAD_PLAN_TERM)) LEAD_PLAN_TERM[k + "_waitlist"] = LEAD_PLAN_TERM[k];
 /** Aktívni členovia (členstvo ešte neskončilo) podľa členstva + záujemcovia v poradovníku (pred spustením predaja). */
 async function termSeats(): Promise<TermSeats> {
@@ -426,7 +425,7 @@ async function freeStatsLine(all: SavedTip[]): Promise<string> {
   });
 }
 async function freeSeatsLine(): Promise<string | undefined> {
-  return `🎯 Členstvo: VIP Klub na mieru · od 50 tipov za 49 € · 🛡 v mínuse = mesiac zadarmo`;
+  return `🎯 Členstvo: VIP Klub · 1 mesiac 39 € · 🛡 v mínuse = mesiac zadarmo`; // 19. 11. 2026 Michal: mesačné členstvo
 }
 /** Vracanie peňazí po prvých 20 tipoch (zrušené 2. 11. 2026). */
 const REFUND_ON = false;
@@ -4382,7 +4381,9 @@ async function memberStatuses(subs: Subscriber[], tipsAll?: SavedTip[]): Promise
   const out = new Map<string, MemberStatus>();
   for (const s of subs) {
     const u = usage.get(s.id)!;
-    const cur = u[u.length - 1];
+    // 19. 11. 2026: ďalší mesiac zaplatený dopredu začína až po konci súčasného – dovtedy sa ukazuje súčasné obdobie.
+    const started = u.filter((x) => new Date(x.period.start).getTime() <= Date.now());
+    const cur = started.length ? started[started.length - 1] : u[u.length - 1];
     const term = memberTerm(s);
     out.set(s.id, {
       term,

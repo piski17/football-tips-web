@@ -490,7 +490,7 @@ const VIEWS = [
   { id: "historia", label: "História tipov", short: "História" },
   { id: "clenovia", label: "Členovia", short: "Členovia" },
   { id: "nastroje", label: "Nástroje", short: "Nástroje" },
-  { id: "spolupraca", label: "Spolupráca", short: "Spolupráca", hidden: true, parent: "nastroje" }, // 11. 11. 2026: priečinok v Nástrojoch, nie v menu
+  { id: "spolupraca", label: "Členstvo", short: "Členstvo", hidden: true, parent: "nastroje" }, // 11. 11. 2026: priečinok v Nástrojoch, nie v menu
 ];
 let currentView = "dnes";
 
@@ -537,7 +537,7 @@ function seatsHtml(t) {
     }
     return `<div class="r${full ? " full" : ""}">${label}<b>${val}</b></div>${bar}`;
   };
-  return `<small>Členstvo</small>${["p100"].map((t) => row(t, `${MEMBER_NAME[t]} · ${MEMBER_TIPS[t]}`)).join("")}`;
+  return `<small>Členstvo</small>${["mesiac"].map((t) => row(t, `${MEMBER_NAME[t]} · ${MEMBER_LENGTH_LABEL[t]}`)).join("")}`;
 }
 function renderSeats(terms) {
   { const sb = document.getElementById("seatBox"); if (sb) sb.innerHTML = seatsHtml(terms); }
@@ -4043,25 +4043,23 @@ async function renderBlendSummary() {
 // časové členstvá m1 (Gold 50 dní), m3 (Onyx 6 mesiacov) a season sa nepredávajú, ostávajú pre staršie záznamy.
 // Od 11. 11. 2026 (Michal): jediné členstvo VIP Klub p100 – 100 tipov 75 €. p30 odvtedy staré.
 const MEMBER_PRICES = { p100: 75, p30: 29, p50: 29, p150: 110, p200: 139, p250: 169, p300: 199, p75: 65, t75: 89, t150: 179, t300: 299, m1: 69, m3: 199, season: 219 };
-const MEMBER_NAME = { p100: "VIP Klub", p30: "Štart (staré)", p50: "Štart (staré)", p150: "VIP (staré)", p200: "Gold (staré)", p250: "Platinum (staré)", p300: "Platinum (staré)", p75: "Štart (staré)", t75: "Štart (starý)", t150: "Gold (starý)", t300: "Onyx (starý)", m1: "Gold (staré)", m3: "Onyx (staré)", season: "Platinum (staré)" };
-const MEMBER_LENGTH_LABEL = { p100: "100 tipov", p30: "30 tipov", p50: "50 tipov", p150: "150 tipov", p200: "200 tipov", p250: "250 tipov", p300: "300 tipov", p75: "75 tipov", t75: "100 tipov", t150: "250 tipov", t300: "500 tipov", m1: "50 dní", m3: "6 mesiacov", season: "6 mesiacov" };
+const MEMBER_NAME = { mesiac: "VIP Klub", p100: "VIP Klub (na tipy)", p30: "Štart (staré)", p50: "Štart (staré)", p150: "VIP (staré)", p200: "Gold (staré)", p250: "Platinum (staré)", p300: "Platinum (staré)", p75: "Štart (staré)", t75: "Štart (starý)", t150: "Gold (starý)", t300: "Onyx (starý)", m1: "Gold (staré)", m3: "Onyx (staré)", season: "Platinum (staré)" };
+const MEMBER_LENGTH_LABEL = { mesiac: "1 mesiac", p100: "100 tipov", p30: "30 tipov", p50: "50 tipov", p150: "150 tipov", p200: "200 tipov", p250: "250 tipov", p300: "300 tipov", p75: "75 tipov", t75: "100 tipov", t150: "250 tipov", t300: "500 tipov", m1: "50 dní", m3: "6 mesiacov", season: "6 mesiacov" };
 const MEMBER_TIPS = { p100: 100, p30: 30, p50: 50, p150: 150, p200: 200, p250: 250, p300: 300, p75: 75, t75: 100, t150: 250, t300: 500 };
-const MEMBER_MONTHS = { p100: 1200, p30: 1200, p50: 1200, p150: 1200, p200: 1200, p250: 1200, p300: 1200, p75: 1200, t75: 1200, t150: 1200, t300: 1200, m1: 1, m3: 6, season: 6 };
+const MEMBER_MONTHS = { mesiac: 1, p100: 1200, p30: 1200, p50: 1200, p150: 1200, p200: 1200, p250: 1200, p300: 1200, p75: 1200, t75: 1200, t150: 1200, t300: 1200, m1: 1, m3: 6, season: 6 };
 const MEMBER_DAYS = { m1: 50 }; // dĺžka v dňoch (staré Gold); ostatné v mesiacoch
 // Letná prestávka: jún a júl sa do členstva nepočítajú (rovnako ako src/payments.ts).
 const SUMMER_PAUSE = { fromMonth: 6, toMonth: 7 };
 let memberFilter = "active";
 let lastSubs = [];
 const subscribersListEl = document.getElementById("subscribersList");
-const subTipsInput = document.getElementById("subTips");
-// 11. 11. 2026 (Michal): členstvo na mieru – od 50 tipov, cena 0,75 € za tip (dá sa prepísať).
-const MEMBER_MIN_TIPS = 50;
-const MEMBER_TIP_PRICE = 0.98; // 12. 11. 2026 Michal: 50 tipov za 49 €
-// 12. 11. 2026 (Michal): malá množstevná zľava – rovnaká ako na odkaze pre klienta (src/coopLinks.ts COOP_DISCOUNTS).
-const MEMBER_DISCOUNTS = [[300, 0.1], [200, 0.08], [150, 0.06], [100, 0.03]];
-const memberDiscount = (tips) => { for (const [from, d] of MEMBER_DISCOUNTS) if (tips >= from) return d; return 0; };
-const memberPriceFor = (tips) => Math.round(tips * MEMBER_TIP_PRICE * (1 - memberDiscount(tips)));
-const subTipsValue = () => Math.max(MEMBER_MIN_TIPS, Math.round(Number(subTipsInput.value) || 100));
+// 19. 11. 2026 (Michal): mesačné členstvo VIP Klub – 1 mesiac za 39 € (platí sa za mesiac, nie za tipy). Cena sa dá prepísať.
+// Rovnaká cena je v src/payments.ts (PAY_TERMS.mesiac) a na webe. Predtým (11. – 18. 11.) spolupráca od 50 tipov, 0,98 € za tip.
+const subMonthsInput = document.getElementById("subMonths");
+const MEMBER_MONTH_PRICE = 39;
+const MONTH_TIPS = 27; // odhad počtu tipov za mesiac (asi 25 – 30) – len pre prepočet v pláne
+const memberPriceFor = (months) => Math.round(months * MEMBER_MONTH_PRICE);
+const subMonthsValue = () => Math.min(12, Math.max(1, Math.round(Number(subMonthsInput.value) || 1)));
 const subPriceInput = document.getElementById("subPrice");
 const subStartInput = document.getElementById("subStart");
 
@@ -4071,14 +4069,14 @@ function daysUntil(dateStr) {
 }
 
 /** Koniec členstva: od dátumu `from` pridá dĺžku, jún a júl sa nepočítajú (členstvo sa pozastaví). */
-function memberEnd(from, length) {
+function memberEnd(from, length, months) {
   const start = new Date(`${String(from).slice(0, 10)}T23:59:00`);
   const calEnd = new Date(start);
   if (MEMBER_DAYS[length]) {
     calEnd.setDate(calEnd.getDate() + MEMBER_DAYS[length]);
   } else {
     const day = calEnd.getDate();
-    calEnd.setMonth(calEnd.getMonth() + (MEMBER_MONTHS[length] || 1));
+    calEnd.setMonth(calEnd.getMonth() + (months || MEMBER_MONTHS[length] || 1));
     if (calEnd.getDate() < day) calEnd.setDate(0); // napr. 31. 1. + 1 mesiac = 28./29. 2.
   }
   let remaining = calEnd.getTime() - start.getTime();
@@ -4097,12 +4095,12 @@ function memberEnd(from, length) {
   return calEnd;
 }
 
-/** Ďalšie členstvo po doterajšom: od 11. 11. 2026 vždy VIP Klub (100 tipov). */
+/** Ďalšie členstvo po doterajšom: od 19. 11. 2026 vždy mesačný VIP Klub. */
 function nextTerm(_length) {
-  return "p100";
+  return "mesiac";
 }
 function syncMemberPrice() {
-  subPriceInput.value = memberPriceFor(subTipsValue());
+  subPriceInput.value = memberPriceFor(subMonthsValue());
   updateSubEndPreview();
 }
 // 11. 11. 2026 (Michal): Nástroje → Spolupráca – plán pre klienta: počet tipov, jeho bank, vklad, cena.
@@ -4111,7 +4109,8 @@ let subPct = 3;
 const COOP_ROI = 0.042; // bežný zisk modelu na tip (rovnako ako web a payments.ts)
 function updateSubEndPreview() {
   const start = subStartInput.value || todayIso();
-  const tips = subTipsValue();
+  const months = subMonthsValue();
+  const tips = months * MONTH_TIPS; // odhad
   const bank = Math.max(0, Number(subBankInput.value) || 0);
   const price = Number(subPriceInput.value) || 0;
   const stake = (bank * subPct) / 100;
@@ -4120,26 +4119,26 @@ function updateSubEndPreview() {
   const net = model * stake - price;
   const bankBreak = price > 0 ? Math.ceil(price / (model * subPct / 100) / 50) * 50 : 0;
   const bankRec = price > 0 ? Math.ceil((1.5 * price) / (model * subPct / 100) / 50) * 50 : 0;
-  document.querySelectorAll("#subTipsPick [data-tips]").forEach((b) => b.classList.toggle("on", Number(b.dataset.tips) === tips));
+  document.querySelectorAll("#subMonthsPick [data-months]").forEach((b) => b.classList.toggle("on", Number(b.dataset.months) === months));
   document.querySelectorAll("#subPctPick [data-pct]").forEach((b) => b.classList.toggle("on", Number(b.dataset.pct) === subPct));
   const eur = (n) => `${Math.round(n).toLocaleString("sk-SK")}${NB}€`;
   const kpi = (label, val, sub, cls = "") => `<div class="kpi${cls}"><small>${label}</small><b>${val}</b>${sub ? `<span>${sub}</span>` : ""}</div>`;
   document.getElementById("coopOut").innerHTML =
     kpi("Vklad na tip", `${fmtNum(stake, stake % 1 ? 2 : 0)}${NB}€`, `${subPct}${NB}% z banku ${eur(bank)}`) +
-    kpi("Cena sa vráti pri", `+${fmtNum(need, 1)}${NB}j.`, `za ${tips} tipov`, need > model ? " warn" : "") +
+    kpi("Cena sa vráti pri", `+${fmtNum(need, 1)}${NB}j.`, `za ${months === 1 ? "mesiac" : `${months} mesiace`} (asi ${tips} tipov)`, need > model ? " warn" : "") +
     kpi("Bežný zisk modelu", `+${fmtNum(model, 1)}${NB}j.`, `≈ ${eur(model * stake)} · po zaplatení ${net >= 0 ? "+" : "−"}${eur(Math.abs(net))}`, net < 0 ? " warn" : "") +
     kpi("Odporúčaný bank", `od ${eur(bankRec)}`, `cena sa vráti od ${eur(bankBreak)}`, bank < bankRec ? " warn" : "");
+  const end = memberEnd(start, "mesiac", months);
   document.getElementById("subEndPreview").textContent =
-    `${tips} tipov za ${eur(price)} od ${new Date(start).toLocaleDateString("sk-SK")}, bez časového limitu · bank ${eur(bank)}, vklad ${fmtNum(stake, stake % 1 ? 2 : 0)}${NB}€` +
-    (Number(subTipsInput.value) < MEMBER_MIN_TIPS ? ` · najmenej ${MEMBER_MIN_TIPS} tipov` : "");
+    `${months === 1 ? "1 mesiac" : `${months} mesiace`} za ${eur(price)} · od ${new Date(start).toLocaleDateString("sk-SK")} do ${end.toLocaleDateString("sk-SK")} · bank ${eur(bank)}, vklad ${fmtNum(stake, stake % 1 ? 2 : 0)}${NB}€`;
 }
-subTipsInput.addEventListener("input", syncMemberPrice);
+subMonthsInput.addEventListener("input", syncMemberPrice);
 subBankInput.addEventListener("input", updateSubEndPreview);
 subPriceInput.addEventListener("input", updateSubEndPreview);
-document.getElementById("subTipsPick").addEventListener("click", (e) => {
-  const b = e.target.closest("[data-tips]");
+document.getElementById("subMonthsPick").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-months]");
   if (!b) return;
-  subTipsInput.value = b.dataset.tips;
+  subMonthsInput.value = b.dataset.months;
   syncMemberPrice();
 });
 document.getElementById("subPctPick").addEventListener("click", (e) => {
@@ -4288,10 +4287,10 @@ function renderSubscribersList(subs) {
   const byTerm = (t) => active.filter((s) => s.length === t).length;
   document.getElementById("subscribersSummary").innerHTML = `
     <div class="kpi"><small>Aktívni</small><b>${active.length}</b></div>
-    <div class="kpi"><small>VIP Klub</small><b>${byTerm("p100")}</b></div>
-    <div class="kpi"><small>Staré členstvá</small><b>${active.length - byTerm("p100")}</b></div>
+    <div class="kpi"><small>VIP Klub · mesačne</small><b>${byTerm("mesiac")}</b></div>
+    <div class="kpi"><small>Staré členstvá</small><b>${active.length - byTerm("mesiac")}</b></div>
         <div class="kpi"><small>Zaplatené</small><b>${income}${NB}€</b><span>aktívni členovia</span></div>
-    <div class="kpi${ending ? " warn" : ""}"><small>Čoskoro končí</small><b>${ending}</b><span>ostáva ≤ 10 tipov</span></div>`;
+    <div class="kpi${ending ? " warn" : ""}"><small>Čoskoro končí</small><b>${ending}</b><span>do 7 dní</span></div>`;
   document.querySelectorAll("#memberFilter [data-f]").forEach((b) => b.classList.toggle("on", b.dataset.f === memberFilter));
 
   const shown = subs
@@ -4334,7 +4333,7 @@ function renderSubscribersList(subs) {
         <span class="res-b ${status.cls}">${status.label}</span>
         <span class="ic">
           ${s.telegramChatId ? `<button type="button" class="btn ghost xs" data-test-reminder-id="${escapeHtml(s.id)}" title="Poslať testovaciu pripomienku teraz">🔔 Test</button>` : ""}
-          <button type="button" class="btn ghost xs" data-extend-id="${escapeHtml(s.id)}" title="Zapísať ďalšie zaplatené členstvo (počet tipov si zvolíš, od 50)">Ďalšie členstvo</button>
+          <button type="button" class="btn ghost xs" data-extend-id="${escapeHtml(s.id)}" title="Zapísať ďalší zaplatený mesiac (nadviaže na koniec súčasného)">Ďalšie členstvo</button>
           <button type="button" class="ib danger" data-remove-id="${escapeHtml(s.id)}" title="Zmazať člena" aria-label="Zmazať člena">${ICON.trash}</button>
         </span>
       </div>`;
@@ -4350,23 +4349,26 @@ subscribersListEl.addEventListener("click", async (e) => {
     if (!sub) return;
     // Ďalšie členstvo (rovnaké, staré → Štart / Gold / Platinum): začína dnes, tipy idú najprv do starého členstva
     // (alebo mesiaca zadarmo), kým sa nemiňú (počíta server). Iné členstvo sa dá zadať do okna.
-    const def = nextTerm(sub.length || "m1");
-    // 11. 11. 2026: členstvo na mieru – počet tipov (od 50) a cena podľa dohody s členom.
-    const term = def;
-    const pick = window.prompt(`Ďalšie členstvo pre ${sub.name}. Koľko tipov? (najmenej ${MEMBER_MIN_TIPS})`, String(sub.tips || 100));
+    // 19. 11. 2026: mesačné členstvo – ďalší mesiac (alebo viac) nadviaže na koniec, ak ešte beží; inak začína dnes.
+    const term = nextTerm(sub.length || "m1");
+    const pick = window.prompt(`Ďalšie členstvo pre ${sub.name}. Koľko mesiacov?`, "1");
     if (pick === null) return;
-    const nTips = Math.round(Number(pick.replace(",", ".")));
-    if (!(nTips >= MEMBER_MIN_TIPS)) { showToast(`Zadaj aspoň ${MEMBER_MIN_TIPS} tipov.`); return; }
-    const priceIn = window.prompt(`Cena za ${nTips} tipov (€):`, String(memberPriceFor(nTips)));
+    const nMonths = Math.round(Number(pick.replace(",", ".")));
+    if (!(nMonths >= 1 && nMonths <= 12)) { showToast("Zadaj počet mesiacov (1 – 12)."); return; }
+    const priceIn = window.prompt(`Cena za ${nMonths === 1 ? "1 mesiac" : `${nMonths} mesiace`} (€):`, String(memberPriceFor(nMonths)));
     if (priceIn === null) return;
     const nPrice = Number(priceIn.replace(",", "."));
     if (!(nPrice >= 0)) { showToast("Zadaj cenu v eurách."); return; }
-    const end = memberEnd(todayIso(), term);
+    const curEnd = new Date((sub.pkg && sub.pkg.validUntil) || sub.nextPaymentDue);
+    const running = memberActive(sub) && curEnd.getTime() > Date.now();
+    const from = running ? curEnd : new Date();
+    const fromIso = running ? curEnd.toISOString().slice(0, 10) : todayIso();
+    const end = memberEnd(fromIso, term, nMonths);
     try {
       await fetchJson(`/api/subscribers/${sub.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nextPaymentDue: end.toISOString(), periodStart: new Date().toISOString(), length: term, tier: "individual", tips: nTips, priceEur: nPrice }),
+        body: JSON.stringify({ nextPaymentDue: end.toISOString(), periodStart: from.toISOString(), length: term, tier: "individual", tips: 0, priceEur: nPrice }),
       });
       showToast("Ďalšie členstvo zapísané.");
       openSubscribers();
@@ -4407,14 +4409,13 @@ document.getElementById("addSubscriberBtn").addEventListener("click", async (e) 
   const nameEl = document.getElementById("subName");
   const name = nameEl.value.trim();
   if (!name) { showToast("Zadaj meno člena."); nameEl.focus(); return; }
-  const length = "p100"; // VIP Klub; počet tipov je pri každom členovi vlastný (pole tips)
-  const tips = Math.round(Number(subTipsInput.value) || 0);
-  if (tips < MEMBER_MIN_TIPS) { showToast(`Členstvo má najmenej ${MEMBER_MIN_TIPS} tipov.`); subTipsInput.focus(); return; }
+  const length = "mesiac"; // 19. 11. 2026: mesačný VIP Klub (bez počtu tipov)
+  const months = subMonthsValue();
   const tier = "individual";
   const start = subStartInput.value || todayIso();
   const priceRaw = subPriceInput.value.trim();
-  const priceEur = priceRaw === "" ? memberPriceFor(tips) : Number(priceRaw);
-  const end = memberEnd(start, length);
+  const priceEur = priceRaw === "" ? memberPriceFor(months) : Number(priceRaw);
+  const end = memberEnd(start, length, months);
   if (end.getTime() < Date.now()) {
     if (!window.confirm(`Toto členstvo by skončilo už ${end.toLocaleDateString("sk-SK")}. Pridať aj tak?`)) return;
   }
@@ -4426,7 +4427,6 @@ document.getElementById("addSubscriberBtn").addEventListener("click", async (e) 
     tier,
     priceEur,
     length,
-    tips,
     bankEur: Math.max(0, Number(subBankInput.value) || 0) || undefined,
     stakePct: subPct,
     startDate: new Date(`${start}T12:00:00`).toISOString(),
@@ -4440,12 +4440,12 @@ document.getElementById("addSubscriberBtn").addEventListener("click", async (e) 
     await postJson("/api/subscribers", subscriber);
     ["subName", "subContact", "subTelegramChatId", "subNote"].forEach((id) => { document.getElementById(id).value = ""; });
     subStartInput.value = todayIso();
-    subTipsInput.value = 50;
+    subMonthsInput.value = 1;
     subBankInput.value = 1000;
     syncMemberPrice();
     memberFilter = "active";
     if (coopUsing) { fetchJson(`/api/coop-links/${coopUsing}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ done: true, seen: true }) }).catch(() => {}); coopUsing = null; void loadCoopLinks(); }
-    showToast(`${name}: členstvo ${tips} tipov za ${priceEur} € nastavené.`);
+    showToast(`${name}: členstvo ${months === 1 ? "1 mesiac" : `${months} mesiace`} za ${priceEur} € nastavené.`);
     goTo("clenovia");
   } catch (err) {
     showToast(`Pridanie zlyhalo: ${err.message}`);
@@ -4514,7 +4514,7 @@ async function loadCoopLinks() {
 document.getElementById("coopCreateBtn").addEventListener("click", async (e) => {
   const name = document.getElementById("coopName").value.trim();
   if (!name) { showToast("Zadaj meno klienta."); document.getElementById("coopName").focus(); return; }
-  const perTip = Number(String(document.getElementById("coopPerTip").value).replace(",", ".")) || MEMBER_TIP_PRICE;
+  const perTip = Number(String(document.getElementById("coopPerTip").value).replace(",", ".")) || 0.98;
   e.currentTarget.disabled = true;
   try {
     const l = await postJson("/api/coop-links", { name, perTip });
@@ -4538,16 +4538,15 @@ document.getElementById("coopList").addEventListener("click", async (e) => {
   else if (b.dataset.coopUse) {
     // Predvyplní plán aj klienta – stačí doplniť bank a kliknúť na „Uložiť spoluprácu“.
     coopUsing = l.token;
-    subTipsInput.value = l.choice.tips;
+    subMonthsInput.value = 1;
     syncMemberPrice();
-    subPriceInput.value = l.choice.price;
     document.getElementById("subName").value = l.name;
     if (l.choice.contact) document.getElementById("subContact").value = l.choice.contact;
     if (l.choice.note) document.getElementById("subNote").value = l.choice.note;
     updateSubEndPreview();
     document.getElementById("subBank").focus();
     document.getElementById("subBank").scrollIntoView({ behavior: "smooth", block: "center" });
-    showToast("Údaje sú vyplnené – doplň bank a Telegram ID a klikni na „Uložiť spoluprácu“.");
+    showToast("Údaje sú vyplnené – doplň bank a Telegram ID a klikni na „Uložiť členstvo“.");
   } else if (b.dataset.coopDel) {
     if (!window.confirm(`Zmazať odkaz pre ${l.name}? Klientovi prestane fungovať.`)) return;
     await fetchJson(`/api/coop-links/${l.token}`, { method: "DELETE" }).catch(() => {});
@@ -4666,10 +4665,12 @@ document.getElementById("salesOpenBtn").addEventListener("click", async (e) => {
 });
 // Odkaz z bota → členstvo (rovnako ako src/telegram.ts PLAN_TERM): c50 … c250 = posuvník na webe, ostatné sú staré odkazy.
 // 11. 11. 2026: všetky odkazy vedú na jediné členstvo VIP Klub (p100).
+// 19. 11. 2026: mesačné členstvo (staré odkazy ostávajú v zozname so štítkom „starý odkaz“).
 const LEAD_PLAN_TERM = { stat: "p100", start: "p100", seria: "p100", vip: "p100", gold: "p100", platinum: "p100", onyx: "p100", sampion: "p100", klub: "p100" };
 const LEAD_PLAN_LABEL = { premium: "starý odkaz Premium", clenstvo: "nevybral", otazka: "otázka z webu" };
-for (const [k, t] of Object.entries(LEAD_PLAN_TERM)) LEAD_PLAN_LABEL[k] = `${MEMBER_NAME[t]} ${MEMBER_TIPS[t]} tipov (starý odkaz)`;
-for (const n of [30, 50, 75, 80, 100, 120, 150, 200, 250]) { const t = "p100"; LEAD_PLAN_TERM["c" + n] = t; LEAD_PLAN_LABEL["c" + n] = n === 100 ? `${MEMBER_NAME[t]} 100 tipov` : `${MEMBER_NAME[t]} 100 tipov (starý odkaz ${n})`; }
+for (const [k, t] of Object.entries(LEAD_PLAN_TERM)) LEAD_PLAN_LABEL[k] = `VIP Klub (starý odkaz)`;
+for (const n of [30, 50, 75, 80, 100, 120, 150, 200, 250]) { LEAD_PLAN_TERM["c" + n] = "p100"; LEAD_PLAN_LABEL["c" + n] = `VIP Klub (starý odkaz ${n} tipov)`; }
+LEAD_PLAN_LABEL.mesiac = LEAD_PLAN_LABEL.mesacne = "VIP Klub · 1 mesiac";
 async function renderLeads() {
   const el = document.getElementById("leadsList");
   try {
@@ -4702,7 +4703,7 @@ async function renderLeads() {
         document.getElementById("subTelegramChatId").value = l.email ? "" : l.chatId;
         syncMemberPrice();
         goTo("spolupraca");
-        showToast("Údaje sú vyplnené – nastav počet tipov a cenu a klikni na „Nastaviť členstvo“.");
+        showToast("Údaje sú vyplnené – skontroluj cenu a bank a klikni na „Uložiť členstvo“.");
       };
     });
     el.querySelectorAll("[data-lead-del]").forEach((b) => {

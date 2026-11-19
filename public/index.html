@@ -240,10 +240,10 @@
         <header class="top"><h2>Členovia</h2></header>
         <div class="page">
           <div class="card gar-card" id="guaranteeCard" hidden></div>
-          <p class="muted small">Všetci, ktorí si kúpili členstvo VIP Klub (pri platbe cez QR kód sa zapíšu sami). Server každému ráta tipy poslané do členského kanála od nákupu; keď ostane 5 tipov, upozorní teba aj člena. Ak je prvé členstvo po 30 tipoch v mínuse, v karte Garancia mu vrátiš peniaze; ak členstvo skončí v mínuse, pridáš mesiac zadarmo.</p>
+          <p class="muted small">Všetci, ktorí si kúpili členstvo VIP Klub – od 19. 11. 2026 mesačné, 1 mesiac 39 € (pri platbe cez QR kód sa zapíšu sami). Server každému ráta tipy poslané do členského kanála počas jeho mesiaca; pár dní pred koncom upozorní teba aj člena. Ak členstvo skončí v mínuse, v karte Garancia mu pridáš mesiac zadarmo.</p>
           <div class="kpis kpis-members" id="subscribersSummary"></div>
 
-          <div class="sales-row"><button type="button" class="btn sm" id="goSetMemberBtn">+ Nová spolupráca</button><span class="muted small">Nového člena (počet tipov od 50, bank, cena) nastavíš v Nástroje → Spolupráca.</span></div>
+          <div class="sales-row"><button type="button" class="btn sm" id="goSetMemberBtn">+ Nový člen</button><span class="muted small">Nového člena (1 mesiac 39 €, bank, vklad) nastavíš v Nástroje → Členstvo.</span></div>
 
           <div id="paymentsBox" hidden>
             <h3 class="sh">Čakajúce platby prevodom</h3>
@@ -270,11 +270,12 @@
 
       <!-- SPOLUPRÁCA (11. 11. 2026, Michal): samostatný priečinok v Nástrojoch – počet tipov od 50, bank klienta, vklad, cena, zápis člena. -->
       <section class="view" data-view="spolupraca" id="viewSpolupraca" hidden>
-        <header class="top"><h2>Spolupráca</h2></header>
+        <header class="top"><h2>Členstvo</h2></header>
         <div class="page">
-          <p class="muted small" style="margin-bottom:14px"><a href="#nastroje" class="link">← Nástroje</a> · Spoluprácu dohodneš s klientom osobne (na webe nie sú ceny). Tu nastavíš počet tipov, jeho bank a cenu a uložíš ho medzi členov.</p>
+          <p class="muted small" style="margin-bottom:14px"><a href="#nastroje" class="link">← Nástroje</a> · Mesačné členstvo VIP Klub: 1 mesiac 39 € (od 19. 11. 2026). Tu nastavíš klientovi bank a vklad a uložíš ho medzi členov.</p>
 
-          <div class="card" style="margin-bottom:18px">
+          <!-- 19. 11. 2026: odkazy „spolupráca na tipy“ (tipradar.eu/spolupraca/KÓD) sa už nepoužívajú – karta skrytá, staré odkazy fungujú ďalej. -->
+          <div class="card" style="margin-bottom:18px" hidden>
             <h4 class="ct">Odkaz pre klienta <small class="muted">klient si sám vyberie dĺžku, tebe príde upozornenie</small></h4>
             <div class="form-grid">
               <label class="fld">Meno klienta<input type="text" id="coopName" placeholder="napr. Jano" /></label>
@@ -288,16 +289,16 @@
           </div>
 
           <div class="card" style="margin-bottom:18px">
-            <h4 class="ct">1 · Plán spolupráce</h4>
+            <h4 class="ct">1 · Plán členstva</h4>
             <div class="form-grid">
-              <label class="fld">Počet tipov (od 50)<input type="number" id="subTips" min="50" step="10" value="50" inputmode="numeric" /></label>
+              <label class="fld">Počet mesiacov<input type="number" id="subMonths" min="1" max="12" step="1" value="1" inputmode="numeric" /></label>
               <label class="fld">Bank klienta (€)<input type="number" id="subBank" min="0" step="50" value="1000" inputmode="numeric" /></label>
               <label class="fld">Cena (€)<input type="number" id="subPrice" min="0" step="1" inputmode="decimal" /></label>
-              <div class="fld fld-wide">Rýchly výber tipov<div class="chips" id="subTipsPick"><button type="button" class="chip on" data-tips="50">50</button><button type="button" class="chip" data-tips="100">100</button><button type="button" class="chip" data-tips="150">150</button><button type="button" class="chip" data-tips="200">200</button><button type="button" class="chip" data-tips="300">300</button></div></div>
+              <div class="fld fld-wide">Rýchly výber<div class="chips" id="subMonthsPick"><button type="button" class="chip on" data-months="1">1 mesiac</button><button type="button" class="chip" data-months="2">2 mesiace</button><button type="button" class="chip" data-months="3">3 mesiace</button></div></div>
               <div class="fld">Vklad na tip<div class="chips" id="subPctPick"><button type="button" class="chip" data-pct="2">2 %</button><button type="button" class="chip on" data-pct="3">3 %</button><button type="button" class="chip" data-pct="5">5 %</button></div></div>
             </div>
             <div class="kpis" id="coopOut" style="margin-top:16px"></div>
-            <p class="faint small" style="margin-top:10px">Cena sa predvyplní 0,98&nbsp;€ za tip (50 tipov = 49&nbsp;€) s malou zľavou pri väčšom odbere: 100 tipov 95&nbsp;€, 150 tipov 138&nbsp;€, 200 tipov 180&nbsp;€, 300 tipov 265&nbsp;€. Môžeš ju prepísať. Bežný zisk modelu = 4,2&nbsp;% zo vkladu na tip (odhad, nie je zaručený). Odporúčaný bank = pri bežnom zisku modelu zarobí klient aspoň 1,5× cenu.</p>
+            <p class="faint small" style="margin-top:10px">Cena sa predvyplní 39&nbsp;€ za mesiac, môžeš ju prepísať. Prepočet ráta s asi 27 tipmi za mesiac (odhad, v slabšom mesiaci môže byť menej). Bežný zisk modelu = 4,2&nbsp;% zo vkladu na tip (opatrný odhad, nie je zaručený). Odporúčaný bank = pri bežnom zisku modelu zarobí klient aspoň 1,5× cenu.</p>
           </div>
 
           <div class="card" id="setMemberCard">
@@ -309,7 +310,7 @@
               <label class="fld">Od<input type="date" id="subStart" /></label>
               <label class="fld fld-wide">Poznámka<input type="text" id="subNote" placeholder="voliteľné" /></label>
             </div>
-            <div class="form-foot"><span class="muted small" id="subEndPreview"></span><button type="button" class="btn sm" id="addSubscriberBtn">Uložiť spoluprácu</button></div>
+            <div class="form-foot"><span class="muted small" id="subEndPreview"></span><button type="button" class="btn sm" id="addSubscriberBtn">Uložiť členstvo</button></div>
           </div>
         </div>
       </section>
@@ -318,7 +319,7 @@
         <header class="top"><h2>Nástroje</h2></header>
         <div class="page">
           <div class="tools-grid">
-            <button type="button" class="tool" id="openCoopBtn"><b>Spolupráca</b><span>Nastavenie spolupráce s klientom: počet tipov (od 50), jeho bank a vklad, cena a zápis medzi členov.</span></button>
+            <button type="button" class="tool" id="openCoopBtn"><b>Členstvo</b><span>Mesačné členstvo VIP Klub (1 mesiac 39 €): bank a vklad klienta a zápis medzi členov.</span></button>
             <button type="button" class="tool" id="openBacktestBtn"><b>Spätný test</b><span>Overenie presnosti modelu na odohraných zápasoch.</span></button>
             <button type="button" class="tool" id="openCoverageBtn"><b>Trhy v ligách</b><span>Ktoré naše druhy stávok (góly, rohy, karty, strely, fauly) stávkovky v každej lige naozaj ponúkajú.</span></button>
             <button type="button" class="tool" id="tgFreeBtn"><b>Kanál zadarmo (FREE): <em id="tgFreeState">…</em></b><span>Keď je zapnutý, server sám pošle do FREE kanála 1 tip denne pred zápasom (najsilnejší z tipov, ktorých výkop je najbližšie, asi 30 minút pred výkopom) a po zápase výsledky všetkých tipov + ranné vyhodnotenie. Ťuknutím zapneš / vypneš.</span></button>
