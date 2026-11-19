@@ -153,7 +153,14 @@ const median = (xs: number[]) => {
   return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 };
 
-interface PriceView { best: number; book: string; median: number; sharpP: number; sharpSource: "Pinnacle" | "trh" }
+interface PriceView { best: number; book: string; median: number; sharpP: number; sharpSource: "Pinnacle" | "trh"; avg3?: number; avgBooks?: string }
+/** 19. 11. 2026 20:23 (Michal): kurz tipu = priemer z 3 stávkoviek – Pinnacle + 2 ďalšie (2 najvyššie kurzy zo známych zahraničných). */
+function avgOf3(prices: { book: string; odd: number }[], top: { book: string; odd: number }[]): { avg3?: number; avgBooks?: string } {
+  const pin = prices.find((p) => /^pinnacle$/i.test(p.book.trim()));
+  if (!pin || top.length < 2) return {};
+  const two = [...top].sort((a, b) => b.odd - a.odd).slice(0, 2);
+  return { avg3: (pin.odd + two[0].odd + two[1].odd) / 3, avgBooks: `priemer: Pinnacle ${pin.odd.toFixed(2)}, ${two.map((x) => `${x.book} ${x.odd.toFixed(2)}`).join(", ")}` };
+}
 
 function priceView(books: Map<string, MarketOdds[]>, pick: { market: string; selection: string }, home: string, away: string): PriceView | null {
   const prices: { book: string; odd: number }[] = [];
@@ -177,8 +184,8 @@ function priceView(books: Map<string, MarketOdds[]>, pick: { market: string; sel
   if (pin != null) { sharpP = pin; sharpSource = "Pinnacle"; }
   else if (fairs.length >= 3) { sharpP = median(fairs); sharpSource = "trh"; }
   else return null;
-  const bestTop = top.sort((a, b) => b.odd - a.odd)[0];
-  return { best: bestTop.odd, book: bestTop.book, median: median(prices.map((p) => p.odd)), sharpP, sharpSource };
+  const bestTop = [...top].sort((a, b) => b.odd - a.odd)[0];
+  return { best: bestTop.odd, book: bestTop.book, median: median(prices.map((p) => p.odd)), sharpP, sharpSource, ...avgOf3(prices, top) };
 }
 
 /** Skupina trhu – z jednej skupiny v zápase len 1 tip (handicap na rohy patrí k rohom, gólový handicap k výsledku). */
@@ -250,8 +257,8 @@ function hcpPriceView(f: FixtureOdds, kind: HcpKind, side: "home" | "away", line
   if (pin != null) { sharpP = pin; sharpSource = "Pinnacle"; }
   else if (fairs.length >= 3) { sharpP = median(fairs); sharpSource = "trh"; }
   else return null;
-  const bestTop = top.sort((a, b) => b.odd - a.odd)[0];
-  return { best: bestTop.odd, book: bestTop.book, median: median(prices.map((p) => p.odd)), sharpP, sharpSource };
+  const bestTop = [...top].sort((a, b) => b.odd - a.odd)[0];
+  return { best: bestTop.odd, book: bestTop.book, median: median(prices.map((p) => p.odd)), sharpP, sharpSource, ...avgOf3(prices, top) };
 }
 const fmtHcp = (line: number) => `${line > 0 ? "+" : "−"}${Math.abs(line)}`;
 
@@ -366,8 +373,8 @@ export async function recordTiprexPicks(
   for (const { market, selection, modelP, pv } of priced) {
     // 19. 11. 2026 20:21 (Michal): Pinnacle POVINNE – tip len z trhov, ktoré má Pinnacle; ten istý tip (rovnaká hranica)
     // musia mať aj aspoň 2 ďalšie zahraničné stávkovky (MIN_TOP_BOOKS). Medián „trh“ bez Pinnacle sa už na nové tipy nepoužíva (len na CLV starých).
-    if (pv.sharpSource !== "Pinnacle") continue;
-    const odds = pv.best;
+    if (pv.sharpSource !== "Pinnacle" || pv.avg3 == null) continue;
+    const odds = pv.avg3; // 19. 11. 2026 20:23 (Michal): priemer Pinnacle + 2 stávkovky, nie najvyšší kurz
     if (odds < VQ_MIN_ODDS || odds > VQ_MAX_ODDS) continue;
     if (odds > pv.median * MAX_OVER_MEDIAN) continue;
     if (Math.abs(modelP - pv.sharpP) > MAX_GAP) continue;
@@ -382,7 +389,7 @@ export async function recordTiprexPicks(
       league: fixture.league || f.league, country: f.country,
       market, selection,
       modelP: Math.round(modelP * 10) / 10, sharpP: Math.round(pv.sharpP * 10) / 10, sharpSource: pv.sharpSource,
-      p: Math.round(p * 10) / 10, odds: Math.round(odds * 100) / 100, book: pv.book, medianOdds: Math.round(pv.median * 100) / 100,
+      p: Math.round(p * 10) / 10, odds: Math.round(odds * 100) / 100, book: pv.avgBooks ?? pv.book, medianOdds: Math.round(pv.median * 100) / 100,
       ev: Math.round(ev * 1000) / 1000, recordedAt: now, status: "pending",
     });
   }
