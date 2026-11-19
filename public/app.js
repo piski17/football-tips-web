@@ -5523,7 +5523,23 @@ async function renderOctoberRetro() {
     ${list ? `<details><summary class="small">Tipy s filtrom rozporu (posledných 150)</summary><div class="table-wrap"><table class="bt-table"><tbody>${list}</tbody></table></div></details>` : ""}</div>`;
   box.querySelector(".oct-retro")?.remove();
   box.insertAdjacentHTML("afterbegin", html);
+  const kb = document.getElementById("k160Result");
+  if (kb && d.cur160_68) {
+    kb.querySelector(".oct-retro")?.remove();
+    kb.insertAdjacentHTML("afterbegin", `<div class="oct-retro"><h4>Spätne (zápasy od ${escapeHtml(new Date(d.from || Date.now()).toLocaleDateString("sk-SK"))})</h4>
+      <p class="faint small">Z tichej evidencie: dôvera 70${NB}% model + 30${NB}% stávkovky (ako pri tipoch pre klientov), kurz z API aspoň 1,60, hodnota +5 až +25${NB}%, bez rozporu, 1 tip z typu. Zo všetkých zápasov, ktoré server prešiel. Pre porovnanie: teraz klientom (kurz od 1,50, 70 – 80${NB}%).</p>
+      <div class="table-wrap"><table class="bt-table"><thead><tr><th></th><th>Tipy</th><th>Vyšlo</th><th>Zisk</th><th>Priem. kurz</th><th>Tipov denne</th></tr></thead><tbody>
+      ${row("Kurz od 1,60, pásmo 68 – 80 %", d.cur160_68)}${row("Kurz od 1,60, pásmo 70 – 80 %", d.cur160_70)}</tbody></table></div></div>`);
+  }
 }
+const K160A_TEXT = {
+  boxId: "k160Result", fold: "kurz160", emptySum: "Tiché sledovanie od 19. 11.",
+  intro: `Pásmo 68 – 80${NB}%: rovnaká dôvera ako pri tipoch pre klientov (model + stávkovky), kurz z API aspoň 1,60, hodnota +5 až +25${NB}%, bez rozporu so stávkovkami, zo zápasu 1 tip z typu.`,
+};
+const K160B_TEXT = {
+  boxId: "k160bResult", fold: "kurz160x", emptySum: "",
+  intro: `Pásmo 70 – 80${NB}%: rovnaké pravidlá, len od 70${NB}%.`,
+};
 const ODDS17_TEXT = {
   boxId: "odds17Result", fold: "kurz17", emptySum: "Tiché sledovanie od 16. 11.",
   intro: `Pri každom zápase server asi hodinu pred výkopom vyberie najviac jeden tip s kurzom stávkoviek aspoň 1,70 a hodnotou +5 až +25${NB}% (prednosť má vyššia šanca), bez rozporu so stávkovkami. Po zápase ho vyhodnotí. Klientom nejde a do štatistík sa neráta.`,
@@ -5565,6 +5581,8 @@ async function renderAllMarkets() {
   catch (err) { box.innerHTML = `<p class="faint small">Nepodarilo sa načítať: ${escapeHtml(err.message)}</p>`; return; }
   renderTopPicks(d.top);
   renderTopPicks(d.oct, OCT_TEXT); // 19. 11. 2026: skúška „Ako v októbri“
+  renderTopPicks(d.k160a, K160A_TEXT); // 19. 11. 2026: skúška „Kurz od 1,60“
+  renderTopPicks(d.k160b, K160B_TEXT);
   void renderOctoberRetro();
   const rows = Object.entries(d.markets || {}).map(([market, m]) => ({ market, ...m, pct: m.n ? (m.won / m.n) * 100 : null, exp: m.n ? m.sumP / m.n : null }))
     .sort((a, b) => b.n - a.n || a.market.localeCompare(b.market));

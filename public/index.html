@@ -155,6 +155,7 @@
           <div class="hist-pane" data-hp="sled" hidden>
           <p class="muted small hist-note">Rozbory na mesačnú kontrolu (najbližšie 1. 12.). Denne ich netreba pozerať. Sledované tipy sa vyhodnocujú potichu: nejdú členom ani na web a nerátajú sa do štatistík. Kliknite na kolónku a otvorí sa.</p>
           <div class="fold-grid" data-fold-group="sled">
+            <button type="button" class="fold-tile" data-fold="kurz160" aria-expanded="false"><span class="ft-t">Kurz od 1,60 – skúška</span><span class="ft-s" data-fold-sum="kurz160">Tiché sledovanie od 19. 11.</span><i aria-hidden="true">›</i></button>
             <button type="button" class="fold-tile" data-fold="oktober" aria-expanded="false"><span class="ft-t">Ako v októbri – skúška</span><span class="ft-s" data-fold-sum="oktober">Tiché sledovanie od 19. 11.</span><i aria-hidden="true">›</i></button>
             <button type="button" class="fold-tile" data-fold="hodnota10" aria-expanded="false"><span class="ft-t">Hodnota od +10 % – skúška</span><span class="ft-s" data-fold-sum="hodnota10">Tiché sledovanie od 17. 11.</span><i aria-hidden="true">›</i></button>
             <button type="button" class="fold-tile" data-fold="auto" aria-expanded="false"><span class="ft-t">Všetky zápasy – automaticky</span><span class="ft-s" data-fold-sum="auto">Model sám prejde každý zápas</span><i aria-hidden="true">›</i></button>
@@ -172,6 +173,11 @@
           <div class="fold-sec" data-fold-sec="najsilnejsi" hidden>
           <h3 class="sh">Najsilnejší tip zápasu <small>z každého zápasu všetkých súťaží jeden tip s najvyššou dôverou (kurz aspoň 1,50)</small><button type="button" class="fold-close" data-fold-close aria-label="Zavrieť">× Zavrieť</button></h3>
           <div class="card" id="topPickResult"><p class="empty">Načítavam…</p></div>
+          </div>
+          <div class="fold-sec" data-fold-sec="kurz160" hidden>
+          <h3 class="sh">Kurz od 1,60 – skúška <small>súčasné pravidlá (model + stávkovky), len kurz aspoň 1,60, pásmo 68 – 80&nbsp;% aj 70 – 80&nbsp;%</small><button type="button" class="fold-close" data-fold-close aria-label="Zavrieť">× Zavrieť</button></h3>
+          <div class="card" id="k160Result"><p class="empty">Načítavam…</p></div>
+          <div class="card" id="k160bResult"></div>
           </div>
           <div class="fold-sec" data-fold-sec="oktober" hidden>
           <h3 class="sh">Ako v októbri – skúška <small>pravidlá zo začiatku štatistík: len model, 70 – 80&nbsp;%, kurz od 1,60</small><button type="button" class="fold-close" data-fold-close aria-label="Zavrieť">× Zavrieť</button></h3>

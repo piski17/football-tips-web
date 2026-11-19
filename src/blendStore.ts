@@ -402,7 +402,28 @@ export function octoberRetro(all: BlendFixture[]) {
     return stats(out);
   };
   // 19. 11. 2026 (Michal): aj s hranicou 70 % namiesto 68 %.
-  return { from, all: run(false), noConflict: run(true), daily3: daily3For(68), noConflict70: run(true, 70), daily3_70: daily3For(70),
+  // 19. 11. 2026 (Michal): súčasná dôvera (70 % model + 30 % stávkovky), kurz od 1,60, pásmo 68 – 80 % a 70 – 80 %.
+  const cur160 = (minP: number) => {
+    const tips: any[] = [];
+    for (const f of all) {
+      if (f.status !== "settled") continue;
+      const best = new Map<string, any>();
+      for (const p of f.picks) {
+        if (p.outcome !== "won" && p.outcome !== "lost") continue;
+        if (p.odds == null || p.odds < 1.6 || p.conflict || NOT_RECOMMENDED_MARKETS.includes(p.market) || /handicap/i.test(p.market)) continue;
+        const prob = 0.7 * p.model + 0.3 * p.bookmakers;
+        if (prob < minP || prob > 80) continue;
+        const ev = (prob / 100) * p.odds;
+        if (ev < 1.05 || ev > 1.25) continue;
+        const k = typeOf(p.market), cur = best.get(k);
+        if (!cur || prob > cur.model) best.set(k, { matchDate: f.matchDate, match: `${f.homeTeam} – ${f.awayTeam}`, market: p.market, selection: p.selection, model: Math.round(prob * 10) / 10, bookmakers: p.bookmakers, odds: p.odds, outcome: p.outcome, conflict: false });
+      }
+      tips.push(...best.values());
+    }
+    tips.sort((a, b) => b.matchDate.localeCompare(a.matchDate));
+    return stats(tips);
+  };
+  return { from, cur160_68: cur160(68), cur160_70: cur160(70), all: run(false), noConflict: run(true), daily3: daily3For(68), noConflict70: run(true, 70), daily3_70: daily3For(70),
     // Návrh 19. 11.: od 70 % a model so stávkovkami sa líšia najviac o 10 bodov (zhoda dvoch názorov).
     agree70: run(true, 70, 10), agree70daily3: daily3For(70, 10) };
 }

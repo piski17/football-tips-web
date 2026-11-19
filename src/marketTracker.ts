@@ -34,13 +34,16 @@ interface PendingFixture {
   odds17?: TopPick;
   /** Skúška „Ako v októbri“ (19. 11. 2026) – pozri pickOctober; z každého typu najviac 1. */
   oct?: TopPick[];
+  /** Skúška „Kurz od 1,60“ (19. 11. 2026): súčasná dôvera (model + stávkovky), pásmo 68 – 80 % / 70 – 80 %. */
+  k160a?: TopPick[];
+  k160b?: TopPick[];
 }
 export interface BandStats { n: number; won: number; sumP: number }
 export interface MarketStats { n: number; won: number; lost: number; void: number; sumP: number; bands: Record<string, BandStats> }
 export interface RecentResult { fixtureId: number; matchDate: string; match: string; league: string; market: string; selection: string; probability: number; status: "won" | "lost" | "void" }
 export interface TopResult { fixtureId: number; matchDate: string; match: string; league: string; market: string; selection: string; probability: number; odds: number; status: "won" | "lost" | "void" }
 export interface TopStats { since: string; n: number; won: number; lost: number; void: number; sumP: number; profit: number; leagues: Record<string, { n: number; won: number; profit: number }>; recent: TopResult[] }
-export interface MarketSummary { since: string; fixtures: number; markets: Record<string, MarketStats>; recent: RecentResult[]; top?: TopStats; odds2?: TopStats; odds17?: TopStats; oct?: TopStats }
+export interface MarketSummary { since: string; fixtures: number; markets: Record<string, MarketStats>; recent: RecentResult[]; top?: TopStats; odds2?: TopStats; odds17?: TopStats; oct?: TopStats; k160a?: TopStats; k160b?: TopStats }
 
 const BANDS: [string, number, number][] = [["pod 60 %", 0, 60], ["60 – 69 %", 60, 70], ["70 – 80 %", 70, 80.01]];
 const bandOf = (p: number) => (BANDS.find(([, lo, hi]) => p >= lo && p < hi) ?? BANDS[0])[0];
@@ -145,6 +148,25 @@ function pickOctober(candidates: Cand[]): TopPick[] {
   return [...byType.values()];
 }
 
+// Skúška „Kurz od 1,60“ (19. 11. 2026, Michal: „daj to do sledovania“): rovnaká dôvera ako pri tipoch pre klientov
+// (model + stávkovky), kurz z API aspoň 1,60, hodnota +5 až +25 %, bez rozporu a nesúhlasu vzájomných zápasov,
+// zo zápasu 1 tip z typu. Dve pásma: 68 – 80 % (k160a) a 70 – 80 % (k160b). Klientom nejde.
+function pick160(candidates: Cand[], minP: number): TopPick[] {
+  const byType = new Map<string, TopPick>();
+  for (const c of candidates ?? []) {
+    if (!c.market || OCT_SKIP.includes(c.market) || c.marketConflict || c.h2hAgainst) continue;
+    const p = Number(c.probability), o = Number(c.odds);
+    if (!isFinite(p) || !isFinite(o) || o < 1.6 || p < minP || p > 80) continue;
+    const ev = (p / 100) * o;
+    if (ev < 1.05 || ev > 1.25) continue;
+    const type = String(c.category || c.market).split("_")[0];
+    const cur = byType.get(type);
+    if (!cur || p > cur.probability || (p === cur.probability && o > cur.odds))
+      byType.set(type, { market: c.market, selection: String(c.selection), probability: Math.round(p * 10) / 10, odds: Math.round(o * 100) / 100 });
+  }
+  return [...byType.values()];
+}
+
 /** Z kandidátov modelu vyberie z každého trhu jednu predpoveď (najvyššia šanca do 80 %) a zapíše zápas. */
 export async function recordMarketPredictions(
   fixture: { fixtureId: number; matchDate: string; homeTeam: string; awayTeam: string; league: string },
@@ -166,8 +188,9 @@ export async function recordMarketPredictions(
   // staré čakajúce sa ešte vyhodnotia (aby sedelo poradie výsledkov), v appke sa dlaždica neukazuje.
   const odds17: TopPick | undefined = undefined;
   const oct = pickOctober(candidates);
-  if (!best.size && !top && !odds2 && !odds17 && !oct.length) return;
-  const entry: PendingFixture = { ...fixture, picks: [...best.values()], ...(top ? { top } : {}), ...(odds2 ? { odds2 } : {}), ...(odds17 ? { odds17 } : {}), ...(oct.length ? { oct } : {}) };
+  const k160a = pick160(candidates, 68), k160b = pick160(candidates, 70);
+  if (!best.size && !top && !odds2 && !odds17 && !oct.length && !k160a.length) return;
+  const entry: PendingFixture = { ...fixture, picks: [...best.values()], ...(top ? { top } : {}), ...(odds2 ? { odds2 } : {}), ...(odds17 ? { odds17 } : {}), ...(oct.length ? { oct } : {}), ...(k160a.length ? { k160a } : {}), ...(k160b.length ? { k160b } : {}) };
   if (!useUpstash) { const d = readFile(); d.pending[String(fixture.fixtureId)] = entry; writeFile(d); return; }
   await redis(["HSET", PENDING_KEY, String(fixture.fixtureId), JSON.stringify(entry)]);
 }
@@ -184,14 +207,14 @@ export async function settleMarketPredictions(): Promise<number> {
     const summary = await readSummary();
     for (const f of due.slice(0, 25)) {
       try {
-        const extra = [f.top, f.odds2, f.odds17, ...(f.oct ?? [])].filter((x): x is TopPick => !!x);
+        const extra = [f.top, f.odds2, f.odds17, ...(f.oct ?? []), ...(f.k160a ?? []), ...(f.k160b ?? [])].filter((x): x is TopPick => !!x);
         const all = [...f.picks, ...extra];
         let outcomes = await settleFixtureBets(f, all);
         if (!outcomes) {
           if (Date.now() < new Date(f.matchDate).getTime() + 3 * 24 * 3600 * 1000) continue;
           outcomes = all.map(() => "void" as const);
         }
-        const addTop = (key: "top" | "odds2" | "odds17" | "oct", pick: TopPick, st: "won" | "lost" | "void") => {
+        const addTop = (key: "top" | "odds2" | "odds17" | "oct" | "k160a" | "k160b", pick: TopPick, st: "won" | "lost" | "void") => {
           const t = (summary[key] ??= { since: new Date().toISOString(), n: 0, won: 0, lost: 0, void: 0, sumP: 0, profit: 0, leagues: {}, recent: [] });
           const gain = st === "won" ? pick.odds - 1 : st === "lost" ? -1 : 0;
           if (st === "void") t.void++;
@@ -209,6 +232,8 @@ export async function settleMarketPredictions(): Promise<number> {
         if (f.odds2) addTop("odds2", f.odds2, outcomes[xi++]);
         if (f.odds17) addTop("odds17", f.odds17, outcomes[xi++]);
         for (const o of f.oct ?? []) addTop("oct", o, outcomes[xi++]);
+        for (const o of f.k160a ?? []) addTop("k160a", o, outcomes[xi++]);
+        for (const o of f.k160b ?? []) addTop("k160b", o, outcomes[xi++]);
         summary.fixtures++;
         f.picks.forEach((p, i) => {
           const st = outcomes![i];
