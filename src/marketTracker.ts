@@ -135,7 +135,7 @@ const OCT_SKIP = ["Ofsajdy", "Výsledok zápasu", "Oba tímy skórujú", "Obaja 
 function pickOctober(candidates: Cand[]): TopPick[] {
   const byType = new Map<string, TopPick>();
   for (const c of candidates ?? []) {
-    if (!c.market || OCT_SKIP.includes(c.market) || c.market.startsWith("Ázijský handicap")) continue;
+    if (!c.market || OCT_SKIP.includes(c.market) || c.market.startsWith("Ázijský handicap") || c.market.startsWith("Handicap")) continue;
     const p = Number(typeof c.blendModel === "number" ? c.blendModel : c.probability), o = Number(c.odds);
     if (!isFinite(p) || !isFinite(o) || o < OCT_MIN_ODDS || p < OCT_MIN_P || p > OCT_MAX_P) continue;
     const ev = (p / 100) * o;

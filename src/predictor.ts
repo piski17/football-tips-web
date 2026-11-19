@@ -4,6 +4,7 @@ import {
   marketProbability,
   offeredLines,
   offeredHcpLines,
+  offeredEuHcpLines,
   plausibleLine,
   MIN_EXPECTED_VALUE,
   MIN_ODDS,
@@ -88,10 +89,11 @@ export function marketCategory(market: string): string | null {
   if (m === "Karty v 1. polčase") return "karty_1p";
   if (m === "Karty v 2. polčase") return "karty_2p";
   if (m.startsWith("Držanie lopty")) return "drzanie_lopty";
-  if (m === "Ázijský handicap") return "hcp_goly";
-  if (m === "Ázijský handicap – rohy") return "hcp_rohy";
-  if (m === "Ázijský handicap – karty") return "hcp_karty";
-  if (m === "Ázijský handicap – strely na bránu") return "hcp_strely";
+  // 20. 11. 2026 (Michal): v TipRadare klasický handicap („Handicap“ = európsky, celé hranice; rohy/karty/strely x,5).
+  if (m === "Ázijský handicap" || m === "Handicap") return "hcp_goly";
+  if (m === "Ázijský handicap – rohy" || m === "Handicap – rohy") return "hcp_rohy";
+  if (m === "Ázijský handicap – karty" || m === "Handicap – karty") return "hcp_karty";
+  if (m === "Ázijský handicap – strely na bránu" || m === "Handicap – strely na bránu") return "hcp_strely";
   return null;
 }
 
@@ -487,9 +489,10 @@ function fmtHcp(line: number): string {
 /** Hranice handicapu pre analýzu bez kurzov (z pohľadu domácich), len x,5. */
 const HCP_DEFAULT_LINES: Record<string, number[]> = {
   "Ázijský handicap": [-1.5, -0.5, 0.5, 1.5],
-  "Ázijský handicap – rohy": [-3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5],
-  "Ázijský handicap – karty": [-1.5, -0.5, 0.5, 1.5],
-  "Ázijský handicap – strely na bránu": [-2.5, -1.5, -0.5, 0.5, 1.5, 2.5],
+  "Handicap": [-2, -1, 1, 2], // 20. 11. 2026: klasický (európsky) handicap – celé hranice, 3 možnosti
+  "Handicap – rohy": [-3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5],
+  "Handicap – karty": [-1.5, -0.5, 0.5, 1.5],
+  "Handicap – strely na bránu": [-2.5, -1.5, -0.5, 0.5, 1.5, 2.5],
 };
 /** Rozdelenie počtu (Poisson alebo negatívne binomické podľa rozptylu) – pmf[0..max]. */
 function countPmf(mean: number, varRatio: number, max = 40): number[] {
@@ -1369,11 +1372,30 @@ export function predictMatch(
       }
     };
     const grid = gj ? gj.grid : poissonGrid(xg.home, xg.away);
-    addHcp("Ázijský handicap", "hcp_goly", (L) => {
+    const gridSum = (f: (d: number) => boolean) => {
       let w = 0;
-      for (let h = 0; h < grid.length; h++) for (let a = 0; a < grid[h].length; a++) if (h - a + L > 0) w += grid[h][a];
+      for (let h = 0; h < grid.length; h++) for (let a = 0; a < grid[h].length; a++) if (f(h - a)) w += grid[h][a];
       return w;
-    }, `Očakávané góly ${fmt1(xg.home)} : ${fmt1(xg.away)}.`);
+    };
+    // 20. 11. 2026 (Michal: „handicapy nedávaj ázijské, ale klasické“): góly = klasický (európsky) handicap s celou hranicou,
+    // 3 možnosti – pri rozdiele presne rovnom hranici tip na tím PREHRÁ (vyhráva „remíza na handicap“). Obe strany zvlášť.
+    const goalNote = `Očakávané góly ${fmt1(xg.home)} : ${fmt1(xg.away)}.`;
+    const euLines = hasOdds ? offeredEuHcpLines(marketOdds) : HCP_DEFAULT_LINES["Handicap"];
+    for (const L of euLines) {
+      const pH = gridSum((d) => d + L > 0), pA = gridSum((d) => d + L < 0);
+      for (const [side, p, line] of [["home", pH, L], ["away", pA, -L]] as const) {
+        if (!isFinite(p)) continue;
+        const team = side === "home" ? fixture.homeTeam.name : fixture.awayTeam.name;
+        candidates.push({
+          market: "Handicap",
+          selection: `${team} ${fmtHcp(line)}`,
+          probability: Math.round(p * 1000) / 10,
+          category: "hcp_goly",
+          explanation: `${goalNote} Handicap ${team} ${fmtHcp(line)}: ${line < 0 ? `${team} musí vyhrať aspoň o ${Math.abs(line) + 1} ${Math.abs(line) + 1 >= 5 ? "gólov" : "góly"}` : `${team} nesmie prehrať o ${line} ${line === 1 ? "gól" : line >= 5 ? "gólov" : "góly"} a viac`} (pri rozdiele presne ${Math.abs(line)} tip neprejde).${mmNote}`,
+        });
+      }
+    }
+    // Ázijský handicap gólov ostáva len v tichom sledovaní (goalMarketsTrackOnly) – z neho ho berie aj TIPREX.
     const team = (hMarket: string, aMarket: string) => {
       const hm = lineModels.find((m) => m.market === hMarket), am = lineModels.find((m) => m.market === aMarket);
       return hm && am && hm.mean > 0 && am.mean > 0 ? { hm, am } : null;
@@ -1387,11 +1409,11 @@ export function predictMatch(
       };
     };
     const tc = team("Rohy domácich", "Rohy hostí");
-    if (tc) addHcp("Ázijský handicap – rohy", "hcp_rohy", teamJoint(tc.hm, tc.am), `Očakávané rohy ${fmt1(tc.hm.mean)} : ${fmt1(tc.am.mean)}.`);
+    if (tc) addHcp("Handicap – rohy", "hcp_rohy", teamJoint(tc.hm, tc.am), `Očakávané rohy ${fmt1(tc.hm.mean)} : ${fmt1(tc.am.mean)}.`);
     const tk = team("Karty domácich", "Karty hostí");
-    if (tk) addHcp("Ázijský handicap – karty", "hcp_karty", teamJoint(tk.hm, tk.am), `Očakávané žlté karty ${fmt1(tk.hm.mean)} : ${fmt1(tk.am.mean)}.${refereeNote("cards")}`);
+    if (tk) addHcp("Handicap – karty", "hcp_karty", teamJoint(tk.hm, tk.am), `Očakávané žlté karty ${fmt1(tk.hm.mean)} : ${fmt1(tk.am.mean)}.${refereeNote("cards")}`);
     const ts = team("Strely na bránu domácich", "Strely na bránu hostí");
-    if (ts) addHcp("Ázijský handicap – strely na bránu", "hcp_strely", teamJoint(ts.hm, ts.am), `Očakávané strely na bránu ${fmt1(ts.hm.mean)} : ${fmt1(ts.am.mean)}.`);
+    if (ts) addHcp("Handicap – strely na bránu", "hcp_strely", teamJoint(ts.hm, ts.am), `Očakávané strely na bránu ${fmt1(ts.hm.mean)} : ${fmt1(ts.am.mean)}.`);
   } catch (err) {
     console.error("Handicapy – výpočet zlyhal:", err); // handicap nesmie zhodiť analýzu zápasu
   }

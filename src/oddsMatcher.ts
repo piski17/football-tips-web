@@ -245,7 +245,43 @@ export const HCP_MARKETS: Record<string, HcpKind> = {
   "Ázijský handicap – rohy": "corners",
   "Ázijský handicap – karty": "cards",
   "Ázijský handicap – strely na bránu": "shots",
+  // 20. 11. 2026 (TipRadar, Michal: „klasické handicapy“): pri polovičných hraniciach je klasický = ázijský, kurzy z tých istých stávok.
+  "Handicap – rohy": "corners",
+  "Handicap – karty": "cards",
+  "Handicap – strely na bránu": "shots",
 };
+
+// ---------- Klasický (európsky) handicap gólov (20. 11. 2026) ----------
+// API-Football „Handicap Result“: hodnoty „Home -1“, „Draw -1“, „Away -1“ – hranica je vždy z pohľadu DOMÁCICH.
+// Tip „Tím −1“ vyhrá len pri výhre o 2+ góly; pri rozdiele presne 1 vyhráva „remíza na handicap“.
+function isEuHcpBet(name: string): boolean {
+  const b = name.toLowerCase().trim();
+  return /^handicap result$|^european handicap$/.test(b);
+}
+function parseEuValue(v: string): { out: "home" | "draw" | "away"; homeLine: number } | null {
+  const m = String(v).trim().match(/^(home|draw|away)\s*([+-]?\d+(?:\.\d+)?)$/i);
+  if (!m) return null;
+  const homeLine = parseFloat(m[2]);
+  if (!isFinite(homeLine) || Math.abs(homeLine % 1) > 0.001 || homeLine === 0) return null; // len celé hranice
+  return { out: m[1].toLowerCase() as "home" | "draw" | "away", homeLine };
+}
+/** Celé hranice klasického handicapu, ktoré stávkovky ponúkajú (z pohľadu domácich). */
+export function offeredEuHcpLines(odds: MarketOdds[] | undefined): number[] {
+  const set = new Set<number>();
+  for (const o of odds ?? []) {
+    if (!isEuHcpBet(o.bet)) continue;
+    const v = parseEuValue(o.value);
+    if (v && Math.abs(v.homeLine) <= 3) set.add(v.homeLine);
+  }
+  return [...set].sort((a, b) => a - b);
+}
+function findEuHcpOdds(odds: MarketOdds[], out: "home" | "draw" | "away", homeLine: number): OddsMatch | null {
+  return best(odds.filter((o) => {
+    if (!isEuHcpBet(o.bet)) return false;
+    const v = parseEuValue(o.value);
+    return !!v && v.out === out && Math.abs(v.homeLine - homeLine) < 0.001;
+  }));
+}
 export function isHcpBet(name: string, kind: HcpKind): boolean {
   const b = name.toLowerCase();
   if (!/asian handicap|handicap asian/.test(b) || /(1st|2nd|first|second|half)/.test(b)) return false;
@@ -314,6 +350,10 @@ export function findOdds(
     return best(odds.filter((o) => /^match winner$/i.test(o.bet.trim()) && o.value.trim().toLowerCase() === want));
   }
 
+  if (pick.market === "Handicap") {
+    const h = parseHcpSelection(pick.selection, homeTeam, awayTeam);
+    return h ? findEuHcpOdds(odds, h.side, h.side === "home" ? h.line : -h.line) : null;
+  }
   if (HCP_MARKETS[pick.market]) {
     const h = parseHcpSelection(pick.selection, homeTeam, awayTeam);
     return h ? findHcpOdds(odds, HCP_MARKETS[pick.market], h.side, h.line) : null;
@@ -380,6 +420,12 @@ function opposingOdds(
     others = [`Výhra ${homeTeam}`, "Remíza", `Výhra ${awayTeam}`]
       .filter((sel) => sel !== pick.selection)
       .map((sel) => findOdds(odds, { market: pick.market, selection: sel }, homeTeam, awayTeam));
+  } else if (pick.market === "Handicap") {
+    const h = parseHcpSelection(pick.selection, homeTeam, awayTeam);
+    if (h) {
+      const L = h.side === "home" ? h.line : -h.line;
+      others = (["home", "draw", "away"] as const).filter((x) => x !== h.side).map((x) => findEuHcpOdds(odds, x, L));
+    }
   } else if (HCP_MARKETS[pick.market]) {
     const h = parseHcpSelection(pick.selection, homeTeam, awayTeam);
     if (h) others = [findHcpOdds(odds, HCP_MARKETS[pick.market], h.side === "home" ? "away" : "home", -h.line)];

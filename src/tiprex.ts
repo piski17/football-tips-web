@@ -343,7 +343,7 @@ export async function recordTiprexPicks(
   // Kandidáti: trhy modelu (s kurzami cez findOdds) + ázijské handicapy (góly z modelu gólov, rohy/karty/strely z modelov tímov).
   const priced: { market: string; selection: string; modelP: number; pv: PriceView }[] = [];
   for (const c of [...(candidates ?? []), ...(trackOnly ?? [])]) {
-    if (!c?.market || SKIP_MARKETS.includes(c.market)) continue;
+    if (!c?.market || SKIP_MARKETS.includes(c.market) || c.market.startsWith("Handicap")) continue; // 20. 11. 2026: TIPREX ostáva pri ázijských handicapoch
     const key = `${c.market}|${c.selection}`;
     if (seen.has(key)) continue;
     seen.add(key);
