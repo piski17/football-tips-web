@@ -5520,7 +5520,7 @@ async function renderOctoberRetro() {
   const html = `<div class="oct-retro"><h4>Spätne – ktoré tipy by prešli (zápasy od ${escapeHtml(new Date(d.from || Date.now()).toLocaleDateString("sk-SK"))})</h4>
     <p class="faint small">Z tichej evidencie modelu a stávkoviek: dôvera len z modelu 68 – 80${NB}%, kurz z API aspoň 1,60, hodnota +5 až +25${NB}%, zo zápasu 1 tip z typu. Zápasy zo všetkých súťaží, ktoré server prešiel – aj tie, ktoré klientom nešli. Zisk pri vklade 1 jednotka, kurz z API.</p>
     <div class="table-wrap"><table class="bt-table"><thead><tr><th></th><th>Tipy</th><th>Vyšlo</th><th>Zisk</th><th>Priem. kurz</th><th>Tipov denne</th></tr></thead><tbody>
-    ${row("S filtrom rozporu so stávkovkami", d.noConflict)}${row("Bez filtra (len model, ako do 19. 10.)", d.all)}</tbody></table></div>
+    ${row("S filtrom rozporu so stávkovkami", d.noConflict)}${row("Bez filtra (len model, ako do 19. 10.)", d.all)}${d.daily3 ? row("Najviac 3 denne – najvyššia dôvera (s filtrom)", d.daily3) : ""}</tbody></table></div>
     ${list ? `<details><summary class="small">Tipy s filtrom rozporu (posledných 150)</summary><div class="table-wrap"><table class="bt-table"><tbody>${list}</tbody></table></div></details>` : ""}</div>`;
   box.querySelector(".oct-retro")?.remove();
   box.insertAdjacentHTML("afterbegin", html);

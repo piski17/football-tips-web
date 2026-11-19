@@ -359,7 +359,8 @@ export function homeCornersSummary(all: BlendFixture[], minOdds = MIN_ODDS): {
  */
 export function octoberRetro(all: BlendFixture[]) {
   const typeOf = (m: string) => String(m).split(" ")[0];
-  const run = (useConflict: boolean) => {
+  const run = (useConflict: boolean) => stats(runList(useConflict));
+  const runList = (useConflict: boolean) => {
     const tips: { matchDate: string; match: string; market: string; selection: string; model: number; bookmakers: number; odds: number; outcome: "won" | "lost"; conflict: boolean }[] = [];
     for (const f of all) {
       if (f.status !== "settled") continue;
@@ -378,6 +379,9 @@ export function octoberRetro(all: BlendFixture[]) {
         tips.push({ matchDate: f.matchDate, match: `${f.homeTeam} – ${f.awayTeam}`, market: p.market, selection: p.selection, model: p.model, bookmakers: p.bookmakers, odds: p.odds!, outcome: p.outcome as "won" | "lost", conflict: !!p.conflict });
     }
     tips.sort((a, b) => b.matchDate.localeCompare(a.matchDate));
+    return tips;
+  };
+  const stats = (tips: { matchDate: string; model: number; odds: number; outcome: "won" | "lost" }[] & any[]) => {
     const won = tips.filter((t) => t.outcome === "won").length;
     const profit = Math.round(tips.reduce((a, t) => a + (t.outcome === "won" ? t.odds - 1 : -1), 0) * 100) / 100;
     const days = new Set(tips.map((t) => t.matchDate.slice(0, 10))).size;
@@ -386,5 +390,15 @@ export function octoberRetro(all: BlendFixture[]) {
     return { n: tips.length, won, profit, days, avgOdds, avgModel, list: tips.slice(0, 150) };
   };
   const from = all.reduce((m, f) => (!m || f.matchDate < m ? f.matchDate : m), "");
-  return { from, all: run(false), noConflict: run(true) };
+  // Najviac 3 tipy denne (ako klientom) – v každý deň 3 s najvyššou dôverou modelu (deň podľa SK času).
+  const daily3 = (() => {
+    const base = runList(true);
+    const byDay = new Map<string, typeof base>();
+    for (const t of base) { const d = new Date(new Date(t.matchDate).getTime() + 3600 * 1000).toISOString().slice(0, 10); byDay.set(d, [...(byDay.get(d) ?? []), t]); }
+    const out: typeof base = [];
+    for (const list of byDay.values()) out.push(...list.sort((a, b) => b.model - a.model).slice(0, 3));
+    out.sort((a, b) => b.matchDate.localeCompare(a.matchDate));
+    return stats(out);
+  })();
+  return { from, all: run(false), noConflict: run(true), daily3 };
 }
