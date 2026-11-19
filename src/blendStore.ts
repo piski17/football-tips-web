@@ -359,8 +359,8 @@ export function homeCornersSummary(all: BlendFixture[], minOdds = MIN_ODDS): {
  */
 export function octoberRetro(all: BlendFixture[]) {
   const typeOf = (m: string) => String(m).split(" ")[0];
-  const run = (useConflict: boolean, minP = 68) => stats(runList(useConflict, minP));
-  const runList = (useConflict: boolean, minP = 68) => {
+  const run = (useConflict: boolean, minP = 68, maxGap = 99) => stats(runList(useConflict, minP, maxGap));
+  const runList = (useConflict: boolean, minP = 68, maxGap = 99) => {
     const tips: { matchDate: string; match: string; market: string; selection: string; model: number; bookmakers: number; odds: number; outcome: "won" | "lost"; conflict: boolean }[] = [];
     for (const f of all) {
       if (f.status !== "settled") continue;
@@ -370,6 +370,7 @@ export function octoberRetro(all: BlendFixture[]) {
         if (p.odds == null || p.odds < 1.6 || NOT_RECOMMENDED_MARKETS.includes(p.market) || /handicap/i.test(p.market)) continue;
         if (useConflict && p.conflict) continue;
         if (p.model < minP || p.model > 80) continue;
+        if (Math.abs(p.model - p.bookmakers) > maxGap) continue;
         const ev = (p.model / 100) * p.odds;
         if (ev < 1.05 || ev > 1.25) continue;
         const k = typeOf(p.market), cur = best.get(k);
@@ -391,8 +392,8 @@ export function octoberRetro(all: BlendFixture[]) {
   };
   const from = all.reduce((m, f) => (!m || f.matchDate < m ? f.matchDate : m), "");
   // Najviac 3 tipy denne (ako klientom) – v každý deň 3 s najvyššou dôverou modelu (deň podľa SK času).
-  const daily3For = (minP: number) => {
-    const base = runList(true, minP);
+  const daily3For = (minP: number, maxGap = 99) => {
+    const base = runList(true, minP, maxGap);
     const byDay = new Map<string, typeof base>();
     for (const t of base) { const d = new Date(new Date(t.matchDate).getTime() + 3600 * 1000).toISOString().slice(0, 10); byDay.set(d, [...(byDay.get(d) ?? []), t]); }
     const out: typeof base = [];
@@ -401,5 +402,7 @@ export function octoberRetro(all: BlendFixture[]) {
     return stats(out);
   };
   // 19. 11. 2026 (Michal): aj s hranicou 70 % namiesto 68 %.
-  return { from, all: run(false), noConflict: run(true), daily3: daily3For(68), noConflict70: run(true, 70), daily3_70: daily3For(70) };
+  return { from, all: run(false), noConflict: run(true), daily3: daily3For(68), noConflict70: run(true, 70), daily3_70: daily3For(70),
+    // Návrh 19. 11.: od 70 % a model so stávkovkami sa líšia najviac o 10 bodov (zhoda dvoch názorov).
+    agree70: run(true, 70, 10), agree70daily3: daily3For(70, 10) };
 }
