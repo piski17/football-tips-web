@@ -11,7 +11,7 @@ import { settleFixtureBets } from "./tipEvaluator";
 //
 // Tip vznikne len vtedy, keď ho NEZÁVISLE potvrdia dvaja „sudcovia“:
 //   1. sudca = štatistický model (šanca z predictor.ts, bez miešania so stávkovkami),
-//   2. sudca = najostrejší trh – Pinnacle bez marže (ak Pinnacle chýba, medián aspoň 3 stávkoviek bez marže).
+//   2. sudca = najostrejší trh – Pinnacle bez marže (od 19. 11. 2026 povinne; bez Pinnacle tip nevznikne).
 // Kurz sa berie NAJVYŠŠÍ zo známych zahraničných stávkoviek (TOP_BOOKS zo surebetov: Bet365, Unibet, Betano…).
 // Rozdiel oproti TipRadaru: kurz 1,70 – 3,20 (šanca zhruba 35 – 62 %), výsledná šanca 50 % model + 50 % Pinnacle,
 // hodnota sa musí ukázať u OBOCH sudcov, z jedného typu trhu v zápase len 1 tip (počet tipov na zápas neobmedzený), viac tipov denne.
@@ -364,6 +364,9 @@ export async function recordTiprexPicks(
     }
   }
   for (const { market, selection, modelP, pv } of priced) {
+    // 19. 11. 2026 20:21 (Michal): Pinnacle POVINNE – tip len z trhov, ktoré má Pinnacle; ten istý tip (rovnaká hranica)
+    // musia mať aj aspoň 3 zahraničné stávkovky (MIN_TOP_BOOKS). Medián „trh“ bez Pinnacle sa už na nové tipy nepoužíva (len na CLV starých).
+    if (pv.sharpSource !== "Pinnacle") continue;
     const odds = pv.best;
     if (odds < VQ_MIN_ODDS || odds > VQ_MAX_ODDS) continue;
     if (odds > pv.median * MAX_OVER_MEDIAN) continue;
