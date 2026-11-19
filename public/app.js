@@ -1482,11 +1482,64 @@ function wireLineCalc(r, root) {
 }
 
 /**
+ * Kurzy zo stávkovky priamo pri tipe na fauly / držanie lopty (19. 11. 2026, Michal): API kurzy na tieto
+ * trhy nemá, tak Michal zadá hranicu zo stávkovky a kurzy viac / menej, model prepočíta šancu pre túto
+ * hranicu a tip, ktorý prejde pravidlami, sa uloží klientom aj do štatistík s Michalovým kurzom.
+ */
+const BOOK_LINE_MARKET = /^(Fauly|Držanie lopty)/;
+function needsBookLine(bet) {
+  return BOOK_LINE_MARKET.test(bet.market || "") && !(typeof bet.odds === "number" && bet.odds > 1);
+}
+function betLineOf(bet) {
+  const m = String(bet.selection || "").match(/(\d+(?:[.,]\d+)?)/);
+  return m ? m[1].replace(".", ",") : "";
+}
+function bookLineHtml(i, bet) {
+  const poss = (bet.market || "").startsWith("Držanie lopty");
+  return `<div class="bookline" data-bl="${i}">
+      <div class="bookline-t small">Hranica a kurzy zo stávkovky</div>
+      <div class="bookline-f">
+        <label>Hranica${poss ? " %" : ""}<input type="text" inputmode="decimal" autocomplete="off" data-bl-line value="${escapeHtml(betLineOf(bet))}" placeholder="${poss ? "napr. 55,5" : "napr. 25,5"}" /></label>
+        <label>${poss ? "Kurz a viac" : "Kurz viac ako"}<input type="text" inputmode="decimal" autocomplete="off" data-bl-over placeholder="napr. 1,85" /></label>
+        <label>Kurz menej ako<input type="text" inputmode="decimal" autocomplete="off" data-bl-under placeholder="napr. 1,90" /></label>
+        <button type="button" class="btn sm" data-bl-calc>Prepočítať</button>
+      </div>
+      <div class="res" data-bl-out></div>
+    </div>`;
+}
+/** Šance pre zadanú hranicu – rovnaký výpočet ako kalkulačka v detaile zápasu. Vráti riadky alebo text chyby. */
+function bookLineRows(r, market, line, overOdds, underOdds) {
+  const lineTxt = String(line).replace(".", ",");
+  if (market.startsWith("Držanie lopty")) {
+    if (!r.possession) return "Model pre tento zápas nemá odhad držania lopty.";
+    if (!(line > 0 && line < 100)) return "Zadaj hranicu v %, napr. 55,5.";
+    const home = market.endsWith("domácich");
+    const exp = home ? r.possession.expectedHome : 100 - r.possession.expectedHome;
+    const over = (1 - normCdf((line - exp) / r.possession.sd)) * 100;
+    const teamName = translateTeamName(home ? r.fixture.homeTeam.name : r.fixture.awayTeam.name);
+    return [
+      { label: `${teamName} ${lineTxt} % a viac`, selection: `Over ${line}`, probability: over, odds: overOdds },
+      { label: `${teamName} menej ako ${lineTxt} %`, selection: `Under ${line}`, probability: 100 - over, odds: underOdds },
+    ];
+  }
+  const m = (r.lineModels || []).find((x) => x.market === market);
+  if (!m) return "Model pre tento trh nemá výpočet.";
+  if (!(line > 0) || Math.abs((line % 1) - 0.5) > 1e-9) return "Zadaj hranicu s ,5 – napr. 25,5.";
+  let under = negBinUnder(m.mean, line, m.varRatio) * 100;
+  if (m.calibration < 1) under = 50 + m.calibration * (under - 50);
+  const name = lineMarketLabel(r, m.market);
+  return [
+    { label: `${name} viac ako ${lineTxt}`, selection: `Over ${line}`, probability: 100 - under, odds: overOdds },
+    { label: `${name} menej ako ${lineTxt}`, selection: `Under ${line}`, probability: under, odds: underOdds },
+  ];
+}
+
+/**
  * Spoločné vyhodnotenie kalkulačky: šanca 68 – 80 %, a ak je zadaný kurz, tak aspoň
  * MIN_ODDS (od 2. 11. 2026 1,60) a výhodnosť (šanca × kurz) 1,05 – 1,25. Ak vyhovujú obe strany
  * a obe majú kurz, odporučí sa len tá výhodnejšia. rows: [{ label, selection, probability, odds }].
  */
-function renderCalcRows(out, r, market, rows) {
+function renderCalcRows(out, r, market, rows, onSaved) {
   rows.forEach((x) => {
     if (x.odds != null) {
       x.ev = (x.probability / 100) * x.odds;
@@ -1551,7 +1604,8 @@ function renderCalcRows(out, r, market, rows) {
       try {
         const saved = await postJson("/api/tips", tip);
         if (saved && saved.sameTypeMoved) { tip.watchOnly = true; tip.sameTypeMoved = true; }
-        b.textContent = "✓ Uložené";
+        b.textContent = saved && saved.watchOnly ? "✓ Uložené do sledovaných" : "✓ Uložené";
+        if (onSaved) onSaved(tip);
         await maybeOfferTelegram(tip.id, tip);
       } catch (err) {
         showToast(`Uloženie zlyhalo: ${err?.message ?? String(err)}`);
@@ -1962,6 +2016,7 @@ function renderDayTipsViewMain() {
           <div class="m"><span>Dôvera <b>${probTxt(bet.probability)}${NB}%</b></span>${betOddsHtml(bet)}</div>
           ${bet.valueWarning ? `<div class="why warn">⚠️ ${escapeHtml(bet.valueWarning)}</div>` : ""}
           ${bet.strictFail ? `<div class="why warn">⚠️ ${escapeHtml(strictHint(bet))}</div>` : ""}
+          ${needsBookLine(bet) && !dayTipSaved.has(i) && !bet.watchBand ? bookLineHtml(i, bet) : ""}
         </div>
         <div class="dtip-odds">
           <div class="odds-books" role="group" aria-label="Kurzy v stávkovkách – platí najvyšší">
@@ -2095,6 +2150,40 @@ function renderDayTipsViewMain() {
     };
   });
   refreshOdds();
+  // Fauly / držanie lopty: hranica a kurzy zo stávkovky → prepočet modelom → uloženie tipu, ktorý prejde.
+  dayTipsPaneEl.querySelectorAll("[data-bl]").forEach((box) => {
+    const i = Number(box.dataset.bl);
+    const item = dayTips.items[i];
+    if (!item) return;
+    const out = box.querySelector("[data-bl-out]");
+    const odd = (sel) => {
+      const v = parseOddsInput(box.querySelector(sel).value);
+      return v != null && v > 1 && v <= 20 ? Math.round(v * 100) / 100 : null;
+    };
+    const calc = () => {
+      const line = parseFloat(String(box.querySelector("[data-bl-line]").value).replace(",", "."));
+      const rows = bookLineRows(item.r, item.bet.market, line, odd("[data-bl-over]"), odd("[data-bl-under]"));
+      if (typeof rows === "string") { out.innerHTML = `<p class="faint small">${escapeHtml(rows)}</p>`; return; }
+      if (rows.some((x) => x.odds == null)) { out.innerHTML = `<p class="faint small">Zadaj oba kurzy – viac aj menej.</p>`; return; }
+      renderCalcRows(out, item.r, item.bet.market, rows, () => {
+        dayTipSaved.add(i);
+        const main = dayTipsPaneEl.querySelector(`[data-save="${i}"]`);
+        if (main) { main.disabled = true; main.textContent = "✓ Uložené"; }
+        dayTipsPaneEl.querySelectorAll(`[data-odds="${i}"]`).forEach((inp) => { inp.disabled = true; });
+        refreshOdds();
+      });
+      // tip, ktorý neprejde, sa neukladá – len krátke vysvetlenie
+      if (!out.querySelector("[data-poss]")) out.insertAdjacentHTML("beforeend", `<p class="faint small">Pri tejto hranici a kurzoch tip neprejde – klientom nejde.</p>`);
+    };
+    box.querySelector("[data-bl-calc]").onclick = calc;
+    box.querySelectorAll("input").forEach((inp, k, all) => {
+      inp.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        if (k < all.length - 1) all[k + 1].focus(); else calc();
+      });
+    });
+  });
   const saveOne = async (idx, realOdds) => {
     const { r, bet } = dayTips.items[idx];
     // Kandidát na ⭐ Silný tip dňa si značku nesie do Histórie tipov (server nechá max. 1 za deň).

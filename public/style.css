@@ -1740,3 +1740,12 @@ button.sb-cell:hover { background: rgba(255, 255, 255, .025); }
 .tk-lbl i { background: #17120A; }
 .tk-sep { color: #D6B67A; }
 ::selection { background: #D6B67A; color: #17120A; }
+
+/* Fauly / držanie lopty – hranica a kurzy zo stávkovky priamo pri tipe (19. 11. 2026) */
+.bookline { margin-top: 10px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: var(--r-sm, 6px); }
+.bookline-t { margin-bottom: 6px; color: var(--muted, inherit); }
+.bookline-f { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
+.bookline-f label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; flex: 1 1 90px; min-width: 80px; }
+.bookline-f input { width: 100%; }
+.bookline .res { margin-top: 8px; display: grid; gap: 6px; }
+.dtip.mini .bookline { display: none; }
