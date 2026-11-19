@@ -364,7 +364,7 @@ app.use((req, res, next) => {
   // obrázky a ikony webu; všetko ostatné (appka TipRadaru, API) na tiprex.eu nie je
   express.static(TIPREX_LANDING, { maxAge: "7d", index: false })(req, res, () => res.redirect(302, "/"));
 });
-app.use("/tiprex-web", express.static(TIPREX_LANDING, { maxAge: "1h" })); // náhľad (za heslom appky nižšie by nebol – preto len statické súbory)
+app.use("/tiprex-web", express.static(TIPREX_LANDING, { maxAge: "1h", setHeaders: (res, fp) => { if (fp.endsWith(".html")) res.setHeader("Cache-Control", "no-cache"); } })); // 20. 11. 2026: stránka bez 1 h cache, aby sa zmeny ukázali hneď // náhľad (za heslom appky nižšie by nebol – preto len statické súbory)
 
 app.get("/", (req, res, next) => {
   if (LANDING_HOSTS.includes((req.hostname || "").toLowerCase())) {
@@ -736,7 +736,7 @@ const COVERAGE_MARKETS: { key: string; label: string; markets: string[] }[] = [
   { key: "cards", label: "Karty", markets: ["Karty", "Karty domácich", "Karty hostí"] },
   { key: "shots", label: "Strely na bránu", markets: ["Strely na bránu", "Strely na bránu domácich", "Strely na bránu hostí"] },
   { key: "fouls", label: "Fauly", markets: ["Fauly", "Fauly domácich", "Fauly hostí"] },
-  { key: "hcp", label: "Handicapy", markets: ["Ázijský handicap", "Ázijský handicap – rohy", "Ázijský handicap – karty", "Ázijský handicap – strely na bránu"] },
+  { key: "hcp", label: "Handicapy", markets: ["Handicap", "Handicap – rohy", "Handicap – karty", "Handicap – strely na bránu", "Ázijský handicap", "Ázijský handicap – rohy", "Ázijský handicap – karty", "Ázijský handicap – strely na bránu"] },
 ];
 type CoverageRow = { order: number; id: number; name: string; country: string; inProject: boolean; fixtures: number; withOdds: number; markets: Record<string, number>; single: Record<string, number>; betNames: string[]; error?: string };
 let coverageJob: { startedAt: string; finishedAt?: string; done: number; total: number; rows: CoverageRow[] } | null = null;
