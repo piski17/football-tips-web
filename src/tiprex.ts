@@ -34,7 +34,7 @@ const MAX_OVER_MEDIAN = 1.08;
 /** 18. 11. 2026 (Michal): zo zápasu toľko tipov, koľko prejde – len nie dva z toho istého typu trhu. */
 const MAX_PER_FIXTURE = 99; // 19. 11. 2026 1:53 (Michal): späť – viac tipov zo zápasu, z každého druhu 1 (najväčšia dôvera)
 /** Tip musia ponúkať aspoň 3 známe zahraničné stávkovky (Bet365, Unibet, Betano…). */
-const MIN_TOP_BOOKS = 3;
+const MIN_TOP_BOOKS = 2; // 19. 11. 2026 20:22 (Michal): Pinnacle + ďalšie 2 stávkovky stačia (predtým 3)
 const SKIP_MARKETS = ["Strelec gólov", "Ofsajdy", "Vyššie držanie lopty", "Držanie lopty domácich", "Držanie lopty hostí"];
 
 const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL;
@@ -365,7 +365,7 @@ export async function recordTiprexPicks(
   }
   for (const { market, selection, modelP, pv } of priced) {
     // 19. 11. 2026 20:21 (Michal): Pinnacle POVINNE – tip len z trhov, ktoré má Pinnacle; ten istý tip (rovnaká hranica)
-    // musia mať aj aspoň 3 zahraničné stávkovky (MIN_TOP_BOOKS). Medián „trh“ bez Pinnacle sa už na nové tipy nepoužíva (len na CLV starých).
+    // musia mať aj aspoň 2 ďalšie zahraničné stávkovky (MIN_TOP_BOOKS). Medián „trh“ bez Pinnacle sa už na nové tipy nepoužíva (len na CLV starých).
     if (pv.sharpSource !== "Pinnacle") continue;
     const odds = pv.best;
     if (odds < VQ_MIN_ODDS || odds > VQ_MAX_ODDS) continue;
