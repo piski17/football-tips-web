@@ -1494,8 +1494,9 @@ function betLineOf(bet) {
   const m = String(bet.selection || "").match(/(\d+(?:[.,]\d+)?)/);
   return m ? m[1].replace(".", ",") : "";
 }
-function bookLineHtml(i, bet) {
+function bookLineHtml(i, bet, r) {
   const poss = (bet.market || "").startsWith("Držanie lopty");
+  const pass = r ? passLinesHtml(r, bet.market) : "";
   return `<div class="bookline" data-bl="${i}">
       <div class="bookline-t small">Hranica a kurzy zo stávkovky</div>
       <div class="bookline-f">
@@ -1504,8 +1505,44 @@ function bookLineHtml(i, bet) {
         <label>Kurz menej ako<input type="text" inputmode="decimal" autocomplete="off" data-bl-under placeholder="–" /></label>
         <button type="button" class="btn sm" data-bl-calc>Prepočítať</button>
       </div>
+      ${pass}
       <div class="res" data-bl-out></div>
     </div>`;
+}
+/**
+ * 20. 11. 2026 (Michal: „tá hranica, ktorú dáš ty, nepustí“): zoznam hraníc, pri ktorých by tip prešiel,
+ * a rozpätie kurzu (od minima po hornú hranicu hodnoty +25 %). Michal hneď vidí, či ju stávkovka má.
+ */
+function passLinesHtml(r, market) {
+  const poss = market.startsWith("Držanie lopty");
+  let center;
+  if (poss) {
+    if (!r.possession) return "";
+    center = market.endsWith("domácich") ? r.possession.expectedHome : 100 - r.possession.expectedHome;
+  } else {
+    const m = (r.lineModels || []).find((x) => x.market === market);
+    if (!m) return "";
+    center = m.mean;
+  }
+  const span = poss ? 15 : 8;
+  const out = [];
+  for (let L = Math.floor(center - span) + 0.5; L <= center + span; L += 1) {
+    if (L <= 0 || (poss && L >= 100)) continue;
+    const rows = bookLineRows(r, market, L, null, null);
+    if (typeof rows === "string") continue;
+    rows.forEach((x) => {
+      if (x.probability < WATCH_BELOW || x.probability > 80) return;
+      const p = x.probability / 100;
+      const lo = Math.max(MIN_ODDS, MIN_EV / p), hi = MAX_EV / p;
+      if (hi < lo) return;
+      const up = x.selection.startsWith("Over");
+      const lineTxt = String(L).replace(".", ",") + (poss ? " %" : "");
+      out.push(`<span class="bookline-chip">${up ? (poss ? "a viac" : "viac ako") : "menej ako"} <b>${lineTxt}</b> · kurz ${fmtOdds(Math.ceil(lo * 100) / 100)} – ${fmtOdds(Math.floor(hi * 100) / 100)}</span>`);
+    });
+  }
+  return out.length
+    ? `<div class="bookline-pass small"><span class="faint">Tip prejde pri:</span> ${out.join(" ")}</div>`
+    : `<div class="bookline-pass small faint">Pri žiadnej hranici by tip neprešiel.</div>`;
 }
 /** Šance pre zadanú hranicu – rovnaký výpočet ako kalkulačka v detaile zápasu. Vráti riadky alebo text chyby. */
 function bookLineRows(r, market, line, overOdds, underOdds) {
@@ -2016,7 +2053,7 @@ function renderDayTipsViewMain() {
           <div class="m"><span>Dôvera <b>${probTxt(bet.probability)}${NB}%</b></span>${betOddsHtml(bet)}</div>
           ${bet.valueWarning ? `<div class="why warn">⚠️ ${escapeHtml(bet.valueWarning)}</div>` : ""}
           ${bet.strictFail ? `<div class="why warn">⚠️ ${escapeHtml(strictHint(bet))}</div>` : ""}
-          ${needsBookLine(bet) && !dayTipSaved.has(i) && !bet.watchBand ? bookLineHtml(i, bet) : ""}
+          ${needsBookLine(bet) && !dayTipSaved.has(i) && !bet.watchBand ? bookLineHtml(i, bet, r) : ""}
         </div>
         <div class="dtip-odds">
           <div class="odds-books" role="group" aria-label="Kurzy v stávkovkách – platí najvyšší">

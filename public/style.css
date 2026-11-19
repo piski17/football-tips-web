@@ -1749,3 +1749,5 @@ button.sb-cell:hover { background: rgba(255, 255, 255, .025); }
 .bookline-f input { width: 100%; }
 .bookline .res { margin-top: 8px; display: grid; gap: 6px; }
 .dtip.mini .bookline { display: none; }
+.bookline-pass { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.bookline-chip { padding: 3px 8px; border: 1px solid var(--line); border-radius: 999px; white-space: nowrap; }
