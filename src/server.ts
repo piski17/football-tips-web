@@ -4074,6 +4074,9 @@ async function addAutoEntry(
     reason = `dôvera pod ${Math.round(WATCH_BELOW_PROBABILITY)} %`;
   } else if (tip.probability > MAX_PROBABILITY) reason = `dôvera nad ${MAX_PROBABILITY} %`;
   else if (typeof entry.odds !== "number" && isFarLineTip(tip.market, tip.probability)) reason = "rohy/karty – príliš vzdialená hranica";
+  // 20. 11. 2026 (Michal): fauly a držanie lopty klientom len s kurzom, ktorý Michal zadá zo stávkovky
+  // (Bayern – Kolín: model „menej ako 22,5“ 70 %, stávkovka mala hranicu 18,5 → skutočný kurz ~1,15, nie 1,50).
+  else if (extra.minOddsAuto && /^(Fauly|Držanie lopty)/.test(tip.market)) reason = "fauly/držanie lopty – bez kurzu zo stávkovky len sledovať";
   else if (odds < MIN_ODDS) reason = `kurz pod ${String(MIN_ODDS).replace(".", ",")}`;
   else if (ev < MIN_EXPECTED_VALUE) reason = "hodnota pod +5 %";
   else if (ev > SUSPICIOUS_EXPECTED_VALUE) reason = "hodnota nad +25 %";
