@@ -99,7 +99,9 @@ function writeFile(d: Record<Bucket, Record<string, TiprexPick>>): void {
 const TIPREX_MIN_GAMES = 8;
 const isWomenLeague = (league: string) => /women|ženy|\(ž\.\)/i.test(league || "");
 async function listPicks(b: Bucket): Promise<TiprexPick[]> {
-  const all = (await listPicksRaw(b)).filter((p) => !isWomenLeague(p.league));
+  // 19. 11. 2026 22:36 (Michal): tipy spred nových pravidiel, ktoré by podľa nich neprešli, sa vymažú zo zoznamu aj štatistík
+  // (v databáze ostávajú – recheck.pass === false). Nové tipy recheck nemajú, tých sa to netýka.
+  const all = (await listPicksRaw(b)).filter((p) => !isWomenLeague(p.league) && !(p.recheck && !p.recheck.pass && p.recordedAt < "2026-11-19T19:35:00Z"));
   // 19. 11. 2026 (Michal): aj spätne z každého druhu trhu v zápase len 1 tip – ten s najväčšou dôverou (ostatné v databáze ostávajú).
   const best = new Map<string, TiprexPick>();
   for (const p of all) {
