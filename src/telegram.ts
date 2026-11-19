@@ -443,7 +443,7 @@ const TELEGRAM_CONTACT_USERNAME = process.env.TELEGRAM_CONTACT_USERNAME || "im_m
 // Predtým (1. 11. 2026) 3: Štart 50 tipov 39 €, Premium 100 tipov 75 €, VIP 150 tipov 110 € (Premium a VIP úvodný hovor 1 na 1, VIP od 2. 11. aj mentoring 1 na 1 počas celého členstva). Gold a Platinum zrušené.
 // Bez časovej platnosti, počet tipov denne sa neuvádza. Garancia: prvých 20 tipov bez rizika (inak peniaze späť) a členstvo v mínuse = 1 mesiac zadarmo.
 const BENEFITS_BASE =
-  `• <b>Denné tipy na Telegrame</b> v súkromnom kanáli, 1 – 2 hodiny pred výkopom – len tipy, ktoré prejdú všetkými pravidlami modelu (najviac 3 naraz, v slabý deň radšej žiadny)\n` +
+  `• <b>Denné tipy na Telegrame</b> v súkromnom kanáli, 1 – 2 hodiny pred výkopom – len tipy, ktoré prejdú všetkými pravidlami modelu (v slabý deň radšej žiadny)\n` +
   `• <b>Pri každom tipe</b> kurz, šanca podľa modelu, dôvod a odporúčaná sadzba\n` +
   `• <b>Súkromný chat členov</b>`;
 /** Výhody navyše podľa členstva (od koľkých tipov platia). Rovnaké sú na webe (landing/index.html, #feats – zdroj zip nocny-zapas/zdroj). */

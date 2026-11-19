@@ -5254,7 +5254,7 @@ init();
 
 
 // =====================================================================
-// DNES (3. 11. 2026, Michal): úvodná obrazovka – tipy na dnes (najviac 3 pre klientov), včera, mesiac, členovia
+// DNES (3. 11. 2026, Michal): úvodná obrazovka – tipy na dnes, včera, mesiac, členovia
 // =====================================================================
 var dnesLoading = false; // var: init() beží skôr, než sa sem skript dostane
 async function renderDnes() {
@@ -5290,7 +5290,7 @@ async function renderDnes() {
     const autoToday = (auto && auto.entries ? auto.entries : [])
       .filter((t) => tipDayKey(t.matchDate) === today && new Date(t.matchDate) > now && lateTipForClients(t) && !autoInHistory(t))
       .sort((a, b) => b.probability - a.probability)
-      .slice(0, Math.max(0, 3 - todayTips.length));
+      ; // 19. 11. 2026 (Michal): limit 3 tipy denne zrušený – klientom posiela podľa uváženia
     const subsList = Array.isArray(subs) ? subs : [];
     const active = subsList.filter(memberActive);
     const ending = active.filter((s) => (s.pkg && s.pkg.left != null && s.pkg.left <= 10) || daysUntil((s.pkg && s.pkg.validUntil) || s.nextPaymentDue) <= 7);
@@ -5395,7 +5395,6 @@ async function renderDnes() {
           <h3 class="dn-big">${todayTips.length ? `${plural(todayTips.length, "tip", "tipy", "tipov")} <em>na dnes</em>` : `Dnes zatiaľ <em>bez tipu</em>`}</h3>
           <p class="dn-lead">${todayTips.length ? `${sent} ${sent === 1 ? "poslaný" : sent >= 2 && sent <= 4 ? "poslané" : "poslaných"} členom${nextTip ? ` · najbližší výkop o ${escapeHtml(timeHm(new Date(nextTip.matchDate)))}` : " · všetky zápasy už začali"}` : autoToday.length ? `Server našiel ${plural(autoToday.length, "tip", "tipy", "tipov")} – pridajte ${autoToday.length === 1 ? "ho" : "ich"} nižšie.` : "Spustite analýzu a model prejde všetky zápasy dňa."}</p>
           <div class="dn-hero-act"><button type="button" class="btn" data-dn-go="tipy">Nájsť tipy dňa</button><button type="button" class="btn ghost" data-dn-go="zapasy">Zápasy</button></div>
-          ${todayTips.length > 3 ? `<p class="warn small">Dnes je ${todayTips.length} tipov – klientom posielate najviac 3.</p>` : ""}
         </div>
         <div class="sb-count"><b>${todayTips.length}</b><span>${todayTips.length === 1 ? "tip" : todayTips.length >= 2 && todayTips.length <= 4 ? "tipy" : "tipov"}<br>na dnes</span><small>${asList.length} ${asList.length === 1 ? "sledovaný zápas" : asList.length >= 2 && asList.length <= 4 ? "sledované zápasy" : "sledovaných zápasov"}</small></div>
       </section>
@@ -5412,7 +5411,7 @@ async function renderDnes() {
         ${cell("Členovia", String(active.length), `${ending.length ? `${ending.length} čoskoro končí` : "aktívnych"}${payPending ? ` · ${payPending} čaká platba` : ""}`, ending.length || payPending ? "warn" : "", "clenovia")}
       </section>
 
-      <h3 class="sh">Tipy na dnes <small>najviac 3 najsilnejšie · vyhodnotenie po skončení dňa</small></h3>
+      <h3 class="sh">Tipy na dnes <small>vyhodnotenie po skončení dňa</small></h3>
       ${todayHtml || autoHtml ? `<div class="dn-tickets">${todayHtml}${autoHtml}</div>${autoHtml ? `<p class="faint small dn-note">Tip, ktorý server našiel hodinu pred výkopom. Server ho uloží sám ${asTo} – ${asFrom} minút pred výkopom (po zostavách) – „+ Pridať“ ho uloží hneď.</p>` : ""}` : `<div class="card dn-card"><p class="empty">Na dnes zatiaľ žiadny tip.</p></div>`}
 
       <h3 class="sh">Automatické ukladanie dnes <small>server ukladá tipy sám ${asTo} – ${asFrom} min pred výkopom</small></h3>
@@ -5520,7 +5519,7 @@ async function renderOctoberRetro() {
   const html = `<div class="oct-retro"><h4>Spätne – ktoré tipy by prešli (zápasy od ${escapeHtml(new Date(d.from || Date.now()).toLocaleDateString("sk-SK"))})</h4>
     <p class="faint small">Z tichej evidencie modelu a stávkoviek: dôvera len z modelu 68 – 80${NB}%, kurz z API aspoň 1,60, hodnota +5 až +25${NB}%, zo zápasu 1 tip z typu. Zápasy zo všetkých súťaží, ktoré server prešiel – aj tie, ktoré klientom nešli. Zisk pri vklade 1 jednotka, kurz z API.</p>
     <div class="table-wrap"><table class="bt-table"><thead><tr><th></th><th>Tipy</th><th>Vyšlo</th><th>Zisk</th><th>Priem. kurz</th><th>Tipov denne</th></tr></thead><tbody>
-    ${row("S filtrom rozporu so stávkovkami", d.noConflict)}${row("Bez filtra (len model, ako do 19. 10.)", d.all)}${d.daily3 ? row("Najviac 3 denne – najvyššia dôvera (s filtrom)", d.daily3) : ""}${d.noConflict70 ? row("Od 70 % (s filtrom)", d.noConflict70) : ""}${d.daily3_70 ? row("Od 70 % – najviac 3 denne", d.daily3_70) : ""}${d.agree70 ? row("Návrh: od 70 %, rozdiel so stávkovkami max. 10 b.", d.agree70) : ""}${d.agree70daily3 ? row("Návrh – najviac 3 denne", d.agree70daily3) : ""}</tbody></table></div>
+    ${row("S filtrom rozporu so stávkovkami", d.noConflict)}${row("Bez filtra (len model, ako do 19. 10.)", d.all)}${d.noConflict70 ? row("Od 70 % (s filtrom)", d.noConflict70) : ""}${d.agree70 ? row("Návrh: od 70 %, rozdiel so stávkovkami max. 10 b.", d.agree70) : ""}</tbody></table></div>
     ${list ? `<details><summary class="small">Tipy s filtrom rozporu (posledných 150)</summary><div class="table-wrap"><table class="bt-table"><tbody>${list}</tbody></table></div></details>` : ""}</div>`;
   box.querySelector(".oct-retro")?.remove();
   box.insertAdjacentHTML("afterbegin", html);
