@@ -4104,7 +4104,7 @@ async function addAutoEntry(
  * Tipy bez kurzu v API sa od 17. 11. 2026 ukladajú s minimálnym kurzom, pri ktorom majú hodnotu. Do Telegramu sa nič neposiela.
  * Ak zostavy nevyjdú, tipy sa uložia pri poslednej kontrole (5 – 10 minút pred výkopom) aj bez nich.
  */
-const BOOKLINE_MIN_PROB = 60;
+const BOOKLINE_MIN_PROB = 55; // 20. 11. 1:07 Michal: rozdiel viac/menej aspoň 10 bodov = 55 : 45
 const BOOKLINE_MIN_ODDS = 1.6;
 const AUTO_SAVE_FROM_MIN = 5;
 const AUTO_SAVE_TO_MIN = 30;
