@@ -1503,7 +1503,7 @@ function bookLineHtml(i, bet, r) {
   const poss = (bet.market || "").startsWith("Držanie lopty");
   const pass = r ? passLinesHtml(r, bet.market) : "";
   return `<div class="bookline" data-bl="${i}">
-      <div class="bookline-t small">Hranica a kurzy zo stávkovky</div>
+      <div class="bookline-t small">Hranica a kurzy zo stávkovky <span class="faint">· uložený tip ide do sledovaných</span></div>
       <div class="bookline-f">
         <label>Hranica${poss ? " %" : ""}<input type="text" inputmode="decimal" autocomplete="off" data-bl-line value="${escapeHtml(betLineOf(bet))}" placeholder="${poss ? "napr. 55,5" : "napr. 25,5"}" /></label>
         <label>${poss ? "Kurz a viac" : "Kurz viac ako"}<input type="text" inputmode="decimal" autocomplete="off" data-bl-over placeholder="–" /></label>
@@ -2077,12 +2077,11 @@ function renderDayTipsViewMain() {
   // každá sa dá zbaliť a rozbaliť tlačidlom − / +. Poradie a čísla tipov ostávajú.
   const groups = [
     { key: "klienti", title: "Pre klientov", note: "", idx: [] },
-    { key: "sledovane", title: "Do sledovaných", note: "vzájomné zápasy hovoria proti tipu, fauly a držanie lopty (vyhodnotíme na konci mesiaca)", idx: [] },
+    { key: "sledovane", title: "Do sledovaných", note: "vzájomné zápasy hovoria proti tipu (alebo neprešli pri 60 / 40)", idx: [] },
     { key: "pasmo65", title: `Pásmo 65 – 69${NB}% – len sledovať`, note: "skúška do kontroly 1. 12.: klientom nejdú, len sa vyhodnotia (História tipov → Pásmo 65 – 67 %)", idx: [] },
   ];
-  // 20. 11. 2026 (Michal): fauly a držanie lopty len do sledovaných (FOUL_POSS_WATCH na serveri).
-  const foulPoss = (bet) => /^(Fauly|Držanie lopty)/.test(bet.market || "");
-  dayTips.items.forEach(({ bet }, i) => groups[bet.watchBand ? 2 : bet.strictFail || bet.h2hAgainst || foulPoss(bet) ? 1 : 0].idx.push(i));
+  // 20. 11. 2026 (Michal): fauly a držanie lopty sa ukazujú medzi tipmi pre klientov, uložený tip ide do sledovaných (server).
+  dayTips.items.forEach(({ bet }, i) => groups[bet.watchBand ? 2 : bet.strictFail || bet.h2hAgainst ? 1 : 0].idx.push(i));
   let shown = 0;
   const rows = groups
     .filter((g) => g.idx.length)
