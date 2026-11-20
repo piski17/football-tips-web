@@ -4147,6 +4147,9 @@ async function autoSaveDueTips(): Promise<void> {
         // Prehľad pre appku (15. 11. 2026): čo server pri zápase spravil a prečo.
         const info: AutoSaveInfo = { at, lineups: hasLineups, homeTeam: fixture.homeTeam.name, awayTeam: fixture.awayTeam.name, saved: [], skipped: [] };
         for (const entry of autoSaveEntries(fixture, result, at)) {
+          // 20. 11. 2026 21:36 (Michal: „fauly a držanie lopty iba moje“): tieto tipy server sám neukladá – len tie,
+          // ktoré Michal uloží z okienka s kurzom zo stávkovky (idú do sledovaných).
+          if (FOUL_POSS_WATCH && /^(Fauly|Držanie lopty)/.test(entry.market)) { info.skipped.push({ market: entry.market, selection: entry.selection, probability: entry.probability, why: "fauly / držanie lopty ukladá len Michal z okienka" }); continue; }
           // Trh bez kurzu v API (17. 11. 2026, Michal: „podľa API a modelu, nie podľa kurzu stávkovky“): tip sa uloží
           // s minimálnym kurzom, pri ktorom má hodnotu (ako „Hrajte len pri kurze aspoň X“); štatistiky rátajú s ním.
           const noApiOdds = !(typeof entry.odds === "number" && entry.odds > 1);
