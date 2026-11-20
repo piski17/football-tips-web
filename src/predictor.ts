@@ -915,6 +915,8 @@ export const POSSESSION_LEAGUE_IDS = [39, 78, 140, 135];
  * súťažiach – Premier League (39), La Liga (140), Serie A (135), Bundesliga (78), Ligue 1 (61) a Liga majstrov (2).
  * V ostatných ligách ostávajú fauly len v analýze (ručne sa dajú uložiť) a v „Všetky trhy“ na mesačnú kontrolu.
  */
+/** 20. 11. 2026 (Michal): fauly a držanie lopty klientom neodporúčať. Návrat: false. */
+export const FOUL_POSS_TRACK_ONLY = false; // 20. 11. 2026 0:05 nahradené kompromisom (BOOKLINE v server.ts)
 export const FOUL_LEAGUE_IDS = [39, 140, 135, 78, 61, 2];
 const isFoulMarket = (market: string): boolean => market === "Fauly" || market.startsWith("Fauly ");
 
@@ -1672,6 +1674,12 @@ export function predictMatch(
       } else if (isFoulMarket(b.market) && !FOUL_LEAGUE_IDS.includes(Number(fixture.league?.id))) {
         // Fauly len v top súťažiach (9. 11. 2026, Michal) – pozri FOUL_LEAGUE_IDS.
         b.rejectReason = "fauly odporúčame len v najvyšších súťažiach (top 5 líg a Liga majstrov)";
+        b.rejectCode = "market_excluded";
+        lowValueBets.push(b);
+      } else if (FOUL_POSS_TRACK_ONLY && (isFoulMarket(b.market) || b.market.startsWith("Držanie lopty")) && !(typeof b.odds === "number" && b.odds > 1)) {
+        // 20. 11. 2026 (Michal): fauly a držanie lopty klientom neodporúčame – API nemá kurzy, model nevie, akú
+        // hranicu dá stávkovka, a pri jej hranici tip takmer nikdy neprejde. Len tiché sledovanie, rozhodnúť 1. 12.
+        b.rejectReason = "fauly a držanie lopty zatiaľ len sledujeme (stávkovky ich v API neponúkajú)";
         b.rejectCode = "market_excluded";
         lowValueBets.push(b);
       } else if (lineTooHigh(b)) {

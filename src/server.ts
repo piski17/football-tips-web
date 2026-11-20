@@ -1196,7 +1196,12 @@ app.post("/api/tips", async (req, res) => {
     if (!isManualResult && !lateFromAnalysis) await addMeasurement(tip);
     // Skúšobné pásmo 65 – 67 %: tip sa automaticky uloží len na sledovanie (bez Telegramu a štatistík).
     // Od 28. 10. 2026 má v Histórii tipov vlastnú skupinu (watchBand).
-    if (!(tip.legs && tip.legs.length) && !tip.manualEntry && typeof tip.probability === "number" && tip.probability < WATCH_BELOW_PROBABILITY) {
+    // Kompromis 20. 11. 2026 (Michal): fauly / držanie lopty s kurzom zo stávkovky (okienko v Tipoch dňa) – stačí
+    // šanca od 60 %, ak je kurz aspoň 1,60 a hodnota +5 až +25 %. Vyhodnotiť zvlášť 1. 12. (značka bookLine).
+    const bookLineOk = tip.bookLine === true && /^(Fauly|Držanie lopty)/.test(String(tip.market)) && typeof tip.probability === "number" && typeof tip.odds === "number"
+      && tip.probability >= BOOKLINE_MIN_PROB && tip.probability <= MAX_PROBABILITY && tip.odds >= BOOKLINE_MIN_ODDS
+      && (tip.probability / 100) * tip.odds >= MIN_EXPECTED_VALUE && (tip.probability / 100) * tip.odds <= SUSPICIOUS_EXPECTED_VALUE;
+    if (!bookLineOk && !(tip.legs && tip.legs.length) && !tip.manualEntry && typeof tip.probability === "number" && tip.probability < WATCH_BELOW_PROBABILITY) {
       tip.watchOnly = true;
       tip.strongOfDay = undefined;
       if (tip.probability >= WATCH_BAND_MIN_PROBABILITY) tip.watchBand = true;
@@ -4099,6 +4104,8 @@ async function addAutoEntry(
  * Tipy bez kurzu v API sa od 17. 11. 2026 ukladajú s minimálnym kurzom, pri ktorom majú hodnotu. Do Telegramu sa nič neposiela.
  * Ak zostavy nevyjdú, tipy sa uložia pri poslednej kontrole (5 – 10 minút pred výkopom) aj bez nich.
  */
+const BOOKLINE_MIN_PROB = 60;
+const BOOKLINE_MIN_ODDS = 1.6;
 const AUTO_SAVE_FROM_MIN = 5;
 const AUTO_SAVE_TO_MIN = 30;
 let autoSaveRunning = false;

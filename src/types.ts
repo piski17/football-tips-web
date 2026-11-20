@@ -338,6 +338,8 @@ export interface SavedTip {
   autoSaved?: boolean;
   /** 17. 11. 2026: trh bez kurzu v API (karty, strely, fauly…) – server uložil tip podľa modelu s minimálnym kurzom, pri ktorom má tip hodnotu (štatistiky rátajú s ním). */
   minOddsAuto?: boolean;
+  /** 20. 11. 2026: fauly / držanie lopty s hranicou a kurzom zo stávkovky (kompromis od 60 %). */
+  bookLine?: boolean;
   /** Tip obnovený z denného súhrnu (18. 10. 2026) – dôvera modelu nie je známa, ak nebola v texte tipu. */
   restoredFromDaily?: boolean;
   probabilityEstimated?: boolean;

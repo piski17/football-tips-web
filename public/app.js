@@ -454,7 +454,7 @@ const WATCH_BELOW = 69.6; // 19. 11. 2026 (Michal): 69,6 % = zaokrúhlene 70 %; 
 const WATCH_BELOW_LABEL = 70; // v textoch
 const MIN_EV = 1.044; // MIN_EXPECTED_VALUE v oddsMatcher.ts (69,6 % × 1,50)
 const MAX_EV = 1.254; // SUSPICIOUS_EXPECTED_VALUE v oddsMatcher.ts (19. 11. 2026: do +25,4 %)
-const isWatchTip = (tip) => !(tip.legs && tip.legs.length) && (tip.strictFail || (!tip.manualEntry && typeof tip.probability === "number" && tip.probability < WATCH_BELOW));
+const isWatchTip = (tip) => !(tip.legs && tip.legs.length) && (tip.strictFail || (!tip.manualEntry && !tip.bookLine && typeof tip.probability === "number" && tip.probability < WATCH_BELOW));
 
 async function maybeOfferTelegram(tipId, tip) {
   if (tip && tip.sameTypeMoved) {
@@ -1487,6 +1487,11 @@ function wireLineCalc(r, root) {
  * hranicu a tip, ktorý prejde pravidlami, sa uloží klientom aj do štatistík s Michalovým kurzom.
  */
 const BOOK_LINE_MARKET = /^(Fauly|Držanie lopty)/;
+// 20. 11. 2026 (Michal: „chcem kompromis, aby to išlo“): pri fauloch a držaní lopty so skutočným kurzom zo stávkovky
+// stačí šanca od 60 % (namiesto 70 %), ale kurz aspoň 1,60 a hodnota +5 až +25 %. Server má rovnaké pravidlo (BOOKLINE_*).
+const BOOKLINE_MIN_PROB = 60;
+const BOOKLINE_MIN_ODDS = 1.6;
+const BOOKLINE_OPTS = { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS, tipExtra: { bookLine: true } };
 function needsBookLine(bet) {
   return BOOK_LINE_MARKET.test(bet.market || "") && !(typeof bet.odds === "number" && bet.odds > 1);
 }
@@ -1531,9 +1536,9 @@ function passLinesHtml(r, market) {
     const rows = bookLineRows(r, market, L, null, null);
     if (typeof rows === "string") continue;
     rows.forEach((x) => {
-      if (x.probability < WATCH_BELOW || x.probability > 80) return;
+      if (x.probability < BOOKLINE_MIN_PROB || x.probability > 80) return;
       const p = x.probability / 100;
-      const lo = Math.max(MIN_ODDS, MIN_EV / p), hi = MAX_EV / p;
+      const lo = Math.max(BOOKLINE_MIN_ODDS, MIN_EV / p), hi = MAX_EV / p;
       if (hi < lo) return;
       const up = x.selection.startsWith("Over");
       const lineTxt = String(L).replace(".", ",") + (poss ? " %" : "");
@@ -1576,13 +1581,15 @@ function bookLineRows(r, market, line, overOdds, underOdds) {
  * MIN_ODDS (od 2. 11. 2026 1,60) a výhodnosť (šanca × kurz) 1,05 – 1,25. Ak vyhovujú obe strany
  * a obe majú kurz, odporučí sa len tá výhodnejšia. rows: [{ label, selection, probability, odds }].
  */
-function renderCalcRows(out, r, market, rows, onSaved) {
+function renderCalcRows(out, r, market, rows, onSaved, opts = {}) {
+  const minProb = opts.minProb ?? WATCH_BELOW, minOdds = opts.minOdds ?? MIN_ODDS;
+  const bandLabel = opts.minProb != null ? String(opts.minProb) : WATCH_BELOW_LABEL;
   rows.forEach((x) => {
     if (x.odds != null) {
       x.ev = (x.probability / 100) * x.odds;
-      x.ok = x.probability >= WATCH_BELOW && x.probability <= 80 && x.odds >= MIN_ODDS && x.ev >= MIN_EV && x.ev <= MAX_EV;
+      x.ok = x.probability >= minProb && x.probability <= 80 && x.odds >= minOdds && x.ev >= MIN_EV && x.ev <= MAX_EV;
     } else {
-      x.ok = x.probability >= WATCH_BELOW && x.probability <= 80;
+      x.ok = x.probability >= minProb && x.probability <= 80;
     }
   });
   const good = rows.filter((x) => x.ok);
@@ -1591,8 +1598,8 @@ function renderCalcRows(out, r, market, rows, onSaved) {
     rows.forEach((x) => { x.ok = x === best; });
   }
   const whyNot = (x) => {
-    if (x.probability < WATCH_BELOW || x.probability > 80) return `Mimo pásma ${WATCH_BELOW_LABEL} – 80${NB}% – neodporúčame.`;
-    if (x.odds < MIN_ODDS) return `Kurz pod ${fmtOdds(MIN_ODDS)} – neodporúčame.`;
+    if (x.probability < minProb || x.probability > 80) return `Mimo pásma ${bandLabel} – 80${NB}% – neodporúčame.`;
+    if (x.odds < minOdds) return `Kurz pod ${fmtOdds(minOdds)} – neodporúčame.`;
     if (x.ev < MIN_EV) return `Kurz je na túto šancu nízky (výhodnosť ${evPct(x.ev)}) – neodporúčame.`;
     if (x.ev > MAX_EV) return `Podozrivo vysoká výhodnosť (${evPct(x.ev)}), model sa asi mýli – neodporúčame.`;
     return "Druhá možnosť je výhodnejšia.";
@@ -1636,6 +1643,7 @@ function renderCalcRows(out, r, market, rows, onSaved) {
         odds,
         savedAt: new Date().toISOString(),
         status: "pending",
+        ...(opts.tipExtra || {}),
       };
       b.disabled = true;
       try {
@@ -2208,7 +2216,7 @@ function renderDayTipsViewMain() {
         if (main) { main.disabled = true; main.textContent = "✓ Uložené"; }
         dayTipsPaneEl.querySelectorAll(`[data-odds="${i}"]`).forEach((inp) => { inp.disabled = true; });
         refreshOdds();
-      });
+      }, BOOKLINE_OPTS);
       // tip, ktorý neprejde, sa neukladá – len krátke vysvetlenie
       if (!out.querySelector("[data-poss]")) out.insertAdjacentHTML("beforeend", `<p class="faint small">Pri tejto hranici a kurzoch tip neprejde – klientom nejde.</p>`);
     };
@@ -2828,7 +2836,7 @@ const CALIBRATION_STEP = 2.5;
 const WATCH_BAND_FROM = 65;
 const isWatchBandTip = (t) =>
   !!t.watchBand ||
-  (!t.manualEntry && !t.softConflict && !t.strictFail && !t.retroStrict && typeof t.probability === "number" && t.probability >= WATCH_BAND_FROM && t.probability < WATCH_BELOW);
+  (!t.manualEntry && !t.bookLine && !t.softConflict && !t.strictFail && !t.retroStrict && typeof t.probability === "number" && t.probability >= WATCH_BAND_FROM && t.probability < WATCH_BELOW);
 function renderWatchBand(list) {
   const el = document.getElementById("watchBandResult");
   if (!el) return;
