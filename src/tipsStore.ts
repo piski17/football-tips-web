@@ -534,6 +534,35 @@ export async function moveSameTypeOnce(typeOf: (market: string) => string | null
  * raz pri štarte idú do sledovaných so značkou oldFoulsMoved. Týka sa len tipov so zápasom pred 8. 11. 2026. Nič sa nemaže.
  */
 const OLD_FOULS_KEY = "tipradar_migr_old_fouls_done";
+const FOUL_POSS_WATCH_KEY = "tipradar_migr_foul_poss_watch_1120";
+/**
+ * 20. 11. 2026 (Michal): fauly a držanie lopty idú len do sledovaných, na konci mesiaca sa vyhodnotia.
+ * Raz presunie tipy z okienka (bookLine) a ešte nevyhodnotené tipy na fauly / držanie lopty. Značka foulPossWatch.
+ */
+export async function moveFoulPossWatchOnce(): Promise<number> {
+  if (!useUpstash) return 0;
+  const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };
+  const done = (await upstashClient().get(`${UPSTASH_URL}/get/${FOUL_POSS_WATCH_KEY}`, auth)).data?.result;
+  if (done) return 0;
+  return withWriteLock(async () => {
+    const tips = await readAll();
+    let moved = 0;
+    for (const t of tips) {
+      if ((t.legs && t.legs.length) || t.watchOnly || !/^(Fauly|Držanie lopty)/.test(String(t.market || ""))) continue;
+      if (!t.bookLine && t.status !== "pending") continue;
+      t.watchOnly = true;
+      t.foulPossWatch = true;
+      t.strongOfDay = undefined;
+      moved++;
+    }
+    if (moved) await writeAll(tips);
+    await upstashClient().post(`${UPSTASH_URL}/set/${FOUL_POSS_WATCH_KEY}`, new Date().toISOString(), {
+      headers: { ...auth.headers, "Content-Type": "text/plain" },
+    });
+    return moved;
+  });
+}
+
 export async function moveOldFoulTipsOnce(): Promise<number> {
   if (!useUpstash) return 0;
   const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };

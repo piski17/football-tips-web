@@ -46,7 +46,7 @@ import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, Market
 import { newModelInputs } from "./newModel";
 import { computeMarketHealth, marketChangesText, clvOf, CLV_TIE } from "./marketHealth";
 import { LeaguePreset, SavedTip } from "./types";
-import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once, moveLateAddsOnce, restoreLateMovedOnce, returnStrictFailedOnce, moveStrictFailedBackOnce, moveSameTypeOnce, moveOldFoulTipsOnce, syncBand65Trial, restoreDeletedWatchOnce } from "./tipsStore";
+import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once, moveLateAddsOnce, restoreLateMovedOnce, returnStrictFailedOnce, moveStrictFailedBackOnce, moveSameTypeOnce, moveOldFoulTipsOnce, moveFoulPossWatchOnce, syncBand65Trial, restoreDeletedWatchOnce } from "./tipsStore";
 import { computeTicketStatus, settleBet, settleFixtureBets, tipHasStartedMatch, MATCH_STARTED_MESSAGE, buildTipEdit } from "./tipEvaluator";
 import {
   sendTipToTelegram,
@@ -1226,6 +1226,12 @@ app.post("/api/tips", async (req, res) => {
       tip.watchOnly = true;
       tip.strongOfDay = undefined;
     } else tip.h2hAgainst = undefined;
+    // 20. 11. 2026 (Michal): fauly a držanie lopty len do sledovaných – vyhodnotiť na konci mesiaca (aj tip z okienka).
+    if (FOUL_POSS_WATCH && !(tip.legs && tip.legs.length) && /^(Fauly|Držanie lopty)/.test(String(tip.market))) {
+      tip.watchOnly = true;
+      tip.foulPossWatch = true;
+      tip.strongOfDay = undefined;
+    }
     // Ručne doplnený tip prejde rovnakou kontrolou ako tipy z modelu (dôvera, kurz, hodnota) –
     // ak by ho model nepustil, uloží sa len medzi sledované.
     if (tip.manualEntry && !(tip.legs && tip.legs.length) && !tip.probabilityEstimated && typeof tip.probability === "number" && typeof tip.odds === "number") {
@@ -4081,6 +4087,7 @@ async function addAutoEntry(
   else if (typeof entry.odds !== "number" && isFarLineTip(tip.market, tip.probability)) reason = "rohy/karty – príliš vzdialená hranica";
   // 20. 11. 2026 (Michal): fauly a držanie lopty klientom len s kurzom, ktorý Michal zadá zo stávkovky
   // (Bayern – Kolín: model „menej ako 22,5“ 70 %, stávkovka mala hranicu 18,5 → skutočný kurz ~1,15, nie 1,50).
+  else if (FOUL_POSS_WATCH && /^(Fauly|Držanie lopty)/.test(tip.market)) { tip.foulPossWatch = true; reason = "fauly a držanie lopty zatiaľ len sledujeme (vyhodnotíme na konci mesiaca)"; }
   else if (extra.minOddsAuto && /^(Fauly|Držanie lopty)/.test(tip.market)) reason = "fauly/držanie lopty – bez kurzu zo stávkovky len sledovať";
   else if (odds < MIN_ODDS) reason = `kurz pod ${String(MIN_ODDS).replace(".", ",")}`;
   else if (ev < MIN_EXPECTED_VALUE) reason = "hodnota pod +5 %";
@@ -4104,6 +4111,8 @@ async function addAutoEntry(
  * Tipy bez kurzu v API sa od 17. 11. 2026 ukladajú s minimálnym kurzom, pri ktorom majú hodnotu. Do Telegramu sa nič neposiela.
  * Ak zostavy nevyjdú, tipy sa uložia pri poslednej kontrole (5 – 10 minút pred výkopom) aj bez nich.
  */
+/** 20. 11. 2026 (Michal): fauly a držanie lopty len do sledovaných. Návrat: false. */
+const FOUL_POSS_WATCH = true;
 const BOOKLINE_MIN_PROB = 55; // 20. 11. 1:07 Michal: rozdiel viac/menej aspoň 10 bodov = 55 : 45
 const BOOKLINE_MIN_ODDS = 1.6;
 const AUTO_SAVE_FROM_MIN = 5;
@@ -4809,6 +4818,9 @@ app.listen(PORT, () => {
     .then((n) => { if (n) console.log(`1 tip z typu: presunuté do sledovaných ${n}`); })
     .catch((err) => console.error("Presun tipov rovnakého typu zlyhal:", err))
     // 8. 11. 2026 (Michal): staré tipy na fauly raz presunie do sledovaných (fauly majú nové hranice podľa zápasu).
+    .then(() => moveFoulPossWatchOnce())
+    .then((n) => { if (n) console.log(`Fauly / držanie lopty: presunuté do sledovaných ${n}`); })
+    .catch((err) => console.error("Presun faulov a držania lopty zlyhal:", err))
     .then(() => moveOldFoulTipsOnce())
     .then((n) => { if (n) console.log(`Staré tipy na fauly: presunuté do sledovaných ${n}`); })
     .catch((err) => console.error("Presun starých tipov na fauly zlyhal:", err))

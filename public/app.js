@@ -1649,6 +1649,7 @@ function renderCalcRows(out, r, market, rows, onSaved, opts = {}) {
       try {
         const saved = await postJson("/api/tips", tip);
         if (saved && saved.sameTypeMoved) { tip.watchOnly = true; tip.sameTypeMoved = true; }
+        if (saved && saved.watchOnly) tip.watchOnly = true;
         b.textContent = saved && saved.watchOnly ? "✓ Uložené do sledovaných" : "✓ Uložené";
         if (onSaved) onSaved(tip);
         await maybeOfferTelegram(tip.id, tip);
@@ -2076,10 +2077,12 @@ function renderDayTipsViewMain() {
   // každá sa dá zbaliť a rozbaliť tlačidlom − / +. Poradie a čísla tipov ostávajú.
   const groups = [
     { key: "klienti", title: "Pre klientov", note: "", idx: [] },
-    { key: "sledovane", title: "Do sledovaných", note: "vzájomné zápasy hovoria proti tipu (alebo neprešli pri 60 / 40)", idx: [] },
+    { key: "sledovane", title: "Do sledovaných", note: "vzájomné zápasy hovoria proti tipu, fauly a držanie lopty (vyhodnotíme na konci mesiaca)", idx: [] },
     { key: "pasmo65", title: `Pásmo 65 – 69${NB}% – len sledovať`, note: "skúška do kontroly 1. 12.: klientom nejdú, len sa vyhodnotia (História tipov → Pásmo 65 – 67 %)", idx: [] },
   ];
-  dayTips.items.forEach(({ bet }, i) => groups[bet.watchBand ? 2 : bet.strictFail || bet.h2hAgainst ? 1 : 0].idx.push(i));
+  // 20. 11. 2026 (Michal): fauly a držanie lopty len do sledovaných (FOUL_POSS_WATCH na serveri).
+  const foulPoss = (bet) => /^(Fauly|Držanie lopty)/.test(bet.market || "");
+  dayTips.items.forEach(({ bet }, i) => groups[bet.watchBand ? 2 : bet.strictFail || bet.h2hAgainst || foulPoss(bet) ? 1 : 0].idx.push(i));
   let shown = 0;
   const rows = groups
     .filter((g) => g.idx.length)
@@ -3174,6 +3177,7 @@ function tipBadges(t) {
   if (isOverrideTip(t)) b += ` <span class="tag warn" title="Vyradené kontrolou kurzu, pridané ručne">⚠️ mimo filtra</span>`;
   if (t.manualEntry) b += ` <span class="tag" title="Tip doplnený ručne po zápase">✍ doplnené ručne</span>`;
   if (t.removedLeague) b += ` <span class="tag" title="Súťaž bola vyradená 2. 11. 2026 – tip sa neráta do štatistík ani na web.">vyradená súťaž · nerátá sa</span>`;
+  if (t.foulPossWatch) b += ` <span class="tag" title="Fauly a držanie lopty od 20. 11. 2026 len sledujeme – vyhodnotíme na konci mesiaca.">fauly / držanie · sledovaný</span>`;
   if (t.minOddsAuto) b += ` <span class="tag" title="Stávkovky v API kurz na tento trh nemajú. Server tip uložil podľa modelu s minimálnym kurzom, pri ktorom sa ho oplatí hrať – štatistiky rátajú s týmto kurzom.">kurz = minimálny</span>`;
   if (t.autoSaved) b += ` <span class="tag" title="Tip uložil server sám 5 – 30 minút pred výkopom, po zverejnení zostáv (nebol uložený ručne). Do Telegramu nešiel.">🤖 uložené automaticky</span>`;
   if (t.oldFoulsMoved) b += ` <span class="tag" title="8. 11. 2026: fauly majú nové hranice podľa zápasu – starý tip na fauly sa do štatistík neráta.">staré fauly · sledovaný</span>`;

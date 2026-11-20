@@ -340,6 +340,8 @@ export interface SavedTip {
   minOddsAuto?: boolean;
   /** 20. 11. 2026: fauly / držanie lopty s hranicou a kurzom zo stávkovky (kompromis od 60 %). */
   bookLine?: boolean;
+  /** 20. 11. 2026: fauly / držanie lopty – len sledované, vyhodnotiť na konci mesiaca. */
+  foulPossWatch?: boolean;
   /** Tip obnovený z denného súhrnu (18. 10. 2026) – dôvera modelu nie je známa, ak nebola v texte tipu. */
   restoredFromDaily?: boolean;
   probabilityEstimated?: boolean;
