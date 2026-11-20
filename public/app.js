@@ -2210,7 +2210,9 @@ function renderDayTipsViewMain() {
       const rows = bookLineRows(item.r, item.bet.market, line, odd("[data-bl-over]"), odd("[data-bl-under]"));
       if (typeof rows === "string") { out.innerHTML = `<p class="faint small">${escapeHtml(rows)}</p>`; return; }
       if (rows.some((x) => x.odds == null)) { out.innerHTML = `<p class="faint small">Zadaj oba kurzy – viac aj menej.</p>`; return; }
-      renderCalcRows(out, item.r, item.bet.market, rows, () => {
+      renderCalcRows(out, item.r, item.bet.market, rows, (tip) => {
+        // 20. 11. 2026 (Michal: „nechcem, aby to išlo pre 2“): po uložení okienko zmizne – z typu ide len 1 tip.
+        box.innerHTML = `<div class="small win">✓ Uložené: ${escapeHtml(item.bet.market)} ${escapeHtml(String(tip.selection).replace(/^Over /, "viac ako ").replace(/^Under /, "menej ako ").replace(".", ","))} · kurz ${fmtOdds(tip.odds)}${tip.watchOnly ? " (len do sledovaných)" : ""}</div>`;
         dayTipSaved.add(i);
         const main = dayTipsPaneEl.querySelector(`[data-save="${i}"]`);
         if (main) { main.disabled = true; main.textContent = "✓ Uložené"; }
