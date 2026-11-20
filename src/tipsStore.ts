@@ -563,6 +563,33 @@ export async function moveFoulPossWatchOnce(): Promise<number> {
   });
 }
 
+const FOUL_POSS_AUTO_DEL_KEY = "tipradar_migr_foul_poss_auto_del_1120";
+/**
+ * 20. 11. 2026 23:07 (Michal: „nech tam sú iba tie, čo ja pridám s mojimi hodnotami“): raz zmaže tipy na fauly
+ * a držanie lopty, ktoré server uložil sám s minimálnym kurzom (minOddsAuto) pri zápasoch od 20. 11. Michalove
+ * tipy z okienka (bookLine) ostávajú. Staršie (17. – 19. 11.) sa nemenia.
+ */
+export async function deleteAutoFoulPossOnce(): Promise<number> {
+  if (!useUpstash) return 0;
+  const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };
+  const done = (await upstashClient().get(`${UPSTASH_URL}/get/${FOUL_POSS_AUTO_DEL_KEY}`, auth)).data?.result;
+  if (done) return 0;
+  return withWriteLock(async () => {
+    const tips = await readAll();
+    const from = new Date("2026-11-19T23:00:00Z").getTime();
+    const keep = tips.filter((t) => !(
+      !(t.legs && t.legs.length) && !t.bookLine && t.minOddsAuto &&
+      /^(Fauly|Držanie lopty)/.test(String(t.market || "")) && new Date(t.matchDate).getTime() >= from
+    ));
+    const removed = tips.length - keep.length;
+    if (removed) await writeAll(keep);
+    await upstashClient().post(`${UPSTASH_URL}/set/${FOUL_POSS_AUTO_DEL_KEY}`, new Date().toISOString(), {
+      headers: { ...auth.headers, "Content-Type": "text/plain" },
+    });
+    return removed;
+  });
+}
+
 export async function moveOldFoulTipsOnce(): Promise<number> {
   if (!useUpstash) return 0;
   const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };
