@@ -1482,7 +1482,7 @@ const BOOKLINE_MIN_ODDS = 1.6;
 const BOOKLINE_OPTS = { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS, tipExtra: { bookLine: true } };
 // 21. 11. 2026 (Michal): okienko na hranice a kurzy aj pri tipoch na karty (v zápase, domácich, hostí),
 // ktoré model navrhne. Tieto idú klientom podľa bežných pravidiel (70 – 80 %, kurz od 1,50).
-const BOOK_LINE_STD = /^Karty( domácich| hostí)?$/; // 22. 11. 0:00 (Michal): rohy ostávajú ako doteraz (bez okienka)
+const BOOK_LINE_STD = /^$/; // 22. 11. 0:01 (Michal): rohy aj karty po starom – okienko len pri držaní lopty
 const lineThresholds = (market) => BOOK_LINE_MARKET.test(market || "") ? { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS } : { minProb: WATCH_BELOW, minOdds: MIN_ODDS };
 function needsBookLine(bet) {
   if (BOOK_LINE_STD.test(bet.market || "")) return true;
