@@ -1254,9 +1254,23 @@ export function predictMatch(
     { mean: xg.away }
   );
 
+  // 22. 11. 2026 0:06 (Michal): rohy a karty (v zápase aj tímu) – napoly posledných 5 vzájomných zápasov so štatistikou
+  // (ak ich nie je 5, aspoň 3; len za posledné 3 sezóny) a napoly posledných 5 zápasov tímov (odhad modelu).
+  // Pri menej ako 3 vzájomných len posledných 5 zápasov. Návrat: H2H_HALF = false.
+  const H2H_HALF = true;
+  const h2hHalfAvg = (key: keyof H2HStats): { avg: number; n: number } | null => {
+    if (!H2H_HALF) return null;
+    const v = (h2hStats ?? []).filter((x) => !x.old).map((x) => x[key]).filter((x): x is number => typeof x === "number" && isFinite(x)).slice(0, 5);
+    return v.length >= 3 ? { avg: v.reduce((a, b) => a + b, 0) / v.length, n: v.length } : null;
+  };
+  const halfBlend = (model: number, key: keyof H2HStats) => {
+    const h = h2hHalfAvg(key);
+    return h ? { mean: (model + h.avg) / 2, note: ` Vzájomné zápasy (${h.n}): v priemere ${fmt1(h.avg)} – započítané napoly s posledných 5 zápasmi.` } : { mean: model, note: "" };
+  };
   if (corners) {
-    const exp = corners.expected;
-    addOverUnder("Rohy", "rohy", (line) => overdispersedOverUnder(exp, line, VR.corners), (line) => statExplanation(exp, line), { mean: exp, varRatio: VR.corners });
+    const cb = halfBlend(corners.expected, "corners");
+    const exp = cb.mean;
+    addOverUnder("Rohy", "rohy", (line) => overdispersedOverUnder(exp, line, VR.corners), (line) => statExplanation(exp, line) + cb.note, { mean: exp, varRatio: VR.corners });
   }
   // Nevyrovnané zápasy (18. 11. 2026, Michal – naostro): keď je jeden tím oveľa silnejší, rohy, strely a fauly
   // JEDNÉHO tímu sa od priemerov odchyľujú viac (favorit po vedení prestane tlačiť, outsider sa len bráni).
@@ -1268,13 +1282,14 @@ export function predictMatch(
   const VRT = { corners: VR.corners * MM_VAR, shotsOnGoal: VR.shotsOnGoal * MM_VAR, fouls: VR.fouls * MM_VAR };
   // Rohy jedného tímu: vlastné rohy tímu zmiešané s tým, koľko rohov dovolí súper.
   if (homeCornersAvg != null && awayCornersAvg != null) {
-    const hc = homeCornersAvg, ac = awayCornersAvg;
+    const hb = halfBlend(homeCornersAvg, "homeCorners"), ab = halfBlend(awayCornersAvg, "awayCorners");
+    const hc = hb.mean, ac = ab.mean;
     addOverUnder("Rohy domácich", "rohy_timu", (line) => overdispersedOverUnder(hc, line, VRT.corners), (line) =>
-      `${fixture.homeTeam.name} má v priemere ${fmt1(hc)} rohu na zápas (aj s ohľadom na súpera), hranica ${line}.${mmNote}`,
+      `${fixture.homeTeam.name} má v priemere ${fmt1(hc)} rohu na zápas (aj s ohľadom na súpera), hranica ${line}.${hb.note}${mmNote}`,
       { mean: hc, varRatio: VRT.corners }
     );
     addOverUnder("Rohy hostí", "rohy_timu", (line) => overdispersedOverUnder(ac, line, VRT.corners), (line) =>
-      `${fixture.awayTeam.name} má v priemere ${fmt1(ac)} rohu na zápas (aj s ohľadom na súpera), hranica ${line}.${mmNote}`,
+      `${fixture.awayTeam.name} má v priemere ${fmt1(ac)} rohu na zápas (aj s ohľadom na súpera), hranica ${line}.${ab.note}${mmNote}`,
       { mean: ac, varRatio: VRT.corners }
     );
   }
@@ -1294,7 +1309,8 @@ export function predictMatch(
   }
 
   if (cards) {
-    const exp = cards.expected;
+    const kb = halfBlend(cards.expected, "cards");
+    const exp = kb.mean;
     // Žlté karty v polčasoch (22. 10. 2026): v 1. polčase ich padá menej (asi 38 %).
     const c1 = exp * FIRST_HALF_CARD_SHARE, c2 = exp * (1 - FIRST_HALF_CARD_SHARE);
     addOverUnder("Karty v 1. polčase", "karty_1p", (line) => overdispersedOverUnder(c1, line, VR.cards), (line) =>
@@ -1306,7 +1322,7 @@ export function predictMatch(
       { mean: c2, varRatio: VR.cards }
     );
     addOverUnder("Karty", "karty", (line) => overdispersedOverUnder(exp, line, VR.cards), (line) =>
-      `Očakávané žlté karty oboch tímov spolu: ${fmt1(exp)}, hranica ${line}.${refereeNote("cards")}`,
+      `Očakávané žlté karty oboch tímov spolu: ${fmt1(exp)}, hranica ${line}.${kb.note}${refereeNote("cards")}`,
       { mean: exp, varRatio: VR.cards }
     );
   }
@@ -1320,13 +1336,14 @@ export function predictMatch(
   // zmiešaný s tým, koľko dovolí súper (ako pri rohoch tímu); karty aj s rozhodcom.
   if (extraStatsAvg?.homeCards != null && extraStatsAvg?.awayCards != null && cards) {
     const rf = referee?.cardsFactor ?? 1;
-    const hk = extraStatsAvg.homeCards * rf, ak = extraStatsAvg.awayCards * rf;
+    const hkb = halfBlend(extraStatsAvg.homeCards * rf, "homeCards"), akb = halfBlend(extraStatsAvg.awayCards * rf, "awayCards");
+    const hk = hkb.mean, ak = akb.mean;
     addOverUnder("Karty domácich", "karty_timu", (line) => overdispersedOverUnder(hk, line, VR.cards), (line) =>
-      `${fixture.homeTeam.name}: očakávané žlté karty ${fmt1(hk)} (aj s ohľadom na súpera), hranica ${line}.${refereeNote("cards")}`,
+      `${fixture.homeTeam.name}: očakávané žlté karty ${fmt1(hk)} (aj s ohľadom na súpera), hranica ${line}.${hkb.note}${refereeNote("cards")}`,
       { mean: hk, varRatio: VR.cards }
     );
     addOverUnder("Karty hostí", "karty_timu", (line) => overdispersedOverUnder(ak, line, VR.cards), (line) =>
-      `${fixture.awayTeam.name}: očakávané žlté karty ${fmt1(ak)} (aj s ohľadom na súpera), hranica ${line}.${refereeNote("cards")}`,
+      `${fixture.awayTeam.name}: očakávané žlté karty ${fmt1(ak)} (aj s ohľadom na súpera), hranica ${line}.${akb.note}${refereeNote("cards")}`,
       { mean: ak, varRatio: VR.cards }
     );
   }
@@ -1417,8 +1434,8 @@ export function predictMatch(
       b.n ? ` Vo vzájomných zápasoch (${b.n}) ${what} ${fmt1(b.h)} : ${fmt1(b.a)} – započítané napoly s posledných 5 zápasmi.` : " Vzájomných zápasov so štatistikou je menej ako 3 – len posledných 5 zápasov.";
     const tc0 = team("Rohy domácich", "Rohy hostí");
     if (tc0) {
-      const tc = h2hBlendTeam(tc0, "homeCorners", "awayCorners");
-      addHcp("Handicap – rohy", "hcp_rohy", teamJoint(tc.hm, tc.am), `Očakávané rohy ${fmt1(tc.hm.mean)} : ${fmt1(tc.am.mean)}.${h2hTxt(tc, "rohy v priemere")}`);
+      // rohy tímov už obsahujú vzájomné zápasy napoly (halfBlend) – druhýkrát sa nemiešajú
+      addHcp("Handicap – rohy", "hcp_rohy", teamJoint(tc0.hm, tc0.am), `Očakávané rohy ${fmt1(tc0.hm.mean)} : ${fmt1(tc0.am.mean)} (5 vzájomných + 5 posledných zápasov).`);
     }
     // 21. 11. 2026 (Michal): „kto urobí viac faulov v zápase“ – tím s viac faulmi; pri rovnosti tip prehrá.
     const tf0 = team("Fauly domácich", "Fauly hostí");
