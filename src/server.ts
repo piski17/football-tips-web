@@ -738,7 +738,7 @@ const COVERAGE_MARKETS: { key: string; label: string; markets: string[] }[] = [
   { key: "cards", label: "Karty", markets: ["Karty", "Karty domácich", "Karty hostí"] },
   { key: "shots", label: "Strely na bránu", markets: ["Strely na bránu", "Strely na bránu domácich", "Strely na bránu hostí"] },
   { key: "fouls", label: "Fauly", markets: ["Fauly", "Fauly domácich", "Fauly hostí"] },
-  { key: "hcp", label: "Handicapy", markets: ["Handicap", "Handicap – rohy", "Handicap – karty", "Handicap – strely na bránu", "Ázijský handicap", "Ázijský handicap – rohy", "Ázijský handicap – karty", "Ázijský handicap – strely na bránu", "Karty v 1. polčase", "Karty v 2. polčase"] },
+  { key: "hcp", label: "Handicapy", markets: ["Handicap", "Handicap – rohy", "Handicap – karty", "Handicap – strely na bránu", "Ázijský handicap", "Ázijský handicap – rohy", "Ázijský handicap – karty", "Ázijský handicap – strely na bránu"] },
 ];
 type CoverageRow = { order: number; id: number; name: string; country: string; inProject: boolean; fixtures: number; withOdds: number; markets: Record<string, number>; single: Record<string, number>; betNames: string[]; error?: string };
 let coverageJob: { startedAt: string; finishedAt?: string; done: number; total: number; rows: CoverageRow[] } | null = null;
