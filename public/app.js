@@ -1480,7 +1480,12 @@ const BOOK_LINE_MARKET = /^(Fauly|Držanie lopty)/;
 const BOOKLINE_MIN_PROB = 60; // 21. 11. 2026 23:41 Michal: od 60 % (predtým 55 %)
 const BOOKLINE_MIN_ODDS = 1.6;
 const BOOKLINE_OPTS = { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS, tipExtra: { bookLine: true } };
+// 21. 11. 2026 (Michal): okienko na hranice a kurzy aj pri tipoch na rohy a karty (v zápase, domácich, hostí),
+// ktoré model navrhne. Tieto idú klientom podľa bežných pravidiel (70 – 80 %, kurz od 1,50).
+const BOOK_LINE_STD = /^(Rohy|Karty)( domácich| hostí)?$/;
+const lineThresholds = (market) => BOOK_LINE_MARKET.test(market || "") ? { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS } : { minProb: WATCH_BELOW, minOdds: MIN_ODDS };
 function needsBookLine(bet) {
+  if (BOOK_LINE_STD.test(bet.market || "")) return true;
   // „Fauly – kto viac“ nemá hranicu – kurz sa zadá do bežného políčka kurzu.
   return BOOK_LINE_MARKET.test(bet.market || "") && bet.market !== "Fauly – kto viac" && !(typeof bet.odds === "number" && bet.odds > 1);
 }
@@ -1491,11 +1496,12 @@ function betLineOf(bet) {
 function bookLineMarkets(r, market) {
   if (market.startsWith("Držanie lopty")) return r.possession ? ["Držanie lopty domácich", "Držanie lopty hostí"] : [market];
   const have = new Set((r.lineModels || []).map((m) => m.market));
-  const list = ["Fauly", "Fauly domácich", "Fauly hostí"].filter((m) => have.has(m));
+  const base = market.startsWith("Rohy") ? "Rohy" : market.startsWith("Karty") ? "Karty" : "Fauly";
+  const list = [base, `${base} domácich`, `${base} hostí`].filter((m) => have.has(m));
   return list.length ? list : [market];
 }
 function bookLineMarketLabel(r, m) {
-  if (m === "Fauly") return "Fauly v zápase";
+  if (m === "Fauly" || m === "Rohy" || m === "Karty") return `${m} v zápase`;
   if (m.startsWith("Držanie lopty")) return `Držanie – ${translateTeamName(m.endsWith("domácich") ? r.fixture.homeTeam.name : r.fixture.awayTeam.name)}`;
   return lineMarketLabel(r, m);
 }
@@ -1505,7 +1511,7 @@ function bookLineHtml(i, bet, r) {
   // 21. 11. 2026 (Michal): v každom riadku sa dá vybrať trh – fauly v zápase / domácich / hostí, držanie domácich / hostí.
   const mkts = r ? bookLineMarkets(r, bet.market) : [bet.market];
   return `<div class="bookline" data-bl="${i}">
-      <div class="bookline-t small">Hranica a kurzy zo stávkovky <span class="faint">· uložený tip ide do sledovaných</span></div>
+      <div class="bookline-t small">Hranica a kurzy zo stávkovky <span class="faint">· ${BOOK_LINE_MARKET.test(bet.market || "") ? "uložený tip ide do sledovaných" : "tip, ktorý prejde, ide klientom (70 – 80 %, kurz od 1,50)"}</span></div>
       <div class="bookline-rows">
         ${[0, 1, 2, 3].map((k) => `<div class="bookline-f" data-bl-row="${k}">
           ${mkts.length > 1 ? `<label>${k === 0 ? "Trh" : ""}<select data-bl-mkt>${mkts.map((m) => `<option value="${escapeHtml(m)}"${m === bet.market ? " selected" : ""}>${escapeHtml(r ? bookLineMarketLabel(r, m) : m)}</option>`).join("")}</select></label>` : ""}
@@ -1542,9 +1548,10 @@ function passLinesHtml(r, market) {
     const rows = bookLineRows(r, market, L, null, null);
     if (typeof rows === "string") continue;
     rows.forEach((x) => {
-      if (x.probability < BOOKLINE_MIN_PROB || x.probability > 80) return;
+      const th = lineThresholds(market);
+      if (x.probability < th.minProb || x.probability > 80) return;
       const p = x.probability / 100;
-      const lo = Math.max(BOOKLINE_MIN_ODDS, MIN_EV / p), hi = MAX_EV / p;
+      const lo = Math.max(th.minOdds, MIN_EV / p), hi = MAX_EV / p;
       if (hi < lo) return;
       const up = x.selection.startsWith("Over");
       const lineTxt = String(L).replace(".", ",") + (poss ? " %" : "");
@@ -2218,7 +2225,7 @@ function renderDayTipsViewMain() {
     };
     // 21. 11. 2026 (Michal): viac hraníc zo stávkovky naraz (až 4 riadky) – appka vyhodnotí všetky a uložiť
     // sa dá len tip s najväčšou dôverou spomedzi tých, ktoré prešli (z typu ide len 1 tip).
-    const passes = (x) => x.odds != null && x.probability >= BOOKLINE_MIN_PROB && x.probability <= 80 && x.odds >= BOOKLINE_MIN_ODDS
+    const passes = (x) => x.odds != null && x.probability >= (x.minProb ?? BOOKLINE_MIN_PROB) && x.probability <= 80 && x.odds >= (x.minOdds ?? BOOKLINE_MIN_ODDS)
       && (x.probability / 100) * x.odds >= MIN_EV && (x.probability / 100) * x.odds <= MAX_EV;
     const oddOf = (el) => {
       const v = parseOddsInput(el.value);
@@ -2234,7 +2241,8 @@ function renderDayTipsViewMain() {
         const fresh = bookLineRows(item.r, mkt, line, oddOf(rowEl.querySelector("[data-bl-over]")), oddOf(rowEl.querySelector("[data-bl-under]")));
         if (typeof fresh === "string") { errs.push(`${raw}: ${fresh}`); return; }
         // ak je zadaný len jeden kurz, vyhodnotí sa len tá strana
-        fresh.filter((x) => x.odds != null).forEach((x) => { x.market = mkt; if (!rows.some((y) => y.market === mkt && y.selection === x.selection)) rows.push(x); });
+        const th = lineThresholds(mkt);
+        fresh.filter((x) => x.odds != null).forEach((x) => { x.market = mkt; x.minProb = th.minProb; x.minOdds = th.minOdds; if (BOOK_LINE_MARKET.test(mkt)) x.bookLine = true; if (!rows.some((y) => y.market === mkt && y.selection === x.selection)) rows.push(x); });
       });
       if (!rows.length) { out.innerHTML = `<p class="faint small">${escapeHtml(errs[0] || "Zadaj aspoň jednu hranicu a kurz.")}</p>`; return; }
       const kept = rows.filter(passes);
@@ -2247,7 +2255,7 @@ function renderDayTipsViewMain() {
         if (main) { main.disabled = true; main.textContent = "✓ Uložené"; }
         dayTipsPaneEl.querySelectorAll(`[data-odds="${i}"]`).forEach((inp) => { inp.disabled = true; });
         refreshOdds();
-      }, { ...BOOKLINE_OPTS, bestBy: "prob" });
+      }, { bestBy: "prob" });
       if (kept.length > 1) out.insertAdjacentHTML("afterbegin", `<p class="small faint">Prešlo ${kept.length} možností – uložiť sa dá tá s najväčšou dôverou (navrchu):</p>`);
       if (errs.length) out.insertAdjacentHTML("beforeend", `<p class="faint small">${errs.map(escapeHtml).join("<br>")}</p>`);
       // tip, ktorý neprejde, sa neukladá – len krátke vysvetlenie

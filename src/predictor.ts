@@ -1254,9 +1254,20 @@ export function predictMatch(
     { mean: xg.away }
   );
 
+  // 21. 11. 2026 (Michal): rohy ako „kto viac faulov“ – posledných 5 vzájomných zápasov so štatistikou (aspoň 3)
+  // napoly s odhadom z posledných 5 zápasov tímov. Pri menej ako 3 vzájomných len posledných 5 zápasov.
+  const h2hCornerAvg = (key: keyof H2HStats): { avg: number; n: number } | null => {
+    const v = (h2hStats ?? []).map((x) => x[key]).filter((x): x is number => typeof x === "number" && isFinite(x)).slice(0, 5);
+    return v.length >= 3 ? { avg: v.reduce((a, b) => a + b, 0) / v.length, n: v.length } : null;
+  };
+  const cornerBlend = (model: number, key: keyof H2HStats) => {
+    const h = h2hCornerAvg(key);
+    return h ? { mean: (model + h.avg) / 2, note: ` Vzájomné zápasy (${h.n}): v priemere ${fmt1(h.avg)} – započítané napoly.` } : { mean: model, note: "" };
+  };
   if (corners) {
-    const exp = corners.expected;
-    addOverUnder("Rohy", "rohy", (line) => overdispersedOverUnder(exp, line, VR.corners), (line) => statExplanation(exp, line), { mean: exp, varRatio: VR.corners });
+    const cb = cornerBlend(corners.expected, "corners");
+    const exp = cb.mean;
+    addOverUnder("Rohy", "rohy", (line) => overdispersedOverUnder(exp, line, VR.corners), (line) => statExplanation(exp, line) + cb.note, { mean: exp, varRatio: VR.corners });
   }
   // Nevyrovnané zápasy (18. 11. 2026, Michal – naostro): keď je jeden tím oveľa silnejší, rohy, strely a fauly
   // JEDNÉHO tímu sa od priemerov odchyľujú viac (favorit po vedení prestane tlačiť, outsider sa len bráni).
@@ -1268,13 +1279,14 @@ export function predictMatch(
   const VRT = { corners: VR.corners * MM_VAR, shotsOnGoal: VR.shotsOnGoal * MM_VAR, fouls: VR.fouls * MM_VAR };
   // Rohy jedného tímu: vlastné rohy tímu zmiešané s tým, koľko rohov dovolí súper.
   if (homeCornersAvg != null && awayCornersAvg != null) {
-    const hc = homeCornersAvg, ac = awayCornersAvg;
+    const hb = cornerBlend(homeCornersAvg, "homeCorners"), ab = cornerBlend(awayCornersAvg, "awayCorners");
+    const hc = hb.mean, ac = ab.mean;
     addOverUnder("Rohy domácich", "rohy_timu", (line) => overdispersedOverUnder(hc, line, VRT.corners), (line) =>
-      `${fixture.homeTeam.name} má v priemere ${fmt1(hc)} rohu na zápas (aj s ohľadom na súpera), hranica ${line}.${mmNote}`,
+      `${fixture.homeTeam.name} má v priemere ${fmt1(hc)} rohu na zápas (aj s ohľadom na súpera), hranica ${line}.${hb.note}${mmNote}`,
       { mean: hc, varRatio: VRT.corners }
     );
     addOverUnder("Rohy hostí", "rohy_timu", (line) => overdispersedOverUnder(ac, line, VRT.corners), (line) =>
-      `${fixture.awayTeam.name} má v priemere ${fmt1(ac)} rohu na zápas (aj s ohľadom na súpera), hranica ${line}.${mmNote}`,
+      `${fixture.awayTeam.name} má v priemere ${fmt1(ac)} rohu na zápas (aj s ohľadom na súpera), hranica ${line}.${ab.note}${mmNote}`,
       { mean: ac, varRatio: VRT.corners }
     );
   }
@@ -1417,8 +1429,8 @@ export function predictMatch(
       b.n ? ` Vo vzájomných zápasoch (${b.n}) ${what} ${fmt1(b.h)} : ${fmt1(b.a)} – započítané napoly s posledných 5 zápasmi.` : " Vzájomných zápasov so štatistikou je menej ako 3 – len posledných 5 zápasov.";
     const tc0 = team("Rohy domácich", "Rohy hostí");
     if (tc0) {
-      const tc = h2hBlendTeam(tc0, "homeCorners", "awayCorners");
-      addHcp("Handicap – rohy", "hcp_rohy", teamJoint(tc.hm, tc.am), `Očakávané rohy ${fmt1(tc.hm.mean)} : ${fmt1(tc.am.mean)}.${h2hTxt(tc, "rohy v priemere")}`);
+      // rohy tímov už obsahujú vzájomné zápasy napoly (cornerBlend vyššie) – druhýkrát sa nemiešajú
+      addHcp("Handicap – rohy", "hcp_rohy", teamJoint(tc0.hm, tc0.am), `Očakávané rohy ${fmt1(tc0.hm.mean)} : ${fmt1(tc0.am.mean)} (5 vzájomných + 5 posledných zápasov).`);
     }
     // 21. 11. 2026 (Michal): „kto urobí viac faulov v zápase“ – tím s viac faulmi; pri rovnosti tip prehrá.
     const tf0 = team("Fauly domácich", "Fauly hostí");
