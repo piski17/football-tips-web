@@ -141,7 +141,7 @@ h1 em, .h2 em, .guar2 h3 em, .hero h1 em { font-family: inherit !important; font
 ::selection { background: #D6B67A; color: #17120A; }
 .pitch { filter: sepia(.25) saturate(.8); }
 
-/* SIGNÁL (21. 11. 2026; 11:40 farby späť Šampanské, písmo IBM Plex Sans) – rovnaký vzhľad ako nový tipradar.eu: tmavé teplé pozadie, šampanské zlato #D9BF8C, IBM Plex Sans + Mono, bez svetlých plôch. */
+/* KLUB 22. 11. 2026: zaoblené zlaté tlačidlá ako nový web. SIGNÁL (21. 11. 2026; 11:40 farby späť Šampanské, písmo IBM Plex Sans) – rovnaký vzhľad ako nový tipradar.eu: tmavé teplé pozadie, šampanské zlato #D9BF8C, IBM Plex Sans + Mono, bez svetlých plôch. */
 :root {
   --bg: #0F0D0B; --bg2: #14120F; --card: #1A1714; --card2: #221E1A; --paper: #0F0D0B; --ink: #F4EEE3;
   --text: #F4EEE3; --muted: #AFA593; --faint: #7A7062;
@@ -161,11 +161,11 @@ h1, h2, h3, h4, .h2 { font-family: var(--sans) !important; font-style: normal !i
 h1 em, .h2 em, h2 em, h3 em { font-style: normal !important; color: #D9BF8C !important; -webkit-text-fill-color: #D9BF8C; background: none !important; }
 .eyebrow { font-family: "IBM Plex Mono", ui-monospace, monospace !important; letter-spacing: .08em !important; color: #D9BF8C !important; }
 .eyebrow::before { background: #D9BF8C !important; }
-.btn, .metal .btn { background: #D9BF8C !important; color: #17120A !important; border-radius: 6px !important; box-shadow: none !important; font-family: var(--sans) !important; font-weight: 600 !important; }
-.btn:hover, .metal .btn:hover { background: #EAD7AE !important; }
+.btn, .metal .btn { background: linear-gradient(120deg, #F1E0BC 0%, #D6B67A 50%, #A8874E 100%) !important; color: #17120A !important; border-radius: 999px !important; box-shadow: none !important; font-family: var(--sans) !important; font-weight: 600 !important; }
+.btn:hover, .metal .btn:hover { filter: brightness(1.06); }
 .btn .arr, .metal .btn .arr { background: transparent !important; color: inherit !important; }
 .btn.ghost { background: transparent !important; color: #F4EEE3 !important; box-shadow: inset 0 0 0 1px rgba(244,238,227,.17) !important; }
-.panel, .card { border-radius: 10px !important; }
+.panel, .card { border-radius: 22px !important; }
 .panel::before { background: none !important; }
 .links a.active { color: #F4EEE3 !important; background: rgba(244,238,227,.06) !important; }
 ::selection { background: #D9BF8C; color: #17120A; }
