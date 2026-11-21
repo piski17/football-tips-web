@@ -577,6 +577,25 @@ const RETRO_1121_MARKETS = ["Fauly", "Fauly domácich", "Fauly hostí", "Handica
  * handicap kariet a striel, a zo zápasu s viacerými tipmi všetky okrem tipu s najväčšou dôverou.
  * Návrat: tipom s retro1121 zrušiť watchOnly.
  */
+const DEL_FOUL_WATCH_KEY = "tipradar_migr_del_foul_watch_1121";
+/** 21. 11. 2026 23:44 (Michal): zo sledovaných raz zmaže tipy na fauly v zápase, domácich a hostí (ostáva držanie lopty a „Fauly – kto viac“). */
+export async function deleteFoulWatchOnce(): Promise<number> {
+  if (!useUpstash) return 0;
+  const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };
+  const done = (await upstashClient().get(`${UPSTASH_URL}/get/${DEL_FOUL_WATCH_KEY}`, auth)).data?.result;
+  if (done) return 0;
+  return withWriteLock(async () => {
+    const tips = await readAll();
+    const keep = tips.filter((t) => !(t.watchOnly && !(t.legs && t.legs.length) && ["Fauly", "Fauly domácich", "Fauly hostí"].includes(String(t.market))));
+    const removed = tips.length - keep.length;
+    if (removed) await writeAll(keep);
+    await upstashClient().post(`${UPSTASH_URL}/set/${DEL_FOUL_WATCH_KEY}`, new Date().toISOString(), {
+      headers: { ...auth.headers, "Content-Type": "text/plain" },
+    });
+    return removed;
+  });
+}
+
 export async function retroApplyRules1121Once(): Promise<number> {
   if (!useUpstash) return 0;
   const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };
