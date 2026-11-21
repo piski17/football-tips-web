@@ -72,19 +72,19 @@ const LEAGUE_ORDER = [
   ["Serie A", "Taliansko", 0],
   ["Bundesliga", "Nemecko", 0],
   ["Ligue 1", "Francúzsko", 0],
-  ["Eredivisie", "Holandsko", 0],
+  ["Eredivisie", "Holandsko", 3],
   ["Primeira Liga", "Portugalsko", 0],
-  ["Jupiler Pro League", "Belgicko", 0],
-  ["Süper Lig", "Turecko", 0],
-  ["Superliga", "Dánsko", 0],
-  ["Premiership", "Škótsko", 0],
+  ["Jupiler Pro League", "Belgicko", 3],
+  ["Süper Lig", "Turecko", 3],
+  ["Superliga", "Dánsko", 3],
+  ["Premiership", "Škótsko", 3],
   ["Championship", "Anglicko", 1],
   ["2. Bundesliga", "Nemecko", 1],
-  ["Segunda División", "Španielsko", 1],
-  ["Ligue 2", "Francúzsko", 1],
+  ["Segunda División", "Španielsko", 3],
+  ["Ligue 2", "Francúzsko", 3],
   ["UEFA Champions League", "", 2],
   // 10. 11. 2026 (Michal): ženská Liga majstrov a Liga národov.
-  ["UEFA Champions League Women", "", 2],
+  ["UEFA Champions League Women", "", 3],
   ["UEFA Nations League", "", 2],
 ];
 const LEAGUE_INFO = new Map(LEAGUE_ORDER.map(([name, country, group], i) => [name, { country, group, order: i }]));
@@ -209,7 +209,7 @@ const MONTH_NAMES = ["Január", "Február", "Marec", "Apríl", "Máj", "Jún", "
 // ---- Pravidlá tipov ----
 const STRONG_TIP_MIN_PROBABILITY = 69.6; // STRONG_TIP_MIN_PROBABILITY v oddsMatcher.ts
 let MIN_ODDS = 1.5; // predvolené: 1,50 (2. 11. 2026 20:50 späť z 1,60, spolu s pásmom 70 – 80 %); ak server pošle MIN_ODDS (/api/public/vip-seats), použije sa ten
-const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté konto"];
+const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté konto", "Strely na bránu", "Strely na bránu domácich", "Strely na bránu hostí", "Handicap – strely na bránu", "Ázijský handicap – strely na bránu"]; // 22. 11. 2026: strely zrušené
 const MATCH_STARTED_TEXT = "Zápas už začal – zabudnutý tip pridáš v detaile zápasu (Pridať zabudnutý tip).";
 const LIVE_STATUSES = ["1H", "HT", "2H", "ET", "BT", "P", "SUSP", "INT"];
 const FINISHED_STATUSES = ["FT", "AET", "PEN"];

@@ -12,6 +12,7 @@ import { marketCategory, MarketAdjustments } from "./predictor";
 // Na tipy, ktoré už boli odoslané, to nemá vplyv.
 
 export const DISABLE_MIN_TIPS = 30;
+const NEVER_DISABLE = ["goly_1p", "goly_2p"];
 export const DISABLE_WINDOW = 50;
 export const CALIBRATION_MIN_TIPS = 50;
 const CALIBRATION_WINDOW = 100;
@@ -163,7 +164,8 @@ export function computeMarketHealth(tips: SavedTip[], shadow: ShadowEntry[]): Ma
     const clvs = win.map((r) => r.clv).filter((v): v is number => v !== null);
     const avgClv = clvs.length ? clvs.reduce((a, b) => a + b, 0) / clvs.length : null;
     const clvBad = clvs.length < CLV_MIN_COUNT || (avgClv ?? 0) <= 0;
-    const isDisabled = win.length >= DISABLE_MIN_TIPS && profit <= 0 && clvBad;
+    // 22. 11. 2026 (Michal): góly v polčasoch idú klientom normálne – automaticky sa nevypínajú.
+    const isDisabled = !NEVER_DISABLE.includes(category) && win.length >= DISABLE_MIN_TIPS && profit <= 0 && clvBad;
     const reason = isDisabled
       ? `posledných ${win.length} tipov ${signed(profit)} j.` + (clvs.length >= CLV_MIN_COUNT ? `, uzatvárací kurz ${signed(avgClv!)} %` : "")
       : null;

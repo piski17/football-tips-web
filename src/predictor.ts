@@ -918,6 +918,8 @@ export const POSSESSION_LEAGUE_IDS = [39, 78, 140, 135];
  * V ostatných ligách ostávajú fauly len v analýze (ručne sa dajú uložiť) a v „Všetky trhy“ na mesačnú kontrolu.
  */
 /** 20. 11. 2026 (Michal): fauly a držanie lopty klientom neodporúčať. Návrat: false. */
+/** 22. 11. 2026 (Michal): strely na bránu (zápas, tím) a karty v polčasoch zrušené. */
+export const REMOVED_1122 = true;
 export const FOUL_POSS_TRACK_ONLY = false; // 20. 11. 2026 0:05 nahradené kompromisom (BOOKLINE v server.ts)
 /** 21. 11. 2026 (Michal): fauly domácich / hostí len Premier League a Bundesliga. */
 /** 21. 11. 2026 (Michal): zo zápasu najviac 1 tip (najväčšia dôvera). */
@@ -1102,7 +1104,7 @@ export function predictMatch(
 
   // ---- Strely na bránu (ak sú dáta k dispozícii) ----
   let shotsOnGoal: OverUnderMarket | undefined;
-  if (extraStatsAvg?.homeShotsOnGoal != null && extraStatsAvg?.awayShotsOnGoal != null) {
+  if (!REMOVED_1122 && extraStatsAvg?.homeShotsOnGoal != null && extraStatsAvg?.awayShotsOnGoal != null) {
     const b = blendH2H(extraStatsAvg.homeShotsOnGoal + extraStatsAvg.awayShotsOnGoal, "shotsOnGoal");
     const expected = b.value;
     if (b.h2h) h2hNotes.strely = `Vo vzájomných zápasoch (${b.h2h.n}) v priemere ${fmt1(b.h2h.avg)} striel na bránu.`;
@@ -1297,11 +1299,12 @@ export function predictMatch(
     const exp = cards.expected;
     // Žlté karty v polčasoch (22. 10. 2026): v 1. polčase ich padá menej (asi 38 %).
     const c1 = exp * FIRST_HALF_CARD_SHARE, c2 = exp * (1 - FIRST_HALF_CARD_SHARE);
-    addOverUnder("Karty v 1. polčase", "karty_1p", (line) => overdispersedOverUnder(c1, line, VR.cards), (line) =>
+    // 22. 11. 2026 (Michal): karty v polčasoch zrušené (ani do sledovaných). Návrat: REMOVED_1122 = false.
+    if (!REMOVED_1122) addOverUnder("Karty v 1. polčase", "karty_1p", (line) => overdispersedOverUnder(c1, line, VR.cards), (line) =>
       `Očakávané žlté karty v 1. polčase: ${fmt1(c1)} (z ${fmt1(exp)} v celom zápase), hranica ${line}.${refereeNote("cards")}`,
       { mean: c1, varRatio: VR.cards }
     );
-    addOverUnder("Karty v 2. polčase", "karty_2p", (line) => overdispersedOverUnder(c2, line, VR.cards), (line) =>
+    if (!REMOVED_1122) addOverUnder("Karty v 2. polčase", "karty_2p", (line) => overdispersedOverUnder(c2, line, VR.cards), (line) =>
       `Očakávané žlté karty v 2. polčase: ${fmt1(c2)} (z ${fmt1(exp)} v celom zápase), hranica ${line}.${refereeNote("cards")}`,
       { mean: c2, varRatio: VR.cards }
     );
@@ -1311,7 +1314,8 @@ export function predictMatch(
     );
   }
 
-  if (shotsOnGoal) {
+  // 22. 11. 2026 (Michal): strely na bránu (zápas aj tím) zrušené – model ich už neponúka ani nesleduje.
+  if (shotsOnGoal && !REMOVED_1122) {
     const exp = shotsOnGoal.expected;
     addOverUnder("Strely na bránu", "strely", (line) => overdispersedOverUnder(exp, line, VR.shotsOnGoal), (line) => statExplanation(exp, line), { mean: exp, varRatio: VR.shotsOnGoal });
   }
