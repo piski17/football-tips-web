@@ -46,7 +46,7 @@ import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, Market
 import { newModelInputs } from "./newModel";
 import { computeMarketHealth, marketChangesText, clvOf, CLV_TIE } from "./marketHealth";
 import { LeaguePreset, SavedTip } from "./types";
-import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once, moveLateAddsOnce, restoreLateMovedOnce, returnStrictFailedOnce, moveStrictFailedBackOnce, moveSameTypeOnce, moveOldFoulTipsOnce, moveFoulPossWatchOnce, deleteAutoFoulPossOnce, syncBand65Trial, restoreDeletedWatchOnce } from "./tipsStore";
+import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once, moveLateAddsOnce, restoreLateMovedOnce, returnStrictFailedOnce, moveStrictFailedBackOnce, moveSameTypeOnce, moveOldFoulTipsOnce, moveFoulPossWatchOnce, deleteAutoFoulPossOnce, retroApplyRules1121Once, syncBand65Trial, restoreDeletedWatchOnce } from "./tipsStore";
 import { computeTicketStatus, settleBet, settleFixtureBets, tipHasStartedMatch, MATCH_STARTED_MESSAGE, buildTipEdit } from "./tipEvaluator";
 import {
   sendTipToTelegram,
@@ -4835,6 +4835,9 @@ app.listen(PORT, () => {
     .then((n) => { if (n) console.log(`1 tip z typu: presunuté do sledovaných ${n}`); })
     .catch((err) => console.error("Presun tipov rovnakého typu zlyhal:", err))
     // 8. 11. 2026 (Michal): staré tipy na fauly raz presunie do sledovaných (fauly majú nové hranice podľa zápasu).
+    .then(() => retroApplyRules1121Once())
+    .then((n) => { if (n) console.log(`Pravidlá z 21. 11. spätne: presunuté do sledovaných ${n}`); })
+    .catch((err) => console.error("Spätné pravidlá z 21. 11. zlyhali:", err))
     .then(() => deleteAutoFoulPossOnce())
     .then((n) => { if (n) console.log(`Automatické tipy na fauly / držanie lopty zmazané: ${n}`); })
     .catch((err) => console.error("Zmazanie automatických faulov zlyhalo:", err))

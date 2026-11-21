@@ -342,6 +342,8 @@ export interface SavedTip {
   bookLine?: boolean;
   /** 20. 11. 2026: fauly / držanie lopty – len sledované, vyhodnotiť na konci mesiaca. */
   foulPossWatch?: boolean;
+  /** 21. 11. 2026: presunuté spätne podľa pravidiel z 21. 11. (1 tip zo zápasu, bez faulov a handicapu kariet/striel). */
+  retro1121?: boolean;
   /** Tip obnovený z denného súhrnu (18. 10. 2026) – dôvera modelu nie je známa, ak nebola v texte tipu. */
   restoredFromDaily?: boolean;
   probabilityEstimated?: boolean;

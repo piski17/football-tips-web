@@ -3195,6 +3195,7 @@ function tipBadges(t) {
   if (isOverrideTip(t)) b += ` <span class="tag warn" title="Vyradené kontrolou kurzu, pridané ručne">⚠️ mimo filtra</span>`;
   if (t.manualEntry) b += ` <span class="tag" title="Tip doplnený ručne po zápase">✍ doplnené ručne</span>`;
   if (t.removedLeague) b += ` <span class="tag" title="Súťaž bola vyradená 2. 11. 2026 – tip sa neráta do štatistík ani na web.">vyradená súťaž · nerátá sa</span>`;
+  if (t.retro1121) b += ` <span class="tag" title="21. 11. 2026: spätne presunuté podľa nových pravidiel (1 tip zo zápasu, bez faulov a handicapu kariet a striel).">nové pravidlá · sledovaný</span>`;
   if (t.foulPossWatch) b += ` <span class="tag" title="Fauly a držanie lopty od 20. 11. 2026 len sledujeme – vyhodnotíme na konci mesiaca.">fauly / držanie · sledovaný</span>`;
   if (t.minOddsAuto) b += ` <span class="tag" title="Stávkovky v API kurz na tento trh nemajú. Server tip uložil podľa modelu s minimálnym kurzom, pri ktorom sa ho oplatí hrať – štatistiky rátajú s týmto kurzom.">kurz = minimálny</span>`;
   if (t.autoSaved) b += ` <span class="tag" title="Tip uložil server sám 5 – 30 minút pred výkopom, po zverejnení zostáv (nebol uložený ručne). Do Telegramu nešiel.">🤖 uložené automaticky</span>`;

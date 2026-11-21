@@ -569,6 +569,45 @@ const FOUL_POSS_AUTO_DEL_KEY = "tipradar_migr_foul_poss_auto_del_1120";
  * a držanie lopty, ktoré server uložil sám s minimálnym kurzom (minOddsAuto) pri zápasoch od 20. 11. Michalove
  * tipy z okienka (bookLine) ostávajú. Staršie (17. – 19. 11.) sa nemenia.
  */
+const RETRO_1121_KEY = "tipradar_migr_retro_1121";
+const RETRO_1121_MARKETS = ["Fauly", "Fauly domácich", "Fauly hostí", "Handicap – karty", "Handicap – strely na bránu", "Ázijský handicap – karty", "Ázijský handicap – strely na bránu"];
+/**
+ * 21. 11. 2026 23:42 (Michal: „aktualizuj podľa nových vecí všetky tipy v štatistikách“): raz presunie zo štatistík
+ * do sledovaných (značka retro1121) tipy, ktoré by podľa pravidiel z 21. 11. neprešli: fauly v zápase / tímu,
+ * handicap kariet a striel, a zo zápasu s viacerými tipmi všetky okrem tipu s najväčšou dôverou.
+ * Návrat: tipom s retro1121 zrušiť watchOnly.
+ */
+export async function retroApplyRules1121Once(): Promise<number> {
+  if (!useUpstash) return 0;
+  const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };
+  const done = (await upstashClient().get(`${UPSTASH_URL}/get/${RETRO_1121_KEY}`, auth)).data?.result;
+  if (done) return 0;
+  return withWriteLock(async () => {
+    const tips = await readAll();
+    let moved = 0;
+    const move = (t: SavedTip) => { t.watchOnly = true; t.retro1121 = true; t.strongOfDay = undefined; moved++; };
+    const pub = tips.filter((t) => !t.watchOnly && !(t.legs && t.legs.length));
+    for (const t of pub) if (RETRO_1121_MARKETS.includes(String(t.market))) move(t);
+    const byFx = new Map<number, SavedTip[]>();
+    for (const t of pub) {
+      if (t.watchOnly || !(Number(t.fixtureId) > 0)) continue;
+      const list = byFx.get(t.fixtureId) ?? [];
+      list.push(t);
+      byFx.set(t.fixtureId, list);
+    }
+    for (const list of byFx.values()) {
+      if (list.length < 2) continue;
+      list.sort((a, b) => (Number(b.probability) || 0) - (Number(a.probability) || 0) || String(a.savedAt).localeCompare(String(b.savedAt)));
+      list.slice(1).forEach(move);
+    }
+    if (moved) await writeAll(tips);
+    await upstashClient().post(`${UPSTASH_URL}/set/${RETRO_1121_KEY}`, new Date().toISOString(), {
+      headers: { ...auth.headers, "Content-Type": "text/plain" },
+    });
+    return moved;
+  });
+}
+
 export async function deleteAutoFoulPossOnce(): Promise<number> {
   if (!useUpstash) return 0;
   const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };
