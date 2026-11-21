@@ -1499,13 +1499,27 @@ function betLineOf(bet) {
   const m = String(bet.selection || "").match(/(\d+(?:[.,]\d+)?)/);
   return m ? m[1].replace(".", ",") : "";
 }
+function bookLineMarkets(r, market) {
+  if (market.startsWith("Držanie lopty")) return r.possession ? ["Držanie lopty domácich", "Držanie lopty hostí"] : [market];
+  const have = new Set((r.lineModels || []).map((m) => m.market));
+  const list = ["Fauly", "Fauly domácich", "Fauly hostí"].filter((m) => have.has(m));
+  return list.length ? list : [market];
+}
+function bookLineMarketLabel(r, m) {
+  if (m === "Fauly") return "Fauly v zápase";
+  if (m.startsWith("Držanie lopty")) return `Držanie – ${translateTeamName(m.endsWith("domácich") ? r.fixture.homeTeam.name : r.fixture.awayTeam.name)}`;
+  return lineMarketLabel(r, m);
+}
 function bookLineHtml(i, bet, r) {
   const poss = (bet.market || "").startsWith("Držanie lopty");
   const pass = r ? passLinesHtml(r, bet.market) : "";
+  // 21. 11. 2026 (Michal): v každom riadku sa dá vybrať trh – fauly v zápase / domácich / hostí, držanie domácich / hostí.
+  const mkts = r ? bookLineMarkets(r, bet.market) : [bet.market];
   return `<div class="bookline" data-bl="${i}">
       <div class="bookline-t small">Hranica a kurzy zo stávkovky <span class="faint">· uložený tip ide do sledovaných</span></div>
       <div class="bookline-rows">
         ${[0, 1, 2, 3].map((k) => `<div class="bookline-f" data-bl-row="${k}">
+          ${mkts.length > 1 ? `<label>${k === 0 ? "Trh" : ""}<select data-bl-mkt>${mkts.map((m) => `<option value="${escapeHtml(m)}"${m === bet.market ? " selected" : ""}>${escapeHtml(r ? bookLineMarketLabel(r, m) : m)}</option>`).join("")}</select></label>` : ""}
           <label>${k === 0 ? `Hranica${poss ? " %" : ""}` : ""}<input type="text" inputmode="decimal" autocomplete="off" data-bl-line value="${k === 0 ? escapeHtml(betLineOf(bet)) : ""}" placeholder="${poss ? "napr. 55,5" : "napr. 12,5"}" /></label>
           <label>${k === 0 ? (poss ? "Kurz a viac" : "Kurz viac ako") : ""}<input type="text" inputmode="decimal" autocomplete="off" data-bl-over placeholder="–" /></label>
           <label>${k === 0 ? "Kurz menej ako" : ""}<input type="text" inputmode="decimal" autocomplete="off" data-bl-under placeholder="–" /></label>
@@ -2226,17 +2240,18 @@ function renderDayTipsViewMain() {
         const raw = String(rowEl.querySelector("[data-bl-line]").value).trim();
         if (!raw) return;
         const line = parseFloat(raw.replace(",", "."));
-        const fresh = bookLineRows(item.r, item.bet.market, line, oddOf(rowEl.querySelector("[data-bl-over]")), oddOf(rowEl.querySelector("[data-bl-under]")));
+        const mkt = rowEl.querySelector("[data-bl-mkt]")?.value || item.bet.market;
+        const fresh = bookLineRows(item.r, mkt, line, oddOf(rowEl.querySelector("[data-bl-over]")), oddOf(rowEl.querySelector("[data-bl-under]")));
         if (typeof fresh === "string") { errs.push(`${raw}: ${fresh}`); return; }
         // ak je zadaný len jeden kurz, vyhodnotí sa len tá strana
-        fresh.filter((x) => x.odds != null).forEach((x) => { if (!rows.some((y) => y.selection === x.selection)) rows.push(x); });
+        fresh.filter((x) => x.odds != null).forEach((x) => { x.market = mkt; if (!rows.some((y) => y.market === mkt && y.selection === x.selection)) rows.push(x); });
       });
       if (!rows.length) { out.innerHTML = `<p class="faint small">${escapeHtml(errs[0] || "Zadaj aspoň jednu hranicu a kurz.")}</p>`; return; }
       const kept = rows.filter(passes);
       rows.sort((x, y) => (passes(y) ? 1 : 0) - (passes(x) ? 1 : 0) || y.probability - x.probability);
       renderCalcRows(out, item.r, item.bet.market, rows, (tip) => {
         // 20. 11. 2026 (Michal: „nechcem, aby to išlo pre 2“): po uložení okienko zmizne – z typu ide len 1 tip.
-        box.innerHTML = `<div class="small win">✓ Uložené: ${escapeHtml(item.bet.market)} ${escapeHtml(String(tip.selection).replace(/^Over /, "viac ako ").replace(/^Under /, "menej ako ").replace(".", ","))} · kurz ${fmtOdds(tip.odds)}${tip.watchOnly ? " (len do sledovaných)" : ""}</div>`;
+        box.innerHTML = `<div class="small win">✓ Uložené: ${escapeHtml(bookLineMarketLabel(item.r, tip.market))} ${escapeHtml(String(tip.selection).replace(/^Over /, "viac ako ").replace(/^Under /, "menej ako ").replace(".", ","))} · kurz ${fmtOdds(tip.odds)}${tip.watchOnly ? " (len do sledovaných)" : ""}</div>`;
         dayTipSaved.add(i);
         const main = dayTipsPaneEl.querySelector(`[data-save="${i}"]`);
         if (main) { main.disabled = true; main.textContent = "✓ Uložené"; }
