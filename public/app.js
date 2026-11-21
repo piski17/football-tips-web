@@ -1399,7 +1399,8 @@ function rejectedBetsHtml(r) {
 }
 
 function lineCalcHtml(r) {
-  const models = r.lineModels || [];
+  // 21. 11. 2026 (Michal): kalkulačka len pre držanie lopty (fauly sú vyradené, ostatné trhy majú kurzy z API).
+  const models = [];
   // Držanie lopty len v Premier League, Bundeslige, La Lige a Serie A (26. 10. 2026).
   const poss = [39, 78, 140, 135].includes(Number(r.fixture?.league?.id)) ? r.possession : null;
   if (!models.length && !poss) return "";
@@ -1414,13 +1415,13 @@ function lineCalcHtml(r) {
   // 21. 11. 2026 (Michal): aj v detaile zápasu až 4 hranice naraz, každá so svojím trhom.
   return `
     <div class="card calc">
-      <h4 class="ct">Kalkulačka hraníc tvojej stávkovky</h4>
+      <h4 class="ct">Kalkulačka držania lopty</h4>
       <p class="faint small calc-intro">Zadaj naraz všetky hranice a kurzy zo stávkovky (nemusíš vyplniť všetky riadky). Appka spočíta šancu rovnako ako model a ponúkne uložiť tip s najväčšou dôverou.</p>
       <div class="bookline-rows">
         ${[0, 1, 2, 3].map((k) => `<div class="bookline-f" data-lc-row="${k}">
           <label>${k === 0 ? "Trh" : ""}<select data-lc="market" aria-label="Trh">${opts}</select></label>
-          <label>${k === 0 ? "Hranica" : ""}<input type="text" data-lc="line" inputmode="decimal" placeholder="napr. 24,5" /></label>
-          <label>${k === 0 ? "Kurz viac / a viac" : ""}<input type="text" data-lc="over" inputmode="decimal" placeholder="–" /></label>
+          <label>${k === 0 ? "Hranica" : ""}<input type="text" data-lc="line" inputmode="decimal" placeholder="napr. 55,5" /></label>
+          <label>${k === 0 ? "Kurz a viac" : ""}<input type="text" data-lc="over" inputmode="decimal" placeholder="–" /></label>
           <label>${k === 0 ? "Kurz menej ako" : ""}<input type="text" data-lc="under" inputmode="decimal" placeholder="–" /></label>
         </div>`).join("")}
       </div>
