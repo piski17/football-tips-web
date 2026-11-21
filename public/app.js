@@ -209,7 +209,7 @@ const MONTH_NAMES = ["Január", "Február", "Marec", "Apríl", "Máj", "Jún", "
 // ---- Pravidlá tipov ----
 const STRONG_TIP_MIN_PROBABILITY = 69.6; // STRONG_TIP_MIN_PROBABILITY v oddsMatcher.ts
 let MIN_ODDS = 1.5; // predvolené: 1,50 (2. 11. 2026 20:50 späť z 1,60, spolu s pásmom 70 – 80 %); ak server pošle MIN_ODDS (/api/public/vip-seats), použije sa ten
-const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté konto", "Strely na bránu", "Strely na bránu domácich", "Strely na bránu hostí", "Handicap – strely na bránu", "Ázijský handicap – strely na bránu"]; // 22. 11. 2026: strely zrušené
+const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté konto", "Strely na bránu", "Strely na bránu domácich", "Strely na bránu hostí", "Handicap – strely na bránu", "Ázijský handicap – strely na bránu", "Karty v 1. polčase", "Karty v 2. polčase"]; // 22. 11. 2026: strely zrušené
 const MATCH_STARTED_TEXT = "Zápas už začal – zabudnutý tip pridáš v detaile zápasu (Pridať zabudnutý tip).";
 const LIVE_STATUSES = ["1H", "HT", "2H", "ET", "BT", "P", "SUSP", "INT"];
 const FINISHED_STATUSES = ["FT", "AET", "PEN"];

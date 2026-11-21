@@ -101,7 +101,7 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 // Trhy, ktoré appka už neponúka - staré uložené tipy na ne sa nerátajú do
 // úspešnosti, reportov ani pripomienok (v histórii ostávajú viditeľné).
 // 22. 11. 2026 (Michal): strely na bránu (zápas, tím, handicap) zrušené – staré tipy sa nerátajú (v databáze ostávajú).
-const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté konto", "Strely na bránu", "Strely na bránu domácich", "Strely na bránu hostí", "Handicap – strely na bránu", "Ázijský handicap – strely na bránu"];
+const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté konto", "Strely na bránu", "Strely na bránu domácich", "Strely na bránu hostí", "Handicap – strely na bránu", "Ázijský handicap – strely na bránu", "Karty v 1. polčase", "Karty v 2. polčase"];
 function statsTips(tips: SavedTip[]): SavedTip[] {
   // Tipy „Len sledovať“ (napr. Liga majstrov na skúšku) sa vyhodnocujú, ale nerátajú sa
   // do štatistík, na web ani do vyhodnotení pre členov.
@@ -738,7 +738,7 @@ const COVERAGE_MARKETS: { key: string; label: string; markets: string[] }[] = [
   { key: "cards", label: "Karty", markets: ["Karty", "Karty domácich", "Karty hostí"] },
   { key: "shots", label: "Strely na bránu", markets: ["Strely na bránu", "Strely na bránu domácich", "Strely na bránu hostí"] },
   { key: "fouls", label: "Fauly", markets: ["Fauly", "Fauly domácich", "Fauly hostí"] },
-  { key: "hcp", label: "Handicapy", markets: ["Handicap", "Handicap – rohy", "Handicap – karty", "Handicap – strely na bránu", "Ázijský handicap", "Ázijský handicap – rohy", "Ázijský handicap – karty", "Ázijský handicap – strely na bránu"] },
+  { key: "hcp", label: "Handicapy", markets: ["Handicap", "Handicap – rohy", "Handicap – karty", "Handicap – strely na bránu", "Ázijský handicap", "Ázijský handicap – rohy", "Ázijský handicap – karty", "Ázijský handicap – strely na bránu", "Karty v 1. polčase", "Karty v 2. polčase"] },
 ];
 type CoverageRow = { order: number; id: number; name: string; country: string; inProject: boolean; fixtures: number; withOdds: number; markets: Record<string, number>; single: Record<string, number>; betNames: string[]; error?: string };
 let coverageJob: { startedAt: string; finishedAt?: string; done: number; total: number; rows: CoverageRow[] } | null = null;
