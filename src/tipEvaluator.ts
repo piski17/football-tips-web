@@ -75,6 +75,14 @@ export function evaluateTip(
       return overUnder(teamValue(actualTeamStats?.fouls, "home"));
     case "Fauly hostí":
       return overUnder(teamValue(actualTeamStats?.fouls, "away"));
+    // 21. 11. 2026: kto urobí viac faulov – tím z výberu musí mať viac faulov ako súper (rovnosť = prehra).
+    case "Fauly – kto viac": {
+      const h = teamValue(actualTeamStats?.fouls, "home"), a = teamValue(actualTeamStats?.fouls, "away");
+      if (h == null || a == null) return "void";
+      if (tip.selection === tip.homeTeam) return h > a ? "won" : "lost";
+      if (tip.selection === tip.awayTeam) return a > h ? "won" : "lost";
+      return "void";
+    }
     case "Góly v 1. polčase": {
       const ht = actualTeamStats?.halftime;
       return overUnder(ht ? ht.home + ht.away : null);
@@ -290,7 +298,7 @@ const VOID_STATUSES = ["CANC", "ABD", "AWD", "WO"];
 /** Odložený / prerušený zápas - ak sa neodohrá do 3 dní, stávka sa vracia. */
 const DELAYED_STATUSES = ["PST", "TBD", "SUSP", "INT"];
 const DELAYED_VOID_AFTER_MS = 3 * 24 * 60 * 60 * 1000;
-export const STATS_MARKETS = ["Rohy", "Rohy domácich", "Rohy hostí", "Karty", "Karty domácich", "Karty hostí", "Strely na bránu domácich", "Strely na bránu hostí", "Strely na bránu", "Fauly", "Ofsajdy", "Vyššie držanie lopty", "Držanie lopty domácich", "Držanie lopty hostí", "Fauly domácich", "Fauly hostí", "Ázijský handicap – rohy", "Ázijský handicap – karty", "Ázijský handicap – strely na bránu", "Handicap – rohy", "Handicap – karty", "Handicap – strely na bránu"];
+export const STATS_MARKETS = ["Rohy", "Rohy domácich", "Rohy hostí", "Karty", "Karty domácich", "Karty hostí", "Strely na bránu domácich", "Strely na bránu hostí", "Strely na bránu", "Fauly", "Ofsajdy", "Vyššie držanie lopty", "Držanie lopty domácich", "Držanie lopty hostí", "Fauly domácich", "Fauly hostí", "Fauly – kto viac", "Ázijský handicap – rohy", "Ázijský handicap – karty", "Ázijský handicap – strely na bránu", "Handicap – rohy", "Handicap – karty", "Handicap – strely na bránu"];
 /** Karty v polčasoch – vyhodnotia sa z udalostí zápasu (pri predĺžení sa vracajú). */
 const CARD_HALF_MARKETS = ["Karty v 1. polčase", "Karty v 2. polčase"];
 const halftimeOf = (r: { htHome?: number | null; htAway?: number | null }) =>

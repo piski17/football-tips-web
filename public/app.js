@@ -1493,7 +1493,8 @@ const BOOKLINE_MIN_PROB = 55; // 20. 11. 1:07 Michal: rozdiel viac/menej aspoň 
 const BOOKLINE_MIN_ODDS = 1.6;
 const BOOKLINE_OPTS = { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS, tipExtra: { bookLine: true } };
 function needsBookLine(bet) {
-  return BOOK_LINE_MARKET.test(bet.market || "") && !(typeof bet.odds === "number" && bet.odds > 1);
+  // „Fauly – kto viac“ nemá hranicu – kurz sa zadá do bežného políčka kurzu.
+  return BOOK_LINE_MARKET.test(bet.market || "") && bet.market !== "Fauly – kto viac" && !(typeof bet.odds === "number" && bet.odds > 1);
 }
 function betLineOf(bet) {
   const m = String(bet.selection || "").match(/(\d+(?:[.,]\d+)?)/);

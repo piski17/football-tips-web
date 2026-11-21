@@ -84,6 +84,8 @@ export function marketCategory(market: string): string | null {
   if (m === "Strely na bránu domácich" || m === "Strely na bránu hostí") return "strely_timu";
   if (m === "Fauly") return "fauly";
   if (m === "Fauly domácich" || m === "Fauly hostí") return "fauly_timu";
+  // 21. 11. 2026 (Michal): kto urobí viac faulov (domáci / hostia, pri rovnosti prehra) – len sledované.
+  if (m === "Fauly – kto viac") return "viacfaulov";
   if (m === "Góly v 1. polčase") return "goly_1p";
   if (m === "Góly v 2. polčase") return "goly_2p";
   if (m === "Karty v 1. polčase") return "karty_1p";
@@ -917,6 +919,8 @@ export const POSSESSION_LEAGUE_IDS = [39, 78, 140, 135];
  */
 /** 20. 11. 2026 (Michal): fauly a držanie lopty klientom neodporúčať. Návrat: false. */
 export const FOUL_POSS_TRACK_ONLY = false; // 20. 11. 2026 0:05 nahradené kompromisom (BOOKLINE v server.ts)
+/** 21. 11. 2026 (Michal): fauly domácich / hostí len Premier League a Bundesliga. */
+export const TEAM_FOUL_LEAGUE_IDS = [39, 78];
 export const FOUL_LEAGUE_IDS = [39, 140, 135, 78, 61, 2];
 const isFoulMarket = (market: string): boolean => market === "Fauly" || market.startsWith("Fauly ");
 
@@ -1416,6 +1420,17 @@ export function predictMatch(
     if (tk) addHcp("Handicap – karty", "hcp_karty", teamJoint(tk.hm, tk.am), `Očakávané žlté karty ${fmt1(tk.hm.mean)} : ${fmt1(tk.am.mean)}.${refereeNote("cards")}`);
     const ts = team("Strely na bránu domácich", "Strely na bránu hostí");
     if (ts) addHcp("Handicap – strely na bránu", "hcp_strely", teamJoint(ts.hm, ts.am), `Očakávané strely na bránu ${fmt1(ts.hm.mean)} : ${fmt1(ts.am.mean)}.`);
+    // 21. 11. 2026 (Michal): „kto urobí viac faulov v zápase“ – tím s viac faulmi; pri rovnosti tip prehrá.
+    const tf = team("Fauly domácich", "Fauly hostí");
+    if (tf) {
+      const j = teamJoint(tf.hm, tf.am);
+      const pHome = j(0), pAway = 1 - j(0.5);
+      const note = `Očakávané fauly ${fmt1(tf.hm.mean)} : ${fmt1(tf.am.mean)} (pri rovnakom počte tip neprejde).${refereeNote("fouls")}`;
+      for (const [name, p] of [[fixture.homeTeam.name, pHome], [fixture.awayTeam.name, pAway]] as const) {
+        if (!isFinite(p)) continue;
+        candidates.push({ market: "Fauly – kto viac", selection: name, probability: Math.round(p * 1000) / 10, category: "viacfaulov", explanation: `${note} ${name} urobí viac faulov.${mmNote}` });
+      }
+    }
   } catch (err) {
     console.error("Handicapy – výpočet zlyhal:", err); // handicap nesmie zhodiť analýzu zápasu
   }
@@ -1603,7 +1618,7 @@ export function predictMatch(
   };
   const lowValueBets: MarketPick[] = [];
   // Trhy, pri ktorých tip bez kurzu z API ide do výberu s minimálnym kurzom (kurz sa zadá ručne).
-  const MANUAL_ODDS_CATEGORIES = ["drzanie_lopty", "fauly", "fauly_timu", "rohy", "rohy_timu", "strely", "strely_timu", "karty", "karty_timu"];
+  const MANUAL_ODDS_CATEGORIES = ["drzanie_lopty", "fauly", "fauly_timu", "viacfaulov", "rohy", "rohy_timu", "strely", "strely_timu", "karty", "karty_timu"];
   // Rohy a karty bez kurzu z API (2. 11. 2026): rozhoduje šanca modelu PRED kalibráciou (tak to vidia stávkovky).
   // Nad 73 % je férový kurz pod ~1,37 a stávkovky (s maržou) dávajú okolo 1,15 – 1,30, takže kurz aspoň 1,50
   // sa takmer nikdy nedá dostať. Príklad: Las Palmas priemer 4,8 rohu, „Under 6,5“ – po kalibrácii 72 %, pred ňou ~78 %.
@@ -1680,6 +1695,11 @@ export function predictMatch(
         // 20. 11. 2026 (Michal): fauly a držanie lopty klientom neodporúčame – API nemá kurzy, model nevie, akú
         // hranicu dá stávkovka, a pri jej hranici tip takmer nikdy neprejde. Len tiché sledovanie, rozhodnúť 1. 12.
         b.rejectReason = "fauly a držanie lopty zatiaľ len sledujeme (stávkovky ich v API neponúkajú)";
+        b.rejectCode = "market_excluded";
+        lowValueBets.push(b);
+      } else if ((b.market === "Fauly domácich" || b.market === "Fauly hostí") && !TEAM_FOUL_LEAGUE_IDS.includes(Number(fixture.league?.id))) {
+        // 21. 11. 2026 (Michal): fauly jedného tímu len v Premier League a Bundeslige (fauly v zápase bez zmeny).
+        b.rejectReason = "fauly tímu odporúčame len v Premier League a Bundeslige";
         b.rejectCode = "market_excluded";
         lowValueBets.push(b);
       } else if (lineTooHigh(b)) {
