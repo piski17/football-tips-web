@@ -1748,8 +1748,7 @@ export function predictMatch(
         // Držanie lopty a fauly (fauly od 30. 10. 2026, Michal): kurz cez API nie je (API-Football má len
         // fauly hráčov), tip ide do výberu s minimálnym kurzom, ktorý Michal porovná so stávkovkou
         // (Tipsport) a kurz zadá ručne – uloží sa len pri hodnote +5 % a aspoň MIN_ODDS.
-        b.minOdds = Math.max(b.category === "viacfaulov" ? 1.55 : MIN_ODDS, // 22. 11. 0:50 Michal: kto viac od 1,55 (sledované)
-         Math.ceil((MIN_EXPECTED_VALUE / (b.probability / 100)) * 100) / 100);
+        b.minOdds = Math.max(b.category === "viacfaulov" ? 1.6 : MIN_ODDS, Math.ceil((MIN_EXPECTED_VALUE / (b.probability / 100)) * 100) / 100);
         pickPool.push(b);
       } else if (ev == null && oddsAvailable) {
         // Stávkovky k zápasu kurzy majú, ale tento trh (alebo túto hranicu) neponúkajú -
