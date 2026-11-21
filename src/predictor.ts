@@ -920,6 +920,8 @@ export const POSSESSION_LEAGUE_IDS = [39, 78, 140, 135];
 /** 20. 11. 2026 (Michal): fauly a držanie lopty klientom neodporúčať. Návrat: false. */
 export const FOUL_POSS_TRACK_ONLY = false; // 20. 11. 2026 0:05 nahradené kompromisom (BOOKLINE v server.ts)
 /** 21. 11. 2026 (Michal): fauly domácich / hostí len Premier League a Bundesliga. */
+/** 21. 11. 2026 (Michal): zo zápasu najviac 1 tip (najväčšia dôvera). */
+export const ONE_TIP_PER_MATCH = true;
 export const TEAM_FOUL_LEAGUE_IDS = [39, 78];
 export const FOUL_LEAGUE_IDS = [39, 140, 135, 78, 61, 2];
 const isFoulMarket = (market: string): boolean => market === "Fauly" || market.startsWith("Fauly ");
@@ -1596,7 +1598,8 @@ export function predictMatch(
   //  - inak normálny tip. Keď sa kurzy objavia, pri ďalšej analýze tip prejde bežne.
   // Trhy mimo Michalovho zoznamu (6. 10. 2026): odporúčajú sa len góly zápasu a tímu,
   // držanie lopty, rohy zápasu a tímu, karty, strely na bránu a fauly.
-  const NOT_RECOMMENDED_MARKETS = ["Ofsajdy", "Výsledok zápasu", "Oba tímy skórujú", "Obaja tímy skórujú"];
+  // 21. 11. 2026 (Michal): fauly v zápase, domácich a hostí vyradené – z faulov ostáva len „Fauly – kto viac“.
+  const NOT_RECOMMENDED_MARKETS = ["Ofsajdy", "Výsledok zápasu", "Oba tímy skórujú", "Obaja tímy skórujú", "Fauly", "Fauly domácich", "Fauly hostí"];
   const fewGames =
     Math.min(homeStats.fixtures.played.total ?? 0, awayStats.fixtures.played.total ?? 0) < MIN_GAMES_FOR_TRUST;
   // Liga majstrov: tímy majú v ligovej fáze 1 – 2 zápasy, ale v domácej lige ich
@@ -1832,10 +1835,16 @@ export function predictMatch(
       const wins = !cur || (manualPoss ? ev > curEv || (ev === curEv && better) : bet.probability > cur.probability || (bet.probability === cur.probability && ev > curEv));
       if (wins) bestInCategory.set(catKey(bet), bet);
     }
-    const diversifiedPicks = Array.from(bestInCategory.values()).sort((a, b) => b.probability - a.probability);
+    const diversifiedPicks = Array.from(bestInCategory.values()).sort((a, b) => (a.h2hAgainst ? 1 : 0) - (b.h2hAgainst ? 1 : 0) || b.probability - a.probability);
+    // 21. 11. 2026 (Michal): zo zápasu len 1 tip – z každého typu ten s najväčšou dôverou a z nich zase ten
+    // s najväčšou dôverou (tip, proti ktorému hovoria vzájomné zápasy, má nižšiu prednosť). Návrat: ONE_TIP_PER_MATCH = false.
+    if (ONE_TIP_PER_MATCH && diversifiedPicks.length > 1) {
+      for (const b of diversifiedPicks.slice(1)) { bestInCategory.delete(catKey(b)); b.rejectCode = "match_lower_ev"; }
+      diversifiedPicks.length = 1;
+    }
     // Meranie (20. 10. 2026): ostatné hranice toho istého trhu dostanú len kód dôvodu
     // pre tichú evidenciu (medzi neodporúčané sa nepresúvajú, výber sa nemení).
-    for (const bet of pickPool) if (bestInCategory.get(catKey(bet)) !== bet) bet.rejectCode = "category_lower_ev";
+    for (const bet of pickPool) if (bestInCategory.get(catKey(bet)) !== bet && bet.rejectCode !== "match_lower_ev") bet.rejectCode = "category_lower_ev";
 
     // 8. 11. 2026 (Michal): späť na „najviac 1 tip z typu“ (nahrádza „1 z trhu“ zo 4. 11.) –
     // napr. Karty pod 5,5 + Karty hostí pod 3,5 + Karty domácich pod 2,5 v jednom zápase už nejdú spolu.

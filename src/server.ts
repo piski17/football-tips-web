@@ -42,7 +42,7 @@ import {
   getRestInfo,
   getFixtureCornersAndCards,
 } from "./apiClient";
-import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, MarketAdjustments, marketCategory, tipType, passesStrict, STRICT_CHECK_ON } from "./predictor";
+import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, MarketAdjustments, marketCategory, tipType, passesStrict, STRICT_CHECK_ON, ONE_TIP_PER_MATCH } from "./predictor";
 import { newModelInputs } from "./newModel";
 import { computeMarketHealth, marketChangesText, clvOf, CLV_TIE } from "./marketHealth";
 import { LeaguePreset, SavedTip } from "./types";
@@ -1157,6 +1157,8 @@ async function applySameTypeRule(tip: SavedTip): Promise<boolean> {
   const type = tipType(cat);
   const taken = (await listTips()).some((t) => {
     if (t.id === tip.id || t.watchOnly || (t.legs && t.legs.length) || t.fixtureId !== tip.fixtureId) return false;
+    // 21. 11. 2026 (Michal): zo zápasu len 1 tip klientom – akýkoľvek ďalší tip ide do sledovaných.
+    if (ONE_TIP_PER_MATCH) return true;
     const c = marketCategory(t.market);
     return !!c && tipType(c) === type;
   });
