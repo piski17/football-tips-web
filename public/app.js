@@ -207,7 +207,7 @@ function dayKeyLabel(key) {
 const MONTH_NAMES = ["Január", "Február", "Marec", "Apríl", "Máj", "Jún", "Júl", "August", "September", "Október", "November", "December"];
 
 // ---- Pravidlá tipov ----
-const STRONG_TIP_MIN_PROBABILITY = 69.6; // STRONG_TIP_MIN_PROBABILITY v oddsMatcher.ts
+const STRONG_TIP_MIN_PROBABILITY = 72; // STRONG_TIP_MIN_PROBABILITY v oddsMatcher.ts
 let MIN_ODDS = 1.5; // predvolené: 1,50 (2. 11. 2026 20:50 späť z 1,60, spolu s pásmom 70 – 80 %); ak server pošle MIN_ODDS (/api/public/vip-seats), použije sa ten
 const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté konto", "Strely na bránu", "Strely na bránu domácich", "Strely na bránu hostí", "Handicap – strely na bránu", "Ázijský handicap – strely na bránu", "Karty v 1. polčase", "Karty v 2. polčase"]; // 22. 11. 2026: strely zrušené
 const MATCH_STARTED_TEXT = "Zápas už začal – zabudnutý tip pridáš v detaile zápasu (Pridať zabudnutý tip).";
@@ -450,8 +450,8 @@ function askTelegramTarget() {
 /** Skúšobné pásmo (21. 10. 2026): tipy pod 68 % sa ukladajú len na sledovanie (rovnako ako server). */
 // 2. 11. 2026 20:50: pásmo pre klientov 70 – 80 % (predtým 68).
 // 12. 11. 2026 (Michal, SKÚŠKA): 65 – 80 % – návrat: 70 (spolu s BAND_65_TRIAL = false v src/oddsMatcher.ts).
-const WATCH_BELOW = 69.6; // 19. 11. 2026 (Michal): 69,6 % = zaokrúhlene 70 %; návrat 70 (aj MIN_PROBABILITY v oddsMatcher.ts)
-const WATCH_BELOW_LABEL = 70; // v textoch
+const WATCH_BELOW = 72; // 22. 11. 2026 0:42 Michal: od 72 %; // 19. 11. 2026 (Michal): 69,6 % = zaokrúhlene 70 %; návrat 70 (aj MIN_PROBABILITY v oddsMatcher.ts)
+const WATCH_BELOW_LABEL = 72; // v textoch
 const MIN_EV = 1.044; // MIN_EXPECTED_VALUE v oddsMatcher.ts (69,6 % × 1,50)
 const MAX_EV = 1.254; // SUSPICIOUS_EXPECTED_VALUE v oddsMatcher.ts (19. 11. 2026: do +25,4 %)
 const isWatchTip = (tip) => !(tip.legs && tip.legs.length) && (tip.strictFail || (!tip.manualEntry && !tip.bookLine && typeof tip.probability === "number" && tip.probability < WATCH_BELOW));
@@ -1514,7 +1514,7 @@ function bookLineHtml(i, bet, r) {
   // 21. 11. 2026 (Michal): v každom riadku sa dá vybrať trh – fauly v zápase / domácich / hostí, držanie domácich / hostí.
   const mkts = r ? bookLineMarkets(r, bet.market) : [bet.market];
   return `<div class="bookline" data-bl="${i}">
-      <div class="bookline-t small">Hranica a kurzy zo stávkovky <span class="faint">· ${BOOK_LINE_MARKET.test(bet.market || "") ? "uložený tip ide do sledovaných" : "tip, ktorý prejde, ide klientom (70 – 80 %, kurz od 1,50)"}</span></div>
+      <div class="bookline-t small">Hranica a kurzy zo stávkovky <span class="faint">· ${BOOK_LINE_MARKET.test(bet.market || "") ? "uložený tip ide do sledovaných" : "tip, ktorý prejde, ide klientom (${WATCH_BELOW_LABEL} – 80 %, kurz od 1,50)"}</span></div>
       <div class="bookline-rows">
         ${[0, 1, 2, 3].map((k) => `<div class="bookline-f" data-bl-row="${k}">
           ${mkts.length > 1 ? `<label>${k === 0 ? "Trh" : ""}<select data-bl-mkt>${mkts.map((m) => `<option value="${escapeHtml(m)}"${m === bet.market ? " selected" : ""}>${escapeHtml(r ? bookLineMarketLabel(r, m) : m)}</option>`).join("")}</select></label>` : ""}
@@ -2845,7 +2845,7 @@ function drawAutoTips() {
     (list.length ? marketTable : "") +
     `<h4 class="ct">Po dňoch</h4>${dayHtml}` +
     `<p class="faint small">Server každý zápas zo všetkých súťaží prejde sám, asi hodinu pred výkopom, a zapíše všetky tipy, ktoré by model odporučil (pásmo ${WATCH_BELOW_LABEL} – 80${NB}%, hodnota +5 až +25${NB}%, kurz aspoň 1,50, najviac 1 tip z typu). Kurz je zo stávkoviek v tom čase. Klientom nejdú, nie sú na webe a nerátajú sa do úspešnosti – sú len pre teba, aby si videl, ako model funguje na veľkom množstve zápasov.</p>` +
-    `<p class="faint small">Zabudol si tip uložiť? Ťukni na „+ Pridať“ – tip pôjde do Histórie tipov ako ostatné, aj keď sa zápas už hrá alebo je po zápase. Berie sa dôvera a kurz, ktoré server zapísal pred výkopom, a platia rovnaké pravidlá (70 – 80${NB}%, kurz aspoň 1,60, kontrola 60 / 40) – čo by klientom nešlo, pôjde do sledovaných. Tip pridaný po výkope má značku „⏱ doplnené po výkope“ a do Telegramu sa neposiela. Po spustení predaja sa takéto tipy na webe nerátajú.</p>`;
+    `<p class="faint small">Zabudol si tip uložiť? Ťukni na „+ Pridať“ – tip pôjde do Histórie tipov ako ostatné, aj keď sa zápas už hrá alebo je po zápase. Berie sa dôvera a kurz, ktoré server zapísal pred výkopom, a platia rovnaké pravidlá (${WATCH_BELOW_LABEL} – 80${NB}%, kurz aspoň 1,50) – čo by klientom nešlo, pôjde do sledovaných. Tip pridaný po výkope má značku „⏱ doplnené po výkope“ a do Telegramu sa neposiela. Po spustení predaja sa takéto tipy na webe nerátajú.</p>`;
   el.querySelectorAll("[data-auto-league]").forEach((b) => {
     b.onclick = () => {
       autoLeague = b.dataset.autoLeague;
