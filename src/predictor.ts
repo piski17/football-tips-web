@@ -1583,8 +1583,9 @@ export function predictMatch(
   // Po úprave podľa trhu sa poradie tipov mohlo zmeniť.
   sortedBets.sort((a, b) => b.probability - a.probability);
 
+  // 21. 11. 2026 (Michal): „Fauly – kto viac“ (len sledované) od 60 % – kurz od 1,60 a hodnota rieši min. kurz.
   const inBand = sortedBets.filter(
-    (b) => b.probability >= MIN_PROBABILITY && b.probability <= MAX_PROBABILITY
+    (b) => b.probability >= (b.category === "viacfaulov" ? 60 : MIN_PROBABILITY) && b.probability <= MAX_PROBABILITY
   );
   // Posúdenie hodnoty podľa skutočného kurzu:
   //  - stávkovky k zápasu zatiaľ nemajú kurzy -> vyradiť (hodnota sa nedá overiť;
@@ -1743,7 +1744,7 @@ export function predictMatch(
         // Držanie lopty a fauly (fauly od 30. 10. 2026, Michal): kurz cez API nie je (API-Football má len
         // fauly hráčov), tip ide do výberu s minimálnym kurzom, ktorý Michal porovná so stávkovkou
         // (Tipsport) a kurz zadá ručne – uloží sa len pri hodnote +5 % a aspoň MIN_ODDS.
-        b.minOdds = Math.max(MIN_ODDS, Math.ceil((MIN_EXPECTED_VALUE / (b.probability / 100)) * 100) / 100);
+        b.minOdds = Math.max(b.category === "viacfaulov" ? 1.6 : MIN_ODDS, Math.ceil((MIN_EXPECTED_VALUE / (b.probability / 100)) * 100) / 100);
         pickPool.push(b);
       } else if (ev == null && oddsAvailable) {
         // Stávkovky k zápasu kurzy majú, ale tento trh (alebo túto hranicu) neponúkajú -

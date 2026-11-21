@@ -4127,7 +4127,7 @@ async function addAutoEntry(
  */
 /** 20. 11. 2026 (Michal): fauly a držanie lopty len do sledovaných. Návrat: false. */
 const FOUL_POSS_WATCH = true;
-const BOOKLINE_MIN_PROB = 55; // 20. 11. 1:07 Michal: rozdiel viac/menej aspoň 10 bodov = 55 : 45
+const BOOKLINE_MIN_PROB = 60; // 21. 11. 2026 23:41 Michal: od 60 % (predtým 55 %)
 const BOOKLINE_MIN_ODDS = 1.6;
 const AUTO_SAVE_FROM_MIN = 5;
 const AUTO_SAVE_TO_MIN = 30;

@@ -1477,7 +1477,7 @@ function wireLineCalc(r, root) {
 const BOOK_LINE_MARKET = /^(Fauly|Držanie lopty)/;
 // 20. 11. 2026 (Michal: „chcem kompromis, aby to išlo“): pri fauloch a držaní lopty so skutočným kurzom zo stávkovky
 // stačí šanca od 60 % (namiesto 70 %), ale kurz aspoň 1,60 a hodnota +5 až +25 %. Server má rovnaké pravidlo (BOOKLINE_*).
-const BOOKLINE_MIN_PROB = 55; // 20. 11. 1:07 Michal: rozdiel viac/menej aspoň 10 bodov = 55 : 45
+const BOOKLINE_MIN_PROB = 60; // 21. 11. 2026 23:41 Michal: od 60 % (predtým 55 %)
 const BOOKLINE_MIN_ODDS = 1.6;
 const BOOKLINE_OPTS = { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS, tipExtra: { bookLine: true } };
 function needsBookLine(bet) {
