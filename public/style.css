@@ -1751,3 +1751,6 @@ button.sb-cell:hover { background: rgba(255, 255, 255, .025); }
 .dtip.mini .bookline { display: none; }
 .bookline-pass { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .bookline-chip { padding: 3px 8px; border: 1px solid var(--line); border-radius: 999px; white-space: nowrap; }
+.bookline-rows { display: grid; gap: 6px; }
+.bookline-rows .bookline-f label:empty { display: none; }
+.bookline-hint { margin: 6px 0; }

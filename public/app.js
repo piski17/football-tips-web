@@ -1504,12 +1504,15 @@ function bookLineHtml(i, bet, r) {
   const pass = r ? passLinesHtml(r, bet.market) : "";
   return `<div class="bookline" data-bl="${i}">
       <div class="bookline-t small">Hranica a kurzy zo stávkovky <span class="faint">· uložený tip ide do sledovaných</span></div>
-      <div class="bookline-f">
-        <label>Hranica${poss ? " %" : ""}<input type="text" inputmode="decimal" autocomplete="off" data-bl-line value="${escapeHtml(betLineOf(bet))}" placeholder="${poss ? "napr. 55,5" : "napr. 25,5"}" /></label>
-        <label>${poss ? "Kurz a viac" : "Kurz viac ako"}<input type="text" inputmode="decimal" autocomplete="off" data-bl-over placeholder="–" /></label>
-        <label>Kurz menej ako<input type="text" inputmode="decimal" autocomplete="off" data-bl-under placeholder="–" /></label>
-        <button type="button" class="btn sm" data-bl-calc>Prepočítať</button>
+      <div class="bookline-rows">
+        ${[0, 1, 2, 3].map((k) => `<div class="bookline-f" data-bl-row="${k}">
+          <label>${k === 0 ? `Hranica${poss ? " %" : ""}` : ""}<input type="text" inputmode="decimal" autocomplete="off" data-bl-line value="${k === 0 ? escapeHtml(betLineOf(bet)) : ""}" placeholder="${poss ? "napr. 55,5" : "napr. 12,5"}" /></label>
+          <label>${k === 0 ? (poss ? "Kurz a viac" : "Kurz viac ako") : ""}<input type="text" inputmode="decimal" autocomplete="off" data-bl-over placeholder="–" /></label>
+          <label>${k === 0 ? "Kurz menej ako" : ""}<input type="text" inputmode="decimal" autocomplete="off" data-bl-under placeholder="–" /></label>
+        </div>`).join("")}
       </div>
+      <p class="faint small bookline-hint">Zadaj všetky hranice zo stávkovky naraz (nemusíš vyplniť všetky riadky). Appka vyberie tip s najväčšou dôverou.</p>
+      <button type="button" class="btn sm" data-bl-calc>Prepočítať všetky</button>
       ${pass}
       <div class="res" data-bl-out></div>
     </div>`;
@@ -1594,7 +1597,9 @@ function renderCalcRows(out, r, market, rows, onSaved, opts = {}) {
   });
   const good = rows.filter((x) => x.ok);
   if (good.length > 1 && good.every((x) => x.ev != null)) {
-    const best = good.reduce((a, b) => (b.ev > a.ev ? b : a));
+    const best = opts.bestBy === "prob"
+      ? good.reduce((a, b) => (b.probability > a.probability || (b.probability === a.probability && b.ev > a.ev) ? b : a))
+      : good.reduce((a, b) => (b.ev > a.ev ? b : a));
     rows.forEach((x) => { x.ok = x === best; });
   }
   const whyNot = (x) => {
@@ -1602,7 +1607,7 @@ function renderCalcRows(out, r, market, rows, onSaved, opts = {}) {
     if (x.odds < minOdds) return `Kurz pod ${fmtOdds(minOdds)} – neodporúčame.`;
     if (x.ev < MIN_EV) return `Kurz je na túto šancu nízky (výhodnosť ${evPct(x.ev)}) – neodporúčame.`;
     if (x.ev > MAX_EV) return `Podozrivo vysoká výhodnosť (${evPct(x.ev)}), model sa asi mýli – neodporúčame.`;
-    return "Druhá možnosť je výhodnejšia.";
+    return opts.bestBy === "prob" ? "Iná možnosť má väčšiu dôveru." : "Druhá možnosť je výhodnejšia.";
   };
   out.innerHTML = rows
     .map((x, i) => {
@@ -2207,20 +2212,28 @@ function renderDayTipsViewMain() {
       const v = parseOddsInput(box.querySelector(sel).value);
       return v != null && v > 1 && v <= 20 ? Math.round(v * 100) / 100 : null;
     };
-    // 20. 11. 2026 (Michal): viac zadaných hraníc sa porovná v jednom zozname – prešlé z predchádzajúcich
-    // prepočtov ostávajú, výhodnejší (vyššia výhodnosť) má tlačidlo Uložiť, ostatné „Druhá možnosť je výhodnejšia“.
-    let kept = [];
+    // 21. 11. 2026 (Michal): viac hraníc zo stávkovky naraz (až 4 riadky) – appka vyhodnotí všetky a uložiť
+    // sa dá len tip s najväčšou dôverou spomedzi tých, ktoré prešli (z typu ide len 1 tip).
     const passes = (x) => x.odds != null && x.probability >= BOOKLINE_MIN_PROB && x.probability <= 80 && x.odds >= BOOKLINE_MIN_ODDS
       && (x.probability / 100) * x.odds >= MIN_EV && (x.probability / 100) * x.odds <= MAX_EV;
+    const oddOf = (el) => {
+      const v = parseOddsInput(el.value);
+      return v != null && v > 1 && v <= 20 ? Math.round(v * 100) / 100 : null;
+    };
     const calc = () => {
-      const line = parseFloat(String(box.querySelector("[data-bl-line]").value).replace(",", "."));
-      const fresh = bookLineRows(item.r, item.bet.market, line, odd("[data-bl-over]"), odd("[data-bl-under]"));
-      if (typeof fresh === "string") { out.innerHTML = `<p class="faint small">${escapeHtml(fresh)}</p>`; return; }
-      if (fresh.some((x) => x.odds == null)) { out.innerHTML = `<p class="faint small">Zadaj oba kurzy – viac aj menej.</p>`; return; }
-      const sel = new Set(fresh.map((x) => x.selection));
-      const rows = [...kept.filter((x) => !sel.has(x.selection)), ...fresh];
-      kept = rows.filter(passes);
-      if (kept.length > 1) rows.sort((a, b) => (passes(b) ? 1 : 0) - (passes(a) ? 1 : 0) || (b.probability / 100) * b.odds - (a.probability / 100) * a.odds);
+      const rows = [], errs = [];
+      box.querySelectorAll("[data-bl-row]").forEach((rowEl) => {
+        const raw = String(rowEl.querySelector("[data-bl-line]").value).trim();
+        if (!raw) return;
+        const line = parseFloat(raw.replace(",", "."));
+        const fresh = bookLineRows(item.r, item.bet.market, line, oddOf(rowEl.querySelector("[data-bl-over]")), oddOf(rowEl.querySelector("[data-bl-under]")));
+        if (typeof fresh === "string") { errs.push(`${raw}: ${fresh}`); return; }
+        // ak je zadaný len jeden kurz, vyhodnotí sa len tá strana
+        fresh.filter((x) => x.odds != null).forEach((x) => { if (!rows.some((y) => y.selection === x.selection)) rows.push(x); });
+      });
+      if (!rows.length) { out.innerHTML = `<p class="faint small">${escapeHtml(errs[0] || "Zadaj aspoň jednu hranicu a kurz.")}</p>`; return; }
+      const kept = rows.filter(passes);
+      rows.sort((x, y) => (passes(y) ? 1 : 0) - (passes(x) ? 1 : 0) || y.probability - x.probability);
       renderCalcRows(out, item.r, item.bet.market, rows, (tip) => {
         // 20. 11. 2026 (Michal: „nechcem, aby to išlo pre 2“): po uložení okienko zmizne – z typu ide len 1 tip.
         box.innerHTML = `<div class="small win">✓ Uložené: ${escapeHtml(item.bet.market)} ${escapeHtml(String(tip.selection).replace(/^Over /, "viac ako ").replace(/^Under /, "menej ako ").replace(".", ","))} · kurz ${fmtOdds(tip.odds)}${tip.watchOnly ? " (len do sledovaných)" : ""}</div>`;
@@ -2229,10 +2242,11 @@ function renderDayTipsViewMain() {
         if (main) { main.disabled = true; main.textContent = "✓ Uložené"; }
         dayTipsPaneEl.querySelectorAll(`[data-odds="${i}"]`).forEach((inp) => { inp.disabled = true; });
         refreshOdds();
-      }, BOOKLINE_OPTS);
-      if (kept.length > 1) out.insertAdjacentHTML("afterbegin", `<p class="small faint">Porovnanie ${kept.length} hraníc, ktoré prešli – uložiť sa dá len výhodnejšia:</p>`);
+      }, { ...BOOKLINE_OPTS, bestBy: "prob" });
+      if (kept.length > 1) out.insertAdjacentHTML("afterbegin", `<p class="small faint">Prešlo ${kept.length} možností – uložiť sa dá tá s najväčšou dôverou (navrchu):</p>`);
+      if (errs.length) out.insertAdjacentHTML("beforeend", `<p class="faint small">${errs.map(escapeHtml).join("<br>")}</p>`);
       // tip, ktorý neprejde, sa neukladá – len krátke vysvetlenie
-      if (!out.querySelector("[data-poss]")) out.insertAdjacentHTML("beforeend", `<p class="faint small">Pri tejto hranici a kurzoch tip neprejde – klientom nejde.</p>`);
+      if (!out.querySelector("[data-poss]")) out.insertAdjacentHTML("beforeend", `<p class="faint small">Pri týchto hraniciach a kurzoch tip neprejde.</p>`);
     };
     box.querySelector("[data-bl-calc]").onclick = calc;
     box.querySelectorAll("input").forEach((inp, k, all) => {
