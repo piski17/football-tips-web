@@ -491,7 +491,7 @@ function fmtHcp(line: number): string {
 /** Hranice handicapu pre analýzu bez kurzov (z pohľadu domácich), len x,5. */
 const HCP_DEFAULT_LINES: Record<string, number[]> = {
   "Ázijský handicap": [-1.5, -0.5, 0.5, 1.5],
-  "Handicap": [-2, -1, 1, 2], // 20. 11. 2026: klasický (európsky) handicap – celé hranice, 3 možnosti
+  "Handicap": [-2.5, -1.5, -0.5, 0.5, 1.5, 2.5], // 21. 11. 2026: hranice ,5 (Barcelona −1,5 = výhra aspoň o 2)
   "Handicap – rohy": [-3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5],
   "Handicap – karty": [-1.5, -0.5, 0.5, 1.5],
   "Handicap – strely na bránu": [-2.5, -1.5, -0.5, 0.5, 1.5, 2.5],
@@ -1385,24 +1385,10 @@ export function predictMatch(
       for (let h = 0; h < grid.length; h++) for (let a = 0; a < grid[h].length; a++) if (f(h - a)) w += grid[h][a];
       return w;
     };
-    // 20. 11. 2026 (Michal: „handicapy nedávaj ázijské, ale klasické“): góly = klasický (európsky) handicap s celou hranicou,
-    // 3 možnosti – pri rozdiele presne rovnom hranici tip na tím PREHRÁ (vyhráva „remíza na handicap“). Obe strany zvlášť.
+    // 21. 11. 2026 (Michal): handicap gólov s hranicami ,5 – napr. Barcelona −1,5 = musí vyhrať aspoň o 2 góly,
+    // +1,5 = nesmie prehrať o 2 a viac. Bez remízy na handicap; kurzy z ázijského handicapu (pri ,5 je to to isté).
     const goalNote = `Očakávané góly ${fmt1(xg.home)} : ${fmt1(xg.away)}.`;
-    const euLines = hasOdds ? offeredEuHcpLines(marketOdds) : HCP_DEFAULT_LINES["Handicap"];
-    for (const L of euLines) {
-      const pH = gridSum((d) => d + L > 0), pA = gridSum((d) => d + L < 0);
-      for (const [side, p, line] of [["home", pH, L], ["away", pA, -L]] as const) {
-        if (!isFinite(p)) continue;
-        const team = side === "home" ? fixture.homeTeam.name : fixture.awayTeam.name;
-        candidates.push({
-          market: "Handicap",
-          selection: `${team} ${fmtHcp(line)}`,
-          probability: Math.round(p * 1000) / 10,
-          category: "hcp_goly",
-          explanation: `${goalNote} Handicap ${team} ${fmtHcp(line)}: ${line < 0 ? `${team} musí vyhrať aspoň o ${Math.abs(line) + 1} ${Math.abs(line) + 1 >= 5 ? "gólov" : "góly"}` : `${team} nesmie prehrať o ${line} ${line === 1 ? "gól" : line >= 5 ? "gólov" : "góly"} a viac`} (pri rozdiele presne ${Math.abs(line)} tip neprejde).${mmNote}`,
-        });
-      }
-    }
+    addHcp("Handicap", "hcp_goly", (L) => gridSum((d) => d + L > 0), goalNote);
     // Ázijský handicap gólov ostáva len v tichom sledovaní (goalMarketsTrackOnly) – z neho ho berie aj TIPREX.
     const team = (hMarket: string, aMarket: string) => {
       const hm = lineModels.find((m) => m.market === hMarket), am = lineModels.find((m) => m.market === aMarket);
@@ -1416,18 +1402,31 @@ export function predictMatch(
         return w;
       };
     };
-    const tc = team("Rohy domácich", "Rohy hostí");
-    if (tc) addHcp("Handicap – rohy", "hcp_rohy", teamJoint(tc.hm, tc.am), `Očakávané rohy ${fmt1(tc.hm.mean)} : ${fmt1(tc.am.mean)}.`);
-    const tk = team("Karty domácich", "Karty hostí");
-    if (tk) addHcp("Handicap – karty", "hcp_karty", teamJoint(tk.hm, tk.am), `Očakávané žlté karty ${fmt1(tk.hm.mean)} : ${fmt1(tk.am.mean)}.${refereeNote("cards")}`);
-    const ts = team("Strely na bránu domácich", "Strely na bránu hostí");
-    if (ts) addHcp("Handicap – strely na bránu", "hcp_strely", teamJoint(ts.hm, ts.am), `Očakávané strely na bránu ${fmt1(ts.hm.mean)} : ${fmt1(ts.am.mean)}.`);
+    // 21. 11. 2026 (Michal): rohy a „kto viac faulov“ – posledných 5 vzájomných zápasov so štatistikou (ak ich je menej,
+    // koľko ich je, ale aspoň 3), k tomu posledných 5 zápasov tímov v súťaži (odhad modelu); polovica a polovica.
+    // Pri menej ako 3 vzájomných len posledných 5 zápasov. Handicap kariet a striel zrušený (Michal 21. 11.).
+    const h2hBlendTeam = (t: { hm: LineModel; am: LineModel }, hk: keyof H2HStats, ak: keyof H2HStats) => {
+      const v = (h2hStats ?? [])
+        .filter((x) => typeof x[hk] === "number" && typeof x[ak] === "number")
+        .slice(0, 5);
+      if (v.length < 3) return { hm: t.hm, am: t.am, n: 0, h: 0, a: 0 };
+      const h = v.reduce((s2, x) => s2 + (x[hk] as number), 0) / v.length, a = v.reduce((s2, x) => s2 + (x[ak] as number), 0) / v.length;
+      return { hm: { ...t.hm, mean: (t.hm.mean + h) / 2 }, am: { ...t.am, mean: (t.am.mean + a) / 2 }, n: v.length, h, a };
+    };
+    const h2hTxt = (b: { n: number; h: number; a: number }, what: string) =>
+      b.n ? ` Vo vzájomných zápasoch (${b.n}) ${what} ${fmt1(b.h)} : ${fmt1(b.a)} – započítané napoly s posledných 5 zápasmi.` : " Vzájomných zápasov so štatistikou je menej ako 3 – len posledných 5 zápasov.";
+    const tc0 = team("Rohy domácich", "Rohy hostí");
+    if (tc0) {
+      const tc = h2hBlendTeam(tc0, "homeCorners", "awayCorners");
+      addHcp("Handicap – rohy", "hcp_rohy", teamJoint(tc.hm, tc.am), `Očakávané rohy ${fmt1(tc.hm.mean)} : ${fmt1(tc.am.mean)}.${h2hTxt(tc, "rohy v priemere")}`);
+    }
     // 21. 11. 2026 (Michal): „kto urobí viac faulov v zápase“ – tím s viac faulmi; pri rovnosti tip prehrá.
-    const tf = team("Fauly domácich", "Fauly hostí");
-    if (tf) {
+    const tf0 = team("Fauly domácich", "Fauly hostí");
+    if (tf0) {
+      const tf = h2hBlendTeam(tf0, "homeFouls", "awayFouls");
       const j = teamJoint(tf.hm, tf.am);
       const pHome = j(0), pAway = 1 - j(0.5);
-      const note = `Očakávané fauly ${fmt1(tf.hm.mean)} : ${fmt1(tf.am.mean)} (pri rovnakom počte tip neprejde).${refereeNote("fouls")}`;
+      const note = `Očakávané fauly ${fmt1(tf.hm.mean)} : ${fmt1(tf.am.mean)} (pri rovnakom počte tip neprejde).${h2hTxt(tf, "fauly v priemere")}${refereeNote("fouls")}`;
       for (const [name, p] of [[fixture.homeTeam.name, pHome], [fixture.awayTeam.name, pAway]] as const) {
         if (!isFinite(p)) continue;
         candidates.push({ market: "Fauly – kto viac", selection: name, probability: Math.round(p * 1000) / 10, category: "viacfaulov", explanation: `${note} ${name} urobí viac faulov.${mmNote}` });

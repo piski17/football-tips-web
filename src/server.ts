@@ -1150,6 +1150,10 @@ function errText(err: any): string {
  * 8. 11. 2026 (Michal): najviac 1 tip z typu na zápas (karty / karty domácich / karty hostí = jeden typ).
  * Ak už zápas má v štatistikách tip toho istého typu, nový tip sa uloží len do sledovaných (sameTypeMoved).
  */
+async function fixtureHasTip(tip: SavedTip): Promise<boolean> {
+  if ((tip.legs && tip.legs.length) || !(Number(tip.fixtureId) > 0)) return false;
+  return (await listTips()).some((t) => t.id !== tip.id && !(t.legs && t.legs.length) && t.fixtureId === tip.fixtureId);
+}
 async function applySameTypeRule(tip: SavedTip): Promise<boolean> {
   if ((tip.legs && tip.legs.length) || tip.watchOnly || !(Number(tip.fixtureId) > 0)) return false;
   const cat = marketCategory(tip.market);
@@ -1251,6 +1255,11 @@ app.post("/api/tips", async (req, res) => {
       tip.lateAdd = true;
       tip.lateFromAnalysis = true;
       tip.strongOfDay = undefined;
+    }
+    // 21. 11. 2026 22:30 (Michal): druhý tip zo zápasu sa vôbec neuloží – zo zápasu ide len 1 tip.
+    if (ONE_TIP_PER_MATCH && await fixtureHasTip(tip)) {
+      res.status(409).json({ error: "Z tohto zápasu už je uložený tip – zo zápasu ide len 1 tip (s najväčšou dôverou)." });
+      return;
     }
     await applySameTypeRule(tip);
     // 12. 11. 2026: skúška pásma 65 – 80 % – tip 65 – 69 %, ktorý ide klientom, dostane značku (na vyhodnotenie / návrat).
@@ -4041,6 +4050,9 @@ async function addAutoEntry(
   const tips = await listTips();
   if (tips.some((t) => t.autoId === entry.id || (!(t.legs && t.legs.length) && t.fixtureId === entry.fixtureId && t.market === entry.market && t.selection === entry.selection))) {
     return { status: 409, error: "Tento tip už v Histórii tipov je." };
+  }
+  if (ONE_TIP_PER_MATCH && tips.some((t) => !(t.legs && t.legs.length) && Number(t.fixtureId) > 0 && t.fixtureId === entry.fixtureId)) {
+    return { status: 409, error: "Z tohto zápasu už je uložený tip – zo zápasu ide len 1 tip." };
   }
   // Kurz: ten, ktorý server zapísal pred výkopom. Len pri trhoch bez kurzu v API (napr. fauly) ho treba zadať.
   const typed = Number(String(typedOddsRaw ?? "").replace(",", "."));

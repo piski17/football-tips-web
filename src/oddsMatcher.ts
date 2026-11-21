@@ -246,6 +246,7 @@ export const HCP_MARKETS: Record<string, HcpKind> = {
   "Ázijský handicap – karty": "cards",
   "Ázijský handicap – strely na bránu": "shots",
   // 20. 11. 2026 (TipRadar, Michal: „klasické handicapy“): pri polovičných hraniciach je klasický = ázijský, kurzy z tých istých stávok.
+  "Handicap": "goals", // 21. 11. 2026: handicap gólov s hranicami ,5 (celé hranice = starý európsky)
   "Handicap – rohy": "corners",
   "Handicap – karty": "cards",
   "Handicap – strely na bránu": "shots",
@@ -350,7 +351,7 @@ export function findOdds(
     return best(odds.filter((o) => /^match winner$/i.test(o.bet.trim()) && o.value.trim().toLowerCase() === want));
   }
 
-  if (pick.market === "Handicap") {
+  if (pick.market === "Handicap" && Number.isInteger(parseHcpSelection(pick.selection, homeTeam, awayTeam)?.line ?? 0.5)) {
     const h = parseHcpSelection(pick.selection, homeTeam, awayTeam);
     return h ? findEuHcpOdds(odds, h.side, h.side === "home" ? h.line : -h.line) : null;
   }
@@ -420,7 +421,7 @@ function opposingOdds(
     others = [`Výhra ${homeTeam}`, "Remíza", `Výhra ${awayTeam}`]
       .filter((sel) => sel !== pick.selection)
       .map((sel) => findOdds(odds, { market: pick.market, selection: sel }, homeTeam, awayTeam));
-  } else if (pick.market === "Handicap") {
+  } else if (pick.market === "Handicap" && Number.isInteger(parseHcpSelection(pick.selection, homeTeam, awayTeam)?.line ?? 0.5)) {
     const h = parseHcpSelection(pick.selection, homeTeam, awayTeam);
     if (h) {
       const L = h.side === "home" ? h.line : -h.line;
