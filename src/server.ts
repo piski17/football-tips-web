@@ -218,24 +218,15 @@ const TIPREX_EXTRA_LEAGUES: { id: number; name: string; country: string }[] = [
   { id: 262, name: "Liga MX", country: "Mexiko" },
   { id: 307, name: "Pro League", country: "Saudská Arábia" },
   { id: 98, name: "J1 League", country: "Japonsko" },
-  // 22. 11. 2026: súťaže vyradené z TipRadaru ostávajú TIPREX-u (TIPREX funguje, Michal ho nechcel meniť).
-  { id: 88, name: "Eredivisie", country: "Holandsko" },
-  { id: 144, name: "Jupiler Pro League", country: "Belgicko" },
-  { id: 203, name: "Süper Lig", country: "Turecko" },
-  { id: 119, name: "Superliga", country: "Dánsko" },
-  { id: 179, name: "Premiership", country: "Škótsko" },
-  { id: 141, name: "Segunda División", country: "Španielsko" },
-  { id: 62, name: "Ligue 2", country: "Francúzsko" },
 ];
 
 const LEAGUE_PRESETS: LeaguePreset[] = [
-  // 22. 11. 2026 0:25 (Michal): ODSTRÁNENÉ Eredivisie, Belgicko, Turecko, Dánsko, Škótsko, Segunda División, Ligue 2 –
-  // 10 súťaží; ich tipy sa nerátajú (isRemovedLeagueTip), v databáze ostávajú. Návrat = vrátiť riadok.
+  // 22. 11. 2026 0:25 Michal 7 súťaží vyradil, o 0:27 VRÁTIL aj s tipmi – 17 súťaží.
   // 10. 11. 2026 (Michal): + ženská Liga majstrov (525) a Liga národov (5) – 18 súťaží.
   // 8. 11. 2026 22:16 (Michal): Rumunská Liga I ODSTRÁNENÁ – 16 súťaží; jej tipy sa nerátajú (HIDE_REMOVED_LEAGUE_TIPS).
-  // 5. 11. 2026 19:45 (Michal): Európska liga a Konferenčná liga ODSTRÁNENÉ – späť 10 súťaží (ich tipy sa nerátajú, HIDE_REMOVED_LEAGUE_TIPS).
-  // 2. 11. 2026 15:15 (Michal): vrátených všetkých 10 súťaží (ráno skúšobne 10).
-  // 30. 10. 2026 večer (Michal): 10 súťaží – pribudlo 5 najvyšších líg Belgicko, Turecko, Dánsko,
+  // 5. 11. 2026 19:45 (Michal): Európska liga a Konferenčná liga ODSTRÁNENÉ – späť 17 súťaží (ich tipy sa nerátajú, HIDE_REMOVED_LEAGUE_TIPS).
+  // 2. 11. 2026 15:15 (Michal): vrátených všetkých 17 súťaží (ráno skúšobne 10).
+  // 30. 10. 2026 večer (Michal): 17 súťaží – pribudlo 5 najvyšších líg Belgicko, Turecko, Dánsko,
   // Škótsko, Rumunsko (v Trhoch v ligách 5/7 trhov), tipy normálne medzi odporúčané.
   // 30. 10. 2026 dopoludnia (Michalovo rozhodnutie, podľa nástroja Trhy v ligách): 12 súťaží – 7 najvyšších líg,
   // 4 druhé ligy a Liga majstrov. Belgicko, Škótsko a Serie B vyradené (Serie B má kurzy len na góly).
@@ -246,15 +237,22 @@ const LEAGUE_PRESETS: LeaguePreset[] = [
   { id: 135, name: "Serie A", country: "Taliansko" },
   { id: 78, name: "Bundesliga", country: "Nemecko" },
   { id: 61, name: "Ligue 1", country: "Francúzsko" },
+  { id: 88, name: "Eredivisie", country: "Holandsko" },
   { id: 94, name: "Primeira Liga", country: "Portugalsko" },
+  { id: 144, name: "Jupiler Pro League", country: "Belgicko" },
+  { id: 203, name: "Süper Lig", country: "Turecko" },
+  { id: 119, name: "Superliga", country: "Dánsko" },
+  { id: 179, name: "Premiership", country: "Škótsko" },
   { id: 40, name: "Championship", country: "Anglicko" },
   { id: 79, name: "2. Bundesliga", country: "Nemecko" },
+  { id: 141, name: "Segunda División", country: "Španielsko" },
+  { id: 62, name: "Ligue 2", country: "Francúzsko" },
   { id: 2, name: "UEFA Champions League", country: "Európa" },
   // 10. 11. 2026 (Michal): pridaná ženská Liga majstrov a znova Liga národov – 18 súťaží.
   // Liga národov bola 6. 10. 2026 odstránená; jej staré tipy (pred 10. 11.) sa nerátajú (since).
   // Bežné pravidlá platia: tím s <3 zápasmi v sezóne súťaže sa neodporúča, pri <5 kurz aspoň od 2 stávkoviek,
   // tip len so skutočným kurzom stávkoviek.
-  // 18. 11. 2026 23:21 (Michal): ženská Liga majstrov (525) VYRADENÁ – 3 tipy, 2 nevyšli; jej tipy sa nerátajú (isRemovedLeagueTip). 10 súťaží.
+  // 18. 11. 2026 23:21 (Michal): ženská Liga majstrov (525) VYRADENÁ – 3 tipy, 2 nevyšli; jej tipy sa nerátajú (isRemovedLeagueTip). 17 súťaží.
   { id: 5, name: "UEFA Nations League", country: "Európa", since: "2026-11-10" },
 ];
 
@@ -2589,7 +2587,7 @@ app.post("/api/analyza", async (req, res) => {
 });
 
 // ---- „Opýtajte sa radaru“ v Telegram bote (17. 11. 2026, Michal) ----
-// Človek napíše botovi zápas alebo tím, server nájde najbližší zápas (dnes + 3 dni, našich 10 súťaží),
+// Človek napíše botovi zápas alebo tím, server nájde najbližší zápas (dnes + 3 dni, našich 17 súťaží),
 // spustí model bez zápisu (record = false) a vráti čísla. Konkrétny tip neprezradí – ten dostávajú členovia.
 const RADAR_DAILY_LIMIT = 15;
 // 17. 11. 23:20: hľadanie cez všetky zápasy dňa (jedna požiadavka na deň), 7 dní dopredu; zápas mimo našich súťaží → vysvetlenie.
@@ -2688,14 +2686,14 @@ setAskRadarHandler(async (text, chatId): Promise<AskRadarAnswer> => {
     const m = `${translateTeamName(fixture.homeTeam.name)} – ${translateTeamName(fixture.awayTeam.name)}`;
     return {
       kind: "notfound",
-      text: `🔎 Našiel som <b>${escapeHtml(m)}</b> (${escapeHtml(String(fixture.league?.name ?? ""))}), ale túto súťaž radar nesleduje – nemá pre ňu dosť spoľahlivé čísla.\n\nRadar sleduje 10 súťaží: top 5 líg, Ligu majstrov, Ligu národov, Niké ligu, Chance Ligu a ďalšie. Skúste zápas z nich, napríklad <i>Arsenal – Chelsea</i>.`,
+      text: `🔎 Našiel som <b>${escapeHtml(m)}</b> (${escapeHtml(String(fixture.league?.name ?? ""))}), ale túto súťaž radar nesleduje – nemá pre ňu dosť spoľahlivé čísla.\n\nRadar sleduje 17 súťaží: top 5 líg, Ligu majstrov, Ligu národov, Niké ligu, Chance Ligu a ďalšie. Skúste zápas z nich, napríklad <i>Arsenal – Chelsea</i>.`,
     };
   }
   if (!fixture) {
     if (!looksLikeMatch) return { kind: "none" };
     return {
       kind: "notfound",
-      text: `🔎 Tento zápas som v najbližších 7 dňoch nenašiel.\n\nRadar sleduje 10 súťaží (top 5 líg, Portugalsko, Championship, 2. Bundesliga, Liga majstrov a Liga národov). Skúste napísať názvy tímov inak, napríklad <i>Arsenal – Chelsea</i>.`,
+      text: `🔎 Tento zápas som v najbližších 7 dňoch nenašiel.\n\nRadar sleduje 17 súťaží (top 5 líg, Liga majstrov, Niké liga, Chance Liga a ďalšie). Skúste napísať názvy tímov inak, napríklad <i>Arsenal – Chelsea</i>.`,
     };
   }
   const day = dayKeySk(new Date());
