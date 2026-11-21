@@ -2470,6 +2470,7 @@ function renderTipsList(rawTips) {
   void renderWatchOverview(watchTips, statTips);
   renderTipRows(tips);
   renderEv10(statTips);
+  renderConf72(statTips);
   renderFoldSums(statTips, watchTips);
   renderTipsCountNote(tips, statTips, removedLeagueCount);
 }
@@ -5643,6 +5644,31 @@ document.getElementById("dnesSendBtn")?.addEventListener("click", () => openSend
 // Skúška „hodnota od +10 %“ (17. 11. 2026, Michal): klientom ide ďalej hranica +5 %, tu sa ticho porovnáva,
 // ako by dopadli len tipy s hodnotou aspoň +10 % (pravdepodobnosť × kurz ≥ 1,10). Od 17. 11. 2026.
 const EV10_SINCE = "2026-11-17";
+// 22. 11. 2026 (Michal): ako by vyzerali štatistiky len s tipmi od 72 % (od 22. 11. 0:42 nová hranica pre nové tipy).
+// Len porovnanie – nič sa nepresúva, tipy 70 – 72 % ostávajú v štatistikách.
+function renderConf72(statTips) {
+  const box = document.getElementById("conf72Result");
+  if (!box) return;
+  const sumEl = document.querySelector('[data-fold-sum="dovera72"]');
+  const fmt2 = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(2).replace(".", ",");
+  const all = statTips.filter((t) => !(t.legs && t.legs.length) && typeof t.probability === "number");
+  const grp = (list) => {
+    const done = list.filter((t) => t.status === "won" || t.status === "lost");
+    const won = done.filter((t) => t.status === "won").length;
+    const withOdds = done.filter((t) => typeof t.odds === "number" && t.odds > 1);
+    const profit = withOdds.reduce((a, t) => a + (t.status === "won" ? t.odds - 1 : -1), 0);
+    const avgOdds = withOdds.length ? withOdds.reduce((a, t) => a + t.odds, 0) / withOdds.length : null;
+    return { n: done.length, won, profit, avgOdds, pending: list.filter((t) => t.status === "pending").length };
+  };
+  const hi = grp(all.filter((t) => t.probability >= 72));
+  const lo = grp(all.filter((t) => t.probability < 72));
+  const tot = grp(all);
+  const line = (label, g) => `<tr><td>${label}</td><td>${g.n}</td><td>${g.n ? `${g.won} (${Math.round((g.won / g.n) * 100)}${NB}%)` : "–"}</td><td>${g.avgOdds ? g.avgOdds.toFixed(2).replace(".", ",") : "–"}</td><td class="${g.profit > 0 ? "g" : g.profit < 0 ? "l" : ""}">${g.n ? fmt2(g.profit) + " j." : "–"}</td><td>${g.pending || ""}</td></tr>`;
+  if (sumEl) sumEl.textContent = hi.n ? `od 72 %: ${hi.n} tipov · ${Math.round((hi.won / hi.n) * 100)}${NB}% · ${fmt2(hi.profit)} j.` : "Všetky tipy v štatistikách";
+  box.innerHTML = `<p class="muted small">Všetky tipy zo štatistík (ako na webe). Od 22. 11. 2026 idú klientom len nové tipy od 72${NB}%; staré tipy 70 – 72${NB}% ostávajú v štatistikách – tu je len porovnanie. Zisk pri vklade 1 jednotka na tip.</p>
+  <table class="bt-table"><thead><tr><th></th><th>Vyhodnotené</th><th>Vyšlo</th><th>Priem. kurz</th><th>Zisk</th><th>Čaká</th></tr></thead><tbody>
+  ${line("Dôvera od 72 %", hi)}${line("Dôvera pod 72 % (by vypadli)", lo)}${line("Všetky tipy v štatistikách", tot)}</tbody></table>`;
+}
 function renderEv10(statTips) {
   const box = document.getElementById("ev10Result");
   if (!box) return;
