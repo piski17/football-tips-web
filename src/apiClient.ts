@@ -1048,9 +1048,6 @@ export async function getFixtureCornersAndCards(
   cornersByTeam?: { team: string; value: number }[] | null;
   /** Žlté karty a strely na bránu jednotlivých tímov (domáci, hostia). */
   cardsByTeam?: { team: string; value: number }[] | null;
-  /** 22. 11. 2026 (TIPREX): všetky karty (žlté + červené) – zahraničné stávkovky rátajú aj červené. */
-  cardsAll?: number | null;
-  cardsAllByTeam?: { team: string; value: number }[] | null;
   shotsByTeam?: { team: string; value: number }[] | null;
   /** Fauly jednotlivých tímov (domáci, hostia). */
   foulsByTeam?: { team: string; value: number }[] | null;
@@ -1109,19 +1106,24 @@ export async function getFixtureCornersAndCards(
       return out.length === 2 ? out : null;
     };
 
+    // 22. 11. 2026 (Michal – Bahia – Coritiba 5 žltých, appka 4): API v štatistikách druhú žltú ráta ako červenú.
+    // Pri červenej sa druhé žlté pripočítajú zo zoznamu udalostí; priama červená sa nepočíta.
+    let cardsByTeam = byTeam("Yellow Cards", true);
+    let secondYellows = 0;
+    if ((totals.cardsRed ?? 0) > 0) {
+      const sy = await getFixtureSecondYellows(fixtureId);
+      if (sy) {
+        secondYellows = [...sy.values()].reduce((a, b) => a + b, 0);
+        if (cardsByTeam) cardsByTeam = cardsByTeam.map((x) => ({ team: x.team, value: x.value + (sy.get(x.team) ?? 0) }));
+      }
+    }
     return {
-      cardsByTeam: byTeam("Yellow Cards", true),
-      cardsAllByTeam: (() => {
-        const y = byTeam("Yellow Cards", true), r = byTeam("Red Cards", true);
-        if (!y) return null;
-        return y.map((x) => ({ team: x.team, value: x.value + (r?.find((z) => z.team === x.team)?.value ?? 0) }));
-      })(),
-      cardsAll: found.cardsYellow || found.cardsRed ? (totals.cardsYellow ?? 0) + (totals.cardsRed ?? 0) : null,
+      cardsByTeam,
       shotsByTeam: byTeam("Shots on Goal", false),
       foulsByTeam: byTeam("Fouls", false),
       corners: found.corners ? totals.corners : null,
       // Karty = len žlté (od 17. 10. 2026); bez žltých, no s červenou = 0 žltých.
-      cards: found.cardsYellow || found.cardsRed ? totals.cardsYellow ?? 0 : null,
+      cards: found.cardsYellow || found.cardsRed ? (totals.cardsYellow ?? 0) + secondYellows : null,
       shotsOnGoal: found.shotsOnGoal ? totals.shotsOnGoal : null,
       fouls: found.fouls ? totals.fouls : null,
       offsides: found.offsides ? totals.offsides : null,
@@ -1153,6 +1155,28 @@ export async function getFixtureYellowCardHalves(fixtureId: number): Promise<{ f
       else if (min <= 90) second++;
     }
     return { first, second };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Druhé žlté karty podľa tímu (22. 11. 2026, Michal – Bahia – Coritiba: 5 žltých, API v štatistikách 4,
+ * lebo druhú žltú zapisuje ako červenú). Priama červená sa nepočíta. null = udalosti nie sú.
+ */
+export async function getFixtureSecondYellows(fixtureId: number): Promise<Map<string, number> | null> {
+  try {
+    const res = await client().get("/fixtures/events", { params: { fixture: fixtureId } });
+    checkApiErrors(res.data);
+    const events: any[] = res.data?.response ?? [];
+    if (!events.length) return null;
+    const out = new Map<string, number>();
+    for (const e of events) {
+      if (String(e?.type).toLowerCase() !== "card" || !/^second yellow/i.test(String(e?.detail ?? "").trim())) continue;
+      const team = String(e?.team?.name ?? "");
+      if (team) out.set(team, (out.get(team) ?? 0) + 1);
+    }
+    return out;
   } catch {
     return null;
   }

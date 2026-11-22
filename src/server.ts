@@ -3903,7 +3903,7 @@ setInterval(() => void runAutoAnalysis().catch((err) => console.error("Automatic
 setTimeout(() => void runAutoAnalysis().catch(() => {}), 60 * 1000);
 setInterval(() => void settleMarketPredictions().catch(() => {}), 15 * 60 * 1000);
 setInterval(() => void settleTiprex().catch(() => {}), 15 * 60 * 1000);
-setTimeout(() => void resettleTiprexCardsOnce().then((n) => { if (n) console.log(`TIPREX karty prepočítané so žltými aj červenými: ${n}`); }).catch((e) => console.error("TIPREX prepočet kariet zlyhal:", e)), 60 * 1000);
+setTimeout(() => void resettleTiprexCardsOnce().then((n) => { if (n) console.log(`TIPREX karty prepočítané aj s druhými žltými: ${n}`); }).catch((e) => console.error("TIPREX prepočet kariet zlyhal:", e)), 60 * 1000);
 
 // TIPREX – ďalšie súťaže (18. 11. 2026): rovnaký postup ako runAutoAnalysis (~65 min pred výkopom), ale výsledok ide
 // LEN do TIPREXU – nič sa nezapisuje do automatických tipov, sledovania trhov ani štatistík TipRadaru.
