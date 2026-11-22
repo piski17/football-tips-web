@@ -1754,3 +1754,70 @@ button.sb-cell:hover { background: rgba(255, 255, 255, .025); }
 .bookline-rows { display: grid; gap: 6px; }
 .bookline-rows .bookline-f label:empty { display: none; }
 .bookline-hint { margin: 6px 0; }
+
+/* ===================== TABUĽA (22. 11. 2026, Michal: „oprav aj vzhľad“ appky podľa nového webu tipradar.eu) =====================
+   Farby Šampanské ostávajú, písmo IBM Plex Sans ako web, večerný štadión v pozadí (reflektory),
+   štítky so zlatými čiarkami po stranách, výsledková tabuľa so zlatým okrajom a zlatými číslami, karty zaoblené 22 – 26 px.
+   Návrat: odstrániť tento blok + v index.html vrátiť písmo Outfit/DM Sans. */
+:root {
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --display: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --serif: "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Sans", system-ui, sans-serif;
+  --tb-line: rgba(244,238,227,.08); --tb-line2: rgba(244,238,227,.16);
+  --tb-grad: linear-gradient(120deg, #F1E0BC 0%, #D6B67A 50%, #A8874E 100%);
+  --tb-num: linear-gradient(180deg, #FBF1DC 10%, #D9BF8C 60%, #B08F55);
+}
+body { font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+h1, h2, h3, h4, .top h2, h3.sh, .modal h3, .dn-big, .splash-word, .lx-logo span { font-family: var(--sans) !important; font-weight: 600; letter-spacing: -.02em; }
+
+/* večerný štadión v pozadí: dva reflektory + teplá žiara pri spodku */
+.lights { background: radial-gradient(70% 45% at 50% 105%, rgba(217,191,140,.08), transparent 70%), linear-gradient(#0A0908, #0F0D0B 60%) !important; }
+.lights::before, .lights::after { content: "" !important; position: absolute !important; top: -10% !important; width: 70% !important; height: 120% !important; border-radius: 0 !important; border: 0 !important;
+  -webkit-mask: none !important; mask: none !important; opacity: .8 !important; animation: tbFlick 8s ease-in-out infinite !important; }
+.lights::before { left: -18% !important; right: auto !important; background: conic-gradient(from 140deg at 0% 0%, transparent 0deg, rgba(255,236,200,.07) 12deg, rgba(255,236,200,.015) 30deg, transparent 40deg) !important; }
+.lights::after { right: -18% !important; left: auto !important; background: conic-gradient(from 180deg at 100% 0%, transparent 0deg, rgba(255,236,200,.015) 10deg, rgba(255,236,200,.07) 28deg, transparent 40deg) !important; animation-delay: -4s !important; }
+@keyframes tbFlick { 0%, 100% { opacity: .8; } 50% { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { .lights::before, .lights::after { animation: none !important; } }
+
+/* štítky ako na webe: zlaté čiarky po oboch stranách (namiesto kosoštvorca) */
+.top h2::before { display: block !important; padding-left: 38px !important; font: 600 10.5px/1 var(--sans) !important; letter-spacing: .22em !important; background: linear-gradient(rgba(217,191,140,.6), rgba(217,191,140,.6)) no-repeat 0 50% / 26px 1px !important; }
+.dn-hello { display: inline-flex !important; align-items: center; gap: 12px; padding-left: 0 !important; background: none !important; font: 600 11.5px/1 var(--sans) !important; letter-spacing: .22em !important; color: #D9BF8C !important; }
+.dn-hello::before, .dn-hello::after { content: "" !important; display: block !important; width: 26px; height: 1px; background: rgba(217,191,140,.5); }
+
+/* výsledková tabuľa dňa: zlatý okraj prechodom, jemná žiara zhora */
+.sb { position: relative; border: 1px solid transparent !important; border-radius: 26px !important;
+  background: radial-gradient(90% 140% at 50% 0%, rgba(217,191,140,.10), transparent 60%) padding-box, linear-gradient(#1A1714, #110F0D) padding-box,
+    linear-gradient(140deg, rgba(241,224,188,.55), rgba(217,191,140,.08) 35%, rgba(217,191,140,.05) 65%, rgba(241,224,188,.4)) border-box !important;
+  box-shadow: 0 40px 80px -40px rgba(0,0,0,.95), 0 0 70px -34px rgba(217,191,140,.3) !important; }
+.sb-date b, .sb-count b { background: var(--tb-num) !important; -webkit-background-clip: text !important; background-clip: text !important; color: transparent !important; -webkit-text-fill-color: transparent; letter-spacing: -.045em !important; font-weight: 600 !important; }
+.dn-big em { font-style: normal !important; background: var(--tb-grad) !important; -webkit-background-clip: text !important; background-clip: text !important; color: transparent !important; -webkit-text-fill-color: transparent !important; }
+
+/* pás Včera / Mesiac / Členovia ako tabuľa na webe */
+.sb-strip { border: 1px solid transparent !important; border-radius: 24px !important;
+  background: linear-gradient(#1A1714, #13110E) padding-box, linear-gradient(140deg, rgba(241,224,188,.35), rgba(217,191,140,.06) 40%, rgba(241,224,188,.25)) border-box !important; }
+.sb-cell small { font-size: 11px !important; letter-spacing: .2em !important; }
+.sb-cell b { font-family: var(--sans) !important; font-weight: 600 !important; letter-spacing: -.04em !important; }
+.sb-cell:not(.g):not(.l) b { background: var(--tb-num); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
+.sb-cell.g b { background: linear-gradient(180deg, #C9F2DA 10%, #7FC8A0 70%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.sb-cell.l b { background: linear-gradient(180deg, #F6C6BC 10%, #E0897A 70%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.sb-cell + .sb-cell { border-right-color: var(--tb-line) !important; }
+
+/* karty a panely: zaoblenejšie, tenká čiara, zlatý okraj pri prechode */
+.card, .tip, .dtip, .tool, .kpi, .gar-card, .intro-card, .adv, .league-group, .fold-tile, .dt-promo, .dn-ticket, .tl, .dn-stat { border-radius: 22px !important; border-color: var(--tb-line) !important; }
+.card:hover, .dtip:hover, .dn-ticket:hover, .tool:hover, .fold-tile:hover { border-color: rgba(217,191,140,.28) !important; }
+.modal { border-radius: 24px !important; }
+
+/* tlačidlá: zlatý prechod + prstencový obrys ako na webe */
+.btn { font-family: var(--sans) !important; font-weight: 600 !important; letter-spacing: 0 !important; }
+.btn.ghost { box-shadow: inset 0 0 0 1px var(--tb-line2) !important; }
+.btn.ghost:hover { box-shadow: inset 0 0 0 1px rgba(244,238,227,.4) !important; }
+
+/* bežiaca lišta Dnes */
+.tk { border-radius: 999px !important; border: 1px solid var(--tb-line) !important; background: rgba(26,23,20,.8) !important; overflow: hidden; }
+.tk-lbl { border-radius: 999px 0 0 999px !important; background: var(--tb-grad) !important; letter-spacing: .2em !important; }
+
+/* menu vľavo a spodná lišta */
+.nav a.on, .tabbar a.on { background: var(--tb-grad) !important; box-shadow: 0 1px 0 rgba(255,255,255,.4) inset, 0 12px 26px -16px rgba(214,182,122,.8) !important; }
+::selection { background: #D9BF8C; color: #17120A; }
+:focus-visible { outline: 2px solid #D9BF8C; outline-offset: 3px; }
