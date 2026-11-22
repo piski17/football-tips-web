@@ -34,9 +34,13 @@
 <link rel="apple-touch-icon" href="/favicon-256.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&amp;family=Doto:wght@700;900&amp;display=swap" rel="stylesheet" />
 <style>
-/* ===================== KLUB (22. 11. 2026) – tipradar.eu znova od základu =====================
+/* ===================== TABUĽA (22. 11. 2026 ~1:00) – tipradar.eu tretíkrát od základu =====================
+   Michal 22. 11. 0:01: „urob mi kompletne nový web, niečo špeciálne“. Večerný štadión: reflektory, ihrisko v perspektíve
+   s letiacou loptou, svetelná tabuľa (písmo Doto) s živými číslami, príbeh tipu pri posúvaní (mobil sa napĺňa správami),
+   VIP karta, ktorá sa nakláňa za myšou. Farby Šampanské + LED jantár #FFC861, písmo IBM Plex Sans (+ Doto len na číslach).
+   Predtým (KLUB, 22. 11. 0:30):
    Michal 21. 11. 23:12: „sprav mi úplne nový web“. Nahrádza rozloženie Signál (radar, ostré rohy, mono štítky).
    Farby ostávajú ŠAMPANSKÉ (Michal 21. 11. 11:32: „farby ako boli predtým“), písmo IBM Plex Sans („profesionálnejšie“).
    Nové: logo v strede menu, úvod na stred, pás posledných tipov (bežia dookola), mobil so správou z Telegramu,
@@ -55,8 +59,7 @@
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
 html, body { margin: 0; background: var(--bg); }
 body { color: var(--text); font: 400 16px/1.65 var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
-body::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 900px; z-index: -1; pointer-events: none;
-  background: radial-gradient(50% 60% at 50% 0%, rgba(217,191,140,.16), transparent 70%); }
+
 img, svg { display: block; max-width: 100%; }
 a { color: inherit; text-decoration: none; }
 button, input, select, textarea { font: inherit; color: inherit; }
@@ -90,24 +93,23 @@ p { margin: 0; }
 .btn:disabled { opacity: .6; cursor: default; transform: none; }
 .panel { background: var(--card); border: 1px solid var(--line); border-radius: 24px; }
 
-/* ================= MENU – logo v strede ================= */
+/* ================= MENU ================= */
 .nav { position: fixed; inset: 0 0 auto; z-index: 50; transition: background .3s, border-color .3s; border-bottom: 1px solid transparent; }
-.scrolled .nav, .menu-open .nav { background: rgba(15,13,11,.88); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-color: var(--line); }
-.nav-in { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; height: 76px; gap: 20px; }
-.links { display: flex; gap: 2px; }
-.links.r { justify-content: flex-end; }
+.scrolled .nav, .menu-open .nav { background: rgba(10,9,8,.86); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-color: var(--line); }
+.nav-in { display: flex; align-items: center; height: 74px; gap: 20px; }
+.links { display: flex; gap: 2px; margin-left: auto; }
 .links a { padding: 8px 13px; border-radius: 999px; font-size: 14.5px; color: var(--muted); transition: color .2s, background .2s; white-space: nowrap; }
 .links a:hover { color: var(--text); }
 .links a.active { color: var(--gold); background: var(--goldDim); }
-.brand { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.brand svg { width: 30px; height: 30px; }
-.brand span { font-size: 15px; font-weight: 600; letter-spacing: .26em; text-transform: uppercase; line-height: 1; }
-.burger { display: none; justify-self: end; width: 44px; height: 44px; border-radius: 50%; border: 0; background: transparent; box-shadow: inset 0 0 0 1px var(--line2); cursor: pointer; }
+.brand { display: inline-flex; align-items: center; gap: 12px; }
+.brand svg { width: 32px; height: 32px; }
+.brand span { font-size: 15px; font-weight: 600; letter-spacing: .24em; text-transform: uppercase; line-height: 1; }
+.burger { display: none; margin-left: auto; width: 44px; height: 44px; border-radius: 50%; border: 0; background: transparent; box-shadow: inset 0 0 0 1px var(--line2); cursor: pointer; }
 .burger i { display: grid; gap: 5px; width: 18px; margin: auto; }
 .burger span { display: block; height: 1.6px; background: var(--text); transition: transform .25s; }
 .menu-open .burger span:first-child { transform: translateY(3.3px) rotate(45deg); }
 .menu-open .burger span:last-child { transform: translateY(-3.3px) rotate(-45deg); }
-.overlay { position: fixed; inset: 76px 0 0; z-index: 49; background: var(--bg); padding: 14px 22px 30px; display: none; flex-direction: column; overflow-y: auto; }
+.overlay { position: fixed; inset: 74px 0 0; z-index: 49; background: var(--bg); padding: 14px 22px 30px; display: none; flex-direction: column; overflow-y: auto; }
 .menu-open .overlay { display: flex; }
 .menu-open body { overflow: hidden; }
 .ov-links { list-style: none; margin: 0; padding: 0; }
@@ -118,24 +120,44 @@ p { margin: 0; }
 .ov-foot .btn { flex: 1; }
 .ic { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; color: var(--muted); box-shadow: inset 0 0 0 1px var(--line2); }
 .ic svg { width: 19px; height: 19px; }
-@media (max-width: 1080px) { .links { display: none; } .nav-in { grid-template-columns: 44px 1fr 44px; } .brand { grid-column: 2; } .burger { display: block; grid-column: 3; } }
+@media (max-width: 1080px) { .links { display: none; } .burger { display: block; } }
 
-/* ================= ÚVOD ================= */
-.hero { padding: 168px 0 0; text-align: center; }
-.badge { display: inline-flex; align-items: center; gap: 10px; padding: 8px 16px; border-radius: 999px; background: var(--goldDim); box-shadow: inset 0 0 0 1px rgba(217,191,140,.25); font-size: 13px; color: var(--gold2); }
-.badge i { width: 7px; height: 7px; border-radius: 50%; background: var(--win); animation: ping 2s infinite; }
-@keyframes ping { 0% { box-shadow: 0 0 0 0 rgba(127,200,160,.55); } 70%, 100% { box-shadow: 0 0 0 9px rgba(127,200,160,0); } }
-.hero h1 { font-size: clamp(36px, 5.2vw, 62px); max-width: 900px; margin: 28px auto 0; letter-spacing: -.03em; line-height: 1.08; }
-.hero .lead { margin-top: 22px; max-width: 620px; }
-.hero .cta { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-top: 36px; }
-.score { display: grid; grid-template-columns: repeat(3, 1fr); max-width: 820px; margin: 64px auto 0; border-radius: 24px; background: linear-gradient(180deg, rgba(217,191,140,.08), rgba(217,191,140,.02)); box-shadow: inset 0 0 0 1px rgba(217,191,140,.22); }
-.score > div { padding: 26px 16px; }
-.score > div + div { border-left: 1px solid rgba(217,191,140,.16); }
-.score b { display: block; font-size: clamp(28px, 3.4vw, 40px); font-weight: 600; letter-spacing: -.03em; line-height: 1; }
-.score small { display: block; margin-top: 10px; font-size: 13.5px; color: var(--muted); }
-.score-cap { margin-top: 14px; font-size: 13px; color: var(--faint); }
+/* ================= ÚVOD – večerný štadión ================= */
+.hero { position: relative; padding: 150px 0 0; overflow: hidden; isolation: isolate; }
+.stadium { position: absolute; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(70% 55% at 50% 100%, rgba(217,191,140,.10), transparent 70%), linear-gradient(#0A0908, #0F0D0B 70%); }
+.beam { position: absolute; top: -10%; width: 70%; height: 120%; opacity: .9; animation: flick 7s ease-in-out infinite; }
+.beam.b1 { left: -18%; background: conic-gradient(from 140deg at 0% 0%, transparent 0deg, rgba(255,236,200,.10) 12deg, rgba(255,236,200,.02) 30deg, transparent 40deg); }
+.beam.b2 { right: -18%; background: conic-gradient(from 180deg at 100% 0%, transparent 0deg, rgba(255,236,200,.02) 10deg, rgba(255,236,200,.10) 28deg, transparent 40deg); animation-delay: -3s; }
+.lamp { position: absolute; top: 18px; width: 120px; height: 22px; border-radius: 6px; background: repeating-linear-gradient(90deg, #FFF3D6 0 10px, transparent 10px 14px); filter: blur(.6px); opacity: .55; box-shadow: 0 0 60px 20px rgba(255,236,200,.12); }
+.lamp.l1 { left: 4%; transform: rotate(-12deg); } .lamp.l2 { right: 4%; transform: rotate(12deg); }
+@keyframes flick { 0%, 100% { opacity: .9; } 50% { opacity: .65; } }
+.pitch3d { position: absolute; left: 50%; bottom: 120px; width: min(1500px, 150%); translate: -50% 0; transform: perspective(900px) rotateX(64deg); transform-origin: 50% 100%; opacity: .55;
+  -webkit-mask-image: linear-gradient(transparent, #000 35%); mask-image: linear-gradient(transparent, #000 35%); }
+.pitch3d svg { width: 100%; height: auto; }
+.hero-in { position: relative; max-width: 760px; }
+.badge { display: inline-flex; align-items: center; gap: 10px; padding: 8px 16px; border-radius: 999px; background: rgba(15,13,11,.6); box-shadow: inset 0 0 0 1px rgba(217,191,140,.28); font-size: 13px; color: var(--gold2); backdrop-filter: blur(6px); }
+.badge i { width: 7px; height: 7px; border-radius: 50%; background: #FF5A4E; animation: ping 1.6s infinite; }
+@keyframes ping { 0% { box-shadow: 0 0 0 0 rgba(255,90,78,.55); } 70%, 100% { box-shadow: 0 0 0 9px rgba(255,90,78,0); } }
+.hero h1 { font-size: clamp(36px, 5.2vw, 64px); margin-top: 26px; letter-spacing: -.03em; line-height: 1.06; text-shadow: 0 10px 40px rgba(0,0,0,.6); }
+.hero .lead { margin: 22px 0 0; max-width: 560px; }
+.hero .cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
+/* svetelná tabuľa */
+.board { position: relative; margin-top: clamp(70px, 9vw, 120px); border-radius: 20px; padding: 10px; background: linear-gradient(#1C1915, #0C0B09); box-shadow: inset 0 0 0 1px rgba(244,238,227,.1), 0 40px 80px -30px rgba(0,0,0,.9); }
+.board::before, .board::after { content: ""; position: absolute; bottom: -34px; width: 10px; height: 34px; background: linear-gradient(#1C1915, #0C0B09); }
+.board::before { left: 18%; } .board::after { right: 18%; }
+.bd-in { border-radius: 12px; background: #050504; background-image: radial-gradient(rgba(255,200,97,.07) 1.1px, transparent 1.6px); background-size: 7px 7px; box-shadow: inset 0 0 0 1px rgba(255,200,97,.12), inset 0 0 40px rgba(0,0,0,.9); overflow: hidden; }
+.bd-top { display: flex; justify-content: space-between; gap: 12px; padding: 12px 22px; border-bottom: 1px dashed rgba(255,200,97,.18); font: 700 13px/1.2 "Doto", var(--sans); letter-spacing: .16em; text-transform: uppercase; color: #FFC861; text-shadow: 0 0 10px rgba(255,200,97,.55); }
+.bd-top span:last-child { color: rgba(255,200,97,.7); letter-spacing: .06em; text-transform: none; font-family: var(--sans); font-weight: 500; text-shadow: none; }
+.bd-row { display: grid; grid-template-columns: repeat(3, 1fr); }
+.bd-row > div { padding: 22px 22px 24px; }
+.bd-row > div + div { border-left: 1px dashed rgba(255,200,97,.18); }
+.bd-row small { display: block; font-size: 12px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: rgba(255,200,97,.6); }
+.bd-row b { display: block; margin-top: 10px; font: 900 clamp(40px, 5.4vw, 68px)/1 "Doto", var(--sans); letter-spacing: .02em; color: #FFC861; text-shadow: 0 0 6px rgba(255,200,97,.8), 0 0 24px rgba(255,200,97,.45); }
+.bd-row b.pos { color: #8FF0B4; text-shadow: 0 0 6px rgba(143,240,180,.8), 0 0 24px rgba(143,240,180,.4); }
+.bd-row b.neg { color: #FF8A7A; text-shadow: 0 0 6px rgba(255,138,122,.8), 0 0 24px rgba(255,138,122,.4); }
+.bd-cap { margin-top: 48px; font-size: 13px; color: var(--faint); text-align: center; }
 /* pás posledných tipov */
-.tape { position: relative; margin-top: 64px; padding: 22px 0; border-block: 1px solid var(--line); overflow: hidden;
+.tape { position: relative; margin-top: 34px; padding: 22px 0; border-block: 1px solid var(--line); overflow: hidden;
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
 .tape ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 14px; width: max-content; animation: tape 60s linear infinite; }
 .tape:hover ul { animation-play-state: paused; }
@@ -148,29 +170,30 @@ p { margin: 0; }
 .tape .m span { display: block; font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tape .m em { font-style: normal; color: var(--gold); }
 .tape-empty { color: var(--faint); font-size: 14px; padding: 10px 20px; }
-.leagues { padding: 26px 0 0; text-align: center; font-size: 13px; color: var(--faint); }
+.leagues { padding: 26px 0 0; text-align: center; position: relative; font-size: 13px; color: var(--faint); }
 .leagues b { color: var(--muted); font-weight: 600; }
 @media (max-width: 640px) {
-  .hero { padding-top: 128px; }
+  .hero { padding-top: 116px; }
   .hero .cta .btn { flex: 1 1 100%; }
-  .score { grid-template-columns: 1fr; text-align: left; }
-  .score > div { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; }
-  .score > div + div { border-left: 0; border-top: 1px solid rgba(217,191,140,.16); }
-  .score small { margin: 0; text-align: right; }
+  .bd-row { grid-template-columns: 1fr; }
+  .bd-row > div { display: flex; justify-content: space-between; align-items: center; padding: 16px 18px; }
+  .bd-row > div + div { border-left: 0; border-top: 1px dashed rgba(255,200,97,.18); }
+  .bd-row b { margin: 0; font-size: 40px; }
+  .bd-top { padding: 10px 16px; font-size: 11.5px; }
   .tape li { min-width: 260px; }
+  .lamp { display: none; }
 }
 
-/* ================= AKO TO FUNGUJE ================= */
-.how { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 420px); gap: clamp(40px, 7vw, 96px); align-items: center; }
-.how .kicker::before { display: none; }
-.how .h2, .how .lead { text-align: left; margin-left: 0; }
-.tl { list-style: none; margin: 34px 0 0; padding: 0; position: relative; }
-.tl::before { content: ""; position: absolute; left: 21px; top: 10px; bottom: 10px; width: 1px; background: linear-gradient(var(--gold), rgba(217,191,140,.08)); }
-.tl li { position: relative; display: grid; grid-template-columns: 44px 1fr; gap: 18px; padding: 12px 0; }
-.tl .dot { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--bg); box-shadow: inset 0 0 0 1px rgba(217,191,140,.45); color: var(--gold); font-weight: 600; font-size: 14px; position: relative; }
-.tl small { display: block; font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
-.tl h3 { font-size: 18px; margin-top: 4px; }
-.tl p { color: var(--muted); font-size: 15px; margin-top: 4px; }
+/* ================= AKO TO FUNGUJE – príbeh tipu pri posúvaní ================= */
+.story { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 400px); gap: clamp(40px, 7vw, 100px); }
+.step { min-height: 46vh; display: flex; flex-direction: column; justify-content: center; padding: 20px 0 20px 28px; border-left: 2px solid var(--line); transition: border-color .4s, opacity .4s; opacity: .35; }
+.step.act { border-color: var(--gold); opacity: 1; }
+.step .n { font: 900 64px/1 "Doto", var(--sans); color: #FFC861; text-shadow: 0 0 16px rgba(255,200,97,.45); }
+.step small { display: block; margin-top: 14px; font-size: 12px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--gold); }
+.step h3 { font-size: clamp(22px, 2.4vw, 28px); margin-top: 8px; }
+.step p { color: var(--muted); font-size: 16px; margin-top: 10px; max-width: 460px; }
+.story-vis { position: relative; }
+.story-vis .sticky { position: sticky; top: calc(50vh - 290px); }
 /* mobil s Telegramom */
 .phone { position: relative; margin: 0 auto; width: min(360px, 100%); padding: 12px; border-radius: 46px; background: linear-gradient(160deg, #2A2520, #12100E); box-shadow: inset 0 0 0 1px rgba(244,238,227,.12), 0 50px 90px -40px rgba(0,0,0,.9), 0 0 0 1px rgba(217,191,140,.12); }
 .screen { border-radius: 36px; overflow: hidden; background: #0C0B0A; }
@@ -189,17 +212,16 @@ p { margin: 0; }
 .msg .row b { color: var(--gold2); }
 .msg.ok { background: rgba(127,200,160,.08); box-shadow: inset 0 0 0 1px rgba(127,200,160,.25); }
 .msg.ok b { color: var(--win); }
-.js-rv .msg { opacity: 0; transform: translateY(8px); transition: opacity .5s, transform .5s; }
-.js-rv .phone.in .msg { opacity: 1; transform: none; }
-.js-rv .phone.in .msg:nth-child(2) { transition-delay: .6s; } .js-rv .phone.in .msg:nth-child(3) { transition-delay: 1.2s; } .js-rv .phone.in .msg:nth-child(4) { transition-delay: 1.8s; }
+.js-story .msg { opacity: 0; transform: translateY(10px) scale(.98); transition: opacity .5s, transform .5s; }
+.js-story .msg.on { opacity: 1; transform: none; }
 .ph-cap { text-align: center; font-size: 12.5px; color: var(--faint); margin-top: 14px; }
 /* pravidlá */
 .rules { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: clamp(56px, 7vw, 88px); }
 .rule { padding: 26px 24px; text-align: center; }
-.rule b { display: block; font-size: clamp(26px, 2.6vw, 32px); font-weight: 600; letter-spacing: -.03em; }
+.rule b { display: block; font: 900 clamp(30px, 3vw, 40px)/1.1 "Doto", var(--sans); color: #FFC861; text-shadow: 0 0 14px rgba(255,200,97,.4); }
 .rule span { display: block; margin-top: 8px; font-size: 14.5px; color: var(--muted); }
 .rules-cap { text-align: center; margin-top: 18px; color: var(--muted); font-size: 15px; }
-@media (max-width: 960px) { .how { grid-template-columns: 1fr; } .rules { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 960px) { .story { grid-template-columns: 1fr; } .step { min-height: 0; opacity: 1; padding: 18px 0 18px 22px; } .step .n { font-size: 44px; } .story-vis { order: -1; } .story-vis .sticky { position: static; } .rules { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 480px) { .rule { padding: 20px 14px; } }
 
 /* ================= VÝSLEDKY ================= */
@@ -210,7 +232,8 @@ p { margin: 0; }
 .per-h { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
 .per-h b { font-size: 14.5px; font-weight: 600; }
 .per-h span { font-size: 12.5px; color: var(--faint); }
-.per > b.num { display: block; margin-top: 18px; font-size: clamp(34px, 3.6vw, 44px); font-weight: 600; line-height: 1; letter-spacing: -.03em; }
+.per > b.num { display: block; margin-top: 18px; font: 900 clamp(38px, 4vw, 50px)/1 "Doto", var(--sans); }
+.per > b.num.pos { text-shadow: 0 0 18px rgba(127,200,160,.35); }
 .per > b.num small { font-size: .42em; margin-left: 6px; color: var(--faint); letter-spacing: 0; font-weight: 500; }
 .per-r { margin-top: 14px; font-size: 14px; color: var(--muted); }
 .per-r strong { color: var(--text); font-weight: 600; }
@@ -331,28 +354,42 @@ p { margin: 0; }
 @media (max-width: 640px) { .facts { grid-template-columns: 1fr 1fr; } }
 
 /* ================= ČLENSTVO – vstupenka ================= */
-.ticket { display: grid; grid-template-columns: minmax(0, 1fr) 300px; max-width: 960px; margin: 0 auto; border-radius: 28px; position: relative;
-  background: linear-gradient(150deg, rgba(217,191,140,.13), rgba(217,191,140,.02) 60%), var(--card); box-shadow: inset 0 0 0 1px rgba(217,191,140,.3), 0 40px 80px -40px rgba(0,0,0,.8); }
-.t-main { padding: clamp(28px, 3.6vw, 44px); }
-.t-main .lab { font-size: 12px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--gold); }
-.t-main h3 { font-size: clamp(24px, 2.4vw, 30px); margin-top: 12px; }
-.t-main > p { margin-top: 12px; color: var(--muted); font-size: 15.5px; max-width: 480px; }
-.incl { list-style: none; margin: 24px 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 12px 22px; }
-.incl li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; font-size: 15px; }
-.incl svg { width: 20px; height: 20px; margin-top: 2px; fill: none; stroke: var(--gold); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-.t-stub { position: relative; padding: clamp(28px, 3.6vw, 44px) 30px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; border-left: 2px dashed rgba(217,191,140,.3); }
-.t-stub::before, .t-stub::after { content: ""; position: absolute; left: -15px; width: 28px; height: 28px; border-radius: 50%; background: var(--bg); }
-.t-stub::before { top: -14px; box-shadow: inset 0 -1px 0 rgba(217,191,140,.3); } .t-stub::after { bottom: -14px; box-shadow: inset 0 1px 0 rgba(217,191,140,.3); }
-.t-stub .amount { font-size: clamp(56px, 6vw, 72px); font-weight: 600; letter-spacing: -.04em; line-height: 1; }
-.t-stub .per-m { margin-top: 6px; color: var(--muted); font-size: 15px; }
-.t-stub .btn { width: 100%; margin-top: 26px; }
-.t-stub .pay { margin-top: 12px; font-size: 12.5px; color: var(--faint); }
-.steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; max-width: 960px; margin: 18px auto 0; list-style: none; padding: 0; }
+.club { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(36px, 6vw, 80px); align-items: center; max-width: 1040px; margin: 0 auto; }
+.vwrap { perspective: 1100px; }
+.vcard { position: relative; aspect-ratio: 1.586; width: 100%; max-width: 470px; margin: 0 auto; border-radius: 22px; padding: clamp(20px, 3vw, 30px); overflow: hidden; transform-style: preserve-3d; transition: transform .25s ease-out;
+  background: radial-gradient(120% 90% at 0% 0%, rgba(241,224,188,.16), transparent 55%), linear-gradient(135deg, #2C261D, #13110E 60%, #1E1A14);
+  box-shadow: inset 0 0 0 1px rgba(217,191,140,.45), 0 50px 80px -30px rgba(0,0,0,.9), 0 0 60px -20px rgba(217,191,140,.35);
+  display: grid; grid-template-rows: auto 1fr auto; }
+.vcard::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(115deg, rgba(217,191,140,.05) 0 2px, transparent 2px 9px); }
+.vc-shine { position: absolute; inset: -40%; background: linear-gradient(105deg, transparent 40%, rgba(255,246,225,.18) 50%, transparent 60%); transform: translateX(var(--sx, -30%)); transition: transform .25s ease-out; pointer-events: none; }
+.vc-top { position: relative; display: flex; justify-content: space-between; align-items: center; }
+.vc-top svg { width: 38px; height: 38px; }
+.vc-top span { font-size: 12px; font-weight: 700; letter-spacing: .28em; color: var(--gold); }
+.vc-chip { position: relative; align-self: center; width: 52px; height: 40px; border-radius: 8px; background: linear-gradient(135deg, #F1E0BC, #B89356); box-shadow: inset 0 0 0 1px rgba(0,0,0,.25); }
+.vc-chip::before { content: ""; position: absolute; inset: 8px 12px; border: 1px solid rgba(0,0,0,.25); border-radius: 4px; }
+.vc-bottom { position: relative; display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; }
+.vc-bottom small { display: block; font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--faint); }
+.vc-bottom b { display: block; margin-top: 4px; font-size: clamp(15px, 1.8vw, 19px); font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
+.vc-bottom .pr { text-align: right; }
+.vc-bottom .pr b { font-size: clamp(26px, 3.2vw, 36px); letter-spacing: -.02em; text-transform: none; }
+.club-info .lab { font-size: 12px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--gold); }
+.club-info h3 { font-size: clamp(24px, 2.4vw, 30px); margin-top: 12px; }
+.club-info > p { margin-top: 12px; color: var(--muted); font-size: 15.5px; }
+.incl { list-style: none; margin: 22px 0 0; padding: 0; display: grid; gap: 12px; }
+.incl li { display: flex; gap: 12px; align-items: flex-start; font-size: 15px; }
+.incl svg { flex: none; width: 20px; height: 20px; margin-top: 1px; padding: 3px; border-radius: 50%; background: var(--goldDim); color: var(--gold); fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.price-row { display: flex; align-items: baseline; gap: 10px; margin-top: 26px; }
+.price-row b { font-size: clamp(44px, 5vw, 56px); font-weight: 600; letter-spacing: -.04em; line-height: 1; }
+.price-row span { color: var(--muted); }
+.club-info .btn { margin-top: 20px; }
+.club-info .pay { margin-top: 12px; font-size: 12.5px; color: var(--faint); }
+@media (max-width: 900px) { .club { grid-template-columns: 1fr; } }
+.steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; max-width: 1040px; margin: clamp(40px, 5vw, 64px) auto 0; list-style: none; padding: 0; }
 .steps li { padding: 22px 20px; border-radius: 22px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
 .steps .n { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--goldDim); color: var(--gold); font-size: 13.5px; font-weight: 600; }
 .steps h4 { margin-top: 16px; font-size: 16.5px; }
 .steps p { margin-top: 6px; color: var(--muted); font-size: 14px; }
-.guar { display: grid; grid-template-columns: auto 1fr; gap: 22px; align-items: center; max-width: 960px; margin: 18px auto 0; padding: 24px 28px; border-radius: 22px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
+.guar { display: grid; grid-template-columns: auto 1fr; gap: 22px; align-items: center; max-width: 1040px; margin: 18px auto 0; padding: 24px 28px; border-radius: 22px; background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
 .seal { width: 74px; height: 74px; border-radius: 50%; display: grid; place-items: center; text-align: center; background: var(--grad); color: #17120A; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; line-height: 1.15; box-shadow: 0 0 0 6px rgba(217,191,140,.1); }
 .seal b { display: block; font-size: 24px; letter-spacing: -.02em; }
 .guar h3 { font-size: 19px; }
@@ -361,10 +398,6 @@ p { margin: 0; }
 .guar small { display: block; margin-top: 8px; font-size: 13px; color: var(--faint); }
 .mem-foot { max-width: 860px; margin: 22px auto 0; text-align: center; font-size: 13px; color: var(--faint); }
 @media (max-width: 900px) {
-  .ticket { grid-template-columns: 1fr; }
-  .t-stub { border-left: 0; border-top: 2px dashed rgba(217,191,140,.3); }
-  .t-stub::before, .t-stub::after { top: -15px; bottom: auto; }
-  .t-stub::before { left: -14px; box-shadow: inset -1px 0 0 rgba(217,191,140,.3); } .t-stub::after { left: auto; right: -14px; box-shadow: inset 1px 0 0 rgba(217,191,140,.3); }
   .steps { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 560px) { .incl { grid-template-columns: 1fr; } .steps { grid-template-columns: 1fr; } .guar { grid-template-columns: 1fr; justify-items: start; } }
@@ -440,7 +473,7 @@ p { margin: 0; }
 .mail-toast.show { opacity: 1; translate: -50% 0; }
 .js-rv .rv { opacity: 0; transform: translateY(18px); transition: opacity .8s ease, transform .8s cubic-bezier(.2,.7,.2,1); transition-delay: var(--d, 0s); }
 .js-rv .rv.in { opacity: 1; transform: none; }
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .tape ul, .badge i { animation: none; } }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .tape ul, .badge i, .beam { animation: none; } .ball { display: none; } }
 </style>
 </head>
 <body>
@@ -456,9 +489,8 @@ p { margin: 0; }
 
 <nav class="nav" aria-label="Hlavná navigácia">
   <div class="wrap nav-in">
-    <div class="links l"><a href="#uvod">Úvod</a><a href="#ako-to-funguje">Ako to funguje</a><a href="#vysledky">Výsledky</a><a href="#kto-za-tym-je">O mne</a></div>
     <a class="brand" href="/" aria-label="TipRadar – úvod"><svg aria-hidden="true"><use href="#logo"/></svg><span>TipRadar</span></a>
-    <div class="links r"><a href="#ponuka">Členstvo</a><a href="#otazky">Otázky</a><a href="#zapis">Kontakt</a><a href="/kurz">Kurz</a></div>
+    <div class="links"><a href="#uvod">Úvod</a><a href="#ako-to-funguje">Ako to funguje</a><a href="#vysledky">Výsledky</a><a href="#kto-za-tym-je">O mne</a><a href="#ponuka">Členstvo</a><a href="#otazky">Otázky</a><a href="#zapis">Kontakt</a><a href="/kurz">Kurz</a></div>
     <button class="burger" type="button" aria-expanded="false" aria-controls="overlay" aria-label="Menu"><i><span></span><span></span></i></button>
   </div>
 </nav>
@@ -484,20 +516,31 @@ p { margin: 0; }
 
   <!-- ================= ÚVOD ================= -->
   <section class="hero" id="uvod">
+    <div class="stadium" aria-hidden="true">
+      <div class="beam b1"></div><div class="beam b2"></div>
+      <div class="pitch3d"><svg viewBox="0 0 1050 680"><g fill="none" stroke="#D9BF8C" stroke-opacity=".55" stroke-width="2.4"><rect x="10" y="10" width="1030" height="660"/><path d="M525 10v660"/><circle cx="525" cy="340" r="91.5"/><rect x="10" y="138.4" width="165" height="403.2"/><rect x="10" y="248.4" width="55" height="183.2"/><rect x="875" y="138.4" width="165" height="403.2"/><rect x="985" y="248.4" width="55" height="183.2"/><path d="M175 267a91.5 91.5 0 0 1 0 146M875 267a91.5 91.5 0 0 0 0 146"/></g><g fill="#D9BF8C" fill-opacity=".7"><circle cx="525" cy="340" r="4"/><circle cx="120" cy="340" r="3"/><circle cx="930" cy="340" r="3"/></g><path id="ballPath" d="M300 470 C 480 260, 760 250, 1010 330" fill="none" stroke="#FFF3D6" stroke-opacity=".25" stroke-width="2" stroke-dasharray="6 10"/><circle class="ball" r="9" fill="#FFF3D6"><animateMotion dur="5s" repeatCount="indefinite" rotate="auto"><mpath href="#ballPath"/></animateMotion></circle></svg></div>
+    </div>
     <div class="wrap">
-      <span class="badge"><i aria-hidden="true"></i><span id="liveDate">Model beží každý deň</span></span>
-      <h1>Futbalové tipy, za ktorými stoja <span class="gold">čísla,</span> nie pocit.</h1>
-      <p class="lead">Model denne prepočíta zápasy 17 európskych súťaží a pošle len tipy s hodnotou. Každý verejne vyhodnotený – výhry aj prehry.</p>
-      <div class="cta">
-        <a class="btn" href="#ponuka">Chcem tipy</a>
-        <a class="btn ghost" href="#vysledky">Pozrieť výsledky</a>
+      <div class="hero-in">
+        <span class="badge"><i aria-hidden="true"></i>Naživo · výsledky každého tipu</span>
+        <h1>Futbalové tipy, za ktorými stoja <span class="gold">čísla,</span> nie pocit.</h1>
+        <p class="lead">Model denne prepočíta zápasy 17 európskych súťaží a pošle len tipy s hodnotou. Každý verejne vyhodnotený – výhry aj prehry.</p>
+        <div class="cta">
+          <a class="btn" href="#ponuka">Chcem tipy</a>
+          <a class="btn ghost" href="#vysledky">Pozrieť výsledky</a>
+        </div>
       </div>
-      <div class="score" aria-label="Výsledky od začiatku">
-        <div><b class="num" id="hsTips">–</b><small>vyhodnotených tipov</small></div>
-        <div><b class="num" id="hsRate">–</b><small>tipov vyšlo</small></div>
-        <div><b class="num" id="hsProfit">–</b><small>zisk v jednotkách</small></div>
+      <div class="board" aria-label="Výsledky od začiatku">
+        <div class="bd-in">
+          <div class="bd-top"><span>TipRadar · skóre</span><span id="liveDate">od 10. 10. 2026</span></div>
+          <div class="bd-row">
+            <div><small>Tipov</small><b id="hsTips">–</b></div>
+            <div><small>Vyšlo</small><b id="hsRate">–</b></div>
+            <div><small>Zisk (j.)</small><b id="hsProfit">–</b></div>
+          </div>
+        </div>
       </div>
-      <p class="score-cap">Od 10. 10. 2026 · 1 jednotka = vklad na jeden tip</p>
+      <p class="bd-cap">Všetky vyhodnotené tipy od 10. 10. 2026 · 1 jednotka = vklad na jeden tip</p>
     </div>
     <div class="tape" aria-label="Posledné vyhodnotené tipy"><ul id="heroList"><li class="tape-empty">Načítavam posledné tipy…</li></ul></div>
     <p class="leagues wrap"><b>Tipujeme:</b> góly · góly v 1. a 2. polčase · rohy · karty · handicapy na góly a rohy<br><b>17 súťaží:</b> Liga majstrov · Premier League · Championship · La Liga · Segunda División · Serie A · Bundesliga · 2. Bundesliga · Ligue 1 · Ligue 2 · Eredivisie · Primeira Liga · Belgicko · Turecko · Dánsko · Škótsko · Liga národov</p>
@@ -506,32 +549,32 @@ p { margin: 0; }
   <!-- ================= AKO TO FUNGUJE ================= -->
   <section class="sec" id="ako-to-funguje">
     <div class="wrap">
-      <div class="how">
-        <div class="rv">
-          <span class="kicker">Ako to funguje</span>
-          <h2 class="h2">Jeden deň s <span class="gold">TipRadarom.</span></h2>
-          <p class="lead">Nič nepočítate ani nesledujete. Tip príde sám do mobilu – s kurzom, šancou a minimálnym kurzom, pri ktorom ho hrať.</p>
-          <ol class="tl">
-            <li><span class="dot">1</span><div><small>Ráno</small><h3>Model prepočíta zápasy</h3><p>Všetky zápasy 17 súťaží a stovky trhov. Väčšina neprejde.</p></div></li>
-            <li><span class="dot">2</span><div><small>1 – 2 h pred výkopom</small><h3>Príde tip</h3><p>Do súkromného kanála na Telegrame, priamo do mobilu.</p></div></li>
-            <li><span class="dot">3</span><div><small>Po zápase</small><h3>Výsledok</h3><p>Výhra aj prehra, hneď ako zápas skončí.</p></div></li>
-            <li><span class="dot">4</span><div><small>Večer</small><h3>Súhrn dňa</h3><p>Koľko tipov vyšlo a zisk dňa v jednotkách.</p></div></li>
-          </ol>
+      <div class="head rv">
+        <span class="kicker">Ako to funguje</span>
+        <h2 class="h2">Jeden deň s <span class="gold">TipRadarom.</span></h2>
+        <p class="lead">Nič nepočítate ani nesledujete. Posúvajte ďalej a uvidíte, ako príde tip do mobilu.</p>
+      </div>
+      <div class="story" id="story">
+        <div class="story-steps">
+          <div class="step act" data-step="1"><span class="n">01</span><small>Ráno</small><h3>Model prepočíta zápasy</h3><p>Všetky zápasy 17 súťaží a stovky trhov. Väčšina neprejde – tip ide ďalej, len keď splní všetky pravidlá.</p></div>
+          <div class="step" data-step="2"><span class="n">02</span><small>1 – 2 h pred výkopom</small><h3>Príde tip</h3><p>Do súkromného kanála na Telegrame – s kurzom, šancou a minimálnym kurzom, pri ktorom ho hrať.</p></div>
+          <div class="step" data-step="3"><span class="n">03</span><small>Po zápase</small><h3>Výsledok</h3><p>Výhra aj prehra, hneď ako zápas skončí. Nič sa nemaže ani neupravuje.</p></div>
+          <div class="step" data-step="4"><span class="n">04</span><small>Večer</small><h3>Súhrn dňa</h3><p>Koľko tipov vyšlo a zisk dňa v jednotkách.</p></div>
         </div>
-        <div>
-          <div class="phone rv" aria-label="Ukážka správ v Telegrame">
+        <div class="story-vis"><div class="sticky">
+          <div class="phone" aria-label="Ukážka správ v Telegrame">
             <div class="screen">
               <div class="ph-top"><span class="av"><svg aria-hidden="true"><use href="#logo-s"/></svg></span><div><b>TipRadar · VIP Klub</b><small>súkromný kanál</small></div></div>
               <div class="chat">
-                <div class="msg">Dobré ráno. Model prepočítal dnešné zápasy, tipy pošlem 1 – 2 hodiny pred výkopom.<span class="t">9:00</span></div>
-                <div class="msg tip"><span class="lg">Premier League · 20:45</span><b>Arsenal – Chelsea</b><br>Rohy: viac ako 9,5<div class="row"><span>Kurz <b>1,85</b></span><span>Šanca <b>74 %</b></span></div><div class="row"><span>Hrajte pri kurze aspoň</span><b>1,50</b></div><span class="t">18:52</span></div>
-                <div class="msg ok"><b>✓ Vyšiel</b> · Arsenal – Chelsea 2:1, 11 rohov · +0,85 j.<span class="t">22:41</span></div>
-                <div class="msg">Súhrn dňa: <b>2 z 2</b> tipov vyšlo · <b>+1,57 j.</b><span class="t">23:05</span></div>
+                <div data-s="1" class="msg">Dobré ráno. Model prepočítal dnešné zápasy, tipy pošlem 1 – 2 hodiny pred výkopom.<span class="t">9:00</span></div>
+                <div data-s="2" class="msg tip"><span class="lg">Premier League · 20:45</span><b>Arsenal – Chelsea</b><br>Rohy: viac ako 9,5<div class="row"><span>Kurz <b>1,85</b></span><span>Šanca <b>74 %</b></span></div><div class="row"><span>Hrajte pri kurze aspoň</span><b>1,50</b></div><span class="t">18:52</span></div>
+                <div data-s="3" class="msg ok"><b>✓ Vyšiel</b> · Arsenal – Chelsea 2:1, 11 rohov · +0,85 j.<span class="t">22:41</span></div>
+                <div data-s="4" class="msg">Súhrn dňa: <b>2 z 2</b> tipov vyšlo · <b>+1,57 j.</b><span class="t">23:05</span></div>
               </div>
             </div>
           </div>
           <p class="ph-cap">Ukážka – takto vyzerajú správy v kanáli.</p>
-        </div>
+        </div></div>
       </div>
       <div class="rules">
         <div class="panel rule rv"><b>72 – 80 %</b><span>šanca podľa modelu</span></div>
@@ -626,9 +669,17 @@ p { margin: 0; }
         <h2 class="h2">VIP Klub. <span class="gold">Mesačne.</span></h2>
         <p class="lead">Jedna cena za mesiac. Žiadne počítanie tipov.</p>
       </div>
-      <div class="ticket rv" id="clenstvo">
-        <div class="t-main">
-          <span class="lab">VIP Klub · vstupenka na 1 mesiac</span>
+      <div class="club" id="clenstvo">
+        <div class="vwrap rv" id="vwrap">
+          <div class="vcard" id="vcard" aria-label="VIP karta TipRadar">
+            <div class="vc-shine"></div>
+            <div class="vc-top"><svg aria-hidden="true"><use href="#logo"/></svg><span>VIP KLUB</span></div>
+            <div class="vc-chip" aria-hidden="true"></div>
+            <div class="vc-bottom"><div><small>Člen</small><b>TipRadar</b></div><div class="pr"><small>Mesačne</small><b>39&nbsp;€</b></div></div>
+          </div>
+        </div>
+        <div class="club-info rv">
+          <span class="lab">VIP Klub · 1 mesiac</span>
           <h3>Mesačné členstvo</h3>
           <p>Platíte za mesiac, nie za tipy. Dostanete všetky tipy, ktoré počas mesiaca prejdú pravidlami modelu.</p>
           <ul class="incl">
@@ -637,10 +688,7 @@ p { margin: 0; }
             <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-ok"/></svg>Mentoring počas celého členstva</li>
             <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-ok"/></svg>Bez viazanosti, samo sa nepredlžuje</li>
           </ul>
-        </div>
-        <div class="t-stub">
-          <div class="amount">39&nbsp;€</div>
-          <div class="per-m">mesačne</div>
+          <div class="price-row"><b>39&nbsp;€</b><span>mesačne</span></div>
           <a class="btn" href="https://t.me/im_mishko?text=Dobr%C3%BD%20de%C5%88%2C%20m%C3%A1m%20z%C3%A1ujem%20o%20%C4%8Dlenstvo%20TipRadar." target="_blank" rel="noopener">Mám záujem o členstvo</a>
           <div class="pay">Bankovým prevodom cez QR kód · bez poplatkov</div>
         </div>
@@ -868,7 +916,7 @@ p { margin: 0; }
 })();
 </script>
 <script>
-/* KLUB (22. 11. 2026) – úvod, výsledky, formulár */
+/* TABUĽA (22. 11. 2026) – úvod, výsledky, formulár */
 (function () {
   var $ = function (id) { return document.getElementById(id); };
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -896,7 +944,7 @@ p { margin: 0; }
   };
 
   // úvod: dnešný dátum pri „Model beží“
-  try { var ld = $("liveDate"); ld.textContent = "Model beží · " + new Date().toLocaleDateString("sk-SK", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Bratislava" }); } catch (e) {}
+  try { var ld = $("liveDate"); ld.textContent = new Date().toLocaleDateString("sk-SK", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Bratislava" }); } catch (e) {}
 
   /* ---------------- VÝSLEDKY ---------------- */
   var PER_PAGE = 6, recentAll = [], filter = "all", pg = 0;
@@ -1083,6 +1131,31 @@ p { margin: 0; }
   var openG = function () { var q = $("garancia-otazka"); if (q) q.open = true; };
   document.querySelectorAll('a[href="#garancia"]').forEach(function (a) { a.addEventListener("click", openG); });
   if (location.hash === "#garancia") openG();
+
+  // ako to funguje: pri posúvaní sa mobil napĺňa správami (krok 1 – 4)
+  (function () {
+    var st = document.getElementById("story"); if (!st) return;
+    var steps = st.querySelectorAll(".step"), msgs = st.querySelectorAll(".msg[data-s]");
+    var set = function (k) { steps.forEach(function (x) { x.classList.toggle("act", +x.dataset.step === k); }); msgs.forEach(function (m) { m.classList.toggle("on", +m.dataset.s <= k); }); };
+    var wide = window.matchMedia("(min-width: 961px)");
+    if (reduce || !("IntersectionObserver" in window)) return;
+    document.documentElement.classList.add("js-story");
+    if (!wide.matches) { msgs.forEach(function (m) { m.classList.add("on"); }); return; }
+    set(1);
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) set(+e.target.dataset.step); }); }, { rootMargin: "-45% 0px -45% 0px" });
+    steps.forEach(function (x) { io.observe(x); });
+  })();
+
+  // VIP karta sa nakláňa za myšou
+  (function () {
+    var w = document.getElementById("vwrap"), c = document.getElementById("vcard"); if (!w || !c || reduce) return;
+    w.addEventListener("mousemove", function (e) {
+      var r = w.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
+      c.style.transform = "rotateY(" + (x * 16).toFixed(2) + "deg) rotateX(" + (-y * 12).toFixed(2) + "deg)";
+      c.style.setProperty("--sx", (x * 60).toFixed(1) + "%");
+    });
+    w.addEventListener("mouseleave", function () { c.style.transform = ""; c.style.setProperty("--sx", "-30%"); });
+  })();
 
   /* ---------------- FORMULÁR ---------------- */
   (function () {
