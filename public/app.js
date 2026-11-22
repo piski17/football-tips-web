@@ -1484,7 +1484,8 @@ const BOOKLINE_OPTS = { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS, 
 // ktoré model navrhne. Tieto idú klientom podľa bežných pravidiel (70 – 80 %, kurz od 1,50).
 // 22. 11. 0:10 (Michal): okienko aj pri tipoch na rohy a karty V ZÁPASE (celkovo), len keď ich model navrhne.
 // Idú klientom podľa bežných pravidiel (70 – 80 %, kurz od 1,50). Rohy/karty tímov bez okienka. Výpočet modelu sa nemení.
-const BOOK_LINE_STD = /^(Rohy|Karty)$/;
+// 22. 11. 2026 13:42 (Michal): okienko aj pri rohoch a kartách TÍMOV (tipy, ktoré model odporučí klientom).
+const BOOK_LINE_STD = /^(Rohy|Karty)( domácich| hostí)?$/;
 const lineThresholds = (market) => BOOK_LINE_MARKET.test(market || "") ? { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS } : { minProb: WATCH_BELOW, minOdds: MIN_ODDS };
 function needsBookLine(bet) {
   if (BOOK_LINE_STD.test(bet.market || "")) return true;
@@ -1497,7 +1498,6 @@ function betLineOf(bet) {
 }
 function bookLineMarkets(r, market) {
   if (market.startsWith("Držanie lopty")) return r.possession ? ["Držanie lopty domácich", "Držanie lopty hostí"] : [market];
-  if (market === "Rohy" || market === "Karty") return [market];
   const have = new Set((r.lineModels || []).map((m) => m.market));
   const base = market.startsWith("Rohy") ? "Rohy" : market.startsWith("Karty") ? "Karty" : "Fauly";
   const list = [base, `${base} domácich`, `${base} hostí`].filter((m) => have.has(m));
