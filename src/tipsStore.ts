@@ -596,6 +596,28 @@ export async function deleteFoulWatchOnce(): Promise<number> {
   });
 }
 
+// 22. 11. 2026 20:13 (Michal: „odstráň ich“): raz natrvalo zmaže 2 tipy z Konferenčnej ligy (848) – Viking – Sabah (4. 11.)
+// a LASK Linz – Slovan Bratislava (3. 11.). Do štatistík sa už nerátali (vyradená súťaž).
+const DEL_KL_TIPS_KEY = "tipradar_migr_del_kl_tips_1122";
+export async function deleteConferenceTipsOnce(): Promise<number> {
+  if (!useUpstash) return 0;
+  const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };
+  const done = (await upstashClient().get(`${UPSTASH_URL}/get/${DEL_KL_TIPS_KEY}`, auth)).data?.result;
+  if (done) return 0;
+  return withWriteLock(async () => {
+    const tips = await readAll();
+    const hit = (t: any) => !(t.legs && t.legs.length) && (/viking/i.test(String(t.homeTeam)) && /sabah/i.test(String(t.awayTeam)) || /lask/i.test(String(t.homeTeam)) && /slovan/i.test(String(t.awayTeam)));
+    const keep = tips.filter((t) => !hit(t));
+    const removed = tips.length - keep.length;
+    if (removed) await writeAll(keep);
+    console.log(`Zmazané tipy Konferenčnej ligy (Viking – Sabah, LASK – Slovan): ${removed}`);
+    await upstashClient().post(`${UPSTASH_URL}/set/${DEL_KL_TIPS_KEY}`, new Date().toISOString(), {
+      headers: { ...auth.headers, "Content-Type": "text/plain" },
+    });
+    return removed;
+  });
+}
+
 // 22. 11. 2026 19:54 (Michal: „fauly odstráň aj zo sledovaných“): raz zmaže všetky sledované tipy na fauly (aj „Fauly – kto viac“).
 const DEL_ALL_FOUL_WATCH_KEY = "tipradar_migr_del_all_foul_watch_1122";
 export async function deleteAllFoulWatchOnce(): Promise<number> {

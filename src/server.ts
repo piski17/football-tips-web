@@ -46,7 +46,7 @@ import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, Market
 import { newModelInputs } from "./newModel";
 import { computeMarketHealth, marketChangesText, clvOf, CLV_TIE } from "./marketHealth";
 import { LeaguePreset, SavedTip } from "./types";
-import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once, moveLateAddsOnce, restoreLateMovedOnce, returnStrictFailedOnce, moveStrictFailedBackOnce, moveSameTypeOnce, moveOldFoulTipsOnce, moveFoulPossWatchOnce, deleteAutoFoulPossOnce, retroApplyRules1121Once, deleteFoulWatchOnce, deleteAllFoulWatchOnce, deleteWatch1122Once, syncBand65Trial, restoreDeletedWatchOnce } from "./tipsStore";
+import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once, moveLateAddsOnce, restoreLateMovedOnce, returnStrictFailedOnce, moveStrictFailedBackOnce, moveSameTypeOnce, moveOldFoulTipsOnce, moveFoulPossWatchOnce, deleteAutoFoulPossOnce, retroApplyRules1121Once, deleteFoulWatchOnce, deleteAllFoulWatchOnce, deleteConferenceTipsOnce, deleteWatch1122Once, syncBand65Trial, restoreDeletedWatchOnce } from "./tipsStore";
 import { computeTicketStatus, settleBet, settleFixtureBets, tipHasStartedMatch, MATCH_STARTED_MESSAGE, buildTipEdit } from "./tipEvaluator";
 import {
   sendTipToTelegram,
@@ -4858,6 +4858,7 @@ app.listen(PORT, () => {
     .catch((err) => console.error("Spätné pravidlá z 21. 11. zlyhali:", err))
     .then(() => deleteFoulWatchOnce())
     .then(() => deleteAllFoulWatchOnce())
+    .then(() => deleteConferenceTipsOnce())
     .then((n) => { if (n) console.log(`Sledované fauly zmazané: ${n}`); })
     .catch((err) => console.error("Zmazanie sledovaných faulov zlyhalo:", err))
     .then(() => deleteWatch1122Once())
