@@ -70,7 +70,10 @@ export interface MarketAdjustments {
  * „drzanie_lopty“ → „drzanie“. Zo zápasu ide klientom najviac 1 tip z typu.
  */
 export function tipType(category: string | null | undefined): string {
-  return String(category || "").split("_")[0];
+  const c = String(category || "");
+  // 22. 11. 2026 (Michal): handicap gólov a handicap rohov sú rôzne druhy (predtým oba „hcp“ → 2. tip šiel do sledovaných).
+  if (c.startsWith("hcp_")) return c;
+  return c.split("_")[0];
 }
 
 /** Kategória trhu podľa jeho názvu (rovnaká ako `category` pri tipoch modelu). */

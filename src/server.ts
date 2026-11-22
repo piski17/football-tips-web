@@ -46,7 +46,7 @@ import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, Market
 import { newModelInputs } from "./newModel";
 import { computeMarketHealth, marketChangesText, clvOf, CLV_TIE } from "./marketHealth";
 import { LeaguePreset, SavedTip } from "./types";
-import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once, moveLateAddsOnce, restoreLateMovedOnce, returnStrictFailedOnce, moveStrictFailedBackOnce, moveSameTypeOnce, moveOldFoulTipsOnce, moveFoulPossWatchOnce, deleteAutoFoulPossOnce, retroApplyRules1121Once, deleteFoulWatchOnce, deleteAllFoulWatchOnce, deleteConferenceTipsOnce, deleteWatch1122Once, syncBand65Trial, restoreDeletedWatchOnce } from "./tipsStore";
+import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once, moveLateAddsOnce, restoreLateMovedOnce, returnStrictFailedOnce, moveStrictFailedBackOnce, moveSameTypeOnce, moveOldFoulTipsOnce, moveFoulPossWatchOnce, deleteAutoFoulPossOnce, retroApplyRules1121Once, deleteFoulWatchOnce, deleteAllFoulWatchOnce, deleteConferenceTipsOnce, restoreHcpTypeOnce, deleteWatch1122Once, syncBand65Trial, restoreDeletedWatchOnce } from "./tipsStore";
 import { computeTicketStatus, settleBet, settleFixtureBets, tipHasStartedMatch, MATCH_STARTED_MESSAGE, buildTipEdit } from "./tipEvaluator";
 import {
   sendTipToTelegram,
@@ -4861,6 +4861,10 @@ app.listen(PORT, () => {
     .then(() => deleteConferenceTipsOnce())
     .then((n) => { if (n) console.log(`Sledované fauly zmazané: ${n}`); })
     .catch((err) => console.error("Zmazanie sledovaných faulov zlyhalo:", err))
+    // 22. 11. 2026: handicap gólov a rohov sú rôzne druhy – omylom presunuté tipy späť klientom
+    .then(() => restoreHcpTypeOnce((market) => { const c = marketCategory(market); return c ? tipType(c) : null; }))
+    .then((n) => { if (n) console.log(`Handicap – vrátené klientom: ${n}`); })
+    .catch((err) => console.error("Vrátenie handicapov zlyhalo:", err))
     .then(() => deleteWatch1122Once())
     .then((n) => { if (n) console.log(`Sledované karty v polčasoch a strely zmazané: ${n}`); })
     .catch((err) => console.error("Zmazanie sledovaných kariet v polčasoch a striel zlyhalo:", err))

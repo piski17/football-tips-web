@@ -788,3 +788,34 @@ export async function restoreDeletedWatchOnce(): Promise<number> {
     return added;
   });
 }
+
+/**
+ * 22. 11. 2026 (Michal): handicap gólov a handicap rohov sú rôzne druhy. Tipy na handicap, ktoré pravidlo
+ * „1 tip z druhu“ omylom presunulo do sledovaných (sameTypeMoved), sa raz vrátia klientom – ak zápas nemá
+ * pre klientov iný tip toho istého handicapu. Len zápasy od 20. 11. 2026.
+ */
+const HCP_TYPE_FIX_KEY = "tipradar_migr_hcp_type_fix_done";
+export async function restoreHcpTypeOnce(typeOf: (market: string) => string | null): Promise<number> {
+  if (!useUpstash) return 0;
+  const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };
+  const done = (await upstashClient().get(`${UPSTASH_URL}/get/${HCP_TYPE_FIX_KEY}`, auth)).data?.result;
+  if (done) return 0;
+  return withWriteLock(async () => {
+    const tips = await readAll();
+    let restored = 0;
+    for (const t of tips) {
+      if (!t.sameTypeMoved || !String(t.market || "").startsWith("Handicap") || String(t.matchDate || "") < "2026-11-20") continue;
+      const type = typeOf(t.market);
+      const clash = tips.some((o) => o !== t && !o.watchOnly && o.fixtureId === t.fixtureId && typeOf(o.market) === type);
+      if (clash) continue;
+      t.watchOnly = false;
+      t.sameTypeMoved = undefined;
+      restored++;
+    }
+    if (restored) await writeAll(tips);
+    await upstashClient().post(`${UPSTASH_URL}/set/${HCP_TYPE_FIX_KEY}`, new Date().toISOString(), {
+      headers: { ...auth.headers, "Content-Type": "text/plain" },
+    });
+    return restored;
+  });
+}
