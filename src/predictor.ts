@@ -1423,7 +1423,8 @@ export function predictMatch(
     const h2hTxt = (b: { n: number; h: number; a: number; w?: number }, what: string) =>
       b.n ? ` Vo vzájomných zápasoch (${b.n}) ${what} ${fmt1(b.h)} : ${fmt1(b.a)} – ${b.w && b.w > 0.5 ? `váha ${Math.round(b.w * 100)} % vzájomné, zvyšok posledných 5 zápasov` : "započítané napoly s posledných 5 zápasmi"}.` : " Vzájomných zápasov so štatistikou je menej ako 3 – len posledných 5 zápasov.";
     const tc0 = team("Rohy domácich", "Rohy hostí");
-    if (tc0) {
+    // 22. 11. 2026 18:09 (Michal): handicap rohov len v najvyšších súťažiach (top 5 líg + Liga majstrov).
+    if (tc0 && FOUL_LEAGUE_IDS.includes(Number(fixture.league?.id))) {
       const tc = h2hBlendTeam(tc0, "homeCorners", "awayCorners");
       addHcp("Handicap – rohy", "hcp_rohy", teamJoint(tc.hm, tc.am), `Očakávané rohy ${fmt1(tc.hm.mean)} : ${fmt1(tc.am.mean)}.${h2hTxt(tc, "rohy v priemere")}`);
     }
