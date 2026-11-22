@@ -130,7 +130,7 @@ function pickOdds2(candidates: Cand[], minOdds = ODDS2_MIN): TopPick | undefined
 // Pravidlá z 10. – 19. 10. 2026: dôvera LEN z modelu (bez zmiešania so stávkovkami), pásmo 68 – 80 %, kurz z API aspoň 1,60,
 // hodnota +5 až +25 % (počítaná zo šance modelu), bez ofsajdov / 1X2 / oba skórujú / handicapov; zo zápasu najviac 1 tip z typu
 // (góly, rohy, karty…), prednosť vyššia dôvera. Len tiché sledovanie – klientom nejde, do štatistík sa neráta.
-const OCT_MIN_ODDS = 1.6, OCT_MIN_P = 70, OCT_MAX_P = 80; // 19. 11. 2026 (Michal): hranica 70 % namiesto 68 %
+const OCT_MIN_ODDS = 1.6, OCT_MIN_P = 68, OCT_MAX_P = 80; // 22. 11. 2026 1:26 (Michal): znova 68 % ako v októbri (19. 11. – 22. 11. bolo 70 %)
 const OCT_SKIP = ["Ofsajdy", "Výsledok zápasu", "Oba tímy skórujú", "Obaja tímy skórujú", "Strelec gólov"];
 function pickOctober(candidates: Cand[]): TopPick[] {
   const byType = new Map<string, TopPick>();

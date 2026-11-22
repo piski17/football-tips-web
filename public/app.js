@@ -5711,7 +5711,7 @@ const ODDS2_TEXT = {
 };
 const OCT_TEXT = {
   boxId: "octResult", fold: "oktober", emptySum: "Tiché sledovanie od 19. 11.",
-  intro: `Pravidlá zo začiatku štatistík (10. – 19. 10. 2026), od 19. 11. s hranicou 70${NB}%: dôvera len z modelu (bez zmiešania so stávkovkami), pásmo 70 – 80${NB}%, kurz z API aspoň 1,60, hodnota +5 až +25${NB}%, zo zápasu najviac 1 tip z typu (góly, rohy, karty…). Server ich vyberá asi hodinu pred výkopom a po zápase vyhodnotí. Klientom nejde a do štatistík sa neráta – na konci mesiaca porovnať so súčasnými tipmi.`,
+  intro: `Pravidlá zo začiatku štatistík (10. – 19. 10. 2026), od 22. 11. znova presne ako v októbri: dôvera len z modelu (bez zmiešania so stávkovkami), pásmo 68 – 80${NB}%, kurz z API aspoň 1,60, hodnota +5 až +25${NB}%, zo zápasu najviac 1 tip z typu (góly, rohy, karty…). Server ich vyberá asi hodinu pred výkopom a po zápase vyhodnotí. Klientom nejde a do štatistík sa neráta – na konci mesiaca porovnať so súčasnými tipmi.`,
 };
 // 19. 11. 2026 (Michal): ktoré tipy by spätne prešli pravidlami „Ako v októbri“ (z tichej evidencie od 20. 10.).
 async function renderOctoberRetro() {
