@@ -1491,8 +1491,42 @@ const BOOKLINE_OPTS = { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS, 
 // 22. 11. 2026 16:36 (Michal): políčka pri každom klientskom tipe na rohy aj karty (zápas aj tímy).
 const BOOK_LINE_STD = /^(Rohy|Karty)( domácich| hostí)?$/;
 const lineThresholds = (market) => BOOK_LINE_MARKET.test(market || "") ? { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS } : { minProb: WATCH_BELOW, minOdds: MIN_ODDS };
+// 22. 11. 2026 17:02 (Michal): políčka aj pri handicapoch (góly, rohy) – hranica z pohľadu domácich + kurz domáci / hostia.
+const HCP_BOOK = /^Handicap( – rohy)?$/;
+const HCP_CAL = { "Handicap": 0.85, "Handicap – rohy": 0.8 }; // = MARKET_CALIBRATION hcp_goly / hcp_rohy v predictor.ts
+const fmtHcpSel = (L) => `${L > 0 ? "+" : "−"}${Math.abs(L)}`;
+function hcpPmf(mean, varRatio, max) {
+  const out = [];
+  let prev = 0;
+  for (let k = 0; k <= max; k++) { const u = negBinUnder(mean, k, varRatio); out.push(Math.max(0, u - prev)); prev = u; }
+  return out;
+}
+/** Šanca, že domáci s handicapom L skončia lepšie (rozdiel + L > 0). */
+function hcpHomeProb(r, market, L) {
+  let ph, pa;
+  if (market === "Handicap") {
+    if (!r.expectedGoals) return null;
+    ph = hcpPmf(r.expectedGoals.home, 1, 12); pa = hcpPmf(r.expectedGoals.away, 1, 12);
+  } else {
+    const hm = (r.lineModels || []).find((m) => m.market === "Rohy domácich"), am = (r.lineModels || []).find((m) => m.market === "Rohy hostí");
+    if (!hm || !am) return null;
+    ph = hcpPmf(hm.mean, hm.varRatio, 30); pa = hcpPmf(am.mean, am.varRatio, 30);
+  }
+  let w = 0;
+  for (let h = 0; h < ph.length; h++) for (let a = 0; a < pa.length; a++) if (h - a + L > 0) w += ph[h] * pa[a];
+  const k = HCP_CAL[market] ?? 1;
+  return 50 + k * (w * 100 - 50);
+}
+function betHcpHomeLine(bet) {
+  const m = String(bet.selection || "").match(/^(.*) ([+−-])(\d+(?:\.\d+)?)$/);
+  if (!m) return "";
+  const L = (m[2] === "+" ? 1 : -1) * parseFloat(m[3]);
+  const home = m[1] === bet.homeTeam || m[1] === bet.fixture?.homeTeam?.name;
+  const hl = home ? L : -L;
+  return (hl > 0 ? "+" : "") + String(hl).replace(".", ",");
+}
 function needsBookLine(bet) {
-  if (BOOK_LINE_STD.test(bet.market || "")) return true;
+  if (BOOK_LINE_STD.test(bet.market || "") || HCP_BOOK.test(bet.market || "")) return true;
   // „Fauly – kto viac“ nemá hranicu – kurz sa zadá do bežného políčka kurzu.
   return BOOK_LINE_MARKET.test(bet.market || "") && bet.market !== "Fauly – kto viac" && !(typeof bet.odds === "number" && bet.odds > 1);
 }
@@ -1501,6 +1535,7 @@ function betLineOf(bet) {
   return m ? m[1].replace(".", ",") : "";
 }
 function bookLineMarkets(r, market) {
+  if (HCP_BOOK.test(market)) return [market];
   if (market.startsWith("Držanie lopty")) return r.possession ? ["Držanie lopty domácich", "Držanie lopty hostí"] : [market];
   const have = new Set((r.lineModels || []).map((m) => m.market));
   const base = market.startsWith("Rohy") ? "Rohy" : market.startsWith("Karty") ? "Karty" : "Fauly";
@@ -1514,6 +1549,7 @@ function bookLineMarketLabel(r, m) {
 }
 function bookLineHtml(i, bet, r) {
   const poss = (bet.market || "").startsWith("Držanie lopty");
+  const hcp = HCP_BOOK.test(bet.market || "");
   const pass = r ? passLinesHtml(r, bet.market) : "";
   // 21. 11. 2026 (Michal): v každom riadku sa dá vybrať trh – fauly v zápase / domácich / hostí, držanie domácich / hostí.
   const mkts = r ? bookLineMarkets(r, bet.market) : [bet.market];
@@ -1522,9 +1558,9 @@ function bookLineHtml(i, bet, r) {
       <div class="bookline-rows">
         ${[0, 1, 2, 3].map((k) => `<div class="bookline-f" data-bl-row="${k}">
           ${mkts.length > 1 ? `<label>${k === 0 ? "Trh" : ""}<select data-bl-mkt>${mkts.map((m) => `<option value="${escapeHtml(m)}"${m === bet.market ? " selected" : ""}>${escapeHtml(r ? bookLineMarketLabel(r, m) : m)}</option>`).join("")}</select></label>` : ""}
-          <label>${k === 0 ? `Hranica${poss ? " %" : ""}` : ""}<input type="text" inputmode="decimal" autocomplete="off" data-bl-line value="${k === 0 ? escapeHtml(betLineOf(bet)) : ""}" placeholder="${poss ? "napr. 55,5" : "napr. 12,5"}" /></label>
-          <label>${k === 0 ? (poss ? "Kurz a viac" : "Kurz viac ako") : ""}<input type="text" inputmode="decimal" autocomplete="off" data-bl-over placeholder="–" /></label>
-          <label>${k === 0 ? "Kurz menej ako" : ""}<input type="text" inputmode="decimal" autocomplete="off" data-bl-under placeholder="–" /></label>
+          <label>${k === 0 ? (hcp ? "Handicap domácich" : `Hranica${poss ? " %" : ""}`) : ""}<input type="text" inputmode="decimal" autocomplete="off" data-bl-line value="${k === 0 ? escapeHtml(hcp ? betHcpHomeLine({ ...bet, fixture: r?.fixture }) : betLineOf(bet)) : ""}" placeholder="${hcp ? "napr. −1,5" : poss ? "napr. 55,5" : "napr. 12,5"}" /></label>
+          <label>${k === 0 ? (hcp ? `Kurz ${escapeHtml(r ? translateTeamName(r.fixture.homeTeam.name) : "domáci")}` : poss ? "Kurz a viac" : "Kurz viac ako") : ""}<input type="text" inputmode="decimal" autocomplete="off" data-bl-over placeholder="–" /></label>
+          <label>${k === 0 ? (hcp ? `Kurz ${escapeHtml(r ? translateTeamName(r.fixture.awayTeam.name) : "hostia")}` : "Kurz menej ako") : ""}<input type="text" inputmode="decimal" autocomplete="off" data-bl-under placeholder="–" /></label>
         </div>`).join("")}
       </div>
       <p class="faint small bookline-hint">Zadaj všetky hranice zo stávkovky naraz (nemusíš vyplniť všetky riadky). Appka vyberie tip s najväčšou dôverou.</p>
@@ -1538,6 +1574,7 @@ function bookLineHtml(i, bet, r) {
  * a rozpätie kurzu (od minima po hornú hranicu hodnoty +25 %). Michal hneď vidí, či ju stávkovka má.
  */
 function passLinesHtml(r, market) {
+  if (HCP_BOOK.test(market)) return "";
   const poss = market.startsWith("Držanie lopty");
   let center;
   if (poss) {
@@ -1572,6 +1609,17 @@ function passLinesHtml(r, market) {
 /** Šance pre zadanú hranicu – rovnaký výpočet ako kalkulačka v detaile zápasu. Vráti riadky alebo text chyby. */
 function bookLineRows(r, market, line, overOdds, underOdds) {
   const lineTxt = String(line).replace(".", ",");
+  if (HCP_BOOK.test(market)) {
+    if (!Number.isFinite(line) || Math.abs((Math.abs(line) % 1) - 0.5) > 1e-9) return "Zadaj handicap domácich s ,5 – napr. −1,5 alebo +0,5.";
+    const pH = hcpHomeProb(r, market, line);
+    if (pH == null) return "Model pre tento zápas nemá výpočet handicapu.";
+    const hn = r.fixture.homeTeam.name, an = r.fixture.awayTeam.name;
+    const what = market === "Handicap" ? "Handicap" : "Handicap rohov";
+    return [
+      { label: `${what}: ${translateTeamName(hn)} ${fmtHcpSel(line).replace(".", ",")}`, selection: `${hn} ${fmtHcpSel(line)}`, probability: pH, odds: overOdds },
+      { label: `${what}: ${translateTeamName(an)} ${fmtHcpSel(-line).replace(".", ",")}`, selection: `${an} ${fmtHcpSel(-line)}`, probability: 100 - pH, odds: underOdds },
+    ];
+  }
   if (market.startsWith("Držanie lopty")) {
     if (!r.possession) return "Model pre tento zápas nemá odhad držania lopty.";
     if (!(line > 0 && line < 100)) return "Zadaj hranicu v %, napr. 55,5.";
@@ -2243,7 +2291,7 @@ function renderDayTipsViewMain() {
       box.querySelectorAll("[data-bl-row]").forEach((rowEl) => {
         const raw = String(rowEl.querySelector("[data-bl-line]").value).trim();
         if (!raw) return;
-        const line = parseFloat(raw.replace(",", "."));
+        const line = parseFloat(raw.replace(",", ".").replace("−", "-"));
         const mkt = rowEl.querySelector("[data-bl-mkt]")?.value || item.bet.market;
         const fresh = bookLineRows(item.r, mkt, line, oddOf(rowEl.querySelector("[data-bl-over]")), oddOf(rowEl.querySelector("[data-bl-under]")));
         if (typeof fresh === "string") { errs.push(`${raw}: ${fresh}`); return; }
