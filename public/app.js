@@ -1530,7 +1530,8 @@ function hcpLineSelect(sel, market) {
   const max = market === "Handicap" ? 3.5 : 5.5;
   const want = String(sel || "").replace(",", ".").replace("−", "-");
   let o = `<option value="">–</option>`;
-  for (let L = -max; L <= max + 1e-9; L += 1) {
+  for (let L = -max; L <= max + 1e-9; L += 0.5) { // 22. 11. 17:15 (Michal): aj celé hranice
+    if (Math.abs(L) < 1e-9) continue;
     const v = String(L), txt = (L > 0 ? "+" : L < 0 ? "−" : "") + String(Math.abs(L)).replace(".", ",");
     o += `<option value="${v}"${want && Math.abs(parseFloat(want) - L) < 1e-9 ? " selected" : ""}>${txt}</option>`;
   }
@@ -1621,7 +1622,8 @@ function passLinesHtml(r, market) {
 function bookLineRows(r, market, line, overOdds, underOdds) {
   const lineTxt = String(line).replace(".", ",");
   if (HCP_BOOK.test(market)) {
-    if (!Number.isFinite(line) || Math.abs((Math.abs(line) % 1) - 0.5) > 1e-9) return "Zadaj handicap domácich s ,5 – napr. −1,5 alebo +0,5.";
+    if (!Number.isFinite(line) || Math.abs((Math.abs(line) * 2) % 1) > 1e-9) return "Vyber handicap domácich, napr. −1 alebo −1,5.";
+    // celá hranica: presne na hranici = prehra (ako európsky handicap v Tipsporte)
     const pH = hcpHomeProb(r, market, line);
     if (pH == null) return "Model pre tento zápas nemá výpočet handicapu.";
     const hn = r.fixture.homeTeam.name, an = r.fixture.awayTeam.name;

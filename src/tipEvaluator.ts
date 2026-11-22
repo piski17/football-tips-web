@@ -219,7 +219,8 @@ export function evaluateTip(
       const h = teamValue(list, "home"), a = teamValue(list, "away");
       if (h == null || a == null) return "void";
       const diff = (isHome ? h - a : a - h) + line;
-      if (diff === 0) return "void";
+      // 22. 11. 2026 (Michal): v TipRadare aj celé hranice – presne na hranici = prehra; ázijský (TIPREX) = vrátené.
+      if (diff === 0) return tip.market.startsWith("Ázijský") ? "void" : "lost";
       return diff > 0 ? "won" : "lost";
     }
 
