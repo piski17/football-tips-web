@@ -482,6 +482,29 @@ export async function updateTiprexClosing(): Promise<void> {
 
 let settling = false;
 /** Vyhodnotí odohrané zápasy (každých 15 minút). */
+/** 22. 11. 2026: raz prepočíta už vyhodnotené TIPREX tipy na karty so všetkými kartami (žlté + červené). */
+const RESETTLE_CARDS_KEY = "tiprex_migr_all_cards_1122";
+let resettledCards = false;
+export async function resettleTiprexCardsOnce(): Promise<number> {
+  if (resettledCards) return 0;
+  resettledCards = true;
+  if (useUpstash && (await redis(["GET", RESETTLE_CARDS_KEY]))) return 0;
+  const done = (await listPicksRaw("done")).filter((p) => /karty|Karty/.test(p.market) && (p.status === "won" || p.status === "lost"));
+  const byFixture = new Map<number, TiprexPick[]>();
+  for (const p of done) byFixture.set(p.fixtureId, [...(byFixture.get(p.fixtureId) ?? []), p]);
+  let changed = 0;
+  for (const [, picks] of byFixture) {
+    try {
+      const out = await settleFixtureBets(picks[0], picks, { allCards: true });
+      if (!out) continue;
+      const upd = picks.filter((p, i) => out[i] !== p.status && (p.status = out[i], true));
+      if (upd.length) { await savePicks("done", upd); changed += upd.length; }
+    } catch { /* ďalší zápas */ }
+  }
+  if (useUpstash) await redis(["SET", RESETTLE_CARDS_KEY, new Date().toISOString()]);
+  return changed;
+}
+
 export async function settleTiprex(): Promise<number> {
   if (settling) return 0;
   settling = true;
@@ -493,7 +516,7 @@ export async function settleTiprex(): Promise<number> {
     for (const [, picks] of [...byFixture].slice(0, 20)) {
       try {
         const first = picks[0];
-        let out = await settleFixtureBets(first, picks);
+        let out = await settleFixtureBets(first, picks, { allCards: true });
         if (!out) {
           if (Date.now() < new Date(first.matchDate).getTime() + 3 * 24 * 3600 * 1000) continue;
           out = picks.map(() => "void" as const);

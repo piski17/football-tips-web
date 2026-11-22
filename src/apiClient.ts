@@ -1048,6 +1048,9 @@ export async function getFixtureCornersAndCards(
   cornersByTeam?: { team: string; value: number }[] | null;
   /** Žlté karty a strely na bránu jednotlivých tímov (domáci, hostia). */
   cardsByTeam?: { team: string; value: number }[] | null;
+  /** 22. 11. 2026 (TIPREX): všetky karty (žlté + červené) – zahraničné stávkovky rátajú aj červené. */
+  cardsAll?: number | null;
+  cardsAllByTeam?: { team: string; value: number }[] | null;
   shotsByTeam?: { team: string; value: number }[] | null;
   /** Fauly jednotlivých tímov (domáci, hostia). */
   foulsByTeam?: { team: string; value: number }[] | null;
@@ -1108,6 +1111,12 @@ export async function getFixtureCornersAndCards(
 
     return {
       cardsByTeam: byTeam("Yellow Cards", true),
+      cardsAllByTeam: (() => {
+        const y = byTeam("Yellow Cards", true), r = byTeam("Red Cards", true);
+        if (!y) return null;
+        return y.map((x) => ({ team: x.team, value: x.value + (r?.find((z) => z.team === x.team)?.value ?? 0) }));
+      })(),
+      cardsAll: found.cardsYellow || found.cardsRed ? (totals.cardsYellow ?? 0) + (totals.cardsRed ?? 0) : null,
       shotsByTeam: byTeam("Shots on Goal", false),
       foulsByTeam: byTeam("Fouls", false),
       corners: found.corners ? totals.corners : null,

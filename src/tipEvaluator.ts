@@ -445,7 +445,8 @@ export function buildTipEdit(tip: SavedTip, edit: TipEdit): Partial<SavedTip> {
  */
 export async function settleFixtureBets(
   fixture: { fixtureId: number; matchDate?: string; homeTeam: string; awayTeam: string },
-  bets: { market: string; selection: string }[]
+  bets: { market: string; selection: string }[],
+  opts?: { allCards?: boolean }
 ): Promise<("won" | "lost" | "void")[] | null> {
   const result = await getFixtureResult(fixture.fixtureId);
   if (!result) return null;
@@ -457,7 +458,12 @@ export async function settleFixtureBets(
   if (!FINISHED_STATUSES.includes(result.status) || result.homeGoals == null || result.awayGoals == null) return null;
   const wentToExtraTime = result.status !== "FT";
   const needStats = !wentToExtraTime && bets.some((b) => STATS_MARKETS.includes(b.market));
-  const stats = needStats ? await getFixtureCornersAndCards(fixture.fixtureId) : null;
+  const stats0 = needStats ? await getFixtureCornersAndCards(fixture.fixtureId) : null;
+  // 22. 11. 2026 (TIPREX, Michal – Bahia – Coritiba 5 kariet, „pod 4,5“ vyhodnotené ako výhra): zahraničné stávkovky
+  // rátajú všetky karty (žlté aj červené), TipRadar len žlté.
+  const stats = stats0 && opts?.allCards
+    ? { ...stats0, cards: stats0.cardsAll ?? stats0.cards, cardsByTeam: stats0.cardsAllByTeam ?? stats0.cardsByTeam }
+    : stats0;
   const cardHalves = !wentToExtraTime && bets.some((b) => CARD_HALF_MARKETS.includes(b.market)) ? await getFixtureYellowCardHalves(fixture.fixtureId) : null;
   const halftime = halftimeOf(result);
   // Štatistiky ešte nie sú (alebo API zlyhalo) – do 2 dní od výkopu skúsiť neskôr, nevracať.
