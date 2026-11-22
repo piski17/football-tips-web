@@ -81,7 +81,6 @@ const LEAGUE_ORDER = [
   ["Championship", "Anglicko", 1],
   ["2. Bundesliga", "Nemecko", 1],
   ["Segunda División", "Španielsko", 1],
-  ["Ligue 2", "Francúzsko", 1],
   ["UEFA Champions League", "", 2],
   // 10. 11. 2026 (Michal): ženská Liga majstrov a Liga národov.
   ["UEFA Champions League Women", "", 2],
