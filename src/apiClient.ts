@@ -1110,7 +1110,8 @@ export async function getFixtureCornersAndCards(
     // Pri červenej sa druhé žlté pripočítajú zo zoznamu udalostí; priama červená sa nepočíta.
     let cardsByTeam = byTeam("Yellow Cards", true);
     let secondYellows = 0;
-    if ((totals.cardsRed ?? 0) > 0) {
+    // Udalosti sa načítajú vždy, keď sú karty – API pri červenej niekedy nemá ani štatistiku „Red Cards“ (Bahia – Coritiba).
+    if (found.cardsYellow || found.cardsRed) {
       const sy = await getFixtureSecondYellows(fixtureId);
       if (sy) {
         secondYellows = [...sy.values()].reduce((a, b) => a + b, 0);

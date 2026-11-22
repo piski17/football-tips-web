@@ -483,7 +483,8 @@ export async function updateTiprexClosing(): Promise<void> {
 let settling = false;
 /** Vyhodnotí odohrané zápasy (každých 15 minút). */
 /** 22. 11. 2026: raz prepočíta už vyhodnotené TIPREX tipy na karty – aj s druhými žltými (API ich ráta ako červené). */
-const RESETTLE_CARDS_KEY = "tiprex_migr_all_cards_1122";
+// v2: prvý beh (s prvou verziou opravy) nastavil príznak skôr, než sa druhé žlté rátali správne.
+const RESETTLE_CARDS_KEY = "tiprex_migr_second_yellow_1122_v2";
 let resettledCards = false;
 export async function resettleTiprexCardsOnce(): Promise<number> {
   if (resettledCards) return 0;
