@@ -794,7 +794,7 @@ export async function restoreDeletedWatchOnce(): Promise<number> {
  * „1 tip z druhu“ omylom presunulo do sledovaných (sameTypeMoved), sa raz vrátia klientom – ak zápas nemá
  * pre klientov iný tip toho istého handicapu. Len zápasy od 20. 11. 2026.
  */
-const HCP_TYPE_FIX_KEY = "tipradar_migr_hcp_type_fix_done";
+const HCP_TYPE_FIX_KEY = "tipradar_migr_hcp_type_fix2_done"; // 22. 11. 20:50: znova (tipy uložené pred nasadením opravy)
 export async function restoreHcpTypeOnce(typeOf: (market: string) => string | null): Promise<number> {
   if (!useUpstash) return 0;
   const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };
