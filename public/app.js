@@ -1416,7 +1416,7 @@ function lineCalcHtml(r) {
   // 21. 11. 2026 (Michal): aj v detaile zápasu až 4 hranice naraz, každá so svojím trhom.
   return `
     <div class="card calc">
-      <h4 class="ct">${poss ? (models.length ? "Kalkulačka – držanie lopty, rohy a karty tímov" : "Kalkulačka držania lopty") : "Kalkulačka – rohy a karty tímov"}</h4>
+      <h4 class="ct">${poss ? (models.length ? "Kalkulačka – hranice a kurzy zo stávkovky" : "Kalkulačka držania lopty") : "Kalkulačka – hranice a kurzy zo stávkovky"}</h4>
       <p class="faint small calc-intro">Zadaj naraz všetky hranice a kurzy zo stávkovky (nemusíš vyplniť všetky riadky). Appka spočíta šancu rovnako ako model a ponúkne uložiť tip s najväčšou dôverou.</p>
       <div class="bookline-rows">
         ${[0, 1, 2, 3].map((k) => `<div class="bookline-f" data-lc-row="${k}">
@@ -1489,7 +1489,8 @@ const BOOKLINE_OPTS = { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS, 
 // 22. 11. 2026 14:12 (Michal): okienko len pri rohoch a kartách TÍMOV; rohy a karty v zápase znova len model (bez zadávania).
 // 22. 11. 2026 15:40 (Michal): okienko aj pri kartách v zápase (nielen tímov).
 // 22. 11. 2026 16:36 (Michal): políčka pri každom klientskom tipe na rohy aj karty (zápas aj tímy).
-const BOOK_LINE_STD = /^(Rohy|Karty)( domácich| hostí)?$/;
+// 22. 11. 2026 17:17 (Michal): políčka pri KAŽDOM klientskom tipe nad/pod – góly (zápas, tímy, polčasy), rohy, karty, strely.
+const BOOK_LINE_STD = /^(Góly|Rohy|Karty|Strely na bránu)( domácich| hostí| v [12]\. polčase)?$/;
 const lineThresholds = (market) => BOOK_LINE_MARKET.test(market || "") ? { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS } : { minProb: WATCH_BELOW, minOdds: MIN_ODDS };
 // 22. 11. 2026 17:02 (Michal): políčka aj pri handicapoch (góly, rohy) – hranica z pohľadu domácich + kurz domáci / hostia.
 const HCP_BOOK = /^Handicap( – rohy)?$/;
@@ -1550,12 +1551,12 @@ function bookLineMarkets(r, market) {
   if (HCP_BOOK.test(market)) return [market];
   if (market.startsWith("Držanie lopty")) return r.possession ? ["Držanie lopty domácich", "Držanie lopty hostí"] : [market];
   const have = new Set((r.lineModels || []).map((m) => m.market));
-  const base = market.startsWith("Rohy") ? "Rohy" : market.startsWith("Karty") ? "Karty" : "Fauly";
-  const list = [base, `${base} domácich`, `${base} hostí`].filter((m) => have.has(m));
+  const base = market.replace(/ (domácich|hostí|v [12]\. polčase)$/, "");
+  const list = (/ v [12]\. polčase$/.test(market) ? [`${base} v 1. polčase`, `${base} v 2. polčase`] : [base, `${base} domácich`, `${base} hostí`]).filter((m) => have.has(m));
   return list.length ? list : [market];
 }
 function bookLineMarketLabel(r, m) {
-  if (m === "Fauly" || m === "Rohy" || m === "Karty") return `${m} v zápase`;
+  if (m === "Fauly" || m === "Rohy" || m === "Karty" || m === "Góly" || m === "Strely na bránu") return `${m} v zápase`;
   if (m.startsWith("Držanie lopty")) return `Držanie – ${translateTeamName(m.endsWith("domácich") ? r.fixture.homeTeam.name : r.fixture.awayTeam.name)}`;
   return lineMarketLabel(r, m);
 }
@@ -1570,7 +1571,7 @@ function bookLineHtml(i, bet, r) {
       <div class="bookline-rows">
         ${[0, 1, 2, 3].map((k) => `<div class="bookline-f" data-bl-row="${k}">
           ${mkts.length > 1 ? `<label>${k === 0 ? "Trh" : ""}<select data-bl-mkt>${mkts.map((m) => `<option value="${escapeHtml(m)}"${m === bet.market ? " selected" : ""}>${escapeHtml(r ? bookLineMarketLabel(r, m) : m)}</option>`).join("")}</select></label>` : ""}
-          <label>${k === 0 ? (hcp ? "Handicap domácich" : `Hranica${poss ? " %" : ""}`) : ""}${hcp ? hcpLineSelect(k === 0 ? betHcpHomeLine({ ...bet, fixture: r?.fixture }) : "", bet.market) : `<input type="text" inputmode="decimal" autocomplete="off" data-bl-line value="${k === 0 ? escapeHtml(betLineOf(bet)) : ""}" placeholder="${poss ? "napr. 55,5" : "napr. 12,5"}" />`}</label>
+          <label>${k === 0 ? (hcp ? "Handicap domácich" : `Hranica${poss ? " %" : ""}`) : ""}${hcp ? hcpLineSelect(k === 0 ? betHcpHomeLine({ ...bet, fixture: r?.fixture }) : "", bet.market) : `<input type="text" inputmode="decimal" autocomplete="off" data-bl-line value="${k === 0 ? escapeHtml(betLineOf(bet)) : ""}" placeholder="${poss ? "napr. 55,5" : (bet.market || "").startsWith("Góly") ? "napr. 2,5" : "napr. 12,5"}" />`}</label>
           <label>${k === 0 ? (hcp ? `Kurz ${escapeHtml(r ? translateTeamName(r.fixture.homeTeam.name) : "domáci")}` : poss ? "Kurz a viac" : "Kurz viac ako") : ""}<input type="text" inputmode="decimal" autocomplete="off" data-bl-over placeholder="–" /></label>
           <label>${k === 0 ? (hcp ? `Kurz ${escapeHtml(r ? translateTeamName(r.fixture.awayTeam.name) : "hostia")}` : "Kurz menej ako") : ""}<input type="text" inputmode="decimal" autocomplete="off" data-bl-under placeholder="–" /></label>
         </div>`).join("")}
