@@ -1336,7 +1336,7 @@ export function predictMatch(
       { mean: ak, varRatio: VR.cards }
     );
   }
-  if (extraStatsAvg?.homeShotsOnGoal != null && extraStatsAvg?.awayShotsOnGoal != null) {
+  if (!REMOVED_1122 && extraStatsAvg?.homeShotsOnGoal != null && extraStatsAvg?.awayShotsOnGoal != null) {
     const hs = extraStatsAvg.homeShotsOnGoal, as = extraStatsAvg.awayShotsOnGoal;
     addOverUnder("Strely na bránu domácich", "strely_timu", (line) => overdispersedOverUnder(hs, line, VRT.shotsOnGoal), (line) =>
       `${fixture.homeTeam.name} má v priemere ${fmt1(hs)} striel na bránu (aj s ohľadom na súpera), hranica ${line}.${mmNote}`,
