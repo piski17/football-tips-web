@@ -93,6 +93,8 @@ export function marketCategory(market: string): string | null {
   if (m === "Karty v 1. polčase") return "karty_1p";
   if (m === "Karty v 2. polčase") return "karty_2p";
   if (m.startsWith("Držanie lopty")) return "drzanie_lopty";
+  if (m === "Výsledok zápasu") return "vysledok"; // 22. 11. 2026 18:45 (Michal): späť klientom
+  if (m === "Oba tímy skórujú" || m === "Obaja tímy skórujú") return "btts";
   // 20. 11. 2026 (Michal): v TipRadare klasický handicap („Handicap“ = európsky, celé hranice; rohy/karty/strely x,5).
   if (m === "Ázijský handicap" || m === "Handicap") return "hcp_goly";
   if (m === "Ázijský handicap – rohy" || m === "Handicap – rohy") return "hcp_rohy";
@@ -167,6 +169,9 @@ const MARKET_CALIBRATION: Record<string, number> = {
   karty_2p: 0.9,
   // Handicapy (18. 11. 2026) – zatiaľ bez spätného testu: rovnako ako trhy tímu, góly opatrnejšie (1X2 model preceňoval).
   hcp_goly: 0.85,
+  // 22. 11. 2026 18:45 (Michal: všetky trhy naostro) – 1X2 model preceňoval, BTTS bez testu: opatrne.
+  vysledok: 0.85,
+  btts: 0.85,
   hcp_rohy: 0.8,
   hcp_karty: 0.9,
   hcp_strely: 0.95,
@@ -921,7 +926,7 @@ export const POSSESSION_LEAGUE_IDS = [39, 78, 140, 135];
  */
 /** 20. 11. 2026 (Michal): fauly a držanie lopty klientom neodporúčať. Návrat: false. */
 /** 22. 11. 2026 (Michal): strely na bránu (zápas, tím) a karty v polčasoch zrušené. */
-export const REMOVED_1122 = true;
+export const REMOVED_1122 = false; // 22. 11. 2026 18:45 (Michal): späť – strely a karty v polčasoch znova (všetky trhy naostro)
 export const FOUL_POSS_TRACK_ONLY = false; // 20. 11. 2026 0:05 nahradené kompromisom (BOOKLINE v server.ts)
 /** 21. 11. 2026 (Michal): fauly domácich / hostí len Premier League a Bundesliga. */
 /** 21. 11. 2026 (Michal): zo zápasu najviac 1 tip (najväčšia dôvera). */
@@ -1185,7 +1190,17 @@ export function predictMatch(
   // kategórie, aby dostal rôznorodý, nie opakujúci sa výber.
   const candidates: MarketPick[] = [];
 
-  // Výsledok zápasu, „oba tímy skórujú“ a ofsajdy model od 15. 10. 2026 vôbec neponúka (Michalovo rozhodnutie).
+  // 22. 11. 2026 18:45 (Michal, karta „Pustiť naostro klientom“): klientom tipy z akéhokoľvek trhu, ktorý prejde
+  // modelom a stávkovkou – späť výsledok zápasu (1X2) a „oba tímy skórujú“ (kurzy z API, rovnaké pravidlá).
+  {
+    const hn = fixture.homeTeam.name, an = fixture.awayTeam.name;
+    const resNote = `Očakávané góly ${fmt1(xg.home)} : ${fmt1(xg.away)}.`;
+    candidates.push({ market: "Výsledok zápasu", selection: `Výhra ${hn}`, probability: Math.round(poisson.probs.homeWin * 10) / 10, category: "vysledok", explanation: `${resNote} Šanca na výhru ${hn}.` });
+    candidates.push({ market: "Výsledok zápasu", selection: "Remíza", probability: Math.round(poisson.probs.draw * 10) / 10, category: "vysledok", explanation: `${resNote} Šanca na remízu.` });
+    candidates.push({ market: "Výsledok zápasu", selection: `Výhra ${an}`, probability: Math.round(poisson.probs.awayWin * 10) / 10, category: "vysledok", explanation: `${resNote} Šanca na výhru ${an}.` });
+    candidates.push({ market: "Oba tímy skórujú", selection: "Áno", probability: Math.round(poisson.bttsYes * 10) / 10, category: "btts", explanation: bttsExplanation });
+    candidates.push({ market: "Oba tímy skórujú", selection: "Nie", probability: Math.round(poisson.bttsNo * 10) / 10, category: "btts", explanation: `${resNote} Aspoň jeden tím podľa modelu neskóruje.` });
+  }
 
   // Nad/pod: pri každom trhu všetky hranice, ktoré stávkovky ponúkajú (bez kurzov
   // predvolené hranice). Pri každej hranici ide do úvahy strana, ktorú model vidí ako
@@ -1395,7 +1410,7 @@ export function predictMatch(
     // +1,5 = nesmie prehrať o 2 a viac. Bez remízy na handicap; kurzy z ázijského handicapu (pri ,5 je to to isté).
     const goalNote = `Očakávané góly ${fmt1(xg.home)} : ${fmt1(xg.away)}.`;
     // 22. 11. 2026 17:26 (Michal): handicap gólov (na zápas) odstránený – ostáva len handicap rohov. Návrat: odkomentovať.
-    void goalNote; // addHcp("Handicap", "hcp_goly", (L) => gridSum((d) => d + L > 0), goalNote);
+    addHcp("Handicap", "hcp_goly", (L) => gridSum((d) => d + L > 0), goalNote); // 22. 11. 18:45: späť (všetky trhy naostro)
     // Ázijský handicap gólov ostáva len v tichom sledovaní (goalMarketsTrackOnly) – z neho ho berie aj TIPREX.
     const team = (hMarket: string, aMarket: string) => {
       const hm = lineModels.find((m) => m.market === hMarket), am = lineModels.find((m) => m.market === aMarket);
@@ -1609,7 +1624,7 @@ export function predictMatch(
   // držanie lopty, rohy zápasu a tímu, karty, strely na bránu a fauly.
   // 21. 11. 2026 (Michal): fauly v zápase, domácich a hostí vyradené – z faulov ostáva len „Fauly – kto viac“.
   // 22. 11. 2026 13:42 (Michal): tipy na držanie lopty (percentá) z tipov odstránené – ostáva len kalkulačka v detaile zápasu (sledované).
-  const NOT_RECOMMENDED_MARKETS = ["Ofsajdy", "Výsledok zápasu", "Oba tímy skórujú", "Obaja tímy skórujú", "Fauly", "Fauly domácich", "Fauly hostí", "Držanie lopty domácich", "Držanie lopty hostí"];
+  const NOT_RECOMMENDED_MARKETS = ["Fauly", "Fauly domácich", "Fauly hostí", "Držanie lopty domácich", "Držanie lopty hostí"];
   const fewGames =
     Math.min(homeStats.fixtures.played.total ?? 0, awayStats.fixtures.played.total ?? 0) < MIN_GAMES_FOR_TRUST;
   // Liga majstrov: tímy majú v ligovej fáze 1 – 2 zápasy, ale v domácej lige ich

@@ -209,6 +209,8 @@ const MONTH_NAMES = ["Január", "Február", "Marec", "Apríl", "Máj", "Jún", "
 // ---- Pravidlá tipov ----
 const STRONG_TIP_MIN_PROBABILITY = 72; // STRONG_TIP_MIN_PROBABILITY v oddsMatcher.ts
 let MIN_ODDS = 1.5; // 22. 11. 2026 1:24 Michal: späť 1,50; predtým predvolené: 1,50 (2. 11. 2026 20:50 späť z 1,60, spolu s pásmom 70 – 80 %); ak server pošle MIN_ODDS (/api/public/vip-seats), použije sa ten
+const ALL_MARKETS_FROM = "2026-11-22T17:45:00Z"; // 22. 11. 2026 18:45: od teraz všetky trhy klientom
+const isExcludedMarketTip = (t) => EXCLUDED_STATS_MARKETS.includes(t.market) && String(t.matchDate || "") < ALL_MARKETS_FROM;
 const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté konto", "Strely na bránu", "Strely na bránu domácich", "Strely na bránu hostí", "Handicap – strely na bránu", "Ázijský handicap – strely na bránu", "Karty v 1. polčase", "Karty v 2. polčase"]; // 22. 11. 2026: strely zrušené
 const MATCH_STARTED_TEXT = "Zápas už začal – zabudnutý tip pridáš v detaile zápasu (Pridať zabudnutý tip).";
 const LIVE_STATUSES = ["1H", "HT", "2H", "ET", "BT", "P", "SUSP", "INT"];
@@ -1497,7 +1499,7 @@ const BOOKLINE_OPTS = { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS, 
 const BOOK_LINE_STD = /^(Góly|Rohy|Karty|Strely na bránu)( domácich| hostí| v [12]\. polčase)?$/;
 const lineThresholds = (market) => BOOK_LINE_MARKET.test(market || "") ? { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS } : { minProb: clientMinProb(market), minOdds: clientMinOdds(market) };
 // 22. 11. 2026 17:02 (Michal): políčka aj pri handicapoch (góly, rohy) – hranica z pohľadu domácich + kurz domáci / hostia.
-const HCP_BOOK = /^Handicap – rohy$/; // 22. 11. 17:26: handicap gólov odstránený
+const HCP_BOOK = /^Handicap( – rohy)?$/; // 22. 11. 18:45: handicap gólov späť
 const HCP_CAL = { "Handicap": 0.85, "Handicap – rohy": 0.8 }; // = MARKET_CALIBRATION hcp_goly / hcp_rohy v predictor.ts
 const fmtHcpSel = (L) => `${L > 0 ? "+" : "−"}${Math.abs(L)}`;
 function hcpPmf(mean, varRatio, max) {
@@ -2525,7 +2527,7 @@ function renderTipsList(rawTips) {
   const tips = allTips.filter((t) => !t.watchOnly && !t.removedLeague);
   // Tipy na trhy, ktoré appka už neponúka, ostávajú v zozname, ale nerátajú sa do štatistík.
   // Tipy z vyradených súťaží (2. 11. 2026) ostávajú v zozname so značkou, ale nerátajú sa do štatistík.
-  const statTips = tips.filter((t) => !EXCLUDED_STATS_MARKETS.includes(t.market) && !t.removedLeague);
+  const statTips = tips.filter((t) => !isExcludedMarketTip(t) && !t.removedLeague);
   lastStatTips = statTips;
   renderTipsKpis(statTips);
   renderOverrideLine(statTips);
@@ -2557,7 +2559,7 @@ function renderTipsCountNote(tips, statTips, removedLeagueCount = 0) {
   const add = (n, one, few, many) => { if (n) parts.push(plural(n, one, few, many)); };
   add(statTips.filter((t) => t.status === "pending").length, "čaká na výsledok", "čakajú na výsledok", "čaká na výsledok");
   add(statTips.filter((t) => t.status === "void").length, "vrátený (0 j.)", "vrátené (0 j.)", "vrátených (0 j.)");
-  add(tips.filter((t) => !t.removedLeague && EXCLUDED_STATS_MARKETS.includes(t.market)).length, "na zrušený trh", "na zrušené trhy", "na zrušené trhy");
+  add(tips.filter((t) => !t.removedLeague && isExcludedMarketTip(t)).length, "na zrušený trh", "na zrušené trhy", "na zrušené trhy");
   el.textContent =
     `V histórii ${plural(tips.length, "tip", "tipy", "tipov")} (bez sledovaných) · na webe v štatistikách ${onWeb} – rátajú sa len vyhodnotené (výhra / prehra).` +
     (parts.length ? ` Rozdiel: ${parts.join(", ")}.` : "") +
@@ -5530,7 +5532,7 @@ async function renderDnes() {
     const all = Array.isArray(tipsRaw) ? dedupeTips(tipsRaw) : [];
     if (all.length) currentHistoryTips = all; // pre „Poslať tipy dňa“
     const client = all.filter((t) => !t.watchOnly && !t.removedLeague); // 18. 11. 2026: bez tipov z vyradených súťaží
-    const stat = client.filter((t) => !EXCLUDED_STATS_MARKETS.includes(t.market) && !t.removedLeague);
+    const stat = client.filter((t) => !isExcludedMarketTip(t) && !t.removedLeague);
     const units = (l) => l.filter((t) => (t.status === "won" || t.status === "lost") && typeof t.odds === "number" && t.odds > 1).reduce((s, t) => s + (t.status === "won" ? t.odds - 1 : -1), 0);
     const sumUp = (l) => { const won = l.filter((t) => t.status === "won").length, lost = l.filter((t) => t.status === "lost").length; return { won, lost, done: won + lost, profit: units(l) }; };
     const byTime = (a, b) => new Date(a.matchDate) - new Date(b.matchDate);

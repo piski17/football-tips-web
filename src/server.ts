@@ -101,6 +101,9 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 // Trhy, ktoré appka už neponúka - staré uložené tipy na ne sa nerátajú do
 // úspešnosti, reportov ani pripomienok (v histórii ostávajú viditeľné).
 // 22. 11. 2026 (Michal): strely na bránu (zápas, tím, handicap) zrušené – staré tipy sa nerátajú (v databáze ostávajú).
+// 22. 11. 2026 18:45: zrušené trhy sa nerátajú len pri starých tipoch – od teraz idú klientom všetky trhy.
+const ALL_MARKETS_FROM = "2026-11-22T17:45:00Z";
+const isExcludedMarketTip = (t: { market: string; matchDate?: string }) => EXCLUDED_STATS_MARKETS.includes(t.market) && String(t.matchDate || "") < ALL_MARKETS_FROM;
 const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté konto", "Strely na bránu", "Strely na bránu domácich", "Strely na bránu hostí", "Handicap – strely na bránu", "Ázijský handicap – strely na bránu", "Karty v 1. polčase", "Karty v 2. polčase"];
 function statsTips(tips: SavedTip[]): SavedTip[] {
   // Tipy „Len sledovať“ (napr. Liga majstrov na skúšku) sa vyhodnocujú, ale nerátajú sa
@@ -109,7 +112,7 @@ function statsTips(tips: SavedTip[]): SavedTip[] {
   // (Michal) sa do štatistík neráta vôbec (predtým len pri SALES_OPEN=true).
   // 5. 11. 2026 (Michal): znova sa ráta normálne, ak prejde pravidlami – nerátá sa až po spustení predaja (SALES_OPEN=true).
   const salesOpen = process.env.SALES_OPEN === "true";
-  return dedupeTips(tips).filter((t) => !EXCLUDED_STATS_MARKETS.includes(t.market) && !t.watchOnly && !(t.lateAdd && salesOpen) && !isRemovedLeagueTip(t));
+  return dedupeTips(tips).filter((t) => !isExcludedMarketTip(t) && !t.watchOnly && !(t.lateAdd && salesOpen) && !isRemovedLeagueTip(t));
 }
 
 /**
