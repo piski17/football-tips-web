@@ -77,7 +77,7 @@ export const MIN_GAMES_TO_RECOMMEND = 3;
 // vráti tipy 65 – 69 % (band65Returned aj band65Trial) späť do sledovaných.
 export const BAND_65_TRIAL = false; // 12. 11. 2026 ~18:30 VRÁTENÉ (42 vrátených tipov 55 %, −4,1 j.)
 // 19. 11. 2026 (Michal): „69,6 je už 70 %“ – spodná hranica 69,6 (len nové tipy). Návrat: 70 (aj public/app.js WATCH_BELOW).
-export const MIN_PROBABILITY = BAND_65_TRIAL ? 65 : 69.6; // 22. 11. 2026 16:18 (Michal): späť na 70 %; // 22. 11. 2026 0:42 (Michal): spodná hranica 72 % (pásmo 70 – 72 % bolo 62,5 % zo 64 tipov); návrat 69.6
+export const MIN_PROBABILITY = BAND_65_TRIAL ? 65 : 72; // 22. 11. 2026 16:42 (Michal): znova 72 % (16:18 krátko 70 %); // 22. 11. 2026 0:42 (Michal): spodná hranica 72 % (pásmo 70 – 72 % bolo 62,5 % zo 64 tipov); návrat 69.6
 /**
  * Skúšobné pásmo (21. 10. 2026, Michalovo rozhodnutie): tipy s dôverou pod touto hranicou
  * (65 – 68 %) sa ukladajú len na sledovanie – vyhodnotia sa, ale neposielajú sa členom
@@ -95,7 +95,7 @@ export const MAX_PROBABILITY = 80;
  * Od tejto dôvery je odporúčaný tip označený „★ Silný tip“. V troch spätných
  * testoch vyšli tipy 70 – 80 % o ~3 body častejšie ako celé pásmo 68 – 80 %.
  */
-export const STRONG_TIP_MIN_PROBABILITY = 69.6; // 19. 11. 2026: = MIN_PROBABILITY (69,6 % = 70 %)
+export const STRONG_TIP_MIN_PROBABILITY = 72; // 19. 11. 2026: = MIN_PROBABILITY (69,6 % = 70 %)
 /**
  * Kurz pre odporúčaný tip musí ponúkať aspoň toľko stávkoviek.
  * 30. 10. 2026 (Michalovo rozhodnutie, naostro): pri všetkých trhoch stačí 1 stávkovka – v API-Football

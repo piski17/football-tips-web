@@ -207,7 +207,7 @@ function dayKeyLabel(key) {
 const MONTH_NAMES = ["Január", "Február", "Marec", "Apríl", "Máj", "Jún", "Júl", "August", "September", "Október", "November", "December"];
 
 // ---- Pravidlá tipov ----
-const STRONG_TIP_MIN_PROBABILITY = 69.6; // STRONG_TIP_MIN_PROBABILITY v oddsMatcher.ts
+const STRONG_TIP_MIN_PROBABILITY = 72; // STRONG_TIP_MIN_PROBABILITY v oddsMatcher.ts
 let MIN_ODDS = 1.5; // 22. 11. 2026 1:24 Michal: späť 1,50; predtým predvolené: 1,50 (2. 11. 2026 20:50 späť z 1,60, spolu s pásmom 70 – 80 %); ak server pošle MIN_ODDS (/api/public/vip-seats), použije sa ten
 const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté konto", "Strely na bránu", "Strely na bránu domácich", "Strely na bránu hostí", "Handicap – strely na bránu", "Ázijský handicap – strely na bránu", "Karty v 1. polčase", "Karty v 2. polčase"]; // 22. 11. 2026: strely zrušené
 const MATCH_STARTED_TEXT = "Zápas už začal – zabudnutý tip pridáš v detaile zápasu (Pridať zabudnutý tip).";
@@ -450,8 +450,8 @@ function askTelegramTarget() {
 /** Skúšobné pásmo (21. 10. 2026): tipy pod 68 % sa ukladajú len na sledovanie (rovnako ako server). */
 // 2. 11. 2026 20:50: pásmo pre klientov 70 – 80 % (predtým 68).
 // 12. 11. 2026 (Michal, SKÚŠKA): 65 – 80 % – návrat: 70 (spolu s BAND_65_TRIAL = false v src/oddsMatcher.ts).
-const WATCH_BELOW = 69.6; // 22. 11. 2026 16:18 Michal: späť na 70 % (0:42 bolo 72 %); // 19. 11. 2026 (Michal): 69,6 % = zaokrúhlene 70 %; návrat 70 (aj MIN_PROBABILITY v oddsMatcher.ts)
-const WATCH_BELOW_LABEL = 70; // v textoch
+const WATCH_BELOW = 72; // 22. 11. 2026 16:42 Michal: znova 72 % (16:18 krátko 70 %); // 19. 11. 2026 (Michal): 69,6 % = zaokrúhlene 70 %; návrat 70 (aj MIN_PROBABILITY v oddsMatcher.ts)
+const WATCH_BELOW_LABEL = 72; // v textoch
 const MIN_EV = 1.044; // MIN_EXPECTED_VALUE v oddsMatcher.ts (69,6 % × 1,50)
 const MAX_EV = 1.254; // SUSPICIOUS_EXPECTED_VALUE v oddsMatcher.ts (19. 11. 2026: do +25,4 %)
 const isWatchTip = (tip) => !(tip.legs && tip.legs.length) && (tip.strictFail || (!tip.manualEntry && !tip.bookLine && typeof tip.probability === "number" && tip.probability < WATCH_BELOW));
