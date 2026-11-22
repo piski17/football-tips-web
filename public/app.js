@@ -1525,6 +1525,17 @@ function betHcpHomeLine(bet) {
   const hl = home ? L : -L;
   return (hl > 0 ? "+" : "") + String(hl).replace(".", ",");
 }
+// 22. 11. 2026 17:12 (Michal): na telefóne sa do políčka nedá napísať mínus – handicap sa vyberá zo zoznamu.
+function hcpLineSelect(sel, market) {
+  const max = market === "Handicap" ? 3.5 : 5.5;
+  const want = String(sel || "").replace(",", ".").replace("−", "-");
+  let o = `<option value="">–</option>`;
+  for (let L = -max; L <= max + 1e-9; L += 1) {
+    const v = String(L), txt = (L > 0 ? "+" : L < 0 ? "−" : "") + String(Math.abs(L)).replace(".", ",");
+    o += `<option value="${v}"${want && Math.abs(parseFloat(want) - L) < 1e-9 ? " selected" : ""}>${txt}</option>`;
+  }
+  return `<select data-bl-line aria-label="Handicap domácich">${o}</select>`;
+}
 function needsBookLine(bet) {
   if (BOOK_LINE_STD.test(bet.market || "") || HCP_BOOK.test(bet.market || "")) return true;
   // „Fauly – kto viac“ nemá hranicu – kurz sa zadá do bežného políčka kurzu.
@@ -1558,7 +1569,7 @@ function bookLineHtml(i, bet, r) {
       <div class="bookline-rows">
         ${[0, 1, 2, 3].map((k) => `<div class="bookline-f" data-bl-row="${k}">
           ${mkts.length > 1 ? `<label>${k === 0 ? "Trh" : ""}<select data-bl-mkt>${mkts.map((m) => `<option value="${escapeHtml(m)}"${m === bet.market ? " selected" : ""}>${escapeHtml(r ? bookLineMarketLabel(r, m) : m)}</option>`).join("")}</select></label>` : ""}
-          <label>${k === 0 ? (hcp ? "Handicap domácich" : `Hranica${poss ? " %" : ""}`) : ""}<input type="text" inputmode="decimal" autocomplete="off" data-bl-line value="${k === 0 ? escapeHtml(hcp ? betHcpHomeLine({ ...bet, fixture: r?.fixture }) : betLineOf(bet)) : ""}" placeholder="${hcp ? "napr. −1,5" : poss ? "napr. 55,5" : "napr. 12,5"}" /></label>
+          <label>${k === 0 ? (hcp ? "Handicap domácich" : `Hranica${poss ? " %" : ""}`) : ""}${hcp ? hcpLineSelect(k === 0 ? betHcpHomeLine({ ...bet, fixture: r?.fixture }) : "", bet.market) : `<input type="text" inputmode="decimal" autocomplete="off" data-bl-line value="${k === 0 ? escapeHtml(betLineOf(bet)) : ""}" placeholder="${poss ? "napr. 55,5" : "napr. 12,5"}" />`}</label>
           <label>${k === 0 ? (hcp ? `Kurz ${escapeHtml(r ? translateTeamName(r.fixture.homeTeam.name) : "domáci")}` : poss ? "Kurz a viac" : "Kurz viac ako") : ""}<input type="text" inputmode="decimal" autocomplete="off" data-bl-over placeholder="–" /></label>
           <label>${k === 0 ? (hcp ? `Kurz ${escapeHtml(r ? translateTeamName(r.fixture.awayTeam.name) : "hostia")}` : "Kurz menej ako") : ""}<input type="text" inputmode="decimal" autocomplete="off" data-bl-under placeholder="–" /></label>
         </div>`).join("")}
