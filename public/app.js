@@ -1399,8 +1399,9 @@ function rejectedBetsHtml(r) {
 }
 
 function lineCalcHtml(r) {
-  // 21. 11. 2026 (Michal): kalkulačka len pre držanie lopty (fauly sú vyradené, ostatné trhy majú kurzy z API).
-  const models = [];
+  // 21. 11. 2026 (Michal): kalkulačka pre držanie lopty (fauly sú vyradené).
+  // 22. 11. 2026 (Michal): rovnaká tabuľka aj pre rohy a karty tímov (idú klientom 70 – 80 %, kurz od 1,50).
+  const models = (r.lineModels || []).filter((m) => BOOK_LINE_STD.test(m.market) && Number.isFinite(m.mean));
   // Držanie lopty len v Premier League, Bundeslige, La Lige a Serie A (26. 10. 2026).
   const poss = [39, 78, 140, 135].includes(Number(r.fixture?.league?.id)) ? r.possession : null;
   if (!models.length && !poss) return "";
@@ -1415,13 +1416,13 @@ function lineCalcHtml(r) {
   // 21. 11. 2026 (Michal): aj v detaile zápasu až 4 hranice naraz, každá so svojím trhom.
   return `
     <div class="card calc">
-      <h4 class="ct">Kalkulačka držania lopty</h4>
+      <h4 class="ct">${poss ? (models.length ? "Kalkulačka – držanie lopty, rohy a karty tímov" : "Kalkulačka držania lopty") : "Kalkulačka – rohy a karty tímov"}</h4>
       <p class="faint small calc-intro">Zadaj naraz všetky hranice a kurzy zo stávkovky (nemusíš vyplniť všetky riadky). Appka spočíta šancu rovnako ako model a ponúkne uložiť tip s najväčšou dôverou.</p>
       <div class="bookline-rows">
         ${[0, 1, 2, 3].map((k) => `<div class="bookline-f" data-lc-row="${k}">
           <label>${k === 0 ? "Trh" : ""}<select data-lc="market" aria-label="Trh">${opts}</select></label>
-          <label>${k === 0 ? "Hranica" : ""}<input type="text" data-lc="line" inputmode="decimal" placeholder="napr. 55,5" /></label>
-          <label>${k === 0 ? "Kurz a viac" : ""}<input type="text" data-lc="over" inputmode="decimal" placeholder="–" /></label>
+          <label>${k === 0 ? "Hranica" : ""}<input type="text" data-lc="line" inputmode="decimal" placeholder="${poss && !models.length ? "napr. 55,5" : "napr. 4,5"}" /></label>
+          <label>${k === 0 ? "Kurz viac ako" : ""}<input type="text" data-lc="over" inputmode="decimal" placeholder="–" /></label>
           <label>${k === 0 ? "Kurz menej ako" : ""}<input type="text" data-lc="under" inputmode="decimal" placeholder="–" /></label>
         </div>`).join("")}
       </div>
@@ -1656,7 +1657,7 @@ function renderCalcRows(out, r, market, rows, onSaved, opts = {}) {
         homeTeamLogo: r.fixture.homeTeam.logo,
         awayTeamLogo: r.fixture.awayTeam.logo,
         matchDate: r.fixture.date,
-        market,
+        market: x.market || market,
         selection: x.selection,
         probability: Math.round(x.probability * 10) / 10,
         odds,
