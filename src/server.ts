@@ -1153,7 +1153,8 @@ function errText(err: any): string {
  * Ak už zápas má v štatistikách tip toho istého typu, nový tip sa uloží len do sledovaných (sameTypeMoved).
  */
 async function fixtureHasTip(tip: SavedTip): Promise<boolean> {
-  if ((tip.legs && tip.legs.length) || !(Number(tip.fixtureId) > 0)) return false;
+  // 22. 11. 2026 15:40 (Michal): pravidlo 1 tipu zo zápasu len pre klientov – sledovaný tip sa uloží vždy.
+  if (tip.watchOnly || (tip.legs && tip.legs.length) || !(Number(tip.fixtureId) > 0)) return false;
   // 22. 11. 2026: rátajú sa len tipy pre klientov – sledovaný tip zo zápasu (napr. pásmo 65 – 72 %) uloženie klientskeho nezablokuje.
   return (await listTips()).some((t) => t.id !== tip.id && !t.watchOnly && !(t.legs && t.legs.length) && t.fixtureId === tip.fixtureId);
 }
