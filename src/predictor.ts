@@ -1624,7 +1624,9 @@ export function predictMatch(
   // držanie lopty, rohy zápasu a tímu, karty, strely na bránu a fauly.
   // 21. 11. 2026 (Michal): fauly v zápase, domácich a hostí vyradené – z faulov ostáva len „Fauly – kto viac“.
   // 22. 11. 2026 13:42 (Michal): tipy na držanie lopty (percentá) z tipov odstránené – ostáva len kalkulačka v detaile zápasu (sledované).
-  const NOT_RECOMMENDED_MARKETS = ["Fauly", "Fauly domácich", "Fauly hostí", "Držanie lopty domácich", "Držanie lopty hostí"];
+  // 22. 11. 2026 19:54 (Michal): klientom len góly, oba tímy skórujú, handicap gólov, rohy, handicap rohov, karty a strely
+  // v ZÁPASE – trhy tímov, polčasy a 1X2 preč; „Fauly – kto viac“ ani do sledovaných.
+  const NOT_RECOMMENDED_MARKETS = ["Výsledok zápasu", "Góly domácich", "Góly hostí", "Góly v 1. polčase", "Góly v 2. polčase", "Rohy domácich", "Rohy hostí", "Karty domácich", "Karty hostí", "Karty v 1. polčase", "Karty v 2. polčase", "Strely na bránu domácich", "Strely na bránu hostí", "Fauly – kto viac", "Fauly", "Fauly domácich", "Fauly hostí", "Držanie lopty domácich", "Držanie lopty hostí"];
   const fewGames =
     Math.min(homeStats.fixtures.played.total ?? 0, awayStats.fixtures.played.total ?? 0) < MIN_GAMES_FOR_TRUST;
   // Liga majstrov: tímy majú v ligovej fáze 1 – 2 zápasy, ale v domácej lige ich

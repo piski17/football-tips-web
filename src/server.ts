@@ -46,7 +46,7 @@ import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, Market
 import { newModelInputs } from "./newModel";
 import { computeMarketHealth, marketChangesText, clvOf, CLV_TIE } from "./marketHealth";
 import { LeaguePreset, SavedTip } from "./types";
-import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once, moveLateAddsOnce, restoreLateMovedOnce, returnStrictFailedOnce, moveStrictFailedBackOnce, moveSameTypeOnce, moveOldFoulTipsOnce, moveFoulPossWatchOnce, deleteAutoFoulPossOnce, retroApplyRules1121Once, deleteFoulWatchOnce, deleteWatch1122Once, syncBand65Trial, restoreDeletedWatchOnce } from "./tipsStore";
+import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once, moveLateAddsOnce, restoreLateMovedOnce, returnStrictFailedOnce, moveStrictFailedBackOnce, moveSameTypeOnce, moveOldFoulTipsOnce, moveFoulPossWatchOnce, deleteAutoFoulPossOnce, retroApplyRules1121Once, deleteFoulWatchOnce, deleteAllFoulWatchOnce, deleteWatch1122Once, syncBand65Trial, restoreDeletedWatchOnce } from "./tipsStore";
 import { computeTicketStatus, settleBet, settleFixtureBets, tipHasStartedMatch, MATCH_STARTED_MESSAGE, buildTipEdit } from "./tipEvaluator";
 import {
   sendTipToTelegram,
@@ -1196,6 +1196,12 @@ app.post("/api/tips", async (req, res) => {
       return;
     }
     // Ten istý tip (zápas + trh + tip) sa nedá uložiť dvakrát (31. 10. 2026, Michal).
+    // 22. 11. 2026: automaticky uložený tip (len do sledovaných) sa Michalovým uložením nahradí.
+    if (!(tip.legs && tip.legs.length) && Number(tip.fixtureId) > 0) {
+      for (const t of await listTips()) {
+        if (t.id !== tip.id && t.autoWatch && t.fixtureId === tip.fixtureId && t.market === tip.market && t.selection === tip.selection) await deleteTip(t.id);
+      }
+    }
     if (!(tip.legs && tip.legs.length) && Number(tip.fixtureId) > 0 && (await listTips()).some((t) => t.id !== tip.id && !(t.legs && t.legs.length) && t.fixtureId === tip.fixtureId && t.market === tip.market && t.selection === tip.selection)) {
       res.status(409).json({ error: "Tento tip už máš uložený v Histórii tipov." });
       return;
@@ -4117,6 +4123,8 @@ async function addAutoEntry(
   // 4. 11. 2026 (Michal): tip doplnený po výkope len do sledovaných – 5. 11. 2026 (Michal) ZRUŠENÉ:
   // ak prejde pravidlami, pridá sa normálne do Histórie tipov (so značkou lateAdd).
   if (reason) tip.watchOnly = true;
+  // 22. 11. 2026 19:54 (Michal): server sám klientom neukladá – automaticky len do sledovaných, klientom ukladá Michal.
+  if (extra.autoWatch) { tip.watchOnly = true; tip.strongOfDay = undefined; if (!reason) reason = "automaticky len do sledovaných – klientom ukladá Michal"; }
   if (await applySameTypeRule(tip)) reason = "zápas už má tip toho istého typu";
   if (BAND_65_TRIAL && !tip.watchOnly && typeof tip.probability === "number" && tip.probability < 70) tip.band65Trial = true;
   await saveTip(tip);
@@ -4176,7 +4184,7 @@ async function autoSaveDueTips(): Promise<void> {
           // s minimálnym kurzom, pri ktorom má hodnotu (ako „Hrajte len pri kurze aspoň X“); štatistiky rátajú s ním.
           const noApiOdds = !(typeof entry.odds === "number" && entry.odds > 1);
           const minOdds = noApiOdds ? Math.ceil(Math.max(MIN_ODDS, MIN_EXPECTED_VALUE / (entry.probability / 100)) * 100) / 100 : undefined;
-          const r = await addAutoEntry(entry, minOdds, { autoSaved: true, ...(noApiOdds ? { minOddsAuto: true } : {}), ...(hasLineups ? { lineupCheck: { at, probability: entry.probability, ok: true } } : {}) });
+          const r = await addAutoEntry(entry, minOdds, { autoSaved: true, autoWatch: true, ...(noApiOdds ? { minOddsAuto: true } : {}), ...(hasLineups ? { lineupCheck: { at, probability: entry.probability, ok: true } } : {}) });
           if ("ok" in r) {
             console.log(`Automaticky uložený tip ${entry.id}${r.watchOnly ? " (sledovaný: " + r.reason + ")" : ""}`);
             info.saved.push({ market: entry.market, selection: entry.selection, probability: entry.probability, odds: entry.odds, watchOnly: r.watchOnly, reason: r.reason });
@@ -4847,6 +4855,7 @@ app.listen(PORT, () => {
     .then((n) => { if (n) console.log(`Pravidlá z 21. 11. spätne: presunuté do sledovaných ${n}`); })
     .catch((err) => console.error("Spätné pravidlá z 21. 11. zlyhali:", err))
     .then(() => deleteFoulWatchOnce())
+    .then(() => deleteAllFoulWatchOnce())
     .then((n) => { if (n) console.log(`Sledované fauly zmazané: ${n}`); })
     .catch((err) => console.error("Zmazanie sledovaných faulov zlyhalo:", err))
     .then(() => deleteWatch1122Once())

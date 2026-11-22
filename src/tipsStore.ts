@@ -596,6 +596,25 @@ export async function deleteFoulWatchOnce(): Promise<number> {
   });
 }
 
+// 22. 11. 2026 19:54 (Michal: „fauly odstráň aj zo sledovaných“): raz zmaže všetky sledované tipy na fauly (aj „Fauly – kto viac“).
+const DEL_ALL_FOUL_WATCH_KEY = "tipradar_migr_del_all_foul_watch_1122";
+export async function deleteAllFoulWatchOnce(): Promise<number> {
+  if (!useUpstash) return 0;
+  const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };
+  const done = (await upstashClient().get(`${UPSTASH_URL}/get/${DEL_ALL_FOUL_WATCH_KEY}`, auth)).data?.result;
+  if (done) return 0;
+  return withWriteLock(async () => {
+    const tips = await readAll();
+    const keep = tips.filter((t) => !(t.watchOnly && !(t.legs && t.legs.length) && String(t.market).startsWith("Fauly")));
+    const removed = tips.length - keep.length;
+    if (removed) await writeAll(keep);
+    await upstashClient().post(`${UPSTASH_URL}/set/${DEL_ALL_FOUL_WATCH_KEY}`, new Date().toISOString(), {
+      headers: { ...auth.headers, "Content-Type": "text/plain" },
+    });
+    return removed;
+  });
+}
+
 // 22. 11. 2026 (Michal): zo sledovaných natrvalo zmazať karty v polčasoch a strely na bránu (trhy zrušené).
 const DEL_WATCH_1122_KEY = "tipradar_migr_del_watch_1122";
 const DEL_WATCH_1122_MARKETS = ["Karty v 1. polčase", "Karty v 2. polčase", "Strely na bránu", "Strely na bránu domácich", "Strely na bránu hostí", "Handicap – strely na bránu", "Ázijský handicap – strely na bránu"];

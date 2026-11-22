@@ -456,7 +456,7 @@ const WATCH_BELOW = 72; // 22. 11. 2026 16:42 Michal: znova 72 % (16:18 krátko 
 const WATCH_BELOW_LABEL = 72; // v textoch
 // 22. 11. 2026 17:29 (Michal): handicap rohov klientom od 60 %, kurz od 1,60 (= clientMinProb / clientMinOdds v oddsMatcher.ts).
 const HCP_CORNERS_MARKET = "Handicap – rohy";
-const clientMinProb = (market) => (market === HCP_CORNERS_MARKET ? 60 : WATCH_BELOW);
+const clientMinProb = (market) => (market === HCP_CORNERS_MARKET || market === "Handicap" ? 60 : WATCH_BELOW); // 22. 11. 19:54: aj handicap gólov od 60 %
 const clientMinOdds = (market) => (market === HCP_CORNERS_MARKET ? Math.max(1.6, MIN_ODDS) : MIN_ODDS);
 const MIN_EV = 1.044; // MIN_EXPECTED_VALUE v oddsMatcher.ts (69,6 % × 1,50)
 const MAX_EV = 1.254; // SUSPICIOUS_EXPECTED_VALUE v oddsMatcher.ts (19. 11. 2026: do +25,4 %)
@@ -1496,7 +1496,7 @@ const BOOKLINE_OPTS = { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS, 
 // 22. 11. 2026 15:40 (Michal): okienko aj pri kartách v zápase (nielen tímov).
 // 22. 11. 2026 16:36 (Michal): políčka pri každom klientskom tipe na rohy aj karty (zápas aj tímy).
 // 22. 11. 2026 17:17 (Michal): políčka pri KAŽDOM klientskom tipe nad/pod – góly (zápas, tímy, polčasy), rohy, karty, strely.
-const BOOK_LINE_STD = /^(Góly|Rohy|Karty|Strely na bránu)( domácich| hostí| v [12]\. polčase)?$/;
+const BOOK_LINE_STD = /^(Góly|Rohy|Karty|Strely na bránu)$/; // 22. 11. 19:54: len trhy v zápase (tímy a polčasy zrušené)
 const lineThresholds = (market) => BOOK_LINE_MARKET.test(market || "") ? { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS } : { minProb: clientMinProb(market), minOdds: clientMinOdds(market) };
 // 22. 11. 2026 17:02 (Michal): políčka aj pri handicapoch (góly, rohy) – hranica z pohľadu domácich + kurz domáci / hostia.
 const HCP_BOOK = /^Handicap( – rohy)?$/; // 22. 11. 18:45: handicap gólov späť
@@ -1558,7 +1558,7 @@ function bookLineMarkets(r, market) {
   if (market.startsWith("Držanie lopty")) return r.possession ? ["Držanie lopty domácich", "Držanie lopty hostí"] : [market];
   const have = new Set((r.lineModels || []).map((m) => m.market));
   const base = market.replace(/ (domácich|hostí|v [12]\. polčase)$/, "");
-  const list = (/ v [12]\. polčase$/.test(market) ? [`${base} v 1. polčase`, `${base} v 2. polčase`] : [base, `${base} domácich`, `${base} hostí`]).filter((m) => have.has(m));
+  const list = [base].filter((m) => have.has(m)); // 22. 11. 19:54: len trh v zápase
   return list.length ? list : [market];
 }
 function bookLineMarketLabel(r, m) {
@@ -2771,6 +2771,7 @@ async function loadSavedTipKeys() {
   const keys = new Set();
   for (const t of Array.isArray(tips) ? tips : []) {
     if (t.legs && t.legs.length) continue;
+    if (t.autoWatch) continue; // 22. 11. 2026: automaticky uložený len do sledovaných – Michal ho môže uložiť klientom
     keys.add(`${t.fixtureId}|${t.market}|${t.selection}`);
     if (t.autoId) autoSavedKeys.add(t.autoId);
   }
