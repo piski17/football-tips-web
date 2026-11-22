@@ -417,6 +417,25 @@ export interface TipEdit {
   status?: "won" | "lost" | "void" | "pending";
   odds?: number | null;
   legs?: { status: "won" | "lost" | "void" | "pending" }[];
+  /** 22. 11. 2026 (Michal): vlastná hranica zo stávkovky (napr. „+0,5“, „2,5“) – nahradí číslo v tipe. */
+  line?: string;
+}
+
+/** Posledné číslo v texte tipu (hranica), napr. „Inter +0,5“ → „+0,5“, „Viac ako 2,5“ → „2,5“. */
+const LINE_RE = /([+\-−]?\d+(?:[.,]\d+)?)(?!.*\d)/;
+export function selectionWithLine(selection: string, line: string): string | null {
+  const raw = String(line || "").trim().replace("−", "-").replace(",", ".");
+  if (!/^[+-]?\d+(\.\d+)?$/.test(raw)) return null;
+  const m = String(selection || "").match(LINE_RE);
+  if (!m) return null;
+  const old = m[1];
+  const n = parseFloat(raw);
+  const signed = /^[+\-−]/.test(old) || /^[+-]/.test(raw);
+  let txt = String(Math.abs(n));
+  if (old.includes(",")) txt = txt.replace(".", ",");
+  if (signed) txt = (n < 0 ? "-" : "+") + txt;
+  else if (n < 0) return null;
+  return selection.slice(0, m.index) + txt + selection.slice((m.index ?? 0) + old.length);
 }
 
 const EDIT_STATUSES = ["won", "lost", "void", "pending"];
@@ -433,6 +452,14 @@ export function buildTipEdit(tip: SavedTip, edit: TipEdit): Partial<SavedTip> {
     patch.status = computeTicketStatus(legs);
   } else if (edit.status && EDIT_STATUSES.includes(edit.status)) {
     patch.status = edit.status;
+  }
+  if (!(tip.legs && tip.legs.length) && typeof edit.line === "string" && edit.line.trim()) {
+    const sel = selectionWithLine(tip.selection, edit.line);
+    if (sel && sel !== tip.selection) {
+      patch.selection = sel;
+      // nová hranica → vyhodnotiť znova (ak Michal výsledok sám nezmenil)
+      if (!edit.status || edit.status === tip.status) patch.status = "pending";
+    }
   }
   if (edit.odds === null) patch.odds = null;
   else if (typeof edit.odds === "number" && isFinite(edit.odds) && edit.odds > 1) patch.odds = Math.round(edit.odds * 100) / 100;

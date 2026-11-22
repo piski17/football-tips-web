@@ -3697,6 +3697,7 @@ function openEditTip(tip) {
     ${isTicket
       ? `<div class="edit-legs">${legsHtml}</div><p class="small">Výsledok tiketu: <b data-ticket-status></b> <span class="faint">(vypočíta sa zo zápasov)</span></p>`
       : `<label class="fld">Výsledok ${statusSelect("data-status", tip.status)}</label>`}
+    ${isTicket || !/\d/.test(String(tip.selection || "")) ? "" : `<label class="fld">Hranica zo stávkovky <input type="text" data-line inputmode="text" value="${escapeHtml((String(tip.selection).match(/([+\-−]?\d+(?:[.,]\d+)?)(?!.*\d)/) || [])[1] || "")}" placeholder="napr. +0,5 alebo 2,5" /><span class="faint small">pri handicape so znamienkom + alebo -</span></label>`}
     <label class="fld">Kurz <input type="text" data-odds inputmode="decimal" value="${typeof tip.odds === "number" && tip.odds > 1 ? String(tip.odds).replace(".", ",") : ""}" placeholder="napr. 1,75" /></label>
     ${isTicket ? "" : `<label class="small"><input type="checkbox" data-watch${tip.watchOnly ? " checked" : ""} /> Len sledovať <span class="faint">(nerátá sa do štatistík ani na web)</span></label>`}
     <p class="faint small form-msg" data-msg></p>
@@ -3720,6 +3721,8 @@ function openEditTip(tip) {
       return;
     }
     const edit = { odds };
+    const lineEl = el.querySelector("[data-line]");
+    if (lineEl && lineEl.value.trim()) edit.line = lineEl.value.trim();
     if (isTicket) edit.legs = legStatuses().map((status) => ({ status }));
     else {
       edit.status = el.querySelector("[data-status]").value;
