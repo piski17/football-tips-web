@@ -90,6 +90,16 @@ export const WATCH_BELOW_PROBABILITY = MIN_PROBABILITY;
  * 1. 12. sa podľa nich rozhodne, či rozšíriť pásmo pre klientov.
  */
 export const WATCH_BAND_MIN_PROBABILITY = 65;
+/** 22. 11. 2026 17:29 (Michal): handicap rohov ide klientom už od 60 %, ale kurz aspoň 1,60. */
+export const HCP_CORNERS_MARKET = "Handicap – rohy";
+export const HCP_CORNERS_MIN_PROBABILITY = 60;
+export const HCP_CORNERS_MIN_ODDS = 1.6;
+export function clientMinProb(market: unknown): number {
+  return market === HCP_CORNERS_MARKET ? HCP_CORNERS_MIN_PROBABILITY : WATCH_BELOW_PROBABILITY;
+}
+export function clientMinOdds(market: unknown): number {
+  return market === HCP_CORNERS_MARKET ? Math.max(HCP_CORNERS_MIN_ODDS, MIN_ODDS) : MIN_ODDS;
+}
 export const MAX_PROBABILITY = 80;
 /**
  * Od tejto dôvery je odporúčaný tip označený „★ Silný tip“. V troch spätných

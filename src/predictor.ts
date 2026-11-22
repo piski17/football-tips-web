@@ -8,6 +8,8 @@ import {
   plausibleLine,
   MIN_EXPECTED_VALUE,
   MIN_ODDS,
+  clientMinProb,
+  clientMinOdds,
   SUSPICIOUS_EXPECTED_VALUE,
   MIN_GAMES_FOR_TRUST,
   MIN_GAMES_TO_RECOMMEND,
@@ -1591,7 +1593,7 @@ export function predictMatch(
 
   // 21. 11. 2026 (Michal): „Fauly – kto viac“ (len sledované) od 60 % – kurz od 1,60 a hodnota rieši min. kurz.
   const inBand = sortedBets.filter(
-    (b) => b.probability >= (b.category === "viacfaulov" ? 60 : MIN_PROBABILITY) && b.probability <= MAX_PROBABILITY
+    (b) => b.probability >= (b.category === "viacfaulov" ? 60 : clientMinProb(b.market)) && b.probability <= MAX_PROBABILITY
   );
   // Posúdenie hodnoty podľa skutočného kurzu:
   //  - stávkovky k zápasu zatiaľ nemajú kurzy -> vyradiť (hodnota sa nedá overiť;
@@ -1751,7 +1753,7 @@ export function predictMatch(
         // Držanie lopty a fauly (fauly od 30. 10. 2026, Michal): kurz cez API nie je (API-Football má len
         // fauly hráčov), tip ide do výberu s minimálnym kurzom, ktorý Michal porovná so stávkovkou
         // (Tipsport) a kurz zadá ručne – uloží sa len pri hodnote +5 % a aspoň MIN_ODDS.
-        b.minOdds = Math.max(MIN_ODDS, Math.ceil((MIN_EXPECTED_VALUE / (b.probability / 100)) * 100) / 100);
+        b.minOdds = Math.max(clientMinOdds(b.market), Math.ceil((MIN_EXPECTED_VALUE / (b.probability / 100)) * 100) / 100);
         pickPool.push(b);
       } else if (ev == null && oddsAvailable) {
         // Stávkovky k zápasu kurzy majú, ale tento trh (alebo túto hranicu) neponúkajú -
@@ -1769,9 +1771,9 @@ export function predictMatch(
         b.rejectReason = "nízky kurz, bez hodnoty";
         b.rejectCode = "ev_low";
         lowValueBets.push(b);
-      } else if (b.odds != null && b.odds < MIN_ODDS) {
+      } else if (b.odds != null && b.odds < clientMinOdds(b.market)) {
         // Kurz pod minimom (predvolene 1,60) - tip má hodnotu, ale zisk z výhry je malý.
-        b.rejectReason = `kurz pod ${MIN_ODDS.toFixed(2).replace(".", ",")}`;
+        b.rejectReason = `kurz pod ${clientMinOdds(b.market).toFixed(2).replace(".", ",")}`;
         b.rejectCode = "min_odds";
         lowValueBets.push(b);
       } else if ((b.oddsBookmakers ?? 0) < (fewGames ? MIN_BOOKMAKERS_FEW_GAMES : MIN_BOOKMAKERS)) {
@@ -1865,7 +1867,7 @@ export function predictMatch(
   // Typ, z ktorého už zápas má tip v pásme 68 – 80 %, sa nepridáva (najviac 1 tip z typu).
   const bandTypes = new Set(bestBets.map((b) => tipType(b.category))); // 8. 11. 2026: podľa typu
   const watchBandBets = selectPicks(
-    sortedBets.filter((b) => b.probability >= WATCH_BAND_MIN_PROBABILITY && b.probability < MIN_PROBABILITY).map((b) => ({ ...b })),
+    sortedBets.filter((b) => b.probability >= WATCH_BAND_MIN_PROBABILITY && b.probability < clientMinProb(b.market)).map((b) => ({ ...b })),
     [],
     true
   )

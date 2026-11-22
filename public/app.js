@@ -238,8 +238,8 @@ function evPct(ev) {
   const p = Math.round((ev - 1) * 100);
   return `${p >= 0 ? "+" : "−"}${Math.abs(p)}${NB}%`;
 }
-function strongTipBadge(p) {
-  if (typeof p === "number" && p < WATCH_BELOW)
+function strongTipBadge(p, market) {
+  if (typeof p === "number" && p < clientMinProb(market))
     return ` <span class="badge-strong" style="opacity:.75" title="Skúšobné pásmo 65 – 69 %: tip sa uloží len na sledovanie – vyhodnotí sa, ale neposiela sa členom a nerátá sa do štatistík.">len sledovať</span>`;
   return typeof p === "number" && p >= STRONG_TIP_MIN_PROBABILITY
     ? ` <span class="badge-strong" title="Dôvera 70 % a viac.">★ 70${NB}%+</span>`
@@ -452,9 +452,13 @@ function askTelegramTarget() {
 // 12. 11. 2026 (Michal, SKÚŠKA): 65 – 80 % – návrat: 70 (spolu s BAND_65_TRIAL = false v src/oddsMatcher.ts).
 const WATCH_BELOW = 72; // 22. 11. 2026 16:42 Michal: znova 72 % (16:18 krátko 70 %); // 19. 11. 2026 (Michal): 69,6 % = zaokrúhlene 70 %; návrat 70 (aj MIN_PROBABILITY v oddsMatcher.ts)
 const WATCH_BELOW_LABEL = 72; // v textoch
+// 22. 11. 2026 17:29 (Michal): handicap rohov klientom od 60 %, kurz od 1,60 (= clientMinProb / clientMinOdds v oddsMatcher.ts).
+const HCP_CORNERS_MARKET = "Handicap – rohy";
+const clientMinProb = (market) => (market === HCP_CORNERS_MARKET ? 60 : WATCH_BELOW);
+const clientMinOdds = (market) => (market === HCP_CORNERS_MARKET ? Math.max(1.6, MIN_ODDS) : MIN_ODDS);
 const MIN_EV = 1.044; // MIN_EXPECTED_VALUE v oddsMatcher.ts (69,6 % × 1,50)
 const MAX_EV = 1.254; // SUSPICIOUS_EXPECTED_VALUE v oddsMatcher.ts (19. 11. 2026: do +25,4 %)
-const isWatchTip = (tip) => !(tip.legs && tip.legs.length) && (tip.strictFail || (!tip.manualEntry && !tip.bookLine && typeof tip.probability === "number" && tip.probability < WATCH_BELOW));
+const isWatchTip = (tip) => !(tip.legs && tip.legs.length) && (tip.strictFail || (!tip.manualEntry && !tip.bookLine && typeof tip.probability === "number" && tip.probability < clientMinProb(tip.market)));
 
 async function maybeOfferTelegram(tipId, tip) {
   if (tip && tip.sameTypeMoved) {
@@ -1024,7 +1028,7 @@ function renderAnalysis(r, root, opts = {}) {
           ${ring(bet.probability)}
           <div class="tip-body">
             <div class="k">${idx === 0 ? "Najsilnejší tip · " : ""}${escapeHtml(bet.market)}</div>
-            <div class="s">${escapeHtml(tr(bet.selection))}${strongTipBadge(bet.probability)}</div>
+            <div class="s">${escapeHtml(tr(bet.selection))}${strongTipBadge(bet.probability, bet.market)}</div>
             <div class="m"><span>Dôvera <b>${probTxt(bet.probability)}${NB}%</b></span>${betOddsHtml(bet)}</div>
             ${bet.explanation ? `<div class="why">${escapeHtml(tr(bet.explanation))}</div>` : ""}
             ${bet.valueWarning ? `<div class="why warn">⚠️ ${escapeHtml(bet.valueWarning)}</div>` : ""}
@@ -1491,7 +1495,7 @@ const BOOKLINE_OPTS = { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS, 
 // 22. 11. 2026 16:36 (Michal): políčka pri každom klientskom tipe na rohy aj karty (zápas aj tímy).
 // 22. 11. 2026 17:17 (Michal): políčka pri KAŽDOM klientskom tipe nad/pod – góly (zápas, tímy, polčasy), rohy, karty, strely.
 const BOOK_LINE_STD = /^(Góly|Rohy|Karty|Strely na bránu)( domácich| hostí| v [12]\. polčase)?$/;
-const lineThresholds = (market) => BOOK_LINE_MARKET.test(market || "") ? { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS } : { minProb: WATCH_BELOW, minOdds: MIN_ODDS };
+const lineThresholds = (market) => BOOK_LINE_MARKET.test(market || "") ? { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS } : { minProb: clientMinProb(market), minOdds: clientMinOdds(market) };
 // 22. 11. 2026 17:02 (Michal): políčka aj pri handicapoch (góly, rohy) – hranica z pohľadu domácich + kurz domáci / hostia.
 const HCP_BOOK = /^Handicap – rohy$/; // 22. 11. 17:26: handicap gólov odstránený
 const HCP_CAL = { "Handicap": 0.85, "Handicap – rohy": 0.8 }; // = MARKET_CALIBRATION hcp_goly / hcp_rohy v predictor.ts
@@ -2038,7 +2042,7 @@ function farLineTip(t) {
 }
 function lateTipForClients(t) {
   // 16. 11. 2026: automatický záznam má strictFail aj pri vypnutej 60 / 40 (strictWouldFail) – rozhoduje len pri zapnutej kontrole, ako na serveri.
-  if ((t.strictFail && STRICT_CHECK_ON) || t.h2hAgainst || t.probability < WATCH_BELOW || t.probability > 80) return false;
+  if ((t.strictFail && STRICT_CHECK_ON) || t.h2hAgainst || t.probability < clientMinProb(t.market) || t.probability > 80) return false;
   if (typeof t.odds !== "number" && farLineTip(t)) return false; // len bez kurzu z API
   if (typeof t.odds !== "number") return true; // trh bez kurzu v API – rozhodne kurz, ktorý zadá Michal
   const value = (t.probability / 100) * t.odds;
@@ -2078,7 +2082,7 @@ async function renderDayLateTips(box) {
       ${ring(t.probability, 54)}
       <div class="dtip-body">
         <div class="dtip-match"><span class="faint">${escapeHtml(timeHm(new Date(t.matchDate)))}</span> ${escapeHtml(translateTeamName(t.homeTeam))} – ${escapeHtml(translateTeamName(t.awayTeam))} <span class="faint small">· ${escapeHtml(translateLeagueName(t.league || ""))}${score}</span></div>
-        <div class="s">${escapeHtml(t.market)}: <b>${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}</b>${strongTipBadge(t.probability)}</div>
+        <div class="s">${escapeHtml(t.market)}: <b>${escapeHtml(translateNamesInText(t.selection, t.homeTeam, t.awayTeam))}</b>${strongTipBadge(t.probability, t.market)}</div>
         <div class="m"><span>Dôvera <b>${probTxt(t.probability)}${NB}%</b></span>${typeof t.odds === "number" ? `<span>Kurz pred výkopom <b>${fmtOdds(t.odds)}</b></span>` : `<span>Priemerný kurz ~${impliedOdds(t.probability).replace(".", ",")}</span><span><b>Hraj len pri kurze aspoň ${fmtOdds(minOddsFor(t))}</b> <span class="faint">(Kurz v API nie je – zadáš ho pri pridaní)</span></span>`}${res[t.status] ? `<span>${res[t.status]}</span>` : ""}</div>
         ${t.strictFail && STRICT_CHECK_ON ? `<div class="why warn">⚠️ neprejde pri 60 / 40</div>` : ""}
       </div>
@@ -2143,7 +2147,7 @@ function renderDayTipsViewMain() {
             <span class="faint">${escapeHtml(kickoffTime(f))}</span> ${escapeHtml(translateTeamName(f.homeTeam.name))} – ${escapeHtml(translateTeamName(f.awayTeam.name))}
             <span class="faint small">· ${escapeHtml(translateLeagueName(f.league.name))}</span>
           </button>
-          <div class="s">${escapeHtml(bet.market)}: <b>${escapeHtml(translateNamesInText(bet.selection, f.homeTeam.name, f.awayTeam.name))}</b><span class="mini-prob"> · ${probTxt(bet.probability)}${NB}%${dayTipSaved.has(i) ? " · ✓ uložené" : ""}</span>${strongTipBadge(bet.probability)}</div>
+          <div class="s">${escapeHtml(bet.market)}: <b>${escapeHtml(translateNamesInText(bet.selection, f.homeTeam.name, f.awayTeam.name))}</b><span class="mini-prob"> · ${probTxt(bet.probability)}${NB}%${dayTipSaved.has(i) ? " · ✓ uložené" : ""}</span>${strongTipBadge(bet.probability, bet.market)}</div>
           <div class="m"><span>Dôvera <b>${probTxt(bet.probability)}${NB}%</b></span>${betOddsHtml(bet)}</div>
           ${bet.valueWarning ? `<div class="why warn">⚠️ ${escapeHtml(bet.valueWarning)}</div>` : ""}
           ${bet.strictFail ? `<div class="why warn">⚠️ ${escapeHtml(strictHint(bet))}</div>` : ""}
@@ -2947,7 +2951,7 @@ const CALIBRATION_STEP = 2.5;
 const WATCH_BAND_FROM = 65;
 const isWatchBandTip = (t) =>
   !!t.watchBand ||
-  (!t.manualEntry && !t.bookLine && !t.softConflict && !t.strictFail && !t.retroStrict && typeof t.probability === "number" && t.probability >= WATCH_BAND_FROM && t.probability < WATCH_BELOW);
+  (!t.manualEntry && !t.bookLine && !t.softConflict && !t.strictFail && !t.retroStrict && typeof t.probability === "number" && t.probability >= WATCH_BAND_FROM && t.probability < clientMinProb(t.market));
 function renderWatchBand(list) {
   const el = document.getElementById("watchBandResult");
   if (!el) return;

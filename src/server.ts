@@ -1,4 +1,4 @@
-import { plausibleLine, offeredLines, offeredHcpLines, MIN_BOOKMAKERS, MIN_ODDS, MAX_PROBABILITY, MIN_PROBABILITY, MIN_EXPECTED_VALUE, SUSPICIOUS_EXPECTED_VALUE, findOdds, marketProbabilityDetail, STRONG_TIP_MIN_PROBABILITY, WATCH_BELOW_PROBABILITY, WATCH_BAND_MIN_PROBABILITY, BAND_65_TRIAL } from "./oddsMatcher";
+import { plausibleLine, offeredLines, offeredHcpLines, MIN_BOOKMAKERS, MIN_ODDS, MAX_PROBABILITY, MIN_PROBABILITY, MIN_EXPECTED_VALUE, SUSPICIOUS_EXPECTED_VALUE, findOdds, marketProbabilityDetail, STRONG_TIP_MIN_PROBABILITY, WATCH_BELOW_PROBABILITY, WATCH_BAND_MIN_PROBABILITY, BAND_65_TRIAL, clientMinProb, clientMinOdds } from "./oddsMatcher";
 import { teamNamesBrowserScript } from "./teamNamesSk";
 import { listLeads, deleteLead, recordLead } from "./leadsStore";
 import { getMeta, setMeta } from "./metaStore";
@@ -1211,7 +1211,7 @@ app.post("/api/tips", async (req, res) => {
     const bookLineOk = tip.bookLine === true && /^(Fauly|Držanie lopty)/.test(String(tip.market)) && typeof tip.probability === "number" && typeof tip.odds === "number"
       && tip.probability >= BOOKLINE_MIN_PROB && tip.probability <= MAX_PROBABILITY && tip.odds >= BOOKLINE_MIN_ODDS
       && (tip.probability / 100) * tip.odds >= MIN_EXPECTED_VALUE && (tip.probability / 100) * tip.odds <= SUSPICIOUS_EXPECTED_VALUE;
-    if (!bookLineOk && !(tip.legs && tip.legs.length) && !tip.manualEntry && typeof tip.probability === "number" && tip.probability < WATCH_BELOW_PROBABILITY) {
+    if (!bookLineOk && !(tip.legs && tip.legs.length) && !tip.manualEntry && typeof tip.probability === "number" && tip.probability < clientMinProb(tip.market)) {
       tip.watchOnly = true;
       tip.strongOfDay = undefined;
       if (tip.probability >= WATCH_BAND_MIN_PROBABILITY) tip.watchBand = true;
@@ -1246,12 +1246,12 @@ app.post("/api/tips", async (req, res) => {
     // ak by ho model nepustil, uloží sa len medzi sledované.
     if (tip.manualEntry && !(tip.legs && tip.legs.length) && !tip.probabilityEstimated && typeof tip.probability === "number" && typeof tip.odds === "number") {
       const ev = (tip.probability / 100) * tip.odds;
-      if (tip.probability < WATCH_BELOW_PROBABILITY || tip.probability > MAX_PROBABILITY || tip.odds < MIN_ODDS || ev < MIN_EXPECTED_VALUE || ev > SUSPICIOUS_EXPECTED_VALUE) {
+      if (tip.probability < clientMinProb(tip.market) || tip.probability > MAX_PROBABILITY || tip.odds < clientMinOdds(tip.market) || ev < MIN_EXPECTED_VALUE || ev > SUSPICIOUS_EXPECTED_VALUE) {
         tip.watchOnly = true;
       }
     }
     // Kurz od 1,60 (2. 11. 2026, Michal): tip s kurzom pod minimom klientom nejde – len do sledovaných.
-    if (!(tip.legs && tip.legs.length) && typeof tip.odds === "number" && tip.odds > 1 && tip.odds < MIN_ODDS - 1e-9) {
+    if (!(tip.legs && tip.legs.length) && typeof tip.odds === "number" && tip.odds > 1 && tip.odds < clientMinOdds(tip.market) - 1e-9) {
       tip.watchOnly = true;
     }
     if (lateFromAnalysis) {
@@ -3728,9 +3728,9 @@ async function checkLineups(): Promise<void> {
         if (!c) {
           ok = false;
           reason = "model tento tip po zostavách už neponúka";
-        } else if (c.probability < (tip.watchBand ? WATCH_BAND_MIN_PROBABILITY : MIN_PROBABILITY) || c.probability > MAX_PROBABILITY) {
+        } else if (c.probability < (tip.watchBand ? WATCH_BAND_MIN_PROBABILITY : Math.min(MIN_PROBABILITY, clientMinProb(tip.market))) || c.probability > MAX_PROBABILITY) {
           ok = false;
-          const lo = tip.watchBand ? WATCH_BAND_MIN_PROBABILITY : MIN_PROBABILITY;
+          const lo = tip.watchBand ? WATCH_BAND_MIN_PROBABILITY : Math.min(MIN_PROBABILITY, clientMinProb(tip.market));
           reason = `dôvera ${c.probability.toFixed(0)} % je mimo pásma ${lo} – ${MAX_PROBABILITY} %`;
         } else if (c.marketConflict && c.rejectCode !== "ev_high") {
           // „Podozrivo vysoká hodnota“ z modelu sa počíta s momentálnym kurzom z API (30. 10. 2026 chyba:
@@ -3810,8 +3810,8 @@ async function notifyAdminClientTips(fixture: any, bets: any[]): Promise<void> {
   const ok = bets.filter(
     (b) =>
       !b.strictFail && !b.watchBand && !b.watchOnly && !b.h2hAgainst &&
-      typeof b.probability === "number" && b.probability >= WATCH_BELOW_PROBABILITY && b.probability <= MAX_PROBABILITY &&
-      (typeof b.odds === "number" && b.odds > 1 ? b.odds >= MIN_ODDS : typeof b.minOdds === "number"),
+      typeof b.probability === "number" && b.probability >= clientMinProb(b.market) && b.probability <= MAX_PROBABILITY &&
+      (typeof b.odds === "number" && b.odds > 1 ? b.odds >= clientMinOdds(b.market) : typeof b.minOdds === "number"),
   );
   if (!ok.length) return;
   const need = (p: unknown) => (typeof p === "number" && p > 0 ? MIN_EXPECTED_VALUE / (p / 100) : 0);
@@ -4099,7 +4099,7 @@ async function addAutoEntry(
   } else if (entry.h2hAgainst) {
     tip.h2hAgainst = entry.h2hAgainst;
     reason = `vzájomné zápasy – ${entry.h2hAgainst}`;
-  } else if (tip.probability < WATCH_BELOW_PROBABILITY) {
+  } else if (tip.probability < clientMinProb(tip.market)) {
     if (tip.probability >= WATCH_BAND_MIN_PROBABILITY) tip.watchBand = true;
     reason = `dôvera pod ${Math.round(WATCH_BELOW_PROBABILITY)} %`;
   } else if (tip.probability > MAX_PROBABILITY) reason = `dôvera nad ${MAX_PROBABILITY} %`;
