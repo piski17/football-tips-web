@@ -1103,7 +1103,7 @@ h1 em, .h2 em, h2 em, h3 em { font-style: normal !important; color: #D9BF8C !imp
   fetch("/api/public/vip-seats", { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
     if (!d) return;
     if (typeof d.freeChannelUrl === "string" && /^https:\/\/t\.me\//.test(d.freeChannelUrl)) document.querySelectorAll("[data-free]").forEach(function (a) { a.href = d.freeChannelUrl; });
-    window.__sales = { open: !!d.salesOpen, pay: d.salesOpen && d.payOpen === true, minOdds: Number(d.minOdds) || 1.6 };
+    window.__sales = { open: !!d.salesOpen, pay: d.salesOpen && d.payOpen === true, minOdds: Number(d.minOdds) || 1.55 };
     if (window.__applySales) window.__applySales();
   }).catch(function () {});
 
