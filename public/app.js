@@ -2097,11 +2097,11 @@ function renderDayTipsViewMain() {
   // každá sa dá zbaliť a rozbaliť tlačidlom − / +. Poradie a čísla tipov ostávajú.
   const groups = [
     { key: "klienti", title: "Pre klientov", note: "", idx: [] },
-    { key: "sledovane", title: "Do sledovaných", note: "vzájomné zápasy hovoria proti tipu (alebo neprešli pri 60 / 40)", idx: [] },
+    { key: "sledovane", title: "Do sledovaných", note: "fauly – kto viac, alebo vzájomné zápasy hovoria proti tipu", idx: [] },
     { key: "pasmo65", title: `Pásmo 65 – 69${NB}% – len sledovať`, note: "skúška do kontroly 1. 12.: klientom nejdú, len sa vyhodnotia (História tipov → Pásmo 65 – 67 %)", idx: [] },
   ];
-  // 20. 11. 2026 (Michal): fauly a držanie lopty sa ukazujú medzi tipmi pre klientov, uložený tip ide do sledovaných (server).
-  dayTips.items.forEach(({ bet }, i) => groups[bet.watchBand ? 2 : bet.strictFail || bet.h2hAgainst ? 1 : 0].idx.push(i));
+  // 22. 11. 2026 (Michal): fauly („kto viac“) idú len do sledovaných – ukazujú sa v skupine Do sledovaných, nie Pre klientov.
+  dayTips.items.forEach(({ bet }, i) => groups[bet.watchBand ? 2 : bet.strictFail || bet.h2hAgainst || BOOK_LINE_MARKET.test(bet.market || "") ? 1 : 0].idx.push(i));
   let shown = 0;
   const rows = groups
     .filter((g) => g.idx.length)
