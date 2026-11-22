@@ -1488,7 +1488,8 @@ const BOOKLINE_OPTS = { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS, 
 // 22. 11. 2026 13:42 (Michal): okienko aj pri rohoch a kartách TÍMOV (tipy, ktoré model odporučí klientom).
 // 22. 11. 2026 14:12 (Michal): okienko len pri rohoch a kartách TÍMOV; rohy a karty v zápase znova len model (bez zadávania).
 // 22. 11. 2026 15:40 (Michal): okienko aj pri kartách v zápase (nielen tímov).
-const BOOK_LINE_STD = /^(Rohy (domácich|hostí)|Karty( domácich| hostí)?)$/;
+// 22. 11. 2026 16:36 (Michal): políčka pri každom klientskom tipe na rohy aj karty (zápas aj tímy).
+const BOOK_LINE_STD = /^(Rohy|Karty)( domácich| hostí)?$/;
 const lineThresholds = (market) => BOOK_LINE_MARKET.test(market || "") ? { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS } : { minProb: WATCH_BELOW, minOdds: MIN_ODDS };
 function needsBookLine(bet) {
   if (BOOK_LINE_STD.test(bet.market || "")) return true;
@@ -1503,7 +1504,7 @@ function bookLineMarkets(r, market) {
   if (market.startsWith("Držanie lopty")) return r.possession ? ["Držanie lopty domácich", "Držanie lopty hostí"] : [market];
   const have = new Set((r.lineModels || []).map((m) => m.market));
   const base = market.startsWith("Rohy") ? "Rohy" : market.startsWith("Karty") ? "Karty" : "Fauly";
-  const list = (base === "Rohy" && BOOK_LINE_STD.test(market) ? [`${base} domácich`, `${base} hostí`] : [base, `${base} domácich`, `${base} hostí`]).filter((m) => have.has(m));
+  const list = [base, `${base} domácich`, `${base} hostí`].filter((m) => have.has(m));
   return list.length ? list : [market];
 }
 function bookLineMarketLabel(r, m) {
