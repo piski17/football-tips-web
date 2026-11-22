@@ -1154,7 +1154,8 @@ function errText(err: any): string {
  */
 async function fixtureHasTip(tip: SavedTip): Promise<boolean> {
   if ((tip.legs && tip.legs.length) || !(Number(tip.fixtureId) > 0)) return false;
-  return (await listTips()).some((t) => t.id !== tip.id && !(t.legs && t.legs.length) && t.fixtureId === tip.fixtureId);
+  // 22. 11. 2026: rátajú sa len tipy pre klientov – sledovaný tip zo zápasu (napr. pásmo 65 – 72 %) uloženie klientskeho nezablokuje.
+  return (await listTips()).some((t) => t.id !== tip.id && !t.watchOnly && !(t.legs && t.legs.length) && t.fixtureId === tip.fixtureId);
 }
 async function applySameTypeRule(tip: SavedTip): Promise<boolean> {
   if ((tip.legs && tip.legs.length) || tip.watchOnly || !(Number(tip.fixtureId) > 0)) return false;
@@ -4054,7 +4055,7 @@ async function addAutoEntry(
   if (tips.some((t) => t.autoId === entry.id || (!(t.legs && t.legs.length) && t.fixtureId === entry.fixtureId && t.market === entry.market && t.selection === entry.selection))) {
     return { status: 409, error: "Tento tip už v Histórii tipov je." };
   }
-  if (ONE_TIP_PER_MATCH && tips.some((t) => !(t.legs && t.legs.length) && Number(t.fixtureId) > 0 && t.fixtureId === entry.fixtureId)) {
+  if (ONE_TIP_PER_MATCH && tips.some((t) => !t.watchOnly && !(t.legs && t.legs.length) && Number(t.fixtureId) > 0 && t.fixtureId === entry.fixtureId)) {
     return { status: 409, error: "Z tohto zápasu už je uložený tip – zo zápasu ide len 1 tip." };
   }
   // Kurz: ten, ktorý server zapísal pred výkopom. Len pri trhoch bez kurzu v API (napr. fauly) ho treba zadať.
