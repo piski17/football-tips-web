@@ -1493,7 +1493,7 @@ const BOOKLINE_OPTS = { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS, 
 const BOOK_LINE_STD = /^(Góly|Rohy|Karty|Strely na bránu)( domácich| hostí| v [12]\. polčase)?$/;
 const lineThresholds = (market) => BOOK_LINE_MARKET.test(market || "") ? { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS } : { minProb: WATCH_BELOW, minOdds: MIN_ODDS };
 // 22. 11. 2026 17:02 (Michal): políčka aj pri handicapoch (góly, rohy) – hranica z pohľadu domácich + kurz domáci / hostia.
-const HCP_BOOK = /^Handicap( – rohy)?$/;
+const HCP_BOOK = /^Handicap – rohy$/; // 22. 11. 17:26: handicap gólov odstránený
 const HCP_CAL = { "Handicap": 0.85, "Handicap – rohy": 0.8 }; // = MARKET_CALIBRATION hcp_goly / hcp_rohy v predictor.ts
 const fmtHcpSel = (L) => `${L > 0 ? "+" : "−"}${Math.abs(L)}`;
 function hcpPmf(mean, varRatio, max) {

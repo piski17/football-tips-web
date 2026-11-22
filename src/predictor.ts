@@ -1392,7 +1392,8 @@ export function predictMatch(
     // 21. 11. 2026 (Michal): handicap gólov s hranicami ,5 – napr. Barcelona −1,5 = musí vyhrať aspoň o 2 góly,
     // +1,5 = nesmie prehrať o 2 a viac. Bez remízy na handicap; kurzy z ázijského handicapu (pri ,5 je to to isté).
     const goalNote = `Očakávané góly ${fmt1(xg.home)} : ${fmt1(xg.away)}.`;
-    addHcp("Handicap", "hcp_goly", (L) => gridSum((d) => d + L > 0), goalNote);
+    // 22. 11. 2026 17:26 (Michal): handicap gólov (na zápas) odstránený – ostáva len handicap rohov. Návrat: odkomentovať.
+    void goalNote; // addHcp("Handicap", "hcp_goly", (L) => gridSum((d) => d + L > 0), goalNote);
     // Ázijský handicap gólov ostáva len v tichom sledovaní (goalMarketsTrackOnly) – z neho ho berie aj TIPREX.
     const team = (hMarket: string, aMarket: string) => {
       const hm = lineModels.find((m) => m.market === hMarket), am = lineModels.find((m) => m.market === aMarket);
