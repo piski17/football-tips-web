@@ -506,6 +506,21 @@ export async function resettleTiprexCardsOnce(): Promise<number> {
   return changed;
 }
 
+/**
+ * 22. 11. 2026 20:55 (Michal): Bahia – Coritiba (21. 11.) malo 5 žltých (hráč s 2 žltými), API udalosti druhú žltú
+ * neukázali, takže automatický prepočet tip „Karty: Under 4.5“ neopravil → ručne na prehru (raz).
+ */
+const FIX_BAHIA_KEY = "tiprex_fix_bahia_coritiba_1121";
+export async function fixBahiaCoritibaOnce(): Promise<number> {
+  if (useUpstash && (await redis(["GET", FIX_BAHIA_KEY]))) return 0;
+  const picks = (await listPicksRaw("done")).filter((p) => /bahia/i.test(p.homeTeam) && /coritiba/i.test(p.awayTeam)
+    && p.market === "Karty" && /under\s*4[.,]5/i.test(p.selection) && String(p.matchDate).startsWith("2026-11-2") && p.status !== "lost");
+  picks.forEach((p) => { p.status = "lost"; });
+  if (picks.length) await savePicks("done", picks);
+  if (useUpstash) await redis(["SET", FIX_BAHIA_KEY, new Date().toISOString()]);
+  return picks.length;
+}
+
 export async function settleTiprex(): Promise<number> {
   if (settling) return 0;
   settling = true;

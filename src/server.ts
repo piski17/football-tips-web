@@ -12,7 +12,7 @@ import { applyCupGoals } from "./cupAdjust";
 import { getDay, getAllDays, setDay } from "./dailyStore";
 import { saveSlip, deleteSlip, listSlipIds, getSlipImage, MAX_SLIP_CHARS } from "./slipStore";
 import { recordMarketPredictions, settleMarketPredictions, marketSummary } from "./marketTracker";
-import { recordTiprexPicks, updateTiprexClosing, settleTiprex, resettleTiprexCardsOnce, tiprexSummary, tiprexPublicStats, addTiprexWaitlist, tiprexWaitlistCount } from "./tiprex";
+import { recordTiprexPicks, updateTiprexClosing, settleTiprex, resettleTiprexCardsOnce, fixBahiaCoritibaOnce, tiprexSummary, tiprexPublicStats, addTiprexWaitlist, tiprexWaitlistCount } from "./tiprex";
 import { scanSurebets, computeSurebets, fixtureResult, topBooksPresent, TOP_BOOKS, surebetStatus, surebetLog, getMyBooks, setMyBooks, startSurebetScanner, setOnScan } from "./surebets";
 import { recordAutoFixture, listAuto, listAutoFixtures, autoFixtureDone, updateAuto, pruneAuto, AutoEntry } from "./autoStore";
 import "dotenv/config";
@@ -3916,6 +3916,7 @@ setInterval(() => void runAutoAnalysis().catch((err) => console.error("Automatic
 setTimeout(() => void runAutoAnalysis().catch(() => {}), 60 * 1000);
 setInterval(() => void settleMarketPredictions().catch(() => {}), 15 * 60 * 1000);
 setInterval(() => void settleTiprex().catch(() => {}), 15 * 60 * 1000);
+setTimeout(() => void fixBahiaCoritibaOnce().then((n) => { if (n) console.log(`TIPREX Bahia – Coritiba karty opravené na prehru: ${n}`); }).catch((e) => console.error("TIPREX oprava Bahia zlyhala:", e)), 90 * 1000);
 setTimeout(() => void resettleTiprexCardsOnce().then((n) => { if (n) console.log(`TIPREX karty prepočítané aj s druhými žltými: ${n}`); }).catch((e) => console.error("TIPREX prepočet kariet zlyhal:", e)), 60 * 1000);
 
 // TIPREX – ďalšie súťaže (18. 11. 2026): rovnaký postup ako runAutoAnalysis (~65 min pred výkopom), ale výsledok ide
