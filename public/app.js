@@ -1420,7 +1420,7 @@ function lineCalcHtml(r) {
       <p class="faint small calc-intro">Zadaj naraz všetky hranice a kurzy zo stávkovky (nemusíš vyplniť všetky riadky). Appka spočíta šancu rovnako ako model a ponúkne uložiť tip s najväčšou dôverou.</p>
       <div class="bookline-rows">
         ${[0, 1, 2, 3].map((k) => `<div class="bookline-f" data-lc-row="${k}">
-          <label>${k === 0 ? "Trh" : ""}<select data-lc="market" aria-label="Trh">${opts}</select></label>
+          <label>${k === 0 ? "Trh" : ""}<select data-lc="market" aria-label="Trh">${models[k] ? opts.replace(`value="${escapeHtml(models[k].market)}"`, `value="${escapeHtml(models[k].market)}" selected`) : opts}</select></label>
           <label>${k === 0 ? "Hranica" : ""}<input type="text" data-lc="line" inputmode="decimal" placeholder="${poss && !models.length ? "napr. 55,5" : "napr. 4,5"}" /></label>
           <label>${k === 0 ? "Kurz viac ako" : ""}<input type="text" data-lc="over" inputmode="decimal" placeholder="–" /></label>
           <label>${k === 0 ? "Kurz menej ako" : ""}<input type="text" data-lc="under" inputmode="decimal" placeholder="–" /></label>
