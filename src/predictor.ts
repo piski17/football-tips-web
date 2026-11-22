@@ -923,7 +923,7 @@ export const REMOVED_1122 = true;
 export const FOUL_POSS_TRACK_ONLY = false; // 20. 11. 2026 0:05 nahradené kompromisom (BOOKLINE v server.ts)
 /** 21. 11. 2026 (Michal): fauly domácich / hostí len Premier League a Bundesliga. */
 /** 21. 11. 2026 (Michal): zo zápasu najviac 1 tip (najväčšia dôvera). */
-export const ONE_TIP_PER_MATCH = true;
+export const ONE_TIP_PER_MATCH = false; // 22. 11. 2026 16:18 (Michal): späť – zo zápasu viac tipov, z každého druhu najviac 1
 export const TEAM_FOUL_LEAGUE_IDS = [39, 78];
 export const FOUL_LEAGUE_IDS = [39, 140, 135, 78, 61, 2];
 const isFoulMarket = (market: string): boolean => market === "Fauly" || market.startsWith("Fauly ");
