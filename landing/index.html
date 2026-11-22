@@ -569,7 +569,7 @@ p { margin: 0; }
               <div class="ph-top"><span class="av"><svg aria-hidden="true"><use href="#logo-s"/></svg></span><div><b>TipRadar · VIP Klub</b><small>súkromný kanál</small></div></div>
               <div class="chat">
                 <div data-s="1" class="msg">Dobré ráno. Model prepočítal dnešné zápasy, tipy pošlem 1 – 2 hodiny pred výkopom.<span class="t">9:00</span></div>
-                <div data-s="2" class="msg tip"><span class="lg">Premier League · 20:45</span><b>Arsenal – Chelsea</b><br>Rohy: viac ako 9,5<div class="row"><span>Kurz <b>1,85</b></span><span>Šanca <b>74 %</b></span></div><div class="row"><span>Hrajte pri kurze aspoň</span><b>1,50</b></div><span class="t">18:52</span></div>
+                <div data-s="2" class="msg tip"><span class="lg">Premier League · 20:45</span><b>Arsenal – Chelsea</b><br>Rohy: viac ako 9,5<div class="row"><span>Kurz <b>1,85</b></span><span>Šanca <b>74 %</b></span></div><div class="row"><span>Hrajte pri kurze aspoň</span><b>1,60</b></div><span class="t">18:52</span></div>
                 <div data-s="3" class="msg ok"><b>✓ Vyšiel</b> · Arsenal – Chelsea 2:1, 11 rohov · +0,85 j.<span class="t">22:41</span></div>
                 <div data-s="4" class="msg">Súhrn dňa: <b>2 z 2</b> tipov vyšlo · <b>+1,57 j.</b><span class="t">23:05</span></div>
               </div>
@@ -580,7 +580,7 @@ p { margin: 0; }
       </div>
       <div class="rules">
         <div class="rule rv"><div><i>PRAVIDLO 1</i><b>72 – 80&nbsp;%</b><span><strong>Šanca</strong>podľa modelu</span></div></div>
-        <div class="rule rv"><div><i>PRAVIDLO 2</i><b>od 1,50</b><span><strong>Kurz</strong>v stávkovej kancelárii</span></div></div>
+        <div class="rule rv"><div><i>PRAVIDLO 2</i><b>od 1,60</b><span><strong>Kurz</strong>v stávkovej kancelárii</span></div></div>
         <div class="rule rv"><div><i>PRAVIDLO 3</i><b>+5&nbsp;%</b><span><strong>Hodnota</strong>kurz nedoceňuje šancu</span></div></div>
         <div class="rule rv"><div><i>PRAVIDLO 4</i><b>1 tip</b><span><strong>Zo zápasu</strong>len ten najsilnejší</span></div></div>
       </div>
@@ -863,7 +863,7 @@ p { margin: 0; }
   fetch("/api/public/vip-seats", { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
     if (!d) return;
     if (typeof d.freeChannelUrl === "string" && /^https:\/\/t\.me\//.test(d.freeChannelUrl)) document.querySelectorAll("[data-free]").forEach(function (a) { a.href = d.freeChannelUrl; });
-    window.__sales = { open: !!d.salesOpen, pay: d.salesOpen && d.payOpen === true, minOdds: Number(d.minOdds) || 1.5 };
+    window.__sales = { open: !!d.salesOpen, pay: d.salesOpen && d.payOpen === true, minOdds: Number(d.minOdds) || 1.6 };
     if (window.__applySales) window.__applySales();
   }).catch(function () {});
 
