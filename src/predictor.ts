@@ -1409,16 +1409,16 @@ export function predictMatch(
     // 21. 11. 2026 (Michal): rohy a „kto viac faulov“ – posledných 5 vzájomných zápasov so štatistikou (ak ich je menej,
     // koľko ich je, ale aspoň 3), k tomu posledných 5 zápasov tímov v súťaži (odhad modelu); polovica a polovica.
     // Pri menej ako 3 vzájomných len posledných 5 zápasov. Handicap kariet a striel zrušený (Michal 21. 11.).
-    const h2hBlendTeam = (t: { hm: LineModel; am: LineModel }, hk: keyof H2HStats, ak: keyof H2HStats) => {
+    const h2hBlendTeam = (t: { hm: LineModel; am: LineModel }, hk: keyof H2HStats, ak: keyof H2HStats, wH2H = 0.5) => {
       const v = (h2hStats ?? [])
         .filter((x) => typeof x[hk] === "number" && typeof x[ak] === "number")
         .slice(0, 5);
-      if (v.length < 3) return { hm: t.hm, am: t.am, n: 0, h: 0, a: 0 };
+      if (v.length < 3) return { hm: t.hm, am: t.am, n: 0, h: 0, a: 0, w: 0 };
       const h = v.reduce((s2, x) => s2 + (x[hk] as number), 0) / v.length, a = v.reduce((s2, x) => s2 + (x[ak] as number), 0) / v.length;
-      return { hm: { ...t.hm, mean: (t.hm.mean + h) / 2 }, am: { ...t.am, mean: (t.am.mean + a) / 2 }, n: v.length, h, a };
+      return { hm: { ...t.hm, mean: (1 - wH2H) * t.hm.mean + wH2H * h }, am: { ...t.am, mean: (1 - wH2H) * t.am.mean + wH2H * a }, n: v.length, h, a, w: wH2H };
     };
-    const h2hTxt = (b: { n: number; h: number; a: number }, what: string) =>
-      b.n ? ` Vo vzájomných zápasoch (${b.n}) ${what} ${fmt1(b.h)} : ${fmt1(b.a)} – započítané napoly s posledných 5 zápasmi.` : " Vzájomných zápasov so štatistikou je menej ako 3 – len posledných 5 zápasov.";
+    const h2hTxt = (b: { n: number; h: number; a: number; w?: number }, what: string) =>
+      b.n ? ` Vo vzájomných zápasoch (${b.n}) ${what} ${fmt1(b.h)} : ${fmt1(b.a)} – ${b.w && b.w > 0.5 ? `váha ${Math.round(b.w * 100)} % vzájomné, zvyšok posledných 5 zápasov` : "započítané napoly s posledných 5 zápasmi"}.` : " Vzájomných zápasov so štatistikou je menej ako 3 – len posledných 5 zápasov.";
     const tc0 = team("Rohy domácich", "Rohy hostí");
     if (tc0) {
       const tc = h2hBlendTeam(tc0, "homeCorners", "awayCorners");
@@ -1427,7 +1427,8 @@ export function predictMatch(
     // 21. 11. 2026 (Michal): „kto urobí viac faulov v zápase“ – tím s viac faulmi; pri rovnosti tip prehrá.
     const tf0 = team("Fauly domácich", "Fauly hostí");
     if (tf0) {
-      const tf = h2hBlendTeam(tf0, "homeFouls", "awayFouls");
+      // 22. 11. 2026 (Michal): „ber to hlavne zo vzájomných zápasov, max 5“ – 80 % vzájomné (3 – 5), 20 % posledných 5 zápasov.
+      const tf = h2hBlendTeam(tf0, "homeFouls", "awayFouls", 0.8);
       const j = teamJoint(tf.hm, tf.am);
       const pHome = j(0), pAway = 1 - j(0.5);
       const note = `Očakávané fauly ${fmt1(tf.hm.mean)} : ${fmt1(tf.am.mean)} (pri rovnakom počte tip neprejde).${h2hTxt(tf, "fauly v priemere")}${refereeNote("fouls")}`;
