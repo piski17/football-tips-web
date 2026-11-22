@@ -37,7 +37,7 @@ export const MIN_EXPECTED_VALUE = 1.044;
  */
 function parseMinOdds(raw: string | undefined): number {
   const n = Number(String(raw ?? "").trim().replace(",", "."));
-  return raw && Number.isFinite(n) && n >= 1.01 && n <= 10 ? n : 1.5; // 2. 11. 2026 20:50 (Michal): späť 1,50 spolu s pásmom 70 – 80 %
+  return raw && Number.isFinite(n) && n >= 1.01 && n <= 10 ? n : 1.6; // 22. 11. 2026 1:12 (Michal): kurz od 1,60 (predtým 1,50); návrat 1.5
 }
 export const MIN_ODDS = parseMinOdds(typeof process !== "undefined" ? process.env.MIN_ODDS : undefined);
 

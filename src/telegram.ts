@@ -168,7 +168,7 @@ function buildMessageText(tip: SavedTip, headerOverride?: string, vip = false, s
 /** Minimálny kurz, pri ktorom tip odporúčam hrať (hodnota aspoň +5 %, nie pod 1,50). */
 export function minOddsFor(tip: SavedTip): number {
   const need = (p: number | undefined) => (typeof p === "number" && p > 0 ? MIN_EXPECTED_VALUE / (p / 100) : 0);
-  return Math.ceil(Math.max(1.5, need(tip.probability), STRICT_CHECK_ON ? need(tip.strictProbability) : 0) * 100) / 100;
+  return Math.ceil(Math.max(MIN_ODDS, need(tip.probability), STRICT_CHECK_ON ? need(tip.strictProbability) : 0) * 100) / 100;
 }
 function minOddsLine(tip: SavedTip): string {
   const min = minOddsFor(tip);
