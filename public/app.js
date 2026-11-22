@@ -73,7 +73,6 @@ const LEAGUE_ORDER = [
   ["Bundesliga", "Nemecko", 0],
   ["Ligue 1", "Francúzsko", 0],
   ["Eredivisie", "Holandsko", 0],
-  ["Primeira Liga", "Portugalsko", 0],
   ["Jupiler Pro League", "Belgicko", 0],
   ["Süper Lig", "Turecko", 0],
   ["Superliga", "Dánsko", 0],

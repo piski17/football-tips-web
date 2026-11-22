@@ -207,6 +207,7 @@ const CUP_LEAGUE_IDS = [2, 3, 848]; // Liga majstrov, Európska liga, Konferenč
 const TIPREX_EXTRA_LEAGUES: { id: number; name: string; country: string }[] = [
   { id: 3, name: "UEFA Europa League", country: "Európa" },
   { id: 62, name: "Ligue 2", country: "Francúzsko" }, // 22. 11. 2026: z TipRadaru vyradená, TIPREX ju berie ďalej
+  { id: 94, name: "Primeira Liga", country: "Portugalsko" }, // 22. 11. 2026: z TipRadaru vyradená, TIPREX ju berie ďalej
   { id: 848, name: "UEFA Conference League", country: "Európa" },
   { id: 136, name: "Serie B", country: "Taliansko" },
   { id: 41, name: "League One", country: "Anglicko" },
@@ -242,7 +243,7 @@ const LEAGUE_PRESETS: LeaguePreset[] = [
   { id: 78, name: "Bundesliga", country: "Nemecko" },
   { id: 61, name: "Ligue 1", country: "Francúzsko" },
   { id: 88, name: "Eredivisie", country: "Holandsko" },
-  { id: 94, name: "Primeira Liga", country: "Portugalsko" },
+  // 22. 11. 2026 20:10 (Michal): Primeira Liga VYRADENÁ (3 z 6, −3,0 j.) – 15 súťaží; tipy sa nerátajú. TIPREX ju má v extras.
   { id: 144, name: "Jupiler Pro League", country: "Belgicko" },
   { id: 203, name: "Süper Lig", country: "Turecko" },
   { id: 119, name: "Superliga", country: "Dánsko" },
@@ -2698,7 +2699,7 @@ setAskRadarHandler(async (text, chatId): Promise<AskRadarAnswer> => {
     const m = `${translateTeamName(fixture.homeTeam.name)} – ${translateTeamName(fixture.awayTeam.name)}`;
     return {
       kind: "notfound",
-      text: `🔎 Našiel som <b>${escapeHtml(m)}</b> (${escapeHtml(String(fixture.league?.name ?? ""))}), ale túto súťaž radar nesleduje – nemá pre ňu dosť spoľahlivé čísla.\n\nRadar sleduje 16 súťaží: top 5 líg, Ligu majstrov, Ligu národov, Niké ligu, Chance Ligu a ďalšie. Skúste zápas z nich, napríklad <i>Arsenal – Chelsea</i>.`,
+      text: `🔎 Našiel som <b>${escapeHtml(m)}</b> (${escapeHtml(String(fixture.league?.name ?? ""))}), ale túto súťaž radar nesleduje – nemá pre ňu dosť spoľahlivé čísla.\n\nRadar sleduje 15 súťaží: top 5 líg, Ligu majstrov, Ligu národov, Niké ligu, Chance Ligu a ďalšie. Skúste zápas z nich, napríklad <i>Arsenal – Chelsea</i>.`,
     };
   }
   if (!fixture) {
