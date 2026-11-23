@@ -5819,7 +5819,7 @@ const K160A_TEXT = {
 };
 const K160B_TEXT = {
   boxId: "k160Result", fold: "kurz160", emptySum: "Tiché sledovanie od 19. 11.",
-  intro: `Pásmo od 69,6 % (zaokrúhlene 70 %) do 80${NB}% – od 23. 11. 2026 len toto pásmo, 68 – 80${NB}% zrušené: rovnaká dôvera ako pri tipoch pre klientov (model + stávkovky), kurz z API aspoň 1,60, hodnota +5 až +25${NB}%, bez rozporu so stávkovkami, zo zápasu 1 tip z typu.`,
+  intro: `Pásmo od 69,6 % (zaokrúhlene 70 %) do 80,5${NB}% – od 23. 11. 2026 len toto pásmo, 68 – 80${NB}% zrušené: rovnaká dôvera ako pri tipoch pre klientov (model + stávkovky), kurz z API aspoň 1,60, hodnota +5 až +25${NB}%, bez rozporu so stávkovkami, zo zápasu 1 tip z typu.`,
 };
 const ODDS17_TEXT = {
   boxId: "odds17Result", fold: "kurz17", emptySum: "Tiché sledovanie od 16. 11.",

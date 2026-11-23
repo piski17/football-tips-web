@@ -170,12 +170,12 @@ function pickOctober(candidates: Cand[]): TopPick[] {
 // Skúška „Kurz od 1,60“ (19. 11. 2026, Michal: „daj to do sledovania“): rovnaká dôvera ako pri tipoch pre klientov
 // (model + stávkovky), kurz z API aspoň 1,60, hodnota +5 až +25 %, bez rozporu a nesúhlasu vzájomných zápasov,
 // zo zápasu 1 tip z typu. Dve pásma: 68 – 80 % (k160a) a 70 – 80 % (k160b). Klientom nejde.
-function pick160(candidates: Cand[], minP: number): TopPick[] {
+function pick160(candidates: Cand[], minP: number, maxP = 80): TopPick[] {
   const byType = new Map<string, TopPick>();
   for (const c of candidates ?? []) {
     if (!c.market || OCT_SKIP.includes(c.market) || c.marketConflict || c.h2hAgainst) continue;
     const p = Number(c.probability), o = Number(c.odds);
-    if (!isFinite(p) || !isFinite(o) || o < 1.6 || p < minP || p > 80) continue;
+    if (!isFinite(p) || !isFinite(o) || o < 1.6 || p < minP || p > maxP) continue;
     const ev = (p / 100) * o;
     if (ev < 1.05 || ev > 1.25) continue;
     const type = String(c.category || c.market).split("_")[0];
@@ -326,7 +326,7 @@ export async function recordMarketPredictions(
   const oct = pickOctober(candidates);
   // 23. 11. 2026 (Michal): pásmo 68 – 80 % ZRUŠENÉ – k160a teraz od 69,6 % („to je viac k 70 %“), appka ukazuje
   // k160a len od 69,6 % (aj staršie tipy); k160b (od 70 %) sa ďalej zapisuje, v appke sa už neukazuje.
-  const k160a = pick160(candidates, 69.6), k160b = pick160(candidates, 70);
+  const k160a = pick160(candidates, 69.6, 80.5) /* 18:51 Michal: horná hranica 80,5 % */, k160b = pick160(candidates, 70);
   let rules: TopPick[] = [], learn: TopPick[] = [], tx: TopPick[] = [];
   try {
     const s = await learnSummary();
