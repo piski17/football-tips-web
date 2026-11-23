@@ -214,9 +214,9 @@ const MATCH_STARTED_TEXT = "Zápas už začal – zabudnutý tip pridáš v deta
 const LIVE_STATUSES = ["1H", "HT", "2H", "ET", "BT", "P", "SUSP", "INT"];
 const FINISHED_STATUSES = ["FT", "AET", "PEN"];
 
-/** 15. 11. 2026 (Michal): k dohratému zápasu sa tip už pridať nedá (vyhodnotený alebo viac ako 2 h po výkope). */
+/** 23. 11. 2026 (Michal): tip ostáva otvorený, kým ho Michal neuloží – aj počas zápasu a po zápase (predtým 15. 11.: po dohraní nie). */
 function autoTipAddable(t) {
-  return t.status === "pending" && Date.now() < new Date(t.matchDate).getTime() + 120 * 60 * 1000;
+  return !!t;
 }
 /** Zápas už začal (alebo je odložený/zrušený) – tip z neho sa nedá pridať. */
 function matchHasStarted(fixture) {
@@ -1081,7 +1081,7 @@ function renderAnalysis(r, root, opts = {}) {
   root.innerHTML = `
     ${header}
     ${statusHtml}
-    ${started && !isDone ? `<h3 class="sh">Pridať zabudnutý tip <small>zapísané pred výkopom</small></h3><div class="card" data-late-add><p class="faint small">Načítavam…</p></div>` : ""}
+    ${started ? `<h3 class="sh">Pridať zabudnutý tip <small>zapísané pred výkopom</small></h3><div class="card" data-late-add><p class="faint small">Načítavam…</p></div>` : ""}
     ${isDone
       ? `<p class="faint small">Zápas sa dohral – tipy sa pri ňom už neukazujú.</p>`
       : `<h3 class="sh">Odporúčané tipy <small>pásmo ${WATCH_BELOW_LABEL} – 80${NB}%, len s hodnotou</small></h3>
@@ -1129,7 +1129,7 @@ function renderAnalysis(r, root, opts = {}) {
       b.textContent = "+ Pridať (po výkope)";
       b.title = "Zápas sa hrá – tip prejde rovnakými pravidlami ako ostatné a dostane značku „doplnené po výkope“.";
     });
-    if (!isDone) void renderLateAdd(f, root.querySelector("[data-late-add]"));
+    void renderLateAdd(f, root.querySelector("[data-late-add]")); // 23. 11. 2026: aj po zápase
   }
 }
 
@@ -2049,8 +2049,8 @@ function lateTipForClients(t) {
   return t.odds >= MIN_ODDS && value >= MIN_EV && value <= MAX_EV;
 }
 async function renderDayLateTips(box) {
-  // 15. 11. 2026 (Michal): dohraté zápasy (FT/AET/PEN) už tipy neukazujú, len zápasy, ktoré sa práve hrajú.
-  const started = currentFixtures.filter((f) => matchHasStarted(f) && !FINISHED_STATUSES.includes(f.status) && kickoffTime(f) === dayTipsTime);
+  // 23. 11. 2026 (Michal): aj dohraté zápasy – tip ostáva otvorený, kým ho Michal neuloží (15. 11. boli skryté).
+  const started = currentFixtures.filter((f) => matchHasStarted(f) && kickoffTime(f) === dayTipsTime);
   if (!started.length) return;
   const ids = new Set(started.map((f) => f.fixtureId));
   box.innerHTML = `<p class="faint small">Načítavam tipy zápasov o ${escapeHtml(dayTipsTime)}…</p>`;

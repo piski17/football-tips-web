@@ -4047,11 +4047,8 @@ app.post("/api/auto-tips/:id/add", async (req, res) => {
       res.status(404).json({ error: "Tip sa v automatických tipoch nenašiel." });
       return;
     }
-    // 15. 11. 2026 (Michal): k dohratému zápasu sa tip už pridať nedá.
-    if (entry.status !== "pending" || Date.now() >= new Date(entry.matchDate).getTime() + 120 * 60 * 1000) {
-      res.status(400).json({ error: "Zápas sa už dohral – tip sa k nemu nedá pridať." });
-      return;
-    }
+    // 23. 11. 2026 (Michal): tip ostáva otvorený, kým ho Michal neuloží – aj počas zápasu a po zápase
+    // (15. 11. – 23. 11. sa k dohratému zápasu pridať nedal). Po výkope dostane značku lateAdd.
     const r = await addAutoEntry(entry, req.body?.odds);
     if ("error" in r) {
       res.status(r.status).json({ error: r.error });
@@ -4069,6 +4066,12 @@ async function addAutoEntry(
   typedOddsRaw?: unknown,
   extra: Partial<SavedTip> = {},
 ): Promise<{ status: number; error: string } | { ok: true; watchOnly: boolean; reason: string; lateAdd: boolean }> {
+  // 23. 11. 2026: kópiu, ktorú server uložil len do sledovaných (autoWatch), Michalovo uloženie nahradí.
+  if (!extra.autoWatch) {
+    for (const t of await listTips()) {
+      if (t.autoWatch && (t.autoId === entry.id || (t.fixtureId === entry.fixtureId && t.market === entry.market && t.selection === entry.selection))) await deleteTip(t.id);
+    }
+  }
   const tips = await listTips();
   if (tips.some((t) => t.autoId === entry.id || (!(t.legs && t.legs.length) && t.fixtureId === entry.fixtureId && t.market === entry.market && t.selection === entry.selection))) {
     return { status: 409, error: "Tento tip už v Histórii tipov je." };
