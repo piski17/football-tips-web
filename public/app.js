@@ -3282,6 +3282,9 @@ function tipBadges(t) {
   if (t.foulPossWatch) b += ` <span class="tag" title="Fauly a držanie lopty od 20. 11. 2026 len sledujeme – vyhodnotíme na konci mesiaca.">fauly / držanie · sledovaný</span>`;
   if (t.minOddsAuto) b += ` <span class="tag" title="Stávkovky v API kurz na tento trh nemajú. Server tip uložil podľa modelu s minimálnym kurzom, pri ktorom sa ho oplatí hrať – štatistiky rátajú s týmto kurzom.">kurz = minimálny</span>`;
   if (t.autoSaved) b += ` <span class="tag" title="Tip uložil server sám 5 – 30 minút pred výkopom, po zverejnení zostáv (nebol uložený ručne). Do Telegramu nešiel.">🤖 uložené automaticky</span>`;
+  // 23. 11. 2026 (Michal sa pýtal, či tip išiel klientom): sledovaný tip musí byť na prvý pohľad odlíšený.
+  if (t.watchOnly && t.h2hAgainst) b += ` <span class="tag warn" title="${escapeHtml("Vzájomné zápasy – " + t.h2hAgainst)}">vzájomné zápasy proti · len sledovaný</span>`;
+  else if (t.watchOnly && t.autoWatch) b += ` <span class="tag" title="Server ukladá sám len do sledovaných – klientom ide tip, až keď ho uložíte vy.">len sledovaný · klientom nešiel</span>`;
   if (t.oldFoulsMoved) b += ` <span class="tag" title="8. 11. 2026: fauly majú nové hranice podľa zápasu – starý tip na fauly sa do štatistík neráta.">staré fauly · sledovaný</span>`;
   if (t.sameTypeMoved) b += ` <span class="tag" title="Zo zápasu ide klientom najviac 1 tip (od 21. 11. 2026; predtým 1 z typu) – tento je len v sledovaných.">2. tip zo zápasu · sledovaný</span>`;
   if (t.lateAdd) b += t.lateFromAnalysis
