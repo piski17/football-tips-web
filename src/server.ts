@@ -1237,7 +1237,7 @@ app.post("/api/tips", async (req, res) => {
     // Od 28. 10. 2026 má v Histórii tipov vlastnú skupinu (watchBand).
     // Kompromis 20. 11. 2026 (Michal): fauly / držanie lopty s kurzom zo stávkovky (okienko v Tipoch dňa) – stačí
     // šanca od 60 %, ak je kurz aspoň 1,60 a hodnota +5 až +25 %. Vyhodnotiť zvlášť 1. 12. (značka bookLine).
-    const bookLineOk = tip.bookLine === true && /^(Fauly|Držanie lopty)/.test(String(tip.market)) && typeof tip.probability === "number" && typeof tip.odds === "number"
+    const bookLineOk = tip.bookLine === true && FOUL_POSS_WATCH_RE.test(String(tip.market)) && typeof tip.probability === "number" && typeof tip.odds === "number"
       && tip.probability >= BOOKLINE_MIN_PROB && tip.probability <= MAX_PROBABILITY && tip.odds >= BOOKLINE_MIN_ODDS
       && (tip.probability / 100) * tip.odds >= MIN_EXPECTED_VALUE && (tip.probability / 100) * tip.odds <= SUSPICIOUS_EXPECTED_VALUE;
     if (!bookLineOk && !(tip.legs && tip.legs.length) && !tip.manualEntry && typeof tip.probability === "number" && tip.probability < clientMinProb(tip.market)) {
@@ -1276,7 +1276,7 @@ app.post("/api/tips", async (req, res) => {
       }
     }
     // 20. 11. 2026 (Michal): fauly a držanie lopty len do sledovaných – vyhodnotiť na konci mesiaca (aj tip z okienka).
-    if (FOUL_POSS_WATCH && !(tip.legs && tip.legs.length) && /^(Fauly|Držanie lopty)/.test(String(tip.market))) {
+    if (FOUL_POSS_WATCH && !(tip.legs && tip.legs.length) && FOUL_POSS_WATCH_RE.test(String(tip.market))) {
       tip.watchOnly = true;
       tip.foulPossWatch = true;
       tip.strongOfDay = undefined;
@@ -4205,7 +4205,7 @@ async function addAutoEntry(
   else if (typeof entry.odds !== "number" && isFarLineTip(tip.market, tip.probability)) reason = "rohy/karty – príliš vzdialená hranica";
   // 20. 11. 2026 (Michal): fauly a držanie lopty klientom len s kurzom, ktorý Michal zadá zo stávkovky
   // (Bayern – Kolín: model „menej ako 22,5“ 70 %, stávkovka mala hranicu 18,5 → skutočný kurz ~1,15, nie 1,50).
-  else if (FOUL_POSS_WATCH && /^(Fauly|Držanie lopty)/.test(tip.market)) { tip.foulPossWatch = true; reason = "fauly a držanie lopty zatiaľ len sledujeme (vyhodnotíme na konci mesiaca)"; }
+  else if (FOUL_POSS_WATCH && FOUL_POSS_WATCH_RE.test(tip.market)) { tip.foulPossWatch = true; reason = "fauly a držanie lopty zatiaľ len sledujeme (vyhodnotíme na konci mesiaca)"; }
   else if (extra.minOddsAuto && /^(Fauly|Držanie lopty)/.test(tip.market)) reason = "fauly/držanie lopty – bez kurzu zo stávkovky len sledovať";
   else if (odds < MIN_ODDS) reason = `kurz pod ${String(MIN_ODDS).replace(".", ",")}`;
   else if (ev < MIN_EXPECTED_VALUE) reason = "hodnota pod +5 %";
@@ -4233,6 +4233,8 @@ async function addAutoEntry(
  */
 /** 20. 11. 2026 (Michal): fauly a držanie lopty len do sledovaných. Návrat: false. */
 const FOUL_POSS_WATCH = true;
+/** 23. 11. 2026 (Michal): FAULY V ZÁPASE znova klientom ako ostatné tipy (72 – 80 %, kurz 1,50, tabuľka) – len sledované ostávajú fauly tímov, kto viac a držanie. */
+const FOUL_POSS_WATCH_RE = /^(Fauly (domácich|hostí|– kto viac)|Držanie lopty)/;
 const BOOKLINE_MIN_PROB = 60; // 21. 11. 2026 23:41 Michal: od 60 % (predtým 55 %)
 const BOOKLINE_MIN_ODDS = 1.6;
 const AUTO_SAVE_FROM_MIN = 5;
