@@ -454,7 +454,7 @@ const WATCH_BELOW = 72; // 22. 11. 2026 16:42 Michal: znova 72 % (16:18 krátko 
 const WATCH_BELOW_LABEL = 72; // v textoch
 // 22. 11. 2026 17:29 (Michal): handicap rohov klientom od 60 %, kurz od 1,60 (= clientMinProb / clientMinOdds v oddsMatcher.ts).
 const HCP_CORNERS_MARKET = "Handicap – rohy";
-const clientMinProb = (market) => (market === HCP_CORNERS_MARKET || market === "Handicap" ? 60 : WATCH_BELOW); // 22. 11. 19:54: aj handicap gólov od 60 %
+const clientMinProb = (market) => (/^Handicap( – |$)/.test(market || "") ? 60 : WATCH_BELOW); // 22. 11. 19:54: aj handicap gólov od 60 %; 23. 11. (Michal): všetky handicapy od 60 %
 const clientMinOdds = (market) => (market === HCP_CORNERS_MARKET ? Math.max(1.5, MIN_ODDS) : MIN_ODDS); // 23. 11. 2026: handicap rohov od 1,50
 const MIN_EV = 1.044; // MIN_EXPECTED_VALUE v oddsMatcher.ts (69,6 % × 1,50)
 const MAX_EV = 1.254; // SUSPICIOUS_EXPECTED_VALUE v oddsMatcher.ts (19. 11. 2026: do +25,4 %)
@@ -1497,8 +1497,8 @@ const BOOKLINE_OPTS = { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS, 
 const BOOK_LINE_STD = /^(Góly|Strely na bránu|(Rohy|Karty)( domácich| hostí)?)$/; // 22. 11. 19:58: zápas + rohy a karty tímov
 const lineThresholds = (market) => BOOK_LINE_MARKET.test(market || "") ? { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS } : { minProb: clientMinProb(market), minOdds: clientMinOdds(market) };
 // 22. 11. 2026 17:02 (Michal): políčka aj pri handicapoch (góly, rohy) – hranica z pohľadu domácich + kurz domáci / hostia.
-const HCP_BOOK = /^Handicap( – rohy)?$/; // 22. 11. 18:45: handicap gólov späť
-const HCP_CAL = { "Handicap": 0.85, "Handicap – rohy": 0.8 }; // = MARKET_CALIBRATION hcp_goly / hcp_rohy v predictor.ts
+const HCP_BOOK = /^Handicap( – (rohy|karty|strely na bránu))?$/; // 22. 11. 18:45: handicap gólov späť; 23. 11. (Michal): aj karty a strely
+const HCP_CAL = { "Handicap": 0.85, "Handicap – rohy": 0.8, "Handicap – karty": 0.9, "Handicap – strely na bránu": 0.95 }; // = MARKET_CALIBRATION hcp_goly / hcp_rohy v predictor.ts
 const fmtHcpSel = (L) => `${L > 0 ? "+" : "−"}${Math.abs(L)}`;
 function hcpPmf(mean, varRatio, max) {
   const out = [];
@@ -1513,7 +1513,8 @@ function hcpHomeProb(r, market, L) {
     if (!r.expectedGoals) return null;
     ph = hcpPmf(r.expectedGoals.home, 1, 12); pa = hcpPmf(r.expectedGoals.away, 1, 12);
   } else {
-    const hm = (r.lineModels || []).find((m) => m.market === "Rohy domácich"), am = (r.lineModels || []).find((m) => m.market === "Rohy hostí");
+    const base = market === "Handicap – karty" ? "Karty" : market === "Handicap – strely na bránu" ? "Strely na bránu" : "Rohy";
+    const hm = (r.lineModels || []).find((m) => m.market === `${base} domácich`), am = (r.lineModels || []).find((m) => m.market === `${base} hostí`);
     if (!hm || !am) return null;
     ph = hcpPmf(hm.mean, hm.varRatio, 30); pa = hcpPmf(am.mean, am.varRatio, 30);
   }
@@ -1571,7 +1572,7 @@ function bookLineHtml(i, bet, r) {
   // 21. 11. 2026 (Michal): v každom riadku sa dá vybrať trh – fauly v zápase / domácich / hostí, držanie domácich / hostí.
   const mkts = r ? bookLineMarkets(r, bet.market) : [bet.market];
   return `<div class="bookline" data-bl="${i}">
-      <div class="bookline-t small">Hranica a kurzy zo stávkovky <span class="faint">· ${BOOK_LINE_MARKET.test(bet.market || "") ? "uložený tip ide do sledovaných" : `tip, ktorý prejde, ide klientom (${WATCH_BELOW_LABEL} – 80 %, kurz od ${MIN_ODDS.toFixed(2).replace(".", ",")})`}</span></div>
+      <div class="bookline-t small">Hranica a kurzy zo stávkovky <span class="faint">· ${BOOK_LINE_MARKET.test(bet.market || "") ? "uložený tip ide do sledovaných" : `tip, ktorý prejde, ide klientom (${hcp ? 60 : WATCH_BELOW_LABEL} – 80 %, kurz od ${MIN_ODDS.toFixed(2).replace(".", ",")})`}</span></div>
       <div class="bookline-rows">
         ${[0, 1, 2, 3].map((k) => `<div class="bookline-f" data-bl-row="${k}">
           ${mkts.length > 1 ? `<label>${k === 0 ? "Trh" : ""}<select data-bl-mkt>${mkts.map((m) => `<option value="${escapeHtml(m)}"${m === bet.market ? " selected" : ""}>${escapeHtml(r ? bookLineMarketLabel(r, m) : m)}</option>`).join("")}</select></label>` : ""}
@@ -1632,7 +1633,7 @@ function bookLineRows(r, market, line, overOdds, underOdds) {
     const pH = hcpHomeProb(r, market, line);
     if (pH == null) return "Model pre tento zápas nemá výpočet handicapu.";
     const hn = r.fixture.homeTeam.name, an = r.fixture.awayTeam.name;
-    const what = market === "Handicap" ? "Handicap" : "Handicap rohov";
+    const what = market === "Handicap" ? "Handicap" : market === "Handicap – karty" ? "Handicap kariet" : market === "Handicap – strely na bránu" ? "Handicap striel" : "Handicap rohov";
     return [
       { label: `${what}: ${translateTeamName(hn)} ${fmtHcpSel(line).replace(".", ",")}`, selection: `${hn} ${fmtHcpSel(line)}`, probability: pH, odds: overOdds },
       { label: `${what}: ${translateTeamName(an)} ${fmtHcpSel(-line).replace(".", ",")}`, selection: `${an} ${fmtHcpSel(-line)}`, probability: 100 - pH, odds: underOdds },

@@ -96,7 +96,8 @@ export const HCP_CORNERS_MIN_PROBABILITY = 60;
 export const HCP_CORNERS_MIN_ODDS = 1.5; // 23. 11. 2026 19:17 (Michal): handicap rohov tiež od kurzu 1,50 (predtým 1,60)
 export function clientMinProb(market: unknown): number {
   // 22. 11. 2026 19:54 (Michal): aj handicap gólov od 60 % (kurz od 1,50 ako ostatné).
-  return market === HCP_CORNERS_MARKET || market === "Handicap" ? HCP_CORNERS_MIN_PROBABILITY : WATCH_BELOW_PROBABILITY;
+  // 23. 11. 2026 19:31 (Michal): všetky handicapy (góly, rohy, karty, strely) od 60 %, ostatné od 72 %.
+  return /^Handicap( – |$)/.test(String(market ?? "")) ? HCP_CORNERS_MIN_PROBABILITY : WATCH_BELOW_PROBABILITY;
 }
 export function clientMinOdds(market: unknown): number {
   return market === HCP_CORNERS_MARKET ? Math.max(HCP_CORNERS_MIN_ODDS, MIN_ODDS) : MIN_ODDS;
