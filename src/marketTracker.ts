@@ -324,8 +324,9 @@ export async function recordMarketPredictions(
   // staré čakajúce sa ešte vyhodnotia (aby sedelo poradie výsledkov), v appke sa dlaždica neukazuje.
   const odds17: TopPick | undefined = undefined;
   const oct = pickOctober(candidates);
-  // 23. 11. 2026 (Michal): pásmo 68 – 80 % (k160a) ZRUŠENÉ – ostáva len 70 – 80 % (k160b); staré čakajúce sa dovyhodnotia.
-  const k160a: TopPick[] = [], k160b = pick160(candidates, 70);
+  // 23. 11. 2026 (Michal): pásmo 68 – 80 % ZRUŠENÉ – k160a teraz od 69,6 % („to je viac k 70 %“), appka ukazuje
+  // k160a len od 69,6 % (aj staršie tipy); k160b (od 70 %) sa ďalej zapisuje, v appke sa už neukazuje.
+  const k160a = pick160(candidates, 69.6), k160b = pick160(candidates, 70);
   let rules: TopPick[] = [], learn: TopPick[] = [], tx: TopPick[] = [];
   try {
     const s = await learnSummary();

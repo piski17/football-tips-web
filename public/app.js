@@ -5819,12 +5819,27 @@ const K160A_TEXT = {
 };
 const K160B_TEXT = {
   boxId: "k160Result", fold: "kurz160", emptySum: "Tiché sledovanie od 19. 11.",
-  intro: `Pásmo 70 – 80${NB}% (od 23. 11. 2026 len toto pásmo, 68 – 80${NB}% zrušené): rovnaká dôvera ako pri tipoch pre klientov (model + stávkovky), kurz z API aspoň 1,60, hodnota +5 až +25${NB}%, bez rozporu so stávkovkami, zo zápasu 1 tip z typu.`,
+  intro: `Pásmo od 69,6 % (zaokrúhlene 70 %) do 80${NB}% – od 23. 11. 2026 len toto pásmo, 68 – 80${NB}% zrušené: rovnaká dôvera ako pri tipoch pre klientov (model + stávkovky), kurz z API aspoň 1,60, hodnota +5 až +25${NB}%, bez rozporu so stávkovkami, zo zápasu 1 tip z typu.`,
 };
 const ODDS17_TEXT = {
   boxId: "odds17Result", fold: "kurz17", emptySum: "Tiché sledovanie od 16. 11.",
   intro: `Pri každom zápase server asi hodinu pred výkopom vyberie najviac jeden tip s kurzom stávkoviek aspoň 1,70 a hodnotou +5 až +25${NB}% (prednosť má vyššia šanca), bez rozporu so stávkovkami. Po zápase ho vyhodnotí. Klientom nejde a do štatistík sa neráta.`,
 };
+// 23. 11. 2026: súhrn skúšky prepočítaný len z tipov s dôverou aspoň minP (zo zoznamu vyhodnotených tipov).
+function filterTopStats(t, minP) {
+  if (!t) return t;
+  const recent = (t.recent || []).filter((x) => x.probability >= minP);
+  const out = { since: t.since, n: 0, won: 0, lost: 0, void: 0, sumP: 0, profit: 0, leagues: {}, recent };
+  for (const x of recent) {
+    if (x.status === "void") { out.void++; continue; }
+    const gain = x.status === "won" ? x.odds - 1 : -1;
+    out.n++; out.sumP += x.probability; out.profit += gain;
+    if (x.status === "won") out.won++; else out.lost++;
+    const lg = (out.leagues[x.league || "?"] ??= { n: 0, won: 0, profit: 0 });
+    lg.n++; if (x.status === "won") lg.won++; lg.profit += gain;
+  }
+  return out;
+}
 function renderTopPicks(t, cfg) {
   const box = document.getElementById(cfg ? cfg.boxId : "topPickResult");
   if (!box) return;
@@ -5930,8 +5945,8 @@ async function renderAllMarkets() {
   catch (err) { box.innerHTML = `<p class="faint small">Nepodarilo sa načítať: ${escapeHtml(err.message)}</p>`; return; }
   renderTopPicks(d.top);
   renderTopPicks(d.oct, OCT_TEXT); // 19. 11. 2026: skúška „Ako v októbri“
-  // 23. 11. 2026 (Michal): skúška „Kurz od 1,60“ len pásmo 70 – 80 % (68 – 80 % zrušené).
-  renderTopPicks(d.k160b, K160B_TEXT);
+  // 23. 11. 2026 (Michal): skúška „Kurz od 1,60“ len od 69,6 % (68 – 80 % zrušené) – prepočet zo zoznamu tipov.
+  renderTopPicks(filterTopStats(d.k160a, 69.6), K160B_TEXT);
   renderSmartTests(d); // 23. 11. 2026: pohyb kurzov, učiaci sa model, ako TIPREX
   void renderOctoberRetro();
   const rows = Object.entries(d.markets || {}).map(([market, m]) => ({ market, ...m, pct: m.n ? (m.won / m.n) * 100 : null, exp: m.n ? m.sumP / m.n : null }))
