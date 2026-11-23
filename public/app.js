@@ -454,7 +454,7 @@ const WATCH_BELOW = 72; // 22. 11. 2026 16:42 Michal: znova 72 % (16:18 krátko 
 const WATCH_BELOW_LABEL = 72; // v textoch
 // 22. 11. 2026 17:29 (Michal): handicap rohov klientom od 60 %, kurz od 1,60 (= clientMinProb / clientMinOdds v oddsMatcher.ts).
 const HCP_CORNERS_MARKET = "Handicap – rohy";
-const clientMinProb = (market) => (/^Handicap( – |$)/.test(market || "") ? 60 : WATCH_BELOW); // 22. 11. 19:54: aj handicap gólov od 60 %; 23. 11. (Michal): všetky handicapy od 60 %
+const clientMinProb = (market) => (/^(Handicap( – |$)|Fauly$|Strely na bránu( domácich| hostí)?$)/.test(market || "") ? 60 : WATCH_BELOW); // 23. 11.: aj fauly v zápase a strely od 60 % // 22. 11. 19:54: aj handicap gólov od 60 %; 23. 11. (Michal): všetky handicapy od 60 %
 const clientMinOdds = (market) => (market === HCP_CORNERS_MARKET ? Math.max(1.5, MIN_ODDS) : MIN_ODDS); // 23. 11. 2026: handicap rohov od 1,50
 const MIN_EV = 1.044; // MIN_EXPECTED_VALUE v oddsMatcher.ts (69,6 % × 1,50)
 const MAX_EV = 1.254; // SUSPICIOUS_EXPECTED_VALUE v oddsMatcher.ts (19. 11. 2026: do +25,4 %)
@@ -1572,7 +1572,7 @@ function bookLineHtml(i, bet, r) {
   // 21. 11. 2026 (Michal): v každom riadku sa dá vybrať trh – fauly v zápase / domácich / hostí, držanie domácich / hostí.
   const mkts = r ? bookLineMarkets(r, bet.market) : [bet.market];
   return `<div class="bookline" data-bl="${i}">
-      <div class="bookline-t small">Hranica a kurzy zo stávkovky <span class="faint">· ${BOOK_LINE_MARKET.test(bet.market || "") ? "uložený tip ide do sledovaných" : `tip, ktorý prejde, ide klientom (${hcp ? 60 : WATCH_BELOW_LABEL} – 80 %, kurz od ${MIN_ODDS.toFixed(2).replace(".", ",")})`}</span></div>
+      <div class="bookline-t small">Hranica a kurzy zo stávkovky <span class="faint">· ${BOOK_LINE_MARKET.test(bet.market || "") ? "uložený tip ide do sledovaných" : `tip, ktorý prejde, ide klientom (${Math.round(clientMinProb(bet.market || ""))} – 80 %, kurz od ${MIN_ODDS.toFixed(2).replace(".", ",")})`}</span></div>
       <div class="bookline-rows">
         ${[0, 1, 2, 3].map((k) => `<div class="bookline-f" data-bl-row="${k}">
           ${mkts.length > 1 ? `<label>${k === 0 ? "Trh" : ""}<select data-bl-mkt>${mkts.map((m) => `<option value="${escapeHtml(m)}"${m === bet.market ? " selected" : ""}>${escapeHtml(r ? bookLineMarketLabel(r, m) : m)}</option>`).join("")}</select></label>` : ""}
