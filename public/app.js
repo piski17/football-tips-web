@@ -1479,7 +1479,7 @@ function wireLineCalc(r, root) {
  * trhy nemá, tak Michal zadá hranicu zo stávkovky a kurzy viac / menej, model prepočíta šancu pre túto
  * hranicu a tip, ktorý prejde pravidlami, sa uloží klientom aj do štatistík s Michalovým kurzom.
  */
-const BOOK_LINE_MARKET = /^(Fauly|Držanie lopty)/;
+const BOOK_LINE_MARKET = /^(Fauly (domácich|hostí|– kto viac)|Držanie lopty)/; // 23. 11. (Michal): fauly v zápase ako ostatné tipy
 // 20. 11. 2026 (Michal: „chcem kompromis, aby to išlo“): pri fauloch a držaní lopty so skutočným kurzom zo stávkovky
 // stačí šanca od 60 % (namiesto 70 %), ale kurz aspoň 1,60 a hodnota +5 až +25 %. Server má rovnaké pravidlo (BOOKLINE_*).
 const BOOKLINE_MIN_PROB = 60; // 21. 11. 2026 23:41 Michal: od 60 % (predtým 55 %)
@@ -1494,7 +1494,7 @@ const BOOKLINE_OPTS = { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS, 
 // 22. 11. 2026 15:40 (Michal): okienko aj pri kartách v zápase (nielen tímov).
 // 22. 11. 2026 16:36 (Michal): políčka pri každom klientskom tipe na rohy aj karty (zápas aj tímy).
 // 22. 11. 2026 17:17 (Michal): políčka pri KAŽDOM klientskom tipe nad/pod – góly (zápas, tímy, polčasy), rohy, karty, strely.
-const BOOK_LINE_STD = /^(Góly|(Strely na bránu|Rohy|Karty)( domácich| hostí)?)$/; // 23. 11. (Michal): aj strely tímov // 22. 11. 19:58: zápas + rohy a karty tímov
+const BOOK_LINE_STD = /^(Góly|Fauly|(Strely na bránu|Rohy|Karty)( domácich| hostí)?)$/; // 23. 11. (Michal): aj strely tímov // 22. 11. 19:58: zápas + rohy a karty tímov
 const lineThresholds = (market) => BOOK_LINE_MARKET.test(market || "") ? { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS } : { minProb: clientMinProb(market), minOdds: clientMinOdds(market) };
 // 22. 11. 2026 17:02 (Michal): políčka aj pri handicapoch (góly, rohy) – hranica z pohľadu domácich + kurz domáci / hostia.
 const HCP_BOOK = /^Handicap( – rohy)?$/; // 22. 11. 18:45: handicap gólov späť; 23. 11. 19:32 (Michal): handicap kariet a striel zrušený
