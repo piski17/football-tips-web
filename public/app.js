@@ -5741,7 +5741,7 @@ function renderConf72(statTips) {
   if (sumEl) sumEl.textContent = hi.n ? `od 72 %: ${hi.n} tipov · ${Math.round((hi.won / hi.n) * 100)}${NB}% · ${fmt2(hi.profit)} j.` : "Všetky tipy v štatistikách";
   box.innerHTML = `<p class="muted small">Všetky tipy zo štatistík (ako na webe). Od 22. 11. 2026 idú klientom len nové tipy od 72${NB}%; staré tipy 70 – 72${NB}% ostávajú v štatistikách – tu je len porovnanie. Zisk pri vklade 1 jednotka na tip.</p>
   <table class="bt-table"><thead><tr><th></th><th>Vyhodnotené</th><th>Vyšlo</th><th>Priem. kurz</th><th>Zisk</th><th>Čaká</th></tr></thead><tbody>
-  ${line("Dôvera od 72 %", hi)}${line("Dôvera pod 72 % (by vypadli)", lo)}${line("Všetky tipy v štatistikách", tot)}</tbody></table>`;
+  ${line("Dôvera od 72 %", hi)}${line("Všetky tipy v štatistikách", tot)}</tbody></table>`;
 }
 function renderEv10(statTips) {
   const box = document.getElementById("ev10Result");
