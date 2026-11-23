@@ -1170,7 +1170,10 @@ async function serverH2hAgainst(tip: SavedTip): Promise<string | undefined> {
   try {
     const fixture = await getFixtureById(Number(tip.fixtureId));
     if (!fixture) return undefined;
-    const h2h = await getHeadToHead(fixture.homeTeam.id, fixture.awayTeam.id, 10);
+    // Len zápasy pred týmto zápasom (pri spätnej kontrole sa nesmie rátať samotný zápas tipu).
+    const kick = new Date(tip.matchDate).getTime();
+    const h2h = (await getHeadToHead(fixture.homeTeam.id, fixture.awayTeam.id, 10))
+      .filter((m) => m.fixtureId !== Number(tip.fixtureId) && !(new Date(m.date).getTime() >= kick));
     const stats = await getHeadToHeadStats(h2h, fixture.homeTeam.name);
     return h2hAgainstFor(String(tip.market), String(tip.selection), stats);
   } catch (err) {
