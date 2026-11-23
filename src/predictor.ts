@@ -1201,8 +1201,9 @@ export function predictMatch(
     candidates.push({ market: "Výsledok zápasu", selection: `Výhra ${hn}`, probability: Math.round(poisson.probs.homeWin * 10) / 10, category: "vysledok", explanation: `${resNote} Šanca na výhru ${hn}.` });
     candidates.push({ market: "Výsledok zápasu", selection: "Remíza", probability: Math.round(poisson.probs.draw * 10) / 10, category: "vysledok", explanation: `${resNote} Šanca na remízu.` });
     candidates.push({ market: "Výsledok zápasu", selection: `Výhra ${an}`, probability: Math.round(poisson.probs.awayWin * 10) / 10, category: "vysledok", explanation: `${resNote} Šanca na výhru ${an}.` });
-    candidates.push({ market: "Oba tímy skórujú", selection: "Áno", probability: Math.round(poisson.bttsYes * 10) / 10, category: "btts", explanation: bttsExplanation });
-    candidates.push({ market: "Oba tímy skórujú", selection: "Nie", probability: Math.round(poisson.bttsNo * 10) / 10, category: "btts", explanation: `${resNote} Aspoň jeden tím podľa modelu neskóruje.` });
+    // 23. 11. 2026 19:30 (Michal): „oba tímy skórujú“ odstránené z TipRadaru (klientom ani v Tipoch dňa). Ostáva len v tichom sledovaní „Všetky trhy“ a v TIPREXE (goalMarketsTrackOnly).
+    // candidates.push({ market: "Oba tímy skórujú", selection: "Áno", probability: Math.round(poisson.bttsYes * 10) / 10, category: "btts", explanation: bttsExplanation });
+    // candidates.push({ market: "Oba tímy skórujú", selection: "Nie", probability: Math.round(poisson.bttsNo * 10) / 10, category: "btts", explanation: `${resNote} Aspoň jeden tím podľa modelu neskóruje.` });
   }
 
   // Nad/pod: pri každom trhu všetky hranice, ktoré stávkovky ponúkajú (bez kurzov

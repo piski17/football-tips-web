@@ -195,7 +195,7 @@ function pick160(candidates: Cand[], minP: number, maxP = 80): TopPick[] {
 // Opravená šanca potom prejde rovnakými pravidlami ako tipy pre klientov (72 – 80 %, kurz, hodnota +5 až +25 %,
 // 1 tip z druhu). Opravy sa rátajú len z výsledkov PRED tipom, takže skúška je férová. Klientom nejde.
 const LEARN_K_MARKET = 40, LEARN_K_LEAGUE = 150, LEARN_CAP = 8;
-const LEARN_MARKETS = new Set(["Góly", "Oba tímy skórujú", "Handicap", HCP_CORNERS_MARKET, "Rohy", "Rohy domácich", "Rohy hostí", "Karty", "Karty domácich", "Karty hostí", "Strely na bránu"]);
+const LEARN_MARKETS = new Set(["Góly", "Handicap", HCP_CORNERS_MARKET, "Rohy", "Rohy domácich", "Rohy hostí", "Karty", "Karty domácich", "Karty hostí", "Strely na bránu"]);
 // Dôvody vyradenia, ktoré nesúvisia so šancou (málo dát, chýba kurz, trh vyradený…) – tie platia aj po oprave.
 const LEARN_STRUCTURAL = new Set(["few_games", "ev_high_few_games", "line_too_high", "manual_far_line", "market_disabled", "market_excluded", "no_market_odds", "no_odds", "one_bookmaker", "conflict", "neighbor_no_value"]);
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
