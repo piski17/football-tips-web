@@ -4155,6 +4155,7 @@ const BOOKLINE_MIN_PROB = 60; // 21. 11. 2026 23:41 Michal: od 60 % (predtým 55
 const BOOKLINE_MIN_ODDS = 1.6;
 const AUTO_SAVE_FROM_MIN = 5;
 const AUTO_SAVE_TO_MIN = 30;
+const AUTO_SAVE_TO_CLIENTS = true; // 23. 11. 2026 (Michal): automaticky uložené tipy s kurzom z API znova klientom
 let autoSaveRunning = false;
 async function autoSaveDueTips(): Promise<void> {
   if (autoSaveRunning) return;
@@ -4192,7 +4193,10 @@ async function autoSaveDueTips(): Promise<void> {
           // s minimálnym kurzom, pri ktorom má hodnotu (ako „Hrajte len pri kurze aspoň X“); štatistiky rátajú s ním.
           const noApiOdds = !(typeof entry.odds === "number" && entry.odds > 1);
           const minOdds = noApiOdds ? Math.ceil(Math.max(MIN_ODDS, MIN_EXPECTED_VALUE / (entry.probability / 100)) * 100) / 100 : undefined;
-          const r = await addAutoEntry(entry, minOdds, { autoSaved: true, autoWatch: true, ...(noApiOdds ? { minOddsAuto: true } : {}), ...(hasLineups ? { lineupCheck: { at, probability: entry.probability, ok: true } } : {}) });
+          // 23. 11. 2026 (Michal, karta „Ukladať rovno klientom“): tip s kurzom z API, ktorý prejde pravidlami, ide znova
+          // rovno klientom (ako 14. – 22. 11.). Tipy bez kurzu v API ostávajú len v sledovaných. Návrat: AUTO_SAVE_TO_CLIENTS = false.
+          const autoWatch = !AUTO_SAVE_TO_CLIENTS || noApiOdds;
+          const r = await addAutoEntry(entry, minOdds, { autoSaved: true, ...(autoWatch ? { autoWatch: true } : {}), ...(noApiOdds ? { minOddsAuto: true } : {}), ...(hasLineups ? { lineupCheck: { at, probability: entry.probability, ok: true } } : {}) });
           if ("ok" in r) {
             console.log(`Automaticky uložený tip ${entry.id}${r.watchOnly ? " (sledovaný: " + r.reason + ")" : ""}`);
             info.saved.push({ market: entry.market, selection: entry.selection, probability: entry.probability, odds: entry.odds, watchOnly: r.watchOnly, reason: r.reason });
