@@ -105,7 +105,7 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 // 22. 11. 2026 18:45: zrušené trhy sa nerátajú len pri starých tipoch – od teraz idú klientom všetky trhy.
 const ALL_MARKETS_FROM = "2026-11-22T17:45:00Z";
 const isExcludedMarketTip = (t: { market: string; matchDate?: string }) => EXCLUDED_STATS_MARKETS.includes(t.market) && String(t.matchDate || "") < ALL_MARKETS_FROM;
-const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté konto", "Strely na bránu", "Strely na bránu domácich", "Strely na bránu hostí", "Handicap – strely na bránu", "Ázijský handicap – strely na bránu", "Karty v 1. polčase", "Karty v 2. polčase"];
+const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté konto", "Handicap – strely na bránu", "Ázijský handicap – strely na bránu", "Karty v 1. polčase", "Karty v 2. polčase"];
 function statsTips(tips: SavedTip[]): SavedTip[] {
   // Tipy „Len sledovať“ (napr. Liga majstrov na skúšku) sa vyhodnocujú, ale nerátajú sa
   // do štatistík, na web ani do vyhodnotení pre členov.

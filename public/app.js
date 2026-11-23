@@ -209,7 +209,7 @@ const STRONG_TIP_MIN_PROBABILITY = 72; // STRONG_TIP_MIN_PROBABILITY v oddsMatch
 let MIN_ODDS = 1.5; // 22. 11. 2026 1:24 Michal: späť 1,50; predtým predvolené: 1,50 (2. 11. 2026 20:50 späť z 1,60, spolu s pásmom 70 – 80 %); ak server pošle MIN_ODDS (/api/public/vip-seats), použije sa ten
 const ALL_MARKETS_FROM = "2026-11-22T17:45:00Z"; // 22. 11. 2026 18:45: od teraz všetky trhy klientom
 const isExcludedMarketTip = (t) => EXCLUDED_STATS_MARKETS.includes(t.market) && String(t.matchDate || "") < ALL_MARKETS_FROM;
-const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté konto", "Strely na bránu", "Strely na bránu domácich", "Strely na bránu hostí", "Handicap – strely na bránu", "Ázijský handicap – strely na bránu", "Karty v 1. polčase", "Karty v 2. polčase"]; // 22. 11. 2026: strely zrušené
+const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté konto", "Handicap – strely na bránu", "Ázijský handicap – strely na bránu", "Karty v 1. polčase", "Karty v 2. polčase"]; // 22. 11. 2026: strely zrušené
 const MATCH_STARTED_TEXT = "Zápas už začal – zabudnutý tip pridáš v detaile zápasu (Pridať zabudnutý tip).";
 const LIVE_STATUSES = ["1H", "HT", "2H", "ET", "BT", "P", "SUSP", "INT"];
 const FINISHED_STATUSES = ["FT", "AET", "PEN"];
@@ -1494,7 +1494,7 @@ const BOOKLINE_OPTS = { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS, 
 // 22. 11. 2026 15:40 (Michal): okienko aj pri kartách v zápase (nielen tímov).
 // 22. 11. 2026 16:36 (Michal): políčka pri každom klientskom tipe na rohy aj karty (zápas aj tímy).
 // 22. 11. 2026 17:17 (Michal): políčka pri KAŽDOM klientskom tipe nad/pod – góly (zápas, tímy, polčasy), rohy, karty, strely.
-const BOOK_LINE_STD = /^(Góly|Strely na bránu|(Rohy|Karty)( domácich| hostí)?)$/; // 22. 11. 19:58: zápas + rohy a karty tímov
+const BOOK_LINE_STD = /^(Góly|(Strely na bránu|Rohy|Karty)( domácich| hostí)?)$/; // 23. 11. (Michal): aj strely tímov // 22. 11. 19:58: zápas + rohy a karty tímov
 const lineThresholds = (market) => BOOK_LINE_MARKET.test(market || "") ? { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS } : { minProb: clientMinProb(market), minOdds: clientMinOdds(market) };
 // 22. 11. 2026 17:02 (Michal): políčka aj pri handicapoch (góly, rohy) – hranica z pohľadu domácich + kurz domáci / hostia.
 const HCP_BOOK = /^Handicap( – rohy)?$/; // 22. 11. 18:45: handicap gólov späť; 23. 11. 19:32 (Michal): handicap kariet a striel zrušený
@@ -1557,7 +1557,7 @@ function bookLineMarkets(r, market) {
   if (market.startsWith("Držanie lopty")) return r.possession ? ["Držanie lopty domácich", "Držanie lopty hostí"] : [market];
   const have = new Set((r.lineModels || []).map((m) => m.market));
   const base = market.replace(/ (domácich|hostí|v [12]\. polčase)$/, "");
-  const list = (/^(Rohy|Karty)$/.test(base) ? [base, `${base} domácich`, `${base} hostí`] : [base]).filter((m) => have.has(m)); // 22. 11. 19:58: rohy a karty aj tímy
+  const list = (/^(Rohy|Karty|Strely na bránu)$/.test(base) ? [base, `${base} domácich`, `${base} hostí`] : [base]).filter((m) => have.has(m)); // 22. 11. 19:58: rohy a karty aj tímy
   return list.length ? list : [market];
 }
 function bookLineMarketLabel(r, m) {
