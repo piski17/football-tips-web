@@ -493,9 +493,12 @@ export async function syncBand65Trial(
  * sledovaných so značkou sameTypeMoved. Nič sa nemaže. Návrat: tipom so sameTypeMoved zrušiť watchOnly.
  */
 const SAME_TYPE_KEY = "tipradar_migr_same_type_done";
-export async function moveSameTypeOnce(typeOf: (market: string) => string | null): Promise<number> {
+// 23. 11. 2026 (Michal: Getafe – Atlético mal v štatistikách 2 handicapy gólov): znova pre zápasy od 20. 11.
+export const SAME_TYPE_KEY_1123 = "tipradar_migr_same_type_1123_done";
+export async function moveSameTypeOnce(typeOf: (market: string) => string | null, key = SAME_TYPE_KEY, since = ""): Promise<number> {
   if (!useUpstash) return 0;
   const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };
+  const SAME_TYPE_KEY = key;
   const done = (await upstashClient().get(`${UPSTASH_URL}/get/${SAME_TYPE_KEY}`, auth)).data?.result;
   if (done) return 0;
   return withWriteLock(async () => {
@@ -503,6 +506,7 @@ export async function moveSameTypeOnce(typeOf: (market: string) => string | null
     const groups = new Map<string, SavedTip[]>();
     for (const t of tips) {
       if ((t.legs && t.legs.length) || t.watchOnly || !t.fixtureId) continue;
+      if (since && String(t.matchDate || "") < since) continue;
       const type = typeOf(t.market);
       if (!type) continue;
       const key = `${t.fixtureId}|${type}`;

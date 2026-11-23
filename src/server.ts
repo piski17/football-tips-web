@@ -47,7 +47,7 @@ import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, Market
 import { newModelInputs } from "./newModel";
 import { computeMarketHealth, marketChangesText, clvOf, CLV_TIE } from "./marketHealth";
 import { LeaguePreset, SavedTip } from "./types";
-import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once, moveLateAddsOnce, restoreLateMovedOnce, returnStrictFailedOnce, moveStrictFailedBackOnce, moveSameTypeOnce, moveOldFoulTipsOnce, moveFoulPossWatchOnce, deleteAutoFoulPossOnce, retroApplyRules1121Once, deleteFoulWatchOnce, deleteAllFoulWatchOnce, deleteConferenceTipsOnce, restoreHcpTypeOnce, deleteWatch1122Once, syncBand65Trial, restoreDeletedWatchOnce } from "./tipsStore";
+import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once, moveLateAddsOnce, restoreLateMovedOnce, returnStrictFailedOnce, moveStrictFailedBackOnce, moveSameTypeOnce, SAME_TYPE_KEY_1123, moveOldFoulTipsOnce, moveFoulPossWatchOnce, deleteAutoFoulPossOnce, retroApplyRules1121Once, deleteFoulWatchOnce, deleteAllFoulWatchOnce, deleteConferenceTipsOnce, restoreHcpTypeOnce, deleteWatch1122Once, syncBand65Trial, restoreDeletedWatchOnce } from "./tipsStore";
 import { computeTicketStatus, settleBet, settleFixtureBets, tipHasStartedMatch, MATCH_STARTED_MESSAGE, buildTipEdit } from "./tipEvaluator";
 import {
   sendTipToTelegram,
@@ -2351,6 +2351,14 @@ app.post("/api/tips/:id/edit", async (req, res) => {
     const patch = buildTipEdit(tip, req.body ?? {});
     // „Len sledovať“ sa dá zapnúť aj dodatočne (napr. tip z Ligy majstrov uložený ako bežný).
     if (typeof req.body?.watchOnly === "boolean") {
+      // 23. 11. 2026 (Michal): ani ručný presun zo sledovaných do štatistík nesmie pridať 2. tip toho istého druhu zo zápasu.
+      if (!req.body.watchOnly && tip.watchOnly && !(tip.legs && tip.legs.length) && Number(tip.fixtureId) > 0) {
+        const probe: SavedTip = { ...tip, watchOnly: undefined };
+        if (await applySameTypeRule(probe)) {
+          res.status(409).json({ error: "Tento zápas už má v štatistikách tip toho istého druhu – zo zápasu ide klientom najviac 1 tip z druhu." });
+          return;
+        }
+      }
       if (req.body.watchOnly) patch.watchOnly = true;
       else patch.watchOnly = undefined;
       // Spätná kontrola 60 / 40 (27. 10. 2026): značka, aby sa presun dal vrátiť a na webe priznať.
@@ -4865,6 +4873,10 @@ app.listen(PORT, () => {
     .then(() => moveSameTypeOnce((market) => { const c = marketCategory(market); return c ? tipType(c) : null; }))
     .then((n) => { if (n) console.log(`1 tip z typu: presunuté do sledovaných ${n}`); })
     .catch((err) => console.error("Presun tipov rovnakého typu zlyhal:", err))
+    // 23. 11. 2026 (Michal): znova pre zápasy od 20. 11. – zo zápasu a druhu ostane klientom tip s najväčšou dôverou.
+    .then(() => moveSameTypeOnce((market) => { const c = marketCategory(market); return c ? tipType(c) : null; }, SAME_TYPE_KEY_1123, "2026-11-20"))
+    .then((n) => { if (n) console.log(`1 tip z druhu (od 20. 11.): presunuté do sledovaných ${n}`); })
+    .catch((err) => console.error("Presun tipov rovnakého druhu (od 20. 11.) zlyhal:", err))
     // 8. 11. 2026 (Michal): staré tipy na fauly raz presunie do sledovaných (fauly majú nové hranice podľa zápasu).
     .then(() => retroApplyRules1121Once())
     .then((n) => { if (n) console.log(`Pravidlá z 21. 11. spätne: presunuté do sledovaných ${n}`); })
