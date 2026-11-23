@@ -60,7 +60,7 @@ import {
   setTelegramWebhook,
   notifyAdminExpiringSubscribers,
   sendCustomMessage,
-  sendTipResultToTelegram, notifyAdmin, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite, sendMemberMessage, isMemberChannel, memberChannelConfigured, sendPackageLowReminder, freeChannelConfigured, sendFreeResult, sendFreeDaySummary, buildFreeDaySummaryText, freeBalanceLine, sendFreeHistoryMessage, deleteTelegramMessages as deleteTgMessages, setTelegramChannelsOn, telegramChannelsOn, setTelegramFreeOn, telegramFreeOn, tipUnits, minOddsFor, FreeBalance, normalizeTelegramUrl, setAskRadarHandler, AskRadarAnswer } from "./telegram";
+  sendTipResultToTelegram, notifyAdmin, buildDailyResultsText, translateTeamName, translateNamesInText, refreshTelegramWebhookSecret, redeemPayment, sendSalesOpenToWaitlist, confirmBankPaymentAndInvite, sendMemberMessage, isMemberChannel, memberChannelConfigured, sendPackageLowReminder, freeChannelConfigured, createFreeInviteLink, sendFreeResult, sendFreeDaySummary, buildFreeDaySummaryText, freeBalanceLine, sendFreeHistoryMessage, deleteTelegramMessages as deleteTgMessages, setTelegramChannelsOn, telegramChannelsOn, setTelegramFreeOn, telegramFreeOn, tipUnits, minOddsFor, FreeBalance, normalizeTelegramUrl, setAskRadarHandler, AskRadarAnswer } from "./telegram";
 import { paymentsEnabled, bankEnabled, isTerm, sellableTerm, SellableTerm, SELLABLE_TERMS, PAY_TERMS, BANK, bankNote, createBankPayment, getPayment, listPayments, cancelPayment, deletePayment, Payment, termLabel, tierName, addActiveMonths, SUMMER_PAUSE } from "./payments";
 import { payBySquareString } from "./payBySquare";
 import QRCode from "qrcode";
@@ -1410,6 +1410,48 @@ app.post("/api/telegram/channels", async (req, res) => {
   }
 });
 
+// ---- Pozývacie odkazy do kanála zadarmo podľa zdroja (23. 11. 2026, Michal) ----
+// Instagram (bio), Web (tlačidlá na tipradar.eu), Reklama (Meta). Počty pridaných ukazuje Telegram pri každom odkaze.
+const FREE_INVITE_META = "freeInviteLinks";
+const FREE_INVITE_SOURCES: { key: string; name: string }[] = [
+  { key: "instagram", name: "Instagram" },
+  { key: "web", name: "Web" },
+  { key: "reklama", name: "Reklama" },
+];
+let freeLinksCache: { at: number; v: Record<string, string> } | null = null;
+async function readFreeInviteLinks(): Promise<Record<string, string>> {
+  if (freeLinksCache && Date.now() - freeLinksCache.at < 10 * 60_000) return { ...freeLinksCache.v };
+  try {
+    const raw = JSON.parse((await getMeta(FREE_INVITE_META)) ?? "{}");
+    const v = raw && typeof raw === "object" ? raw : {};
+    freeLinksCache = { at: Date.now(), v };
+    return { ...v };
+  } catch { return {}; }
+}
+app.get("/api/telegram/free-links", async (_req, res) => {
+  try {
+    const links = await readFreeInviteLinks();
+    res.json({ configured: freeChannelConfigured(), sources: FREE_INVITE_SOURCES.map((s) => ({ ...s, url: links[s.key] ?? null })) });
+  } catch (err: any) {
+    res.status(502).json({ error: errText(err) });
+  }
+});
+// Vytvorí chýbajúce odkazy (existujúce nemení, aby staré odkazy v bio a reklame platili ďalej).
+app.post("/api/telegram/free-links", async (_req, res) => {
+  try {
+    const links = await readFreeInviteLinks();
+    for (const s of FREE_INVITE_SOURCES) {
+      if (links[s.key]) continue;
+      links[s.key] = await createFreeInviteLink(s.name);
+      await setMeta(FREE_INVITE_META, JSON.stringify(links)); // hneď uložiť, aby sa pri chybe ďalšieho nestratil
+      freeLinksCache = null;
+    }
+    res.json({ configured: true, sources: FREE_INVITE_SOURCES.map((s) => ({ ...s, url: links[s.key] ?? null })) });
+  } catch (err: any) {
+    res.status(502).json({ error: errText(err) });
+  }
+});
+
 // ---- Doplnenie histórie do kanála zadarmo (15. 11. 2026, Michal: „pridať do FREE tipy od 1. 11.“) ----
 // Jedna správa za každý dohraný deň (ako ranné vyhodnotenie) s priebežnou bilanciou. Posiela sa len ručne
 // z Nástrojov (náhľad → Odoslať), aj keď je hlavný vypínač kanálov vypnutý. Správy sa dajú zase zmazať.
@@ -1951,7 +1993,9 @@ app.get("/api/public/vip-seats", async (_req, res) => {
   try {
     // Predaj: SALES_OPEN=true na Renderi (kým nie je živnosť, len poradovník).
     // Odkaz na bezplatný Telegram kanál: premenná TELEGRAM_FREE_CHANNEL_URL na Renderi (napr. https://t.me/tipradar_free).
-    const freeChannelUrl = normalizeTelegramUrl(process.env.TELEGRAM_FREE_CHANNEL_URL) || "https://t.me/TipRadarAiBot?start=free";
+    // Od 23. 11. 2026: ak existuje pozývací odkaz „Web“ (Nástroje → Pozývacie odkazy), web vedie cezeň – Telegram tak ráta, koľko ľudí prišlo z webu.
+    const freeLinks = await readFreeInviteLinks();
+    const freeChannelUrl = freeLinks.web || normalizeTelegramUrl(process.env.TELEGRAM_FREE_CHANNEL_URL) || "https://t.me/TipRadarAiBot?start=free";
     const terms = await termSeats();
     res.json({ salesOpen: process.env.SALES_OPEN === "true", payOpen: paymentsEnabled(), minOdds: MIN_ODDS, freeChannelUrl, terms });
   } catch (err: any) {

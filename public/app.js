@@ -5344,6 +5344,49 @@ async function openVisits() {
 }
 document.getElementById("openVisitsBtn").addEventListener("click", () => openVisits());
 
+// ---- Pozývacie odkazy do kanála zadarmo podľa zdroja (23. 11. 2026, Michal) ----
+document.getElementById("freeLinksBtn")?.addEventListener("click", () => openFreeLinks());
+async function openFreeLinks() {
+  const m = openModal(`
+    <h3>Pozývacie odkazy do kanála zadarmo</h3>
+    <p class="muted small">Každý zdroj má vlastný odkaz. Koľko ľudí sa cez ktorý pridalo, uvidíš v Telegrame: kanál → Spravovať kanál → Pozývacie odkazy (odkazy vytvorené botom sú v časti od iných administrátorov).</p>
+    <div data-body><p class="empty">Načítavam…</p></div>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" data-close>Zavrieť</button>
+      <button type="button" class="btn" data-create hidden>Vytvoriť odkazy</button>
+    </div>`, { wide: true });
+  const body = m.el.querySelector("[data-body]");
+  const createBtn = m.el.querySelector("[data-create]");
+  const where = { instagram: "Vlož do bio na Instagrame (Upraviť profil → Odkazy).", web: "Používajú ho tlačidlá Telegram na tipradar.eu – netreba nič robiť.", reklama: "Daj ho ako odkaz v reklame na Mete." };
+  const draw = (d) => {
+    const missing = d.sources.some((s) => !s.url);
+    createBtn.hidden = !missing;
+    body.innerHTML = d.sources.map((s) => `
+      <div class="fl-row" style="display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line, rgba(127,127,127,.25))">
+        <div style="min-width:0"><b>${escapeHtml(s.name)}</b><br><span class="muted small">${escapeHtml(where[s.key] || "")}</span>
+          ${s.url ? `<br><code style="word-break:break-all">${escapeHtml(s.url)}</code>` : `<br><span class="muted small">zatiaľ nevytvorený</span>`}</div>
+        ${s.url ? `<button type="button" class="btn ghost" data-copy="${escapeHtml(s.url)}">Kopírovať</button>` : ""}
+      </div>`).join("") + (d.configured ? "" : `<p class="empty">Kanál zadarmo nie je na serveri nastavený.</p>`);
+    body.querySelectorAll("[data-copy]").forEach((b) => b.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(b.dataset.copy); showToast("Odkaz skopírovaný."); } catch { showToast("Kopírovanie sa nepodarilo – označ odkaz a skopíruj ho ručne."); }
+    }));
+  };
+  createBtn.addEventListener("click", async () => {
+    createBtn.disabled = true;
+    try { draw(await postJson("/api/telegram/free-links", {})); showToast("Odkazy sú vytvorené."); }
+    catch (err) { showToast(`Nepodarilo sa: ${err.message}`); }
+    finally { createBtn.disabled = false; }
+  });
+  try {
+    const r = await fetch("/api/telegram/free-links", { cache: "no-store" });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || r.statusText);
+    draw(d);
+  } catch (err) {
+    body.innerHTML = `<p class="empty">Nepodarilo sa načítať: ${escapeHtml(err.message || String(err))}</p>`;
+  }
+}
+
 // ---- Doplnenie tipov od 1. 11. do kanála zadarmo (15. 11. 2026, Michal) ----
 document.getElementById("freeHistoryBtn")?.addEventListener("click", () => openFreeHistory());
 async function openFreeHistory() {

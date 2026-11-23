@@ -306,6 +306,30 @@ export async function sendTipResultToTelegram(
 }
 
 /** Je nastavený bezplatný kanál? */
+/**
+ * Trvalé pozývacie odkazy do kanála zadarmo podľa zdroja (23. 11. 2026, Michal: „Instagram / Web / Reklama“).
+ * Bez limitu a bez dátumu konca. Telegram pri každom odkaze ukazuje, koľko ľudí sa cez neho pridalo
+ * (kanál → Spravovať kanál → Pozývacie odkazy). Bot musí byť v kanáli administrátor s právom pozývať.
+ */
+export async function createFreeInviteLink(name: string): Promise<string> {
+  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID_FREE) throw new Error("Kanál zadarmo nie je na serveri nastavený.");
+  try {
+    const res = await axios.post(
+      `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/createChatInviteLink`,
+      { chat_id: TELEGRAM_CHAT_ID_FREE, name: name.slice(0, 32) },
+      { timeout: 10000 }
+    );
+    const link = res.data?.result?.invite_link;
+    if (!link) throw new Error("Telegram nevrátil odkaz.");
+    return link;
+  } catch (err: any) {
+    const reason = err?.response?.data?.description ?? err?.message ?? String(err);
+    throw new Error(/not enough rights|CHAT_ADMIN_REQUIRED/i.test(reason)
+      ? "Bot v kanáli nemá právo pozývať používateľov (kanál → Administrátori → bot → zapni „Pridávať odberateľov“)."
+      : reason);
+  }
+}
+
 export function freeChannelConfigured(): boolean {
   return Boolean(TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID_FREE);
 }
