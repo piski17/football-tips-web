@@ -3,6 +3,8 @@ import * as path from "path";
 import axios from "axios";
 import { settleFixtureBets } from "./tipEvaluator";
 import { cachedRedis } from "./upstashCache";
+import { clientMinProb, clientMinOdds, HCP_CORNERS_MARKET } from "./oddsMatcher";
+import { openingMove } from "./oddsMove";
 
 // Vyhodnocovanie VŠETKÝCH trhov (4. 11. 2026, Michal: „nech sa dajú vyhodnocovať všetky tipy stávok, čo mám nastavené“).
 // Pri automatickej analýze zápasu (asi hodinu pred výkopom) sa z každého trhu (góly, góly tímu, rohy, rohy tímu,
@@ -22,7 +24,17 @@ const SKIP_MARKETS = ["Strelec gólov"];
 const RECENT_MAX = 300;
 
 export interface MarketPrediction { market: string; selection: string; probability: number }
-export interface TopPick extends MarketPrediction { odds: number }
+export interface TopPick extends MarketPrediction {
+  odds: number;
+  /** Učiaci sa model (23. 11. 2026): pôvodná šanca pred opravou z vlastných výsledkov. */
+  orig?: number;
+  /** Pohyb férovej šance Pinnacle od rána po výber tipu (body, + = kurz klesol). */
+  move?: number | null;
+  /** Férová šanca Pinnacle pri výbere tipu (%). */
+  pin?: number | null;
+  /** Skupiny na porovnanie (napr. „move:down“, „learn:ok“, „pin:ok“). */
+  grps?: string[];
+}
 interface PendingFixture {
   fixtureId: number; matchDate: string; homeTeam: string; awayTeam: string; league: string;
   picks: MarketPrediction[];
@@ -37,13 +49,18 @@ interface PendingFixture {
   /** Skúška „Kurz od 1,60“ (19. 11. 2026): súčasná dôvera (model + stávkovky), pásmo 68 – 80 % / 70 – 80 %. */
   k160a?: TopPick[];
   k160b?: TopPick[];
+  /** 23. 11. 2026: tipy podľa pravidiel pre klientov (bestBets) – pohyb kurzov, učiaci sa model a Pinnacle ako v TIPREXE. */
+  rules?: TopPick[];
+  /** 23. 11. 2026: učiaci sa model – pravidlá pre klientov, ale šanca opravená podľa vlastných výsledkov. */
+  learn?: TopPick[];
 }
 export interface BandStats { n: number; won: number; sumP: number }
 export interface MarketStats { n: number; won: number; lost: number; void: number; sumP: number; bands: Record<string, BandStats> }
 export interface RecentResult { fixtureId: number; matchDate: string; match: string; league: string; market: string; selection: string; probability: number; status: "won" | "lost" | "void" }
-export interface TopResult { fixtureId: number; matchDate: string; match: string; league: string; market: string; selection: string; probability: number; odds: number; status: "won" | "lost" | "void" }
-export interface TopStats { since: string; n: number; won: number; lost: number; void: number; sumP: number; profit: number; leagues: Record<string, { n: number; won: number; profit: number }>; recent: TopResult[] }
-export interface MarketSummary { since: string; fixtures: number; markets: Record<string, MarketStats>; recent: RecentResult[]; top?: TopStats; odds2?: TopStats; odds17?: TopStats; oct?: TopStats; k160a?: TopStats; k160b?: TopStats }
+export interface TopResult { fixtureId: number; matchDate: string; match: string; league: string; market: string; selection: string; probability: number; odds: number; status: "won" | "lost" | "void"; orig?: number; move?: number | null; pin?: number | null; grps?: string[] }
+export interface GroupStats { n: number; won: number; profit: number; sumP: number }
+export interface TopStats { since: string; n: number; won: number; lost: number; void: number; sumP: number; profit: number; leagues: Record<string, { n: number; won: number; profit: number }>; recent: TopResult[]; groups?: Record<string, GroupStats> }
+export interface MarketSummary { since: string; fixtures: number; markets: Record<string, MarketStats>; recent: RecentResult[]; top?: TopStats; odds2?: TopStats; odds17?: TopStats; oct?: TopStats; k160a?: TopStats; k160b?: TopStats; rules?: TopStats; learn?: TopStats; learnData?: { since: string; leagues: Record<string, BandStats> } }
 
 const BANDS: [string, number, number][] = [["pod 60 %", 0, 60], ["60 – 69 %", 60, 70], ["70 – 80 %", 70, 80.01]];
 const bandOf = (p: number) => (BANDS.find(([, lo, hi]) => p >= lo && p < hi) ?? BANDS[0])[0];
@@ -167,12 +184,103 @@ function pick160(candidates: Cand[], minP: number): TopPick[] {
   return [...byType.values()];
 }
 
+// ---------- Učiaci sa model (23. 11. 2026, Michal: „bod 4 … daj to do tichého sledovania“) ----------
+// Server už od 4. 11. vyhodnocuje predpoveď modelu v každom trhu (súhrn „Všetky trhy“). Z toho sa dá zistiť,
+// kde model sústavne preceňuje alebo podceňuje: oprava = (koľko vyšlo − koľko model čakal) / (počet + K),
+// teda pri málo dátach takmer nič, pri veľa dátach skoro celý rozdiel. Dve opravy sa sčítajú:
+//   1. druh stávky v danom pásme dôvery (napr. „Rohy hostí“ 70 – 80 %),
+//   2. súťaž (zo všetkých predpovedí v nej – zbiera sa od 23. 11. 2026).
+// Opravená šanca potom prejde rovnakými pravidlami ako tipy pre klientov (72 – 80 %, kurz, hodnota +5 až +25 %,
+// 1 tip z druhu). Opravy sa rátajú len z výsledkov PRED tipom, takže skúška je férová. Klientom nejde.
+const LEARN_K_MARKET = 40, LEARN_K_LEAGUE = 150, LEARN_CAP = 8;
+const LEARN_MARKETS = new Set(["Góly", "Oba tímy skórujú", "Handicap", HCP_CORNERS_MARKET, "Rohy", "Rohy domácich", "Rohy hostí", "Karty", "Karty domácich", "Karty hostí", "Strely na bránu"]);
+// Dôvody vyradenia, ktoré nesúvisia so šancou (málo dát, chýba kurz, trh vyradený…) – tie platia aj po oprave.
+const LEARN_STRUCTURAL = new Set(["few_games", "ev_high_few_games", "line_too_high", "manual_far_line", "market_disabled", "market_excluded", "no_market_odds", "no_odds", "one_bookmaker", "conflict", "neighbor_no_value"]);
+const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+const r1 = (v: number) => Math.round(v * 10) / 10;
+export function learnAdj(s: MarketSummary, market: string, league: string, p: number): { adj: number; mkt: number; lg: number } {
+  const b = s.markets?.[market]?.bands?.[bandOf(p)];
+  const mkt = b && b.n ? clamp((b.won * 100 - b.sumP) / (b.n + LEARN_K_MARKET), -LEARN_CAP, LEARN_CAP) : 0;
+  const l = s.learnData?.leagues?.[league];
+  const lg = l && l.n ? clamp((l.won * 100 - l.sumP) / (l.n + LEARN_K_LEAGUE), -LEARN_CAP, LEARN_CAP) : 0;
+  return { adj: mkt + lg, mkt, lg };
+}
+const typeKey = (c: { category?: string; market: string }) => {
+  const cat = String(c.category || c.market);
+  return cat.startsWith("hcp_") ? cat : cat.split("_")[0];
+};
+const passesClientRules = (market: string, p: number, odds: number) => {
+  if (!isFinite(p) || !isFinite(odds) || p < clientMinProb(market) || p > MAX_PROB || odds < clientMinOdds(market)) return false;
+  const ev = (p / 100) * odds;
+  return ev >= 1.05 && ev <= 1.25;
+};
+type LearnCand = Cand & { rejectCode?: string };
+function pickLearn(candidates: LearnCand[], ruleKeys: Set<string>, league: string, s: MarketSummary): TopPick[] {
+  const byType = new Map<string, TopPick>();
+  for (const c of candidates ?? []) {
+    if (!c.market || !LEARN_MARKETS.has(c.market) || c.marketConflict || c.h2hAgainst) continue;
+    if (c.rejectCode && LEARN_STRUCTURAL.has(c.rejectCode)) continue;
+    // Handicap rohov len v top súťažiach – tam, kde ho pravidlá pre klientov pustili.
+    if (c.market === HCP_CORNERS_MARKET && !ruleKeys.has(`${c.market}|${c.selection}`)) continue;
+    const p0 = Number(c.probability), o = Number(c.odds);
+    if (!isFinite(p0) || !isFinite(o) || o <= 1) continue;
+    const p = p0 + learnAdj(s, c.market, league, p0).adj;
+    if (!passesClientRules(c.market, p, o)) continue;
+    const type = typeKey(c);
+    const cur = byType.get(type);
+    if (!cur || p > cur.probability || (p === cur.probability && o > cur.odds))
+      byType.set(type, { market: c.market, selection: String(c.selection), probability: r1(p), odds: Math.round(o * 100) / 100, orig: r1(p0) });
+  }
+  return [...byType.values()];
+}
+// Súhrn pre opravy – v pamäti 30 minút (šetrí prenos z Upstash pri každom zápase).
+let learnCache: { at: number; s: MarketSummary } | null = null;
+async function learnSummary(): Promise<MarketSummary> {
+  if (learnCache && Date.now() - learnCache.at < 30 * 60 * 1000) return learnCache.s;
+  const s = await readSummary();
+  learnCache = { at: Date.now(), s };
+  return s;
+}
+
+// ---------- Pohyb kurzov a „ako TIPREX“ (23. 11. 2026) ----------
+// Tipy podľa pravidiel pre klientov (bestBets z automatickej analýzy) sa zapíšu so značkami:
+//   move:down = férová šanca Pinnacle od rána stúpla aspoň o 1,5 b. (kurz klesol – trh súhlasí),
+//   move:up   = klesla aspoň o 1,5 b. (trh proti), move:flat = bez väčšej zmeny, move:none = bez údajov,
+//   learn:ok / learn:out = či by tip prešiel aj po oprave učiaceho sa modelu,
+//   pin:ok / pin:out / pin:none = Pinnacle tip potvrdí ako v TIPREXE (rozdiel so šancou najviac 12 b.,
+//   hodnota podľa Pinnacle aspoň +1 %) / nepotvrdí / Pinnacle tip neponúka.
+const MOVE_MIN = 1.5, MOVE_MIN_HOURS = 2, PIN_MAX_GAP = 12, PIN_MIN_EV = 1.01;
+async function pickRules(
+  fixture: { fixtureId: number; matchDate: string; homeTeam: string; awayTeam: string; league: string },
+  bestBets: Cand[], s: MarketSummary
+): Promise<TopPick[]> {
+  const out: TopPick[] = [];
+  for (const b of bestBets ?? []) {
+    const p = Number(b.probability), o = Number(b.odds);
+    if (!b.market || !isFinite(p) || !isFinite(o) || o <= 1) continue;
+    const pick = { market: b.market, selection: String(b.selection) };
+    const mv = await openingMove(fixture, pick).catch(() => null);
+    const grps: string[] = [];
+    if (!mv || mv.openH < MOVE_MIN_HOURS) grps.push("move:none");
+    else grps.push(mv.move >= MOVE_MIN ? "move:down" : mv.move <= -MOVE_MIN ? "move:up" : "move:flat");
+    const pl = p + learnAdj(s, b.market, fixture.league, p).adj;
+    grps.push(passesClientRules(b.market, pl, o) ? "learn:ok" : "learn:out");
+    const pin = mv?.nowP ?? null;
+    if (pin == null) grps.push("pin:none");
+    else grps.push(Math.abs(p - pin) <= PIN_MAX_GAP && (pin / 100) * o >= PIN_MIN_EV ? "pin:ok" : "pin:out");
+    out.push({ ...pick, probability: r1(p), odds: Math.round(o * 100) / 100, move: mv && mv.openH >= MOVE_MIN_HOURS ? mv.move : null, pin, grps });
+  }
+  return out;
+}
+
 /** Z kandidátov modelu vyberie z každého trhu jednu predpoveď (najvyššia šanca do 80 %) a zapíše zápas. */
 export async function recordMarketPredictions(
   fixture: { fixtureId: number; matchDate: string; homeTeam: string; awayTeam: string; league: string },
   candidates: Cand[],
   /** Ďalšie trhy z modelu gólov len na sledovanie (16. 11. 2026) – dvojšanca, handicap, presný počet gólov… */
-  trackOnly: Cand[] = []
+  trackOnly: Cand[] = [],
+  /** Tipy podľa pravidiel pre klientov (23. 11. 2026) – pohyb kurzov, učiaci sa model, Pinnacle. */
+  bestBets: Cand[] = []
 ): Promise<void> {
   const best = new Map<string, MarketPrediction>();
   for (const c of [...(candidates ?? []), ...(trackOnly ?? [])]) {
@@ -189,8 +297,14 @@ export async function recordMarketPredictions(
   const odds17: TopPick | undefined = undefined;
   const oct = pickOctober(candidates);
   const k160a = pick160(candidates, 68), k160b = pick160(candidates, 70);
-  if (!best.size && !top && !odds2 && !odds17 && !oct.length && !k160a.length) return;
-  const entry: PendingFixture = { ...fixture, picks: [...best.values()], ...(top ? { top } : {}), ...(odds2 ? { odds2 } : {}), ...(odds17 ? { odds17 } : {}), ...(oct.length ? { oct } : {}), ...(k160a.length ? { k160a } : {}), ...(k160b.length ? { k160b } : {}) };
+  let rules: TopPick[] = [], learn: TopPick[] = [];
+  try {
+    const s = await learnSummary();
+    rules = await pickRules(fixture, bestBets, s);
+    learn = pickLearn(candidates as LearnCand[], new Set(rules.map((r) => `${r.market}|${r.selection}`)), fixture.league, s);
+  } catch (err) { console.error("Pohyb kurzov / učiaci sa model zlyhal:", err); }
+  if (!best.size && !top && !odds2 && !odds17 && !oct.length && !k160a.length && !rules.length && !learn.length) return;
+  const entry: PendingFixture = { ...fixture, picks: [...best.values()], ...(rules.length ? { rules } : {}), ...(learn.length ? { learn } : {}), ...(top ? { top } : {}), ...(odds2 ? { odds2 } : {}), ...(odds17 ? { odds17 } : {}), ...(oct.length ? { oct } : {}), ...(k160a.length ? { k160a } : {}), ...(k160b.length ? { k160b } : {}) };
   if (!useUpstash) { const d = readFile(); d.pending[String(fixture.fixtureId)] = entry; writeFile(d); return; }
   await redis(["HSET", PENDING_KEY, String(fixture.fixtureId), JSON.stringify(entry)]);
 }
@@ -207,14 +321,14 @@ export async function settleMarketPredictions(): Promise<number> {
     const summary = await readSummary();
     for (const f of due.slice(0, 25)) {
       try {
-        const extra = [f.top, f.odds2, f.odds17, ...(f.oct ?? []), ...(f.k160a ?? []), ...(f.k160b ?? [])].filter((x): x is TopPick => !!x);
+        const extra = [f.top, f.odds2, f.odds17, ...(f.oct ?? []), ...(f.k160a ?? []), ...(f.k160b ?? []), ...(f.rules ?? []), ...(f.learn ?? [])].filter((x): x is TopPick => !!x);
         const all = [...f.picks, ...extra];
         let outcomes = await settleFixtureBets(f, all);
         if (!outcomes) {
           if (Date.now() < new Date(f.matchDate).getTime() + 3 * 24 * 3600 * 1000) continue;
           outcomes = all.map(() => "void" as const);
         }
-        const addTop = (key: "top" | "odds2" | "odds17" | "oct" | "k160a" | "k160b", pick: TopPick, st: "won" | "lost" | "void") => {
+        const addTop = (key: "top" | "odds2" | "odds17" | "oct" | "k160a" | "k160b" | "rules" | "learn", pick: TopPick, st: "won" | "lost" | "void") => {
           const t = (summary[key] ??= { since: new Date().toISOString(), n: 0, won: 0, lost: 0, void: 0, sumP: 0, profit: 0, leagues: {}, recent: [] });
           const gain = st === "won" ? pick.odds - 1 : st === "lost" ? -1 : 0;
           if (st === "void") t.void++;
@@ -223,8 +337,13 @@ export async function settleMarketPredictions(): Promise<number> {
             if (st === "won") t.won++; else t.lost++;
             const lg = (t.leagues[f.league || "?"] ??= { n: 0, won: 0, profit: 0 });
             lg.n++; if (st === "won") lg.won++; lg.profit = Math.round((lg.profit + gain) * 100) / 100;
+            for (const g of pick.grps ?? []) {
+              const x = ((t.groups ??= {})[g] ??= { n: 0, won: 0, profit: 0, sumP: 0 });
+              x.n++; x.sumP += pick.probability; if (st === "won") x.won++; x.profit = Math.round((x.profit + gain) * 100) / 100;
+            }
           }
-          t.recent.unshift({ fixtureId: f.fixtureId, matchDate: f.matchDate, match: `${f.homeTeam} – ${f.awayTeam}`, league: f.league, market: pick.market, selection: pick.selection, probability: pick.probability, odds: pick.odds, status: st });
+          t.recent.unshift({ fixtureId: f.fixtureId, matchDate: f.matchDate, match: `${f.homeTeam} – ${f.awayTeam}`, league: f.league, market: pick.market, selection: pick.selection, probability: pick.probability, odds: pick.odds, status: st,
+            ...(pick.orig != null ? { orig: pick.orig } : {}), ...(pick.move !== undefined ? { move: pick.move } : {}), ...(pick.pin !== undefined ? { pin: pick.pin } : {}), ...(pick.grps ? { grps: pick.grps } : {}) });
           t.recent = t.recent.slice(0, TOP_RECENT_MAX);
         };
         let xi = f.picks.length;
@@ -234,6 +353,8 @@ export async function settleMarketPredictions(): Promise<number> {
         for (const o of f.oct ?? []) addTop("oct", o, outcomes[xi++]);
         for (const o of f.k160a ?? []) addTop("k160a", o, outcomes[xi++]);
         for (const o of f.k160b ?? []) addTop("k160b", o, outcomes[xi++]);
+        for (const o of f.rules ?? []) addTop("rules", o, outcomes[xi++]);
+        for (const o of f.learn ?? []) addTop("learn", o, outcomes[xi++]);
         summary.fixtures++;
         f.picks.forEach((p, i) => {
           const st = outcomes![i];
@@ -244,6 +365,10 @@ export async function settleMarketPredictions(): Promise<number> {
             if (st === "won") m.won++; else m.lost++;
             const b = (m.bands[bandOf(p.probability)] ??= { n: 0, won: 0, sumP: 0 });
             b.n++; b.sumP += p.probability; if (st === "won") b.won++;
+            // Učiaci sa model (23. 11. 2026): presnosť modelu po súťažiach.
+            const ld = (summary.learnData ??= { since: new Date().toISOString(), leagues: {} });
+            const lb = (ld.leagues[f.league || "?"] ??= { n: 0, won: 0, sumP: 0 });
+            lb.n++; lb.sumP += p.probability; if (st === "won") lb.won++;
           }
           summary.recent.unshift({ fixtureId: f.fixtureId, matchDate: f.matchDate, match: `${f.homeTeam} – ${f.awayTeam}`, league: f.league, market: p.market, selection: p.selection, probability: p.probability, status: st });
         });
@@ -259,7 +384,10 @@ export async function settleMarketPredictions(): Promise<number> {
   return done;
 }
 
-export async function marketSummary(): Promise<MarketSummary & { pending: number }> {
+export async function marketSummary(): Promise<MarketSummary & { pending: number; learnTable: { markets: { market: string; n: number; adj: number }[]; leagues: { league: string; n: number; adj: number }[] } }> {
   const [s, p] = await Promise.all([readSummary(), listPending()]);
-  return { ...s, pending: p.length };
+  // Aktuálne opravy učiaceho sa modelu (pre tipy s dôverou okolo 75 %).
+  const markets = [...LEARN_MARKETS].map((m) => ({ market: m, n: s.markets?.[m]?.bands?.[bandOf(75)]?.n ?? 0, adj: r1(learnAdj({ ...s, learnData: undefined }, m, "", 75).mkt) }));
+  const leagues = Object.entries(s.learnData?.leagues ?? {}).map(([league, x]) => ({ league, n: x.n, adj: r1(learnAdj({ ...s, markets: {} }, "", league, 75).lg) })).sort((a, b) => b.n - a.n);
+  return { ...s, pending: p.length, learnTable: { markets, leagues } };
 }

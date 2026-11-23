@@ -12,6 +12,7 @@ import { applyCupGoals } from "./cupAdjust";
 import { getDay, getAllDays, setDay } from "./dailyStore";
 import { saveSlip, deleteSlip, listSlipIds, getSlipImage, MAX_SLIP_CHARS } from "./slipStore";
 import { recordMarketPredictions, settleMarketPredictions, marketSummary } from "./marketTracker";
+import { snapshotOpeningOdds } from "./oddsMove";
 import { recordTiprexPicks, updateTiprexClosing, settleTiprex, resettleTiprexCardsOnce, fixBahiaCoritibaOnce, tiprexSummary, tiprexPublicStats, addTiprexWaitlist, tiprexWaitlistCount } from "./tiprex";
 import { scanSurebets, computeSurebets, fixtureResult, topBooksPresent, TOP_BOOKS, surebetStatus, surebetLog, getMyBooks, setMyBooks, startSurebetScanner, setOnScan } from "./surebets";
 import { recordAutoFixture, listAuto, listAutoFixtures, autoFixtureDone, updateAuto, pruneAuto, AutoEntry } from "./autoStore";
@@ -2520,7 +2521,10 @@ app.get("/api/surebets/result", async (req, res) => {
   }
 });
 startSurebetScanner(LEAGUE_PRESETS, TIPREX_EXTRA_LEAGUES); // TIPREX: kurzy aj ďalších súťaží (do surebetov sa nerátajú)
-setOnScan(() => updateTiprexClosing()); // TIPREX: posledný férový kurz pred výkopom (CLV)
+setOnScan(async () => {
+  await updateTiprexClosing().catch((err) => console.error("TIPREX – CLV zlyhalo:", err)); // TIPREX: posledný férový kurz pred výkopom (CLV)
+  await snapshotOpeningOdds().catch((err) => console.error("Ranné kurzy Pinnacle zlyhali:", err)); // 23. 11. 2026: pohyb kurzov
+});
 
 // ---- Valuebety odstránené z appky (15. 11. 2026, Michal). Staré záznamy ostávajú v Upstash (tipradar_valuebets). ----
 app.get(["/valuebety", "/valuebety/"], (_req, res) => res.redirect("/"));
@@ -3886,7 +3890,8 @@ async function runAutoAnalysis(): Promise<void> {
         await recordMarketPredictions(
           { fixtureId: fixture.fixtureId, matchDate: fixture.date, homeTeam: fixture.homeTeam.name, awayTeam: fixture.awayTeam.name, league: String(fixture.league.name ?? "") },
           (result as any).allCandidates ?? [],
-          (result as any).trackOnlyCandidates ?? []
+          (result as any).trackOnlyCandidates ?? [],
+          (result as any).bestBets ?? [] // 23. 11. 2026: pohyb kurzov, učiaci sa model, Pinnacle ako v TIPREXE
         ).catch((err) => console.error("Zápis predpovedí všetkých trhov zlyhal:", err));
         // TIPREX (18. 11. 2026): samostatný model pre zahraničie – model + Pinnacle, kurz 1,70 – 3,20. Len skúška.
         await recordTiprexPicks(

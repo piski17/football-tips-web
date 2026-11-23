@@ -5854,6 +5854,70 @@ function renderTopPicks(t, cfg) {
     </details>`;
 }
 
+// =====================================================================
+// 23. 11. 2026 (Michal): tri nové tiché skúšky – pohyb kurzov, učiaci sa model, Pinnacle ako v TIPREXE.
+// Všetky stoja na tipoch, ktoré model vyberie podľa pravidiel pre klientov (ako v Tipoch dňa) asi hodinu
+// pred výkopom – aj keď ich Michal klientom neuloží. Klientom nejde nič, do štatistík sa neráta.
+// =====================================================================
+function groupTestTable(t, rows) {
+  const fmt2 = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(2).replace(".", ",");
+  const line = (label, g, strong) => {
+    const n = g ? g.n : 0;
+    return `<tr${strong ? ' style="font-weight:600"' : ""}><td>${label}</td><td>${n}</td><td>${n ? `${g.won} (${Math.round((g.won / n) * 100)}${NB}%)` : "–"}</td><td>${n ? Math.round(g.sumP / n) + NB + "%" : "–"}</td><td class="${n && g.profit > 0 ? "g" : n && g.profit < 0 ? "l" : ""}">${n ? fmt2(g.profit) + " j." : "–"}</td></tr>`;
+  };
+  return `<div class="table-wrap"><table class="bt-table"><thead><tr><th></th><th>Tipy</th><th>Vyšlo</th><th>Model čakal</th><th>Zisk</th></tr></thead><tbody>
+    ${rows.map(([label, g, strong]) => line(label, g, strong)).join("")}</tbody></table></div>`;
+}
+function groupTestRecent(list, extraCol) {
+  const ST = { won: '<b class="g">✓</b>', lost: '<b class="l">✕</b>', void: '<span class="faint">↺</span>' };
+  const rows = (list || []).slice(0, 100).map((x) => `<tr><td class="faint small">${escapeHtml(new Date(x.matchDate).toLocaleDateString("sk-SK", { day: "numeric", month: "numeric" }))}</td><td>${escapeHtml(translateTeamName(x.match.split(" – ")[0] || ""))} – ${escapeHtml(translateTeamName(x.match.split(" – ")[1] || ""))}<br><span class="faint small">${escapeHtml(x.league || "")}</span></td><td>${escapeHtml(x.market)}: ${escapeHtml(translateNamesInText(x.selection, "", ""))}</td><td>${probTxt(x.probability)}${NB}%</td><td>${fmtOdds(x.odds)}</td><td>${extraCol(x)}</td><td>${ST[x.status] || ""}</td></tr>`).join("");
+  return rows ? `<details><summary class="small">Posledné tipy</summary><div class="table-wrap"><table class="bt-table"><tbody>${rows}</tbody></table></div></details>` : "";
+}
+function groupTestSum(fold, g, empty) {
+  const el = document.querySelector(`[data-fold-sum="${fold}"]`);
+  if (!el) return;
+  const fmt2 = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(2).replace(".", ",");
+  el.textContent = g && g.n ? `${g.n} tipov · ${Math.round((g.won / g.n) * 100)}${NB}% · ${fmt2(g.profit)} j.` : empty;
+}
+const SMART_INTRO = `Rátajú sa tipy, ktoré model asi hodinu pred výkopom vyberie podľa pravidiel pre klientov (ako v Tipoch dňa: 72 – 80${NB}%, kurz od 1,50, hodnota +5 až +25${NB}%) – aj tie, ktoré ste klientom neuložili. Zisk pri vklade 1 jednotka na tip, kurz z API. Klientom nejde nič a do štatistík sa neráta. Vyhodnocovať až pri aspoň 30 tipoch v riadku.`;
+function renderSmartTests(d) {
+  const r = d.rules, g = (r && r.groups) || {};
+  const empty = `<p class="empty">Zatiaľ nič vyhodnotené. Prvé výsledky budú po dnešných zápasoch.</p>`;
+  const signed = (v) => (v == null ? "–" : (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1).replace(".", ",") + " b.");
+  // 1. Pohyb kurzov
+  const mv = document.getElementById("moveResult");
+  if (mv) {
+    const best = g["move:down"];
+    groupTestSum("pohyb", best, "Tiché sledovanie od 23. 11.");
+    mv.innerHTML = `<p class="muted small">Server si ráno odloží kurzy Pinnacle (najpresnejšia stávkovka na svete). Keď model vyberie tip, porovná, ako sa odvtedy zmenila férová šanca Pinnacle (bez marže). Keď šanca stúpla aspoň o 1,5 bodu – kurz klesol, na tip stavili aj veľkí hráči – „trh súhlasí“. ${SMART_INTRO}</p>
+      ${r && r.n ? groupTestTable(r, [["Trh súhlasí (kurz Pinnacle klesol)", g["move:down"]], ["Bez väčšej zmeny", g["move:flat"]], ["Trh proti (kurz Pinnacle stúpol)", g["move:up"]], ["Bez ranného kurzu Pinnacle", g["move:none"]], ["Všetky tipy podľa pravidiel", r, true]]) + `<p class="faint small">Ak bude riadok „Trh súhlasí“ po 30 a viac tipoch jasne lepší ako „Všetky tipy“, dá sa zvážiť posielať klientom len tieto tipy alebo ich označiť ako silnejšie.</p>` + groupTestRecent(r.recent, (x) => `<span class="small">${signed(x.move)}</span>`) : empty}`;
+  }
+  // 2. Učiaci sa model
+  const lr = document.getElementById("learnResult");
+  if (lr) {
+    const l = d.learn;
+    groupTestSum("ucenie", l, "Tiché sledovanie od 23. 11.");
+    const t = d.learnTable || { markets: [], leagues: [] };
+    const adjCell = (v) => `<td class="${v >= 1 ? "g" : v <= -1 ? "l" : "faint"}">${signed(v)}</td>`;
+    const mk = t.markets.filter((x) => x.n).map((x) => `<tr><td>${escapeHtml(x.market)}</td><td>${x.n}</td>${adjCell(x.adj)}</tr>`).join("");
+    const lg = t.leagues.slice(0, 20).map((x) => `<tr><td>${escapeHtml(x.league)}</td><td>${x.n}</td>${adjCell(x.adj)}</tr>`).join("");
+    lr.innerHTML = `<p class="muted small">Model sa učí z vlastných výsledkov: z tisícov vyhodnotených predpovedí („Všetky trhy“) zistí, v ktorých druhoch stávok a súťažiach sústavne preceňuje alebo podceňuje, a šancu o to opraví (pri málo dátach opravuje málo, najviac o 8 bodov). Opravená šanca potom prejde rovnakými pravidlami ako tipy pre klientov. ${SMART_INTRO}</p>
+      ${l && l.n ? groupTestTable(l, [["Učiaci sa model – všetky jeho tipy", l, true], ["Súčasné pravidlá – všetky tipy", r], ["Súčasné tipy, ktoré by prešli aj po oprave", g["learn:ok"]], ["Súčasné tipy, ktoré by po oprave vypadli", g["learn:out"]]]) + groupTestRecent(l.recent, (x) => `<span class="faint small">pôvodne ${x.orig != null ? probTxt(x.orig) + NB + "%" : "–"}</span>`) : empty}
+      <details><summary class="small">Aktuálne opravy (pri dôvere okolo 75 %)</summary>
+        <p class="faint small">+ = model tu podceňuje (šanca sa zvýši), − = preceňuje (šanca sa zníži). Opravy po súťažiach sa zbierajú od 23. 11. 2026.</p>
+        <div class="table-wrap"><table class="bt-table"><thead><tr><th>Druh stávky</th><th>Predpovede</th><th>Oprava</th></tr></thead><tbody>${mk || '<tr><td colspan="3" class="faint">Zatiaľ bez dát</td></tr>'}</tbody></table></div>
+        <div class="table-wrap"><table class="bt-table"><thead><tr><th>Súťaž</th><th>Predpovede</th><th>Oprava</th></tr></thead><tbody>${lg || '<tr><td colspan="3" class="faint">Zatiaľ bez dát</td></tr>'}</tbody></table></div>
+      </details>`;
+  }
+  // 3. Ako TIPREX
+  const px = document.getElementById("pinResult");
+  if (px) {
+    groupTestSum("akotiprex", g["pin:ok"], "Tiché sledovanie od 23. 11.");
+    px.innerHTML = `<p class="muted small">Ako v TIPREXE: tip musí potvrdiť aj Pinnacle – jeho férová šanca (bez marže) sa od šance modelu nesmie líšiť o viac ako 12 bodov a aj podľa Pinnacle musí mať tip hodnotu aspoň +1${NB}%. ${SMART_INTRO}</p>
+      ${r && r.n ? groupTestTable(r, [["Pinnacle potvrdil", g["pin:ok"]], ["Pinnacle nepotvrdil", g["pin:out"]], ["Pinnacle tip neponúka", g["pin:none"]], ["Všetky tipy podľa pravidiel", r, true]]) + groupTestRecent(r.recent, (x) => `<span class="small">${x.pin != null ? "Pinnacle " + probTxt(x.pin) + NB + "%" : '<span class="faint">bez Pinnacle</span>'}</span>`) : empty}`;
+  }
+}
+
 async function renderAllMarkets() {
   const box = document.getElementById("allMarketsResult");
   if (!box) return;
@@ -5864,6 +5928,7 @@ async function renderAllMarkets() {
   renderTopPicks(d.oct, OCT_TEXT); // 19. 11. 2026: skúška „Ako v októbri“
   renderTopPicks(d.k160a, K160A_TEXT); // 19. 11. 2026: skúška „Kurz od 1,60“
   renderTopPicks(d.k160b, K160B_TEXT);
+  renderSmartTests(d); // 23. 11. 2026: pohyb kurzov, učiaci sa model, ako TIPREX
   void renderOctoberRetro();
   const rows = Object.entries(d.markets || {}).map(([market, m]) => ({ market, ...m, pct: m.n ? (m.won / m.n) * 100 : null, exp: m.n ? m.sumP / m.n : null }))
     .sort((a, b) => b.n - a.n || a.market.localeCompare(b.market));
