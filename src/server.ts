@@ -4866,12 +4866,20 @@ checkExpiringSubscribers(); // aj hneď po štarte appky
  * vzájomných zápasov. Raz ich prejde a tie, proti ktorým hovoria vzájomné zápasy, presunie do sledovaných.
  */
 async function h2hBookLineFixOnce(): Promise<number> {
-  const KEY = "h2hBookLineFix1123";
+  // 23. 11. 19:55: znova (2. pokus) – navyše sa pozrie aj na záznam automatického ukladania, kde server
+  // pred výkopom napísal „do sledovaných (vzájomné zápasy – …)“.
+  const KEY = "h2hBookLineFix1123b";
   if (await getMeta(KEY)) return 0;
   let moved = 0;
   for (const t of await listTips()) {
-    if (t.watchOnly || (t.legs && t.legs.length) || t.h2hAgainst || t.manualEntry || !H2H_CHECK_MARKETS.includes(String(t.market)) || String(t.matchDate || "") < "2026-11-20") continue;
-    const against = await serverH2hAgainst(t);
+    if (t.watchOnly || (t.legs && t.legs.length) || t.h2hAgainst || !H2H_CHECK_MARKETS.includes(String(t.market)) || String(t.matchDate || "") < "2026-11-20") continue;
+    let against: string | undefined;
+    try {
+      const info = JSON.parse((await getMeta(`autoSaveInfo:${t.fixtureId}`)) || "null");
+      const hit = (info?.saved ?? []).find((x: any) => x.market === t.market && x.selection === t.selection && /^vzájomné zápasy/.test(String(x.reason || "")));
+      if (hit) against = String(hit.reason).replace(/^vzájomné zápasy – /, "");
+    } catch { /* bez záznamu */ }
+    if (!against) against = await serverH2hAgainst(t);
     if (!against) continue;
     await updateTip(t.id, { watchOnly: true, h2hAgainst: against, strongOfDay: undefined });
     moved++;
