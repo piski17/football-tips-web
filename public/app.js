@@ -5912,8 +5912,12 @@ function renderSmartTests(d) {
   // 3. Ako TIPREX
   const px = document.getElementById("pinResult");
   if (px) {
-    groupTestSum("akotiprex", g["pin:ok"], "Tiché sledovanie od 23. 11.");
+    groupTestSum("akotiprex", d.tx, "Tiché sledovanie od 23. 11.");
     px.innerHTML = `<p class="muted small">Ako v TIPREXE: tip musí potvrdiť aj Pinnacle – jeho férová šanca (bez marže) sa od šance modelu nesmie líšiť o viac ako 12 bodov a aj podľa Pinnacle musí mať tip hodnotu aspoň +1${NB}%. ${SMART_INTRO}</p>
+      <h4>Tipy s pravidlami TIPREXU (kurz od 1,60)</h4>
+      <p class="faint small">Súťaže a druhy stávok TipRadaru, ale výber ako v TIPREXE: šanca = polovica model + polovica Pinnacle, rozdiel najviac 12 bodov, kurz z API aspoň 1,60 (bez hornej hranice), hodnota podľa modelu aspoň +5${NB}%, podľa Pinnacle aspoň +1${NB}%, spolu +3 až +20${NB}%, zo zápasu 1 tip z druhu.</p>
+      ${d.tx && d.tx.n ? groupTestTable(d.tx, [["Tipy ako v TIPREXE", d.tx, true]]) + groupTestRecent(d.tx.recent, (x) => `<span class="faint small">model ${x.orig != null ? probTxt(x.orig) + NB + "%" : "–"} · Pinnacle ${x.pin != null ? probTxt(x.pin) + NB + "%" : "–"}</span>`) : empty}
+      <h4>Tipy TipRadaru (od 1,50), ktoré potvrdí Pinnacle</h4>
       ${r && r.n ? groupTestTable(r, [["Pinnacle potvrdil", g["pin:ok"]], ["Pinnacle nepotvrdil", g["pin:out"]], ["Pinnacle tip neponúka", g["pin:none"]], ["Všetky tipy podľa pravidiel", r, true]]) + groupTestRecent(r.recent, (x) => `<span class="small">${x.pin != null ? "Pinnacle " + probTxt(x.pin) + NB + "%" : '<span class="faint">bez Pinnacle</span>'}</span>`) : empty}`;
   }
 }

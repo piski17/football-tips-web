@@ -4,7 +4,7 @@ import axios from "axios";
 import { settleFixtureBets } from "./tipEvaluator";
 import { cachedRedis } from "./upstashCache";
 import { clientMinProb, clientMinOdds, HCP_CORNERS_MARKET } from "./oddsMatcher";
-import { openingMove } from "./oddsMove";
+import { openingMove, pinnacleNow } from "./oddsMove";
 
 // Vyhodnocovanie VŠETKÝCH trhov (4. 11. 2026, Michal: „nech sa dajú vyhodnocovať všetky tipy stávok, čo mám nastavené“).
 // Pri automatickej analýze zápasu (asi hodinu pred výkopom) sa z každého trhu (góly, góly tímu, rohy, rohy tímu,
@@ -53,6 +53,8 @@ interface PendingFixture {
   rules?: TopPick[];
   /** 23. 11. 2026: učiaci sa model – pravidlá pre klientov, ale šanca opravená podľa vlastných výsledkov. */
   learn?: TopPick[];
+  /** 23. 11. 2026: tipy s pravidlami TIPREXU v súťažiach a druhoch stávok TipRadaru. */
+  tx?: TopPick[];
 }
 export interface BandStats { n: number; won: number; sumP: number }
 export interface MarketStats { n: number; won: number; lost: number; void: number; sumP: number; bands: Record<string, BandStats> }
@@ -60,7 +62,7 @@ export interface RecentResult { fixtureId: number; matchDate: string; match: str
 export interface TopResult { fixtureId: number; matchDate: string; match: string; league: string; market: string; selection: string; probability: number; odds: number; status: "won" | "lost" | "void"; orig?: number; move?: number | null; pin?: number | null; grps?: string[] }
 export interface GroupStats { n: number; won: number; profit: number; sumP: number }
 export interface TopStats { since: string; n: number; won: number; lost: number; void: number; sumP: number; profit: number; leagues: Record<string, { n: number; won: number; profit: number }>; recent: TopResult[]; groups?: Record<string, GroupStats> }
-export interface MarketSummary { since: string; fixtures: number; markets: Record<string, MarketStats>; recent: RecentResult[]; top?: TopStats; odds2?: TopStats; odds17?: TopStats; oct?: TopStats; k160a?: TopStats; k160b?: TopStats; rules?: TopStats; learn?: TopStats; learnData?: { since: string; leagues: Record<string, BandStats> } }
+export interface MarketSummary { since: string; fixtures: number; markets: Record<string, MarketStats>; recent: RecentResult[]; top?: TopStats; odds2?: TopStats; odds17?: TopStats; oct?: TopStats; k160a?: TopStats; k160b?: TopStats; rules?: TopStats; learn?: TopStats; tx?: TopStats; learnData?: { since: string; leagues: Record<string, BandStats> } }
 
 const BANDS: [string, number, number][] = [["pod 60 %", 0, 60], ["60 – 69 %", 60, 70], ["70 – 80 %", 70, 80.01]];
 const bandOf = (p: number) => (BANDS.find(([, lo, hi]) => p >= lo && p < hi) ?? BANDS[0])[0];
@@ -273,6 +275,32 @@ async function pickRules(
   return out;
 }
 
+// ---------- Tipy ako v TIPREXE (23. 11. 2026, Michal: „kľudne tam môžu byť také tipy ako v TIPREXE“) ----------
+// Pravidlá TIPREXU (src/tiprex.ts) na zápasoch a druhoch stávok TipRadaru: šanca = 50 % model (bez stávkoviek)
+// + 50 % Pinnacle bez marže, rozdiel najviac 12 b., kurz z API (ako pri TipRadare) aspoň 1,60 (bez hornej hranice), hodnota podľa modelu
+// aspoň +5 %, podľa Pinnacle aspoň +1 %, spolu +3 až +20 %, 1 tip z druhu (najväčšia šanca). Klientom nejde.
+const TX_MIN_ODDS = 1.6; // 23. 11. 2026 18:46 (Michal): bez hornej hranice, kurz aspoň 1,60
+function pickTiprexLike(fixture: { fixtureId: number; matchDate: string; homeTeam: string; awayTeam: string }, candidates: LearnCand[], ruleKeys: Set<string>): TopPick[] {
+  const byType = new Map<string, TopPick>();
+  for (const c of candidates ?? []) {
+    if (!c.market || !LEARN_MARKETS.has(c.market) || c.marketConflict || c.h2hAgainst) continue;
+    if (c.rejectCode && LEARN_STRUCTURAL.has(c.rejectCode)) continue;
+    if (c.market === HCP_CORNERS_MARKET && !ruleKeys.has(`${c.market}|${c.selection}`)) continue;
+    const o = Number(c.odds);
+    if (!isFinite(o) || o < TX_MIN_ODDS) continue;
+    const modelP = Number(typeof c.blendModel === "number" ? c.blendModel : c.probability);
+    if (!isFinite(modelP) || (modelP / 100) * o < 1.05) continue;
+    const pin = pinnacleNow(fixture, c);
+    if (pin == null || Math.abs(modelP - pin) > PIN_MAX_GAP || (pin / 100) * o < PIN_MIN_EV) continue;
+    const p = (modelP + pin) / 2, ev = (p / 100) * o;
+    if (ev < 1.03 || ev > 1.2) continue;
+    const type = typeKey(c);
+    const cur = byType.get(type);
+    if (!cur || p > cur.probability) byType.set(type, { market: c.market, selection: String(c.selection), probability: r1(p), odds: Math.round(o * 100) / 100, orig: r1(modelP), pin: r1(pin) });
+  }
+  return [...byType.values()];
+}
+
 /** Z kandidátov modelu vyberie z každého trhu jednu predpoveď (najvyššia šanca do 80 %) a zapíše zápas. */
 export async function recordMarketPredictions(
   fixture: { fixtureId: number; matchDate: string; homeTeam: string; awayTeam: string; league: string },
@@ -297,14 +325,16 @@ export async function recordMarketPredictions(
   const odds17: TopPick | undefined = undefined;
   const oct = pickOctober(candidates);
   const k160a = pick160(candidates, 68), k160b = pick160(candidates, 70);
-  let rules: TopPick[] = [], learn: TopPick[] = [];
+  let rules: TopPick[] = [], learn: TopPick[] = [], tx: TopPick[] = [];
   try {
     const s = await learnSummary();
     rules = await pickRules(fixture, bestBets, s);
-    learn = pickLearn(candidates as LearnCand[], new Set(rules.map((r) => `${r.market}|${r.selection}`)), fixture.league, s);
+    const ruleKeys = new Set(rules.map((r) => `${r.market}|${r.selection}`));
+    learn = pickLearn(candidates as LearnCand[], ruleKeys, fixture.league, s);
+    tx = pickTiprexLike(fixture, candidates as LearnCand[], ruleKeys);
   } catch (err) { console.error("Pohyb kurzov / učiaci sa model zlyhal:", err); }
-  if (!best.size && !top && !odds2 && !odds17 && !oct.length && !k160a.length && !rules.length && !learn.length) return;
-  const entry: PendingFixture = { ...fixture, picks: [...best.values()], ...(rules.length ? { rules } : {}), ...(learn.length ? { learn } : {}), ...(top ? { top } : {}), ...(odds2 ? { odds2 } : {}), ...(odds17 ? { odds17 } : {}), ...(oct.length ? { oct } : {}), ...(k160a.length ? { k160a } : {}), ...(k160b.length ? { k160b } : {}) };
+  if (!best.size && !top && !odds2 && !odds17 && !oct.length && !k160a.length && !rules.length && !learn.length && !tx.length) return;
+  const entry: PendingFixture = { ...fixture, picks: [...best.values()], ...(rules.length ? { rules } : {}), ...(learn.length ? { learn } : {}), ...(tx.length ? { tx } : {}), ...(top ? { top } : {}), ...(odds2 ? { odds2 } : {}), ...(odds17 ? { odds17 } : {}), ...(oct.length ? { oct } : {}), ...(k160a.length ? { k160a } : {}), ...(k160b.length ? { k160b } : {}) };
   if (!useUpstash) { const d = readFile(); d.pending[String(fixture.fixtureId)] = entry; writeFile(d); return; }
   await redis(["HSET", PENDING_KEY, String(fixture.fixtureId), JSON.stringify(entry)]);
 }
@@ -321,14 +351,14 @@ export async function settleMarketPredictions(): Promise<number> {
     const summary = await readSummary();
     for (const f of due.slice(0, 25)) {
       try {
-        const extra = [f.top, f.odds2, f.odds17, ...(f.oct ?? []), ...(f.k160a ?? []), ...(f.k160b ?? []), ...(f.rules ?? []), ...(f.learn ?? [])].filter((x): x is TopPick => !!x);
+        const extra = [f.top, f.odds2, f.odds17, ...(f.oct ?? []), ...(f.k160a ?? []), ...(f.k160b ?? []), ...(f.rules ?? []), ...(f.learn ?? []), ...(f.tx ?? [])].filter((x): x is TopPick => !!x);
         const all = [...f.picks, ...extra];
         let outcomes = await settleFixtureBets(f, all);
         if (!outcomes) {
           if (Date.now() < new Date(f.matchDate).getTime() + 3 * 24 * 3600 * 1000) continue;
           outcomes = all.map(() => "void" as const);
         }
-        const addTop = (key: "top" | "odds2" | "odds17" | "oct" | "k160a" | "k160b" | "rules" | "learn", pick: TopPick, st: "won" | "lost" | "void") => {
+        const addTop = (key: "top" | "odds2" | "odds17" | "oct" | "k160a" | "k160b" | "rules" | "learn" | "tx", pick: TopPick, st: "won" | "lost" | "void") => {
           const t = (summary[key] ??= { since: new Date().toISOString(), n: 0, won: 0, lost: 0, void: 0, sumP: 0, profit: 0, leagues: {}, recent: [] });
           const gain = st === "won" ? pick.odds - 1 : st === "lost" ? -1 : 0;
           if (st === "void") t.void++;
@@ -355,6 +385,7 @@ export async function settleMarketPredictions(): Promise<number> {
         for (const o of f.k160b ?? []) addTop("k160b", o, outcomes[xi++]);
         for (const o of f.rules ?? []) addTop("rules", o, outcomes[xi++]);
         for (const o of f.learn ?? []) addTop("learn", o, outcomes[xi++]);
+        for (const o of f.tx ?? []) addTop("tx", o, outcomes[xi++]);
         summary.fixtures++;
         f.picks.forEach((p, i) => {
           const st = outcomes![i];
