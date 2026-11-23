@@ -43,7 +43,7 @@ import {
   getRestInfo,
   getFixtureCornersAndCards,
 } from "./apiClient";
-import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, MarketAdjustments, marketCategory, tipType, passesStrict, STRICT_CHECK_ON, ONE_TIP_PER_MATCH } from "./predictor";
+import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, MarketAdjustments, marketCategory, tipType, h2hAgainstFor, H2H_CHECK_MARKETS, passesStrict, STRICT_CHECK_ON, ONE_TIP_PER_MATCH } from "./predictor";
 import { newModelInputs } from "./newModel";
 import { computeMarketHealth, marketChangesText, clvOf, CLV_TIE } from "./marketHealth";
 import { LeaguePreset, SavedTip } from "./types";
@@ -1164,6 +1164,20 @@ async function fixtureHasTip(tip: SavedTip): Promise<boolean> {
   // 22. 11. 2026: rátajú sa len tipy pre klientov – sledovaný tip zo zápasu (napr. pásmo 65 – 72 %) uloženie klientskeho nezablokuje.
   return (await listTips()).some((t) => t.id !== tip.id && !t.watchOnly && !(t.legs && t.legs.length) && t.fixtureId === tip.fixtureId);
 }
+/** Kontrola vzájomných zápasov priamo na serveri (23. 11. 2026). Pri chybe API sa tip nezablokuje. */
+async function serverH2hAgainst(tip: SavedTip): Promise<string | undefined> {
+  if (!(Number(tip.fixtureId) > 0) || !H2H_CHECK_MARKETS.includes(String(tip.market))) return undefined;
+  try {
+    const fixture = await getFixtureById(Number(tip.fixtureId));
+    if (!fixture) return undefined;
+    const h2h = await getHeadToHead(fixture.homeTeam.id, fixture.awayTeam.id, 10);
+    const stats = await getHeadToHeadStats(h2h, fixture.homeTeam.name);
+    return h2hAgainstFor(String(tip.market), String(tip.selection), stats);
+  } catch (err) {
+    console.error("Kontrola vzájomných zápasov pri ukladaní zlyhala:", err);
+    return undefined;
+  }
+}
 async function applySameTypeRule(tip: SavedTip): Promise<boolean> {
   if ((tip.legs && tip.legs.length) || tip.watchOnly || !(Number(tip.fixtureId) > 0)) return false;
   const cat = marketCategory(tip.market);
@@ -1247,7 +1261,17 @@ app.post("/api/tips", async (req, res) => {
     if (typeof tip.h2hAgainst === "string" && tip.h2hAgainst && !(tip.legs && tip.legs.length)) {
       tip.watchOnly = true;
       tip.strongOfDay = undefined;
-    } else tip.h2hAgainst = undefined;
+    } else {
+      tip.h2hAgainst = undefined;
+      // 23. 11. 2026 (Michal, Bröndby – Midtjylland karty hostí): tip uložený z tabuľky hraníc a kurzov kontrolu
+      // nemal – server ju teraz urobí sám pri každom klientskom tipe na rohy, karty, strely (fauly, držanie).
+      const against = !tip.watchOnly && !(tip.legs && tip.legs.length) && !tip.manualEntry ? await serverH2hAgainst(tip) : undefined;
+      if (against) {
+        tip.h2hAgainst = against;
+        tip.watchOnly = true;
+        tip.strongOfDay = undefined;
+      }
+    }
     // 20. 11. 2026 (Michal): fauly a držanie lopty len do sledovaných – vyhodnotiť na konci mesiaca (aj tip z okienka).
     if (FOUL_POSS_WATCH && !(tip.legs && tip.legs.length) && /^(Fauly|Držanie lopty)/.test(String(tip.market))) {
       tip.watchOnly = true;
@@ -4834,6 +4858,25 @@ async function checkExpiringSubscribers(): Promise<void> {
 setInterval(checkExpiringSubscribers, 6 * 60 * 60 * 1000); // kontrola každých 6 hodín
 checkExpiringSubscribers(); // aj hneď po štarte appky
 
+/**
+ * 23. 11. 2026 (Michal): klientske tipy (najmä z tabuľky hraníc a kurzov) od 20. 11. mohli obísť kontrolu
+ * vzájomných zápasov. Raz ich prejde a tie, proti ktorým hovoria vzájomné zápasy, presunie do sledovaných.
+ */
+async function h2hBookLineFixOnce(): Promise<number> {
+  const KEY = "h2hBookLineFix1123";
+  if (await getMeta(KEY)) return 0;
+  let moved = 0;
+  for (const t of await listTips()) {
+    if (t.watchOnly || (t.legs && t.legs.length) || t.h2hAgainst || t.manualEntry || !H2H_CHECK_MARKETS.includes(String(t.market)) || String(t.matchDate || "") < "2026-11-20") continue;
+    const against = await serverH2hAgainst(t);
+    if (!against) continue;
+    await updateTip(t.id, { watchOnly: true, h2hAgainst: against, strongOfDay: undefined });
+    moved++;
+  }
+  await setMeta(KEY, new Date().toISOString());
+  return moved;
+}
+
 app.listen(PORT, () => {
   console.log(`TipRadar beží na porte ${PORT}`);
   void refreshTelegramWebhookSecret(telegramWebhookSecret());
@@ -4876,6 +4919,8 @@ app.listen(PORT, () => {
     // 23. 11. 2026 (Michal): znova pre zápasy od 20. 11. – zo zápasu a druhu ostane klientom tip s najväčšou dôverou.
     .then(() => moveSameTypeOnce((market) => { const c = marketCategory(market); return c ? tipType(c) : null; }, SAME_TYPE_KEY_1123, "2026-11-20"))
     .then((n) => { if (n) console.log(`1 tip z druhu (od 20. 11.): presunuté do sledovaných ${n}`); })
+    .then(() => h2hBookLineFixOnce())
+    .then((n) => { if (n) console.log(`Vzájomné zápasy (tipy z tabuľky od 20. 11.): presunuté do sledovaných ${n}`); })
     .catch((err) => console.error("Presun tipov rovnakého druhu (od 20. 11.) zlyhal:", err))
     // 8. 11. 2026 (Michal): staré tipy na fauly raz presunie do sledovaných (fauly majú nové hranice podľa zápasu).
     .then(() => retroApplyRules1121Once())

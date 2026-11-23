@@ -863,6 +863,42 @@ function normalCdf(z: number): number {
 // Novšie zápasy majú väčšiu váhu (každý starší × 0,85).
 // 18. 11. 2026 23:19 (Michal): vzájomné zápasy sa použijú až pri aspoň 5 za posledné 3 roky (predtým 3). Štatistiky tímu ostávajú z 5 zápasov.
 const H2H_MIN = 5;
+
+const H2H_CHECK: Record<string, (x: H2HStats) => number | null | undefined> = {
+    "Rohy": (x) => x.corners,
+    "Rohy domácich": (x) => x.homeCorners,
+    "Rohy hostí": (x) => x.awayCorners,
+    "Karty": (x) => x.cards,
+    "Karty domácich": (x) => x.homeCards,
+    "Karty hostí": (x) => x.awayCards,
+    "Strely na bránu": (x) => x.shotsOnGoal,
+    "Strely na bránu domácich": (x) => x.homeShots,
+    "Strely na bránu hostí": (x) => x.awayShots,
+    "Fauly": (x) => x.fouls,
+    "Fauly domácich": (x) => x.homeFouls,
+    "Fauly hostí": (x) => x.awayFouls,
+    // 20. 11. 2026 (Michal): aj držanie lopty – posledných 5 vzájomných zápasov (percentá z pohľadu tímu v tipe).
+    "Držanie lopty domácich": (x) => x.homePossession,
+    "Držanie lopty hostí": (x) => (typeof x.homePossession === "number" ? 100 - x.homePossession : null),
+  };
+
+/**
+ * Kontrola vzájomných zápasov pre jeden tip (zdieľaná modelom aj serverom pri ukladaní – 23. 11. 2026, Michal:
+ * tip Bröndby – Midtjylland uložený z tabuľky hraníc obišiel kontrolu). Vráti text dôvodu, ak by tip vo väčšine
+ * vzájomných zápasov neprešiel; inak undefined.
+ */
+export function h2hAgainstFor(market: string, selection: string, h2hStats: H2HStats[] | undefined | null): string | undefined {
+  const get = H2H_CHECK[market];
+  const m = /^(Over|Under)\s+([\d.]+)/.exec(selection);
+  if (!get || !m) return undefined;
+  const line = Number(m[2]);
+  const vals = (h2hStats ?? []).map(get).filter((v): v is number => typeof v === "number" && isFinite(v));
+  // Málo vzájomných zápasov so štatistikou → rozhoduje model (19. 11. 2026, Michal).
+  if (vals.length < H2H_MIN) return undefined;
+  const lost = vals.filter((v) => (m[1] === "Over" ? v < line : v > line)).length;
+  return lost * 2 > vals.length ? `vo vzájomných zápasoch by tip neprešiel ${lost}× z ${vals.length} (${vals.join(", ")})` : undefined;
+}
+export const H2H_CHECK_MARKETS = Object.keys(H2H_CHECK);
 function h2hWeight(n: number): number {
   return n >= 5 ? 0.25 : n === 4 ? 0.2 : n === 3 ? 0.15 : 0;
 }
@@ -1672,37 +1708,10 @@ export function predictMatch(
   // vo vzájomných zápasoch 0, 2 a 1 roh): pri rohoch, kartách, strelách a fauloch (zápas aj tím) sa tip porovná
   // s posledným vzájomnými zápasmi (aspoň 3 so štatistikou). Ak by vo väčšine z nich neprešiel, ide len do
   // sledovaných (h2hAgainst). Odhad modelu sa nemení. Od 20. 11. 2026 aj držanie lopty.
-  const H2H_CHECK: Record<string, (x: H2HStats) => number | null | undefined> = {
-    "Rohy": (x) => x.corners,
-    "Rohy domácich": (x) => x.homeCorners,
-    "Rohy hostí": (x) => x.awayCorners,
-    "Karty": (x) => x.cards,
-    "Karty domácich": (x) => x.homeCards,
-    "Karty hostí": (x) => x.awayCards,
-    "Strely na bránu": (x) => x.shotsOnGoal,
-    "Strely na bránu domácich": (x) => x.homeShots,
-    "Strely na bránu hostí": (x) => x.awayShots,
-    "Fauly": (x) => x.fouls,
-    "Fauly domácich": (x) => x.homeFouls,
-    "Fauly hostí": (x) => x.awayFouls,
-    // 20. 11. 2026 (Michal): aj držanie lopty – posledných 5 vzájomných zápasov (percentá z pohľadu tímu v tipe).
-    "Držanie lopty domácich": (x) => x.homePossession,
-    "Držanie lopty hostí": (x) => (typeof x.homePossession === "number" ? 100 - x.homePossession : null),
-  };
   for (const c of candidates) {
-    const get = H2H_CHECK[c.market];
-    const m = /^(Over|Under)\s+([\d.]+)/.exec(c.selection);
-    if (!get || !m) continue;
-    const line = Number(m[2]);
-    const vals = (h2hStats ?? []).map(get).filter((v): v is number => typeof v === "number" && isFinite(v));
-    if (vals.length < H2H_MIN) {
-      // Málo vzájomných zápasov so štatistikou → rozhoduje model (19. 11. 2026, Michal; zrušené aj pravidlo
-      // Ligy národov z 15. 11., kde sa také tipy len sledovali).
-      continue;
-    }
-    const lost = vals.filter((v) => (m[1] === "Over" ? v < line : v > line)).length;
-    if (lost * 2 > vals.length) {
-      c.h2hAgainst = `vo vzájomných zápasoch by tip neprešiel ${lost}× z ${vals.length} (${vals.join(", ")})`;
+    const against = h2hAgainstFor(c.market, c.selection, h2hStats);
+    if (against) {
+      c.h2hAgainst = against;
       c.explanation = (c.explanation ? c.explanation + " " : "") + `⚠️ Vzájomné zápasy: ${c.h2hAgainst} – len do sledovaných.`;
     }
   }
