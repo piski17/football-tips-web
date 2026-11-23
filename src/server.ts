@@ -4155,7 +4155,7 @@ const BOOKLINE_MIN_PROB = 60; // 21. 11. 2026 23:41 Michal: od 60 % (predtým 55
 const BOOKLINE_MIN_ODDS = 1.6;
 const AUTO_SAVE_FROM_MIN = 5;
 const AUTO_SAVE_TO_MIN = 30;
-const AUTO_SAVE_TO_CLIENTS = true; // 23. 11. 2026 (Michal): automaticky uložené tipy s kurzom z API znova klientom
+const AUTO_SAVE_TO_CLIENTS = false; // 23. 11. 2026 19:07 (Michal): klientom ukladá len Michal (vlastné kurzy) – automaticky len do sledovaných
 let autoSaveRunning = false;
 async function autoSaveDueTips(): Promise<void> {
   if (autoSaveRunning) return;
