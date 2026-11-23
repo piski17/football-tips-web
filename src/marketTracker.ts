@@ -324,7 +324,8 @@ export async function recordMarketPredictions(
   // staré čakajúce sa ešte vyhodnotia (aby sedelo poradie výsledkov), v appke sa dlaždica neukazuje.
   const odds17: TopPick | undefined = undefined;
   const oct = pickOctober(candidates);
-  const k160a = pick160(candidates, 68), k160b = pick160(candidates, 70);
+  // 23. 11. 2026 (Michal): pásmo 68 – 80 % (k160a) ZRUŠENÉ – ostáva len 70 – 80 % (k160b); staré čakajúce sa dovyhodnotia.
+  const k160a: TopPick[] = [], k160b = pick160(candidates, 70);
   let rules: TopPick[] = [], learn: TopPick[] = [], tx: TopPick[] = [];
   try {
     const s = await learnSummary();
@@ -333,7 +334,7 @@ export async function recordMarketPredictions(
     learn = pickLearn(candidates as LearnCand[], ruleKeys, fixture.league, s);
     tx = pickTiprexLike(fixture, candidates as LearnCand[], ruleKeys);
   } catch (err) { console.error("Pohyb kurzov / učiaci sa model zlyhal:", err); }
-  if (!best.size && !top && !odds2 && !odds17 && !oct.length && !k160a.length && !rules.length && !learn.length && !tx.length) return;
+  if (!best.size && !top && !odds2 && !odds17 && !oct.length && !k160a.length && !k160b.length && !rules.length && !learn.length && !tx.length) return;
   const entry: PendingFixture = { ...fixture, picks: [...best.values()], ...(rules.length ? { rules } : {}), ...(learn.length ? { learn } : {}), ...(tx.length ? { tx } : {}), ...(top ? { top } : {}), ...(odds2 ? { odds2 } : {}), ...(odds17 ? { odds17 } : {}), ...(oct.length ? { oct } : {}), ...(k160a.length ? { k160a } : {}), ...(k160b.length ? { k160b } : {}) };
   if (!useUpstash) { const d = readFile(); d.pending[String(fixture.fixtureId)] = entry; writeFile(d); return; }
   await redis(["HSET", PENDING_KEY, String(fixture.fixtureId), JSON.stringify(entry)]);
