@@ -672,6 +672,11 @@ h1, h2, .h2 { letter-spacing: -.015em; line-height: 1.04; }
 .card b, .trio b, .grid4 b, .verdict b { letter-spacing: -.02em; }
 h3, h4 { font-family: var(--sans); font-weight: 600; letter-spacing: -.02em; }
 .brand { font-family: var(--display); font-weight: 400; font-size: 20px; letter-spacing: -.01em; }
+/* 24. 11. 19:50 – Michal: telefón v úvode bol na mobile odrezaný → celý telefón, výška podľa obsahu */
+.stage { height: auto; padding-bottom: clamp(70px, 9vw, 110px); }
+.phone { position: relative; left: auto; top: auto; translate: none; height: auto; margin: 0 auto; }
+.scr { height: auto; padding-bottom: 18px; }
+@media (max-width: 700px) { .stage { height: auto; margin-top: 48px; padding-bottom: 60px; } .phone { height: auto; width: min(300px, 100%); } }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .eyebrow i, .chip, .medal .spin { animation: none; } .bar-row .track i { transition: none; } .bar-row.model .track i { width: 74%; } .bar-row.book .track i { width: 66%; } }
 </style>
 </head>
