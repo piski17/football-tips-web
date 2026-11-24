@@ -1128,10 +1128,16 @@ export function predictMatch(
 
   // ---- Rohy (ak sú dáta k dispozícii) ----
   let corners: OverUnderMarket | undefined;
-  if (homeCornersAvg != null && awayCornersAvg != null) {
-    const b = blendH2H(homeCornersAvg + awayCornersAvg, "corners");
-    const expected = b.value;
-    if (b.h2h) h2hNotes.rohy = `Vo vzájomných zápasoch (${b.h2h.n}) padlo v priemere ${fmt1(b.h2h.avg)} rohu.`;
+  // 24. 11. 2026 (Michal): rohy v zápase ako fauly – z posledných 5 vzájomných zápasov (aspoň 3), inak z posledných
+  // 5 zápasov oboch tímov v tejto súťaži; ak ani tie nie sú, rohy v zápase sa neponúkajú.
+  const cornersH2H = h2hStat("corners");
+  const cornersFromH2H = !!cornersH2H && cornersH2H.n >= 3;
+  const cornersLeagueOk = extraStatsAvg?.foulsLeagueGames === undefined || extraStatsAvg.foulsLeagueGames >= STAT_GAMES_FOR_FOULS;
+  if (homeCornersAvg != null && awayCornersAvg != null && (cornersFromH2H || cornersLeagueOk)) {
+    const expected = cornersFromH2H ? cornersH2H!.avg : homeCornersAvg + awayCornersAvg;
+    h2hNotes.rohy = cornersFromH2H
+      ? `Rohy z posledných ${cornersH2H!.n} vzájomných zápasov: v priemere ${fmt1(cornersH2H!.avg)}.`
+      : `Vzájomných zápasov so štatistikou je menej ako 3 – rohy z posledných ${STAT_GAMES_FOR_FOULS} zápasov oboch tímov v tejto súťaži.`;
     const { over, under } = overdispersedOverUnder(expected, CORNERS_LINE, VR.corners);
     corners = { expected, line: CORNERS_LINE, over, under };
   }
@@ -1666,7 +1672,7 @@ export function predictMatch(
 
   // 21. 11. 2026 (Michal): „Fauly – kto viac“ (len sledované) od 60 % – kurz od 1,60 a hodnota rieši min. kurz.
   const inBand = sortedBets.filter(
-    (b) => b.probability >= (b.category === "viacfaulov" ? 60 : clientMinProb(b.market)) && b.probability <= MAX_PROBABILITY
+    (b) => b.probability >= clientMinProb(b.market) && b.probability <= MAX_PROBABILITY // 24. 11. 2026: aj kto viac faulov od 72 %
   );
   // Posúdenie hodnoty podľa skutočného kurzu:
   //  - stávkovky k zápasu zatiaľ nemajú kurzy -> vyradiť (hodnota sa nedá overiť;
@@ -1683,7 +1689,9 @@ export function predictMatch(
   // 22. 11. 2026 13:42 (Michal): tipy na držanie lopty (percentá) z tipov odstránené – ostáva len kalkulačka v detaile zápasu (sledované).
   // 22. 11. 2026 19:58 (Michal): + rohy a karty tímov späť. 19:54: klientom len góly, oba tímy skórujú, handicap gólov, rohy, handicap rohov, karty a strely
   // v ZÁPASE – trhy tímov, polčasy a 1X2 preč; „Fauly – kto viac“ ani do sledovaných.
-  const NOT_RECOMMENDED_MARKETS = ["Výsledok zápasu", "Góly domácich", "Góly hostí", "Góly v 1. polčase", "Góly v 2. polčase", "Karty v 1. polčase", "Karty v 2. polčase", "Fauly – kto viac", "Fauly domácich", "Fauly hostí", "Držanie lopty domácich", "Držanie lopty hostí", "Handicap – karty", "Handicap – strely na bránu"]; // 23. 11. 19:32 (Michal): handicapy len góly a rohy; 21:20 strely domácich/hostí späť klientom (s tabuľkou)
+  // 24. 11. 2026 23:15 (Michal): klientom len góly, rohy, karty, strely na bránu, fauly (v zápase), kto viac faulov, držanie lopty,
+  // handicap gólov a rohov. Preč: 1X2, góly/rohy/karty/strely/fauly tímov, polčasy, handicap kariet a striel.
+  const NOT_RECOMMENDED_MARKETS = ["Výsledok zápasu", "Góly domácich", "Góly hostí", "Góly v 1. polčase", "Góly v 2. polčase", "Karty v 1. polčase", "Karty v 2. polčase", "Fauly domácich", "Fauly hostí", "Rohy domácich", "Rohy hostí", "Karty domácich", "Karty hostí", "Strely na bránu domácich", "Strely na bránu hostí", "Handicap – karty", "Handicap – strely na bránu"]; // 23. 11. 19:32 (Michal): handicapy len góly a rohy; 21:20 strely domácich/hostí späť klientom (s tabuľkou)
   const fewGames =
     Math.min(homeStats.fixtures.played.total ?? 0, awayStats.fixtures.played.total ?? 0) < MIN_GAMES_FOR_TRUST;
   // Liga majstrov: tímy majú v ligovej fáze 1 – 2 zápasy, ale v domácej lige ich
@@ -1711,7 +1719,7 @@ export function predictMatch(
   // sa takmer nikdy nedá dostať. Príklad: Las Palmas priemer 4,8 rohu, „Under 6,5“ – po kalibrácii 72 %, pred ňou ~78 %.
   const MANUAL_FAR_LINE_CATEGORIES = ["rohy", "rohy_timu", "karty", "karty_timu"];
   const MANUAL_MAX_PROBABILITY = 73;
-  const MAX_RECOMMEND_LINE: Record<string, number> = { "Rohy": 12.5, "Rohy domácich": 6.5, "Rohy hostí": 6.5 };
+  const MAX_RECOMMEND_LINE: Record<string, number> = {}; // 24. 11. 2026 (Michal): hranice rohov v zápase zrušené (predtým max 12,5 / tím 6,5)
   const lineTooHigh = (b: MarketPick): boolean => {
     const x = ouParts(b.selection), max = MAX_RECOMMEND_LINE[b.market];
     return !!x && max != null && x.line > max + 0.001;

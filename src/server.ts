@@ -1287,7 +1287,7 @@ app.post("/api/tips", async (req, res) => {
     // Kompromis 20. 11. 2026 (Michal): fauly / držanie lopty s kurzom zo stávkovky (okienko v Tipoch dňa) – stačí
     // šanca od 60 %, ak je kurz aspoň 1,60 a hodnota +5 až +25 %. Vyhodnotiť zvlášť 1. 12. (značka bookLine).
     const bookLineOk = tip.bookLine === true && FOUL_POSS_WATCH_RE.test(String(tip.market)) && typeof tip.probability === "number" && typeof tip.odds === "number"
-      && tip.probability >= BOOKLINE_MIN_PROB && tip.probability <= MAX_PROBABILITY && tip.odds >= BOOKLINE_MIN_ODDS
+      && tip.probability >= Math.max(BOOKLINE_MIN_PROB, clientMinProb(tip.market)) && tip.probability <= MAX_PROBABILITY && tip.odds >= Math.max(BOOKLINE_MIN_ODDS, clientMinOdds(tip.market))
       && (tip.probability / 100) * tip.odds >= MIN_EXPECTED_VALUE && (tip.probability / 100) * tip.odds <= SUSPICIOUS_EXPECTED_VALUE;
     if (!bookLineOk && !(tip.legs && tip.legs.length) && !tip.manualEntry && typeof tip.probability === "number" && tip.probability < clientMinProb(tip.market)) {
       tip.watchOnly = true;
@@ -4288,7 +4288,7 @@ async function addAutoEntry(
 /** 20. 11. 2026 (Michal): fauly a držanie lopty len do sledovaných. Návrat: false. */
 const FOUL_POSS_WATCH = true;
 /** 23. 11. 2026 (Michal): FAULY V ZÁPASE znova klientom ako ostatné tipy (72 – 80 %, kurz 1,50, tabuľka) – len sledované ostávajú fauly tímov, kto viac a držanie. */
-const FOUL_POSS_WATCH_RE = /^(Fauly (domácich|hostí|– kto viac)|Držanie lopty)/;
+const FOUL_POSS_WATCH_RE = /^Fauly (domácich|hostí)/; // 24. 11. 2026 23:15 (Michal): kto viac faulov (od 72 %) a držanie lopty (od 70 %) klientom
 const BOOKLINE_MIN_PROB = 60; // 21. 11. 2026 23:41 Michal: od 60 % (predtým 55 %)
 const BOOKLINE_MIN_ODDS = 1.6;
 const AUTO_SAVE_FROM_MIN = 5;
