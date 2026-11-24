@@ -1691,7 +1691,7 @@ export function predictMatch(
   // v ZÁPASE – trhy tímov, polčasy a 1X2 preč; „Fauly – kto viac“ ani do sledovaných.
   // 24. 11. 2026 23:15 (Michal): klientom len góly, rohy, karty, strely na bránu, fauly (v zápase), kto viac faulov, držanie lopty,
   // handicap gólov a rohov. Preč: 1X2, góly/rohy/karty/strely/fauly tímov, polčasy, handicap kariet a striel.
-  const NOT_RECOMMENDED_MARKETS = ["Výsledok zápasu", "Góly domácich", "Góly hostí", "Góly v 1. polčase", "Góly v 2. polčase", "Karty v 1. polčase", "Karty v 2. polčase", "Fauly domácich", "Fauly hostí", "Rohy domácich", "Rohy hostí", "Karty domácich", "Karty hostí", "Strely na bránu domácich", "Strely na bránu hostí", "Handicap – karty", "Handicap – strely na bránu"]; // 23. 11. 19:32 (Michal): handicapy len góly a rohy; 21:20 strely domácich/hostí späť klientom (s tabuľkou)
+  const NOT_RECOMMENDED_MARKETS = ["Výsledok zápasu", "Karty v 1. polčase", "Karty v 2. polčase", "Fauly domácich", "Fauly hostí", "Handicap – karty", "Handicap – strely na bránu"]; // 24. 11. 2026 23:20 (Michal): späť klientom góly/rohy/karty/strely domácich a hostí, góly v 1./2. polčase (od 72 %) // 23. 11. 19:32 (Michal): handicapy len góly a rohy; 21:20 strely domácich/hostí späť klientom (s tabuľkou)
   const fewGames =
     Math.min(homeStats.fixtures.played.total ?? 0, awayStats.fixtures.played.total ?? 0) < MIN_GAMES_FOR_TRUST;
   // Liga majstrov: tímy majú v ligovej fáze 1 – 2 zápasy, ale v domácej lige ich

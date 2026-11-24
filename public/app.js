@@ -1500,7 +1500,7 @@ const BOOKLINE_OPTS = { minProb: BOOKLINE_MIN_PROB, minOdds: BOOKLINE_MIN_ODDS, 
 // 22. 11. 2026 15:40 (Michal): okienko aj pri kartách v zápase (nielen tímov).
 // 22. 11. 2026 16:36 (Michal): políčka pri každom klientskom tipe na rohy aj karty (zápas aj tímy).
 // 22. 11. 2026 17:17 (Michal): políčka pri KAŽDOM klientskom tipe nad/pod – góly (zápas, tímy, polčasy), rohy, karty, strely.
-const BOOK_LINE_STD = /^(Góly|Fauly|(Strely na bránu|Rohy|Karty)( domácich| hostí)?)$/; // 23. 11. (Michal): aj strely tímov // 22. 11. 19:58: zápas + rohy a karty tímov
+const BOOK_LINE_STD = /^(Góly( domácich| hostí| v [12]\. polčase)?|Fauly|(Strely na bránu|Rohy|Karty)( domácich| hostí)?)$/; // 24. 11. 23:20 (Michal): aj góly tímov a v polčasoch // 23. 11. (Michal): aj strely tímov // 22. 11. 19:58: zápas + rohy a karty tímov
 const lineThresholds = (market) => ({ minProb: clientMinProb(market), minOdds: clientMinOdds(market) }); // 24. 11. 2026: rovnaký prah pre všetky trhy
 // 22. 11. 2026 17:02 (Michal): políčka aj pri handicapoch (góly, rohy) – hranica z pohľadu domácich + kurz domáci / hostia.
 const HCP_BOOK = /^Handicap( – rohy)?$/; // 22. 11. 18:45: handicap gólov späť; 23. 11. 19:32 (Michal): handicap kariet a striel zrušený
