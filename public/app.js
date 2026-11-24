@@ -210,7 +210,7 @@ let MIN_ODDS = 1.5; // 22. 11. 2026 1:24 Michal: späť 1,50; predtým predvolen
 const ALL_MARKETS_FROM = "2026-11-22T17:45:00Z"; // 22. 11. 2026 18:45: od teraz všetky trhy klientom
 const isExcludedMarketTip = (t) => (EXCLUDED_STATS_MARKETS.includes(t.market) && String(t.matchDate || "") < ALL_MARKETS_FROM) || failsRules1124(t);
 // 24. 11. 2026 23:15 (Michal): staré tipy, ktoré nespĺňajú NOVÉ pravidlá, sa nerátajú (rovnako ako server, RETRO_1124).
-const RETRO_1124 = "full";
+const RETRO_1124 = "off"; // 24. 11. 23:19 Michal: vrátiť späť
 const RETRO_1124_REMOVED = /^(Výsledok zápasu|(Góly|Rohy|Karty|Strely na bránu|Fauly) (domácich|hostí)|(Góly|Karty) v [12]\. polčase|Handicap – (karty|strely na bránu))$/;
 const failsRules1124 = (t) => RETRO_1124 !== "off" && !(t.legs && t.legs.length) && !t.manualEntry &&
   (RETRO_1124_REMOVED.test(String(t.market || "")) || (RETRO_1124 === "full" && typeof t.probability === "number" && t.probability < clientMinProb(t.market) - 0.001));

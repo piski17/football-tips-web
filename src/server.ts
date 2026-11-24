@@ -112,7 +112,7 @@ const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté kont
  * 24. 11. 2026 23:15 (Michal): staré tipy, ktoré nespĺňajú NOVÉ pravidlá, sa do štatistík nerátajú (v databáze ostávajú).
  * RETRO_1124: "full" = zrušené trhy aj dôvera pod prahom (72 %, handicapy a držanie lopty 70 %), "markets" = len zrušené trhy, "off" = nič.
  */
-const RETRO_1124: "full" | "markets" | "off" = "full";
+const RETRO_1124: "full" | "markets" | "off" = "off"; // 24. 11. 23:19 Michal: vrátiť späť
 const RETRO_1124_REMOVED = /^(Výsledok zápasu|(Góly|Rohy|Karty|Strely na bránu|Fauly) (domácich|hostí)|(Góly|Karty) v [12]\. polčase|Handicap – (karty|strely na bránu))$/;
 function failsRules1124(t: SavedTip): boolean {
   if (RETRO_1124 === "off" || (t.legs && t.legs.length) || t.manualEntry) return false;
