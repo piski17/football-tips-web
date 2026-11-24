@@ -1822,3 +1822,83 @@ h1, h2, h3, h4, .top h2, h3.sh, .modal h3, .dn-big, .splash-word, .lx-logo span 
 .nav a.on, .tabbar a.on { background: var(--tb-grad) !important; box-shadow: 0 1px 0 rgba(255,255,255,.4) inset, 0 12px 26px -16px rgba(214,182,122,.8) !important; }
 ::selection { background: #D9BF8C; color: #17120A; }
 :focus-visible { outline: 2px solid #D9BF8C; outline-offset: 3px; }
+
+/* ===================== PREPOČÍTANÉ (24. 11. 2026, Michal: „prerob app.tipradar podľa nového vzhľadu webstránky“) =====================
+   Ako nový tipradar.eu: čistá čierna, sivé panely #161617, plochá zlatá #C9A96E, žiadne prechody, žiary ani reflektory.
+   Písmo: nadpisy a veľké čísla DM Serif Display (pätkové), text Geist. Funkcie appky sa nemenia, len vzhľad.
+   Návrat: odstrániť tento blok + v index.html vrátiť písmo IBM Plex Sans. */
+:root {
+  --bg: #000; --bg2: #0B0B0C; --panel: #161617; --panel2: #1D1D1F;
+  --line: rgba(255,255,255,.08); --line2: rgba(255,255,255,.16);
+  --gold: #C9A96E; --gold-hi: #E3C995; --gold-lo: #A8884F; --acc: #C9A96E; --wine: #C9A96E;
+  --text: #F5F5F7; --muted: #A1A1A6; --faint: #86868B;
+  --win: #4CD08A; --loss: #FF6F61;
+  --plat: #C9A96E; --glass: rgba(0,0,0,.78);
+  --sans: "Geist", -apple-system, system-ui, "Segoe UI", sans-serif;
+  --display: "DM Serif Display", Georgia, serif;
+  --serif: "DM Serif Display", Georgia, serif;
+  --mono: "Geist", system-ui, sans-serif;
+  --tb-line: rgba(255,255,255,.08); --tb-line2: rgba(255,255,255,.16);
+  --tb-grad: #C9A96E; --tb-num: #F5F5F7;
+}
+html, body { background: #000 !important; }
+body { font-family: var(--sans) !important; font-size: 15px; letter-spacing: -.005em; color: var(--text); }
+/* pozadie: žiadne reflektory ani žiara */
+.lights, .lights::before, .lights::after { background: #000 !important; animation: none !important; opacity: 1 !important; }
+.lights::before, .lights::after, .lights i { display: none !important; }
+.splash { background: #000 !important; }
+
+/* nadpisy a veľké čísla pätkovým písmom, bez kurzívy-zlatých prechodov */
+h1, h2, .top h2, h3.sh, .modal h3, .dn-big, .splash-word, .lx-logo span { font-family: var(--display) !important; font-weight: 400 !important; letter-spacing: -.01em !important; }
+h3, h4 { font-family: var(--sans); font-weight: 600; letter-spacing: -.015em; }
+.lx-logo span small, .lx-logo small { font-family: var(--sans) !important; font-weight: 500 !important; letter-spacing: .02em !important; text-transform: none !important; color: var(--faint) !important; }
+.splash-word em, .lx-logo span em { font-style: italic; color: var(--gold-hi) !important; background: none !important; -webkit-text-fill-color: currentColor !important; }
+.kpi b, .dn-stat b, .mh .mid b, .an-kpis b, .per b, .dn-t-pick b, .dn-t-k b, .sb-date b, .sb-count b, .sb-cell b {
+  font-family: var(--display) !important; font-weight: 400 !important; letter-spacing: -.02em !important; }
+.sb-date b, .sb-count b, .sb-cell:not(.g):not(.l) b { background: none !important; color: var(--text) !important; -webkit-text-fill-color: currentColor !important; }
+.sb-cell.g b { background: none !important; color: var(--win) !important; -webkit-text-fill-color: currentColor !important; }
+.sb-cell.l b { background: none !important; color: var(--loss) !important; -webkit-text-fill-color: currentColor !important; }
+.dn-big em { font-style: italic !important; background: none !important; color: var(--gold-hi) !important; -webkit-text-fill-color: currentColor !important; }
+
+/* štítky: obyčajný text v zlatej, bez veľkých riedkych písmen a čiarok */
+.top h2::before { background: none !important; padding-left: 0 !important; font: 500 13px/1 var(--sans) !important; letter-spacing: .01em !important; text-transform: none !important; color: var(--gold-hi) !important; }
+.dn-hello { font: 500 14px/1 var(--sans) !important; letter-spacing: .01em !important; text-transform: none !important; color: var(--gold-hi) !important; }
+.dn-hello::before, .dn-hello::after { display: none !important; }
+.seats small, .ct, .kpi small, .mh .mid small, .dt-times-l, .tip .k, .dtip .k, .lg-sec, .sb-cell small, .dn-t-pick small {
+  font-family: var(--sans) !important; font-weight: 500 !important; letter-spacing: .01em !important; text-transform: none !important; color: var(--faint) !important; }
+
+/* panely: ploché sivé, jemne zaoblené, bez tieňov a zlatých okrajov */
+.card, .tip, .dtip, .tool, .kpi, .gar-card, .intro-card, .adv, .league-group, .fold-tile, .dt-promo, .dn-ticket, .tl, .dn-stat, .sb, .sb-strip, .modal, .panel, .per {
+  background: var(--panel) !important; border: 1px solid transparent !important; box-shadow: none !important; border-radius: 22px !important; }
+.card:hover, .dtip:hover, .dn-ticket:hover, .tool:hover, .fold-tile:hover { border-color: rgba(255,255,255,.14) !important; }
+.sb { border-radius: 28px !important; }
+.modal { background: var(--panel2) !important; border-radius: 26px !important; }
+.sb-cell + .sb-cell { border-color: var(--line) !important; }
+
+/* tlačidlá: plochá zlatá „pilulka“ ako na webe */
+.btn { background: var(--gold) !important; background-size: auto !important; color: #000 !important; font-family: var(--sans) !important; font-weight: 500 !important; letter-spacing: -.005em !important; border-radius: 999px !important; box-shadow: none !important; }
+.btn:hover { background: var(--gold-hi) !important; transform: none !important; }
+.btn.ghost { background: transparent !important; color: var(--text) !important; box-shadow: inset 0 0 0 1px var(--line2) !important; }
+.btn.ghost:hover { box-shadow: inset 0 0 0 1px var(--gold) !important; }
+.chip, .tabs button { font-family: var(--sans) !important; }
+
+/* menu vľavo a spodná lišta: aktívna položka plochá zlatá */
+.side { background: #000 !important; border-color: var(--line) !important; }
+.nav a, .tabbar a { font-family: var(--sans) !important; }
+.nav a.on, .tabbar a.on { background: var(--gold) !important; color: #000 !important; box-shadow: none !important; }
+.nav a.on svg, .tabbar a.on svg { color: #000 !important; }
+@media (max-width: 900px) { .tabbar { background: rgba(0,0,0,.82) !important; -webkit-backdrop-filter: saturate(1.8) blur(20px) !important; backdrop-filter: saturate(1.8) blur(20px) !important; border-color: var(--line) !important; } }
+
+/* bežiaca lišta Dnes */
+.tk { background: var(--panel) !important; border-color: transparent !important; }
+.tk-lbl { background: var(--gold) !important; color: #000 !important; letter-spacing: .02em !important; text-transform: none !important; font-weight: 600 !important; }
+::selection { background: #C9A96E; color: #000; }
+:focus-visible { outline: 2px solid #C9A96E; outline-offset: 3px; }
+/* horná lišta čierna priesvitná, dátum bez veľkých riedkych písmen */
+.top { background: rgba(0,0,0,.78) !important; border-image: none !important; border-bottom: 1px solid var(--line) !important; }
+.top h2::after { display: none !important; }
+.sb-date span, .sb-count span { font-family: var(--sans) !important; font-weight: 500 !important; letter-spacing: .01em !important; text-transform: none !important; color: var(--gold-hi) !important; }
+h3.sh, .tl header b { font-family: var(--display) !important; font-weight: 400 !important; letter-spacing: -.01em !important; }
+.chip.on, .days .chip.on, #tipsFilter .chip.on, .hist-tabs .chip.on, .tabs button.on { background: var(--gold) !important; color: #000 !important; box-shadow: none !important; border-color: transparent !important; }
+.hrow .d, .dn-t-time, .dn-score { font-family: var(--sans) !important; font-weight: 600 !important; }
+.hrow .d { background: rgba(255,255,255,.06) !important; border-color: transparent !important; color: var(--text) !important; }
