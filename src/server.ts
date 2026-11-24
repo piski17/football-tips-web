@@ -48,7 +48,7 @@ import { FOULS_ONLY_LEAGUE_IDS, isFoulMarketName, predictMatch, predictPlayerGoa
 import { newModelInputs } from "./newModel";
 import { computeMarketHealth, marketChangesText, clvOf, CLV_TIE } from "./marketHealth";
 import { LeaguePreset, SavedTip } from "./types";
-import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once, moveLateAddsOnce, restoreLateMovedOnce, returnStrictFailedOnce, moveStrictFailedBackOnce, moveSameTypeOnce, SAME_TYPE_KEY_1123, moveOldFoulTipsOnce, moveFoulPossWatchOnce, deleteAutoFoulPossOnce, retroApplyRules1121Once, deleteFoulWatchOnce, deleteAllFoulWatchOnce, deleteConferenceTipsOnce, restoreHcpTypeOnce, deleteWatch1122Once, syncBand65Trial, restoreDeletedWatchOnce } from "./tipsStore";
+import { saveTip, listTips, updateTip, deleteTip, clearAllTips, splitMarketText, restoreBelow160AndBand70Once, moveLateAddsOnce, restoreLateMovedOnce, returnStrictFailedOnce, moveStrictFailedBackOnce, moveSameTypeOnce, SAME_TYPE_KEY_1123, moveOldFoulTipsOnce, moveFoulPossWatchOnce, deleteAutoFoulPossOnce, moveLmFoulsToWatchOnce, retroApplyRules1121Once, deleteFoulWatchOnce, deleteAllFoulWatchOnce, deleteConferenceTipsOnce, restoreHcpTypeOnce, deleteWatch1122Once, syncBand65Trial, restoreDeletedWatchOnce } from "./tipsStore";
 import { computeTicketStatus, settleBet, settleFixtureBets, tipHasStartedMatch, MATCH_STARTED_MESSAGE, buildTipEdit } from "./tipEvaluator";
 import {
   sendTipToTelegram,
@@ -5050,6 +5050,10 @@ app.listen(PORT, () => {
     .then(() => deleteAutoFoulPossOnce())
     .then((n) => { if (n) console.log(`Automatické tipy na fauly / držanie lopty zmazané: ${n}`); })
     .catch((err) => console.error("Zmazanie automatických faulov zlyhalo:", err))
+    // 24. 11. 2026 (Michal): uložené tipy na fauly v Lige majstrov raz do sledovaných.
+    .then(() => moveLmFoulsToWatchOnce())
+    .then((n) => { if (n) console.log(`Fauly v Lige majstrov presunuté do sledovaných: ${n}`); })
+    .catch((err) => console.error("Presun faulov v Lige majstrov zlyhal:", err))
     .then(() => moveFoulPossWatchOnce())
     .then((n) => { if (n) console.log(`Fauly / držanie lopty: presunuté do sledovaných ${n}`); })
     .catch((err) => console.error("Presun faulov a držania lopty zlyhal:", err))

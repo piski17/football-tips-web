@@ -823,3 +823,29 @@ export async function restoreHcpTypeOnce(typeOf: (market: string) => string | nu
     return restored;
   });
 }
+
+/** 24. 11. 2026 (Michal): fauly v Lige majstrov klientom nejdú – už uložené tipy na fauly v LM (od 23. 11.) jednorazovo do sledovaných. */
+const LM_FOULS_WATCH_KEY = "tipradar_migr_lm_fouls_1124_done";
+export async function moveLmFoulsToWatchOnce(): Promise<number> {
+  if (!useUpstash) return 0;
+  const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };
+  const done = (await upstashClient().get(`${UPSTASH_URL}/get/${LM_FOULS_WATCH_KEY}`, auth)).data?.result;
+  if (done) return 0;
+  return withWriteLock(async () => {
+    const tips = await readAll();
+    const from = new Date("2026-11-22T23:00:00Z").getTime();
+    let moved = 0;
+    for (const t of tips) {
+      if (!(t.legs && t.legs.length) && !t.watchOnly && Number(t.leagueId) === 2 && /^Fauly/.test(String(t.market || "")) && new Date(t.matchDate).getTime() >= from) {
+        t.watchOnly = true;
+        t.strongOfDay = undefined;
+        moved++;
+      }
+    }
+    if (moved) await writeAll(tips);
+    await upstashClient().post(`${UPSTASH_URL}/set/${LM_FOULS_WATCH_KEY}`, new Date().toISOString(), {
+      headers: { ...auth.headers, "Content-Type": "text/plain" },
+    });
+    return moved;
+  });
+}
