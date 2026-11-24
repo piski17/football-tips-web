@@ -429,12 +429,14 @@ function highValuePct(bet, odd) {
   const p = bet?.probability;
   if (typeof p !== "number" || !(odd > 1)) return null;
   const ev = (p / 100) * odd;
-  return ev > MAX_EV ? Math.round((ev - 1) * 100) : null;
+  // 24. 11. 2026 23:30 (Michal): rovnaký tip s iným kurzom prejde, ak má kurz aspoň 1,50 – horná hranica +25 % neplatí,
+  // upozornenie len pri zjavnom preklepe (hodnota nad +60 %, napr. 2,30 namiesto 1,30 pri 70 %).
+  return ev > TYPO_EV ? Math.round((ev - 1) * 100) : null;
 }
 function confirmHighValue(bet, odd) {
   const pct = highValuePct(bet, odd);
   if (pct == null) return true;
-  return window.confirm(`Skontroluj kurz – je oveľa vyšší ako u ostatných stávkoviek.\n\nPri kurze ${fmtOdds(odd)} a dôvere ${fmtNum(bet.probability, 0)}${NB}% vychádza hodnota +${pct}${NB}% (pravidlo je najviac +25${NB}%). Nie je to preklep alebo iný trh?\n\nUložiť tip aj tak?`);
+  return window.confirm(`Skontroluj kurz – je oveľa vyšší ako u ostatných stávkoviek.\n\nPri kurze ${fmtOdds(odd)} a dôvere ${fmtNum(bet.probability, 0)}${NB}% vychádza hodnota +${pct}${NB}%. Nie je to preklep alebo iný trh?\n\nUložiť tip aj tak?`);
 }
 
 /** Výber Telegram kanála: "premium", "free", alebo null = neposielať. */
@@ -463,6 +465,7 @@ const HCP_CORNERS_MARKET = "Handicap – rohy";
 const clientMinProb = (market) => (/^(Handicap( – |$)|Držanie lopty|Fauly)/.test(market || "") ? 70 : WATCH_BELOW); // 24. 11. 23:22 (Michal): 70 % LEN handicapy (gólov, rohov), všetko ostatné vrátane držania lopty od 72 %, ostatné od 72 % // 23. 11.: aj fauly v zápase a strely od 60 % // 22. 11. 19:54: aj handicap gólov od 60 %; 23. 11. (Michal): všetky handicapy od 60 %
 const clientMinOdds = (market) => (market === HCP_CORNERS_MARKET ? Math.max(1.5, MIN_ODDS) : MIN_ODDS); // 23. 11. 2026: handicap rohov od 1,50
 const MIN_EV = 1.044; // MIN_EXPECTED_VALUE v oddsMatcher.ts (69,6 % × 1,50)
+const TYPO_EV = 1.6;
 const MAX_EV = 1.254; // SUSPICIOUS_EXPECTED_VALUE v oddsMatcher.ts (19. 11. 2026: do +25,4 %)
 const isWatchTip = (tip) => !(tip.legs && tip.legs.length) && (tip.strictFail || (!tip.manualEntry && !tip.bookLine && typeof tip.probability === "number" && tip.probability < clientMinProb(tip.market)));
 
@@ -1680,7 +1683,7 @@ function renderCalcRows(out, r, market, rows, onSaved, opts = {}) {
   rows.forEach((x) => {
     if (x.odds != null) {
       x.ev = (x.probability / 100) * x.odds;
-      x.ok = x.probability >= (x.minProb ?? minProb) && x.probability <= 80 && x.odds >= (x.minOdds ?? minOdds) && x.ev >= MIN_EV && x.ev <= MAX_EV;
+      x.ok = x.probability >= (x.minProb ?? minProb) && x.probability <= 80 && x.odds >= (x.minOdds ?? minOdds) && x.ev >= MIN_EV && (x.sameAsTip || x.ev <= MAX_EV); // 24. 11. 23:30 (Michal): rovnaký tip – stačí kurz od 1,50, horná hranica neplatí
     } else {
       x.ok = x.probability >= (x.minProb ?? minProb) && x.probability <= 80;
     }
@@ -2306,7 +2309,7 @@ function renderDayTipsViewMain() {
     // 21. 11. 2026 (Michal): viac hraníc zo stávkovky naraz (až 4 riadky) – appka vyhodnotí všetky a uložiť
     // sa dá len tip s najväčšou dôverou spomedzi tých, ktoré prešli (z typu ide len 1 tip).
     const passes = (x) => x.odds != null && x.probability >= (x.minProb ?? BOOKLINE_MIN_PROB) && x.probability <= 80 && x.odds >= (x.minOdds ?? BOOKLINE_MIN_ODDS)
-      && (x.probability / 100) * x.odds >= MIN_EV && (x.probability / 100) * x.odds <= MAX_EV;
+      && (x.probability / 100) * x.odds >= MIN_EV && (x.sameAsTip || (x.probability / 100) * x.odds <= MAX_EV);
     const oddOf = (el) => {
       const v = parseOddsInput(el.value);
       return v != null && v > 1 && v <= 20 ? Math.round(v * 100) / 100 : null;
@@ -2395,7 +2398,7 @@ function renderDayTipsViewMain() {
     const todo = dayTips.items.map((_, i) => i).filter((i) => !dayTipSaved.has(i) && oddsState(i).ok && !matchHasStarted(dayTips.items[i].r.fixture));
     if (!todo.length) return;
     const high = todo.filter((i) => highValuePct(dayTips.items[i].bet, oddsState(i).odd) != null);
-    if (high.length && !window.confirm(`Skontroluj kurz – ${plural(high.length, "tip má", "tipy majú", "tipov má")} kurz oveľa vyšší ako u ostatných stávkoviek (hodnota nad +25${NB}%). Nie je to preklep?\n\nUložiť všetky aj tak?`)) return;
+    if (high.length && !window.confirm(`Skontroluj kurz – ${plural(high.length, "tip má", "tipy majú", "tipov má")} kurz oveľa vyšší ako u ostatných stávkoviek. Nie je to preklep?\n\nUložiť všetky aj tak?`)) return;
     bulk.disabled = true;
     let saved = 0, sent = 0, errs = 0;
     for (const i of todo) {
