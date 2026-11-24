@@ -5,8 +5,7 @@ import { SavedTip } from "./types";
  * pre klientov „vsadí“ toto percento z aktuálneho banku a po vyhodnotení bank prepočíta.
  * Nič sa nestavia naozaj – Michal tipy podáva ručne podľa vypočítanej sumy.
  *
- * Vklad sa počíta z banku NA ZAČIATKU DŇA (ráno) – všetky tipy jedného dňa majú rovnaký vklad,
- * presne ako keď ich Michal ráno podá. Bank sa zmení až po vyhodnotení tipov dňa.
+ * Vklad je PEVNÝ – % z počiatočného banku (24. 11. 2026 18:05, Michal: zisk sa do vkladu nepridáva).
  */
 export interface VirtualBankSettings {
   /** Počiatočný bank v eurách. */
@@ -49,6 +48,11 @@ export function validBankSettings(s: any): VirtualBankSettings | null {
 export function stakeFor(bank: number, pct: number): number {
   if (bank < 1) return 0;
   return Math.max(1, Math.round((bank * pct) / 100));
+}
+
+/** Pevný vklad: % z POČIATOČNÉHO banku; ak by bank klesol pod vklad, vsadí sa len to, čo ostalo. */
+export function flatStake(bank: number, settings: VirtualBankSettings): number {
+  return Math.min(stakeFor(settings.start, settings.pct), Math.floor(bank));
 }
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
@@ -106,7 +110,8 @@ export function computeVirtualBank(
   const series: { day: string; bank: number }[] = [{ day: settings.from, bank: r2(bank) }];
   for (const [day, list] of byDay) {
     const bankStart = bank;
-    const stake = stakeFor(bankStart, settings.pct);
+    // 24. 11. 2026 18:05 (Michal): vklad len z počiatočného banku – zisk sa do vkladu nepridáva (pevný vklad).
+    const stake = flatStake(bankStart, settings);
     let profit = 0;
     const d: BankDay = { day, bankStart: r2(bankStart), stake, bankEnd: 0, profit: 0, won: 0, lost: 0, voided: 0, pending: 0, tips: [] };
     for (const t of list) {
@@ -152,7 +157,7 @@ export function computeVirtualBank(
     maxDrop: r2(maxDrop),
     won, lost, voided, pending, noOdds,
     /** Vklad na jeden tip, ak by dnešné tipy ešte len prišli (z aktuálneho banku). */
-    nextStake: todayDay ? todayDay.stake : stakeFor(bank, settings.pct),
+    nextStake: todayDay ? todayDay.stake : flatStake(bank, settings),
     todayTips: todayDay ? todayDay.tips : [],
     series,
     days: days.slice().reverse(),

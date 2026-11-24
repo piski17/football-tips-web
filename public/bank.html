@@ -112,7 +112,7 @@ details.day .tips .row { grid-template-columns: 54px 1fr auto; padding: 8px 0; }
 <div class="wrap">
   <a class="back" href="/">← Späť do appky</a>
   <h1>Virtuálny <em>bank</em></h1>
-  <p class="lead">Zadajte počiatočný bank a koľko percent z neho dávať na jeden tip. Appka na každý tip pre klientov sama „vsadí“ túto časť z aktuálneho banku a po vyhodnotení bank prepočíta. Nič sa nestavia naozaj – dnešné tipy podáte ručne v stávkovke podľa sumy nižšie.</p>
+  <p class="lead">Zadajte počiatočný bank a koľko percent z neho dávať na jeden tip. Appka na každý tip pre klientov sama „vsadí“ túto časť z počiatočného banku (vklad je stále rovnaký, zisk sa do vkladu nepridáva) a po vyhodnotení bank prepočíta. Nič sa nestavia naozaj – dnešné tipy podáte ručne v stávkovke podľa sumy nižšie.</p>
 
   <section class="panel">
     <div class="inputs">
@@ -233,7 +233,7 @@ function render(d) {
     <section class="hero">
       <div class="main"><small>Bank teraz</small><b>${eur(d.bank)}</b><span>začiatok ${eur(s.start, 0)} · ${shortDay(s.from)}${s.from.slice(0, 4)}</span></div>
       <div><small>Zisk / strata</small><b class="${cls(d.profit)}">${sEur(d.profit)}</b><span>${sJ(d.units)} (1${NB}j. = jeden vklad)</span></div>
-      <div><small>Vklad na tip dnes</small><b>${eur(d.nextStake, 0)}</b><span>${num(s.pct, s.pct % 1 ? 1 : 0)}${NB}% z banku na začiatku dňa</span></div>
+      <div><small>Vklad na tip dnes</small><b>${eur(d.nextStake, 0)}</b><span>${num(s.pct, s.pct % 1 ? 1 : 0)}${NB}% z počiatočného banku ${eur(s.start, 0)}</span></div>
     </section>
     <div class="stats">
       <div><small>Tipy</small><b>${done ? `${d.won} z ${done} vyšlo` : "–"}</b></div>
@@ -252,7 +252,7 @@ function render(d) {
     <section class="panel">
       <h2>Po dňoch <small>ťuknite na deň pre tipy</small></h2>
       ${daysHtml || `<p class="empty">Zatiaľ žiadny odohraný deň od ${shortDay(s.from)}${s.from.slice(0, 4)}.</p>`}
-      <p class="note">Vklad je rovnaký pre všetky tipy jedného dňa: ${num(s.pct, s.pct % 1 ? 1 : 0)}${NB}% z banku na začiatku dňa, zaokrúhlené na celé eurá. Rátajú sa len tipy pre klientov (bez sledovaných a vyradených súťaží), s kurzom, ktorý je pri tipe uložený.${d.noOdds ? ` ${plural(d.noOdds, "tip bez kurzu sa nerátal", "tipy bez kurzu sa nerátali", "tipov bez kurzu sa nerátalo")}.` : ""}</p>
+      <p class="note">Vklad je pevný pri každom tipe: ${num(s.pct, s.pct % 1 ? 1 : 0)}${NB}% z počiatočného banku ${eur(s.start, 0)}, zaokrúhlené na celé eurá – zisk sa do vkladu nepridáva. Ak by bank klesol pod vklad, vsadí sa len to, čo ostalo. Rátajú sa len tipy pre klientov (bez sledovaných a vyradených súťaží), s kurzom, ktorý je pri tipe uložený.${d.noOdds ? ` ${plural(d.noOdds, "tip bez kurzu sa nerátal", "tipy bez kurzu sa nerátali", "tipov bez kurzu sa nerátalo")}.` : ""}</p>
     </section>`;
   const tipEl = $("chartTip");
   const svg = document.querySelector(".chart svg");
