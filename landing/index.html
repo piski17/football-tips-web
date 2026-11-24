@@ -34,7 +34,7 @@
 <link rel="apple-touch-icon" href="/favicon-256.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet" />
 <style>
 /* ===================== ORBIT (24. 11. 2026) – tipradar.eu od základu, štvrtá verzia =====================
    Michal 24. 11.: „sprav mi úplne nový web so všetkým novým – grafikou, fontami, obrázkami… niečo úplne iné, farby môžeš nechať“.
@@ -508,7 +508,7 @@ em { font-style: normal; }
    Michal vybral návrh 2 – prémiový čistý vzhľad: jedno písmo Inter Tight, čierne a svetlé časti sa striedajú,
    veľké čísla, jedna vec na obrazovku, mobil s ukážkou tipu v úvode. Stena tipov, Archivo a Bodoni preč.
    Predtým: Stena tipov 6190c3d – vrátiť = git revert tohto commitu. */
-:root { --display: "Inter Tight", -apple-system, system-ui, sans-serif; --sans: "Inter Tight", -apple-system, system-ui, sans-serif;
+:root { --display: "Geist", -apple-system, system-ui, sans-serif; --sans: "Geist", -apple-system, system-ui, sans-serif;
   --bg: #000; --bg2: #000; --card: #161617; --card2: #1D1D1F; --text: #F5F5F7; --muted: #A1A1A6; --faint: #86868B;
   --line: rgba(255,255,255,.08); --line2: rgba(255,255,255,.16); --hair: rgba(255,255,255,.1); --hair2: rgba(255,255,255,.2);
   --gold: #C9A96E; --gold2: #E3C995; --goldDim: rgba(201,169,110,.14); --grad: #C9A96E; --win: #4CD08A; --loss: #FF6F61; --r: 28px; --wrap: 1080px; }
@@ -577,6 +577,7 @@ em { font-style: normal; }
 .faq-grid .head { justify-items: start; text-align: left; } .faq-grid .head .lead { margin-left: 0; }
 .plan-price { box-shadow: none; } .tgcard { box-shadow: none; }
 
+
 /* ÚVOD – veľký nadpis a mobil s ukážkou tipu */
 .hero { position: relative; padding: 130px 0 0; text-align: center; overflow: hidden; }
 .hero .kicker { display: block; }
@@ -635,6 +636,33 @@ em { font-style: normal; }
 @media (max-width: 700px) { .trio { grid-template-columns: 1fr; gap: 12px; margin-top: 50px; } .hero { padding-top: 100px; } .stage { margin-top: 56px; height: 520px; } .phone { width: 300px; height: 620px; } }
 @media (max-width: 420px) { .grid4 { grid-template-columns: 1fr; } }
 .js-rv .rv { transform: translateY(40px) scale(.985); transition: opacity 1s ease, transform 1s cubic-bezier(.2,.7,.2,1); transition-delay: var(--d, 0s); }
+/* 24. 11. 19:35 – Michal: „zmenšiť text, exkluzívnejšie písmo“ → Geist, všetko o stupeň menšie a jemnejšie */
+body { font-size: 16.5px; letter-spacing: -.005em; }
+h1, h2, h3, h4 { font-weight: 600; letter-spacing: -.03em; }
+.hero { padding-top: 120px; }
+.hero h1 { font-size: clamp(40px, 6vw, 80px); letter-spacing: -.04em; font-weight: 600; }
+.hero .sub { font-size: clamp(17px, 1.5vw, 20px); max-width: 600px; font-weight: 400; }
+.links-cta { font-size: 17px; }
+.kicker { font-size: 16px; font-weight: 500; letter-spacing: .01em; }
+.lead { font-size: clamp(16.5px, 1.3vw, 18.5px); }
+.h2 { font-size: clamp(34px, 4.6vw, 60px); }
+.nums .giant { font-size: clamp(96px, 16vw, 210px); font-weight: 600; letter-spacing: -.05em; }
+.nums h2 { font-size: clamp(26px, 3.2vw, 40px); }
+.trio b { font-size: clamp(34px, 3.6vw, 46px); font-weight: 600; }
+.trio span, .grid4 span, .card p, .verdict span { font-size: 15.5px; }
+.card { min-height: 280px; padding: 36px 34px; }
+.card small { font-size: 15px; font-weight: 500; }
+.card b { font-size: clamp(72px, 8vw, 110px); font-weight: 600; letter-spacing: -.05em; }
+.verdict b { font-size: clamp(26px, 3vw, 36px); font-weight: 600; }
+.grid4 b { font-size: clamp(28px, 2.8vw, 34px); font-weight: 600; }
+.rules-cap { font-size: 16px; }
+.final h2 { font-size: clamp(32px, 4.2vw, 54px); }
+.plan-price .amount { font-weight: 600; }
+.guar .big { font-size: clamp(46px, 5.6vw, 76px); font-weight: 600; }
+.faq summary { font-size: 17px; font-weight: 500; }
+.me blockquote { font-size: clamp(19px, 1.8vw, 23px); font-weight: 500; }
+.btn { font-size: 15.5px; font-weight: 500; min-height: 46px; }
+.links a { font-size: 13px; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .eyebrow i, .chip, .medal .spin { animation: none; } .bar-row .track i { transition: none; } .bar-row.model .track i { width: 74%; } .bar-row.book .track i { width: 66%; } }
 </style>
 </head>
