@@ -974,7 +974,8 @@ export const TEAM_FOUL_LEAGUE_IDS = [39, 78];
 /** Top 5 líg + Liga majstrov – handicap rohov. */
 export const FOUL_LEAGUE_IDS = [39, 140, 135, 78, 61, 2];
 /** 24. 11. 2026 (Michal): fauly len v top 5 ligách – Liga majstrov vyradená. */
-export const FOULS_ONLY_LEAGUE_IDS = [39, 140, 135, 78, 61];
+export const FOULS_ONLY_LEAGUE_IDS = [39, 140, 135, 78, 61, 2]; // 24. 11. 2026 19:30 (Michal): Liga majstrov späť – fauly zo vzájomných zápasov / 5 zápasov v súťaži
+const STAT_GAMES_FOR_FOULS = 5;
 export const isFoulMarketName = (market: string): boolean => market === "Fauly" || market.startsWith("Fauly ");
 const isFoulMarket = (market: string): boolean => market === "Fauly" || market.startsWith("Fauly ");
 
@@ -1004,6 +1005,8 @@ export function predictMatch(
     awayPossession?: number | null;
     homeCards?: number | null;
     awayCards?: number | null;
+    /** 24. 11. 2026: menší z počtov posledných zápasov oboch tímov v tejto súťaži (undefined = neznáme, napr. spätný test). */
+    foulsLeagueGames?: number;
   },
   marketOdds?: MarketOdds[],
   h2hStats?: H2HStats[],
@@ -1163,11 +1166,19 @@ export function predictMatch(
   }
 
   // ---- Fauly (ak sú dáta k dispozícii) ----
+  // 24. 11. 2026 (Michal): fauly sa počítajú z posledných 5 vzájomných zápasov (aspoň 3). Ak ich nie je dosť,
+  // z posledných 5 zápasov oboch tímov v TEJTO súťaži; ak ani tie nie sú, fauly sa neponúkajú.
+  const foulsH2H = h2hStat("fouls");
+  const foulsFromH2H = !!foulsH2H && foulsH2H.n >= 3;
+  const foulsLeagueOk = extraStatsAvg?.foulsLeagueGames === undefined || extraStatsAvg.foulsLeagueGames >= STAT_GAMES_FOR_FOULS;
+  const foulsTeamH2H = (key: "homeFouls" | "awayFouls") => { const h = h2hStat(key); return h && h.n >= 3 ? h : null; };
   let fouls: OverUnderMarket | undefined;
-  if (extraStatsAvg?.homeFouls != null && extraStatsAvg?.awayFouls != null) {
-    const b = blendH2H(extraStatsAvg.homeFouls + extraStatsAvg.awayFouls, "fouls");
-    const expected = b.value * (referee?.foulsFactor ?? 1);
-    if (b.h2h) h2hNotes.fauly = `Vo vzájomných zápasoch (${b.h2h.n}) v priemere ${fmt1(b.h2h.avg)} faulov.`;
+  if (extraStatsAvg?.homeFouls != null && extraStatsAvg?.awayFouls != null && (foulsFromH2H || foulsLeagueOk)) {
+    const base = foulsFromH2H ? foulsH2H!.avg : extraStatsAvg.homeFouls + extraStatsAvg.awayFouls;
+    const expected = base * (referee?.foulsFactor ?? 1);
+    h2hNotes.fauly = foulsFromH2H
+      ? `Fauly z posledných ${foulsH2H!.n} vzájomných zápasov: v priemere ${fmt1(foulsH2H!.avg)}.`
+      : `Vzájomných zápasov so štatistikou je menej ako 3 – fauly z posledných ${STAT_GAMES_FOR_FOULS} zápasov oboch tímov v tejto súťaži.`;
     const { over, under } = overdispersedOverUnder(expected, FOULS_LINE, VR.fouls);
     fouls = { expected, line: FOULS_LINE, over, under };
   }
@@ -1413,7 +1424,9 @@ export function predictMatch(
     // Fauly jedného tímu (22. 10. 2026): vlastný priemer zmiešaný s tým, koľko faulov
     // súper vynúti (ako pri rohoch a kartách tímu), aj s vplyvom rozhodcu.
     const rf = referee?.foulsFactor ?? 1;
-    const hf = extraStatsAvg!.homeFouls! * rf, af = extraStatsAvg!.awayFouls! * rf;
+    // 24. 11. 2026: fauly tímu tiež zo vzájomných zápasov (aspoň 3), inak z posledných zápasov v súťaži.
+    const hfH = foulsTeamH2H("homeFouls"), afH = foulsTeamH2H("awayFouls");
+    const hf = (hfH && afH ? hfH.avg : extraStatsAvg!.homeFouls!) * rf, af = (hfH && afH ? afH.avg : extraStatsAvg!.awayFouls!) * rf;
     addOverUnder("Fauly domácich", "fauly_timu", (line) => overdispersedOverUnder(hf, line, VRT.fouls), (line) =>
       `${fixture.homeTeam.name}: očakávané fauly ${fmt1(hf)} (aj s ohľadom na súpera), hranica ${line}.${refereeNote("fouls")}${mmNote}`,
       { mean: hf, varRatio: VRT.fouls }
@@ -1735,7 +1748,7 @@ export function predictMatch(
         lowValueBets.push(b);
       } else if (isFoulMarket(b.market) && !FOULS_ONLY_LEAGUE_IDS.includes(Number(fixture.league?.id))) {
         // Fauly len v top súťažiach (9. 11. 2026, Michal); 24. 11. 2026 bez Ligy majstrov – pozri FOULS_ONLY_LEAGUE_IDS.
-        b.rejectReason = "fauly odporúčame len v top 5 ligách (Liga majstrov bez faulov)";
+        b.rejectReason = "fauly odporúčame len v top 5 ligách a Lige majstrov";
         b.rejectCode = "market_excluded";
         lowValueBets.push(b);
       } else if (FOUL_POSS_TRACK_ONLY && (isFoulMarket(b.market) || b.market.startsWith("Držanie lopty")) && !(typeof b.odds === "number" && b.odds > 1)) {

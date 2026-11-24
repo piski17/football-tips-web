@@ -322,6 +322,8 @@ export interface TeamExtendedStatsAverages {
   /** Nový model: priemery len zo zápasov doma (venueHome) a len vonku (venueAway). */
   venueHome?: VenueStats;
   venueAway?: VenueStats;
+  /** 24. 11. 2026: koľko z posledných STAT_GAMES zápasov (z ktorých sú štatistiky) je z tej istej súťaže ako tip. */
+  leagueStatGames?: number;
 }
 
 /** Priemery štatistík len z domácich alebo len z vonkajších zápasov (nový model, 21. 10. 2026). */
@@ -357,7 +359,7 @@ export async function getTeamExtendedStatsAverages(
   lastN: number = 10,
   asOf?: string
 ): Promise<TeamExtendedStatsAverages> {
-  const cacheKey = `extStatsAvg8:${leagueId}:${season}:${teamId}:${lastN}:${asOf ?? ""}`;
+  const cacheKey = `extStatsAvg9:${leagueId}:${season}:${teamId}:${lastN}:${asOf ?? ""}`;
   // Pri spätnom teste načítame viac zápasov a ponecháme len tie spred výkopu.
   const extra = asOf ? 15 : 0;
   const cached = getCached<TeamExtendedStatsAverages>(cacheKey);
@@ -468,6 +470,7 @@ export async function getTeamExtendedStatsAverages(
           row.gf = gh == null || ga == null ? null : Number(row.isHome ? gh : ga);
           row.ga = gh == null || ga == null ? null : Number(row.isHome ? ga : gh);
           row.time = new Date(f.fixture?.date).getTime() || 0;
+          row.leagueId = Number(f.league?.id) || 0;
           return row;
         } catch {
           return null;
@@ -550,6 +553,7 @@ export async function getTeamExtendedStatsAverages(
       xgRatioAgainst: xgRatio(xgA, gA),
       xgGames: xgRows.length,
       venueHome: venue(1),
+      leagueStatGames: statRows.filter((r) => r.leagueId === leagueId).length,
       venueAway: venue(0),
       goalsFor: gw > 0 ? gfSum / gw : null,
       goalsAgainst: gw > 0 ? gaSum / gw : null,
