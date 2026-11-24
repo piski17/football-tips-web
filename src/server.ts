@@ -44,7 +44,7 @@ import {
   getRestInfo,
   getFixtureCornersAndCards,
 } from "./apiClient";
-import { predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, MarketAdjustments, marketCategory, tipType, h2hAgainstFor, H2H_CHECK_MARKETS, passesStrict, STRICT_CHECK_ON, ONE_TIP_PER_MATCH } from "./predictor";
+import { FOULS_ONLY_LEAGUE_IDS, isFoulMarketName, predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, MarketAdjustments, marketCategory, tipType, h2hAgainstFor, H2H_CHECK_MARKETS, passesStrict, STRICT_CHECK_ON, ONE_TIP_PER_MATCH } from "./predictor";
 import { newModelInputs } from "./newModel";
 import { computeMarketHealth, marketChangesText, clvOf, CLV_TIE } from "./marketHealth";
 import { LeaguePreset, SavedTip } from "./types";
@@ -1321,6 +1321,11 @@ app.post("/api/tips", async (req, res) => {
         tip.watchOnly = true;
         tip.strongOfDay = undefined;
       }
+    }
+    // 24. 11. 2026 (Michal): fauly v Lige majstrov (a mimo top 5 líg) klientom nejdú – len do sledovaných.
+    if (!(tip.legs && tip.legs.length) && isFoulMarketName(String(tip.market)) && !FOULS_ONLY_LEAGUE_IDS.includes(Number(tip.leagueId))) {
+      tip.watchOnly = true;
+      tip.strongOfDay = undefined;
     }
     // 20. 11. 2026 (Michal): fauly a držanie lopty len do sledovaných – vyhodnotiť na konci mesiaca (aj tip z okienka).
     if (FOUL_POSS_WATCH && !(tip.legs && tip.legs.length) && FOUL_POSS_WATCH_RE.test(String(tip.market))) {

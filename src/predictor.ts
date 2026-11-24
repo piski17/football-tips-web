@@ -971,7 +971,11 @@ export const FOUL_POSS_TRACK_ONLY = false; // 20. 11. 2026 0:05 nahradené kompr
 /** 21. 11. 2026 (Michal): zo zápasu najviac 1 tip (najväčšia dôvera). */
 export const ONE_TIP_PER_MATCH = false; // 22. 11. 2026 16:18 (Michal): späť – zo zápasu viac tipov, z každého druhu najviac 1
 export const TEAM_FOUL_LEAGUE_IDS = [39, 78];
+/** Top 5 líg + Liga majstrov – handicap rohov. */
 export const FOUL_LEAGUE_IDS = [39, 140, 135, 78, 61, 2];
+/** 24. 11. 2026 (Michal): fauly len v top 5 ligách – Liga majstrov vyradená. */
+export const FOULS_ONLY_LEAGUE_IDS = [39, 140, 135, 78, 61];
+export const isFoulMarketName = (market: string): boolean => market === "Fauly" || market.startsWith("Fauly ");
 const isFoulMarket = (market: string): boolean => market === "Fauly" || market.startsWith("Fauly ");
 
 export function predictMatch(
@@ -1729,9 +1733,9 @@ export function predictMatch(
         b.rejectReason = "tento trh neodporúčame";
         b.rejectCode = "market_excluded";
         lowValueBets.push(b);
-      } else if (isFoulMarket(b.market) && !FOUL_LEAGUE_IDS.includes(Number(fixture.league?.id))) {
-        // Fauly len v top súťažiach (9. 11. 2026, Michal) – pozri FOUL_LEAGUE_IDS.
-        b.rejectReason = "fauly odporúčame len v najvyšších súťažiach (top 5 líg a Liga majstrov)";
+      } else if (isFoulMarket(b.market) && !FOULS_ONLY_LEAGUE_IDS.includes(Number(fixture.league?.id))) {
+        // Fauly len v top súťažiach (9. 11. 2026, Michal); 24. 11. 2026 bez Ligy majstrov – pozri FOULS_ONLY_LEAGUE_IDS.
+        b.rejectReason = "fauly odporúčame len v top 5 ligách (Liga majstrov bez faulov)";
         b.rejectCode = "market_excluded";
         lowValueBets.push(b);
       } else if (FOUL_POSS_TRACK_ONLY && (isFoulMarket(b.market) || b.market.startsWith("Držanie lopty")) && !(typeof b.odds === "number" && b.odds > 1)) {
