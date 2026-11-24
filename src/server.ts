@@ -107,6 +107,18 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 const ALL_MARKETS_FROM = "2026-11-22T17:45:00Z";
 const isExcludedMarketTip = (t: { market: string; matchDate?: string }) => EXCLUDED_STATS_MARKETS.includes(t.market) && String(t.matchDate || "") < ALL_MARKETS_FROM;
 const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté konto", "Handicap – strely na bránu", "Ázijský handicap – strely na bránu", "Karty v 1. polčase", "Karty v 2. polčase"];
+
+/**
+ * 24. 11. 2026 23:15 (Michal): staré tipy, ktoré nespĺňajú NOVÉ pravidlá, sa do štatistík nerátajú (v databáze ostávajú).
+ * RETRO_1124: "full" = zrušené trhy aj dôvera pod prahom (72 %, handicapy a držanie lopty 70 %), "markets" = len zrušené trhy, "off" = nič.
+ */
+const RETRO_1124: "full" | "markets" | "off" = "full";
+const RETRO_1124_REMOVED = /^(Výsledok zápasu|(Góly|Rohy|Karty|Strely na bránu|Fauly) (domácich|hostí)|(Góly|Karty) v [12]\. polčase|Handicap – (karty|strely na bránu))$/;
+function failsRules1124(t: SavedTip): boolean {
+  if (RETRO_1124 === "off" || (t.legs && t.legs.length) || t.manualEntry) return false;
+  if (RETRO_1124_REMOVED.test(String(t.market || ""))) return true;
+  return RETRO_1124 === "full" && typeof t.probability === "number" && t.probability < clientMinProb(t.market) - 0.001;
+}
 function statsTips(tips: SavedTip[]): SavedTip[] {
   // Tipy „Len sledovať“ (napr. Liga majstrov na skúšku) sa vyhodnocujú, ale nerátajú sa
   // do štatistík, na web ani do vyhodnotení pre členov.
@@ -114,7 +126,7 @@ function statsTips(tips: SavedTip[]): SavedTip[] {
   // (Michal) sa do štatistík neráta vôbec (predtým len pri SALES_OPEN=true).
   // 5. 11. 2026 (Michal): znova sa ráta normálne, ak prejde pravidlami – nerátá sa až po spustení predaja (SALES_OPEN=true).
   const salesOpen = process.env.SALES_OPEN === "true";
-  return dedupeTips(tips).filter((t) => !isExcludedMarketTip(t) && !t.watchOnly && !(t.lateAdd && salesOpen) && !isRemovedLeagueTip(t));
+  return dedupeTips(tips).filter((t) => !isExcludedMarketTip(t) && !t.watchOnly && !(t.lateAdd && salesOpen) && !isRemovedLeagueTip(t) && !failsRules1124(t));
 }
 
 /**

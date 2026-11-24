@@ -208,7 +208,13 @@ const MONTH_NAMES = ["Január", "Február", "Marec", "Apríl", "Máj", "Jún", "
 const STRONG_TIP_MIN_PROBABILITY = 72; // STRONG_TIP_MIN_PROBABILITY v oddsMatcher.ts
 let MIN_ODDS = 1.5; // 22. 11. 2026 1:24 Michal: späť 1,50; predtým predvolené: 1,50 (2. 11. 2026 20:50 späť z 1,60, spolu s pásmom 70 – 80 %); ak server pošle MIN_ODDS (/api/public/vip-seats), použije sa ten
 const ALL_MARKETS_FROM = "2026-11-22T17:45:00Z"; // 22. 11. 2026 18:45: od teraz všetky trhy klientom
-const isExcludedMarketTip = (t) => EXCLUDED_STATS_MARKETS.includes(t.market) && String(t.matchDate || "") < ALL_MARKETS_FROM;
+const isExcludedMarketTip = (t) => (EXCLUDED_STATS_MARKETS.includes(t.market) && String(t.matchDate || "") < ALL_MARKETS_FROM) || failsRules1124(t);
+// 24. 11. 2026 23:15 (Michal): staré tipy, ktoré nespĺňajú NOVÉ pravidlá, sa nerátajú (rovnako ako server, RETRO_1124).
+const RETRO_1124 = "full";
+const RETRO_1124_REMOVED = /^(Výsledok zápasu|(Góly|Rohy|Karty|Strely na bránu|Fauly) (domácich|hostí)|(Góly|Karty) v [12]\. polčase|Handicap – (karty|strely na bránu))$/;
+const failsRules1124 = (t) => RETRO_1124 !== "off" && !(t.legs && t.legs.length) && !t.manualEntry &&
+  (RETRO_1124_REMOVED.test(String(t.market || "")) || (RETRO_1124 === "full" && typeof t.probability === "number" && t.probability < clientMinProb(t.market) - 0.001));
+
 const EXCLUDED_STATS_MARKETS = ["Dvojšanca", "Presný výsledok", "Čisté konto", "Handicap – strely na bránu", "Ázijský handicap – strely na bránu", "Karty v 1. polčase", "Karty v 2. polčase"]; // 22. 11. 2026: strely zrušené
 const MATCH_STARTED_TEXT = "Zápas už začal – zabudnutý tip pridáš v detaile zápasu (Pridať zabudnutý tip).";
 const LIVE_STATUSES = ["1H", "HT", "2H", "ET", "BT", "P", "SUSP", "INT"];
