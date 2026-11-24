@@ -5567,6 +5567,7 @@ async function renderDnes() {
   const now = new Date();
   document.getElementById("dnesDate").textContent = now.toLocaleDateString("sk-SK", { weekday: "long", day: "numeric", month: "numeric" });
   try {
+    let vbank = null; // 24. 11. 2026: virtuálny bank (/bank)
     const [tipsRaw, auto, subs, pays, autoSave] = await Promise.all([
       fetchJson("/api/tips").catch(() => null),
       fetchJson("/api/auto-tips").catch(() => null),
@@ -5574,6 +5575,7 @@ async function renderDnes() {
       fetchJson("/api/payments").catch(() => null),
       fetchJson("/api/auto-save-status").catch(() => null),
       loadSavedTipKeys().catch(() => null),
+      fetchJson("/api/virtual-bank").then((v) => (vbank = v)).catch(() => null),
     ]);
     const today = tipDayKey(now.toISOString());
     const yesterday = tipDayKey(new Date(now.getTime() - 86400000).toISOString());
@@ -5711,6 +5713,7 @@ async function renderDnes() {
       <section class="sb-strip">
         ${cell("Včera", y.done ? j(y.profit) : "–", y.done ? `${y.won} z ${y.done} vyšlo` : yTips.length ? "čaká na výsledky" : "bez tipu", y.profit > 0 ? "g" : y.profit < 0 ? "l" : "")}
         ${cell("Tento mesiac", m.done ? j(m.profit) : "–", m.done ? `${m.won} z ${m.done} vyšlo · ${Math.round((m.won / m.done) * 100)}${NB}%` : "zatiaľ bez výsledkov", m.profit > 0 ? "g" : m.profit < 0 ? "l" : "")}
+        ${vbank && vbank.saved ? `<a class="sb-cell ${vbank.profit > 0 ? "g" : vbank.profit < 0 ? "l" : ""}" href="/bank" style="text-decoration:none"><small>Virtuálny bank</small><b>${escapeHtml(Math.round(vbank.bank).toLocaleString("sk-SK").replace(/\u00a0|\u202f/g, NB))}${NB}€</b><span>vklad na tip dnes ${escapeHtml(String(vbank.nextStake))}${NB}€</span></a>` : ""}
         ${cell("Členovia", String(active.length), `${ending.length ? `${ending.length} čoskoro končí` : "aktívnych"}${payPending ? ` · ${payPending} čaká platba` : ""}`, ending.length || payPending ? "warn" : "", "clenovia")}
       </section>
 

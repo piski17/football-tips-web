@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E0D0C">
+<title>TipRadar – virtuálny bank</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+/* Virtuálny bank (24. 11. 2026, Michal) – farby a písmo ako appka (Šampanské + IBM Plex Sans). */
+:root {
+  --bg: #0E0D0C; --section: #17150F; --card: #1F1C18; --line: rgba(244,238,227,.09); --line2: rgba(244,238,227,.18);
+  --gold: #D9BF8C; --gold-hi: #FBF1DC; --gold-lo: #B08F55; --text: #F4EEE3; --muted: #AFA593; --faint: #7A7062;
+  --good: #7FC8A0; --bad: #E0897A;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: radial-gradient(70% 40% at 50% 0%, rgba(217,191,140,.07), transparent 70%), var(--bg); color: var(--text); font: 15px/1.55 var(--sans); font-variant-numeric: tabular-nums; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 28px 20px 56px; }
+@media (max-width: 620px) { .wrap { padding: 20px 16px 44px; } }
+a.back { color: var(--muted); text-decoration: none; font-size: 13.5px; }
+a.back:hover { color: var(--gold); }
+h1 { font: 600 32px/1.1 var(--sans); letter-spacing: -.02em; margin: 10px 0 6px; }
+h1 em { font-style: normal; background: linear-gradient(120deg, #F1E0BC, #D6B67A 50%, #A8874E); -webkit-background-clip: text; background-clip: text; color: transparent; }
+h2 { font: 600 19px/1.2 var(--sans); letter-spacing: -.01em; margin: 0 0 12px; }
+h2 small { font-weight: 400; font-size: 13px; color: var(--muted); margin-left: 6px; }
+.lead { color: var(--muted); margin: 0 0 22px; max-width: 72ch; }
+.panel { background: var(--section); border: 1px solid var(--line); border-radius: 20px; padding: 20px; margin-bottom: 18px; }
+@media (max-width: 620px) { .panel { padding: 14px; border-radius: 16px; } }
+
+/* nastavenie */
+.inputs { display: grid; grid-template-columns: 1fr 1fr 1.3fr auto; gap: 14px; align-items: end; }
+@media (max-width: 820px) { .inputs { grid-template-columns: 1fr 1fr; } .inputs .act { grid-column: 1 / -1; } }
+label.f { display: block; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; font-weight: 600; }
+.field { position: relative; }
+.field input { width: 100%; font: 600 19px/1.2 var(--sans); color: var(--text); background: var(--card); border: 1px solid var(--line2); border-radius: 12px; padding: 10px 36px 10px 12px; }
+.field input[type=date] { padding-right: 12px; font-size: 16px; min-height: 46px; }
+.field .unit { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 14px; pointer-events: none; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chip { font: 500 12.5px var(--sans); color: var(--muted); background: transparent; border: 1px solid var(--line2); border-radius: 999px; padding: 4px 10px; cursor: pointer; }
+.chip:hover, .chip.on { color: #0E0D0C; background: var(--gold); border-color: var(--gold); }
+input:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.btn { font: 600 14px var(--sans); color: #0E0D0C; background: linear-gradient(120deg, #F1E0BC, #D6B67A 50%, #A8874E); border: 0; border-radius: 999px; padding: 12px 22px; cursor: pointer; white-space: nowrap; }
+.btn:disabled { opacity: .5; cursor: default; }
+.msg { font-size: 13px; color: var(--muted); margin-top: 10px; min-height: 1em; }
+.msg.warn { color: var(--gold); } .msg.err { color: var(--bad); } .msg.ok { color: var(--good); }
+
+/* hlavné čísla */
+.hero { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 0; border: 1px solid var(--gold-lo); border-radius: 22px; overflow: hidden; background: linear-gradient(180deg, #1B1813, #12100D); margin-bottom: 18px; }
+.hero > div { padding: 20px 22px; border-right: 1px solid var(--line); }
+.hero > div:last-child { border-right: 0; }
+.hero small { display: block; font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--faint); font-weight: 600; margin-bottom: 8px; }
+.hero b { display: block; font: 600 38px/1 var(--sans); letter-spacing: -.03em; }
+.hero .main b { background: linear-gradient(180deg, #FBF1DC 10%, #D9BF8C 60%, #B08F55); -webkit-background-clip: text; background-clip: text; color: transparent; font-size: 46px; }
+.hero span { display: block; color: var(--muted); font-size: 13px; margin-top: 8px; }
+.g { color: var(--good) !important; } .l { color: var(--bad) !important; }
+@media (max-width: 760px) { .hero { grid-template-columns: 1fr 1fr; } .hero .main { grid-column: 1 / -1; border-right: 0; border-bottom: 1px solid var(--line); } .hero b { font-size: 30px; } }
+
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 18px; }
+.stats div { background: var(--section); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; }
+.stats small { display: block; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); font-weight: 600; }
+.stats b { display: block; font-size: 20px; font-weight: 600; margin-top: 6px; }
+@media (max-width: 760px) { .stats { grid-template-columns: 1fr 1fr; } }
+
+/* dnes */
+.today-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px; }
+.stake-big { font-size: 15px; color: var(--muted); }
+.stake-big b { font-size: 22px; color: var(--gold-hi); }
+.row { display: grid; grid-template-columns: 54px 1fr auto; gap: 12px; align-items: center; padding: 11px 0; border-top: 1px solid var(--line); }
+.row:first-of-type { border-top: 0; }
+.row .t { color: var(--muted); font-size: 13px; }
+.row .m b { display: block; font-weight: 600; }
+.row .m span { color: var(--muted); font-size: 13px; }
+.row .r { text-align: right; white-space: nowrap; }
+.row .r b { display: block; font-size: 17px; }
+.row .r span { font-size: 12.5px; color: var(--muted); }
+.empty { color: var(--muted); margin: 4px 0; }
+
+/* graf */
+.chart { position: relative; }
+.chart svg { display: block; width: 100%; height: auto; }
+.chart .ax { font: 11px var(--sans); fill: var(--faint); }
+.chart .grid { stroke: var(--line); }
+.chart .startline { stroke: var(--faint); stroke-dasharray: 4 4; }
+.chart .ln { fill: none; stroke: var(--gold); stroke-width: 2.2; stroke-linejoin: round; stroke-linecap: round; }
+.chart .ar { fill: url(#bkFill); }
+.chart .pt { fill: var(--gold); }
+.chart .hit { fill: transparent; cursor: pointer; }
+.tip { position: absolute; pointer-events: none; background: #26221C; border: 1px solid var(--line2); border-radius: 10px; padding: 7px 10px; font-size: 12.5px; white-space: nowrap; transform: translate(-50%, -115%); }
+.tip[hidden] { display: none; }
+
+/* história dní */
+details.day { border-top: 1px solid var(--line); }
+details.day:first-of-type { border-top: 0; }
+details.day summary { list-style: none; display: grid; grid-template-columns: 1fr auto auto; gap: 14px; align-items: center; padding: 12px 0; cursor: pointer; }
+details.day summary::-webkit-details-marker { display: none; }
+details.day summary .d b { font-weight: 600; }
+details.day summary .d span { display: block; color: var(--muted); font-size: 12.5px; }
+details.day summary .p { font-weight: 600; text-align: right; }
+details.day summary .bk { color: var(--muted); font-size: 13px; text-align: right; min-width: 90px; }
+details.day[open] summary { padding-bottom: 4px; }
+details.day .tips { padding: 0 0 10px; }
+details.day .tips .row { grid-template-columns: 54px 1fr auto; padding: 8px 0; }
+.note { color: var(--faint); font-size: 12.5px; margin: 10px 0 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/">← Späť do appky</a>
+  <h1>Virtuálny <em>bank</em></h1>
+  <p class="lead">Zadajte počiatočný bank a koľko percent z neho dávať na jeden tip. Appka na každý tip pre klientov sama „vsadí“ túto časť z aktuálneho banku a po vyhodnotení bank prepočíta. Nič sa nestavia naozaj – dnešné tipy podáte ručne v stávkovke podľa sumy nižšie.</p>
+
+  <section class="panel">
+    <div class="inputs">
+      <div>
+        <label class="f" for="start">Počiatočný bank</label>
+        <div class="field"><input id="start" type="number" inputmode="decimal" min="10" step="10" value="1000"><span class="unit">€</span></div>
+        <div class="chips" data-for="start"><button type="button" class="chip" data-v="500">500 €</button><button type="button" class="chip" data-v="1000">1 000 €</button><button type="button" class="chip" data-v="2000">2 000 €</button></div>
+      </div>
+      <div>
+        <label class="f" for="pct">Vklad na tip</label>
+        <div class="field"><input id="pct" type="number" inputmode="decimal" min="0.5" max="20" step="0.5" value="3"><span class="unit">%</span></div>
+        <div class="chips" data-for="pct"><button type="button" class="chip" data-v="2">2 %</button><button type="button" class="chip" data-v="3">3 %</button><button type="button" class="chip" data-v="5">5 %</button></div>
+      </div>
+      <div>
+        <label class="f" for="from">Rátať tipy od</label>
+        <div class="field"><input id="from" type="date"></div>
+        <div class="chips" id="fromChips"></div>
+      </div>
+      <div class="act"><button type="button" class="btn" id="saveBtn">Uložiť a spustiť</button></div>
+    </div>
+    <p class="msg" id="msg"></p>
+  </section>
+
+  <div id="out"><p class="empty">Načítavam…</p></div>
+</div>
+
+<script>
+const NB = " ";
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const num = (n, d = 2) => Number(n).toLocaleString("sk-SK", { minimumFractionDigits: d, maximumFractionDigits: d }).replace(/ | /g, NB);
+const eur = (n, d = 2) => `${num(n, d)}${NB}€`;
+const sEur = (n) => `${n > 0 ? "+" : n < 0 ? "−" : ""}${eur(Math.abs(n))}`;
+const sJ = (n) => `${n > 0 ? "+" : n < 0 ? "−" : ""}${num(Math.abs(n), 1)}${NB}j.`;
+const cls = (n) => (n > 0 ? "g" : n < 0 ? "l" : "");
+const dayTxt = (k) => { const [y, m, d] = k.split("-").map(Number); const dt = new Date(Date.UTC(y, m - 1, d, 12)); return dt.toLocaleDateString("sk-SK", { weekday: "short", day: "numeric", month: "numeric", timeZone: "Europe/Bratislava" }).replace(/ /g, " "); };
+const shortDay = (k) => { const [, m, d] = k.split("-").map(Number); return `${d}. ${m}.`; };
+const hm = (ms) => ms ? new Date(ms).toLocaleTimeString("sk-SK", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Bratislava" }) : "";
+const fmtOdds = (o) => (o ? num(o, 2) : "–");
+const plural = (n, a, b, c) => `${n}${NB}${n === 1 ? a : n >= 2 && n <= 4 ? b : c}`;
+
+let data = null;
+let dirty = false;
+
+async function load(preview) {
+  const q = preview ? `?start=${encodeURIComponent(preview.start)}&pct=${encodeURIComponent(preview.pct)}&from=${encodeURIComponent(preview.from)}` : "";
+  const r = await fetch("/api/virtual-bank" + q, { credentials: "same-origin" });
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.error || "Chyba servera");
+  return j;
+}
+
+function fill(s) {
+  $("start").value = s.start;
+  $("pct").value = s.pct;
+  $("from").value = s.from;
+  markChips();
+}
+function current() {
+  return { start: Number(String($("start").value).replace(",", ".")), pct: Number(String($("pct").value).replace(",", ".")), from: $("from").value };
+}
+function markChips() {
+  document.querySelectorAll(".chips[data-for]").forEach((box) => box.querySelectorAll(".chip").forEach((c) => c.classList.toggle("on", Number(c.dataset.v) === Number($(box.dataset.for).value))));
+  document.querySelectorAll("#fromChips .chip").forEach((c) => c.classList.toggle("on", c.dataset.v === $("from").value));
+}
+function setMsg(text, kind = "") { const m = $("msg"); m.textContent = text; m.className = "msg " + kind; }
+function updateMsg() {
+  if (!data) return;
+  if (dirty) setMsg("Náhľad – zmeny ešte nie sú uložené. Ťuknite na „Uložiť a spustiť“.", "warn");
+  else if (!data.saved) setMsg("Bank ešte nie je uložený – zobrazený je náhľad s predvolenými hodnotami.", "warn");
+  else setMsg(`Uložené: ${eur(data.savedSettings.start, 0)}, vklad ${num(data.savedSettings.pct, data.savedSettings.pct % 1 ? 1 : 0)}${NB}%, tipy od ${shortDay(data.savedSettings.from)}${data.savedSettings.from.slice(0, 4)}.`, "ok");
+}
+
+function chart(series, start) {
+  if (series.length < 2) return `<p class="empty">Graf sa ukáže po prvom vyhodnotenom dni.</p>`;
+  const W = Math.max(300, Math.round(($("out").clientWidth || 1000) - 40)), H = W < 600 ? 200 : 240, pl = 48, pr = 14, pt = 14, pb = 28;
+  const vals = series.map((p) => p.bank).concat([start]);
+  let lo = Math.min(...vals), hi = Math.max(...vals);
+  const pad = Math.max((hi - lo) * 0.12, start * 0.02);
+  lo -= pad; hi += pad;
+  const x = (i) => pl + (i / (series.length - 1)) * (W - pl - pr);
+  const y = (v) => pt + (1 - (v - lo) / (hi - lo)) * (H - pt - pb);
+  const line = series.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)} ${y(p.bank).toFixed(1)}`).join(" ");
+  const area = `${line} L${x(series.length - 1).toFixed(1)} ${H - pb} L${x(0).toFixed(1)} ${H - pb} Z`;
+  const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => lo + f * (hi - lo));
+  const grid = ticks.map((v) => `<line class="grid" x1="${pl}" x2="${W - pr}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"/><text class="ax" x="${pl - 8}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end">${num(v, 0)}</text>`).join("");
+  const every = Math.max(1, Math.ceil(series.length / Math.max(3, Math.floor(W / 110))));
+  const xl = series.map((p, i) => (i % every === 0 || i === series.length - 1 ? `<text class="ax" x="${x(i).toFixed(1)}" y="${H - 8}" text-anchor="middle">${i === 0 ? "štart" : shortDay(p.day)}</text>` : "")).join("");
+  const pts = series.map((p, i) => `<circle class="pt" cx="${x(i).toFixed(1)}" cy="${y(p.bank).toFixed(1)}" r="${series.length > 40 ? 0 : 3.5}"/><rect class="hit" data-i="${i}" x="${(x(i) - (W - pl - pr) / (series.length - 1) / 2).toFixed(1)}" y="${pt}" width="${((W - pl - pr) / (series.length - 1)).toFixed(1)}" height="${H - pt - pb}"/>`).join("");
+  return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Vývoj banku">
+    <defs><linearGradient id="bkFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D9BF8C" stop-opacity=".28"/><stop offset="1" stop-color="#D9BF8C" stop-opacity="0"/></linearGradient></defs>
+    ${grid}<line class="startline" x1="${pl}" x2="${W - pr}" y1="${y(start).toFixed(1)}" y2="${y(start).toFixed(1)}"/>
+    <path class="ar" d="${area}"/><path class="ln" d="${line}"/>${pts}${xl}</svg><div class="tip" id="chartTip" hidden></div></div>`;
+}
+
+function tipRow(t, showStake) {
+  const st = t.noOdds ? `<span>bez kurzu – nerátal sa</span>`
+    : t.status === "won" ? `<b class="g">${sEur(t.profit)}</b><span>✓ vyšiel · vklad ${eur(t.stake, 0)}</span>`
+    : t.status === "lost" ? `<b class="l">${sEur(t.profit)}</b><span>✕ nevyšiel · vklad ${eur(t.stake, 0)}</span>`
+    : t.status === "void" ? `<b>${eur(0)}</b><span>vrátený · vklad ${eur(t.stake, 0)}</span>`
+    : showStake ? `<b>${eur(t.stake, 0)}</b><span>vsadiť</span>` : `<b>${eur(t.stake, 0)}</b><span>čaká na výsledok</span>`;
+  return `<div class="row"><span class="t">${esc(hm(t.time))}</span><span class="m"><b>${esc(t.match)}</b><span>${esc(t.bet)} · kurz ${fmtOdds(t.odds)}</span></span><span class="r">${st}</span></div>`;
+}
+
+function render(d) {
+  const s = d.settings;
+  const done = d.won + d.lost;
+  const todayPending = d.todayTips.filter((t) => t.status === "pending" && !t.noOdds);
+  const todayHtml = d.todayTips.length
+    ? d.todayTips.map((t) => tipRow(t, true)).join("")
+    : `<p class="empty">Na dnes zatiaľ žiadny tip pre klientov. Keď ho uložíte, objaví sa tu aj so sumou.</p>`;
+  const daysHtml = d.days.filter((x) => x.day !== d.today).map((x) => {
+    const res = x.won + x.lost + x.voided;
+    const sub = `${plural(x.tips.length, "tip", "tipy", "tipov")} · vklad ${eur(x.stake, 0)}${res ? ` · ${x.won} z ${x.won + x.lost} vyšlo` : ""}${x.pending ? ` · ${x.pending} čaká` : ""}`;
+    return `<details class="day"><summary><span class="d"><b>${esc(dayTxt(x.day))}</b><span>${sub}</span></span><span class="p ${cls(x.profit)}">${res ? sEur(x.profit) : "–"}</span><span class="bk">${eur(x.bankEnd, 0)}</span></summary><div class="tips">${x.tips.map((t) => tipRow(t, false)).join("")}</div></details>`;
+  }).join("");
+  $("out").innerHTML = `
+    <section class="hero">
+      <div class="main"><small>Bank teraz</small><b>${eur(d.bank)}</b><span>začiatok ${eur(s.start, 0)} · ${shortDay(s.from)}${s.from.slice(0, 4)}</span></div>
+      <div><small>Zisk / strata</small><b class="${cls(d.profit)}">${sEur(d.profit)}</b><span>${sJ(d.units)} (1${NB}j. = jeden vklad)</span></div>
+      <div><small>Vklad na tip dnes</small><b>${eur(d.nextStake, 0)}</b><span>${num(s.pct, s.pct % 1 ? 1 : 0)}${NB}% z banku na začiatku dňa</span></div>
+    </section>
+    <div class="stats">
+      <div><small>Tipy</small><b>${done ? `${d.won} z ${done} vyšlo` : "–"}</b></div>
+      <div><small>Vsadené spolu</small><b>${eur(d.staked, 0)}</b></div>
+      <div><small>Najvyšší bank</small><b>${eur(d.peak, 0)}</b></div>
+      <div><small>Najväčší pokles</small><b class="${d.maxDrop > 0 ? "l" : ""}">${d.maxDrop > 0 ? "−" + eur(d.maxDrop, 0) : "–"}</b></div>
+    </div>
+    <section class="panel">
+      <div class="today-head"><h2>Dnes <small>${esc(dayTxt(d.today))}</small></h2>${todayPending.length ? `<span class="stake-big">Spolu vsadiť <b>${eur(todayPending.reduce((a, t) => a + t.stake, 0), 0)}</b></span>` : ""}</div>
+      ${todayHtml}
+    </section>
+    <section class="panel">
+      <h2>Vývoj banku</h2>
+      ${chart(d.series, s.start)}
+    </section>
+    <section class="panel">
+      <h2>Po dňoch <small>ťuknite na deň pre tipy</small></h2>
+      ${daysHtml || `<p class="empty">Zatiaľ žiadny odohraný deň od ${shortDay(s.from)}${s.from.slice(0, 4)}.</p>`}
+      <p class="note">Vklad je rovnaký pre všetky tipy jedného dňa: ${num(s.pct, s.pct % 1 ? 1 : 0)}${NB}% z banku na začiatku dňa, zaokrúhlené na celé eurá. Rátajú sa len tipy pre klientov (bez sledovaných a vyradených súťaží), s kurzom, ktorý je pri tipe uložený.${d.noOdds ? ` ${plural(d.noOdds, "tip bez kurzu sa nerátal", "tipy bez kurzu sa nerátali", "tipov bez kurzu sa nerátalo")}.` : ""}</p>
+    </section>`;
+  const tipEl = $("chartTip");
+  const svg = document.querySelector(".chart svg");
+  if (svg && tipEl) {
+    svg.querySelectorAll(".hit").forEach((r) => {
+      const show = () => {
+        const p = d.series[Number(r.dataset.i)];
+        const box = svg.getBoundingClientRect();
+        const rb = r.getBoundingClientRect();
+        tipEl.innerHTML = `<b>${eur(p.bank)}</b> · ${Number(r.dataset.i) === 0 ? "štart" : esc(dayTxt(p.day))}`;
+        tipEl.style.left = `${rb.left - box.left + rb.width / 2}px`;
+        tipEl.style.top = `${(svg.querySelectorAll(".pt")[Number(r.dataset.i)].getBoundingClientRect().top - box.top)}px`;
+        tipEl.hidden = false;
+      };
+      r.addEventListener("mouseenter", show);
+      r.addEventListener("click", show);
+    });
+    svg.addEventListener("mouseleave", () => (tipEl.hidden = true));
+  }
+}
+
+function fromChips(d) {
+  const month = d.today.slice(0, 8) + "01";
+  const opts = [["Dnes", d.today], ["Od 1. dňa mesiaca", month], ["Od prvého tipu", d.firstDay]];
+  $("fromChips").innerHTML = opts.filter((o, i, a) => a.findIndex((x) => x[1] === o[1]) === i).map(([l, v]) => `<button type="button" class="chip" data-v="${v}">${l}</button>`).join("");
+  $("fromChips").querySelectorAll(".chip").forEach((c) => (c.onclick = () => { $("from").value = c.dataset.v; onChange(); }));
+}
+
+let timer = null;
+function onChange() {
+  markChips();
+  dirty = true;
+  clearTimeout(timer);
+  timer = setTimeout(async () => {
+    const v = current();
+    if (!(v.start >= 10) || !(v.pct >= 0.5 && v.pct <= 20) || !v.from) { setMsg("Bank aspoň 10 €, vklad 0,5 – 20 %.", "err"); return; }
+    try { data = await load(v); render(data); updateMsg(); } catch (e) { setMsg(e.message, "err"); }
+  }, 350);
+}
+
+document.querySelectorAll(".chips[data-for] .chip").forEach((c) => (c.onclick = () => { $(c.parentElement.dataset.for).value = c.dataset.v; onChange(); }));
+["start", "pct", "from"].forEach((id) => $(id).addEventListener("input", onChange));
+
+$("saveBtn").onclick = async () => {
+  const v = current();
+  $("saveBtn").disabled = true;
+  try {
+    const r = await fetch("/api/virtual-bank", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify(v) });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || "Uloženie sa nepodarilo.");
+    data = j; dirty = false; fill(j.settings); render(j); updateMsg();
+  } catch (e) { setMsg(e.message, "err"); }
+  finally { $("saveBtn").disabled = false; }
+};
+
+let rz = null;
+window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => data && render(data), 200); });
+(async () => {
+  try {
+    data = await load();
+    fill(data.settings); fromChips(data); markChips(); render(data); updateMsg();
+  } catch (e) {
+    $("out").innerHTML = `<p class="empty">Nepodarilo sa načítať: ${esc(e.message)}</p>`;
+  }
+})();
+</script>
+</body>
+</html>

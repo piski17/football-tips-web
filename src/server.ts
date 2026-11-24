@@ -2,6 +2,7 @@ import { plausibleLine, offeredLines, offeredHcpLines, MIN_BOOKMAKERS, MIN_ODDS,
 import { teamNamesBrowserScript } from "./teamNamesSk";
 import { listLeads, deleteLead, recordLead } from "./leadsStore";
 import { getMeta, setMeta } from "./metaStore";
+import { computeVirtualBank, parseBankSettings, validBankSettings, VIRTUAL_BANK_META } from "./virtualBank";
 import { listCoopLinks, getCoopLink, createCoopLink, updateCoopLink, deleteCoopLink, chooseCoop, coopPage, coopPayHtml, coopNote, CoopLink, CoopPay } from "./coopLinks";
 import * as crypto from "crypto";
 import { recordShadow, listShadow, updateShadow, shadowEntriesFrom, shadowReasonCode, ShadowEntry } from "./shadowStore";
@@ -710,6 +711,52 @@ app.post("/api/public/coop/:token", express.json({ limit: "10kb" }), async (req,
 app.use(basicAuth);
 app.use(express.json({ limit: "2mb" }));
 app.use(express.static(path.join(__dirname, "..", "public")));
+
+// ---- Virtuálny bank (24. 11. 2026, Michal): počiatočný bank + % vkladu, appka „stavia“ na každý tip pre klientov ----
+// Len tipy, ktoré sa rátajú do štatistík (statsTips: bez sledovaných, duplicít a vyradených súťaží). Nič sa nestavia naozaj.
+app.get(["/bank", "/bank/"], (_req, res) => {
+  res.set("Cache-Control", "no-cache");
+  res.sendFile(path.join(__dirname, "..", "public", "bank.html"));
+});
+function bankDescribe(t: SavedTip) {
+  const isTicket = Array.isArray(t.legs) && t.legs.length > 0;
+  return {
+    match: isTicket ? `Tiket (${plural(t.legs!.length, "zápas", "zápasy", "zápasov")})` : `${translateTeamName(t.homeTeam)} – ${translateTeamName(t.awayTeam)}`,
+    bet: isTicket
+      ? t.legs!.map((l) => `${translateTeamName(l.homeTeam)} – ${translateTeamName(l.awayTeam)}: ${translateNamesInText(l.selection, l.homeTeam, l.awayTeam)}`).join(" · ")
+      : `${t.market}: ${translateNamesInText(t.selection, t.homeTeam, t.awayTeam)}`,
+  };
+}
+async function virtualBankView(override?: { start: number; pct: number; from: string }) {
+  const today = dayKeySk(new Date());
+  const { settings, saved } = parseBankSettings(await getMeta(VIRTUAL_BANK_META).catch(() => null), today);
+  const tips = statsTips(await listTips());
+  const firstDay = tips.map((t) => tipDayKey(t) ?? "").filter(Boolean).sort()[0] ?? today;
+  const view = computeVirtualBank(tips, override ?? settings, today, tipDayKey, tipKickMs, bankDescribe);
+  return { ...view, saved, savedSettings: settings, firstDay };
+}
+app.get("/api/virtual-bank", async (req, res) => {
+  try {
+    // Náhľad bez uloženia: ?start=1000&pct=3&from=2026-11-01
+    const preview = req.query.start != null ? validBankSettings({ start: req.query.start, pct: req.query.pct, from: req.query.from }) : null;
+    res.json(await virtualBankView(preview ?? undefined));
+  } catch (err) {
+    res.status(500).json({ error: "Virtuálny bank sa nepodarilo načítať: " + (err as Error).message });
+  }
+});
+app.post("/api/virtual-bank", express.json(), async (req, res) => {
+  const v = validBankSettings(req.body);
+  if (!v) {
+    res.status(400).json({ error: "Skontrolujte údaje: bank aspoň 10 €, vklad 0,5 – 20 % a dátum začiatku." });
+    return;
+  }
+  try {
+    await setMeta(VIRTUAL_BANK_META, JSON.stringify({ ...v, savedAt: new Date().toISOString() }));
+    res.json(await virtualBankView());
+  } catch (err) {
+    res.status(502).json({ error: "Uloženie sa nepodarilo: " + (err as Error).message });
+  }
+});
 
 app.get("/api/leagues", (_req, res) => {
   res.json(LEAGUE_PRESETS);

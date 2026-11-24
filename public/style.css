@@ -1688,6 +1688,7 @@ body { font-family: var(--sans); font-weight: 400; }
 .sb-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 14px 0 6px; border: 1px solid var(--line); border-radius: 20px; overflow: hidden; background: #13110E; }
 .sb-cell { display: flex; flex-direction: column; gap: 6px; padding: 20px 26px; text-align: left; color: inherit; border-right: 1px solid var(--line); background: none; }
 .sb-cell:last-child { border-right: 0; }
+@media (min-width: 900px) { .sb-strip:has(> :nth-child(4)) { grid-template-columns: repeat(4, minmax(0, 1fr)); } } /* 24. 11. 2026: + Virtuálny bank */
 button.sb-cell:hover { background: rgba(255, 255, 255, .025); }
 .sb-cell small { font: 600 10.5px/1 var(--sans); letter-spacing: .2em; text-transform: uppercase; color: var(--faint); }
 .sb-cell b { font: 600 38px/1 var(--display); letter-spacing: -.04em; color: var(--text); }
