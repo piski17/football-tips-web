@@ -2320,6 +2320,9 @@ function renderDayTipsViewMain() {
         const mkt = rowEl.querySelector("[data-bl-mkt]")?.value || item.bet.market;
         const fresh = bookLineRows(item.r, mkt, line, oddOf(rowEl.querySelector("[data-bl-over]")), oddOf(rowEl.querySelector("[data-bl-under]")));
         if (typeof fresh === "string") { errs.push(`${raw}: ${fresh}`); return; }
+        // 24. 11. 2026 23:28 (Michal): rovnaká hranica a strana ako odporúčaný tip → platí dôvera tipu (tá, s ktorou tip prešiel);
+        // Michalov kurz zo stávkovky stačí, ak je od min. kurzu po najvyšší kurz, ktorý dôvera dovolí (hodnota do +25 %).
+        fresh.forEach((x) => { if (mkt === item.bet.market && x.selection === item.bet.selection && typeof item.bet.probability === "number") { x.probability = item.bet.probability; x.sameAsTip = true; } });
         // ak je zadaný len jeden kurz, vyhodnotí sa len tá strana
         const th = lineThresholds(mkt);
         fresh.filter((x) => x.odds != null).forEach((x) => { x.market = mkt; x.minProb = th.minProb; x.minOdds = th.minOdds; if (BOOK_LINE_MARKET.test(mkt)) x.bookLine = true; if (!rows.some((y) => y.market === mkt && y.selection === x.selection)) rows.push(x); });
