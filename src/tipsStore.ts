@@ -849,3 +849,30 @@ export async function moveLmFoulsToWatchOnce(): Promise<number> {
     return moved;
   });
 }
+
+/** 24. 11. 2026 19:35 (Michal): dnešné tipy na fauly v LM, ktoré uložil klientom a moveLmFoulsToWatchOnce ich dal do sledovaných – späť klientom. */
+const LM_FOULS_RESTORE_KEY = "tipradar_migr_lm_fouls_restore_1124_done";
+export async function restoreLmFoulsOnce(): Promise<number> {
+  if (!useUpstash) return 0;
+  const auth = { headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` } };
+  const done = (await upstashClient().get(`${UPSTASH_URL}/get/${LM_FOULS_RESTORE_KEY}`, auth)).data?.result;
+  if (done) return 0;
+  return withWriteLock(async () => {
+    const tips = await readAll();
+    const from = new Date("2026-11-23T23:00:00Z").getTime(), to = new Date("2026-11-24T23:00:00Z").getTime();
+    let restored = 0;
+    for (const t of tips) {
+      const at = new Date(t.matchDate).getTime();
+      if (!(t.legs && t.legs.length) && t.watchOnly && Number(t.leagueId) === 2 && /^Fauly/.test(String(t.market || "")) && at >= from && at < to
+        && !t.autoWatch && !t.foulPossWatch && !t.h2hAgainst && !t.sameTypeMoved && !t.lineupMoved && !t.watchBand && !t.strictFail) {
+        t.watchOnly = undefined;
+        restored++;
+      }
+    }
+    if (restored) await writeAll(tips);
+    await upstashClient().post(`${UPSTASH_URL}/set/${LM_FOULS_RESTORE_KEY}`, new Date().toISOString(), {
+      headers: { ...auth.headers, "Content-Type": "text/plain" },
+    });
+    return restored;
+  });
+}
