@@ -99,7 +99,7 @@ export function clientMinProb(market: unknown): number {
   // 23. 11. 2026 19:31 (Michal): všetky handicapy (góly, rohy, karty, strely) od 60 %, ostatné od 72 %.
   // 23. 11. 2026 (Michal): od 60 % aj fauly v zápase a strely na bránu (zápas, domácich, hostí).
   // 24. 11. 2026 23:15 (Michal): handicapy (góly, rohy) a držanie lopty od 70 %, všetko ostatné (aj fauly, kto viac, strely) od 72 %.
-  return /^Handicap( – |$)/.test(String(market ?? "")) ? HCP_CORNERS_MIN_PROBABILITY : WATCH_BELOW_PROBABILITY; // 24. 11. 23:22 (Michal): 70 % len handicapy
+  return /^(Handicap( – |$)|Držanie lopty)/.test(String(market ?? "")) ? HCP_CORNERS_MIN_PROBABILITY : WATCH_BELOW_PROBABILITY; // 24. 11. 23:22 (Michal): 70 % len handicapy
 }
 export function clientMinOdds(market: unknown): number {
   return market === HCP_CORNERS_MARKET ? Math.max(HCP_CORNERS_MIN_ODDS, MIN_ODDS) : MIN_ODDS;
