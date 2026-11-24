@@ -1009,6 +1009,8 @@ async function analyzeFixture(fixture: any, leagueId: any, season: any, record =
     awayPossession: awayExtStats.possession,
     homeCards: mixStat(homeExtStats.cards, awayExtStats.cardsAgainst),
     awayCards: mixStat(awayExtStats.cards, homeExtStats.cardsAgainst),
+    // 24. 11. 2026 (Michal): fauly bez vzájomných zápasov len keď oba tímy majú aspoň 5 zápasov v tejto súťaži.
+    foulsLeagueGames: Math.min(homeExtStats.leagueStatGames ?? 0, awayExtStats.leagueStatGames ?? 0),
   };
   // Súčasný a nový model z tých istých údajov; tipy vyberá ten, ktorý je zapnutý.
   const run = (isNew: boolean) => predictMatch(
