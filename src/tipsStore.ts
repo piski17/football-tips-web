@@ -37,17 +37,30 @@ function upstashClient() {
  */
 // 8. 11. 2026: zoznam tipov sa drží v pamäti (ako text) – predtým sa celý sťahoval z Upstash pri každej
 // akcii a minul sa mesačný prenos dát. Zapisuje len tento server, takže pri zápise sa pamäť obnoví.
-let rawCache: { at: number; raw: string | null } | null = null;
+// 24. 11. 2026: počas nasadenia na Renderi bežia chvíľu DVA servery (starý aj nový). Každý mal vlastnú pamäť
+// tipov, takže starý server mohol pri zápise (napr. vyhodnotenie výsledkov) prepísať tip, ktorý medzitým uložil
+// nový server – tip zmizol. Preto sa pri každom čítaní overí malé číslo verzie v Upstash (pár bajtov):
+// ak ho iný server zmenil, tipy sa stiahnu znova. Pri zápise sa verzia zvýši.
+const TIPS_VER_KEY = "tipradar_tips_ver";
+let rawCache: { at: number; raw: string | null; ver: string | null } | null = null;
 const RAW_TTL = 30 * 60 * 1000;
+async function readVersion(): Promise<string | null> {
+  const res = await upstashClient().get(`${UPSTASH_URL}/get/${TIPS_VER_KEY}`, {
+    headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
+  });
+  const v = res.data?.result;
+  return v == null ? null : String(v);
+}
 async function readAllRemote(): Promise<SavedTip[]> {
   let raw: string | null;
-  if (rawCache && Date.now() - rawCache.at < RAW_TTL) raw = rawCache.raw;
+  const ver = await readVersion();
+  if (rawCache && rawCache.ver === ver && Date.now() - rawCache.at < RAW_TTL) raw = rawCache.raw;
   else {
     const res = await upstashClient().get(`${UPSTASH_URL}/get/${TIPS_KEY}`, {
       headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
     });
     raw = res.data?.result ?? null;
-    rawCache = { at: Date.now(), raw };
+    rawCache = { at: Date.now(), raw, ver };
   }
   if (!raw) return [];
   try {
@@ -64,7 +77,11 @@ async function writeAllRemote(tips: SavedTip[]): Promise<void> {
   await upstashClient().post(`${UPSTASH_URL}/set/${TIPS_KEY}`, raw, {
     headers: { Authorization: `Bearer ${UPSTASH_TOKEN}`, "Content-Type": "text/plain" },
   });
-  rawCache = { at: Date.now(), raw };
+  const res = await upstashClient().post(`${UPSTASH_URL}/incr/${TIPS_VER_KEY}`, "", {
+    headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
+  }).catch(() => null);
+  const ver = res?.data?.result;
+  rawCache = ver == null ? null : { at: Date.now(), raw, ver: String(ver) };
 }
 
 // ---- Lokálne úložisko (záloha, ak Upstash nie je nastavený - napr. pri lokálnom vývoji) ----
