@@ -34,7 +34,7 @@
 <link rel="apple-touch-icon" href="/favicon-256.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&amp;family=Geist:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet" />
 <style>
 /* ===================== ORBIT (24. 11. 2026) – tipradar.eu od základu, štvrtá verzia =====================
    Michal 24. 11.: „sprav mi úplne nový web so všetkým novým – grafikou, fontami, obrázkami… niečo úplne iné, farby môžeš nechať“.
@@ -508,7 +508,7 @@ em { font-style: normal; }
    Michal vybral návrh 2 – prémiový čistý vzhľad: jedno písmo Inter Tight, čierne a svetlé časti sa striedajú,
    veľké čísla, jedna vec na obrazovku, mobil s ukážkou tipu v úvode. Stena tipov, Archivo a Bodoni preč.
    Predtým: Stena tipov 6190c3d – vrátiť = git revert tohto commitu. */
-:root { --display: "Geist", -apple-system, system-ui, sans-serif; --sans: "Geist", -apple-system, system-ui, sans-serif;
+:root { --display: "DM Serif Display", Georgia, serif; --sans: "Geist", -apple-system, system-ui, sans-serif;
   --bg: #000; --bg2: #000; --card: #161617; --card2: #1D1D1F; --text: #F5F5F7; --muted: #A1A1A6; --faint: #86868B;
   --line: rgba(255,255,255,.08); --line2: rgba(255,255,255,.16); --hair: rgba(255,255,255,.1); --hair2: rgba(255,255,255,.2);
   --gold: #C9A96E; --gold2: #E3C995; --goldDim: rgba(201,169,110,.14); --grad: #C9A96E; --win: #4CD08A; --loss: #FF6F61; --r: 28px; --wrap: 1080px; }
@@ -663,6 +663,15 @@ h1, h2, h3, h4 { font-weight: 600; letter-spacing: -.03em; }
 .me blockquote { font-size: clamp(19px, 1.8vw, 23px); font-weight: 500; }
 .btn { font-size: 15.5px; font-weight: 500; min-height: 46px; }
 .links a { font-size: 13px; }
+/* 24. 11. 19:40 – Michal: „písmo sa veľmi nezmenilo, daj úplne iný tón“ → nadpisy a veľké čísla v pätkovom DM Serif Display, text ostáva Geist */
+h1, h2, .h2, .hero h1, .nums .giant, .nums h2, .trio b, .card b, .verdict b, .grid4 b, .final h2, .plan-price .amount, .guar .big, .per > b.num, .chart-h .now b, .cal-stat b, .kpi b, .coin span, .me h2 { font-family: var(--display); font-weight: 400; }
+h1, h2, .h2 { letter-spacing: -.015em; line-height: 1.04; }
+.hero h1 { letter-spacing: -.02em; font-size: clamp(44px, 6.4vw, 86px); }
+.hero h1 span, .h2 em, h2 em { font-style: italic; }
+.nums .giant { letter-spacing: -.03em; }
+.card b, .trio b, .grid4 b, .verdict b { letter-spacing: -.02em; }
+h3, h4 { font-family: var(--sans); font-weight: 600; letter-spacing: -.02em; }
+.brand { font-family: var(--display); font-weight: 400; font-size: 20px; letter-spacing: -.01em; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .eyebrow i, .chip, .medal .spin { animation: none; } .bar-row .track i { transition: none; } .bar-row.model .track i { width: 74%; } .bar-row.book .track i { width: 66%; } }
 </style>
 </head>
