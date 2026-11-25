@@ -446,7 +446,7 @@ async function freeStatsLine(all: SavedTip[]): Promise<string> {
   });
 }
 async function freeSeatsLine(): Promise<string | undefined> {
-  return `🎯 Členstvo: VIP Klub · 1 mesiac 39 € · 🛡 v mínuse = mesiac zadarmo`; // 19. 11. 2026 Michal: mesačné členstvo
+  return `🎯 Členstvo: VIP Klub · 1 mesiac 59 € · 🛡 v mínuse = mesiac zadarmo`; // 19. 11. 2026 Michal: mesačné členstvo
 }
 /** Vracanie peňazí po prvých 20 tipoch (zrušené 2. 11. 2026). */
 const REFUND_ON = false;

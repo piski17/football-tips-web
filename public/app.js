@@ -4327,7 +4327,7 @@ const subscribersListEl = document.getElementById("subscribersList");
 // 19. 11. 2026 (Michal): mesačné členstvo VIP Klub – 1 mesiac za 39 € (platí sa za mesiac, nie za tipy). Cena sa dá prepísať.
 // Rovnaká cena je v src/payments.ts (PAY_TERMS.mesiac) a na webe. Predtým (11. – 18. 11.) spolupráca od 50 tipov, 0,98 € za tip.
 const subMonthsInput = document.getElementById("subMonths");
-const MEMBER_MONTH_PRICE = 39;
+const MEMBER_MONTH_PRICE = 59; // 25. 11. 2026 21:55 Michal (predtým 39 €)
 const MONTH_TIPS = 27; // odhad počtu tipov za mesiac (asi 25 – 30) – len pre prepočet v pláne
 const memberPriceFor = (months) => Math.round(months * MEMBER_MONTH_PRICE);
 const subMonthsValue = () => Math.min(12, Math.max(1, Math.round(Number(subMonthsInput.value) || 1)));

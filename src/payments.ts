@@ -80,7 +80,7 @@ export type Term = SellableTerm | "p100" | "p30" | "p50" | "p75" | "p150" | "p20
 export const SELLABLE_TERMS: SellableTerm[] = ["mesiac"];
 const pk = (price: number, tips: number) => ({ price, name: `${tips} tipov`, tips, months: NO_EXPIRY_MONTHS });
 export const PAY_TERMS: Record<Term, { price: number; name: string; months?: number; days?: number; tips?: number }> = {
-  mesiac: { price: 39, name: "1 mesiac", months: 1 }, // 19. 11. 2026 Michal: mesačné členstvo 39 €
+  mesiac: { price: 59, name: "1 mesiac", months: 1 }, // 25. 11. 2026 21:55 Michal: 59 € (19. – 25. 11. 39 €)
   p100: pk(98, 100), // 12. 11. 2026 Michal: 50 tipov za 49 € → 0,98 € za tip
   p30: pk(29, 30),
   p50: pk(39, 50),
