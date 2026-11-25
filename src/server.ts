@@ -14,7 +14,7 @@ import { getDay, getAllDays, setDay } from "./dailyStore";
 import { saveSlip, deleteSlip, listSlipIds, getSlipImage, MAX_SLIP_CHARS } from "./slipStore";
 import { recordMarketPredictions, settleMarketPredictions, marketSummary } from "./marketTracker";
 import { snapshotOpeningOdds } from "./oddsMove";
-import { recordTiprexPicks, updateTiprexClosing, settleTiprex, resettleTiprexCardsOnce, fixBahiaCoritibaOnce, tiprexSummary, tiprexPublicStats, addTiprexWaitlist, tiprexWaitlistCount } from "./tiprex";
+import { recordTiprexPicks, updateTiprexClosing, settleTiprex, resettleTiprexCardsOnce, fixBahiaCoritibaOnce, tiprexSummary, tiprexBankPicks, tiprexPublicStats, addTiprexWaitlist, tiprexWaitlistCount } from "./tiprex";
 import { scanSurebets, computeSurebets, fixtureResult, topBooksPresent, TOP_BOOKS, surebetStatus, surebetLog, getMyBooks, setMyBooks, startSurebetScanner, setOnScan } from "./surebets";
 import { recordAutoFixture, listAuto, listAutoFixtures, autoFixtureDone, updateAuto, pruneAuto, AutoEntry } from "./autoStore";
 import "dotenv/config";
@@ -739,19 +739,31 @@ function bankDescribe(t: SavedTip) {
       : `${t.market}: ${translateNamesInText(t.selection, t.homeTeam, t.awayTeam)}`,
   };
 }
-async function virtualBankView(override?: { start: number; pct: number; from: string }) {
+// 25. 11. 2026 (Michal): ten istý virtuálny bank aj pre TIPREX (?src=tiprex, vlastné nastavenie v meta virtual_bank_tiprex).
+type BankSrc = "tipradar" | "tiprex";
+const bankSrcOf = (q: unknown): BankSrc => (String(q ?? "") === "tiprex" ? "tiprex" : "tipradar");
+const bankMetaKey = (src: BankSrc) => (src === "tiprex" ? VIRTUAL_BANK_META + "_tiprex" : VIRTUAL_BANK_META);
+async function bankTips(src: BankSrc): Promise<SavedTip[]> {
+  if (src === "tipradar") return statsTips(await listTips());
+  return (await tiprexBankPicks()).map((p) => ({
+    id: p.id, fixtureId: p.fixtureId, matchDate: p.matchDate, homeTeam: p.homeTeam, awayTeam: p.awayTeam,
+    market: p.market, selection: p.selection, probability: p.p, odds: p.odds, status: p.status,
+  } as unknown as SavedTip));
+}
+const tiprexBankDescribe = (t: SavedTip) => ({ match: `${t.homeTeam} – ${t.awayTeam}`, bet: `${t.market}: ${t.selection}` });
+async function virtualBankView(override?: { start: number; pct: number; from: string }, src: BankSrc = "tipradar") {
   const today = dayKeySk(new Date());
-  const { settings, saved } = parseBankSettings(await getMeta(VIRTUAL_BANK_META).catch(() => null), today);
-  const tips = statsTips(await listTips());
+  const { settings, saved } = parseBankSettings(await getMeta(bankMetaKey(src)).catch(() => null), today);
+  const tips = await bankTips(src);
   const firstDay = tips.map((t) => tipDayKey(t) ?? "").filter(Boolean).sort()[0] ?? today;
-  const view = computeVirtualBank(tips, override ?? settings, today, tipDayKey, tipKickMs, bankDescribe);
-  return { ...view, saved, savedSettings: settings, firstDay };
+  const view = computeVirtualBank(tips, override ?? settings, today, tipDayKey, tipKickMs, src === "tiprex" ? tiprexBankDescribe : bankDescribe);
+  return { ...view, saved, savedSettings: settings, firstDay, src };
 }
 app.get("/api/virtual-bank", async (req, res) => {
   try {
     // Náhľad bez uloženia: ?start=1000&pct=3&from=2026-11-01
     const preview = req.query.start != null ? validBankSettings({ start: req.query.start, pct: req.query.pct, from: req.query.from }) : null;
-    res.json(await virtualBankView(preview ?? undefined));
+    res.json(await virtualBankView(preview ?? undefined, bankSrcOf(req.query.src)));
   } catch (err) {
     res.status(500).json({ error: "Virtuálny bank sa nepodarilo načítať: " + (err as Error).message });
   }
@@ -763,8 +775,9 @@ app.post("/api/virtual-bank", express.json(), async (req, res) => {
     return;
   }
   try {
-    await setMeta(VIRTUAL_BANK_META, JSON.stringify({ ...v, savedAt: new Date().toISOString() }));
-    res.json(await virtualBankView());
+    const src = bankSrcOf(req.query.src);
+    await setMeta(bankMetaKey(src), JSON.stringify({ ...v, savedAt: new Date().toISOString() }));
+    res.json(await virtualBankView(undefined, src));
   } catch (err) {
     res.status(502).json({ error: "Uloženie sa nepodarilo: " + (err as Error).message });
   }

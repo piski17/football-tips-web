@@ -707,3 +707,8 @@ export async function tiprexWaitlistCount(): Promise<number> {
   }
   return Number(await redis(["HLEN", WAITLIST_KEY])) || 0;
 }
+
+/** Virtuálny bank TIPREXU (25. 11. 2026, Michal): všetky tipy (vyhodnotené aj čakajúce), rovnaké ako v prehľade. */
+export async function tiprexBankPicks(): Promise<TiprexPick[]> {
+  return [...(await listPicks("done")), ...(await listPicks("pending"))];
+}
