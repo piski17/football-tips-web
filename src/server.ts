@@ -4223,6 +4223,7 @@ async function addAutoEntry(
   entry: AutoEntry,
   typedOddsRaw?: unknown,
   extra: Partial<SavedTip> = {},
+  opts: { skipClientEligible?: boolean } = {},
 ): Promise<{ status: number; error: string } | { ok: true; watchOnly: boolean; reason: string; lateAdd: boolean }> {
   // 23. 11. 2026: kópiu, ktorú server uložil len do sledovaných (autoWatch), Michalovo uloženie nahradí.
   if (!extra.autoWatch) {
@@ -4292,6 +4293,9 @@ async function addAutoEntry(
   // 4. 11. 2026 (Michal): tip doplnený po výkope len do sledovaných – 5. 11. 2026 (Michal) ZRUŠENÉ:
   // ak prejde pravidlami, pridá sa normálne do Histórie tipov (so značkou lateAdd).
   if (reason) tip.watchOnly = true;
+  // 25. 11. 2026 21:34 (Michal): tip, ktorý prejde pravidlami pre klientov, server sám neukladá ani do sledovaných –
+  // pridá ho Michal (aj počas zápasu alebo po ňom). Návrat: SKIP_CLIENT_ELIGIBLE_AUTO = false.
+  if (opts.skipClientEligible && !reason) return { status: 202, error: "prešiel pravidlami pre klientov – neukladá sa, pridá ho Michal" };
   // 22. 11. 2026 19:54 (Michal): server sám klientom neukladá – automaticky len do sledovaných, klientom ukladá Michal.
   if (extra.autoWatch) { tip.watchOnly = true; tip.strongOfDay = undefined; if (!reason) reason = "automaticky len do sledovaných – klientom ukladá Michal"; }
   if (await applySameTypeRule(tip)) reason = "zápas už má tip toho istého typu";
@@ -4318,6 +4322,7 @@ const BOOKLINE_MIN_PROB = 60; // 21. 11. 2026 23:41 Michal: od 60 % (predtým 55
 const BOOKLINE_MIN_ODDS = 1.6;
 const AUTO_SAVE_FROM_MIN = 5;
 const AUTO_SAVE_TO_MIN = 30;
+const SKIP_CLIENT_ELIGIBLE_AUTO = true; // 25. 11. 2026 21:34 (Michal): tipy pre klientov server neukladá ani do sledovaných
 const AUTO_SAVE_TO_CLIENTS = false; // 23. 11. 2026 19:07 (Michal): klientom ukladá len Michal (vlastné kurzy) – automaticky len do sledovaných
 let autoSaveRunning = false;
 async function autoSaveDueTips(): Promise<void> {
@@ -4359,7 +4364,7 @@ async function autoSaveDueTips(): Promise<void> {
           // 23. 11. 2026 (Michal, karta „Ukladať rovno klientom“): tip s kurzom z API, ktorý prejde pravidlami, ide znova
           // rovno klientom (ako 14. – 22. 11.). Tipy bez kurzu v API ostávajú len v sledovaných. Návrat: AUTO_SAVE_TO_CLIENTS = false.
           const autoWatch = !AUTO_SAVE_TO_CLIENTS || noApiOdds;
-          const r = await addAutoEntry(entry, minOdds, { autoSaved: true, ...(autoWatch ? { autoWatch: true } : {}), ...(noApiOdds ? { minOddsAuto: true } : {}), ...(hasLineups ? { lineupCheck: { at, probability: entry.probability, ok: true } } : {}) });
+          const r = await addAutoEntry(entry, minOdds, { autoSaved: true, ...(autoWatch ? { autoWatch: true } : {}), ...(noApiOdds ? { minOddsAuto: true } : {}), ...(hasLineups ? { lineupCheck: { at, probability: entry.probability, ok: true } } : {}) }, { skipClientEligible: SKIP_CLIENT_ELIGIBLE_AUTO && !AUTO_SAVE_TO_CLIENTS });
           if ("ok" in r) {
             console.log(`Automaticky uložený tip ${entry.id}${r.watchOnly ? " (sledovaný: " + r.reason + ")" : ""}`);
             info.saved.push({ market: entry.market, selection: entry.selection, probability: entry.probability, odds: entry.odds, watchOnly: r.watchOnly, reason: r.reason });
