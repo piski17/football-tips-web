@@ -15,7 +15,7 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="dark" />
-<meta name="theme-color" content="#000000" />
+<meta name="theme-color" content="#0F0D0A" />
 <title>TipRadar – futbalové tipy podložené štatistickým modelom</title>
 <meta name="description" content="Futbalové tipy podložené štatistickým modelom. Tip odporučíme iba vtedy, keď kurz nedoceňuje reálnu šancu výsledku. Všetky vyhodnotené tipy zverejňujeme transparentne, výhry aj prehry." />
 <meta property="og:type" content="website" />
@@ -34,7 +34,7 @@
 <link rel="apple-touch-icon" href="/favicon-256.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&amp;family=Geist:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
 <style>
 /* ===================== ORBIT (24. 11. 2026) – tipradar.eu od základu, štvrtá verzia =====================
    Michal 24. 11.: „sprav mi úplne nový web so všetkým novým – grafikou, fontami, obrázkami… niečo úplne iné, farby môžeš nechať“.
@@ -678,6 +678,61 @@ h3, h4 { font-family: var(--sans); font-weight: 600; letter-spacing: -.02em; }
 .scr { height: auto; padding-bottom: 18px; }
 @media (max-width: 700px) { .stage { height: auto; margin-top: 48px; padding-bottom: 60px; } .phone { height: auto; width: min(300px, 100%); } }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .eyebrow i, .chip, .medal .spin { animation: none; } .bar-row .track i { transition: none; } .bar-row.model .track i { width: 74%; } .bar-row.book .track i { width: 66%; } }
+/* ===================== ŠAMPANSKÉ (26. 11. 2026) =====================
+   Michal 26. 11.: „luxusnejšie, v tónoch šampanské“ – štýl návrhu, ktorý sa mu páčil.
+   Písmo Cormorant Garamond (nadpisy, čísla) + Manrope (text), teplá čierna so zlatistým svetlom,
+   svetlé časti v slonovinovej, zlaté prechody na tlačidlách, ihrisko v úvode. Obsah a skripty bez zmeny.
+   Vrátiť = git revert tohto commitu. */
+:root { --display: "Cormorant Garamond", Georgia, serif; --sans: "Manrope", -apple-system, system-ui, sans-serif;
+  --bg: #0F0D0A; --bg2: #0F0D0A; --card: #1A1610; --card2: #211C14; --text: #F6EDDC; --muted: #C2B49A; --faint: #8F826C;
+  --line: rgba(220,192,140,.14); --line2: rgba(220,192,140,.26); --hair: rgba(220,192,140,.18); --hair2: rgba(220,192,140,.32);
+  --gold: #DCC08C; --gold2: #EBD5A8; --goldDim: rgba(220,192,140,.14); --grad: linear-gradient(135deg,#F6E6C4,#CFAE74 60%,#B89357); --win: #9FD3A8; --loss: #E59A85; }
+.light { --bg: #F6EDDC; --bg2: #F6EDDC; --card: rgba(255,255,255,.6); --card2: #fff; --text: #1F1810; --muted: #6E5F48; --faint: #8C7B60;
+  --line: rgba(110,95,72,.16); --line2: rgba(110,95,72,.28); --hair: rgba(110,95,72,.18); --hair2: rgba(110,95,72,.3); --gold: #8A6328; --gold2: #8A6328; --win: #2F7D4B; --loss: #A8543F;
+  background: linear-gradient(180deg,#F9F1E2,#EFE2C8); }
+html, body { background: #0F0D0A; }
+* { font-variant-numeric: lining-nums; }
+body { font-family: var(--sans); letter-spacing: 0; }
+h1, h2, .h2, .hero h1, .nums .giant, .nums h2, .trio b, .card b, .verdict b, .grid4 b, .final h2, .plan-price .amount, .guar .big, .per > b.num, .chart-h .now b, .cal-stat b, .kpi b, .coin span, .me h2, .brand { font-family: var(--display); font-weight: 600; letter-spacing: -.01em; }
+.hero h1 { font-size: clamp(48px, 7vw, 96px); line-height: 1; }
+.h2 { font-size: clamp(40px, 5.2vw, 68px); line-height: 1.02; }
+.hero h1 span, .h2 em, h2 em, h3 em { font-style: italic; color: var(--gold2); }
+.light .h2 em, .light h2 em, .light h3 em { color: var(--gold); }
+.brand { font-size: 23px; font-weight: 700; }
+.kicker { display: inline-block; padding: 7px 16px; border: 1px solid var(--gold); border-radius: 999px; font: italic 600 18px/1 var(--display); letter-spacing: .01em; color: var(--gold2); }
+.light .kicker { color: var(--gold); }
+.sec:not(.light), .hero, .final { background: radial-gradient(ellipse 70% 55% at 80% 0%, rgba(220,192,140,.16), transparent 70%), radial-gradient(ellipse 50% 45% at 0% 100%, rgba(220,192,140,.08), transparent 70%), #0F0D0A; }
+.btn, .light .btn { background: var(--grad); color: #1A140C; font-weight: 700; }
+.btn:hover, .light .btn:hover { background: linear-gradient(135deg,#FBEFD2,#DCC08C 60%,#C29E62); color: #1A140C; }
+.btn.ghost, .light .btn.ghost { background: none; color: var(--gold2); box-shadow: inset 0 0 0 1px var(--gold); }
+.nav-in, .scrolled .nav-in { background: rgba(15,13,10,.82); box-shadow: inset 0 -1px 0 rgba(220,192,140,.18); }
+.links a { color: #D9CCB2; } .links a:hover, .links a.active { color: var(--gold2); }
+.overlay { background: rgba(15,13,10,.97); }
+.tile, .panel, .per, .card, .trio > div, .grid4 > div, .final-in { background: linear-gradient(160deg, rgba(220,192,140,.10), rgba(220,192,140,.02)); box-shadow: inset 0 0 0 1px rgba(220,192,140,.22); }
+.light .tile, .light .panel, .light .per, .light .card, .light .trio > div, .light .grid4 > div { background: rgba(255,255,255,.62); box-shadow: inset 0 0 0 1px rgba(138,99,40,.18); }
+.per.all, .tgcard, .plan-price { background: linear-gradient(160deg, rgba(220,192,140,.18), rgba(220,192,140,.05)); box-shadow: inset 0 0 0 1px rgba(220,192,140,.45); }
+.plan-price .amount, .guar .big { background: linear-gradient(135deg,#FBEFD2,#DCC08C 50%,#B58F55); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.card.g b, .nums .giant { color: var(--gold2); }
+.light .nums .giant, .nums.light .giant { background: linear-gradient(135deg,#B58F55,#8A6328); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.verdict { background: linear-gradient(135deg, rgba(220,192,140,.22), rgba(220,192,140,.06)); box-shadow: inset 0 0 0 1px rgba(220,192,140,.4); }
+.verdict b { color: var(--gold2); } .verdict span { color: var(--muted); }
+.coin { background: var(--grad); }
+.phone { box-shadow: 0 0 0 1.5px #8F7447, 0 40px 90px rgba(0,0,0,.6); background: linear-gradient(145deg,#3A3226,#16120D); }
+.tgh i { background: var(--grad); }
+.msg .row b { color: #EBD5A8; }
+.foot.light { border-top: 1px solid rgba(138,99,40,.2); }
+.faq summary { font: 600 22px/1.25 var(--display); }
+.me blockquote { font-family: var(--display); font-style: italic; font-size: clamp(24px, 2.4vw, 32px); }
+/* ihrisko v úvode za telefónom */
+.stage { isolation: isolate; }
+.pitch { position: absolute; left: 50%; top: 4%; width: min(1100px, 150vw); height: 82%; translate: -50% 0; z-index: -1; opacity: .9; pointer-events: none; }
+.pitch .ball { animation: tr-roll 5s ease-in-out infinite; }
+.pitch .trail { stroke-dasharray: 5 8; animation: tr-dash 1.2s linear infinite; }
+@keyframes tr-roll { 0% { offset-distance: 0%; } 70%, 100% { offset-distance: 100%; } }
+@keyframes tr-dash { to { stroke-dashoffset: -13; } }
+.hero .kicker { display: inline-block; }
+.scr { background: #14110C; } .msg { background: #221B12; } .tgh { border-bottom-color: rgba(220,192,140,.12); } .msg small, .msg .t, .tgh small { color: #9C8E74; } .msg .row { color: #CDBF9F; }
+@media (prefers-reduced-motion: reduce) { .pitch .ball, .pitch .trail { animation: none; } }
 </style>
 </head>
 <body>
@@ -726,6 +781,7 @@ h3, h4 { font-family: var(--sans); font-weight: 600; letter-spacing: -.02em; }
       <div class="links-cta"><a data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener">Výsledky zadarmo na Telegrame ›</a><a href="#vysledky">Pozrieť všetky tipy ›</a></div>
     </div>
     <div class="stage rv" aria-label="Ukážka správ v súkromnom kanáli na Telegrame">
+      <svg class="pitch" viewBox="0 0 1100 600" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><polygon points="290.0,60.0 810.0,60.0 839.0,110.0 261.0,110.0" fill="rgba(220,192,140,.03)"/><polygon points="261.0,110.0 839.0,110.0 868.0,160.0 232.0,160.0" fill="rgba(220,192,140,.07)"/><polygon points="232.0,160.0 868.0,160.0 897.0,210.0 203.0,210.0" fill="rgba(220,192,140,.03)"/><polygon points="203.0,210.0 897.0,210.0 926.0,260.0 174.0,260.0" fill="rgba(220,192,140,.07)"/><polygon points="174.0,260.0 926.0,260.0 955.0,310.0 145.0,310.0" fill="rgba(220,192,140,.03)"/><polygon points="145.0,310.0 955.0,310.0 984.0,360.0 116.0,360.0" fill="rgba(220,192,140,.07)"/><polygon points="116.0,360.0 984.0,360.0 1013.0,410.0 87.0,410.0" fill="rgba(220,192,140,.03)"/><polygon points="87.0,410.0 1013.0,410.0 1042.0,460.0 58.0,460.0" fill="rgba(220,192,140,.07)"/><polygon points="58.0,460.0 1042.0,460.0 1071.0,510.0 29.0,510.0" fill="rgba(220,192,140,.03)"/><polygon points="29.0,510.0 1071.0,510.0 1100.0,560.0 0.0,560.0" fill="rgba(220,192,140,.07)"/><g fill="none" stroke="rgba(232,210,166,.45)" stroke-width="1.5"><polygon points="290.0,60.0 810.0,60.0 1100.0,560.0 0.0,560.0"/><line x1="145.0" y1="310.0" x2="955.0" y2="310.0"/><polygon points="394.0,60.0 706.0,60.0 733.8,140.0 366.2,140.0"/><polygon points="477.2,60.0 622.8,60.0 627.7,90.0 472.3,90.0"/><polygon points="247.8,480.0 852.2,480.0 880.0,560.0 220.0,560.0"/><polygon points="400.9,530.0 699.1,530.0 704.0,560.0 396.0,560.0"/><polyline points="600.2,310.0 600.2,317.8 598.8,325.5 596.2,332.7 592.3,339.4 587.3,345.4 581.2,350.5 574.3,354.6 566.6,357.6 558.4,359.4 550.0,360.0 541.6,359.4 533.4,357.6 525.7,354.6 518.8,350.5 512.7,345.4 507.7,339.4 503.8,332.7 501.2,325.5 499.8,317.8 499.8,310.0 501.0,302.2 503.3,294.5 506.7,287.3 511.1,280.6 516.3,274.6 522.2,269.5 528.7,265.4 535.5,262.4 542.7,260.6 550.0,260.0 557.3,260.6 564.5,262.4 571.3,265.4 577.8,269.5 583.7,274.6 588.9,280.6 593.3,287.3 596.7,294.5 599.0,302.2 600.2,310.0"/></g><circle cx="308.3" cy="160.0" r="6.2" fill="rgba(246,237,220,.55)"/><circle cx="429.8" cy="130.0" r="5.8" fill="rgba(246,237,220,.55)"/><circle cx="762.3" cy="150.0" r="6.1" fill="rgba(246,237,220,.55)"/><circle cx="185.4" cy="360.0" r="8.6" fill="rgba(246,237,220,.55)"/><circle cx="911.1" cy="390.0" r="9.0" fill="rgba(246,237,220,.55)"/><circle cx="235.1" cy="460.0" r="9.8" fill="rgba(246,237,220,.55)"/><circle cx="345.9" cy="240.0" r="7.2" fill="rgba(220,192,140,.7)"/><circle cx="775.6" cy="260.0" r="7.4" fill="rgba(220,192,140,.7)"/><circle cx="244.6" cy="270.0" r="7.5" fill="rgba(220,192,140,.7)"/><circle cx="890.2" cy="310.0" r="8.0" fill="rgba(220,192,140,.7)"/><circle cx="892.4" cy="480.0" r="10.0" fill="rgba(220,192,140,.7)"/><path class="trail" d="M866.7,370.0 Q862.3,210.0 606.6,100.0" fill="none" stroke="#EBD5A8" stroke-width="2"/><circle class="ball" r="6" fill="#F6EDDC" style="offset-path:path('M866.7,370.0 Q862.3,210.0 606.6,100.0')"/></svg>
       <div class="phone"><div class="scr"><span class="isl"></span><div class="tg">
         <div class="tgh"><i>MP</i><div><b>TipRadar · VIP Klub</b><small>súkromný kanál</small></div></div>
         <div class="msg">Dobré ráno. Model prepočítal dnešné zápasy, tipy pošlem 1 – 2 hodiny pred výkopom.<span class="t">9:00</span></div>
