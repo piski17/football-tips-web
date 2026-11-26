@@ -326,6 +326,8 @@ input[type=text], input[type=date], input[type=time], textarea { border-radius: 
 .pages button { border-radius: 12px !important; }
 canvas { border-radius: 20px !important; border-color: rgba(217,192,138,.3) !important; }
 </style>
+<!-- PT SERIF (26. 11. 2026): Michal – rovnaké písmo ako web tipradar.eu, na celej appke -->
+<link href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400&amp;display=swap" rel="stylesheet">
 </head>
 <body>
 <div class="wrap">
@@ -1387,5 +1389,6 @@ const tnm = (n) => (window.teamSk ? window.teamSk(n) : n);
   }
 })();
 </script>
+<style>/* PT SERIF – musí byť posledné, prebije všetky staršie písma */ html body *:not(#_), html body *:not(#_)::before, html body *:not(#_)::after { font-family: "PT Serif", Georgia, serif !important; }</style>
 </body>
 </html>

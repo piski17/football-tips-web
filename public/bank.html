@@ -126,6 +126,8 @@ label.f { color: var(--gold-hi); } .hero small, .stats small { color: var(--fain
 .hero .main b { background: none; color: var(--text); -webkit-text-fill-color: currentColor; font-size: 50px; }
 .stats b { font-family: var(--display); font-weight: 400; font-size: 24px; }
 </style>
+<!-- PT SERIF (26. 11. 2026): Michal – rovnaké písmo ako web tipradar.eu, na celej appke -->
+<link href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400&amp;display=swap" rel="stylesheet">
 </head>
 <body>
 <div class="wrap">
@@ -358,5 +360,6 @@ window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() =
   }
 })();
 </script>
+<style>/* PT SERIF – musí byť posledné, prebije všetky staršie písma */ html body *:not(#_), html body *:not(#_)::before, html body *:not(#_)::after { font-family: "PT Serif", Georgia, serif !important; }</style>
 </body>
 </html>

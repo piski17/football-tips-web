@@ -173,6 +173,8 @@ select { width: 100%; font: 500 15px var(--body); color: var(--text); background
 <style>/* PRIVÉ (4. 11. 2026): písmo Manrope ako appka */ body, button, input, select, textarea, h1, h2, h3, h4, b, strong, td, th { font-family: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif !important; } em, i { font-style: normal; }</style>
 <style>/* PLATINUM (8. 11. 2026): nadpisy a čísla Urbanist ako web */ h1, h2, h3, h4 { font-family: "Urbanist", "Manrope", system-ui, sans-serif !important; letter-spacing: -.025em; } html, body { background-color: #0E0D0C; }</style>
 <style>/* PÍSMO FRAUNCES + FIGTREE (13. 11. 2026) ako web */ body, button, input, select, textarea, b, strong, td, th { font-family: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif !important; } h1, h2, h3, h4 { font-family: "Fraunces", Georgia, serif !important; font-weight: 350 !important; letter-spacing: -.02em; font-variation-settings: "opsz" 144, "SOFT" 30; }</style>
+<!-- PT SERIF (26. 11. 2026): Michal – rovnaké písmo ako web tipradar.eu, na celej appke -->
+<link href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400&amp;display=swap" rel="stylesheet">
 </head>
 <body>
 <div class="wrap">
@@ -458,5 +460,6 @@ function render(r) {
 initDays();
 loadDay(curDay);
 </script>
+<style>/* PT SERIF – musí byť posledné, prebije všetky staršie písma */ html body *:not(#_), html body *:not(#_)::before, html body *:not(#_)::after { font-family: "PT Serif", Georgia, serif !important; }</style>
 </body>
 </html>
