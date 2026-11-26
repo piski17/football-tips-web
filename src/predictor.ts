@@ -863,6 +863,11 @@ function normalCdf(z: number): number {
 // Novšie zápasy majú väčšiu váhu (každý starší × 0,85).
 // 18. 11. 2026 23:19 (Michal): vzájomné zápasy sa použijú až pri aspoň 5 za posledné 3 roky (predtým 3). Štatistiky tímu ostávajú z 5 zápasov.
 const H2H_MIN = 5;
+/** 26. 11. 2026 (Michal): Európska liga – posledných 5 vzájomných zápasov, keď ich nie je 5, stačia aspoň 3. Ostatné súťaže 5. */
+const H2H_MIN_BY_LEAGUE: Record<number, number> = { 3: 3 };
+export function h2hMinFor(leagueId: number | null | undefined): number {
+  return (leagueId != null && H2H_MIN_BY_LEAGUE[Number(leagueId)]) || H2H_MIN;
+}
 
 const H2H_CHECK: Record<string, (x: H2HStats) => number | null | undefined> = {
     "Rohy": (x) => x.corners,
@@ -887,14 +892,14 @@ const H2H_CHECK: Record<string, (x: H2HStats) => number | null | undefined> = {
  * tip Bröndby – Midtjylland uložený z tabuľky hraníc obišiel kontrolu). Vráti text dôvodu, ak by tip vo väčšine
  * vzájomných zápasov neprešiel; inak undefined.
  */
-export function h2hAgainstFor(market: string, selection: string, h2hStats: H2HStats[] | undefined | null): string | undefined {
+export function h2hAgainstFor(market: string, selection: string, h2hStats: H2HStats[] | undefined | null, minN: number = H2H_MIN): string | undefined {
   const get = H2H_CHECK[market];
   const m = /^(Over|Under)\s+([\d.]+)/.exec(selection);
   if (!get || !m) return undefined;
   const line = Number(m[2]);
   const vals = (h2hStats ?? []).map(get).filter((v): v is number => typeof v === "number" && isFinite(v));
   // Málo vzájomných zápasov so štatistikou → rozhoduje model (19. 11. 2026, Michal).
-  if (vals.length < H2H_MIN) return undefined;
+  if (vals.length < minN) return undefined;
   const lost = vals.filter((v) => (m[1] === "Over" ? v < line : v > line)).length;
   return lost * 2 > vals.length ? `vo vzájomných zápasoch by tip neprešiel ${lost}× z ${vals.length} (${vals.join(", ")})` : undefined;
 }
@@ -902,14 +907,14 @@ export const H2H_CHECK_MARKETS = Object.keys(H2H_CHECK);
 function h2hWeight(n: number): number {
   return n >= 5 ? 0.25 : n === 4 ? 0.2 : n === 3 ? 0.15 : 0;
 }
-function recencyAverage(values: (number | null)[]): { avg: number; n: number } | null {
+function recencyAverage(values: (number | null)[], minN: number = H2H_MIN): { avg: number; n: number } | null {
   let sum = 0, wsum = 0, n = 0;
   values.forEach((v, i) => {
     if (v === null || v === undefined || !isFinite(v)) return;
     const w = Math.pow(0.85, i);
     sum += v * w; wsum += w; n++;
   });
-  return n >= H2H_MIN ? { avg: sum / wsum, n } : null;
+  return n >= minN ? { avg: sum / wsum, n } : null;
 }
 interface H2HGoals { n: number; weight: number; home: number; away: number; total: number }
 /** Vzájomné zápasy sa berú za posledné 3 roky (18. 11. 2026, Michal; predtým od 21. 10. 5 rokov) – staršie už pre dnešné tímy veľa nehovoria. */
@@ -921,11 +926,11 @@ function h2hRecent(h2h: HeadToHeadMatch[]): HeadToHeadMatch[] {
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
 }
-function h2hGoals(h2h: HeadToHeadMatch[], homeTeamId: number): H2HGoals | null {
+function h2hGoals(h2h: HeadToHeadMatch[], homeTeamId: number, minN: number = H2H_MIN): H2HGoals | null {
   const recent = h2hRecent(h2h)
   ;
-  const home = recencyAverage(recent.map((m) => (m.homeTeamId === homeTeamId ? m.homeGoals : m.awayGoals)));
-  const away = recencyAverage(recent.map((m) => (m.homeTeamId === homeTeamId ? m.awayGoals : m.homeGoals)));
+  const home = recencyAverage(recent.map((m) => (m.homeTeamId === homeTeamId ? m.homeGoals : m.awayGoals)), minN);
+  const away = recencyAverage(recent.map((m) => (m.homeTeamId === homeTeamId ? m.awayGoals : m.homeGoals)), minN);
   if (!home || !away) return null;
   return { n: home.n, weight: h2hWeight(home.n), home: home.avg, away: away.avg, total: home.avg + away.avg };
 }
@@ -1066,7 +1071,8 @@ export function predictMatch(
     xg.away = clamp(xg.away * awayX * tiredAway * (1 + (1 - tiredHome) / 2), 0.15, 5);
   }
   // Vzájomné zápasy spresnia očakávané góly (výsledok, góly, oba tímy skórujú…).
-  const h2hG = h2hGoals(h2h, fixture.homeTeam.id);
+  const h2hMin = h2hMinFor(fixture.league?.id);
+  const h2hG = h2hGoals(h2h, fixture.homeTeam.id, h2hMin);
   if (h2hG && h2hG.weight > 0) {
     xg.home = (1 - h2hG.weight) * xg.home + h2hG.weight * h2hG.home;
     xg.away = (1 - h2hG.weight) * xg.away + h2hG.weight * h2hG.away;
@@ -1079,7 +1085,7 @@ export function predictMatch(
     xg.away = clamp(xg.away * absences.away.attack * absences.home.defense, 0.15, 5);
   }
   // Štatistiky vzájomných zápasov spresnia rohy, karty, strely, fauly, ofsajdy a držanie lopty.
-  const h2hStat = (key: keyof H2HStats) => recencyAverage((h2hStats ?? []).filter((x) => !x.old).map((x) => (typeof x[key] === "number" ? (x[key] as number) : null)));
+  const h2hStat = (key: keyof H2HStats) => recencyAverage((h2hStats ?? []).filter((x) => !x.old).map((x) => (typeof x[key] === "number" ? (x[key] as number) : null)), h2hMin);
   const blendH2H = (expected: number, key: keyof H2HStats): { value: number; h2h: { avg: number; n: number } | null } => {
     const h = h2hStat(key);
     if (!h) return { value: expected, h2h: null };
@@ -1734,7 +1740,7 @@ export function predictMatch(
   // s posledným vzájomnými zápasmi (aspoň 3 so štatistikou). Ak by vo väčšine z nich neprešiel, ide len do
   // sledovaných (h2hAgainst). Odhad modelu sa nemení. Od 20. 11. 2026 aj držanie lopty.
   for (const c of candidates) {
-    const against = h2hAgainstFor(c.market, c.selection, h2hStats);
+    const against = h2hAgainstFor(c.market, c.selection, h2hStats, h2hMin);
     if (against) {
       c.h2hAgainst = against;
       c.explanation = (c.explanation ? c.explanation + " " : "") + `⚠️ Vzájomné zápasy: ${c.h2hAgainst} – len do sledovaných.`;

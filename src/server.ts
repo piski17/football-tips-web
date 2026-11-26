@@ -44,7 +44,7 @@ import {
   getRestInfo,
   getFixtureCornersAndCards,
 } from "./apiClient";
-import { FOULS_ONLY_LEAGUE_IDS, isFoulMarketName, predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, MarketAdjustments, marketCategory, tipType, h2hAgainstFor, H2H_CHECK_MARKETS, passesStrict, STRICT_CHECK_ON, ONE_TIP_PER_MATCH } from "./predictor";
+import { FOULS_ONLY_LEAGUE_IDS, isFoulMarketName, predictMatch, predictPlayerGoal, DEFAULT_WEIGHTS, MODEL_VERSION, MarketAdjustments, marketCategory, tipType, h2hAgainstFor, h2hMinFor, H2H_CHECK_MARKETS, passesStrict, STRICT_CHECK_ON, ONE_TIP_PER_MATCH } from "./predictor";
 import { newModelInputs } from "./newModel";
 import { computeMarketHealth, marketChangesText, clvOf, CLV_TIE } from "./marketHealth";
 import { LeaguePreset, SavedTip } from "./types";
@@ -219,7 +219,7 @@ const CUP_LEAGUE_IDS = [2, 3, 848]; // Liga majstrov, Európska liga, Konferenč
  * Tip z nich vznikne len vtedy, keď presne ten tip ponúkajú aspoň 3 známe zahraničné stávkovky (src/tiprex.ts).
  */
 const TIPREX_EXTRA_LEAGUES: { id: number; name: string; country: string }[] = [
-  { id: 3, name: "UEFA Europa League", country: "Európa" },
+  // 26. 11. 2026: Európska liga je späť v TipRadare (LEAGUE_PRESETS), TIPREX ju berie odtiaľ.
   { id: 62, name: "Ligue 2", country: "Francúzsko" }, // 22. 11. 2026: z TipRadaru vyradená, TIPREX ju berie ďalej
   { id: 94, name: "Primeira Liga", country: "Portugalsko" }, // 22. 11. 2026: z TipRadaru vyradená, TIPREX ju berie ďalej
   { id: 848, name: "UEFA Conference League", country: "Európa" },
@@ -267,6 +267,9 @@ const LEAGUE_PRESETS: LeaguePreset[] = [
   { id: 141, name: "Segunda División", country: "Španielsko" },
   // 22. 11. 2026 20:04 (Michal): Ligue 2 VYRADENÁ (1 tip, prehra) – 16 súťaží; tipy sa nerátajú (isRemovedLeagueTip). TIPREX ju má v extras.
   { id: 2, name: "UEFA Champions League", country: "Európa" },
+  // 26. 11. 2026 (Michal): Európska liga VRÁTENÁ – aj jej staré tipy sa znova rátajú do štatistík. Počíta sa ako Liga majstrov
+  // (CUP_LEAGUE_IDS: góly z posledných zápasov vo všetkých súťažiach podľa sily domácich líg); vzájomné zápasy: 5, aspoň 3 (h2hMinFor).
+  { id: 3, name: "UEFA Europa League", country: "Európa" },
   // 10. 11. 2026 (Michal): pridaná ženská Liga majstrov a znova Liga národov – 18 súťaží.
   // Liga národov bola 6. 10. 2026 odstránená; jej staré tipy (pred 10. 11.) sa nerátajú (since).
   // Bežné pravidlá platia: tím s <3 zápasmi v sezóne súťaže sa neodporúča, pri <5 kurz aspoň od 2 stávkoviek,
@@ -1249,7 +1252,7 @@ async function serverH2hAgainst(tip: SavedTip): Promise<string | undefined> {
     const h2h = (await getHeadToHead(fixture.homeTeam.id, fixture.awayTeam.id, 10))
       .filter((m) => m.fixtureId !== Number(tip.fixtureId) && !(new Date(m.date).getTime() >= kick));
     const stats = await getHeadToHeadStats(h2h, fixture.homeTeam.name);
-    return h2hAgainstFor(String(tip.market), String(tip.selection), stats);
+    return h2hAgainstFor(String(tip.market), String(tip.selection), stats, h2hMinFor(tip.leagueId));
   } catch (err) {
     console.error("Kontrola vzájomných zápasov pri ukladaní zlyhala:", err);
     return undefined;

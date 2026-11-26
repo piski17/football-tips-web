@@ -185,7 +185,7 @@ details p, details li { color: var(--muted); font-size: 14px; }
 
   <!-- SKÚŠKA -->
   <section class="panel">
-    <div class="head"><div><h2>Skúška – prehľad</h2><div class="muted small">Server každú hodinu prehľadá dnešné zápasy 15 súťaží TipRadaru a zapíše každý surebet; tu sa ukazujú a vyhodnocujú len tie so ziskom aspoň 5 % (bez podozrivých nad 8 %). Kliknutím na deň uvidíte, ktoré surebety to boli.</div></div></div>
+    <div class="head"><div><h2>Skúška – prehľad</h2><div class="muted small">Server každú hodinu prehľadá dnešné zápasy 16 súťaží TipRadaru a zapíše každý surebet; tu sa ukazujú a vyhodnocujú len tie so ziskom aspoň 5 % (bez podozrivých nad 8 %). Kliknutím na deň uvidíte, ktoré surebety to boli.</div></div></div>
     <div class="chips" id="logScope" style="display:none">
       <button type="button" class="chip on" data-s="all">Všetky stávkovky s kurzami</button>
       <button type="button" class="chip" data-s="top">Len známe zahraničné</button>
@@ -393,7 +393,7 @@ async function load() {
   } catch (err) { $("scanInfo").textContent = err.message; }
 }
 $("scanBtn").addEventListener("click", async () => {
-  $("scanBtn").disabled = true; $("scanInfo").textContent = "Prehľadávam dnešné zápasy 15 súťaží, trvá to asi minútu…";
+  $("scanBtn").disabled = true; $("scanInfo").textContent = "Prehľadávam dnešné zápasy 16 súťaží, trvá to asi minútu…";
   try { await api("/api/surebets/scan", { method: "POST" }); } catch (err) { /* chyba sa ukáže v stave */ }
   $("scanBtn").disabled = false;
   load(); loadLog();
