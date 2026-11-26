@@ -240,7 +240,7 @@ const EARLY_SEASON_CALIBRATION: Record<string, number> = {
  * Góly v 2. polčase sedeli, tie ostávajú.
  */
 const CUP_GOAL_CALIBRATION: Record<string, number> = { goly: 0.85, goly_timu: 0.85, goly_1p: 0.85 };
-const CUP_LEAGUE_IDS = [2, 3, 848]; // LM, EL, Konferenčná liga
+const CUP_LEAGUE_IDS = [2, 848]; // LM, Konferenčná liga. // 26. 11. 2026 21:00 (Michal): Európska liga (3) VYŇATÁ – štatistiky len z nej samej, ako bežná liga
 /** Koeficient kalibrácie pre trh pri danom počte odohraných zápasov v sezóne. */
 function calibrationFactor(category: string, gamesPlayed: number, leagueId?: number): number {
   const early = clamp((15 - gamesPlayed) / 10, 0, 1);
@@ -863,8 +863,7 @@ function normalCdf(z: number): number {
 // Novšie zápasy majú väčšiu váhu (každý starší × 0,85).
 // 18. 11. 2026 23:19 (Michal): vzájomné zápasy sa použijú až pri aspoň 5 za posledné 3 roky (predtým 3). Štatistiky tímu ostávajú z 5 zápasov.
 const H2H_MIN = 5;
-/** 26. 11. 2026 20:00 (Michal): Európska liga rovnako ako ostatné súťaže (5 vzájomných zápasov) – žiadna výnimka.
- *  Sem sa dá doplniť výnimka pre súťaž, napr. { 3: 3 } = Európska liga aspoň 3. */
+/** 26. 11. 2026 21:00 (Michal): Európska liga ako ostatné súťaže – bez výnimky. Výnimka pre súťaž: { id: min }. */
 const H2H_MIN_BY_LEAGUE: Record<number, number> = {};
 export function h2hMinFor(leagueId: number | null | undefined): number {
   return (leagueId != null && H2H_MIN_BY_LEAGUE[Number(leagueId)]) || H2H_MIN;

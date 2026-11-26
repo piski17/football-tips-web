@@ -47,7 +47,7 @@ export function leagueStrength(leagueId: number | null): number | null {
 }
 
 /** Liga majstrov, Európska liga, Konferenčná liga (od 5. 11. 2026) */
-export const CUP_LEAGUE_IDS = [2, 3, 848];
+export const CUP_LEAGUE_IDS = [2, 848]; // 26. 11. 2026 21:00 (Michal): Európska liga (3) VYŇATÁ – štatistiky len z nej samej, ako bežná liga
 
 type Goals = NonNullable<Awaited<ReturnType<typeof getRecentGoalsAnyCompetition>>>;
 

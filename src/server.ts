@@ -212,7 +212,7 @@ function monthlyResults(tips: SavedTip[]) {
 }
 
 /** Pohárové súťaže: tímy v nich hrajú málo zápasov, ale v domácej lige majú dosť dát. */
-const CUP_LEAGUE_IDS = [2, 3, 848]; // Liga majstrov, Európska liga, Konferenčná liga
+const CUP_LEAGUE_IDS = [2, 848]; // Liga majstrov, Konferenčná liga. // 26. 11. 2026 21:00 (Michal): Európska liga (3) VYŇATÁ – štatistiky len z nej samej, ako bežná liga
 
 /**
  * TIPREX (18. 11. 2026, Michal): ďalšie súťaže LEN pre TIPREX – TipRadar ani ARBREX ich nepoužívajú.
@@ -267,8 +267,8 @@ const LEAGUE_PRESETS: LeaguePreset[] = [
   { id: 141, name: "Segunda División", country: "Španielsko" },
   // 22. 11. 2026 20:04 (Michal): Ligue 2 VYRADENÁ (1 tip, prehra) – 16 súťaží; tipy sa nerátajú (isRemovedLeagueTip). TIPREX ju má v extras.
   { id: 2, name: "UEFA Champions League", country: "Európa" },
-  // 26. 11. 2026 (Michal): Európska liga VRÁTENÁ – aj jej staré tipy sa znova rátajú do štatistík. Počíta sa ako Liga majstrov
-  // (CUP_LEAGUE_IDS: góly z posledných zápasov vo všetkých súťažiach podľa sily domácich líg); vzájomné zápasy ako ostatné súťaže (aspoň 5).
+  // 26. 11. 2026 (Michal): Európska liga VRÁTENÁ – aj jej staré tipy sa znova rátajú do štatistík. 
+  // 21:00: štatistiky len z Európskej ligy (nie je v CUP_LEAGUE_IDS); vzájomné zápasy ako ostatné súťaže (H2H_MIN v predictor.ts).
   { id: 3, name: "UEFA Europa League", country: "Európa" },
   // 10. 11. 2026 (Michal): pridaná ženská Liga majstrov a znova Liga národov – 18 súťaží.
   // Liga národov bola 6. 10. 2026 odstránená; jej staré tipy (pred 10. 11.) sa nerátajú (since).
