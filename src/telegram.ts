@@ -33,7 +33,10 @@ const TELEGRAM_CHAT_ID_VIP = process.env.TELEGRAM_CHAT_ID_VIP;
 const TELEGRAM_CHAT_ID_VIPCHAT = process.env.TELEGRAM_CHAT_ID_VIPCHAT;
 // Bezplatný kanál: TELEGRAM_CHAT_ID_FREE (napr. -100… alebo @nazovkanala). Ak chýba a kanál je verejný,
 // použije sa názov z TELEGRAM_FREE_CHANNEL_URL (https://t.me/nazovkanala → @nazovkanala).
-const TELEGRAM_CHAT_ID_FREE = process.env.TELEGRAM_CHAT_ID_FREE || freeChatFromUrl(process.env.TELEGRAM_FREE_CHANNEL_URL);
+// 26. 11. 2026 21:10 (Michal): kanál zadarmo (FREE) NATRVALO VYPNUTÝ – server doň neposiela nič (ani pri zapnutých
+// členských kanáloch). Zapnúť späť = FREE_CHANNEL_DISABLED na false.
+const FREE_CHANNEL_DISABLED = true;
+const TELEGRAM_CHAT_ID_FREE = FREE_CHANNEL_DISABLED ? "" : process.env.TELEGRAM_CHAT_ID_FREE || freeChatFromUrl(process.env.TELEGRAM_FREE_CHANNEL_URL);
 
 /**
  * Odkaz na kanál v akomkoľvek tvare z Renderu („https://t.me/tipradar“, „t.me/tipradar“, „@tipradar“, „tipradar“)
