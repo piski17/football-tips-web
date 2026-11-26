@@ -199,7 +199,7 @@ footer .in{display:flex;gap:20px;justify-content:space-between;flex-wrap:wrap;al
 <body>
 <header><div class="in">
   <a class="logo" href="/" aria-label="TipRadar – úvod"><i>T</i>TipRadar</a>
-  <nav aria-label="Hlavná navigácia"><a href="#ako">Ako to funguje</a><a href="#pravidla">Pravidlá</a><a href="#tabula">Tabuľa</a><a href="#vysledky">Výsledky</a><a href="#ponuka">Členstvo</a><a href="#otazky">Otázky</a><a href="#zapis">Kontakt</a><a href="/kurz">Kurz</a></nav>
+  <nav aria-label="Hlavná navigácia"><a href="#ako">Ako to funguje</a><a href="#pravidla">Pravidlá</a><a href="#vysledky">Výsledky</a><a href="#ponuka">Členstvo</a><a href="#otazky">Otázky</a><a href="#zapis">Kontakt</a><a href="/kurz">Kurz</a></nav>
   <a class="btn sm" href="#ponuka">Vstúpiť do klubu</a>
 </div></header>
 
@@ -210,7 +210,6 @@ footer .in{display:flex;gap:20px;justify-content:space-between;flex-wrap:wrap;al
     <h1>Kým ostatní tipujú, my počítame.</h1>
     <p class="lead">Model prepočíta každý zápas v 15 súťažiach a hľadá tie, kde stávková kancelária podcenila šancu. Tip pošlem členom, len keď čísla jasne hovoria za neho a potvrdia ho aj zostavy. Výhry aj prehry sú verejné.</p>
     <div class="cta"><a class="btn" href="#ponuka">Chcem členstvo</a><a class="btn ghost" data-free href="https://t.me/TipRadarAiBot?start=free" target="_blank" rel="noopener">Výsledky zadarmo na Telegrame</a></div>
-</div>
   </div>
   <div class="figwrap">
     <div class="fig" id="pitch"><svg id="ps" aria-label="Ihrisko s dráhou lopty do šestnástky"></svg></div>
@@ -254,23 +253,6 @@ footer .in{display:flex;gap:20px;justify-content:space-between;flex-wrap:wrap;al
   </div>
 </div></section>
 
-<section class="band grass" id="tabula"><div class="in calc">
-  <div>
-    <h2>Striedačská tabuľa: prejde tvoj tip?</h2>
-    <p class="lead" style="margin-top:0">Nastav šancu, ktorú tipu dávaš, a kurz zo stávkovky. Tabuľa ti ukáže hodnotu a povie, či by tip išiel členom.</p>
-    <p class="mut">Rovnako rozhoduje aj model TipRadaru, len šancu nepočíta odhadom, ale z dát.</p>
-  </div>
-  <div class="board">
-    <div class="scr">
-      <div class="cell g"><small>Šanca</small><div class="led" id="probO">74</div></div>
-      <div class="cell r"><small>Kurz</small><div class="led" id="oddsO">1.62</div></div>
-      <div class="cell res"><small>Hodnota tipu</small><div class="led" id="evO">+19.9%</div></div>
-    </div>
-    <div class="verdict" id="verdict" aria-live="polite"></div>
-    <label for="prob"><span>Šanca na výhru <b id="probL">74 %</b></span><input type="range" id="prob" min="50" max="90" value="74"></label>
-    <label for="odds"><span>Kurz <b id="oddsL">1,62</b></span><input type="range" id="odds" min="1.2" max="3" step="0.01" value="1.62"></label>
-  </div>
-</div></section>
 
 <section class="band" id="vysledky"><div class="in">
   <h2>Výsledková tabuľa</h2>
@@ -383,22 +365,6 @@ const draw = () => {
 };
 const ro = new ResizeObserver(draw); ro.observe(box);
 
-function calc() {
-  const p = +$('#prob').value / 100, o = +$('#odds').value, ev = p * o - 1;
-  $('#probO').textContent = Math.round(p * 100); $('#oddsO').textContent = o.toFixed(2);
-  $('#probL').textContent = Math.round(p * 100) + ' %'; $('#oddsL').textContent = fmt(o, 2);
-  $('#evO').textContent = (ev >= 0 ? '+' : '') + (ev * 100).toFixed(1) + '%';
-  let why = '';
-  if (p < .72 || p > .80) why = 'šanca mimo 72 – 80 %';
-  else if (o < 1.5) why = 'kurz pod 1,50';
-  else if (ev < .05) why = 'hodnota pod +5 %';
-  else if (ev > .25) why = 'hodnota nad +25 %';
-  const v = $('#verdict');
-  v.textContent = why ? 'Tip ostáva na lavičke: ' + why : 'Tip ide na ihrisko, prešiel pravidlami';
-  v.className = 'verdict' + (why ? ' no' : '');
-}
-['#prob', '#odds'].forEach(id => $(id).addEventListener('input', calc));
-calc();
 
 const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const signed = (n, d) => (n > 0 ? '+' : n < 0 ? '−' : '') + fmt(Math.abs(n), d);
