@@ -268,7 +268,7 @@ const LEAGUE_PRESETS: LeaguePreset[] = [
   // 22. 11. 2026 20:04 (Michal): Ligue 2 VYRADENÁ (1 tip, prehra) – 16 súťaží; tipy sa nerátajú (isRemovedLeagueTip). TIPREX ju má v extras.
   { id: 2, name: "UEFA Champions League", country: "Európa" },
   // 26. 11. 2026 (Michal): Európska liga VRÁTENÁ – aj jej staré tipy sa znova rátajú do štatistík. Počíta sa ako Liga majstrov
-  // (CUP_LEAGUE_IDS: góly z posledných zápasov vo všetkých súťažiach podľa sily domácich líg); vzájomné zápasy: 5, aspoň 3 (h2hMinFor).
+  // (CUP_LEAGUE_IDS: góly z posledných zápasov vo všetkých súťažiach podľa sily domácich líg); vzájomné zápasy ako ostatné súťaže (aspoň 5).
   { id: 3, name: "UEFA Europa League", country: "Európa" },
   // 10. 11. 2026 (Michal): pridaná ženská Liga majstrov a znova Liga národov – 18 súťaží.
   // Liga národov bola 6. 10. 2026 odstránená; jej staré tipy (pred 10. 11.) sa nerátajú (since).

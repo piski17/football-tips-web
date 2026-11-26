@@ -863,8 +863,9 @@ function normalCdf(z: number): number {
 // Novšie zápasy majú väčšiu váhu (každý starší × 0,85).
 // 18. 11. 2026 23:19 (Michal): vzájomné zápasy sa použijú až pri aspoň 5 za posledné 3 roky (predtým 3). Štatistiky tímu ostávajú z 5 zápasov.
 const H2H_MIN = 5;
-/** 26. 11. 2026 (Michal): Európska liga – posledných 5 vzájomných zápasov, keď ich nie je 5, stačia aspoň 3. Ostatné súťaže 5. */
-const H2H_MIN_BY_LEAGUE: Record<number, number> = { 3: 3 };
+/** 26. 11. 2026 20:00 (Michal): Európska liga rovnako ako ostatné súťaže (5 vzájomných zápasov) – žiadna výnimka.
+ *  Sem sa dá doplniť výnimka pre súťaž, napr. { 3: 3 } = Európska liga aspoň 3. */
+const H2H_MIN_BY_LEAGUE: Record<number, number> = {};
 export function h2hMinFor(leagueId: number | null | undefined): number {
   return (leagueId != null && H2H_MIN_BY_LEAGUE[Number(leagueId)]) || H2H_MIN;
 }
