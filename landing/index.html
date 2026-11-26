@@ -34,7 +34,7 @@
 <link rel="apple-touch-icon" href="/favicon-256.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&amp;family=Manrope:wght@400;600;700;800&amp;family=VT323&amp;display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&amp;family=Jost:wght@400;500;600&amp;display=swap" rel="stylesheet" />
 <style>
 /* ===================== ŠAMPANSKÉ IHRISKO (26. 11. 2026) =====================
    Michal 26. 11.: „sprav úplne ten istý“ web, aký sa mu páčil v náhľade – luxusný, v tónoch šampanské.
@@ -46,12 +46,12 @@ html{scroll-behavior:smooth}
 section[id]{scroll-margin-top:70px}
 :root{color-scheme:dark;--g:#17130e;--g2:#2a2216;--g3:#0f0d0a;--chalk:#f6eddc;--mut:#c2b49a;--y:#dcc08c;--red:#a8543f;--led:#f0d9a8}
 *{box-sizing:border-box;min-width:0;font-variant-numeric:lining-nums}
-body{margin:0;background:var(--g3);color:var(--chalk);font:17px/1.55 Manrope,system-ui,sans-serif;overflow-x:clip}
+body{margin:0;background:var(--g3);color:var(--chalk);font:17px/1.55 Jost,system-ui,sans-serif;overflow-x:clip}
 a{color:inherit}
 .in{max-width:1240px;margin:0 auto}
 .band{padding-block:clamp(40px,6vw,96px);padding-left:max(5vw,16px,env(safe-area-inset-left,0px));padding-right:max(5vw,16px,env(safe-area-inset-right,0px))}
 .grass{background:radial-gradient(ellipse 70% 60% at 75% 10%,rgba(220,192,140,.22),transparent 70%),radial-gradient(ellipse 50% 50% at 0% 100%,rgba(220,192,140,.10),transparent 70%),linear-gradient(180deg,#1a1510,#0f0d0a)}
-h1,h2,h3{color:#fbf3e3;font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;line-height:1.02;letter-spacing:-.01em;margin:0}
+h1,h2,h3{color:#fbf3e3;font-family:'Marcellus',Georgia,serif;font-weight:700;line-height:1.02;letter-spacing:-.01em;margin:0}
 h1{font-size:clamp(48px,7.4vw,104px)}
 h2{font-size:clamp(36px,4.6vw,60px);margin-bottom:18px}
 h3{font-size:28px;font-weight:700}
@@ -60,22 +60,22 @@ p{margin:0 0 14px;max-width:62ch}
 header{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:rgba(15,13,10,.88);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,255,255,.12);padding:12px max(5vw,16px)}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:#0b0907;z-index:10}
 header .in{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
-.logo{font:700 26px/1 'Cormorant Garamond',Georgia,serif;display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo{font:400 26px/1 'Marcellus',Georgia,serif;display:flex;align-items:center;gap:10px;text-decoration:none}
 .logo i{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#f6e6c4,#b89357);display:grid;place-items:center;color:#1a140c;font-style:normal;font-size:17px}
 nav{display:flex;gap:18px;margin-left:auto;font-weight:600;font-size:15px;flex-wrap:wrap}
 nav a{text-decoration:none;opacity:.85}nav a:hover{opacity:1;color:var(--y)}
-.btn{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#f6e6c4,#cfae74 60%,#b89357);color:#1a140c;letter-spacing:.01em;font:800 18px/1 Manrope,sans-serif;padding:16px 26px;border-radius:999px;text-decoration:none;border:0;cursor:pointer;transition:transform .15s}
+.btn{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#f6e6c4,#cfae74 60%,#b89357);color:#1a140c;letter-spacing:.01em;font:800 18px/1 Jost,sans-serif;padding:16px 26px;border-radius:999px;text-decoration:none;border:0;cursor:pointer;transition:transform .15s}
 .btn:hover{transform:translateY(-2px)}.btn.sm{padding:10px 18px;font-size:15px}
 .btn.ghost{background:transparent;color:var(--y);box-shadow:inset 0 0 0 1px var(--y)}
 /* hero */
 .hero{display:grid;gap:clamp(20px,3vw,48px);align-items:center}
 @media(min-width:900px){.hero{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);min-height:min(calc(100svh - 70px),820px)}}
-.arm{display:inline-block;border:1px solid var(--y);color:var(--y);font:italic 600 20px/1 'Cormorant Garamond',Georgia,serif;padding:8px 16px;border-radius:999px;margin-bottom:22px}
+.arm{display:inline-block;border:1px solid var(--y);color:var(--y);font:400 20px/1 'Marcellus',Georgia,serif;padding:8px 16px;border-radius:999px;margin-bottom:22px}
 .lead{font-size:clamp(18px,1.6vw,21px);color:var(--mut);margin:22px 0 28px}
 .cta{display:flex;gap:12px;flex-wrap:wrap}
 .nums{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:34px;max-width:520px}
 .nums div{border-top:1px solid var(--y);padding-top:8px}
-.nums b{display:block;color:var(--y);font:700 clamp(26px,3vw,38px)/1 'Cormorant Garamond',Georgia,serif;white-space:nowrap}
+.nums b{display:block;color:var(--y);font:400 clamp(26px,3vw,38px)/1 'Marcellus',Georgia,serif;white-space:nowrap}
 .nums span{font-size:14px;color:var(--mut)}
 .figwrap{position:relative}
 .fig{position:relative;min-height:520px}
@@ -91,14 +91,14 @@ nav a{text-decoration:none;opacity:.85}nav a:hover{opacity:1;color:var(--y)}
 @keyframes dash{to{stroke-dashoffset:-14}}
 @media(max-width:899px){.fig{min-height:360px}.tip{position:relative;transform:none;width:auto;margin-top:-10px}.figwrap{display:grid}}
 /* ticker */
-.ticker{background:linear-gradient(90deg,#b89357,#f2e0b9,#b89357);color:#1a140c;overflow:hidden;white-space:nowrap;font:700 22px/1 'Cormorant Garamond',Georgia,serif;padding:14px 0}
+.ticker{background:linear-gradient(90deg,#b89357,#f2e0b9,#b89357);color:#1a140c;overflow:hidden;white-space:nowrap;font:400 22px/1 'Marcellus',Georgia,serif;padding:14px 0}
 .ticker div{display:inline-block;animation:tk 30s linear infinite}
 .ticker span{margin:0 28px}
 @keyframes tk{to{transform:translateX(-50%)}}
 /* steps */
 .steps{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
 .step{background:linear-gradient(160deg,rgba(220,192,140,.10),rgba(220,192,140,.02));border:1px solid rgba(220,192,140,.28);border-radius:18px;padding:22px;position:relative;overflow:hidden}
-.step .no{position:absolute;right:14px;top:-6px;font:700 110px/1 'Cormorant Garamond',Georgia,serif;color:rgba(220,192,140,.14)}
+.step .no{position:absolute;right:14px;top:-6px;font:400 110px/1 'Marcellus',Georgia,serif;color:rgba(220,192,140,.14)}
 .step svg{width:100%;height:110px;display:block;margin-bottom:14px}
 .step p{font-size:16px;color:var(--mut);margin:8px 0 0}
 /* rules */
@@ -107,23 +107,23 @@ nav a{text-decoration:none;opacity:.85}nav a:hover{opacity:1;color:var(--y)}
 .rules .mut{color:#6e5f48}
 .rgrid{display:grid;gap:clamp(24px,4vw,56px)}
 @media(min-width:900px){.rgrid{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}}
-.formula{font:700 clamp(30px,3.6vw,46px)/1.1 'Cormorant Garamond',Georgia,serif;background:#1a140c;color:var(--y);border-radius:14px;padding:20px 22px;margin-top:20px;white-space:nowrap;overflow-x:auto}
+.formula{font:400 clamp(30px,3.6vw,46px)/1.1 'Marcellus',Georgia,serif;background:#1a140c;color:var(--y);border-radius:14px;padding:20px 22px;margin-top:20px;white-space:nowrap;overflow-x:auto}
 .lineup{display:grid;gap:10px}
 .pl{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:14px;align-items:center;background:rgba(255,255,255,.65);border:1px solid #e0cfae;border-radius:14px;padding:12px 16px}
-.pl .sh{width:56px;height:56px;display:grid;place-items:center;font:700 26px/1 'Cormorant Garamond',Georgia,serif;color:#1a140c;background:linear-gradient(135deg,#f6e6c4,#c9a669);clip-path:polygon(25% 0,40% 6%,60% 6%,75% 0,100% 18%,88% 38%,80% 34%,80% 100%,20% 100%,20% 34%,12% 38%,0 18%)}
+.pl .sh{width:56px;height:56px;display:grid;place-items:center;font:400 26px/1 'Marcellus',Georgia,serif;color:#1a140c;background:linear-gradient(135deg,#f6e6c4,#c9a669);clip-path:polygon(25% 0,40% 6%,60% 6%,75% 0,100% 18%,88% 38%,80% 34%,80% 100%,20% 100%,20% 34%,12% 38%,0 18%)}
 .pl b{font-size:18px}.pl small{display:block;color:#6e5f48;font-size:15px}
-.pl .v{font:700 26px/1 'Cormorant Garamond',Georgia,serif;white-space:nowrap;color:#8a6328}
+.pl .v{font:400 26px/1 'Marcellus',Georgia,serif;white-space:nowrap;color:#8a6328}
 /* board calculator */
 .calc{display:grid;gap:clamp(24px,4vw,56px);align-items:center}
 @media(min-width:900px){.calc{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
 .board{background:linear-gradient(160deg,#1c1813,#0d0b08);border:1px solid rgba(220,192,140,.35);border-radius:20px;padding:20px;box-shadow:inset 0 0 0 6px #1a160f,0 20px 50px rgba(0,0,0,.4)}
 .board .scr{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .cell{background:#050505;border-radius:10px;padding:10px 14px;text-align:center}
-.cell small{display:block;font:600 13px Manrope,sans-serif;color:#9aa39c}
+.cell small{display:block;font:600 13px Jost,sans-serif;color:#9aa39c}
 .led{font:clamp(60px,8vw,92px)/1 VT323,monospace;text-shadow:0 0 14px currentColor}
 .cell.g .led{color:var(--led)}.cell.r .led{color:#e8c486}
 .res{grid-column:1/-1}.res .led{color:var(--y)}
-.verdict{margin-top:12px;text-align:center;font:700 18px Manrope,sans-serif;padding:12px;border-radius:10px;background:rgba(220,192,140,.14);color:var(--led)}
+.verdict{margin-top:12px;text-align:center;font:700 18px Jost,sans-serif;padding:12px;border-radius:10px;background:rgba(220,192,140,.14);color:var(--led)}
 .verdict.no{background:rgba(168,84,63,.18);color:#e59a85}
 .board label{display:block;margin-top:16px;font-size:15px;color:#cfd6d0}
 .board label span{display:flex;justify-content:space-between}
@@ -132,11 +132,11 @@ input[type=range]{width:100%;height:44px;accent-color:var(--y);margin:0}
 .sb{display:grid;gap:8px}
 .m{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:14px;align-items:center;background:rgba(220,192,140,.06);border:1px solid rgba(220,192,140,.16);border-radius:12px;padding:12px 16px}
 .m b{font-size:17px}.m small{display:block;color:var(--mut);font-size:15px}
-.m .o{font:700 22px/1 'Cormorant Garamond',Georgia,serif;white-space:nowrap}
-.m .u{font:700 22px/1 'Cormorant Garamond',Georgia,serif;white-space:nowrap;padding:6px 10px;border-radius:8px;min-width:76px;text-align:center}
+.m .o{font:400 22px/1 'Marcellus',Georgia,serif;white-space:nowrap}
+.m .u{font:400 22px/1 'Marcellus',Georgia,serif;white-space:nowrap;padding:6px 10px;border-radius:8px;min-width:76px;text-align:center}
 .m .w{background:linear-gradient(135deg,#f6e6c4,#cfae74);color:#1a140c}.m .l{background:rgba(255,255,255,.12)}
 .tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px;font-weight:700}
-.tot b{font:700 34px/1 'Cormorant Garamond',Georgia,serif;color:var(--y)}
+.tot b{font:400 34px/1 'Marcellus',Georgia,serif;color:var(--y)}
 /* member card */
 .price{display:grid;gap:clamp(24px,4vw,56px);align-items:center}
 @media(min-width:900px){.price{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
@@ -144,7 +144,7 @@ input[type=range]{width:100%;height:44px;accent-color:var(--y);margin:0}
 .card::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(115deg,transparent 0 22px,rgba(255,255,255,.22) 22px 23px)}
 .card .top{display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1}
 .chip{width:46px;height:34px;border-radius:7px;background:linear-gradient(135deg,#d9d9d9,#8f8f8f)}
-.card .amt{font:700 clamp(54px,7vw,80px)/1 'Cormorant Garamond',Georgia,serif;position:relative;z-index:1}
+.card .amt{font:400 clamp(54px,7vw,80px)/1 'Marcellus',Georgia,serif;position:relative;z-index:1}
 .card .amt small{font-size:.35em}
 .card .bot{display:flex;justify-content:space-between;font-weight:700;font-size:15px;position:relative;z-index:1}
 ul.ok{list-style:none;padding:0;margin:0 0 24px}
@@ -152,12 +152,12 @@ ul.ok li{padding:10px 0 10px 34px;border-bottom:1px solid rgba(220,192,140,.2);p
 ul.ok li::before{content:"";position:absolute;left:0;top:13px;width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,#f6e6c4,#b89357)}
 /* faq */
 details{border-bottom:1px solid rgba(220,192,140,.25);padding:16px 0}
-summary{font:700 24px/1.2 'Cormorant Garamond',Georgia,serif;cursor:pointer}
+summary{font:400 24px/1.2 'Marcellus',Georgia,serif;cursor:pointer}
 details p{margin:10px 0 0;color:var(--mut)}
 .faq{display:grid;gap:clamp(24px,4vw,56px)}
 @media(min-width:900px){.faq{grid-template-columns:minmax(0,.7fr) minmax(0,1.3fr)}}
 .resp{background:rgba(220,192,140,.07);border:1px solid rgba(220,192,140,.2);border-radius:16px;padding:20px 22px;display:flex;gap:16px;align-items:flex-start;margin-top:28px}
-.resp i{flex:none;width:48px;height:48px;border-radius:50%;background:var(--red);display:grid;place-items:center;font:700 20px 'Cormorant Garamond',Georgia,serif;font-style:normal}
+.resp i{flex:none;width:48px;height:48px;border-radius:50%;background:var(--red);display:grid;place-items:center;font:400 20px 'Marcellus',Georgia,serif;font-style:normal}
 footer{background:#0b0907;font-size:15px;color:var(--mut)}
 footer .in{display:flex;gap:20px;justify-content:space-between;flex-wrap:wrap;align-items:center}
 .note{font-size:14px;color:var(--mut);margin-top:10px}
@@ -172,7 +172,7 @@ footer .in{display:flex;gap:20px;justify-content:space-between;flex-wrap:wrap;al
 .fields{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));margin:16px 0}
 .field{display:grid;gap:6px;font-size:14px;color:var(--mut)}
 .field.wide{grid-column:1/-1}
-.field input,.field select,.field textarea{font:16px Manrope,sans-serif;color:var(--chalk);background:rgba(0,0,0,.35);border:1px solid rgba(220,192,140,.3);border-radius:10px;padding:12px 14px;width:100%}
+.field input,.field select,.field textarea{font:16px Jost,sans-serif;color:var(--chalk);background:rgba(0,0,0,.35);border:1px solid rgba(220,192,140,.3);border-radius:10px;padding:12px 14px;width:100%}
 .field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--y);outline-offset:1px}
 .field [aria-invalid=true]{border-color:#e59a85}
 .hp{position:absolute;left:-9999px}
@@ -180,18 +180,40 @@ footer .in{display:flex;gap:20px;justify-content:space-between;flex-wrap:wrap;al
 .consent input{margin-top:3px;accent-color:var(--y)}
 .form-msg{color:#e59a85;font-size:15px;margin:10px 0 0;min-height:1em}
 .form.sent .fields,.form.sent .consent,.form.sent .submit{display:none}
-.form-done b{font:700 26px 'Cormorant Garamond',Georgia,serif;color:var(--y)}
+.form-done b{font:400 26px 'Marcellus',Georgia,serif;color:var(--y)}
 .empty{padding:18px;color:var(--mut);text-align:center}
-.more{margin-top:12px;background:none;border:1px solid rgba(220,192,140,.4);color:var(--y);border-radius:999px;padding:10px 20px;font:600 15px Manrope,sans-serif;cursor:pointer}
+.more{margin-top:12px;background:none;border:1px solid rgba(220,192,140,.4);color:var(--y);border-radius:999px;padding:10px 20px;font:600 15px Jost,sans-serif;cursor:pointer}
 .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:22px}
 .stats div{border-top:1px solid var(--y);padding-top:8px}
-.stats b{display:block;font:700 clamp(30px,4vw,48px)/1 'Cormorant Garamond',Georgia,serif;color:var(--y);white-space:nowrap}
+.stats b{display:block;font:400 clamp(30px,4vw,48px)/1 'Marcellus',Georgia,serif;color:var(--y);white-space:nowrap}
 .stats span{font-size:14px;color:var(--mut)}
 .m .u.v{background:rgba(255,255,255,.06);color:var(--mut)}
 .legal{font-size:13px;color:#8f826c;max-width:900px;margin-top:18px}
 .legal p{max-width:none}.legal a{color:var(--mut)}
 .mail-toast{position:fixed;left:50%;bottom:24px;z-index:60;translate:-50% 20px;opacity:0;pointer-events:none;padding:12px 18px;border-radius:999px;background:#211c14;border:1px solid rgba(220,192,140,.3);transition:.3s}
 .mail-toast.show{opacity:1;translate:-50% 0}
+/* 26. 11. 20:50 – Michal: „zmenšiť texty a písmo, aké sme ešte nemali“ → Marcellus (nadpisy) + Jost (text), všetko menšie */
+h1,h2,h3{font-weight:400;letter-spacing:0;line-height:1.12}
+body{font-size:15.5px;line-height:1.6}
+h1{font-size:clamp(34px,4.4vw,60px)}
+h2{font-size:clamp(26px,3vw,40px);margin-bottom:14px}
+h3{font-size:21px}
+.lead{font-size:clamp(15.5px,1.2vw,17px)}
+.arm{font-size:14px;padding:7px 14px;letter-spacing:.04em}
+.logo{font-size:21px}
+nav{font-size:14px;font-weight:500}
+.btn{font-size:15px;font-weight:600;padding:13px 22px}.btn.sm{font-size:13.5px;padding:9px 16px}
+.tip h3{font-size:19px}.tip .row{font-size:14px}
+.pl b{font-size:16px}.pl small{font-size:13.5px}.pl .v{font-size:20px}.pl .sh{font-size:20px;width:46px;height:46px}.pl{grid-template-columns:46px minmax(0,1fr) auto}
+.stats b{font-size:clamp(24px,2.8vw,34px)}.stats span{font-size:13px}
+.m b{font-size:15px}.m small{font-size:13.5px}.m .o,.m .u{font-size:17px}
+.tot b{font-size:24px}
+.card .amt{font-size:clamp(42px,5vw,58px)}
+ul.ok li{font-size:15px;padding-block:8px}
+summary{font-size:18px}
+details p,.panel p,.note{font-size:14.5px}
+.resp p{font-size:14.5px}
+@media(min-width:900px){.hero{min-height:0}.fig{min-height:460px}}
 @media(prefers-reduced-motion:reduce){.ball,.trail,.ticker div{animation:none}}
 @media(max-width:600px){nav{display:none}.nums{gap:8px}.m{grid-template-columns:minmax(0,1fr) auto}.m .o{display:none}}
 </style>
@@ -254,7 +276,7 @@ footer .in{display:flex;gap:20px;justify-content:space-between;flex-wrap:wrap;al
 <section class="band grass" id="ponuka"><div class="in price">
   <div style="display:grid;place-items:center;padding:20px 0">
     <div class="card">
-      <div class="top"><b style="font:700 28px 'Cormorant Garamond',Georgia,serif">TipRadar</b><div class="chip"></div></div>
+      <div class="top"><b style="font:400 28px 'Marcellus',Georgia,serif">TipRadar</b><div class="chip"></div></div>
       <div class="amt">59 € <small>/ mesiac</small></div>
       <div class="bot"><span>VIP KLUB</span><span>Sezóna 26/27</span></div>
     </div>
