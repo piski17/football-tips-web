@@ -74,6 +74,8 @@ export function tipType(category: string | null | undefined): string {
   const c = String(category || "");
   // 22. 11. 2026 (Michal): handicap gólov a handicap rohov sú rôzne druhy (predtým oba „hcp“ → 2. tip šiel do sledovaných).
   if (c.startsWith("hcp_")) return c;
+  // 28. 11. 2026 (Michal): „fauly sú jeden trh“ – kto viac faulov a počet faulov (zápas aj tímy) = jeden druh.
+  if (c === "viacfaulov") return "fauly";
   return c.split("_")[0];
 }
 
