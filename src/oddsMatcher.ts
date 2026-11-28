@@ -92,7 +92,7 @@ export const WATCH_BELOW_PROBABILITY = MIN_PROBABILITY;
 export const WATCH_BAND_MIN_PROBABILITY = 65;
 /** 22. 11. 2026 17:29 (Michal): handicap rohov ide klientom už od 60 %, ale kurz aspoň 1,60. */
 export const HCP_CORNERS_MARKET = "Handicap – rohy";
-export const HCP_CORNERS_MIN_PROBABILITY = 70; // 24. 11. 2026 23:15 (Michal): handicapy a držanie lopty od 70 % (predtým 60 %)
+export const HCP_CORNERS_MIN_PROBABILITY = 65; // 28. 11. 2026 (Michal): 65 % // 24. 11. 2026 23:15 (Michal): handicapy a držanie lopty od 70 % (predtým 60 %)
 export const HCP_CORNERS_MIN_ODDS = 1.5; // 23. 11. 2026 19:17 (Michal): handicap rohov tiež od kurzu 1,50 (predtým 1,60)
 export function clientMinProb(market: unknown): number {
   // 22. 11. 2026 19:54 (Michal): aj handicap gólov od 60 % (kurz od 1,50 ako ostatné).
