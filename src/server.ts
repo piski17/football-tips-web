@@ -4329,7 +4329,9 @@ async function addAutoEntry(
   else if (extra.minOddsAuto && /^(Fauly|Držanie lopty)/.test(tip.market)) reason = "fauly/držanie lopty – bez kurzu zo stávkovky len sledovať";
   else if (odds < MIN_ODDS) reason = `kurz pod ${String(MIN_ODDS).replace(".", ",")}`;
   else if (ev < clientMinEv(tip.market)) reason = "hodnota pod +5 %";
-  else if (ev > SUSPICIOUS_EXPECTED_VALUE) reason = "hodnota nad +25 %";
+  // 28. 11. 2026 18:55 (Michal): rovnaký tip s vyšším kurzom zo stávkovky prejde – horná hranica +25 % pri vlastnom kurze neplatí
+  // (ako v Tipoch dňa od 24. 11. 23:31). Ostáva len pri kurze z API (tam znamená chybu kurzu).
+  else if (ev > SUSPICIOUS_EXPECTED_VALUE && !(typedOddsRaw != null && String(typedOddsRaw).trim() !== "")) reason = "hodnota nad +25 %";
   // 4. 11. 2026 (Michal): tip doplnený po výkope len do sledovaných – 5. 11. 2026 (Michal) ZRUŠENÉ:
   // ak prejde pravidlami, pridá sa normálne do Histórie tipov (so značkou lateAdd).
   if (reason) tip.watchOnly = true;
