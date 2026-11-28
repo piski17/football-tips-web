@@ -4221,6 +4221,43 @@ app.post("/api/auto-tips/:id/add", async (req, res) => {
   }
 });
 
+/**
+ * 28. 11. 2026 15:51 (Michal): omylom zmazaný tip na fauly (Bundesliga, 28. 11.) späť klientom. Raz (meta príznak).
+ * Pridá sa len ten, ktorý v Histórii tipov chýba (zápas + trh Fauly).
+ */
+async function restoreDeletedFouls1128Once(): Promise<number> {
+  const FLAG = "restore_fouls_1128_done";
+  if ((await getMeta(FLAG).catch(() => null)) === "1") return 0;
+  const targets = [
+    { home: /paderborn/i, away: /schalke/i, selection: "Under 23.5", probability: 68, odds: 1.61 },
+    { home: /k(ö|o|oe)ln/i, away: /elversberg/i, selection: "Under 24.5", probability: 67, odds: 1.51 },
+  ];
+  const day = "2026-11-28";
+  const auto = (await listAuto()).filter((e) => dayKeySk(new Date(e.matchDate)) === day);
+  let leagueFx: any[] | null = null;
+  let n = 0;
+  for (const tg of targets) {
+    let base: AutoEntry | undefined = auto.find((e) => tg.home.test(e.homeTeam) && tg.away.test(e.awayTeam));
+    if (!base) {
+      if (!leagueFx) {
+        leagueFx = [];
+        for (const lg of [78, 79]) leagueFx.push(...(await getFixturesByLeague(lg, 2026, 60, day, true).catch(() => [] as any[])));
+      }
+      const fx = leagueFx.find((f) => tg.home.test(f.homeTeam.name) && tg.away.test(f.awayTeam.name));
+      if (fx) base = { id: "", fixtureId: fx.fixtureId, leagueId: fx.league.id, league: fx.league.name, season: fx.league.season, homeTeam: fx.homeTeam.name, awayTeam: fx.awayTeam.name, homeTeamLogo: (fx.homeTeam as any).logo, awayTeamLogo: (fx.awayTeam as any).logo, matchDate: fx.date, market: "", selection: "", probability: 0, odds: null, recordedAt: new Date().toISOString(), status: "pending" };
+    }
+    if (!base) { console.log(`Obnova faulov 28. 11.: zápas sa nenašiel (${tg.home} – ${tg.away})`); continue; }
+    const tips = await listTips();
+    if (tips.some((t) => t.fixtureId === base!.fixtureId && t.market === "Fauly")) continue;
+    const entry: AutoEntry = { ...base, id: `${base.fixtureId}-fauly-obnova-1128`, market: "Fauly", selection: tg.selection, probability: tg.probability, odds: null, strictFail: undefined, h2hAgainst: undefined, recordedAt: new Date(new Date(base.matchDate).getTime() - 60 * 60 * 1000).toISOString() };
+    const r = await addAutoEntry(entry, tg.odds, { bookLine: true } as Partial<SavedTip>);
+    console.log(`Obnova faulov 28. 11. (${base.homeTeam} – ${base.awayTeam}):`, JSON.stringify(r));
+    if ("ok" in r) n++;
+  }
+  await setMeta(FLAG, "1");
+  return n;
+}
+
 /** Pridá automaticky zapísaný tip do Histórie tipov (rovnaké pravidlá ako pri ručnom uložení). */
 async function addAutoEntry(
   entry: AutoEntry,
@@ -5090,6 +5127,9 @@ app.listen(PORT, () => {
     .then((n) => { if (n) console.log(`Fauly v Lige majstrov presunuté do sledovaných: ${n}`); })
     .catch((err) => console.error("Presun faulov v Lige majstrov zlyhal:", err))
     // 24. 11. 2026 19:35 (Michal): dnešné tipy na fauly v LM (uložené klientom) späť klientom.
+    .then(() => restoreDeletedFouls1128Once())
+    .then((n) => { if (n) console.log(`Zmazané fauly 28. 11. vrátené: ${n}`); })
+    .catch((err) => console.error("Obnova faulov 28. 11. zlyhala:", err))
     .then(() => restoreLmFoulsOnce())
     .then((n) => { if (n) console.log(`Fauly v Lige majstrov vrátené klientom: ${n}`); })
     .catch((err) => console.error("Vrátenie faulov v Lige majstrov zlyhalo:", err))
