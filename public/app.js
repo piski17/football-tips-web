@@ -462,7 +462,7 @@ const WATCH_BELOW = 72; // 22. 11. 2026 16:42 Michal: znova 72 % (16:18 krátko 
 const WATCH_BELOW_LABEL = 72; // v textoch
 // 22. 11. 2026 17:29 (Michal): handicap rohov klientom od 60 %, kurz od 1,60 (= clientMinProb / clientMinOdds v oddsMatcher.ts).
 const HCP_CORNERS_MARKET = "Handicap – rohy";
-const clientMinProb = (market) => (/^(Handicap( – |$)|Držanie lopty|Fauly)/.test(market || "") ? 70 : WATCH_BELOW); // 24. 11. 23:22 (Michal): 70 % LEN handicapy (gólov, rohov), všetko ostatné vrátane držania lopty od 72 %, ostatné od 72 % // 23. 11.: aj fauly v zápase a strely od 60 % // 22. 11. 19:54: aj handicap gólov od 60 %; 23. 11. (Michal): všetky handicapy od 60 %
+const clientMinProb = (market) => (/^(Handicap( – |$)|Držanie lopty|Fauly)/.test(market || "") ? 65 : WATCH_BELOW); // 28. 11. 2026 (Michal): handicapy, držanie lopty a fauly od 65 % // 24. 11. 23:22 (Michal): 70 % LEN handicapy (gólov, rohov), všetko ostatné vrátane držania lopty od 72 %, ostatné od 72 % // 23. 11.: aj fauly v zápase a strely od 60 % // 22. 11. 19:54: aj handicap gólov od 60 %; 23. 11. (Michal): všetky handicapy od 60 %
 const clientMinOdds = (market) => (market === HCP_CORNERS_MARKET ? Math.max(1.5, MIN_ODDS) : MIN_ODDS); // 23. 11. 2026: handicap rohov od 1,50
 const MIN_EV = 1.044; // MIN_EXPECTED_VALUE v oddsMatcher.ts (69,6 % × 1,50)
 const TYPO_EV = 1.6;
