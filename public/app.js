@@ -238,7 +238,7 @@ function isOverrideTip(t) {
 function minOddsFor(bet) {
   if (typeof bet.minOdds === "number") return bet.minOdds;
   const p = (bet.probability ?? 0) / 100;
-  return p > 0 ? Math.max(MIN_ODDS, Math.ceil((MIN_EV / p) * 100) / 100) : MIN_ODDS;
+  return p > 0 ? Math.max(MIN_ODDS, Math.ceil((clientMinEv(bet.market) / p) * 100) / 100) : MIN_ODDS;
 }
 function evPct(ev) {
   const p = Math.round((ev - 1) * 100);
@@ -464,6 +464,8 @@ const WATCH_BELOW_LABEL = 72; // v textoch
 const HCP_CORNERS_MARKET = "Handicap – rohy";
 const clientMinProb = (market) => (/^(Handicap( – |$)|Držanie lopty|Fauly)/.test(market || "") ? 65 : WATCH_BELOW); // 28. 11. 2026 (Michal): handicapy, držanie lopty a fauly od 65 % // 24. 11. 23:22 (Michal): 70 % LEN handicapy (gólov, rohov), všetko ostatné vrátane držania lopty od 72 %, ostatné od 72 % // 23. 11.: aj fauly v zápase a strely od 60 % // 22. 11. 19:54: aj handicap gólov od 60 %; 23. 11. (Michal): všetky handicapy od 60 %
 const clientMinOdds = (market) => (market === HCP_CORNERS_MARKET ? Math.max(1.5, MIN_ODDS) : MIN_ODDS); // 23. 11. 2026: handicap rohov od 1,50
+// 28. 11. 2026 15:05 (Michal): handicapy, držanie lopty a fauly (od 65 %) stačí kurz od 1,50 – bez spodnej hranice hodnoty (ako server clientMinEv).
+const clientMinEv = (market) => (/^(Handicap( – |$)|Držanie lopty|Fauly)/.test(market || "") ? 0 : MIN_EV);
 const MIN_EV = 1.044; // MIN_EXPECTED_VALUE v oddsMatcher.ts (69,6 % × 1,50)
 const TYPO_EV = 1.6;
 const MAX_EV = 1.254; // SUSPICIOUS_EXPECTED_VALUE v oddsMatcher.ts (19. 11. 2026: do +25,4 %)
@@ -1622,7 +1624,7 @@ function passLinesHtml(r, market) {
       const th = lineThresholds(market);
       if (x.probability < th.minProb || x.probability > 80) return;
       const p = x.probability / 100;
-      const lo = Math.max(th.minOdds, MIN_EV / p), hi = MAX_EV / p;
+      const lo = Math.max(th.minOdds, clientMinEv(market) / p), hi = MAX_EV / p;
       if (hi < lo) return;
       const up = x.selection.startsWith("Over");
       const lineTxt = String(L).replace(".", ",") + (poss ? " %" : "");
@@ -1683,7 +1685,7 @@ function renderCalcRows(out, r, market, rows, onSaved, opts = {}) {
   rows.forEach((x) => {
     if (x.odds != null) {
       x.ev = (x.probability / 100) * x.odds;
-      x.ok = x.probability >= (x.minProb ?? minProb) && x.probability <= 80 && x.odds >= (x.minOdds ?? minOdds) && x.ev >= MIN_EV && (x.sameAsTip || x.ev <= MAX_EV); // 24. 11. 23:30 (Michal): rovnaký tip – stačí kurz od 1,50, horná hranica neplatí
+      x.ok = x.probability >= (x.minProb ?? minProb) && x.probability <= 80 && x.odds >= (x.minOdds ?? minOdds) && x.ev >= clientMinEv(x.market || market) && (x.sameAsTip || x.ev <= MAX_EV); // 24. 11. 23:30 (Michal): rovnaký tip – stačí kurz od 1,50, horná hranica neplatí
     } else {
       x.ok = x.probability >= (x.minProb ?? minProb) && x.probability <= 80;
     }
@@ -1698,13 +1700,13 @@ function renderCalcRows(out, r, market, rows, onSaved, opts = {}) {
   const whyNot = (x) => {
     if (x.probability < (x.minProb ?? minProb) || x.probability > 80) return `Mimo pásma ${x.minProb != null ? x.minProb : bandLabel} – 80${NB}% – neodporúčame.`;
     if (x.odds < (x.minOdds ?? minOdds)) return `Kurz pod ${fmtOdds(x.minOdds ?? minOdds)} – neodporúčame.`;
-    if (x.ev < MIN_EV) return `Kurz je na túto šancu nízky (výhodnosť ${evPct(x.ev)}) – neodporúčame.`;
+    if (x.ev < clientMinEv(x.market || market)) return `Kurz je na túto šancu nízky (výhodnosť ${evPct(x.ev)}) – neodporúčame.`;
     if (x.ev > MAX_EV) return `Podozrivo vysoká výhodnosť (${evPct(x.ev)}), model sa asi mýli – neodporúčame.`;
     return opts.bestBy === "prob" ? "Iná možnosť má väčšiu dôveru." : "Druhá možnosť je výhodnejšia.";
   };
   out.innerHTML = rows
     .map((x, i) => {
-      const min = minOddsFor({ probability: x.probability });
+      const min = minOddsFor({ probability: x.probability, market: x.market || market });
       const info = x.odds != null
         ? `Odporúčame · kurz <b>${fmtOdds(x.odds)}</b> · výhodnosť <b>${evPct(x.ev)}</b>`
         : `Hraj len pri kurze aspoň <b>${fmtOdds(min)}</b>`;
@@ -2056,7 +2058,7 @@ function lateTipForClients(t) {
   if (typeof t.odds !== "number" && farLineTip(t)) return false; // len bez kurzu z API
   if (typeof t.odds !== "number") return true; // trh bez kurzu v API – rozhodne kurz, ktorý zadá Michal
   const value = (t.probability / 100) * t.odds;
-  return t.odds >= MIN_ODDS && value >= MIN_EV && value <= MAX_EV;
+  return t.odds >= MIN_ODDS && value >= clientMinEv(t.market) && value <= MAX_EV;
 }
 async function renderDayLateTips(box) {
   // 23. 11. 2026 (Michal): aj dohraté zápasy – tip ostáva otvorený, kým ho Michal neuloží (15. 11. boli skryté).
@@ -2309,7 +2311,7 @@ function renderDayTipsViewMain() {
     // 21. 11. 2026 (Michal): viac hraníc zo stávkovky naraz (až 4 riadky) – appka vyhodnotí všetky a uložiť
     // sa dá len tip s najväčšou dôverou spomedzi tých, ktoré prešli (z typu ide len 1 tip).
     const passes = (x) => x.odds != null && x.probability >= (x.minProb ?? BOOKLINE_MIN_PROB) && x.probability <= 80 && x.odds >= (x.minOdds ?? BOOKLINE_MIN_ODDS)
-      && (x.probability / 100) * x.odds >= MIN_EV && (x.sameAsTip || (x.probability / 100) * x.odds <= MAX_EV);
+      && (x.probability / 100) * x.odds >= clientMinEv(x.market) && (x.sameAsTip || (x.probability / 100) * x.odds <= MAX_EV);
     const oddOf = (el) => {
       const v = parseOddsInput(el.value);
       return v != null && v > 1 && v <= 20 ? Math.round(v * 100) / 100 : null;

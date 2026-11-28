@@ -101,6 +101,11 @@ export function clientMinProb(market: unknown): number {
   // 24. 11. 2026 23:15 (Michal): handicapy (góly, rohy) a držanie lopty od 70 %, všetko ostatné (aj fauly, kto viac, strely) od 72 %.
   return /^(Handicap( – |$)|Držanie lopty|Fauly)/.test(String(market ?? "")) ? HCP_CORNERS_MIN_PROBABILITY : WATCH_BELOW_PROBABILITY; // 24. 11. 23:22 (Michal): 70 % len handicapy
 }
+/** 28. 11. 2026 15:05 (Michal): handicapy, držanie lopty a fauly (od 65 %) stačí kurz od 1,50 – bez spodnej hranice hodnoty +5 %. */
+export const LOW_BAND_MARKET_RE = /^(Handicap( – |$)|Držanie lopty|Fauly)/;
+export function clientMinEv(market: unknown): number {
+  return LOW_BAND_MARKET_RE.test(String(market ?? "")) ? 0 : MIN_EXPECTED_VALUE;
+}
 export function clientMinOdds(market: unknown): number {
   return market === HCP_CORNERS_MARKET ? Math.max(HCP_CORNERS_MIN_ODDS, MIN_ODDS) : MIN_ODDS;
 }

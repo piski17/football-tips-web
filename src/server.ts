@@ -1,4 +1,4 @@
-import { plausibleLine, offeredLines, offeredHcpLines, MIN_BOOKMAKERS, MIN_ODDS, MAX_PROBABILITY, MIN_PROBABILITY, MIN_EXPECTED_VALUE, SUSPICIOUS_EXPECTED_VALUE, findOdds, marketProbabilityDetail, STRONG_TIP_MIN_PROBABILITY, WATCH_BELOW_PROBABILITY, WATCH_BAND_MIN_PROBABILITY, BAND_65_TRIAL, clientMinProb, clientMinOdds } from "./oddsMatcher";
+import { plausibleLine, offeredLines, offeredHcpLines, MIN_BOOKMAKERS, MIN_ODDS, MAX_PROBABILITY, MIN_PROBABILITY, MIN_EXPECTED_VALUE, SUSPICIOUS_EXPECTED_VALUE, findOdds, marketProbabilityDetail, STRONG_TIP_MIN_PROBABILITY, WATCH_BELOW_PROBABILITY, WATCH_BAND_MIN_PROBABILITY, BAND_65_TRIAL, clientMinProb, clientMinOdds, clientMinEv } from "./oddsMatcher";
 import { teamNamesBrowserScript } from "./teamNamesSk";
 import { listLeads, deleteLead, recordLead } from "./leadsStore";
 import { getMeta, setMeta } from "./metaStore";
@@ -1316,7 +1316,7 @@ app.post("/api/tips", async (req, res) => {
     // šanca od 60 %, ak je kurz aspoň 1,60 a hodnota +5 až +25 %. Vyhodnotiť zvlášť 1. 12. (značka bookLine).
     const bookLineOk = tip.bookLine === true && FOUL_POSS_WATCH_RE.test(String(tip.market)) && typeof tip.probability === "number" && typeof tip.odds === "number"
       && tip.probability >= Math.max(BOOKLINE_MIN_PROB, clientMinProb(tip.market)) && tip.probability <= MAX_PROBABILITY && tip.odds >= Math.max(BOOKLINE_MIN_ODDS, clientMinOdds(tip.market))
-      && (tip.probability / 100) * tip.odds >= MIN_EXPECTED_VALUE && (tip.probability / 100) * tip.odds <= SUSPICIOUS_EXPECTED_VALUE;
+      && (tip.probability / 100) * tip.odds >= clientMinEv(tip.market) && (tip.probability / 100) * tip.odds <= SUSPICIOUS_EXPECTED_VALUE;
     if (!bookLineOk && !(tip.legs && tip.legs.length) && !tip.manualEntry && typeof tip.probability === "number" && tip.probability < clientMinProb(tip.market)) {
       tip.watchOnly = true;
       tip.strongOfDay = undefined;
@@ -1367,7 +1367,7 @@ app.post("/api/tips", async (req, res) => {
     // ak by ho model nepustil, uloží sa len medzi sledované.
     if (tip.manualEntry && !(tip.legs && tip.legs.length) && !tip.probabilityEstimated && typeof tip.probability === "number" && typeof tip.odds === "number") {
       const ev = (tip.probability / 100) * tip.odds;
-      if (tip.probability < clientMinProb(tip.market) || tip.probability > MAX_PROBABILITY || tip.odds < clientMinOdds(tip.market) || ev < MIN_EXPECTED_VALUE || ev > SUSPICIOUS_EXPECTED_VALUE) {
+      if (tip.probability < clientMinProb(tip.market) || tip.probability > MAX_PROBABILITY || tip.odds < clientMinOdds(tip.market) || ev < clientMinEv(tip.market) || ev > SUSPICIOUS_EXPECTED_VALUE) {
         tip.watchOnly = true;
       }
     }
@@ -3916,7 +3916,7 @@ async function checkLineups(): Promise<void> {
           reason = c.marketConflict;
         } else if (odds != null) {
           const ev = (c.probability / 100) * odds;
-          if (ev < MIN_EXPECTED_VALUE) {
+          if (ev < clientMinEv(tip.market)) {
             ok = false;
             reason = `hodnota klesla na ${((ev - 1) * 100).toFixed(0)} %`;
           } else if (ev > SUSPICIOUS_EXPECTED_VALUE) {
@@ -4291,7 +4291,7 @@ async function addAutoEntry(
   else if (FOUL_POSS_WATCH && FOUL_POSS_WATCH_RE.test(tip.market)) { tip.foulPossWatch = true; reason = "fauly a držanie lopty zatiaľ len sledujeme (vyhodnotíme na konci mesiaca)"; }
   else if (extra.minOddsAuto && /^(Fauly|Držanie lopty)/.test(tip.market)) reason = "fauly/držanie lopty – bez kurzu zo stávkovky len sledovať";
   else if (odds < MIN_ODDS) reason = `kurz pod ${String(MIN_ODDS).replace(".", ",")}`;
-  else if (ev < MIN_EXPECTED_VALUE) reason = "hodnota pod +5 %";
+  else if (ev < clientMinEv(tip.market)) reason = "hodnota pod +5 %";
   else if (ev > SUSPICIOUS_EXPECTED_VALUE) reason = "hodnota nad +25 %";
   // 4. 11. 2026 (Michal): tip doplnený po výkope len do sledovaných – 5. 11. 2026 (Michal) ZRUŠENÉ:
   // ak prejde pravidlami, pridá sa normálne do Histórie tipov (so značkou lateAdd).

@@ -9,6 +9,7 @@ import {
   MIN_EXPECTED_VALUE,
   MIN_ODDS,
   clientMinProb,
+  clientMinEv,
   clientMinOdds,
   SUSPICIOUS_EXPECTED_VALUE,
   MIN_GAMES_FOR_TRUST,
@@ -1815,7 +1816,7 @@ export function predictMatch(
         // Držanie lopty a fauly (fauly od 30. 10. 2026, Michal): kurz cez API nie je (API-Football má len
         // fauly hráčov), tip ide do výberu s minimálnym kurzom, ktorý Michal porovná so stávkovkou
         // (Tipsport) a kurz zadá ručne – uloží sa len pri hodnote +5 % a aspoň MIN_ODDS.
-        b.minOdds = Math.max(clientMinOdds(b.market), Math.ceil((MIN_EXPECTED_VALUE / (b.probability / 100)) * 100) / 100);
+        b.minOdds = Math.max(clientMinOdds(b.market), Math.ceil((clientMinEv(b.market) / (b.probability / 100)) * 100) / 100);
         pickPool.push(b);
       } else if (ev == null && oddsAvailable) {
         // Stávkovky k zápasu kurzy majú, ale tento trh (alebo túto hranicu) neponúkajú -
@@ -1829,7 +1830,7 @@ export function predictMatch(
         b.rejectReason = "stávkovky zatiaľ neponúkajú kurz";
         b.rejectCode = "no_odds";
         lowValueBets.push(b);
-      } else if (ev < MIN_EXPECTED_VALUE) {
+      } else if (ev < clientMinEv(b.market)) {
         b.rejectReason = "nízky kurz, bez hodnoty";
         b.rejectCode = "ev_low";
         lowValueBets.push(b);
