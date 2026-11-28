@@ -434,6 +434,9 @@ function highValuePct(bet, odd) {
   return ev > TYPO_EV ? Math.round((ev - 1) * 100) : null;
 }
 function confirmHighValue(bet, odd) {
+  // 28. 11. 2026 (Michal: „prečo to nejde uložiť“): potvrdzovacie okno v appke (telefón / Mac) sa nemusí ukázať a tip sa
+  // potom neuložil. Upozornenie „Skontroluj kurz“ ostáva pri políčku, uloženie už nič neblokuje.
+  return true;
   const pct = highValuePct(bet, odd);
   if (pct == null) return true;
   return window.confirm(`Skontroluj kurz – je oveľa vyšší ako u ostatných stávkoviek.\n\nPri kurze ${fmtOdds(odd)} a dôvere ${fmtNum(bet.probability, 0)}${NB}% vychádza hodnota +${pct}${NB}%. Nie je to preklep alebo iný trh?\n\nUložiť tip aj tak?`);
@@ -2400,7 +2403,7 @@ function renderDayTipsViewMain() {
     const todo = dayTips.items.map((_, i) => i).filter((i) => !dayTipSaved.has(i) && oddsState(i).ok && !matchHasStarted(dayTips.items[i].r.fixture));
     if (!todo.length) return;
     const high = todo.filter((i) => highValuePct(dayTips.items[i].bet, oddsState(i).odd) != null);
-    if (high.length && !window.confirm(`Skontroluj kurz – ${plural(high.length, "tip má", "tipy majú", "tipov má")} kurz oveľa vyšší ako u ostatných stávkoviek. Nie je to preklep?\n\nUložiť všetky aj tak?`)) return;
+    if (false && high.length && !window.confirm(`Skontroluj kurz – ${plural(high.length, "tip má", "tipy majú", "tipov má")} kurz oveľa vyšší ako u ostatných stávkoviek. Nie je to preklep?\n\nUložiť všetky aj tak?`)) return;
     bulk.disabled = true;
     let saved = 0, sent = 0, errs = 0;
     for (const i of todo) {
