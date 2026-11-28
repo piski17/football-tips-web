@@ -1816,7 +1816,7 @@ export function predictMatch(
         // Držanie lopty a fauly (fauly od 30. 10. 2026, Michal): kurz cez API nie je (API-Football má len
         // fauly hráčov), tip ide do výberu s minimálnym kurzom, ktorý Michal porovná so stávkovkou
         // (Tipsport) a kurz zadá ručne – uloží sa len pri hodnote +5 % a aspoň MIN_ODDS.
-        b.minOdds = Math.max(clientMinOdds(b.market), Math.ceil((clientMinEv(b.market) / (b.probability / 100)) * 100) / 100);
+        b.minOdds = Math.max(clientMinOdds(b.market, b.probability), Math.ceil((clientMinEv(b.market) / (b.probability / 100)) * 100) / 100);
         pickPool.push(b);
       } else if (ev == null && oddsAvailable) {
         // Stávkovky k zápasu kurzy majú, ale tento trh (alebo túto hranicu) neponúkajú -
@@ -1834,9 +1834,9 @@ export function predictMatch(
         b.rejectReason = "nízky kurz, bez hodnoty";
         b.rejectCode = "ev_low";
         lowValueBets.push(b);
-      } else if (b.odds != null && b.odds < clientMinOdds(b.market)) {
+      } else if (b.odds != null && b.odds < clientMinOdds(b.market, b.probability)) {
         // Kurz pod minimom (predvolene 1,60) - tip má hodnotu, ale zisk z výhry je malý.
-        b.rejectReason = `kurz pod ${clientMinOdds(b.market).toFixed(2).replace(".", ",")}`;
+        b.rejectReason = `kurz pod ${clientMinOdds(b.market, b.probability).toFixed(2).replace(".", ",")}`;
         b.rejectCode = "min_odds";
         lowValueBets.push(b);
       } else if ((b.oddsBookmakers ?? 0) < (fewGames ? MIN_BOOKMAKERS_FEW_GAMES : MIN_BOOKMAKERS)) {

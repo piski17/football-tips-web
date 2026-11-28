@@ -212,7 +212,7 @@ const typeKey = (c: { category?: string; market: string }) => {
   return cat.startsWith("hcp_") ? cat : cat.split("_")[0];
 };
 const passesClientRules = (market: string, p: number, odds: number) => {
-  if (!isFinite(p) || !isFinite(odds) || p < clientMinProb(market) || p > MAX_PROB || odds < clientMinOdds(market)) return false;
+  if (!isFinite(p) || !isFinite(odds) || p < clientMinProb(market) || p > MAX_PROB || odds < clientMinOdds(market, p)) return false;
   const ev = (p / 100) * odds;
   return ev >= 1.05 && ev <= 1.25;
 };

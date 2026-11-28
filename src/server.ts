@@ -1315,7 +1315,7 @@ app.post("/api/tips", async (req, res) => {
     // Kompromis 20. 11. 2026 (Michal): fauly / držanie lopty s kurzom zo stávkovky (okienko v Tipoch dňa) – stačí
     // šanca od 60 %, ak je kurz aspoň 1,60 a hodnota +5 až +25 %. Vyhodnotiť zvlášť 1. 12. (značka bookLine).
     const bookLineOk = tip.bookLine === true && FOUL_POSS_WATCH_RE.test(String(tip.market)) && typeof tip.probability === "number" && typeof tip.odds === "number"
-      && tip.probability >= Math.max(BOOKLINE_MIN_PROB, clientMinProb(tip.market)) && tip.probability <= MAX_PROBABILITY && tip.odds >= Math.max(BOOKLINE_MIN_ODDS, clientMinOdds(tip.market))
+      && tip.probability >= Math.max(BOOKLINE_MIN_PROB, clientMinProb(tip.market)) && tip.probability <= MAX_PROBABILITY && tip.odds >= Math.max(BOOKLINE_MIN_ODDS, clientMinOdds(tip.market, tip.probability))
       && (tip.probability / 100) * tip.odds >= clientMinEv(tip.market) && (tip.probability / 100) * tip.odds <= SUSPICIOUS_EXPECTED_VALUE;
     if (!bookLineOk && !(tip.legs && tip.legs.length) && !tip.manualEntry && typeof tip.probability === "number" && tip.probability < clientMinProb(tip.market)) {
       tip.watchOnly = true;
@@ -1367,12 +1367,12 @@ app.post("/api/tips", async (req, res) => {
     // ak by ho model nepustil, uloží sa len medzi sledované.
     if (tip.manualEntry && !(tip.legs && tip.legs.length) && !tip.probabilityEstimated && typeof tip.probability === "number" && typeof tip.odds === "number") {
       const ev = (tip.probability / 100) * tip.odds;
-      if (tip.probability < clientMinProb(tip.market) || tip.probability > MAX_PROBABILITY || tip.odds < clientMinOdds(tip.market) || ev < clientMinEv(tip.market) || ev > SUSPICIOUS_EXPECTED_VALUE) {
+      if (tip.probability < clientMinProb(tip.market) || tip.probability > MAX_PROBABILITY || tip.odds < clientMinOdds(tip.market, tip.probability) || ev < clientMinEv(tip.market) || ev > SUSPICIOUS_EXPECTED_VALUE) {
         tip.watchOnly = true;
       }
     }
     // Kurz od 1,60 (2. 11. 2026, Michal): tip s kurzom pod minimom klientom nejde – len do sledovaných.
-    if (!(tip.legs && tip.legs.length) && typeof tip.odds === "number" && tip.odds > 1 && tip.odds < clientMinOdds(tip.market) - 1e-9) {
+    if (!(tip.legs && tip.legs.length) && typeof tip.odds === "number" && tip.odds > 1 && tip.odds < clientMinOdds(tip.market, tip.probability) - 1e-9) {
       tip.watchOnly = true;
     }
     if (lateFromAnalysis) {
@@ -3987,7 +3987,7 @@ async function notifyAdminClientTips(fixture: any, bets: any[]): Promise<void> {
     (b) =>
       !b.strictFail && !b.watchBand && !b.watchOnly && !b.h2hAgainst &&
       typeof b.probability === "number" && b.probability >= clientMinProb(b.market) && b.probability <= MAX_PROBABILITY &&
-      (typeof b.odds === "number" && b.odds > 1 ? b.odds >= clientMinOdds(b.market) : typeof b.minOdds === "number"),
+      (typeof b.odds === "number" && b.odds > 1 ? b.odds >= clientMinOdds(b.market, b.probability) : typeof b.minOdds === "number"),
   );
   if (!ok.length) return;
   const need = (p: unknown) => (typeof p === "number" && p > 0 ? MIN_EXPECTED_VALUE / (p / 100) : 0);

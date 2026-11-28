@@ -92,7 +92,8 @@ export const WATCH_BELOW_PROBABILITY = MIN_PROBABILITY;
 export const WATCH_BAND_MIN_PROBABILITY = 65;
 /** 22. 11. 2026 17:29 (Michal): handicap rohov ide klientom už od 60 %, ale kurz aspoň 1,60. */
 export const HCP_CORNERS_MARKET = "Handicap – rohy";
-export const HCP_CORNERS_MIN_PROBABILITY = 65; // 28. 11. 2026 (Michal): 65 % // 24. 11. 2026 23:15 (Michal): handicapy a držanie lopty od 70 % (predtým 60 %)
+export const HCP_CORNERS_MIN_PROBABILITY = 60; // 28. 11. 2026 15:44 (Michal): od 60 %, pri 60 – 64,9 % kurz aspoň 1,60
+export const LOW_BAND_160_BELOW = 65; // 28. 11. 2026 (Michal): 65 % // 24. 11. 2026 23:15 (Michal): handicapy a držanie lopty od 70 % (predtým 60 %)
 export const HCP_CORNERS_MIN_ODDS = 1.5; // 23. 11. 2026 19:17 (Michal): handicap rohov tiež od kurzu 1,50 (predtým 1,60)
 export function clientMinProb(market: unknown): number {
   // 22. 11. 2026 19:54 (Michal): aj handicap gólov od 60 % (kurz od 1,50 ako ostatné).
@@ -106,8 +107,11 @@ export const LOW_BAND_MARKET_RE = /^(Handicap( – |$)|Držanie lopty|Fauly)/;
 export function clientMinEv(market: unknown): number {
   return LOW_BAND_MARKET_RE.test(String(market ?? "")) ? 0 : MIN_EXPECTED_VALUE;
 }
-export function clientMinOdds(market: unknown): number {
-  return market === HCP_CORNERS_MARKET ? Math.max(HCP_CORNERS_MIN_ODDS, MIN_ODDS) : MIN_ODDS;
+export function clientMinOdds(market: unknown, probability?: number): number {
+  const base = market === HCP_CORNERS_MARKET ? Math.max(HCP_CORNERS_MIN_ODDS, MIN_ODDS) : MIN_ODDS;
+  // 28. 11. 2026 15:44 (Michal): handicapy, držanie lopty a fauly s dôverou 60 – 64,9 % len pri kurze od 1,60.
+  if (typeof probability === "number" && probability < LOW_BAND_160_BELOW && LOW_BAND_MARKET_RE.test(String(market ?? ""))) return Math.max(base, 1.6);
+  return base;
 }
 export const MAX_PROBABILITY = 80;
 /**
